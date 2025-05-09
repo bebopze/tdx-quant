@@ -7,3 +7,9 @@ target/
 *.iml
 *mvnw
 *.cmd
+
+
+**/**/application-prod.properties
+
+
+wiki/

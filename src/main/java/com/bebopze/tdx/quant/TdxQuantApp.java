@@ -1,8 +1,12 @@
 package com.bebopze.tdx.quant;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
 /**
@@ -12,6 +16,10 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
  * @date: 2025/5/4
  */
 @SpringBootApplication
+@EnableTransactionManagement
+@EnableFeignClients("com.bebopze.tdx.quant.client")
+@MapperScan("com.bebopze.tdx.quant.dal.mapper")
+@EnableScheduling
 public class TdxQuantApp {
 
 

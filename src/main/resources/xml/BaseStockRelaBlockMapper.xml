@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockMapper">
+
+
+    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="stock_id" jdbcType="BIGINT" property="stockId"/>
+        <result column="block_id" jdbcType="BIGINT" property="blockId"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        , stock_id, block_id, gmt_create, gmt_modify
+    </sql>
+
+
+    <delete id="deleteByStockId">
+        DELETE
+        FROM base_stock_rela_block
+        WHERE stock_id = #{stockId}
+    </delete>
+
+
+</mapper>

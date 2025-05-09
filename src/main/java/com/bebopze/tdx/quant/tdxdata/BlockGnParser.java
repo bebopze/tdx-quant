@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.tdxdata;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.compress.utils.Lists;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

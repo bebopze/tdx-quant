@@ -1,0 +1,20 @@
+package com.bebopze.tdx.quant.dal.service;
+
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+
+/**
+ * <p>
+ * 板块/指数-实时行情（以 tdx 为准） 服务类
+ * </p>
+ *
+ * @author bebopze
+ * @since 2025-05-09
+ */
+public interface IBaseBlockService extends IService<BaseBlockDO> {
+
+    BaseBlockDO getByCode(String code);
+
+    Long getIdByCode(String code);
+}
