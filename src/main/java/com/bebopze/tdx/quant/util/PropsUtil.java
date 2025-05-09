@@ -10,6 +10,8 @@ import java.util.Properties;
 
 
 /**
+ * 配置 - 读取
+ *
  * @author: bebopze
  * @date: 2025/5/4
  */
@@ -17,7 +19,7 @@ import java.util.Properties;
 public class PropsUtil {
 
 
-    private static Properties props = null;
+    private static Properties props;
 
     static {
 
@@ -36,11 +38,6 @@ public class PropsUtil {
     @SneakyThrows
     public static String getProperty(String key) {
 
-//        Properties root_props = PropertiesLoaderUtils.loadProperties(new ClassPathResource("application.properties"));
-//        String active_profile = root_props.getProperty("spring.profiles.active");
-//
-//
-//        Properties props = PropertiesLoaderUtils.loadProperties(new ClassPathResource("application-" + active_profile + ".properties"));
         String value = props.getProperty(key);
 
 
