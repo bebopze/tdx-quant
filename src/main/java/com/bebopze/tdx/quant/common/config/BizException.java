@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.config;
 
+import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import lombok.Data;
 
 
@@ -32,6 +33,12 @@ public class BizException extends RuntimeException {
         super(msg);
         this.code = code;
         this.msg = msg;
+    }
+
+    public BizException(BaseExEnum exEnum) {
+        super(exEnum.getMsg());
+        this.code = exEnum.getCode();
+        this.msg = exEnum.getMsg();
     }
 
 }

@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.util;
 
 import com.alibaba.fastjson.JSON;
+import com.bebopze.tdx.quant.common.config.BizException;
+import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +67,7 @@ public class HttpUtil {
 
 
         String result = CLIENT.execute(httpGet, handler);
-        log.info("doGet     >>>     url : {} , headers : {}, result : {}", url, JSON.toJSONString(headers), JSON.toJSONString(result));
+        log.info("doGet     >>>     url : {} , result : {}", url, JSON.toJSONString(result));
 
         return result;
     }
@@ -114,10 +116,10 @@ public class HttpUtil {
 
 
             if (result.contains("<h2>Object moved to <a href=\"/LogIn/ExitLogin?returl=")) {
-                log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, headers : {} , result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(headers), JSON.toJSONString(result));
-                throw new RuntimeException("cookie过期，请重新登录！");
+                log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(result));
+                throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
             } else {
-                log.info("doPost     >>>     url : {} , formData : {}, headers : {} , result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(headers), JSON.toJSONString(result));
+                log.info("doPost     >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(result));
             }
 
 

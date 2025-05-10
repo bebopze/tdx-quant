@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.client;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
@@ -195,8 +196,8 @@ public class EastMoneyHttpClient {
                     // TODO ...
 
 
-                    log.info("信用账户-[{}]   suc     >>>     url : {} , formData : {} , headers : {} , 委托编号 : {}",
-                             req.getTradeTypeEnum().getDesc(), url, formData, headers, wtbh);
+                    log.info("信用账户-[{}]   suc     >>>     url : {} , formData : {} , 委托编号 : {}",
+                             req.getTradeTypeEnum().getDesc(), url, formData, wtbh);
 
 
                     return wtbh;
@@ -204,18 +205,18 @@ public class EastMoneyHttpClient {
 
             } else {
                 String errMsg = resultJson.getString("Message");
-                log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {} , result : {}",
-                          req.getTradeTypeEnum().getDesc(), url, formData, headers, errMsg, result);
+                log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
+                          req.getTradeTypeEnum().getDesc(), url, formData, errMsg, result);
 
                 throw new RuntimeException(errMsg);
             }
 
 
         } catch (Exception e) {
-            log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {}",
-                      req.getTradeTypeEnum().getDesc(), url, formData, headers, e.getMessage(), e);
+            log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , errMsg : {}",
+                      req.getTradeTypeEnum().getDesc(), url, formData, e.getMessage(), e);
 
-            throw new RuntimeException("下单异常");
+            throw new BizException("下单异常");
         }
 
 
@@ -228,12 +229,10 @@ public class EastMoneyHttpClient {
      * <p>
      * https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
-     * @param validatekey
      * @param reqDTO
      * @return
      */
-    public static void revokeOrders(String validatekey,
-                                    TradeTypeEnum tradeTypeEnum,
+    public static void revokeOrders(TradeTypeEnum tradeTypeEnum,
                                     RevokeOrdersReq reqDTO) {
 
 
@@ -255,10 +254,15 @@ public class EastMoneyHttpClient {
             // 20250506: 您的撤单委托已提交，可至当日委托查看撤单结果
             // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
             if (result.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
-                log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , headers : {} , 委托编号 : {}", tradeTypeEnum.getDesc(), url, formData, headers, reqDTO.getRevokes());
+
+                log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , 委托编号 : {}",
+                         tradeTypeEnum.getDesc(), url, formData, reqDTO.getRevokes());
                 return;
+
             } else if (result.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
-                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , headers : {} , result : {}", tradeTypeEnum.getDesc(), url, formData, headers, result);
+
+                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , result : {}",
+                          tradeTypeEnum.getDesc(), url, formData, result);
                 return;
             }
 
@@ -266,24 +270,29 @@ public class EastMoneyHttpClient {
             JSONObject resultJson = JSON.parseObject(result);
             if (MapUtils.isNotEmpty(resultJson) && Objects.equals(resultJson.getInteger("Status"), 0)) {
                 resultJson.getJSONArray("Data").forEach(e -> {
+
+
                     // 委托编号
                     Integer wtbh = ((JSONObject) e).getInteger("Wtbh");
 
                     // TODO ...
 
 
-                    log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , headers : {} , 委托编号 : {}", tradeTypeEnum.getDesc(), url, formData, headers, wtbh);
+                    log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , 委托编号 : {}",
+                             tradeTypeEnum.getDesc(), url, JSON.toJSONString(formData), wtbh);
                 });
 
             } else {
 
-                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {} , result : {}", tradeTypeEnum.getDesc(), url, formData, headers, resultJson.getString("Message"), result);
+                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
+                          tradeTypeEnum.getDesc(), url, formData, resultJson.getString("Message"), result);
             }
 
 
         } catch (Exception e) {
 
-            log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {}", tradeTypeEnum.getDesc(), url, formData, headers, e.getMessage(), e);
+            log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , errMsg : {}",
+                      tradeTypeEnum.getDesc(), url, JSON.toJSONString(formData), e.getMessage(), e);
         }
     }
 
