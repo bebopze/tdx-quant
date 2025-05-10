@@ -3,8 +3,10 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,10 +35,20 @@ public class TradeController {
     }
 
 
+    @Operation(summary = "实时行情：买5/卖5", description = "实时行情：买5/卖5")
+    @GetMapping(value = "/SHSZQuoteSnapshot")
+    public Result<SHSZQuoteSnapshotResp> SHSZQuoteSnapshot(@Schema(description = "证券代码", example = "300059")
+                                                           @RequestParam String stockCode) {
+
+        return Result.SUC(tradeService.SHSZQuoteSnapshot(stockCode));
+    }
+
+
     @Operation(summary = "买入/卖出", description = "买入/卖出")
     @PostMapping(value = "/bs")
     public Result<Integer> bs(@RequestBody TradeBSParam param) {
         return Result.SUC(tradeService.bs(param));
     }
+
 
 }

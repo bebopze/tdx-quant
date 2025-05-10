@@ -3,19 +3,18 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2StockResp;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2StockResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.util.HttpUtil;
 import com.bebopze.tdx.quant.util.PropsUtil;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,52 +58,59 @@ public class EastMoneyHttpClient {
     public static void main(String[] args) {
 
 
-        QueryCreditNewPosV2Resp queryCreditNewPosV2Resp = queryCreditNewPosV2();
-        System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
-
-
-        // stockCode: 000063
-        // stockName: 中兴通讯
-        // price: 123.45
-        // amount: 100
-        // tradeType: S
-        // xyjylx: 7
-        // market: SA
-        SubmitTradeV2Req req = new SubmitTradeV2Req();
-        req.setStockCode("000063");
-        req.setStockName("中兴通讯");
-        req.setPrice(new BigDecimal("123.45"));
-        req.setAmount(100);
-
-
-        req.setStockCode("001696");
-        req.setStockName("宗申动力");
-        req.setPrice(new BigDecimal("123.45"));
-        req.setAmount(100);
-
-
-//        req.setStockCode("588050");
-//        req.setStockName("科创ETF");
-//        req.setPrice(new BigDecimal("3.055"));
+//        // --------------------------------- 我的持仓   -   信用账户
+//
+//        QueryCreditNewPosV2Resp queryCreditNewPosV2Resp = queryCreditNewPosV2();
+//        System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
+//
+//
+//        // stockCode: 000063
+//        // stockName: 中兴通讯
+//        // price: 123.45
+//        // amount: 100
+//        // tradeType: S
+//        // xyjylx: 7
+//        // market: SA
+//        SubmitTradeV2Req req = new SubmitTradeV2Req();
+//        req.setStockCode("000063");
+//        req.setStockName("中兴通讯");
+//        req.setPrice(new BigDecimal("123.45"));
 //        req.setAmount(100);
-
-
-        req.setTradeTypeEnum(TradeTypeEnum.SELL);
-        req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
-        req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
-
-        String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
-        req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
-
-        Integer wtbh1 = submitTradeV2(req);
-
-        System.out.println();
-//        reqDTO.setPrice("2.066");
-//        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-//        reqDTO.setPrice("2.077");
-//        Integer wtbh3 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
 //
 //
+//        req.setStockCode("001696");
+//        req.setStockName("宗申动力");
+//        req.setPrice(new BigDecimal("123.45"));
+//        req.setAmount(100);
+//
+//
+////        req.setStockCode("588050");
+////        req.setStockName("科创ETF");
+////        req.setPrice(new BigDecimal("3.055"));
+////        req.setAmount(100);
+//
+//
+//        req.setTradeTypeEnum(TradeTypeEnum.SELL);
+//        req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
+//        req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
+//
+//        String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
+//        req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
+//
+//        Integer wtbh1 = submitTradeV2(req);
+//
+//        System.out.println();
+//
+//
+////        reqDTO.setPrice("2.066");
+////        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+////        reqDTO.setPrice("2.077");
+////        Integer wtbh3 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+//
+
+        // --------------------------------- 撤单
+
+
 //        //
 //        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
 //
@@ -115,17 +121,25 @@ public class EastMoneyHttpClient {
 //        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
 //        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh3);
 //        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
+
+
+        // --------------------------------- 买5/卖5
+
+
+        SHSZQuoteSnapshotResp resp = SHSZQuoteSnapshot("300059");
+        System.out.println(JSON.toJSONString(resp));
     }
 
 
     /**
-     * 我的持仓
-     * <p>
-     * 信用账户
+     * 我的持仓   -   信用账户
+     * -
+     * -
      * - v1
-     * https://jywg.18.cn/MarginSearch/queryCreditNewPosV1?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+     * - https://jywg.18.cn/MarginSearch/queryCreditNewPosV1?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+     * -
      * - v2
-     * https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+     * - https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param
      * @return
@@ -158,6 +172,45 @@ public class EastMoneyHttpClient {
 
         // ----------------------------- 持股详情 列表
         List<QueryCreditNewPosV2StockResp> stockDTOList = resp.getStocks();
+
+
+        return resp;
+    }
+
+
+    /**
+     * 实时行情：买5 / 卖5
+     * -
+     * - https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?id=300059
+     *
+     * @param stockCode
+     * @return
+     */
+    public static SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
+
+
+        String url = "https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?id=" + stockCode;
+
+
+        String result = HttpUtil.doGet(url, null);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getString("code").equals(stockCode)) {
+            log.info("/api/SHSZQuoteSnapshot   suc     >>>     stockCode : {} , result : {}", stockCode, result);
+        }
+
+
+        // ----------------------------- 个股信息
+        SHSZQuoteSnapshotResp resp = JSON.toJavaObject(resultJson, SHSZQuoteSnapshotResp.class);
+
+
+        // ----------------------------- 买5 / 卖5
+        SHSZQuoteSnapshotResp.FivequoteDTO fivequoteDTO = resp.getFivequote();
+
+
+        // ----------------------------- 实时报价
+        SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequoteDTO = resp.getRealtimequote();
 
 
         return resp;

@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,12 @@ public class TradeServiceImpl implements TradeService {
     public QueryCreditNewPosV2Resp queryCreditNewPosV2() {
         QueryCreditNewPosV2Resp resp = EastMoneyHttpClient.queryCreditNewPosV2();
         return resp;
+    }
+
+    @Override
+    public SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
+        SHSZQuoteSnapshotResp dto = EastMoneyHttpClient.SHSZQuoteSnapshot(stockCode);
+        return dto;
     }
 
 
