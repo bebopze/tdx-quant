@@ -10,7 +10,7 @@ import lombok.Data;
  * @date: 2025/4/29
  */
 @Data
-public class RevokeOrdersReqDTO {
+public class RevokeOrdersReq {
 
 
     // revokes: 20250428_2374

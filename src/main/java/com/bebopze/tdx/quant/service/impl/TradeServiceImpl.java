@@ -3,7 +3,8 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.client.EastMoneyHttpClient;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2ReqDTO;
+import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.bebopze.tdx.quant.util.PropsUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +26,11 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public JSONObject queryCreditNewPosV2(String validatekey) {
-
-//        validatekey = this.validatekey;
-//
-//
-//        JSONObject result = eastMoneySecClient.queryCreditNewPosV2(validatekey);
-//        log.info("eastMoneySecClient#queryCreditNewPosV2     >>>     validatekey : {} , result : {}", validatekey, JSON.toJSONString(result));
-//
-
-        return null;
+    public QueryCreditNewPosV2Resp queryCreditNewPosV2() {
+        QueryCreditNewPosV2Resp resp = EastMoneyHttpClient.queryCreditNewPosV2();
+        return resp;
     }
+
 
     @Override
     public JSONObject wdcc() {
@@ -44,7 +39,7 @@ public class TradeServiceImpl implements TradeService {
         EastMoneyHttpClient.queryCreditNewPosV2();
 
 
-        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
+        SubmitTradeV2Req reqDTO = new SubmitTradeV2Req();
         reqDTO.setStockCode("588050");
         reqDTO.setStockName("科创ETF");
         reqDTO.setPrice("2.055");
@@ -59,11 +54,25 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    public static void main(String[] args) {
-
-//        JSONObject jsonObject = queryCreditNewPosV2("");
+//    @Override
+//    public JSONObject buy() {
 //
-//        System.out.println();
-    }
+//
+//        EastMoneyHttpClient.queryCreditNewPosV2();
+//
+//
+//        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
+//        reqDTO.setStockCode("588050");
+//        reqDTO.setStockName("科创ETF");
+//        reqDTO.setPrice("2.055");
+//        reqDTO.setAmount("100");
+//
+//
+//        // 委托单号
+//        Integer wtbh = EastMoneyHttpClient.submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+//
+//
+//        return null;
+//    }
 
 }

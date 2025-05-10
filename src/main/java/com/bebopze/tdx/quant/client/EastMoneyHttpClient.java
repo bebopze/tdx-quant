@@ -4,16 +4,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.req.RevokeOrdersReqDTO;
-import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2ReqDTO;
+import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2StockResp;
+import com.bebopze.tdx.quant.common.domain.req.RevokeOrdersReq;
+import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.util.HttpUtil;
 import com.bebopze.tdx.quant.util.PropsUtil;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -33,6 +34,13 @@ public class EastMoneyHttpClient {
     private static final String COOKIE = PropsUtil.getCookie();
 
 
+    private static final Map<String, String> headers = Maps.newHashMap();
+
+    static {
+        headers.put("Cookie", COOKIE);
+    }
+
+
 //    /**
 //     * 登录
 //     * <p>
@@ -49,29 +57,33 @@ public class EastMoneyHttpClient {
     public static void main(String[] args) {
 
 
-        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
-        reqDTO.setStockCode("588050");
-        reqDTO.setStockName("科创ETF");
-        reqDTO.setPrice("2.055");
-        reqDTO.setAmount("100");
-
-        Integer wtbh1 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-        reqDTO.setPrice("2.066");
-        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-        reqDTO.setPrice("2.077");
-        Integer wtbh3 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+        QueryCreditNewPosV2Resp queryCreditNewPosV2Resp = queryCreditNewPosV2();
+        System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
 
 
-        //
-        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-
-        RevokeOrdersReqDTO revokeOrdersReqDTO = new RevokeOrdersReqDTO();
-        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh1);
-        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
-        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh2);
-        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
-        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh3);
-        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
+//        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
+//        reqDTO.setStockCode("588050");
+//        reqDTO.setStockName("科创ETF");
+//        reqDTO.setPrice("2.055");
+//        reqDTO.setAmount("100");
+//
+//        Integer wtbh1 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+//        reqDTO.setPrice("2.066");
+//        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+//        reqDTO.setPrice("2.077");
+//        Integer wtbh3 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+//
+//
+//        //
+//        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+//
+//        RevokeOrdersReqDTO revokeOrdersReqDTO = new RevokeOrdersReqDTO();
+//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh1);
+//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
+//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh2);
+//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
+//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh3);
+//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
     }
 
 
@@ -80,41 +92,51 @@ public class EastMoneyHttpClient {
      * <p>
      * 信用账户
      * - v1
-     * https://jywg.eastmoneysec.com/MarginSearch/queryCreditNewPosV1?validatekey=b41148f0-825d-4b4a-a2ad-474fb46729d3
+     * https://jywg.18.cn/MarginSearch/queryCreditNewPosV1?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      * - v2
-     * https://jywg.eastmoneysec.com/MarginSearch/queryCreditNewPosV2?validatekey=b41148f0-825d-4b4a-a2ad-474fb46729d3
+     * https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param
      * @return
      */
-    public static void queryCreditNewPosV2() {
-
-
-        // https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=38ba1303-3726-458b-a2be-93cca7ca5c9e
+    public static QueryCreditNewPosV2Resp queryCreditNewPosV2() {
 
 
         String url = "https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=" + SID;
 
 
-        Map<String, String> headers = Maps.newHashMap();
-        headers.put("Cookie", COOKIE);
+        // 不区分   Request Method
 
 
-        // String result = HttpUtil.doPost(url, null, headers);
-        String result = HttpUtil.doGet(url, headers);
+        // String result = HttpUtil.doGet(url, headers);
+        String result = HttpUtil.doPost(url, null, headers);
 
 
-        // TODO parse result
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("Status") == 0) {
+            log.info("/MarginSearch/queryCreditNewPosV2   suc     >>>     result : {}", result);
+        }
 
 
-        System.out.println(result);
+        JSONObject data = resultJson.getJSONArray("Data").getJSONObject(0);
+
+
+        // ----------------------------- 资金持仓 汇总
+        QueryCreditNewPosV2Resp resp = JSON.toJavaObject(data, QueryCreditNewPosV2Resp.class);
+
+
+        // ----------------------------- 持股详情 列表
+        List<QueryCreditNewPosV2StockResp> stockDTOList = resp.getStocks();
+
+
+        return resp;
     }
 
 
     /**
      * 融资/担保 买入（卖出） - 信用账户
      * <p>
-     * https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=4a7a091e-1994-44a5-965a-8a91ce615ebf
+     * https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param tradeTypeEnum
      * @param reqDTO
@@ -122,10 +144,10 @@ public class EastMoneyHttpClient {
      */
     public static Integer submitTradeV2(String validatekey,
                                         TradeTypeEnum tradeTypeEnum,
-                                        SubmitTradeV2ReqDTO reqDTO) {
+                                        SubmitTradeV2Req reqDTO) {
 
 
-        // https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=bc7439e3-301b-44b7-bc94-9ad210699699
+        // https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
         String url = "https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=" + SID;
 
 
@@ -196,7 +218,7 @@ public class EastMoneyHttpClient {
     /**
      * 撤单
      * <p>
-     * https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=bc7439e3-301b-44b7-bc94-9ad210699699
+     * https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param validatekey
      * @param reqDTO
@@ -204,10 +226,10 @@ public class EastMoneyHttpClient {
      */
     public static void revokeOrders(String validatekey,
                                     TradeTypeEnum tradeTypeEnum,
-                                    RevokeOrdersReqDTO reqDTO) {
+                                    RevokeOrdersReq reqDTO) {
 
 
-        // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=bc7439e3-301b-44b7-bc94-9ad210699699
+        // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
         String url = "https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=" + SID;
 
 

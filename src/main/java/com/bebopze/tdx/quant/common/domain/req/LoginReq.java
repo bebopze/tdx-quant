@@ -8,7 +8,7 @@ import lombok.Data;
  * @date: 2025/4/29
  */
 @Data
-public class LoginReqDTO {
+public class LoginReq {
 
 
     // userId: 500000123456

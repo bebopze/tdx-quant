@@ -8,7 +8,7 @@ import lombok.Data;
  * @date: 2025/4/29
  */
 @Data
-public class SubmitTradeV2ReqDTO {
+public class SubmitTradeV2Req {
 
 
     // stockCode: 588050       股票代码
