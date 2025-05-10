@@ -4,16 +4,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2Resp;
-import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2StockResp;
-import com.bebopze.tdx.quant.common.domain.req.RevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2StockResp;
+import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
+import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.util.HttpUtil;
 import com.bebopze.tdx.quant.util.PropsUtil;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,13 +62,23 @@ public class EastMoneyHttpClient {
         System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
 
 
-//        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
-//        reqDTO.setStockCode("588050");
-//        reqDTO.setStockName("科创ETF");
-//        reqDTO.setPrice("2.055");
-//        reqDTO.setAmount("100");
-//
-//        Integer wtbh1 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
+        SubmitTradeV2Req req = new SubmitTradeV2Req();
+        req.setStockCode("588050");
+        req.setStockName("科创ETF");
+        req.setPrice(new BigDecimal("3.055"));
+        req.setAmount(100);
+
+
+        req.setTradeTypeEnum(TradeTypeEnum.SELL);
+        req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
+        req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
+
+        String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
+        req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
+
+        Integer wtbh1 = submitTradeV2(req);
+
+        System.out.println();
 //        reqDTO.setPrice("2.066");
 //        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
 //        reqDTO.setPrice("2.077");
@@ -138,50 +149,17 @@ public class EastMoneyHttpClient {
      * <p>
      * https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
-     * @param tradeTypeEnum
-     * @param reqDTO
+     * @param req
      * @return
      */
-    public static Integer submitTradeV2(String validatekey,
-                                        TradeTypeEnum tradeTypeEnum,
-                                        SubmitTradeV2Req reqDTO) {
+    public static Integer submitTradeV2(SubmitTradeV2Req req) {
 
 
         // https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
         String url = "https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=" + SID;
 
 
-        Map<String, String> headers = Maps.newHashMap();
-        headers.put("Cookie", COOKIE);
-
-
-        // TradeTypeEnum.DANBAO_BUY;
-
-        // stockCode: 588050
-        // stockName: 科创ETF
-        // price: 2.055
-        // amount: 100
-        // tradeType: S
-        // xyjylx: 7
-        // market: HA
-        // SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
-        // reqDTO.setStockCode("588050");
-        // reqDTO.setStockName("科创ETF");
-        // reqDTO.setPrice("2.055");
-        // reqDTO.setAmount("100");
-
-        // B：买入 / S：卖出
-        reqDTO.setTradeType(tradeTypeEnum.getTradeType());
-        // 担保买入-6; 卖出-7; 融资买入-a;   [融券卖出-A];
-        reqDTO.setXyjylx(tradeTypeEnum.getXyjylx());
-
-
-        // TODO   市场（HA-沪A / SA-深A / B-北交所）
-        // String market = EastMoneyMarketEnum.getMarket(1);
-        String market = StockMarketEnum.getEastMoneyMarketByStockCode(reqDTO.getStockCode());
-        reqDTO.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
-
-        JSONObject formData = JSON.parseObject(JSON.toJSONString(reqDTO));
+        JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
 
 
         try {
@@ -189,25 +167,36 @@ public class EastMoneyHttpClient {
 
             JSONObject resultJson = JSON.parseObject(result);
             if (MapUtils.isNotEmpty(resultJson) && Objects.equals(resultJson.getInteger("Status"), 0)) {
-                for (Object e : resultJson.getJSONArray("Data")) {// 委托编号
+                for (Object e : resultJson.getJSONArray("Data")) {
+
+                    // 委托编号
                     Integer wtbh = ((JSONObject) e).getInteger("Wtbh");
+
 
                     // TODO ...
 
 
-                    log.info("信用账户-{} suc     >>>     url : {} , formData : {} , headers : {} , 委托编号 : {}", tradeTypeEnum.getDesc(), url, formData, headers, wtbh);
+                    log.info("信用账户-[{}]   suc     >>>     url : {} , formData : {} , headers : {} , 委托编号 : {}",
+                             req.getTradeTypeEnum().getDesc(), url, formData, headers, wtbh);
+
+
                     return wtbh;
                 }
 
             } else {
+                String errMsg = resultJson.getString("Message");
+                log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {} , result : {}",
+                          req.getTradeTypeEnum().getDesc(), url, formData, headers, errMsg, result);
 
-                log.error("信用账户-{} fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {} , result : {}", tradeTypeEnum.getDesc(), url, formData, headers, resultJson.getString("Message"), result);
+                throw new RuntimeException(errMsg);
             }
 
 
         } catch (Exception e) {
+            log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {}",
+                      req.getTradeTypeEnum().getDesc(), url, formData, headers, e.getMessage(), e);
 
-            log.error("信用账户-{} fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {}", tradeTypeEnum.getDesc(), url, formData, headers, e.getMessage(), e);
+            throw new RuntimeException("下单异常");
         }
 
 
@@ -278,5 +267,6 @@ public class EastMoneyHttpClient {
             log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , headers : {} , errMsg : {}", tradeTypeEnum.getDesc(), url, formData, headers, e.getMessage(), e);
         }
     }
+
 
 }

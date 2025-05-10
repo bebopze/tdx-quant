@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.client.EastMoneyHttpClient;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.req.SubmitTradeV2Req;
-import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.service.TradeService;
-import com.bebopze.tdx.quant.util.PropsUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +21,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class TradeServiceImpl implements TradeService {
 
-    // @Value("eastmoney.validatekey")
-    private static String validatekey = PropsUtil.getSid();
-
 
     @Override
     public QueryCreditNewPosV2Resp queryCreditNewPosV2() {
@@ -33,46 +30,39 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public JSONObject wdcc() {
+    public Integer bs(TradeBSParam param) {
+
+        SubmitTradeV2Req reqDTO = convert2Req(param);
 
 
-        EastMoneyHttpClient.queryCreditNewPosV2();
-
-
-        SubmitTradeV2Req reqDTO = new SubmitTradeV2Req();
-        reqDTO.setStockCode("588050");
-        reqDTO.setStockName("科创ETF");
-        reqDTO.setPrice("2.055");
-        reqDTO.setAmount("100");
-
-
-        // 委托单号
-        Integer wtbh = EastMoneyHttpClient.submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-
-
-        return null;
+        Integer wtdh = EastMoneyHttpClient.submitTradeV2(reqDTO);
+        return wtdh;
     }
 
 
-//    @Override
-//    public JSONObject buy() {
-//
-//
-//        EastMoneyHttpClient.queryCreditNewPosV2();
-//
-//
-//        SubmitTradeV2ReqDTO reqDTO = new SubmitTradeV2ReqDTO();
-//        reqDTO.setStockCode("588050");
-//        reqDTO.setStockName("科创ETF");
-//        reqDTO.setPrice("2.055");
-//        reqDTO.setAmount("100");
-//
-//
-//        // 委托单号
-//        Integer wtbh = EastMoneyHttpClient.submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-//
-//
-//        return null;
-//    }
+    private SubmitTradeV2Req convert2Req(TradeBSParam param) {
+
+        SubmitTradeV2Req req = new SubmitTradeV2Req();
+        req.setStockCode(param.getStockCode());
+        req.setStockName(param.getStockName());
+        req.setPrice(param.getPrice());
+        req.setAmount(param.getAmount());
+
+
+        // B/S
+        TradeTypeEnum tradeTypeEnum = TradeTypeEnum.getByTradeType(param.getTradeType());
+        req.setTradeType(tradeTypeEnum.getEastMoneyTradeType());
+        req.setXyjylx(tradeTypeEnum.getXyjylx());
+
+
+        // 市场（HA-沪A / SA-深A / B-北交所）
+        String market = StockMarketEnum.getEastMoneyMarketByStockCode(param.getStockCode());
+        req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
+
+
+        req.setTradeTypeEnum(tradeTypeEnum);
+
+        return req;
+    }
 
 }

@@ -1,9 +1,14 @@
-package com.bebopze.tdx.quant.common.domain.req;
+package com.bebopze.tdx.quant.common.domain.trade.req;
 
+import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 
 /**
+ * 买入（融资/担保） / 卖出
+ *
  * @author: bebopze
  * @date: 2025/4/29
  */
@@ -24,13 +29,21 @@ public class SubmitTradeV2Req {
 
     private String stockName;
 
-    private String price;
+    private BigDecimal price;
 
-    private String amount;
+    private Integer amount;
+
 
     private String tradeType;
 
     private String xyjylx;
 
+
     private String market;
+
+
+    // -------------------------------------------
+
+
+    private transient TradeTypeEnum tradeTypeEnum;
 }

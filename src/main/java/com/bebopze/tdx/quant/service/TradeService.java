@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-import com.alibaba.fastjson.JSONObject;
-import com.bebopze.tdx.quant.common.domain.resp.QueryCreditNewPosV2Resp;
+import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 
 
 /**
@@ -14,6 +14,5 @@ public interface TradeService {
 
     QueryCreditNewPosV2Resp queryCreditNewPosV2();
 
-    JSONObject wdcc();
-
+    Integer bs(TradeBSParam param);
 }

@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.req;
+package com.bebopze.tdx.quant.common.domain.trade.req;
 
 import lombok.Data;
 
