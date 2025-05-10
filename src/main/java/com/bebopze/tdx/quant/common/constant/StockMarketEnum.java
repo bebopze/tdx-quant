@@ -95,7 +95,7 @@ public enum StockMarketEnum {
     public static String getEastMoneyMarketByStockCode(String stockCode) {
 
         // 前2位
-        String codePrefix = stockCode.trim().substring(0, 1);
+        String codePrefix = stockCode.trim().substring(0, 2);
 
         for (StockMarketEnum value : StockMarketEnum.values()) {
 

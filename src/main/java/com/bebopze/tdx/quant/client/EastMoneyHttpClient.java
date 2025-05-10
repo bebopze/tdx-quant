@@ -62,11 +62,30 @@ public class EastMoneyHttpClient {
         System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
 
 
+        // stockCode: 000063
+        // stockName: 中兴通讯
+        // price: 123.45
+        // amount: 100
+        // tradeType: S
+        // xyjylx: 7
+        // market: SA
         SubmitTradeV2Req req = new SubmitTradeV2Req();
-        req.setStockCode("588050");
-        req.setStockName("科创ETF");
-        req.setPrice(new BigDecimal("3.055"));
+        req.setStockCode("000063");
+        req.setStockName("中兴通讯");
+        req.setPrice(new BigDecimal("123.45"));
         req.setAmount(100);
+
+
+        req.setStockCode("001696");
+        req.setStockName("宗申动力");
+        req.setPrice(new BigDecimal("123.45"));
+        req.setAmount(100);
+
+
+//        req.setStockCode("588050");
+//        req.setStockName("科创ETF");
+//        req.setPrice(new BigDecimal("3.055"));
+//        req.setAmount(100);
 
 
         req.setTradeTypeEnum(TradeTypeEnum.SELL);
