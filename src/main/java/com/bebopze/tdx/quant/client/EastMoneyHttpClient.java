@@ -258,18 +258,18 @@ public class EastMoneyHttpClient {
 
             } else {
                 String errMsg = resultJson.getString("Message");
-                log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
-                          req.getTradeTypeEnum().getDesc(), url, formData, errMsg, result);
+                // log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
+                //          req.getTradeTypeEnum().getDesc(), url, formData, errMsg, result);
 
-                throw new RuntimeException(errMsg);
+                throw new BizException(errMsg);
             }
 
 
         } catch (Exception e) {
-            log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , errMsg : {}",
+            log.error("信用账户-[{}]   fail     >>>     url : {} , formData : {} , exMsg : {}",
                       req.getTradeTypeEnum().getDesc(), url, formData, e.getMessage(), e);
 
-            throw new BizException("下单异常");
+            throw new BizException("下单异常：" + e.getMessage());
         }
 
 
@@ -285,16 +285,11 @@ public class EastMoneyHttpClient {
      * @param reqDTO
      * @return
      */
-    public static void revokeOrders(TradeTypeEnum tradeTypeEnum,
-                                    RevokeOrdersReq reqDTO) {
+    public static void revokeOrders(RevokeOrdersReq reqDTO) {
 
 
         // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
         String url = "https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=" + SID;
-
-
-        Map<String, String> headers = Maps.newHashMap();
-        headers.put("Cookie", COOKIE);
 
 
         JSONObject formData = JSON.parseObject(JSON.toJSONString(reqDTO));
@@ -308,15 +303,13 @@ public class EastMoneyHttpClient {
             // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
             if (result.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
 
-                log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , 委托编号 : {}",
-                         tradeTypeEnum.getDesc(), url, formData, reqDTO.getRevokes());
+                log.info("撤单   suc     >>>     url : {} , formData : {} , 委托编号 : {}", url, JSON.toJSONString(formData), reqDTO.getRevokes());
                 return;
 
             } else if (result.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
 
-                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , result : {}",
-                          tradeTypeEnum.getDesc(), url, formData, result);
-                return;
+                log.error("撤单   fail     >>>     url : {} , formData : {} , result : {}", url, JSON.toJSONString(formData), result);
+                throw new BizException(result.trim());
             }
 
 
@@ -331,23 +324,23 @@ public class EastMoneyHttpClient {
                     // TODO ...
 
 
-                    log.info("信用账户-{}   撤单 suc     >>>     url : {} , formData : {} , 委托编号 : {}",
-                             tradeTypeEnum.getDesc(), url, JSON.toJSONString(formData), wtbh);
+                    log.info("撤单   suc     >>>     url : {} , formData : {} , 委托编号 : {}", url, JSON.toJSONString(formData), wtbh);
                 });
 
             } else {
 
-                log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
-                          tradeTypeEnum.getDesc(), url, formData, resultJson.getString("Message"), result);
+                log.error("撤单   fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
+                          url, JSON.toJSONString(formData), resultJson.getString("Message"), result);
             }
 
 
         } catch (Exception e) {
 
-            log.error("信用账户-{}   撤单 fail     >>>     url : {} , formData : {} , errMsg : {}",
-                      tradeTypeEnum.getDesc(), url, JSON.toJSONString(formData), e.getMessage(), e);
+            log.error("撤单   fail     >>>     url : {} , formData : {} , exMsg : {}",
+                      url, JSON.toJSONString(formData), e.getMessage(), e);
+
+            throw new BizException("撤单异常：" + e.getMessage());
         }
     }
-
 
 }

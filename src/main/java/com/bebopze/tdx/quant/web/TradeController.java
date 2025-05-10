@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
@@ -48,6 +49,14 @@ public class TradeController {
     @PostMapping(value = "/bs")
     public Result<Integer> bs(@RequestBody TradeBSParam param) {
         return Result.SUC(tradeService.bs(param));
+    }
+
+
+    @Operation(summary = "撤单", description = "撤单")
+    @PostMapping(value = "/revokeOrders")
+    public Result<Integer> revokeOrders(@RequestBody TradeRevokeOrdersParam param) {
+        tradeService.revokeOrders(param);
+        return Result.SUC();
     }
 
 

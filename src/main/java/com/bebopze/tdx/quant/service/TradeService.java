@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
@@ -17,6 +18,7 @@ public interface TradeService {
 
     SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode);
 
-
     Integer bs(TradeBSParam param);
+
+    void revokeOrders(TradeRevokeOrdersParam param);
 }
