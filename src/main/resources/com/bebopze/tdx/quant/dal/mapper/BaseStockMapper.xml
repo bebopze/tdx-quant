@@ -41,12 +41,47 @@
 
 
     <select id="getByCode" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
-        select
+        SELECT
+
         <include refid="Base_Column_List"/>
         ,
         <include refid="Blob_Column_List"/>
-        from base_stock
-        where code = #{code}
+        FROM base_stock
+
+        WHERE code = #{code}
+    </select>
+
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+
+        id AS id,
+        code AS code
+
+
+        FROM base_stock
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
+    </select>
+
+
+    <select id="listBaseByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+
+        <include refid="Base_Column_List"/>
+
+        FROM base_stock
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
     </select>
 
 

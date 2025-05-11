@@ -14,10 +14,13 @@ public interface TdxDataParserService {
 
     void tdxData();
 
+    void blockNew();
+
     void xgcz();
 
 
     Map<String, List<String>> marketRelaStockCodePrefixList();
 
     JSONObject check();
+
 }

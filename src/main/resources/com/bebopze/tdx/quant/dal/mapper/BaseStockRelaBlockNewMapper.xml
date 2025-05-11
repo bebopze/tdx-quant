@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockNewMapper">
+
+
+    <delete id="delByBlockNewId" parameterType="long">
+        DELETE
+        FROM base_stock_rela_block_new
+        WHERE block_new_id = #{blockNewId}
+    </delete>
+
+
+</mapper>

@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.tdxdata;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,18 +32,47 @@ public class BlockNewParser {
 
     public static void main(String[] args) {
 
-        parse(filePath);
+
+        parseAll();
 
 
-        System.out.println();
-        System.out.println("---------------------------------------");
-        System.out.println();
+//        parse(filePath);
+//
+//
+//        System.out.println();
+//        System.out.println("---------------------------------------");
+//        System.out.println();
+//
+//
+//        write(Lists.newArrayList("0000001", "0000002", "0000007"));
+//
+//
+//        parse(filePath);
+    }
 
 
-        write(Lists.newArrayList("0000001", "0000002", "0000007"));
+    public static void parseAll() {
 
 
-        parse(filePath);
+        String baseFilePath = TDX_PATH + "/T0002/blocknew/";
+
+
+        File dir = new File(baseFilePath);
+        File[] blkFiles = dir.listFiles((d, name) -> name.endsWith(".blk"));
+
+
+        for (File blkFile : blkFiles) {
+            String path = blkFile.getPath();
+            String absolutePath = blkFile.getAbsolutePath();
+            long l = blkFile.lastModified();
+            List<BlockNewDTO> dtoList = parse(blkFile.getAbsolutePath());
+
+
+            System.out.println(String.format("%s   -   %s",
+                                             absolutePath.replace("baseFilePath", ""),
+                                             JSON.toJSONString(dtoList)));
+        }
+
     }
 
 
@@ -71,17 +101,30 @@ public class BlockNewParser {
 
 
                 // 处理每一行
-                if (StringUtils.hasText(line)) {
+                if (StringUtils.hasText(line) && line.length() == 7) {
 
 
-                    // 0-深；1-沪；2-北；
-                    Integer marketType = Integer.valueOf(line.substring(0, 1));
-                    // 个股code
-                    String stockCode = line.substring(1, 5);
+                    try {
+                        // 0-深；1-沪；2-北；
+                        Integer marketType = Integer.valueOf(line.substring(0, 1));
+                        // 个股code
+                        String stockCode = line.substring(1, 7);
 
 
-                    BlockNewDTO dto = new BlockNewDTO(marketType, stockCode);
-                    dtoList.add(dto);
+                        BlockNewDTO dto = new BlockNewDTO(marketType, stockCode);
+                        dtoList.add(dto);
+
+
+                    } catch (Exception e) {
+                        log.error("parse ex     >>>     filePath : {} , i : {} , line : {} , exMsg : {}",
+                                  filePath.split("blocknew")[1], i, line, e.getMessage(), e);
+                    }
+
+
+                } else {
+
+                    log.error("parse ex     >>>     filePath : {} , i : {} , line : {}",
+                              filePath.split("blocknew")[1], i, line);
                 }
             }
 

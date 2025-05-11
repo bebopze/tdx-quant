@@ -3,12 +3,8 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO;
-import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
-import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockService;
-import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.dal.entity.*;
+import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.bebopze.tdx.quant.tdxdata.*;
 import com.google.common.collect.Lists;
@@ -42,6 +38,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Autowired
     private IBaseStockRelaBlockService iBaseStockRelaBlockService;
+
+    @Autowired
+    private IBaseBlockNewService iBaseBlockNewService;
+
+    @Autowired
+    private IBaseStockRelaBlockNewService iBaseStockRelaBlockNewService;
 
 
     @Override
@@ -348,6 +350,16 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
+    public void blockNew() {
+
+
+        BlockNewParser.parseAll();
+
+
+    }
+
+
+    @Override
     public void xgcz() {
 
 
@@ -357,17 +369,36 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<BlockNewParser.BlockNewDTO> dtoList_60rxg = BlockNewParser.parse(filePath_60rxg);
 
 
-        dtoList_60rxg.forEach(e -> {
+        List<BaseStockRelaBlockNewDO> entityList = Lists.newArrayList();
 
+
+        BaseBlockNewDO baseBlockNewDO = iBaseBlockNewService.getByCode("60rxg");
+        Long blockNewId = baseBlockNewDO.getId();
+
+
+        List<String> stockCodeList = dtoList_60rxg.stream().map(BlockNewParser.BlockNewDTO::getStockCode).collect(Collectors.toList());
+        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap(stockCodeList);
+
+
+        dtoList_60rxg.forEach(e -> {
 
             String stockCode = e.getStockCode();
             Integer tdxMarketType = e.getTdxMarketType();
 
 
+            BaseStockRelaBlockNewDO entity = new BaseStockRelaBlockNewDO();
+            entity.setStockId(codeIdMap.get(stockCode));
+            entity.setBlockNewId(blockNewId);
+
+            entityList.add(entity);
         });
 
 
+        iBaseStockRelaBlockNewService.delByBlockNewId(blockNewId);
+
+        iBaseStockRelaBlockNewService.saveBatch(entityList);
     }
+
 
     @Override
     public Map<String, List<String>> marketRelaStockCodePrefixList() {

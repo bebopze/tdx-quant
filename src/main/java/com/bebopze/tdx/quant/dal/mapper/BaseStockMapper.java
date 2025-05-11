@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * <p>
  * 股票-实时行情 Mapper 接口
@@ -15,4 +17,8 @@ import org.apache.ibatis.annotations.Param;
 public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     BaseStockDO getByCode(@Param("code") String code);
+
+    List<BaseStockDO> listSimpleByCodeList(@Param("stockCodeList") List<String> stockCodeList);
+
+    List<BaseStockDO> listBaseByCodeList(@Param("stockCodeList") List<String> stockCodeList);
 }

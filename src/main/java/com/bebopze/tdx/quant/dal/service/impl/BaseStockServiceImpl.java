@@ -11,8 +11,10 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -92,6 +94,30 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         return market_stockCodePrefixList_map;
+    }
+
+
+    @Override
+    public List<BaseStockDO> listSimpleByCodeList(List<String> stockCodeList) {
+        List<BaseStockDO> entityList = baseMapper.listSimpleByCodeList(stockCodeList);
+        return entityList;
+    }
+
+    @Override
+    public Map<String, Long> codeIdMap(List<String> stockCodeList) {
+
+        List<BaseStockDO> entityList = listSimpleByCodeList(stockCodeList);
+
+
+        Map<String, Long> code_id_map = entityList.stream()
+                .collect(Collectors.toMap(
+                        BaseStockDO::getCode,  // 键：从对象中提取 code 字段
+                        BaseStockDO::getId,    // 值：从对象中提取 id 字段
+
+                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                ));
+
+        return code_id_map;
     }
 
 }

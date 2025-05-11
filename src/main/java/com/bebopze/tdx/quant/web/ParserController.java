@@ -50,6 +50,18 @@ public class ParserController {
      * @return
      */
     @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
+    @GetMapping(value = "/block_new")
+    public Result<Object> blockNew() {
+        tdxDataParserService.blockNew();
+        return Result.SUC();
+    }
+
+    /**
+     * 通达信 - 数据解析 入库
+     *
+     * @return
+     */
+    @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
     @GetMapping(value = "/xgcz")
     public Result<Object> xgcz() {
         tdxDataParserService.xgcz();
@@ -74,7 +86,7 @@ public class ParserController {
      *
      * @return
      */
-    @Operation(summary = "交易所 - 股票代码 前缀", description = "交易所 - 股票代码 前缀")
+    @Operation(summary = "check", description = "check")
     @GetMapping(value = "/check")
     public Result<JSONObject> check() {
         return Result.SUC(tdxDataParserService.check());
