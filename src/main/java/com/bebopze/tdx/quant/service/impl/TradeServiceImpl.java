@@ -3,19 +3,23 @@ package com.bebopze.tdx.quant.service.impl;
 import com.bebopze.tdx.quant.client.EastMoneyHttpClient;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
+import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 
 /**
@@ -52,12 +56,22 @@ public class TradeServiceImpl implements TradeService {
         return wtdh;
     }
 
+
     @Override
-    public void revokeOrders(TradeRevokeOrdersParam param) {
+    public List<GetOrdersDataResp> getOrdersData() {
 
-        RevokeOrdersReq req = convert2Req(param);
+        List<GetOrdersDataResp> respList = EastMoneyHttpClient.getOrdersData();
+        return respList;
+    }
 
-        EastMoneyHttpClient.revokeOrders(req);
+
+    @Override
+    public List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList) {
+
+        RevokeOrdersReq req = convert2Req(paramList);
+
+        List<RevokeOrderResultDTO> dtoList = EastMoneyHttpClient.revokeOrders(req);
+        return dtoList;
     }
 
 
@@ -96,18 +110,27 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 撤单
      *
-     * @param param
+     * @param paramList
      * @return
      */
-    private RevokeOrdersReq convert2Req(TradeRevokeOrdersParam param) {
+    private RevokeOrdersReq convert2Req(List<TradeRevokeOrdersParam> paramList) {
+        List<String> revokeList = Lists.newArrayList();
+
+
+        for (TradeRevokeOrdersParam param : paramList) {
+
+            // 委托日期
+            String date = StringUtils.isEmpty(param.getDate()) ? LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) : param.getDate();
+
+            // 委托日期_委托编号
+            String revoke = date + "_" + param.getWtdh();
+
+            revokeList.add(revoke);
+        }
+
 
         RevokeOrdersReq req = new RevokeOrdersReq();
-        // 委托日期
-        String date = StringUtils.isEmpty(param.getDate()) ? LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) : param.getDate();
-
-        String revokes = date + "_" + param.getWtdh();
-        req.setRevokes(revokes);
-
+        req.setRevokes(String.join(",", revokeList));
 
         return req;
     }

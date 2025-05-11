@@ -17,8 +17,8 @@ import java.util.Objects;
 public enum TradeTypeEnum {
 
 
-    // B：买入 / S：卖出
-    // 担保买入-6; 卖出-7; 融资买入-a;   [融券卖出-A];
+    // B-买入 / S-卖出
+    // 6-担保买入; 7-卖出; a-融资买入;   [A-融券卖出];
     RZ_BUY(1, "B", "a", "融资买入"),
 
     ZY_BUY(2, "B", "6", "担保买入"),
@@ -26,18 +26,28 @@ public enum TradeTypeEnum {
     SELL(3, "S", "7", "担保卖出");
 
 
+    /**
+     * 自定义（web层 参数枚举）
+     */
     @Getter
     private Integer tradeType;
 
+
     /**
-     * 东方财富 - tradeType
+     * 东方财富 - tradeType（B-买入；S-卖出；）
      */
     @Getter
     private String eastMoneyTradeType;
-
+    /**
+     * 东方财富 - 信用交易类型（6-担保买入; 7-卖出; a-融资买入;   [A-融券卖出];）
+     */
     @Getter
     private String xyjylx;
 
+
+    /**
+     * 描述
+     */
     @Getter
     private String desc;
 

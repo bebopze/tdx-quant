@@ -1,8 +1,10 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
@@ -11,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 /**
@@ -52,12 +56,27 @@ public class TradeController {
     }
 
 
-    @Operation(summary = "撤单", description = "撤单")
-    @PostMapping(value = "/revokeOrders")
-    public Result<Integer> revokeOrders(@RequestBody TradeRevokeOrdersParam param) {
-        tradeService.revokeOrders(param);
+    @Operation(summary = "当日 委托单列表", description = "当日 委托单列表")
+    @GetMapping(value = "/getOrdersData")
+    public Result<List<GetOrdersDataResp>> getOrdersData() {
+        return Result.SUC(tradeService.getOrdersData());
+    }
+
+
+    @Operation(summary = "全部 委托单列表   -   仅返回 可撤列表", description = "全部 委托单列表   -   仅返回 可撤列表")
+    @PostMapping(value = "/getRevokeList")
+    @Deprecated
+    public Result<Integer> getRevokeList() {
+        // https://jywg.18.cn/MarginTrade/GetRevokeList?validatekey=6909e3d0-112f-4ea4-93c6-6d7842acab48
+        // tradeService.getRevokeList();
         return Result.SUC();
     }
 
+
+    @Operation(summary = "批量撤单", description = "批量撤单")
+    @PostMapping(value = "/revokeOrders")
+    public Result<List<RevokeOrderResultDTO>> revokeOrders(@RequestBody List<TradeRevokeOrdersParam> paramList) {
+        return Result.SUC(tradeService.revokeOrders(paramList));
+    }
 
 }
