@@ -333,95 +333,51 @@ public class EastMoneyHttpClient {
         JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
 
 
-        try {
-            String result = HttpUtil.doPost(url, formData, headers);
+        String result = HttpUtil.doPost(url, formData, headers);
 
 
-            // 20250511: 您的撤单委托已提交，可至当日委托查看撤单结果   20250511: 撤单失败，该笔委托已经全部成交或全部撤单   20250511: 委托序号与委托人不符
+        // 20250511: 您的撤单委托已提交，可至当日委托查看撤单结果   20250511: 撤单失败，该笔委托已经全部成交或全部撤单   20250511: 委托序号与委托人不符
 
 
-            // 20250506: 您的撤单委托已提交，可至当日委托查看撤单结果
-            // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
-            // 20250511: 委托序号与委托人不符
+        // 20250506: 您的撤单委托已提交，可至当日委托查看撤单结果
+        // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
+        // 20250511: 委托序号与委托人不符
 
 
-            String[] revokeArr = req.getRevokes().split(",");
-            String[] resultArr = result.split("   ");
+        String[] revokeArr = req.getRevokes().split(",");
+        String[] resultArr = result.split("   ");
 
 
-            List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
-            for (int i = 0; i < resultArr.length; i++) {
+        List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
+        for (int i = 0; i < resultArr.length; i++) {
 
-                String revoke = revokeArr[i];
-                String revoke_r = resultArr[i];
-
-
-                RevokeOrderResultDTO dto = new RevokeOrderResultDTO();
-                dto.setRevoke(revoke);
-                dto.setResultDesc(revoke_r);
+            String revoke = revokeArr[i];
+            String revoke_r = resultArr[i];
 
 
-                boolean suc;
-                if (revoke_r.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
-                    suc = true;
-                } else if (revoke_r.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
-                    suc = false;
-                } else if (revoke_r.contains("委托序号与委托人不符")) {
-                    suc = false;
-                } else {
-                    suc = false;
-                }
-                dto.setSuc(suc);
+            RevokeOrderResultDTO dto = new RevokeOrderResultDTO();
+            dto.setRevoke(revoke);
+            dto.setResultDesc(revoke_r);
 
 
-                dtoList.add(dto);
+            boolean suc;
+            if (revoke_r.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
+                suc = true;
+            } else if (revoke_r.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
+                suc = false;
+            } else if (revoke_r.contains("委托序号与委托人不符")) {
+                suc = false;
+            } else {
+                suc = false;
             }
+            dto.setSuc(suc);
 
 
-            return dtoList;
-
-
-            //   if (result.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
-            //
-            //       log.info("撤单   suc     >>>     url : {} , formData : {} , result : {}", url, JSON.toJSONString(formData), result);
-            //
-            //       return;
-            //
-            //   } else if (result.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
-            //
-            //       log.error("撤单   fail     >>>     url : {} , formData : {} , result : {}", url, JSON.toJSONString(formData), result);
-            //       throw new BizException(result.trim());
-            //   }
-
-
-            //   JSONObject resultJson = JSON.parseObject(result);
-            //   if (MapUtils.isNotEmpty(resultJson) && Objects.equals(resultJson.getInteger("Status"), 0)) {
-            //       resultJson.getJSONArray("Data").forEach(e -> {
-            //
-            //
-            //           // 委托编号
-            //           Integer wtbh = ((JSONObject) e).getInteger("Wtbh");
-            //
-            //           // TODO ...
-            //
-            //
-            //           log.info("撤单   suc     >>>     url : {} , formData : {} , 委托编号 : {}", url, JSON.toJSONString(formData), wtbh);
-            //       });
-            //
-            //   } else {
-            //
-            //       log.error("撤单   fail     >>>     url : {} , formData : {} , errMsg : {} , result : {}",
-            //                 url, JSON.toJSONString(formData), resultJson.getString("Message"), result);
-            //   }
-
-
-        } catch (Exception e) {
-
-            log.error("撤单   fail     >>>     url : {} , formData : {} , exMsg : {}",
-                      url, JSON.toJSONString(formData), e.getMessage(), e);
-
-            throw new BizException("撤单异常：" + e.getMessage());
+            dtoList.add(dto);
         }
+
+
+        return dtoList;
     }
 
 }
