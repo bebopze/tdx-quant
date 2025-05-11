@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.common.constant;
 
-import com.bebopze.tdx.quant.util.PropsUtil;
+import com.bebopze.tdx.quant.common.util.PropsUtil;
 
 /**
  * @author: bebopze

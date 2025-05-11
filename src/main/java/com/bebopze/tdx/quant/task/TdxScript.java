@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.task;
 
-import com.bebopze.tdx.quant.util.WinUtils;
-import com.bebopze.tdx.quant.util.WinUtils2;
+import com.bebopze.tdx.quant.common.util.WinUtils;
+import com.bebopze.tdx.quant.common.util.WinUtils2;
 import com.google.common.collect.Lists;
 import com.sun.jna.platform.win32.WinDef;
 import lombok.extern.slf4j.Slf4j;
@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
-import static com.bebopze.tdx.quant.util.DateUtils.formatMillis;
-import static com.bebopze.tdx.quant.util.SleepUtils.winSleep;
+import static com.bebopze.tdx.quant.common.util.DateUtils.formatMillis;
+import static com.bebopze.tdx.quant.common.util.SleepUtils.winSleep;
 import static java.awt.event.KeyEvent.*;
 
 

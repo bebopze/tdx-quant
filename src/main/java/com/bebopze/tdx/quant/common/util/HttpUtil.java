@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.util;
+package com.bebopze.tdx.quant.common.util;
 
 import com.alibaba.fastjson.JSON;
 import com.bebopze.tdx.quant.common.config.BizException;

@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.util;
+package com.bebopze.tdx.quant.common.util;
 
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.bebopze.tdx.quant.util.SleepUtils.winSleep;
+import static com.bebopze.tdx.quant.common.util.SleepUtils.winSleep;
 
 
 /**

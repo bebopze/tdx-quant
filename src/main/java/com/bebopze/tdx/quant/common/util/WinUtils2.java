@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.util;
+package com.bebopze.tdx.quant.common.util;
 
 import com.google.common.collect.Lists;
 import com.sun.jna.Native;

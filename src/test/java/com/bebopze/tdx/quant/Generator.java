@@ -3,7 +3,7 @@ package com.bebopze.tdx.quant;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
-import com.bebopze.tdx.quant.util.PropsUtil;
+import com.bebopze.tdx.quant.common.util.PropsUtil;
 
 import java.nio.file.Paths;
 import java.sql.Types;
