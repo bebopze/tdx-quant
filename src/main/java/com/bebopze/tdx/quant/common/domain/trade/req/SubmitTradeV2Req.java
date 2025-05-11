@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.domain.trade.req;
+package com.bebopze.tdx.quant.common.domain.trade.req;
 
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import lombok.Data;

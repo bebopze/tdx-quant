@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.common.util;
 
 import com.alibaba.fastjson.JSON;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.domain.BaseExEnum;
+import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

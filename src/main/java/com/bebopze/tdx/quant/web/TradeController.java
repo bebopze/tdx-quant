@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.domain.Result;
-import com.bebopze.tdx.quant.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.domain.param.TradeBSParam;
-import com.bebopze.tdx.quant.domain.param.TradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;

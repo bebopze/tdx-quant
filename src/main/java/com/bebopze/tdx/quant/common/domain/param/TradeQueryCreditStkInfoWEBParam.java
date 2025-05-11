@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.domain.param;
+package com.bebopze.tdx.quant.common.domain.param;
 
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -9,10 +10,7 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
-import com.bebopze.tdx.quant.tdxdata.BlockGnParser;
-import com.bebopze.tdx.quant.tdxdata.LdayParser;
-import com.bebopze.tdx.quant.tdxdata.TdxhyParser;
-import com.bebopze.tdx.quant.tdxdata.Tdxzs3Parser;
+import com.bebopze.tdx.quant.tdxdata.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -346,6 +344,28 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             iBaseStockRelaBlockService.saveBatch(doList);
         });
 
+    }
+
+
+    @Override
+    public void xgcz() {
+
+
+        // 60日新高
+        String filePath_60rxg = TDX_PATH + "/T0002/blocknew/60rxg.blk";
+
+        List<BlockNewParser.BlockNewDTO> dtoList_60rxg = BlockNewParser.parse(filePath_60rxg);
+
+
+        dtoList_60rxg.forEach(e -> {
+
+
+            String stockCode = e.getStockCode();
+            Integer tdxMarketType = e.getTdxMarketType();
+
+
+        });
+
 
     }
 
@@ -355,6 +375,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, List<String>> market_stockCodeList_map = iBaseStockService.market_stockCodePrefixList_map();
 
         return market_stockCodeList_map;
+    }
+
+
+    @Override
+    public JSONObject check() {
+
+        return null;
     }
 
 }

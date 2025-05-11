@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.tdxdata;
 
 import com.google.common.collect.Lists;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
@@ -29,7 +31,7 @@ public class BlockNewParser {
 
     public static void main(String[] args) {
 
-        parse();
+        parse(filePath);
 
 
         System.out.println();
@@ -40,7 +42,7 @@ public class BlockNewParser {
         write(Lists.newArrayList("0000001", "0000002", "0000007"));
 
 
-        parse();
+        parse(filePath);
     }
 
 
@@ -51,7 +53,10 @@ public class BlockNewParser {
      *
      * @return
      */
-    public static void parse() {
+    public static List<BlockNewDTO> parse(String filePath) {
+
+        List<BlockNewDTO> dtoList = Lists.newArrayList();
+
 
         try {
             List<String> lines = FileUtils.readLines(new File(filePath), "UTF-8");
@@ -70,23 +75,25 @@ public class BlockNewParser {
 
 
                     // 0-深；1-沪；2-北；
-                    String marketType = line.substring(0, 1);
-
+                    Integer marketType = Integer.valueOf(line.substring(0, 1));
                     // 个股code
                     String stockCode = line.substring(1, 5);
 
 
-                    save2DB(stockCode);
-
-
-                    System.out.println(line);
+                    BlockNewDTO dto = new BlockNewDTO(marketType, stockCode);
+                    dtoList.add(dto);
                 }
             }
+
+
+            return dtoList;
 
 
         } catch (IOException e) {
 
             log.error("BlockNewParser#parse   err     >>>     filePath : {},   errMsg : {}", filePath, e.getMessage(), e);
+
+            return null;
         }
     }
 
@@ -108,12 +115,14 @@ public class BlockNewParser {
     }
 
 
-    private static void save2DB(String stockCode) {
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-        // TODO   save2DB
-
-
+    @Data
+    @AllArgsConstructor
+    public static class BlockNewDTO {
+        private Integer tdxMarketType;
+        private String stockCode;
     }
 
 }

@@ -1,11 +1,11 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.domain.param.TradeBSParam;
-import com.bebopze.tdx.quant.domain.param.TradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
 import java.util.List;
 

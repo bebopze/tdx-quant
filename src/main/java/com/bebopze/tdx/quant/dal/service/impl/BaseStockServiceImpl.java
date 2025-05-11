@@ -30,8 +30,10 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Override
     public void test() {
         BaseStockDO baseStockDO = baseMapper.selectById(1L);
+        BaseStockDO baseStockDO2 = baseMapper.getByCode("000001");
         System.out.println(baseStockDO);
     }
+
 
     @Override
     public BaseStockDO getByCode(String code) {

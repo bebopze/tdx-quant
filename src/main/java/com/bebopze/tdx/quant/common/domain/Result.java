@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.domain;
+package com.bebopze.tdx.quant.common.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

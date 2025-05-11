@@ -14,5 +14,5 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
-    BaseStockDO selectByCode(@Param("code") String code);
+    BaseStockDO getByCode(@Param("code") String code);
 }

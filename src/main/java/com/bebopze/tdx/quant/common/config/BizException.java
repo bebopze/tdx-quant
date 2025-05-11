@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.common.config;
 
-import com.bebopze.tdx.quant.domain.BaseExEnum;
+import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import lombok.Data;
 
 

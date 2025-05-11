@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto;
 
 import lombok.Data;
 
