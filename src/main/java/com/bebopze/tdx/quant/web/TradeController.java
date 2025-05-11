@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
-import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.domain.Result;
+import com.bebopze.tdx.quant.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
+import com.bebopze.tdx.quant.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,7 +35,7 @@ public class TradeController {
 
     @Operation(summary = "我的持仓", description = "我的持仓")
     @GetMapping(value = "/queryCreditNewPosV2")
-    public Result<QueryCreditNewPosV2Resp> queryCreditNewPosV2() {
+    public Result<QueryCreditNewPosResp> queryCreditNewPosV2() {
         return Result.SUC(tradeService.queryCreditNewPosV2());
     }
 
@@ -67,7 +67,7 @@ public class TradeController {
     @PostMapping(value = "/getRevokeList")
     @Deprecated
     public Result<Integer> getRevokeList() {
-        // https://jywg.18.cn/MarginTrade/GetRevokeList?validatekey=6909e3d0-112f-4ea4-93c6-6d7842acab48
+        // https://jywg.18.cn/MarginTrade/GetRevokeList?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
         // tradeService.getRevokeList();
         return Result.SUC();
     }

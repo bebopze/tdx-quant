@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain;
+package com.bebopze.tdx.quant.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

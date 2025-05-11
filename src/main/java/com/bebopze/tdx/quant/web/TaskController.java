@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.domain.Result;
 import com.bebopze.tdx.quant.task.TdxScript;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

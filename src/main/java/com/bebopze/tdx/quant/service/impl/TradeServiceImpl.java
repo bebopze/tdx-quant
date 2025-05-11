@@ -3,14 +3,14 @@ package com.bebopze.tdx.quant.service.impl;
 import com.bebopze.tdx.quant.client.EastMoneyHttpClient;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
-import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
-import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.domain.param.TradeBSParam;
+import com.bebopze.tdx.quant.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.domain.trade.req.RevokeOrdersReq;
+import com.bebopze.tdx.quant.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
+import com.bebopze.tdx.quant.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +34,8 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public QueryCreditNewPosV2Resp queryCreditNewPosV2() {
-        QueryCreditNewPosV2Resp resp = EastMoneyHttpClient.queryCreditNewPosV2();
+    public QueryCreditNewPosResp queryCreditNewPosV2() {
+        QueryCreditNewPosResp resp = EastMoneyHttpClient.queryCreditNewPosV2();
         return resp;
     }
 

@@ -3,13 +3,13 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
-import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2Resp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2StockResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.domain.trade.req.RevokeOrdersReq;
+import com.bebopze.tdx.quant.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
+import com.bebopze.tdx.quant.domain.trade.resp.QueryCreditNewPosV2StockResp;
+import com.bebopze.tdx.quant.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.google.common.collect.Lists;
@@ -151,7 +151,7 @@ public class EastMoneyHttpClient {
      * @param
      * @return
      */
-    public static QueryCreditNewPosV2Resp queryCreditNewPosV2() {
+    public static QueryCreditNewPosResp queryCreditNewPosV2() {
 
 
         String url = "https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=" + SID;
@@ -174,7 +174,7 @@ public class EastMoneyHttpClient {
 
 
         // ----------------------------- 资金持仓 汇总
-        QueryCreditNewPosV2Resp resp = JSON.toJavaObject(data, QueryCreditNewPosV2Resp.class);
+        QueryCreditNewPosResp resp = JSON.toJavaObject(data, QueryCreditNewPosResp.class);
 
 
         // ----------------------------- 持股详情 列表
