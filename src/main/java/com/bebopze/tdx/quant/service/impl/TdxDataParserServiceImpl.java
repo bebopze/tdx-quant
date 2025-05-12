@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -117,7 +118,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // all 个股code
-        HashSet<String> allStockCodeSet = Sets.newHashSet();
+        Set<String> allStockCodeSet = Sets.newHashSet();
         blockGnDTOList.forEach(e -> {
 
             String blockCode = e.getCode();
@@ -163,6 +164,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         Map<String, Long> stock__codeIdMap = Maps.newHashMap();
         Map<String, Long> block__codeIdMap = Maps.newHashMap();
+        Map<String, String> block__code_pCode_map = Maps.newHashMap();
 
 
         sortAllStockCodeList.forEach(stockCode -> {
@@ -247,13 +249,16 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String blockCode = e.getCode();
             String blockName = e.getName();
 
+            String pCode = e.getPCode();
+
 
             BaseBlockDO baseBlockDO = new BaseBlockDO();
             baseBlockDO.setCode(blockCode);
             baseBlockDO.setName(blockName);
             baseBlockDO.setType(e.getBlockType());
-            baseBlockDO.setParentId(null);
             baseBlockDO.setLevel(e.getLevel());
+            // 父级
+            baseBlockDO.setParentId(null);
 
 
             // 板块 - 实时行情
@@ -304,10 +309,28 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             block__codeIdMap.put(blockCode, blockId);
 
 
+            // 父级（行业板块）
+            if (StringUtils.isNotEmpty(pCode)) {
+                block__code_pCode_map.put(blockCode, e.getPCode());
+            }
+
+
             if (blockId == null) {
                 log.error("base_block - insertOrUpdate   err     >>>     blockCode : {} , blockId : {} , baseBlockDO : {}",
                           blockCode, blockId, JSON.toJSONString(baseBlockDO));
             }
+        });
+
+
+        // p_id（行业板块）
+        block__code_pCode_map.forEach((blockCode, pCode) -> {
+
+
+            BaseBlockDO baseBlockDO = new BaseBlockDO();
+            baseBlockDO.setId(block__codeIdMap.get(blockCode));
+            baseBlockDO.setParentId(block__codeIdMap.get(pCode));
+
+            iBaseBlockService.updateById(baseBlockDO);
         });
 
 
@@ -343,9 +366,143 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // del All
             iBaseStockRelaBlockService.deleteByStockId(stockId);
             // batch insert
-            iBaseStockRelaBlockService.saveBatch(doList);
+            iBaseStockRelaBlockService.saveBatch(doList, 1000);
         });
 
+    }
+
+
+    @Override
+    public void exportBlock() {
+
+
+        List<ExportBlockParser.ExportBlockDTO> dtoList = ExportBlockParser.parseAll();
+
+        List<ExportBlockParser.ExportBlockDTO> zdy_dtoList = ExportBlockParser.parse_zdy();
+
+
+        Map<String, Long> blockCode_blockNewId_map = Maps.newHashMap();
+
+
+        List<String> stockCodeList = Lists.newArrayList();
+        zdy_dtoList.forEach(e -> {
+
+            String blockCode = e.getBlockCode();
+            String blockName = e.getBlockName();
+
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
+
+
+            BaseBlockNewDO baseBlockNewDO = new BaseBlockNewDO();
+            baseBlockNewDO.setCode(blockCode);
+            baseBlockNewDO.setName(blockName);
+
+
+            iBaseBlockNewService.save(baseBlockNewDO);
+            Long blockNewId = baseBlockNewDO.getId();
+
+            blockCode_blockNewId_map.put(blockCode, blockNewId);
+
+            stockCodeList.add(stockCode);
+        });
+
+        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap(stockCodeList);
+
+
+        List<BaseStockRelaBlockNewDO> relaDOList = Lists.newArrayList();
+
+        for (String stockCode : stockCodeList) {
+            BaseStockRelaBlockNewDO baseStockRelaBlockNewDO = new BaseStockRelaBlockNewDO();
+            baseStockRelaBlockNewDO.setBlockNewId(blockCode_blockNewId_map.get(stockCode));
+            baseStockRelaBlockNewDO.setStockId(codeIdMap.get(stockCode));
+
+            relaDOList.add(baseStockRelaBlockNewDO);
+        }
+
+        iBaseStockRelaBlockNewService.saveBatch(relaDOList, 1000);
+    }
+
+    @Override
+    public void exportBlockNew() {
+
+
+        List<ExportBlockParser.ExportBlockDTO> dtoList = ExportBlockParser.parseAll();
+
+        List<ExportBlockParser.ExportBlockDTO> zdy_dtoList = ExportBlockParser.parse_zdy();
+
+
+        Map<String, Long> blockCode_blockNewId_map = Maps.newHashMap();
+
+
+        Set<String> stockCodeSet = Sets.newHashSet();
+        zdy_dtoList.forEach(e -> {
+
+            String blockCode = e.getBlockCode();
+            String blockName = e.getBlockName();
+
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
+
+
+            Long blockNewId = blockCode_blockNewId_map.get(blockCode);
+            if (blockNewId == null) {
+
+                BaseBlockNewDO baseBlockNewDO = new BaseBlockNewDO();
+                baseBlockNewDO.setCode(blockCode);
+                baseBlockNewDO.setName(blockName);
+
+                iBaseBlockNewService.save(baseBlockNewDO);
+
+                blockNewId = baseBlockNewDO.getId();
+                blockCode_blockNewId_map.put(blockCode, blockNewId);
+            }
+
+            stockCodeSet.add(stockCode);
+        });
+
+
+        Map<String, Long> sotock__codeIdMap = iBaseStockService.codeIdMap(stockCodeSet);
+
+
+        List<BaseStockRelaBlockNewDO> relaDOList = Lists.newArrayList();
+        zdy_dtoList.forEach(e -> {
+
+            String blockCode = e.getBlockCode();
+            String blockName = e.getBlockName();
+
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
+
+
+            BaseStockRelaBlockNewDO baseStockRelaBlockNewDO = new BaseStockRelaBlockNewDO();
+            baseStockRelaBlockNewDO.setBlockNewId(blockCode_blockNewId_map.get(blockCode));
+            baseStockRelaBlockNewDO.setStockId(sotock__codeIdMap.get(stockCode));
+
+            if (baseStockRelaBlockNewDO.getStockId() == null) {
+
+                // TODO   自定义板块     - 关联了 ->     大盘指数 / 板块 / ETF / 港股 / 美股 / ...     =>     忽略
+                log.warn("stockId不存在     >>>     zdy_e : {}", JSON.toJSONString(e));
+
+
+                // BaseStockDO baseStockDO = new BaseStockDO();
+                // baseStockDO.setCode(stockCode);
+                // baseStockDO.setName(stockName);
+                //
+                // iBaseStockService.save(baseStockDO);
+                // baseStockRelaBlockNewDO.setStockId(baseStockDO.getId());
+
+
+            } else {
+
+                relaDOList.add(baseStockRelaBlockNewDO);
+            }
+
+        });
+
+
+        iBaseStockRelaBlockNewService.deleteAll();
+        iBaseStockRelaBlockNewService.saveBatch(relaDOList, 1000);
     }
 
 

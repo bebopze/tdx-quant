@@ -59,15 +59,24 @@ public class HttpUtil {
             headers.forEach(httpGet::addHeader);
         }
 
+        int[] status = {0};
         ResponseHandler<String> handler = response -> {
-            int status = response.getStatusLine().getStatusCode();
+            status[0] = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
             return entity != null ? EntityUtils.toString(entity, "UTF-8") : null;
         };
 
 
         String result = CLIENT.execute(httpGet, handler);
-        log.info("doGet     >>>     url : {} , result : {}", url, JSON.toJSONString(result));
+
+        log.info("status : {}", status[0]);
+
+        if (result.contains("<!DOCTYPE HTML PUBLIC")) {
+            log.error("doGet     cookie过期，请重新登录！   >>>     url : {}, result : {}", url, JSON.toJSONString(result));
+            throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
+        } else {
+            log.info("doGet     >>>     url : {} , result : {}", url, JSON.toJSONString(result));
+        }
 
         return result;
     }
@@ -111,6 +120,10 @@ public class HttpUtil {
 
         try (CloseableHttpResponse response = CLIENT.execute(httpPost)) {
             HttpEntity entity = response.getEntity();
+
+
+            int statusCode = response.getStatusLine().getStatusCode();
+            log.info("doPost     >>>     statusCode : {}", statusCode);
 
             String result = entity != null ? EntityUtils.toString(entity, "UTF-8") : "";
 

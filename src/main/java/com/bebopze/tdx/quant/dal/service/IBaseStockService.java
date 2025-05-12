@@ -2,9 +2,8 @@ package com.bebopze.tdx.quant.dal.service;
 
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +27,7 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     Map<String, List<String>> market_stockCodePrefixList_map();
 
 
-    List<BaseStockDO> listSimpleByCodeList(List<String> stockCodeList);
+    List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList);
 
-    Map<String, Long> codeIdMap(List<String> stockCodeList);
+    Map<String, Long> codeIdMap(Collection<String> stockCodeList);
 }

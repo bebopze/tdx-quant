@@ -10,9 +10,11 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
+import static com.bebopze.tdx.quant.common.util.DateTimeUtil.millis2Time;
 
 
 /**
@@ -27,7 +29,9 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 public class BlockNewParser {
 
 
-    private static final String filePath = TDX_PATH + "/T0002/blocknew/IDEA-test.blk";
+    private static final String baseFilePath = TDX_PATH + "/T0002/blocknew/";
+
+    private static final String filePath = baseFilePath + "IDEA-test.blk";
 
 
     public static void main(String[] args) {
@@ -54,17 +58,17 @@ public class BlockNewParser {
     public static void parseAll() {
 
 
-        String baseFilePath = TDX_PATH + "/T0002/blocknew/";
-
-
         File dir = new File(baseFilePath);
         File[] blkFiles = dir.listFiles((d, name) -> name.endsWith(".blk"));
 
 
         for (File blkFile : blkFiles) {
-            String path = blkFile.getPath();
+
             String absolutePath = blkFile.getAbsolutePath();
-            long l = blkFile.lastModified();
+            long lastModified = blkFile.lastModified();
+            LocalDateTime time = millis2Time(lastModified);
+
+
             List<BlockNewDTO> dtoList = parse(blkFile.getAbsolutePath());
 
 

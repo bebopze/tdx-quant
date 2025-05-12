@@ -14,4 +14,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IBaseStockRelaBlockNewService extends IService<BaseStockRelaBlockNewDO> {
 
     int delByBlockNewId(Long blockId);
+
+    int deleteAll();
 }

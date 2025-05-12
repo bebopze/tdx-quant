@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -98,13 +99,13 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public List<BaseStockDO> listSimpleByCodeList(List<String> stockCodeList) {
+    public List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList) {
         List<BaseStockDO> entityList = baseMapper.listSimpleByCodeList(stockCodeList);
         return entityList;
     }
 
     @Override
-    public Map<String, Long> codeIdMap(List<String> stockCodeList) {
+    public Map<String, Long> codeIdMap(Collection<String> stockCodeList) {
 
         List<BaseStockDO> entityList = listSimpleByCodeList(stockCodeList);
 

@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.tdxdata;
 
 import com.alibaba.fastjson.JSON;
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
+import com.bebopze.tdx.quant.common.util.PinYinUtil;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
@@ -38,22 +40,101 @@ public class ExportBlockParser {
 
     public static void main(String[] args) {
 
-        parseExport();
+        List<ExportBlockDTO> dtoList = parseAll();
+
+
+        System.out.println(JSON.toJSONString(dtoList));
     }
 
 
-    public static void parseExport() {
+    public static List<ExportBlockDTO> parseAll() {
 
-        parse(filePath_hy, BlockTypeEnum.HY_PT);
-        parse(filePath_hy, BlockTypeEnum.HY_YJ);
 
-        parse(filePath_gn, BlockTypeEnum.GN);
-        parse(filePath_fg, BlockTypeEnum.FG);
-        parse(filePath_dq, BlockTypeEnum.DQ);
-        parse(filePath_zs, BlockTypeEnum.ZS);
+        // 880302,煤炭开采,000552,甘肃能化
 
-        parse(filePath_zdy, BlockTypeEnum.ZDY);
+        List<ExportBlockDTO> hy_pt_list = parse_hy_pt();
+        List<ExportBlockDTO> hy_yj_list = parse_hy_yj();
+
+        List<ExportBlockDTO> gn_list = parse_gn();
+        List<ExportBlockDTO> fg_list = parse_fg();
+        List<ExportBlockDTO> dq_list = parse_dq();
+        List<ExportBlockDTO> zs_list = parse_zs();
+
+
+        // ----------------------- 自定义板块
+
+        // 51（快捷键51-59，后面为空）,上市1年（自定义板块）,600203（个股code）,福日电子（个股name）
+        //
+        // ,板块902,880515,通达信88
+
+        List<ExportBlockDTO> zdy_list = parse_zdy();
+
+
+        // -----------------------
+
+
+        List<ExportBlockDTO> allDTOList = Lists.newArrayList();
+
+        allDTOList.addAll(hy_pt_list);
+        allDTOList.addAll(hy_yj_list);
+
+        allDTOList.addAll(gn_list);
+
+        // allDTOList.addAll(fg_list);
+        // allDTOList.addAll(dq_list);
+        // allDTOList.addAll(zs_list);
+
+        allDTOList.addAll(zdy_list);
+
+
+        return allDTOList;
     }
+
+
+    public static List<ExportBlockDTO> parse_hy_pt() {
+        return parse(filePath_hy, BlockTypeEnum.HY_PT);
+    }
+
+    public static List<ExportBlockDTO> parse_hy_yj() {
+        return parse(filePath_hy, BlockTypeEnum.HY_YJ);
+    }
+
+    public static List<ExportBlockDTO> parse_gn() {
+        return parse(filePath_gn, BlockTypeEnum.GN);
+    }
+
+    public static List<ExportBlockDTO> parse_fg() {
+        return parse(filePath_fg, BlockTypeEnum.FG);
+    }
+
+    public static List<ExportBlockDTO> parse_dq() {
+        return parse(filePath_dq, BlockTypeEnum.DQ);
+    }
+
+    public static List<ExportBlockDTO> parse_zs() {
+        return parse(filePath_zs, BlockTypeEnum.ZS);
+    }
+
+
+    /**
+     * 自定义 板块
+     *
+     * @return
+     */
+    public static List<ExportBlockDTO> parse_zdy() {
+        List<ExportBlockDTO> dtoList = parse(filePath_zdy, BlockTypeEnum.ZDY);
+
+        for (ExportBlockDTO dto : dtoList) {
+            // 板块名称 -> 板块code（拼音 首字母）
+            // 60日新高 -> 60RXG
+            dto.setBlockCode(PinYinUtil.toFirstLetters(dto.getBlockName()));
+        }
+
+        return dtoList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -109,11 +190,11 @@ public class ExportBlockParser {
                     dto.setStockName(stockName);
 
                     dtoList.add(dto);
-
-
-                    // System.out.println(JSON.toJSONString(strArr));
                 }
             }
+
+
+            return dtoList;
 
 
         } catch (IOException e) {
@@ -131,7 +212,7 @@ public class ExportBlockParser {
 
 
     @Data
-    static class ExportBlockDTO {
+    public static class ExportBlockDTO {
         /**
          * 板块code
          */
@@ -149,6 +230,17 @@ public class ExportBlockParser {
          * 个股name
          */
         private String stockName;
+
+
+        // ------------------------------------------------------------- 自定义板块（存在 个股/板块/指数/...）
+
+
+        /**
+         * 1-个股；2-板块；
+         * -
+         * - 简略方案：至存储 个股 关系，非个股（直接pass）
+         */
+        private Integer type = 1;
     }
 
 }

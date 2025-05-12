@@ -22,7 +22,7 @@ import java.util.Map;
  * @date: 2025/5/7
  */
 @RestController
-@RequestMapping("/api/tdxdata/parser")
+@RequestMapping("/api/parser/tdxdata")
 @Tag(name = "tdx parser", description = "tdx解析器 API，如 tdxhy.cfg")
 public class ParserController {
 
@@ -37,9 +37,24 @@ public class ParserController {
      * @return
      */
     @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
-    @GetMapping(value = "/tdxData")
+    @GetMapping(value = "/tdxdata")
     public Result<Object> tdxData() {
         tdxDataParserService.tdxData();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "通达信（报表 - 系统板块） - 解析入库", description = "通达信（报表 - 系统板块） - 解析入库")
+    @GetMapping(value = "/export/block")
+    public Result<Object> exportBlock() {
+        tdxDataParserService.exportBlock();
+        return Result.SUC();
+    }
+
+    @Operation(summary = "通达信（报表 - 自定义板块） - 解析入库", description = "通达信（报表 - 自定义板块） - 解析入库")
+    @GetMapping(value = "/export/block_new")
+    public Result<Object> exportBlockNew() {
+        tdxDataParserService.exportBlockNew();
         return Result.SUC();
     }
 

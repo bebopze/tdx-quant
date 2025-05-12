@@ -170,4 +170,15 @@ public class BaseBlockDO implements Serializable {
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
     private LocalDateTime gmtModify;
+
+
+//    // -----------------------------------------------------------------------------------------------------------------
+//
+//
+//    /**
+//     * 父级 - 板块代码
+//     */
+//    @TableField(value = "p_code", exist = false)
+//    @Schema(description = "父级 - 板块代码")
+//    private transient String pCode;
 }

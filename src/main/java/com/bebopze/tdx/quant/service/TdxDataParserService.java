@@ -14,6 +14,11 @@ public interface TdxDataParserService {
 
     void tdxData();
 
+    void exportBlock();
+
+    void exportBlockNew();
+
+
     void blockNew();
 
     void xgcz();

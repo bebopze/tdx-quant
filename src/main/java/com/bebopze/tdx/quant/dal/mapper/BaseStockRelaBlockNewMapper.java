@@ -16,4 +16,6 @@ public interface BaseStockRelaBlockNewMapper extends BaseMapper<BaseStockRelaBlo
 
 
     int delByBlockNewId(@Param("blockNewId") Long blockNewId);
+
+    int deleteAll();
 }

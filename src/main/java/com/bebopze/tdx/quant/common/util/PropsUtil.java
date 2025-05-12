@@ -1,60 +1,85 @@
 package com.bebopze.tdx.quant.common.util;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 
-import java.io.IOException;
 import java.util.Properties;
 
 
 /**
- * 配置 - 读取
+ * yaml 配置 - 读取
  *
  * @author: bebopze
- * @date: 2025/5/4
+ * @date: 2025/5/12
  */
 @Slf4j
 public class PropsUtil {
 
 
-    private static Properties props;
+    private static final Properties props = new Properties();
 
     static {
+        // 加载 公共配置
+        loadYamlIntoProps("application.yml");
 
-        try {
-            Properties root_props = PropertiesLoaderUtils.loadProperties(new ClassPathResource("application.properties"));
-            String active_profile = root_props.getProperty("spring.profiles.active");
 
-            props = PropertiesLoaderUtils.loadProperties(new ClassPathResource("application-" + active_profile + ".properties"));
+        // 运行环境
+        String activeProfile = props.getProperty("spring.profiles.active");
 
-        } catch (IOException ex) {
-            log.error(ex.getMessage(), ex);
+
+        // 加载 运行环境-配置
+        if (activeProfile != null && !activeProfile.isEmpty()) {
+            loadYamlIntoProps("application-" + activeProfile + ".yml");
         }
     }
 
 
-    @SneakyThrows
+    /**
+     * 读取单个 YAML 文件，并将其全部键值放入 props 中（覆盖同名 key）
+     *
+     * @param yamlPath
+     */
+    private static void loadYamlIntoProps(String yamlPath) {
+        Properties p = loadYamlProps(yamlPath);
+        props.putAll(p);
+    }
+
+
+    /**
+     * 从 ClassPath 读取 YAML 配置文件，转换成 Properties
+     *
+     * @param yamlPath
+     * @return
+     */
+    private static Properties loadYamlProps(String yamlPath) {
+
+        YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
+        yamlFactory.setResources(new ClassPathResource(yamlPath));
+
+
+        Properties p = yamlFactory.getObject();
+        if (p == null) {
+            log.warn("未找到或无法解析 YAML：{}", yamlPath);
+            return new Properties();
+        }
+        return p;
+    }
+
+
     public static String getProperty(String key) {
-
         String value = props.getProperty(key);
-
-
-        log.info("getProperty     >>>     key : {} , value : {}", key, value);
+        log.info("getProperty >>> key: {} , value: {}", key, value);
         return value;
     }
 
 
     /**
      * 通达信 - 根目录
-     *
-     * @return
      */
     public static String getTdxPath() {
         return getProperty("tdx-path");
     }
-
 
     public static String getSid() {
         return getProperty("eastmoney.validatekey");
@@ -68,6 +93,7 @@ public class PropsUtil {
     public static void main(String[] args) {
         getTdxPath();
         getSid();
+        getCookie();
     }
 
 }

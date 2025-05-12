@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
-import static com.bebopze.tdx.quant.common.util.DateUtils.formatMillis;
+import static com.bebopze.tdx.quant.common.util.DateTimeUtil.formatMillis;
 import static com.bebopze.tdx.quant.common.util.SleepUtils.winSleep;
 import static java.awt.event.KeyEvent.*;
 

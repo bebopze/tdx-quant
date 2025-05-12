@@ -10,4 +10,10 @@
     </delete>
 
 
+    <delete id="deleteAll">
+        DELETE
+        FROM base_stock_rela_block_new
+    </delete>
+
+
 </mapper>

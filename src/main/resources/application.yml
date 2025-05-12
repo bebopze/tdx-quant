@@ -1,0 +1,59 @@
+# \u6240\u6709\u73AF\u5883\u901A\u7528\u7684\u914D\u7F6E\uFF0C\u653E\u5728\u8FD9\u91CC
+
+# \u8FD0\u884C\u73AF\u5883\u3001\u7AEF\u53E3
+spring.profiles.active: prod
+server.port: 7001
+spring.application.name: tdx-script
+
+
+# 404 \u4EA4\u7ED9\u5F02\u5E38\u5904\u7406\u5668\u5904\u7406
+spring.mvc.throw-exception-if-no-handler-found: true
+spring.web.resources.add-mappings: false
+
+
+
+
+
+# MyBatis-Plus \u914D\u7F6E
+mybatis-plus:
+  # Mapper XML \u6587\u4EF6\u4F4D\u7F6E
+  mapper-locations: "classpath*:mapper/**/*.xml"
+  # \u5B9E\u4F53\u7C7B\u5305\u8DEF\u5F84
+  type-aliases-package: com.bebopze.tdx.quant.dal.entity
+  configuration:
+    # \u4E0B\u5212\u7EBF\u8F6C\u9A7C\u5CF0
+    map-underscore-to-camel-case: true
+    # SQL\u65E5\u5FD7
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+  # \u5168\u5C40\u914D\u7F6E
+  global-config:
+    banner: true
+    db-config:
+      # ID\u751F\u6210\u7B56\u7565
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      field-strategy: not_empty
+      table-underline: true
+      logic-delete-field: deleted
+
+
+
+logging.level.org.apache.ibatis: DEBUG
+
+# log4j2
+logging.config: "classpath:log4j2.xml"
+
+
+
+# springdoc
+springdoc.api-docs.path: "/v3/api-docs"
+springdoc.swagger-ui.path: "/swagger-ui.html"
+
+
+
+
+
+# \u901A\u8FBE\u4FE1-\u6839\u76EE\u5F55
+tdx-path: "C:/soft/\u901A\u8FBE\u4FE1/v_2024/\u8DD1\u6570\u636E\u4E13\u7528/new_tdx"

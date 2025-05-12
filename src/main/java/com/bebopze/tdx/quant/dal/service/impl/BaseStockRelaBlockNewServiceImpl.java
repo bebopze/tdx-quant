@@ -23,4 +23,9 @@ public class BaseStockRelaBlockNewServiceImpl extends ServiceImpl<BaseStockRelaB
         return baseMapper.delByBlockNewId(blockNewId);
     }
 
+    @Override
+    public int deleteAll() {
+        return baseMapper.deleteAll();
+    }
+
 }
