@@ -17,11 +17,23 @@
     </sql>
 
 
-    <delete id="deleteByStockId">
+    <delete id="deleteByBlockId" parameterType="long">
+        DELETE
+        FROM base_stock_rela_block
+        WHERE block_id = #{blockId}
+    </delete>
+
+
+    <delete id="deleteByStockId" parameterType="long">
         DELETE
         FROM base_stock_rela_block
         WHERE stock_id = #{stockId}
     </delete>
 
+
+    <delete id="deleteAll">
+        DELETE
+        FROM base_stock_rela_block
+    </delete>
 
 </mapper>

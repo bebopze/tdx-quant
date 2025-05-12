@@ -14,5 +14,9 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface BaseStockRelaBlockMapper extends BaseMapper<BaseStockRelaBlockDO> {
 
+    int deleteByBlockId(@Param("blockId") Long blockId);
+
     int deleteByStockId(@Param("stockId") Long stockId);
+
+    int deleteAll();
 }

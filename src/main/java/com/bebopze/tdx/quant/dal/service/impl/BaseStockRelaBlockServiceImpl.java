@@ -23,13 +23,13 @@ public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBloc
     @Override
     public int deleteByBlockId(Long blockId) {
 
-        // return baseMapper.deleteByBlockId(blockId);
+        return baseMapper.deleteByBlockId(blockId);
 
 
-        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
-                                              .eq(BaseStockRelaBlockDO::getBlockId, blockId));
-
-        return count;
+//        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
+//                                              .eq(BaseStockRelaBlockDO::getBlockId, blockId));
+//
+//        return count;
     }
 
 
@@ -37,12 +37,17 @@ public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBloc
     public int deleteByStockId(Long stockId) {
 
 
-        // return baseMapper.deleteByStockId(stockId);
+        return baseMapper.deleteByStockId(stockId);
 
 
-        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
-                                              .eq(BaseStockRelaBlockDO::getStockId, stockId));
+//        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
+//                                              .eq(BaseStockRelaBlockDO::getStockId, stockId));
+//
+//        return count;
+    }
 
-        return count;
+    @Override
+    public int deleteAll() {
+        return baseMapper.deleteAll();
     }
 }

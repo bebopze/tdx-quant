@@ -9,7 +9,7 @@ target/
 *.cmd
 
 
-**/**/application-prod.properties
+**/**/application-**.**
 
 
 wiki/

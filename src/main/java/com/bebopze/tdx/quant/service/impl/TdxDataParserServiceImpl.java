@@ -366,7 +366,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // del All
             iBaseStockRelaBlockService.deleteByStockId(stockId);
             // batch insert
-            iBaseStockRelaBlockService.saveBatch(doList, 1000);
+            iBaseStockRelaBlockService.saveBatch(doList, 500);
         });
 
     }
@@ -376,16 +376,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public void exportBlock() {
 
 
-        List<ExportBlockParser.ExportBlockDTO> dtoList = ExportBlockParser.parseAll();
-
-        List<ExportBlockParser.ExportBlockDTO> zdy_dtoList = ExportBlockParser.parse_zdy();
+        List<ExportBlockParser.ExportBlockDTO> dtoList = ExportBlockParser.parseAllTdxBlock();
 
 
-        Map<String, Long> blockCode_blockNewId_map = Maps.newHashMap();
+        Map<String, Long> blockCode_blockId_map = Maps.newHashMap();
 
 
-        List<String> stockCodeList = Lists.newArrayList();
-        zdy_dtoList.forEach(e -> {
+        Set<String> stockCodeSet = Sets.newHashSet();
+        dtoList.forEach(e -> {
 
             String blockCode = e.getBlockCode();
             String blockName = e.getBlockName();
@@ -394,40 +392,75 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String stockName = e.getStockName();
 
 
-            BaseBlockNewDO baseBlockNewDO = new BaseBlockNewDO();
-            baseBlockNewDO.setCode(blockCode);
-            baseBlockNewDO.setName(blockName);
+            Long blockId = blockCode_blockId_map.get(blockCode);
+            if (blockId == null) {
+
+                blockId = iBaseBlockService.getIdByCode(blockCode);
+                if (blockId == null) {
+
+                    BaseBlockDO blockEntity = new BaseBlockDO();
+                    blockEntity.setCode(blockCode);
+                    blockEntity.setName(blockName);
+
+                    iBaseBlockService.save(blockEntity);
+
+                    blockId = blockEntity.getId();
+                }
 
 
-            iBaseBlockNewService.save(baseBlockNewDO);
-            Long blockNewId = baseBlockNewDO.getId();
+                blockCode_blockId_map.put(blockCode, blockId);
+            }
 
-            blockCode_blockNewId_map.put(blockCode, blockNewId);
-
-            stockCodeList.add(stockCode);
+            stockCodeSet.add(stockCode);
         });
 
-        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap(stockCodeList);
+
+        Map<String, Long> sotock__codeIdMap = iBaseStockService.codeIdMap(stockCodeSet);
 
 
-        List<BaseStockRelaBlockNewDO> relaDOList = Lists.newArrayList();
+        List<BaseStockRelaBlockDO> relaDOList = Lists.newArrayList();
+        dtoList.forEach(e -> {
 
-        for (String stockCode : stockCodeList) {
-            BaseStockRelaBlockNewDO baseStockRelaBlockNewDO = new BaseStockRelaBlockNewDO();
-            baseStockRelaBlockNewDO.setBlockNewId(blockCode_blockNewId_map.get(stockCode));
-            baseStockRelaBlockNewDO.setStockId(codeIdMap.get(stockCode));
+            String blockCode = e.getBlockCode();
+            String blockName = e.getBlockName();
 
-            relaDOList.add(baseStockRelaBlockNewDO);
-        }
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
 
-        iBaseStockRelaBlockNewService.saveBatch(relaDOList, 1000);
+
+            BaseStockRelaBlockDO baseStockRelaBlockDO = new BaseStockRelaBlockDO();
+            baseStockRelaBlockDO.setBlockId(blockCode_blockId_map.get(blockCode));
+            baseStockRelaBlockDO.setStockId(sotock__codeIdMap.get(stockCode));
+
+            if (baseStockRelaBlockDO.getStockId() == null) {
+
+                log.warn("stockId不存在     >>>     zdy_e : {}", JSON.toJSONString(e));
+
+
+                // BaseStockDO baseStockDO = new BaseStockDO();
+                // baseStockDO.setCode(stockCode);
+                // baseStockDO.setName(stockName);
+                //
+                // iBaseStockService.save(baseStockDO);
+                // baseStockRelaBlockNewDO.setStockId(baseStockDO.getId());
+
+
+            } else {
+
+                relaDOList.add(baseStockRelaBlockDO);
+            }
+
+        });
+
+
+        iBaseStockRelaBlockService.deleteAll();
+        iBaseStockRelaBlockService.saveBatch(relaDOList, 500);
     }
+
 
     @Override
     public void exportBlockNew() {
 
-
-        List<ExportBlockParser.ExportBlockDTO> dtoList = ExportBlockParser.parseAll();
 
         List<ExportBlockParser.ExportBlockDTO> zdy_dtoList = ExportBlockParser.parse_zdy();
 
@@ -502,17 +535,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         iBaseStockRelaBlockNewService.deleteAll();
-        iBaseStockRelaBlockNewService.saveBatch(relaDOList, 1000);
-    }
-
-
-    @Override
-    public void blockNew() {
-
-
-        BlockNewParser.parseAll();
-
-
+        iBaseStockRelaBlockNewService.saveBatch(relaDOList, 500);
     }
 
 

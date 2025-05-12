@@ -17,4 +17,6 @@ public interface IBaseStockRelaBlockService extends IService<BaseStockRelaBlockD
     int deleteByBlockId(Long blockId);
 
     int deleteByStockId(Long stockId);
+
+    int deleteAll();
 }

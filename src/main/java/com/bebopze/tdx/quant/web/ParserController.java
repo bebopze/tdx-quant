@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.web;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
@@ -36,40 +35,28 @@ public class ParserController {
      *
      * @return
      */
-    @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
-    @GetMapping(value = "/tdxdata")
+    @Operation(summary = "通达信（cfg + dat） - 解析入库", description = "通达信 - 解析入库")
+    @GetMapping(value = "/blockCfg")
     public Result<Object> tdxData() {
         tdxDataParserService.tdxData();
         return Result.SUC();
     }
 
 
-    @Operation(summary = "通达信（报表 - 系统板块） - 解析入库", description = "通达信（报表 - 系统板块） - 解析入库")
+    @Operation(summary = "通达信（报表导出 - 系统板块） - 解析入库", description = "通达信（报表导出 - 系统板块） - 解析入库")
     @GetMapping(value = "/export/block")
     public Result<Object> exportBlock() {
         tdxDataParserService.exportBlock();
         return Result.SUC();
     }
 
-    @Operation(summary = "通达信（报表 - 自定义板块） - 解析入库", description = "通达信（报表 - 自定义板块） - 解析入库")
+    @Operation(summary = "通达信（报表导出 - 自定义板块） - 解析入库", description = "通达信（报表导出 - 自定义板块） - 解析入库")
     @GetMapping(value = "/export/block_new")
     public Result<Object> exportBlockNew() {
         tdxDataParserService.exportBlockNew();
         return Result.SUC();
     }
 
-
-    /**
-     * 通达信 - 数据解析 入库
-     *
-     * @return
-     */
-    @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
-    @GetMapping(value = "/block_new")
-    public Result<Object> blockNew() {
-        tdxDataParserService.blockNew();
-        return Result.SUC();
-    }
 
     /**
      * 通达信 - 数据解析 入库

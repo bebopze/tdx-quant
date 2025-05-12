@@ -40,14 +40,19 @@ public class ExportBlockParser {
 
     public static void main(String[] args) {
 
-        List<ExportBlockDTO> dtoList = parseAll();
+        List<ExportBlockDTO> dtoList = parseAllTdxBlock();
 
 
         System.out.println(JSON.toJSONString(dtoList));
     }
 
 
-    public static List<ExportBlockDTO> parseAll() {
+    /**
+     * tdx - 系统自带 板块     -     all
+     *
+     * @return
+     */
+    public static List<ExportBlockDTO> parseAllTdxBlock() {
 
 
         // 880302,煤炭开采,000552,甘肃能化
@@ -59,15 +64,6 @@ public class ExportBlockParser {
         List<ExportBlockDTO> fg_list = parse_fg();
         List<ExportBlockDTO> dq_list = parse_dq();
         List<ExportBlockDTO> zs_list = parse_zs();
-
-
-        // ----------------------- 自定义板块
-
-        // 51（快捷键51-59，后面为空）,上市1年（自定义板块）,600203（个股code）,福日电子（个股name）
-        //
-        // ,板块902,880515,通达信88
-
-        List<ExportBlockDTO> zdy_list = parse_zdy();
 
 
         // -----------------------
@@ -83,8 +79,6 @@ public class ExportBlockParser {
         // allDTOList.addAll(fg_list);
         // allDTOList.addAll(dq_list);
         // allDTOList.addAll(zs_list);
-
-        allDTOList.addAll(zdy_list);
 
 
         return allDTOList;
@@ -122,7 +116,17 @@ public class ExportBlockParser {
      * @return
      */
     public static List<ExportBlockDTO> parse_zdy() {
+
+
+        // ----------------------- 自定义板块
+
+        // 51（快捷键51-59，后面为空）,上市1年（自定义板块）,600203（个股code）,福日电子（个股name）
+        //
+        // ,板块902,880515,通达信88
+
+
         List<ExportBlockDTO> dtoList = parse(filePath_zdy, BlockTypeEnum.ZDY);
+
 
         for (ExportBlockDTO dto : dtoList) {
             // 板块名称 -> 板块code（拼音 首字母）
