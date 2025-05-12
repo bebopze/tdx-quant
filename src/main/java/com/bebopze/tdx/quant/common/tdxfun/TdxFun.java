@@ -1,25 +1,21 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 
 /**
- * MyTT Java版 - 精准实现通达信/同花顺指标函数                     TechnicalIndicators
- * 原作者：mpquant
- * 转换自 Python 实现，V3.3
+ * MyTT.py     Java版   ->   精准实现 通达信/同花顺   指标函数
+ * -
+ * -
+ * 转换自  原作者 mpquant  的  Python实现          https://github.com/mpquant/MyTT/blob/main/MyTT.py
  *
  * @author: bebopze
  * @date: 2025/5/13
  */
-public class MyTT {
+public class TdxFun {
 
 
-    // ...
-    // Due to length constraints, remaining functions (FORCAST, LAST, COUNT, EVERY, EXIST, FILTER, BARSLAST, BARSLASTCOUNT, BARSSINCEN, CROSS, LONGCROSS, VALUEWHEN, BETWEEN, TOPRANGE, LOWRANGE, and all indicators up to XSII) would follow similarly, translating the logic line-by-line.
-
-
-    // 省略：COUNT, EVERY, EXIST, FILTER, BARSLAST 等辅助函数可以在Utils中复用。
-    // 以下示例：测试对比
     public static void main(String[] args) {
 
         // 测试案例：
@@ -214,6 +210,28 @@ public class MyTT {
         for (int i = 1; i < S.length; i++) r[i] = A * S[i] + (1 - A) * r[i - 1];
         return r;
     }
+
+
+    /**
+     * 动态移动平均：A 支持序列化平滑因子
+     *
+     * @param S 原始序列
+     * @param A 每一周期的平滑系数数组，长度与 S 相同
+     * @return 计算后的 DMA 序列
+     */
+    public static double[] DMA(double[] S,
+                               double[] A) {
+        int n = S.length;
+        double[] Y = new double[n];
+        if (n == 0) return Y;
+        Y[0] = S[0];
+        for (int i = 1; i < n; i++) {
+            double alpha = A[i];
+            Y[i] = alpha * S[i] + (1 - alpha) * Y[i - 1];
+        }
+        return Y;
+    }
+
 
     public static double[] AVEDEV(double[] S,
                                   int N) {
@@ -773,8 +791,10 @@ public class MyTT {
         for (int i = 0; i < len; i++)
             mid[i] = 100 * (high[i] + low[i] - (i > 0 ? (high[i - 1] + low[i - 1]) : (high[i] + low[i]))) / (high[i] + low[i]);
         double[] emv = new double[len];
-        for (int i = 0; i < len; i++)
-            emv[i] = MA(Arrays.stream(mid).map(d -> d * maVol[i] * (high[i] - low[i]) / MA(Arrays.stream(high).map(h -> low[i]).toArray(), n)[i]).toArray(), n)[i];
+        for (int i = 0; i < len; i++) {
+            int finalI = i;
+            emv[i] = MA(Arrays.stream(mid).map(d -> d * maVol[finalI] * (high[finalI] - low[finalI]) / MA(Arrays.stream(high).map(h -> low[finalI]).toArray(), n)[finalI]).toArray(), n)[i];
+        }
         double[] maEmv = MA(emv, m);
         return new double[][]{emv, maEmv};
     }
@@ -802,15 +822,25 @@ public class MyTT {
                                 double[] high,
                                 double[] low,
                                 int m1) {
-        double[] sumHighOpen = SUM(Arrays.stream(high).map((h, i) -> h - open[i]).toArray(), m1);
-        double[] sumOpenLow = SUM(Arrays.stream(open).map((o, i) -> o - low[i]).toArray(), m1);
-        double[] ar = new double[open.length];
-        for (int i = 0; i < open.length; i++) ar[i] = sumHighOpen[i] / sumOpenLow[i] * 100;
+
+        int len = open.length;
+
+
+        // 累计   HIGH - OPEN
+        double[] sumHighOpen = SUM(IntStream.range(0, len).mapToDouble(i -> high[i] - open[i]).toArray(), m1);
+        // 累计   OPEN - LOW
+        double[] sumOpenLow = SUM(IntStream.range(0, len).mapToDouble(i -> open[i] - low[i]).toArray(), m1);
+
+        double[] ar = new double[len];
+        for (int i = 0; i < len; i++) ar[i] = sumHighOpen[i] / sumOpenLow[i] * 100;
         double[] refClose = REF(close, 1);
-        double[] sumBrNum = SUM(Arrays.stream(high).map((h, i) -> Math.max(0, h - refClose[i])).toArray(), m1);
-        double[] sumBrDen = SUM(Arrays.stream(low).map((l, i) -> Math.max(0, refClose[i] - l)).toArray(), m1);
-        double[] br = new double[open.length];
-        for (int i = 0; i < open.length; i++) br[i] = sumBrNum[i] / sumBrDen[i] * 100;
+
+
+        double[] sumBrNum = SUM(IntStream.range(0, len).mapToDouble(i -> Math.max(0, high[i] - refClose[i])).toArray(), m1);
+        double[] sumBrDen = SUM(IntStream.range(0, len).mapToDouble(i -> Math.max(0, refClose[i] - low[i])).toArray(), m1);
+
+        double[] br = new double[len];
+        for (int i = 0; i < len; i++) br[i] = sumBrNum[i] / sumBrDen[i] * 100;
         return new double[]{ /* 0: unused */, /* placeholder */};
     }
 
@@ -848,12 +878,22 @@ public class MyTT {
         int len = high.length;
         double[] hl = new double[len];
         for (int i = 0; i < len; i++) hl[i] = high[i] - low[i];
+
         double[] maHl = MA(hl, n1);
         double[] maMaHl = MA(maHl, n1);
-        double[] mass = SUM(Arrays.stream(maHl).map((v, i) -> v / maMaHl[i]).toArray(), n2);
+
+        // double[] mass = SUM(Arrays.stream(maHl).map((v, i) -> v / maMaHl[i]).toArray(), n2);
+
+        // 使用 IntStream.range 通过索引来生成 ratio
+        double[] ratio = IntStream.range(0, len).mapToDouble(i -> maHl[i] / maMaHl[i]).toArray();
+
+        // 再用 SUM 计算 n2 周期的累积和
+        double[] mass = SUM(ratio, n2);
         double[] maMass = MA(mass, m);
+
         return new double[][]{mass, maMass};
     }
+
 
     // ROC: 变动率指标
     public static double[][] ROC(double[] close,
@@ -865,6 +905,7 @@ public class MyTT {
         double[] maroC = MA(roc, m);
         return new double[][]{roc, maroC};
     }
+
 
     // EXPMA: EMA 指数平均数指标
     public static double[][] EXPMA(double[] close,
@@ -920,10 +961,15 @@ public class MyTT {
                                  int m2) {
         int len = close.length;
         double[] lc = REF(close, 1);
-        double[] aa = ABS(Arrays.stream(high).map((h, i) -> h - lc[i]).toArray());
-        double[] bb = ABS(Arrays.stream(low).map((l, i) -> l - lc[i]).toArray());
-        double[] ccArr = ABS(Arrays.stream(high).map((h, i) -> h - low[i - 1]).toArray());
-        double[] dd = ABS(Arrays.stream(lc).map((v, i) -> v - open[i - 1]).toArray());
+
+        double[] aa = ABS(IntStream.range(0, len).mapToDouble(i -> high[i] - lc[i]).toArray());
+        double[] bb = ABS(IntStream.range(0, len).mapToDouble(i -> low[i] - lc[i]).toArray());
+
+        // 对于需要用到 i-1 的，给 i==0 一个默认值（比如 0 或 NaN），防止越界
+        double[] ccArr = ABS(IntStream.range(0, len).mapToDouble(i -> i > 0 ? high[i] - low[i - 1] : 0.0).toArray());
+        double[] dd = ABS(IntStream.range(0, len).mapToDouble(i -> i > 0 ? lc[i] - open[i - 1] : 0.0).toArray());
+
+
         double[] r = new double[len];
         for (int i = 0; i < len; i++) {
             if (aa[i] > bb[i] && aa[i] > ccArr[i]) r[i] = aa[i] + bb[i] / 2 + dd[i] / 4;
@@ -955,7 +1001,10 @@ public class MyTT {
             td1[i] = aaArr[i] * n / 100.0;
             td2[i] = aaArr[i] * (200 - n) / 100.0;
         }
-        double[] diff = DMA(close, Arrays.stream(tp).map(v -> Math.abs(v - MA(close, 20)[i])).toArray());
+
+        double[] array = IntStream.range(0, len).mapToDouble(i -> Math.abs(tp[i] - MA(close, 20)[i])).toArray();
+        double[] diff = DMA(close, array);
+
         double[] td3 = new double[len];
         double[] td4 = new double[len];
         for (int i = 0; i < len; i++) {
