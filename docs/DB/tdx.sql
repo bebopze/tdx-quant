@@ -80,7 +80,7 @@ CREATE TABLE `base_stock`
     `gmt_create`      datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify`      datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `uk_code` (`code`) USING BTREE COMMENT '股票code'
+    UNIQUE KEY `uk_code` (`code`) USING BTREE COMMENT '股票code'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='股票-实时行情';
