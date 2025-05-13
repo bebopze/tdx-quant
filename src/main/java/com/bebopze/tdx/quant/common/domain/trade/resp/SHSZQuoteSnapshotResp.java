@@ -82,8 +82,8 @@ public class SHSZQuoteSnapshotResp implements Serializable {
     //            currentPriceE: null
     //       },
     //       pricelimit: {
-    //            upper: "0.00",
-    //            lower: "0.00"
+    //            upper: "21.25",
+    //            lower: "20.41"
     //       }
     //   }
 
@@ -337,24 +337,22 @@ public class SHSZQuoteSnapshotResp implements Serializable {
     }
 
 
-    // ------------------------------------------- 价格限制
+    // ------------------------------------------- 价格笼子（挂单价不能超过2%）
     private PricelimitDTO pricelimit;
 
-    //       pricelimit: {
-    //            upper: "0.00",
-    //            lower: "0.00"
-    //       }
+    //   pricelimit: {
+    //       upper: 21.25,
+    //       lower: 20.41
+    //   }
 
 
     @Data
     public static class PricelimitDTO implements Serializable {
 
-        // ETF有   个股无？
 
-
-        // 价格上限
+        // 价格上限   （ C x 1.02 ）
         private BigDecimal upper;
-        // 价格下限
+        // 价格下限   （ C x 0.98 ）
         private BigDecimal lower;
     }
 

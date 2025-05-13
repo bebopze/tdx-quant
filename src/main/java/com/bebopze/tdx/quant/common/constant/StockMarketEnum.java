@@ -86,13 +86,7 @@ public enum StockMarketEnum {
     private List<String> stockCodePrefixList;
 
 
-    /**
-     * stockCode  ->  东财 market
-     *
-     * @param stockCode
-     * @return
-     */
-    public static String getEastMoneyMarketByStockCode(String stockCode) {
+    public static StockMarketEnum getByStockCode(String stockCode) {
 
         // 前2位
         String codePrefix = stockCode.trim().substring(0, 2);
@@ -100,10 +94,21 @@ public enum StockMarketEnum {
         for (StockMarketEnum value : StockMarketEnum.values()) {
 
             if (value.stockCodePrefixList.contains(codePrefix)) {
-                return value.eastMoneyMarket;
+                return value;
             }
         }
         return null;
+    }
+
+
+    /**
+     * stockCode  ->  东财 market
+     *
+     * @param stockCode
+     * @return
+     */
+    public static String getEastMoneyMarketByStockCode(String stockCode) {
+        return Objects.requireNonNull(getByStockCode(stockCode)).getEastMoneyMarket();
     }
 
 
@@ -119,6 +124,10 @@ public enum StockMarketEnum {
 
     public static String getMarketSymbol(Integer tdxMarketType) {
         return Objects.requireNonNull(getByTdxMarketType(tdxMarketType)).getTdxMarketTypeSymbol();
+    }
+
+    public static String getMarketSymbol(String stockCode) {
+        return Objects.requireNonNull(getByStockCode(stockCode)).getTdxMarketTypeSymbol();
     }
 
 }

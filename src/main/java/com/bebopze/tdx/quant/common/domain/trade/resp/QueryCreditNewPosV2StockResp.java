@@ -18,8 +18,8 @@ public class QueryCreditNewPosV2StockResp implements Serializable {
 
     //  {
     //     costprice: "34.593",
-    //     curProfitratio: "",
-    //     curprofit: "",
+    //     curProfitratio: 0.02030145,
+    //     curprofit: 66,
     //     isApplyStg: "1",
     //     lastprice: "32.510",
     //
@@ -49,7 +49,7 @@ public class QueryCreditNewPosV2StockResp implements Serializable {
 
     // 成本价
     private BigDecimal costprice;
-    // 当日盈亏比例
+    // 当日盈亏比例（0.02030145   ->   2.030%）
     private BigDecimal curProfitratio;
     // 当日盈亏
     private BigDecimal curprofit;
@@ -66,7 +66,7 @@ public class QueryCreditNewPosV2StockResp implements Serializable {
     private Integer needGyjg;
     // -
     private Integer needJzd;
-    // 个股仓位
+    // 个股仓位（0.0106592   ->   1.07%）
     private BigDecimal posratio;
 
     // 持仓盈亏

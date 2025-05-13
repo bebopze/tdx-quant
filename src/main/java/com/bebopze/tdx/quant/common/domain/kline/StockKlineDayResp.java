@@ -8,13 +8,13 @@ import java.util.List;
 
 
 /**
- * 个股 - 历史行情
+ * 个股 - 历史行情          日K
  *
  * @author: bebopze
  * @date: 2025/5/14
  */
 @Data
-public class StockKlineGetResp implements Serializable {
+public class StockKlineDayResp implements Serializable {
 
 
     //   code: "300059",
@@ -41,7 +41,7 @@ public class StockKlineGetResp implements Serializable {
     private String name;
     // 小数位数
     private String decimal;
-    // klines - 总数
+    // klines - 总数           （有bug，不可用       日/周/月 -> 全部返回的 日K 总数）
     private String dktotal;
     //
     private String preKPrice;
@@ -54,6 +54,8 @@ public class StockKlineGetResp implements Serializable {
 
 
     // 2025-05-06,20.70,20.99,21.08,20.61,3281601,6867607336.00,2.28,2.04,0.42,2.46
+
+    // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
     // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
     private List<String> klines;
 
