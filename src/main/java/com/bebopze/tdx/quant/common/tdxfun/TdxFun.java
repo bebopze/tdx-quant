@@ -5,10 +5,12 @@ import java.util.stream.IntStream;
 
 
 /**
- * MyTT.py     Java版   ->   精准实现 通达信/同花顺   指标函数
+ * 通达信/同花顺  函数库     -     Java实现
  * -
  * -
- * 转换自  原作者 mpquant  的  Python实现          https://github.com/mpquant/MyTT/blob/main/MyTT.py
+ * - MyTT.py     Java版                               https://github.com/mpquant/MyTT/blob/main/MyTT.py
+ * -
+ * - 转换自  原作者 mpquant  的  Python实现
  *
  * @author: bebopze
  * @date: 2025/5/13
