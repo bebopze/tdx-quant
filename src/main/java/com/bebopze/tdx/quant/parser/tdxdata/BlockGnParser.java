@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.tdxdata;
+package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
