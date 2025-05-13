@@ -8,7 +8,7 @@ import java.util.List;
 
 
 /**
- * 个股 - 历史行情          日/周/月/季/年
+ * 个股 - 历史行情          日/周/月/季/半年/年
  *
  * @author: bebopze
  * @date: 2025/5/14
