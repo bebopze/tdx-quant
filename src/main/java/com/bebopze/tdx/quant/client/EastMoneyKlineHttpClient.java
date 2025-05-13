@@ -27,10 +27,12 @@ public class EastMoneyKlineHttpClient {
 
         StockKlineDayResp resp_day = stockKlineHisDay(stockCode);
         StockKlineDayResp resp_week = stockKlineHisWeek(stockCode);
+        StockKlineDayResp resp_month = stockKlineHisMonth(stockCode);
 
 
         // System.out.println(JSON.toJSONString(resp_day));
-        System.out.println(JSON.toJSONString(resp_week));
+        // System.out.println(JSON.toJSONString(resp_week));
+        System.out.println(JSON.toJSONString(resp_month));
     }
 
 
@@ -135,6 +137,68 @@ public class EastMoneyKlineHttpClient {
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
         if (resultJson.getInteger("rc") == 0) {
             log.info("/api/qt/stock/kline/get   周K   suc     >>>     result : {}", result);
+        }
+
+
+        StockKlineDayResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineDayResp.class);
+
+
+        // ----------------------------- 历史行情
+        List<String> klines = resp.getKlines();
+
+
+        return resp;
+    }
+
+
+    /**
+     * 个股/板块 - 历史行情       月K
+     * -
+     * -
+     * - 旧版
+     * - https://push2.eastmoney.com/api/qt/stock/cqcx/get?id=SZ300059
+     * -
+     * -
+     * -
+     * - 新版     行情中心
+     * - https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.300059&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=103&fqt=1&end=20250514&lmt=210
+     * -
+     * -
+     * - 页面（行情中心）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     *
+     * @param
+     * @return
+     */
+    public static StockKlineDayResp stockKlineHisMonth(String stockCode) {
+
+        // SZ300059
+        String id = StockMarketEnum.getMarketSymbol(stockCode) + stockCode;
+
+        // String url = "https://push2.eastmoney.com/api/qt/stock/cqcx/get?id=" + stockCode;
+
+
+        int limit = 500;
+
+        // 0.300059
+        String secid = String.format("0.%s", stockCode);
+
+
+        String url = "https://push2his.eastmoney.com/api/qt/stock/kline/get?" +
+
+                "fields1=f1,f2,f3,f4,f5,f6" +
+                "&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61" +
+                "&klt=103&fqt=1" +
+                "&end=20250514" +
+                "&lmt=210" + limit +
+                "&secid=" + secid;
+
+
+        String result = HttpUtil.doGet(url, null);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("rc") == 0) {
+            log.info("/api/qt/stock/kline/get   月K   suc     >>>     result : {}", result);
         }
 
 
