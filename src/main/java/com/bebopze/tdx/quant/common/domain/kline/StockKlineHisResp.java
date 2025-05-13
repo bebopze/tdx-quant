@@ -8,13 +8,13 @@ import java.util.List;
 
 
 /**
- * 个股 - 历史行情          日K
+ * 个股 - 历史行情          日/周/月/季/年
  *
  * @author: bebopze
  * @date: 2025/5/14
  */
 @Data
-public class StockKlineDayResp implements Serializable {
+public class StockKlineHisResp implements Serializable {
 
 
     //   code: "300059",
