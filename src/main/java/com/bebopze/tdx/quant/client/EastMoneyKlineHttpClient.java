@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.domain.kline.StockKlineTrendResp;
+import com.bebopze.tdx.quant.common.util.EventStreamUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,9 +28,11 @@ public class EastMoneyKlineHttpClient {
         String stockCode = "300059";
 
 
-        StockKlineHisResp stockKlineHisResp = stockKlineHis(KlineTypeEnum.DAY, stockCode);
+        // StockKlineHisResp stockKlineHisResp = stockKlineHis(KlineTypeEnum.DAY, stockCode);
+        // System.out.println(stockKlineHisResp);
 
-        System.out.println(stockKlineHisResp);
+        StockKlineTrendResp stockKlineTrends = stockKlineTrends(stockCode);
+        System.out.println(stockKlineTrends);
     }
 
 
@@ -67,6 +71,65 @@ public class EastMoneyKlineHttpClient {
 
         // ----------------------------- 历史行情
         List<String> klines = resp.getKlines();
+
+
+        return resp;
+    }
+
+
+    /**
+     * 个股/板块 - 分时
+     * -
+     * - https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17&fields2=f51,f52,f53,f54,f55,f56,f57,f58&mpi=1000&ut=fa5fd1943c7b386f172d6893dbfba10b&secid=0.300059&ndays=1&iscr=0&iscca=0&wbp2u=1849325530509956|0|1|0|web
+     * -
+     * -
+     * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
+     * -
+     * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     *
+     * @param
+     * @return
+     */
+    public static StockKlineTrendResp stockKlineTrends(String stockCode) {
+
+
+        // 0.300059
+        String secid = String.format("0.%s", stockCode);
+        //
+        int ndays = 1;
+
+
+        String url = "https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?" +
+                "fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17" +
+                "&fields2=f51,f52,f53,f54,f55,f56,f57,f58" +
+                "&mpi=1000" +
+                // "&ut=fa5fd1943c7b386f172d6893dbfba10b" +
+                "&secid=" + secid +
+                "&ndays=" + ndays +
+                "&iscr=0" +
+                "&iscca=0" + ""
+                // "&wbp2u=1849325530509956|0|1|0|we"
+                + "";
+
+
+        String result = EventStreamUtil.fetchOnce(url);
+
+
+        // String result = HttpUtil.doGet(url, null);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("rc") == 0) {
+            log.info("/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
+                     "分时", ndays, stockCode, result);
+        }
+
+
+        StockKlineTrendResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineTrendResp.class);
+
+
+        // ----------------------------- 分时行情
+        List<String> trends = resp.getTrends();
 
 
         return resp;
