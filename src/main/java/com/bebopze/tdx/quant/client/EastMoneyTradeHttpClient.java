@@ -23,13 +23,13 @@ import java.util.Objects;
 
 
 /**
- * 东方财富 - API封装               static
+ * 东方财富 - 交易   API封装               static
  *
  * @author: bebopze
  * @date: 2025/5/9
  */
 @Slf4j
-public class EastMoneyHttpClient {
+public class EastMoneyTradeHttpClient {
 
 
     private static final String SID = PropsUtil.getSid();
