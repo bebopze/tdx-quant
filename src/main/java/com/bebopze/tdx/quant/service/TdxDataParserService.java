@@ -19,11 +19,17 @@ public interface TdxDataParserService {
     void exportBlockNew();
 
 
+    void kline(String stockCode);
+
+    void klineAll();
+
+
     void xgcz();
 
 
     Map<String, List<String>> marketRelaStockCodePrefixList();
 
     JSONObject check();
+
 
 }
