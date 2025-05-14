@@ -86,17 +86,20 @@ public class EastMoneyKlineHttpClient {
      * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
      * -
      * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     * -
+     * -
      *
-     * @param
+     * @param stockCode
+     * @param ndays     分时 - 天数
      * @return
      */
-    public static StockKlineTrendResp stockKlineTrends(String stockCode) {
+    public static StockKlineTrendResp stockKlineTrends(String stockCode, int ndays) {
 
 
         // 0.300059
         String secid = String.format("0.%s", stockCode);
-        //
-        int ndays = 1;
+
+        ndays = Math.max(ndays, 1);
 
 
         String url = "https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?" +
@@ -107,15 +110,12 @@ public class EastMoneyKlineHttpClient {
                 "&secid=" + secid +
                 "&ndays=" + ndays +
                 "&iscr=0" +
-                "&iscca=0" + ""
+                "&iscca=0"
                 // "&wbp2u=1849325530509956|0|1|0|we"
-                + "";
+                ;
 
 
         String result = EventStreamUtil.fetchOnce(url);
-
-
-        // String result = HttpUtil.doGet(url, null);
 
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
@@ -133,6 +133,10 @@ public class EastMoneyKlineHttpClient {
 
 
         return resp;
+    }
+
+    public static StockKlineTrendResp stockKlineTrends(String stockCode) {
+        return stockKlineTrends(stockCode, 1);
     }
 
 

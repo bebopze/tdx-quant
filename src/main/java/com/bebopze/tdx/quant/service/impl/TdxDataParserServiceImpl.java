@@ -189,10 +189,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // 个股 - 历史行情
-            String market = StockMarketEnum.getMarketSymbol(marketType);
+            // String market = StockMarketEnum.getMarketSymbol(marketType);
             // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
-            String filePath_a = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
-            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parse(filePath_a);
+            // String filePath_a = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
 
 
             Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
@@ -267,10 +267,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // 板块 - 历史行情
 
             // 清一色：   1-上海
-            String market = StockMarketEnum.getMarketSymbol(1);
+            // String market = StockMarketEnum.getMarketSymbol(1);
             // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh880904.day";
-            String filePath_a = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, blockCode);
-            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parse(filePath_a);
+            // String filePath_a = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, blockCode);
+            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
 
 
             Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();

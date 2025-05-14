@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
 /**
@@ -87,13 +88,20 @@ public enum StockMarketEnum {
 
 
     public static StockMarketEnum getByStockCode(String stockCode) {
-
         // 前2位
         String codePrefix = stockCode.trim().substring(0, 2);
 
         for (StockMarketEnum value : StockMarketEnum.values()) {
-
             if (value.stockCodePrefixList.contains(codePrefix)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    public static StockMarketEnum getByTdxMarketType(Integer tdxMarketType) {
+        for (StockMarketEnum value : StockMarketEnum.values()) {
+            if (value.tdxMarketType.equals(tdxMarketType)) {
                 return value;
             }
         }
@@ -108,26 +116,19 @@ public enum StockMarketEnum {
      * @return
      */
     public static String getEastMoneyMarketByStockCode(String stockCode) {
-        return Objects.requireNonNull(getByStockCode(stockCode)).getEastMoneyMarket();
+        StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
+        return stockMarketEnum == null ? null : stockMarketEnum.getEastMoneyMarket();
     }
 
-
-    public static StockMarketEnum getByTdxMarketType(Integer tdxMarketType) {
-        for (StockMarketEnum value : StockMarketEnum.values()) {
-            if (value.getTdxMarketType().equals(tdxMarketType)) {
-                return value;
-            }
-        }
-        return null;
-    }
-
-
-    public static String getMarketSymbol(Integer tdxMarketType) {
-        return Objects.requireNonNull(getByTdxMarketType(tdxMarketType)).getTdxMarketTypeSymbol();
-    }
 
     public static String getMarketSymbol(String stockCode) {
-        return Objects.requireNonNull(getByStockCode(stockCode)).getTdxMarketTypeSymbol();
+        StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
+        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketTypeSymbol();
+    }
+
+    public static String getMarketSymbol(Integer tdxMarketType) {
+        StockMarketEnum stockMarketEnum = getByTdxMarketType(tdxMarketType);
+        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketTypeSymbol();
     }
 
 }

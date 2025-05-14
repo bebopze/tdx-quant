@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson.JSON;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -33,29 +35,88 @@ public class LdayParser {
 
     public static void main(String[] args) {
 
-        // C:\soft\通达信\v_2024\跑数据专用\new_tdx\vipdoc\sh\lday\sh000001.day
-        // C:\soft\通达信\v_2024\跑数据专用\new_tdx\vipdoc\ds\lday\31#00700.day
-        // C:\soft\通达信\v_2024\跑数据专用\new_tdx\vipdoc\ds\lday\74#SPY.day
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/sh/lday/sh000001.day
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/31#00700.day
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/74#SPY.day
 
 
+        // A股          sz-深圳；sh-上海；bj-北京
         String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
+        // ds - 港美
         String filePath_hk = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
         String filePath_us = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
 
+
+        // 板块
         String filePath_bk = TDX_PATH + "/vipdoc/sh/lday/sh880904.day";
         String filePath_bk2 = TDX_PATH + "/vipdoc/sh/lday/sh880948.day";
+
+
+        // 指数
         String filePath_zs = TDX_PATH + "/vipdoc/sh/lday/sh880003.day";
-        String filePath_zs2 = TDX_PATH + "/vipdoc/sh/lday/sz399106.day";
+        String filePath_zs2 = TDX_PATH + "/vipdoc/sz/lday/sz399106.day";
 
 
-        List<LdayDTO> stockDataList = parse(filePath_zs);
+        // ----------
+
+
+        String stockCode_sz = "000001";
+        String stockCode_sh = "600519";
+        String stockCode_bj = "833171";
+
+        String stockCode_bk = "880904";
+
+        String stockCode_zs_sz = "399106";
+        String stockCode_zs_sh = "880003";
+
+
+        List<LdayDTO> stockDataList = parseByStockCode(stockCode_sz);
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));
         }
 
 
+        // ----------
+
+
+//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
+//        for (LdayDTO e : stockDataList) {
+//            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+//            System.out.println(JSON.toJSONString(item));
+//        }
+
+
         System.out.println("---------------------------------- code：" + stockDataList.get(0).code + "     总数：" + stockDataList.size());
+    }
+
+    /**
+     * tdx 盘后数据（xx.day）   -   解析器
+     *
+     * @param stockCode 证券代码
+     * @return
+     */
+    @SneakyThrows
+    public static List<LdayDTO> parseByStockCode(String stockCode) {
+
+        // sz/sh/bj
+        String market = StockMarketEnum.getMarketSymbol(stockCode);
+        // 兼容   ->   板块（全部sh） / 指数（sh/sz）
+        market = market == null ? "sh" : market;
+
+
+        // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
+        String filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+
+
+        // 指数：上证 / 深证
+        if (!new File(filePath).exists()) {
+            market = "sz";
+            filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+        }
+
+
+        return parseByFilePath(filePath);
     }
 
 
@@ -66,7 +127,7 @@ public class LdayParser {
      * @return
      */
     @SneakyThrows
-    public static List<LdayDTO> parse(String filePath) {
+    public static List<LdayDTO> parseByFilePath(String filePath) {
 
         // 股票代码
         String code = parseCode(filePath);
