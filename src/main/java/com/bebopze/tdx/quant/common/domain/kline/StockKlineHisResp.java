@@ -47,7 +47,7 @@ public class StockKlineHisResp implements Serializable {
     private String preKPrice;
     // 昨日-收盘价
     private String prePrice;
-    // 类型（7-日线）
+    // xx类型（7-日线 ？？？）
     private String qtMiscType;
     //
     private String version;

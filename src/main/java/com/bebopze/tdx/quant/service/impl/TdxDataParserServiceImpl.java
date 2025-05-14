@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
@@ -16,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -47,6 +51,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Autowired
     private IBaseStockRelaBlockNewService iBaseStockRelaBlockNewService;
+    @Qualifier("conversionService")
+    @Autowired
+    private ConversionService conversionService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -654,18 +661,53 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
-    public void kline(String stockCode) {
+    public void fillStockKline(String stockCode) {
+
+
+        // ---------------------  东方财富 API     ->     拉取数据
 
         StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(KlineTypeEnum.DAY, stockCode);
 
         String name = stockKlineHisResp.getName();
-        String market = stockKlineHisResp.getMarket();
+        List<String> klines = stockKlineHisResp.getKlines();
 
 
+        // --------------------- entity
+
+        BaseStockDO entity = new BaseStockDO();
+        entity.setId(iBaseStockService.getIdByCode(stockCode));
+        entity.setName(name);
+        // 历史行情
+        entity.setKlineHis(JSON.toJSONString(klines));
+
+
+        // 实时行情   -   last kline
+        KlineDTO lastKlineDTO = ConvertStock.str2DTO(klines.get(klines.size() - 1));
+
+        entity.setTradeDate(lastKlineDTO.getDate());
+
+        entity.setOpenPrice(lastKlineDTO.getOpen());
+        entity.setClosePrice(lastKlineDTO.getClose());
+        entity.setHighPrice(lastKlineDTO.getHigh());
+        entity.setLowPrice(lastKlineDTO.getLow());
+
+        entity.setVolume(lastKlineDTO.getVol());
+        entity.setAmount(lastKlineDTO.getAmo());
+
+        entity.setRangePct(lastKlineDTO.getRange_pct());
+        entity.setChangePct(lastKlineDTO.getChange_pct());
+        entity.setTurnoverPct(lastKlineDTO.getTurnover_pct());
+
+
+        // --------------------- DB
+
+        iBaseStockService.updateById(entity);
     }
 
     @Override
-    public void klineAll() {
+    public void fillStockKlineAll() {
+
+        // Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
 
     }
 

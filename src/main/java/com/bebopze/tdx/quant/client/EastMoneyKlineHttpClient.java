@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineTrendResp;
 import com.bebopze.tdx.quant.common.util.EventStreamUtil;
@@ -45,12 +46,14 @@ public class EastMoneyKlineHttpClient {
      * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
      * -
      * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     * -
+     * -
      *
-     * @param
+     * @param klineTypeEnum
+     * @param stockCode
      * @return
      */
-    public static StockKlineHisResp stockKlineHis(KlineTypeEnum klineTypeEnum,
-                                                  String stockCode) {
+    public static StockKlineHisResp stockKlineHis(KlineTypeEnum klineTypeEnum, String stockCode) {
 
 
         String url = stockKlineHisUrl(klineTypeEnum.getType(), stockCode);
@@ -147,16 +150,21 @@ public class EastMoneyKlineHttpClient {
      * @param stockCode 证券代码
      * @return
      */
-    private static String stockKlineHisUrl(Integer klt,
-                                           String stockCode) {
+    private static String stockKlineHisUrl(Integer klt, String stockCode) {
 
 
         // secid=90.BK1090     - 板块
         // String secid_bk = String.format("90.%s", stockCode);
 
 
+        // 0-深圳；1-上海；2-北京；
+        Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
+        // 深圳+北京 -> 0
+        Integer marketType = tdxMarketType == 1 ? 1 : 0;
+
+
         // secid=0.300059      - 个股
-        String secid = String.format("0.%s", stockCode);
+        String secid = String.format("%s.%s", marketType, stockCode);
 
 
         // 截止日期

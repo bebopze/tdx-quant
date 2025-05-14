@@ -19,9 +19,9 @@ public interface TdxDataParserService {
     void exportBlockNew();
 
 
-    void kline(String stockCode);
+    void fillStockKline(String stockCode);
 
-    void klineAll();
+    void fillStockKlineAll();
 
 
     void xgcz();

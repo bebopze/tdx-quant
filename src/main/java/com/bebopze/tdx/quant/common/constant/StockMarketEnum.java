@@ -63,7 +63,7 @@ public enum StockMarketEnum {
     private String marketDesc;
 
     /**
-     * 通达信 - 交易所 类型
+     * 通达信 - 交易所 类型（0-深圳；1-上海；2-北京；）
      */
     @Getter
     private Integer tdxMarketType;
@@ -129,6 +129,12 @@ public enum StockMarketEnum {
     public static String getMarketSymbol(Integer tdxMarketType) {
         StockMarketEnum stockMarketEnum = getByTdxMarketType(tdxMarketType);
         return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketTypeSymbol();
+    }
+
+
+    public static Integer getTdxMarketType(String stockCode) {
+        StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
+        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketType();
     }
 
 }

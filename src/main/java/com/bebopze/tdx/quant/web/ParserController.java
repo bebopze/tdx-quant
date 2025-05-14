@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -54,6 +55,21 @@ public class ParserController {
     @GetMapping(value = "/export/block_new")
     public Result<Object> exportBlockNew() {
         tdxDataParserService.exportBlockNew();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
+    @GetMapping(value = "/fillStockKline")
+    public Result<Object> fillStockKline(@RequestParam String stockCode) {
+        tdxDataParserService.fillStockKline(stockCode);
+        return Result.SUC();
+    }
+
+    @Operation(summary = "个股行情（全量） - 拉取解析入库", description = "个股行情（全量） - 拉取解析入库")
+    @GetMapping(value = "/fillStockKlineAll")
+    public Result<Object> fillStockKlineAll() {
+        tdxDataParserService.fillStockKlineAll();
         return Result.SUC();
     }
 

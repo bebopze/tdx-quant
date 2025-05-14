@@ -2,15 +2,36 @@ package com.bebopze.tdx.quant.common.util;
 
 import java.text.DecimalFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 
 /**
+ * 日期 / 时间
+ *
  * @author: bebopze
  * @date: 2025/5/4
  */
 public class DateTimeUtil {
+
+
+    public static void main(String[] args) {
+        // 示例毫秒值
+        long milliseconds = 3661000;
+        String formattedTime = formatMillis(milliseconds);
+        // 输出: 01:01:01
+        System.out.println(formattedTime);
+
+
+        // 时间戳
+        long timestamp = System.currentTimeMillis();
+        millis2Time(timestamp);
+    }
+
+
+    // ----------------------------------------------------------------------------------------------
 
 
     /**
@@ -50,17 +71,12 @@ public class DateTimeUtil {
     }
 
 
-    public static void main(String[] args) {
-        // 示例毫秒值
-        long milliseconds = 3661000;
-        String formattedTime = formatMillis(milliseconds);
-        // 输出: 01:01:01
-        System.out.println(formattedTime);
+    public static LocalDate parseDate_yyyyMMdd(String dateStr) {
+        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"));
+    }
 
-
-        // 时间戳
-        long timestamp = System.currentTimeMillis();
-        millis2Time(timestamp);
+    public static LocalDate parseDate_yyyy_MM_dd(String dateStr) {
+        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
 }
