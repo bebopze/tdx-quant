@@ -121,4 +121,22 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
+
+    @Override
+    public Map<String, Long> codeIdMap() {
+
+        List<BaseStockDO> entityList = baseMapper.listAllSimple();
+
+
+        Map<String, Long> code_id_map = entityList.stream()
+                .collect(Collectors.toMap(
+                        BaseStockDO::getCode,
+                        BaseStockDO::getId,
+
+                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                ));
+
+        return code_id_map;
+    }
+
 }

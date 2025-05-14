@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -662,9 +663,30 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Override
     public void fillStockKline(String stockCode) {
+        fillStockKline(stockCode, null);
+    }
+
+    @Override
+    public void fillStockKlineAll() {
+
+        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
+
+        codeIdMap.forEach((stockCode, stockId) -> {
+            fillStockKline(stockCode, stockId);
+        });
+    }
 
 
-        // ---------------------  东方财富 API     ->     拉取数据
+    private void fillStockKline(String stockCode, Long stockId) {
+
+
+        // --------------------- ID
+
+        stockId = stockId == null ? iBaseStockService.getIdByCode(stockCode) : stockId;
+        Assert.notNull(stockId, "个股信息不存在：" + stockCode);
+
+
+        // ---------------------  拉取数据     ->     东方财富 API
 
         StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(KlineTypeEnum.DAY, stockCode);
 
@@ -675,7 +697,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- entity
 
         BaseStockDO entity = new BaseStockDO();
-        entity.setId(iBaseStockService.getIdByCode(stockCode));
+        entity.setId(stockId);
         entity.setName(name);
         // 历史行情
         entity.setKlineHis(JSON.toJSONString(klines));
@@ -702,13 +724,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- DB
 
         iBaseStockService.updateById(entity);
-    }
-
-    @Override
-    public void fillStockKlineAll() {
-
-        // Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
-
     }
 
 

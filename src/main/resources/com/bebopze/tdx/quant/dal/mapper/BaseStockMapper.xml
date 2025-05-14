@@ -3,30 +3,30 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockMapper">
 
 
-    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        <id column="id" jdbcType="BIGINT" property="id"/>
-        <result column="code" jdbcType="VARCHAR" property="code"/>
-        <result column="name" jdbcType="VARCHAR" property="name"/>
-        <result column="tdx_market_type" jdbcType="TINYINT" property="tdxMarketType"/>
-        <result column="trade_date" jdbcType="DATE" property="tradeDate"/>
-        <result column="open_price" jdbcType="DECIMAL" property="openPrice"/>
-        <result column="high_price" jdbcType="DECIMAL" property="highPrice"/>
-        <result column="low_price" jdbcType="DECIMAL" property="lowPrice"/>
-        <result column="close_price" jdbcType="DECIMAL" property="closePrice"/>
-        <result column="adj_close_price" jdbcType="DECIMAL" property="adjClosePrice"/>
-        <result column="volume" jdbcType="BIGINT" property="volume"/>
-        <result column="amount" jdbcType="DECIMAL" property="amount"/>
-        <result column="change_pct" jdbcType="DECIMAL" property="changePct"/>
-        <result column="range_pct" jdbcType="DECIMAL" property="rangePct"/>
-        <result column="turnover_pct" jdbcType="DECIMAL" property="turnoverPct"/>
-        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
-        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
-    </resultMap>
+    <!--    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseStockDO">-->
+    <!--        <id column="id" jdbcType="BIGINT" property="id"/>-->
+    <!--        <result column="code" jdbcType="VARCHAR" property="code"/>-->
+    <!--        <result column="name" jdbcType="VARCHAR" property="name"/>-->
+    <!--        <result column="tdx_market_type" jdbcType="TINYINT" property="tdxMarketType"/>-->
+    <!--        <result column="trade_date" jdbcType="DATE" property="tradeDate"/>-->
+    <!--        <result column="open_price" jdbcType="DECIMAL" property="openPrice"/>-->
+    <!--        <result column="high_price" jdbcType="DECIMAL" property="highPrice"/>-->
+    <!--        <result column="low_price" jdbcType="DECIMAL" property="lowPrice"/>-->
+    <!--        <result column="close_price" jdbcType="DECIMAL" property="closePrice"/>-->
+    <!--        <result column="adj_close_price" jdbcType="DECIMAL" property="adjClosePrice"/>-->
+    <!--        <result column="volume" jdbcType="BIGINT" property="volume"/>-->
+    <!--        <result column="amount" jdbcType="DECIMAL" property="amount"/>-->
+    <!--        <result column="change_pct" jdbcType="DECIMAL" property="changePct"/>-->
+    <!--        <result column="range_pct" jdbcType="DECIMAL" property="rangePct"/>-->
+    <!--        <result column="turnover_pct" jdbcType="DECIMAL" property="turnoverPct"/>-->
+    <!--        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>-->
+    <!--        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>-->
+    <!--    </resultMap>-->
 
-    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"
-               type="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        <result column="kline_his" jdbcType="LONGVARCHAR" property="klineHis"/>
-    </resultMap>
+    <!--    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"-->
+    <!--               type="com.bebopze.tdx.quant.dal.entity.BaseStockDO">-->
+    <!--        <result column="kline_his" jdbcType="LONGVARCHAR" property="klineHis"/>-->
+    <!--    </resultMap>-->
 
 
     <sql id="Base_Column_List">
@@ -40,18 +40,25 @@
     </sql>
 
 
-    <select id="getByCode" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
-        SELECT
+    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT *
 
-        <include refid="Base_Column_List"/>
-        ,
-        <include refid="Blob_Column_List"/>
         FROM base_stock
 
         WHERE code = #{code}
     </select>
 
-    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT id   AS id,
+               code AS code
+
+        FROM base_stock
+    </select>
+
+
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+
         SELECT
 
         id AS id,
@@ -69,7 +76,7 @@
     </select>
 
 
-    <select id="listBaseByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
         <include refid="Base_Column_List"/>
