@@ -707,7 +707,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // ---------------------  拉取数据     ->     东方财富 API
 
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(KlineTypeEnum.DAY, stockCode);
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
         String name = stockKlineHisResp.getName();
         List<String> klines = stockKlineHisResp.getKlines();

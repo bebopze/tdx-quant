@@ -1,8 +1,10 @@
 package com.bebopze.tdx.quant.common.convert;
 
-
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,13 +53,100 @@ public class ConvertStock {
     }
 
 
+    /**
+     * 最近N日 行情
+     *
+     * @param klines
+     * @param limit  最近N日
+     * @return
+     */
+    public static List<KlineDTO> str2DTO(List<String> klines, int limit) {
+
+        int size = klines.size();
+        if (size > limit) {
+            List<String> subKlines = klines.subList(size - limit, size);
+            return str2DTO(subKlines);
+        }
+
+        return str2DTO(klines);
+    }
+
+
+    @SneakyThrows
+    public static double[] fieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+
+        int size = klineDTOList.size();
+        double[] arr = new double[size];
+
+
+        // 一次性查找 Field，并设置可访问
+        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+
+
+        // 遍历 取值
+        for (int i = 0; i < size; i++) {
+            KlineDTO dto = klineDTOList.get(i);
+
+
+            Object value = field.get(dto);
+            if (value == null) {
+
+                // null -> 0
+                arr[i] = Double.NaN;
+
+            } else if (value instanceof Number) {
+
+                arr[i] = ((Number) value).doubleValue();
+
+            } else {
+                throw new IllegalArgumentException(
+                        String.format("字段 %s 的类型为 %s，无法转换为 double", fieldName, value.getClass().getSimpleName()));
+            }
+        }
+
+        return arr;
+    }
+
+
+    @SneakyThrows
+    public static Object[] objFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+
+        int size = klineDTOList.size();
+        Object[] arr = new Object[size];
+
+
+        // 一次性查找 Field，并设置可访问
+        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+
+
+        // 遍历 取值
+        for (int i = 0; i < size; i++) {
+            KlineDTO dto = klineDTOList.get(i);
+
+
+            Object value = field.get(dto);
+            arr[i] = value;
+        }
+
+        return arr;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static void main(String[] args) {
 
-        String kline = "2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33";
+//        List<String> list = Lists.newArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9");
+//        str2DTO(list, 10);
 
 
-        KlineDTO klineDTO = str2DTO(kline);
-        System.out.println(klineDTO);
+//        String kline = "2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33";
+//
+//
+//        KlineDTO klineDTO = str2DTO(kline);
+//        System.out.println(klineDTO);
     }
+
 
 }

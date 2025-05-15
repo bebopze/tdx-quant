@@ -49,14 +49,14 @@ public class EastMoneyKlineHttpClient {
      * -
      * -
      *
-     * @param klineTypeEnum
      * @param stockCode
+     * @param klineTypeEnum
      * @return
      */
-    public static StockKlineHisResp stockKlineHis(KlineTypeEnum klineTypeEnum, String stockCode) {
+    public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum) {
 
 
-        String url = stockKlineHisUrl(klineTypeEnum.getType(), stockCode);
+        String url = stockKlineHisUrl(stockCode, klineTypeEnum.getType());
 
 
         String result = HttpUtil.doGet(url, null);
@@ -146,11 +146,11 @@ public class EastMoneyKlineHttpClient {
     /**
      * 个股行情 - url拼接
      *
-     * @param klt       K线 - 类型
      * @param stockCode 证券代码
+     * @param klt       K线 - 类型
      * @return
      */
-    private static String stockKlineHisUrl(Integer klt, String stockCode) {
+    private static String stockKlineHisUrl(String stockCode, Integer klt) {
 
 
         // secid=90.BK1090     - 板块
