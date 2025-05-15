@@ -3,13 +3,15 @@ package com.bebopze.tdx.quant.strategy.sell;
 import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
 import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
-import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
-import lombok.var;
+import com.bebopze.tdx.quant.indicator.Fun1;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -37,31 +39,49 @@ public class DownMASellStrategy {
         double C = realtimequote.getCurrentPrice().doubleValue();
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), 5000);
+        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), 500);
 
 
-        double[] closeArr = ConvertStock.fieldValArr(klineDTOList, "close");
-        Object[] dateArr = ConvertStock.objFieldValArr(klineDTOList, "date");
+        double[] C_arr = ConvertStock.fieldValArr(klineDTOList, "close");
+        Object[] date_arr = ConvertStock.objFieldValArr(klineDTOList, "date");
 
 
-        // MA函数   ->   验证通过
-        double[] ma_arr = TdxFun.MA(closeArr, 50);
+        // -------------------------------------------------------------------------------------------------------------
 
-        for (int i = 0; i < ma_arr.length; i++) {
-            System.out.println(dateArr[i] + "     " + ma_arr[i]);
+
+        // 1、下MA50
+
+        Fun1 fun1 = new Fun1(stockCode);
+
+        boolean 下MA50 = fun1.下MA(50);
+
+
+        // MA50
+
+
+        // 2、MA空(20)
+        boolean MA20_空 = fun1.MA空(20);
+
+
+        // 3、RPS三线 < 85
+
+
+        boolean sell = 下MA50 || MA20_空;
+
+
+        if (sell) {
+
+            // 卖出
+            SubmitTradeV2Req req = new SubmitTradeV2Req();
+            req.setStockCode(stockCode);
+            req.setPrice(new BigDecimal("123.45"));
+            req.setAmount(100);
+
+            req.setTradeTypeEnum(TradeTypeEnum.SELL);
+
+            Integer wtbh = EastMoneyTradeHttpClient.submitTradeV2(req);
+            System.out.println("wtbh : " + wtbh);
         }
-
-
-        // double MA50 = MA(C, 50);
-        // 1、RPS三线 < 85
-
-
-        // 2、下MA50
-
-
-        // 3、MA空(20)
-
-
     }
 
 
