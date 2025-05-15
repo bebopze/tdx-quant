@@ -18,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -52,9 +50,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Autowired
     private IBaseStockRelaBlockNewService iBaseStockRelaBlockNewService;
-    @Qualifier("conversionService")
-    @Autowired
-    private ConversionService conversionService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -664,15 +659,39 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillStockKline(String stockCode) {
         fillStockKline(stockCode, null);
+        log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
     }
 
     @Override
     public void fillStockKlineAll() {
+        long[] start = {System.currentTimeMillis()};
+
 
         Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
 
+
+        int[] count = {0};
         codeIdMap.forEach((stockCode, stockId) -> {
+
+
             fillStockKline(stockCode, stockId);
+
+
+            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+
+
+            ++count[0];
+            long time = System.currentTimeMillis() - start[0];
+
+
+            long r1 = time / count[0];
+            long r2 = count[0] / (time / 1000);
+            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
+
+
+            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                     stockCode, stockId, count[0], r1, r2, r3);
         });
     }
 
