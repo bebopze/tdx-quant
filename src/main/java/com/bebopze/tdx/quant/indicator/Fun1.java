@@ -1,0 +1,201 @@
+package com.bebopze.tdx.quant.indicator;
+
+import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
+import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.REF;
+
+
+/**
+ * 基础指标   -   非序列化（仅返回  最后一个交易日）
+ *
+ * @author: bebopze
+ * @date: 2025/5/16
+ */
+@Slf4j
+public class Fun1 {
+
+    private String stockCode;
+
+
+    // 实时行情  -  买5/卖5
+    private SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
+
+
+    // 历史行情
+    private List<KlineDTO> klineDTOList;
+    // 实时行情
+    // private KlineDTO lastKlineDTO;
+
+
+    private double C;
+
+    private Object[] date_arr;
+
+    private double[] close_arr;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public Fun1(String stockCode) {
+        initData(stockCode, null);
+    }
+
+
+    /**
+     * 加载 行情数据
+     *
+     * @param stockCode 股票code
+     * @param limit     N日
+     */
+    public void initData(String stockCode, Integer limit) {
+
+        limit = limit == null ? 500 : limit;
+
+
+        // --------------------------- HTTP 获取   个股行情 data
+
+        // 实时行情 - API
+        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeHttpClient.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
+
+
+        // 历史行情 - API
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        // --------------------------- resp -> DTO
+
+
+        // 收盘价 - 实时
+        double C = realtimequote.getCurrentPrice().doubleValue();
+
+
+        // 历史行情
+        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), limit);
+
+
+        Object[] date_arr = ConvertStock.objFieldValArr(klineDTOList, "date");
+        double[] close_arr = ConvertStock.fieldValArr(klineDTOList, "close");
+
+
+        // --------------------------- init data
+
+        this.stockCode = stockCode;
+
+        this.shszQuoteSnapshotResp = shszQuoteSnapshotResp;
+        this.klineDTOList = klineDTOList;
+
+        this.C = C;
+
+        this.date_arr = date_arr;
+        this.close_arr = close_arr;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public boolean 上MA(int N) {
+        // MA20
+        double[] MA20_arr = MA(close_arr, N);
+        // last
+        double MA20 = MA20_arr[MA20_arr.length - 1];
+
+        return C >= MA20;
+    }
+
+    public boolean 下MA(int N) {
+        // MA20
+        double[] MA20_arr = MA(close_arr, N);
+        // last
+        double MA20 = MA20_arr[MA20_arr.length - 1];
+
+        return C < MA20;
+    }
+
+
+    public boolean MA向上(int N) {
+        // MA20
+        double[] MA20_arr = MA(close_arr, N);
+
+
+        // last 1
+        double MA20 = MA20_arr[MA20_arr.length - 1];
+        // last 2
+        double MA20_ref = MA20_arr[MA20_arr.length - 2];
+
+        return MA20 >= MA20_ref;
+    }
+
+
+    public boolean MA向下(int N) {
+        // MA20
+        double[] MA20_arr = MA(close_arr, N);
+
+
+        // last 1
+        double MA20 = MA20_arr[MA20_arr.length - 1];
+        // last 2
+        double MA20_ref = MA20_arr[MA20_arr.length - 2];
+
+        return MA20 < MA20_ref;
+    }
+
+
+    public boolean MA多(int N) {
+        boolean 上MA = 上MA(N);
+        boolean MA向上 = MA向上(N);
+
+        return 上MA && MA向上;
+    }
+
+
+    public boolean MA空(int N) {
+        boolean 下MA = 下MA(N);
+        boolean MA向下 = MA向下(N);
+
+        return 下MA && MA向下;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+        String stockCode = "300059";
+
+
+        Fun1 fun = new Fun1(stockCode);
+
+
+        // 1、下MA50
+        boolean 下MA50 = fun.下MA(50);
+
+
+        // 2、MA空(20)
+        boolean MA20_空 = fun.MA空(20);
+
+
+        // 3、RPS三线 < 85
+
+
+        boolean sell = 下MA50 || MA20_空;
+    }
+
+}

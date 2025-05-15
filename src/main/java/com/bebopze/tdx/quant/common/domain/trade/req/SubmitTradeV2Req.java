@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.req;
 
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import lombok.Data;
 
@@ -29,9 +30,13 @@ public class SubmitTradeV2Req {
 
     private String stockName;
 
+    // 价格
     private BigDecimal price;
-
+    // 数量
     private Integer amount;
+
+
+    // ------------------------------------------- 根据 tradeTypeEnum / stockCode   ->   自动计算 填充
 
 
     private String tradeType;
@@ -45,5 +50,26 @@ public class SubmitTradeV2Req {
     // -------------------------------------------
 
 
+    // 买卖 枚举（自动映射   ->   tradeType、xyjylx）
     private transient TradeTypeEnum tradeTypeEnum;
+
+
+    // -----------------------------------------------------------------------------------------------
+
+
+    public String getTradeType() {
+        return tradeTypeEnum.getEastMoneyTradeType();
+    }
+
+    public String getXyjylx() {
+        return tradeTypeEnum.getXyjylx();
+    }
+
+
+    public String getMarket() {
+        // 市场（HA-沪A / SA-深A / B-北交所）
+        String market = StockMarketEnum.getEastMoneyMarketByStockCode(stockCode);
+        return market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market;
+    }
+
 }
