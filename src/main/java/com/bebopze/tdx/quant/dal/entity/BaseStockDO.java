@@ -69,37 +69,37 @@ public class BaseStockDO implements Serializable {
     /**
      * 开盘价
      */
-    @TableField("open_price")
+    @TableField("open")
     @Schema(description = "开盘价")
-    private BigDecimal openPrice;
+    private BigDecimal open;
 
     /**
      * 最高价
      */
-    @TableField("high_price")
+    @TableField("high")
     @Schema(description = "最高价")
-    private BigDecimal highPrice;
+    private BigDecimal high;
 
     /**
      * 最低价
      */
-    @TableField("low_price")
+    @TableField("low")
     @Schema(description = "最低价")
-    private BigDecimal lowPrice;
+    private BigDecimal low;
 
     /**
      * 收盘价
      */
-    @TableField("close_price")
+    @TableField("close")
     @Schema(description = "收盘价")
-    private BigDecimal closePrice;
+    private BigDecimal close;
 
     /**
      * 复权后收盘价（可选）
      */
-    @TableField("adj_close_price")
+    @TableField("adj_close")
     @Schema(description = "复权后收盘价（可选）")
-    private BigDecimal adjClosePrice;
+    private BigDecimal adjClose;
 
     /**
      * 成交量

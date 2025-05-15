@@ -306,10 +306,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
             baseStockDO.setTradeDate(last.getTradeDate());
-            baseStockDO.setOpenPrice(last.getOpen());
-            baseStockDO.setHighPrice(last.getHigh());
-            baseStockDO.setLowPrice(last.getLow());
-            baseStockDO.setClosePrice(last.getClose());
+            baseStockDO.setOpen(last.getOpen());
+            baseStockDO.setHigh(last.getHigh());
+            baseStockDO.setLow(last.getLow());
+            baseStockDO.setChangePct(last.getClose());
             baseStockDO.setVolume(Long.valueOf(last.getVol()));
             baseStockDO.setAmount(last.getAmount());
             baseStockDO.setChangePct(last.getChangePct());
@@ -386,10 +386,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
             baseBlockDO.setTradeDate(last.getTradeDate());
-            baseBlockDO.setOpenPrice(last.getOpen());
-            baseBlockDO.setHighPrice(last.getHigh());
-            baseBlockDO.setLowPrice(last.getLow());
-            baseBlockDO.setClosePrice(last.getClose());
+            baseBlockDO.setOpen(last.getOpen());
+            baseBlockDO.setHigh(last.getHigh());
+            baseBlockDO.setLow(last.getLow());
+            baseBlockDO.setClose(last.getClose());
             baseBlockDO.setVolume(Long.valueOf(last.getVol()));
             baseBlockDO.setAmount(last.getAmount());
             baseBlockDO.setChangePct(last.getChangePct());
@@ -727,10 +727,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         entity.setTradeDate(lastKlineDTO.getDate());
 
-        entity.setOpenPrice(lastKlineDTO.getOpen());
-        entity.setClosePrice(lastKlineDTO.getClose());
-        entity.setHighPrice(lastKlineDTO.getHigh());
-        entity.setLowPrice(lastKlineDTO.getLow());
+        entity.setOpen(lastKlineDTO.getOpen());
+        entity.setClose(lastKlineDTO.getClose());
+        entity.setHigh(lastKlineDTO.getHigh());
+        entity.setLow(lastKlineDTO.getLow());
 
         entity.setVolume(lastKlineDTO.getVol());
         entity.setAmount(lastKlineDTO.getAmo());
