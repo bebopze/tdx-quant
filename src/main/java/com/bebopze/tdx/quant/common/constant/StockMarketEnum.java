@@ -5,12 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 
 /**
- * A股 - 交易所
+ * A股 - 交易所                          仅支持  个股code  匹配，       TODO     ETF 暂未支持
  *
  * @author: bebopze
  * @date: 2025/5/9

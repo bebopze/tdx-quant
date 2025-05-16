@@ -160,8 +160,8 @@ public class EastMoneyKlineAPI {
 
         // 0-深圳；1-上海；2-北京；
         Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
-        // 深圳+北京 -> 0
-        Integer marketType = tdxMarketType == 1 ? 1 : 0;
+        // 深圳+北京 -> 0（缺省值 -> ETF）
+        Integer marketType = Objects.equals(tdxMarketType, 1) ? 1 : 0;
 
 
         // secid=0.300059      - 个股

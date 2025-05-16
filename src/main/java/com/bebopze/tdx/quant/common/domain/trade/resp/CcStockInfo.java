@@ -13,7 +13,7 @@ import java.math.BigDecimal;
  * @date: 2025/5/10
  */
 @Data
-public class QueryCreditNewPosV2StockResp implements Serializable {
+public class CcStockInfo implements Serializable {
 
 
     //  {

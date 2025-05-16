@@ -1,18 +1,15 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
+import com.alibaba.fastjson.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStock;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
-import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.indicator.Fun1;
+import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -27,36 +24,19 @@ public class DownMASellStrategy {
     public static void main(String[] args) {
 
 
-        String stockCode = "300059";
+        // String stockCode = "300059";
 
-        // 实时行情
-        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-        SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = resp.getRealtimequote();
-
-
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-
-        double C = realtimequote.getCurrentPrice().doubleValue();
-
-        // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), 500);
+        // 纳指ETF
+        String stockCode = "159941";
 
 
-        double[] C_arr = ConvertStock.fieldValArr(klineDTOList, "close");
-        Object[] date_arr = ConvertStock.objFieldValArr(klineDTOList, "date");
-
-
-        // -------------------------------------------------------------------------------------------------------------
+        Fun1 fun1 = new Fun1(stockCode);
 
 
         // 1、下MA50
 
-        Fun1 fun1 = new Fun1(stockCode);
 
         boolean 下MA50 = fun1.下MA(50);
-
-
-        // MA50
 
 
         // 2、MA空(20)
@@ -64,9 +44,27 @@ public class DownMASellStrategy {
 
 
         // 3、RPS三线 < 85
+        // boolean RPS三线红_NOT = true;
 
 
-        boolean sell = 下MA50 || MA20_空;
+        boolean sell = 下MA50 || MA20_空 /*|| RPS三线红_NOT*/;
+
+
+        String stockName = fun1.getStockName();
+
+
+        // 买5价（ 最低价  ->  一键卖出 ）
+        BigDecimal buy5 = fun1.getShszQuoteSnapshotResp().getFivequote().getBuy5();
+
+        // 持仓
+        CcStockInfo ccStockInfo = fun1.getQueryCreditNewPosResp().getStocks().stream()
+                .filter(e -> Objects.equals(e.getStkcode(), stockCode))
+                .findAny().orElse(null);
+        Assert.notNull(ccStockInfo, String.format("当前个股 [%s-%s] 无持仓", stockCode, stockName));
+        // 可卖数量
+        Integer stkavl = ccStockInfo.getStkavl();
+        Assert.isTrue(stkavl > 0, String.format("当前个股 [%s-%s] 可用数量不足：[%s]     >>>     ccStockInfo : %s",
+                                                stockCode, stockName, stkavl, JSON.toJSONString(ccStockInfo)));
 
 
         if (sell) {
@@ -74,10 +72,17 @@ public class DownMASellStrategy {
             // 卖出
             SubmitTradeV2Req req = new SubmitTradeV2Req();
             req.setStockCode(stockCode);
-            req.setPrice(new BigDecimal("123.45"));
-            req.setAmount(100);
+            req.setStockName(stockName);
+            req.setPrice(buy5);
+            req.setAmount(stkavl);
+
+//            BigDecimal price = new BigDecimal(Math.max(buy5.doubleValue(), fun1.getShszQuoteSnapshotResp().getTopprice().doubleValue())).setScale(3, BigDecimal.ROUND_HALF_UP);
+//            req.setPrice(price);
+//            req.setAmount(100);
 
             req.setTradeTypeEnum(TradeTypeEnum.SELL);
+            req.setMarket(ccStockInfo.getMarket());
+
 
             Integer wtbh = EastMoneyTradeAPI.submitTradeV2(req);
             System.out.println("wtbh : " + wtbh);

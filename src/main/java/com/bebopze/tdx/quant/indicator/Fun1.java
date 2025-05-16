@@ -6,7 +6,9 @@ import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -21,9 +23,15 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
  * @date: 2025/5/16
  */
 @Slf4j
+@Data
 public class Fun1 {
 
     private String stockCode;
+    private String stockName;
+
+
+    // 我的持仓
+    private QueryCreditNewPosResp queryCreditNewPosResp;
 
 
     // 实时行情  -  买5/卖5
@@ -77,6 +85,10 @@ public class Fun1 {
         StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
 
+        // 我的持仓
+        QueryCreditNewPosResp queryCreditNewPosResp = EastMoneyTradeAPI.queryCreditNewPosV2();
+
+
         // -------------------------------------------------------------------------------------------------------------
 
         // --------------------------- resp -> DTO
@@ -97,6 +109,9 @@ public class Fun1 {
         // --------------------------- init data
 
         this.stockCode = stockCode;
+        this.stockName = shszQuoteSnapshotResp.getName();
+
+        this.queryCreditNewPosResp = queryCreditNewPosResp;
 
         this.shszQuoteSnapshotResp = shszQuoteSnapshotResp;
         this.klineDTOList = klineDTOList;

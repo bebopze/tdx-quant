@@ -80,7 +80,7 @@ public class QueryCreditNewPosResp implements Serializable {
     /**
      * 持仓个股 - 详情列表
      */
-    private List<QueryCreditNewPosV2StockResp> stocks;
+    private List<CcStockInfo> stocks;
 
 
     // 总资产

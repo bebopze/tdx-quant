@@ -8,7 +8,7 @@ import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosV2StockResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
@@ -178,7 +178,7 @@ public class EastMoneyTradeAPI {
 
 
         // ----------------------------- 持股详情 列表
-        List<QueryCreditNewPosV2StockResp> stockDTOList = resp.getStocks();
+        List<CcStockInfo> stockDTOList = resp.getStocks();
 
 
         return resp;

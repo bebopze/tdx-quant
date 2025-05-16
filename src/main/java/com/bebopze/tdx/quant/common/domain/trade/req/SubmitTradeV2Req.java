@@ -32,7 +32,7 @@ public class SubmitTradeV2Req {
 
     // 价格
     private BigDecimal price;
-    // 数量
+    // 数量（100 x N       ->       150 : 不允许将整股拆成零股来卖）
     private Integer amount;
 
 
@@ -58,18 +58,23 @@ public class SubmitTradeV2Req {
 
 
     public String getTradeType() {
-        return tradeTypeEnum.getEastMoneyTradeType();
+        return tradeType != null ? tradeType :
+                tradeTypeEnum != null ? tradeTypeEnum.getEastMoneyTradeType() : null;
     }
 
     public String getXyjylx() {
-        return tradeTypeEnum.getXyjylx();
+        return xyjylx != null ? xyjylx :
+                tradeTypeEnum != null ? tradeTypeEnum.getXyjylx() : null;
     }
 
 
     public String getMarket() {
-        // 市场（HA-沪A / SA-深A / B-北交所）
-        String market = StockMarketEnum.getEastMoneyMarketByStockCode(stockCode);
-        return market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market;
+        if (market == null) {
+            // 市场（HA-沪A / SA-深A / B-北交所）
+            String market = StockMarketEnum.getEastMoneyMarketByStockCode(stockCode);
+            return market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market;
+        }
+        return market;
     }
 
 }
