@@ -24,6 +24,12 @@ public class KlineDTO implements Serializable {
     // 20250501
     private String date;
 
+
+    // --------------- price 规则（ 2位小数 ）
+    //
+    // A股 股票真实成交价 在交易所层面   统一精确到  小数点后 2位（分）
+    // 券商线上系统 或 API 虽可能对参数格式 或 成本测算展示更多小数位，但最终的 撮合成交价 均以  2位小数  上报并成交
+
     private BigDecimal open;
 
     private BigDecimal close;
@@ -31,6 +37,7 @@ public class KlineDTO implements Serializable {
     private BigDecimal high;
 
     private BigDecimal low;
+
 
     private Long vol;
 
