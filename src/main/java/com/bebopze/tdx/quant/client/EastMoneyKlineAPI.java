@@ -21,7 +21,7 @@ import java.util.Objects;
  * @date: 2025/5/14
  */
 @Slf4j
-public class EastMoneyKlineHttpClient {
+public class EastMoneyKlineAPI {
 
 
     public static void main(String[] args) {
@@ -123,8 +123,9 @@ public class EastMoneyKlineHttpClient {
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
         if (resultJson.getInteger("rc") == 0) {
-            log.info("/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
-                     "分时", ndays, stockCode, result);
+            log.info(
+                    "/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
+                    "分时", ndays, stockCode, result);
         }
 
 

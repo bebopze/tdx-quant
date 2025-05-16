@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.indicator;
 
-import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
-import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
@@ -65,12 +65,12 @@ public class Fun2 {
         // --------------------------- HTTP 获取   个股行情 data
 
         // 实时行情 - API
-        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeHttpClient.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
         SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
 
 
         // 历史行情 - API
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
 
         // -------------------------------------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ import java.util.Objects;
  * @date: 2025/5/9
  */
 @Slf4j
-public class EastMoneyTradeHttpClient {
+public class EastMoneyTradeAPI {
 
 
     private static final String SID = PropsUtil.getSid();

@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
-import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
-import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
@@ -30,11 +30,11 @@ public class DownMASellStrategy {
         String stockCode = "300059";
 
         // 实时行情
-        SHSZQuoteSnapshotResp resp = EastMoneyTradeHttpClient.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
         SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = resp.getRealtimequote();
 
 
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
         double C = realtimequote.getCurrentPrice().doubleValue();
 
@@ -79,7 +79,7 @@ public class DownMASellStrategy {
 
             req.setTradeTypeEnum(TradeTypeEnum.SELL);
 
-            Integer wtbh = EastMoneyTradeHttpClient.submitTradeV2(req);
+            Integer wtbh = EastMoneyTradeAPI.submitTradeV2(req);
             System.out.println("wtbh : " + wtbh);
         }
     }

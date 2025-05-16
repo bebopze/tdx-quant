@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
@@ -707,7 +707,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // ---------------------  拉取数据     ->     东方财富 API
 
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
         String name = stockKlineHisResp.getName();
         List<String> klines = stockKlineHisResp.getKlines();

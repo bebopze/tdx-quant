@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
@@ -35,13 +35,13 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     public QueryCreditNewPosResp queryCreditNewPosV2() {
-        QueryCreditNewPosResp resp = EastMoneyTradeHttpClient.queryCreditNewPosV2();
+        QueryCreditNewPosResp resp = EastMoneyTradeAPI.queryCreditNewPosV2();
         return resp;
     }
 
     @Override
     public SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
-        SHSZQuoteSnapshotResp dto = EastMoneyTradeHttpClient.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp dto = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
         return dto;
     }
 
@@ -52,7 +52,7 @@ public class TradeServiceImpl implements TradeService {
         SubmitTradeV2Req req = convert2Req(param);
 
 
-        Integer wtdh = EastMoneyTradeHttpClient.submitTradeV2(req);
+        Integer wtdh = EastMoneyTradeAPI.submitTradeV2(req);
         return wtdh;
     }
 
@@ -60,7 +60,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public List<GetOrdersDataResp> getOrdersData() {
 
-        List<GetOrdersDataResp> respList = EastMoneyTradeHttpClient.getOrdersData();
+        List<GetOrdersDataResp> respList = EastMoneyTradeAPI.getOrdersData();
         return respList;
     }
 
@@ -70,7 +70,7 @@ public class TradeServiceImpl implements TradeService {
 
         RevokeOrdersReq req = convert2Req(paramList);
 
-        List<RevokeOrderResultDTO> dtoList = EastMoneyTradeHttpClient.revokeOrders(req);
+        List<RevokeOrderResultDTO> dtoList = EastMoneyTradeAPI.revokeOrders(req);
         return dtoList;
     }
 

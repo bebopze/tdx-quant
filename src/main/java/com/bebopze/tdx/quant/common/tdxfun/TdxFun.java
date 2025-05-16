@@ -43,24 +43,21 @@ public class TdxFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static double[] REF(double[] S,
-                               int N) {
+    public static double[] REF(double[] S, int N) {
         double[] r = new double[S.length];
         Arrays.fill(r, Double.NaN);
         for (int i = N; i < S.length; i++) r[i] = S[i - N];
         return r;
     }
 
-    public static double[] DIFF(double[] S,
-                                int N) {
+    public static double[] DIFF(double[] S, int N) {
         double[] r = new double[S.length];
         Arrays.fill(r, Double.NaN);
         for (int i = N; i < S.length; i++) r[i] = S[i] - S[i - N];
         return r;
     }
 
-    public static double[] STD(double[] S,
-                               int N) {
+    public static double[] STD(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -73,8 +70,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] SUM(double[] S,
-                               int N) {
+    public static double[] SUM(double[] S, int N) {
         double[] r = new double[S.length];
         if (N <= 0) {
             double cum = 0;
@@ -101,8 +97,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] HHV(double[] S,
-                               int N) {
+    public static double[] HHV(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -114,8 +109,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] LLV(double[] S,
-                               int N) {
+    public static double[] LLV(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -127,8 +121,7 @@ public class TdxFun {
         return r;
     }
 
-    public static int[] HHVBARS(double[] S,
-                                int N) {
+    public static int[] HHVBARS(double[] S, int N) {
         int[] r = new int[S.length];
         for (int i = N - 1; i < S.length; i++) {
             double max = Double.NEGATIVE_INFINITY;
@@ -143,8 +136,7 @@ public class TdxFun {
         return r;
     }
 
-    public static int[] LLVBARS(double[] S,
-                                int N) {
+    public static int[] LLVBARS(double[] S, int N) {
         int[] r = new int[S.length];
         for (int i = N - 1; i < S.length; i++) {
             double min = Double.POSITIVE_INFINITY;
@@ -160,8 +152,7 @@ public class TdxFun {
     }
 
 
-    public static double[] MA(double[] S,
-                              int N) {
+    public static double[] MA(double[] S, int N) {
         double[] r = new double[S.length];
         double sum = 0;
         for (int i = 0; i < S.length; i++) {
@@ -173,8 +164,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] EMA(double[] S,
-                               int N) {
+    public static double[] EMA(double[] S, int N) {
         double[] r = new double[S.length];
         double alpha = 2.0 / (N + 1);
         r[0] = S[0];
@@ -182,9 +172,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] SMA(double[] S,
-                               int N,
-                               double M) {
+    public static double[] SMA(double[] S, int N, double M) {
         double[] r = new double[S.length];
         double alpha = M / N;
         r[0] = S[0];
@@ -192,8 +180,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] WMA(double[] S,
-                               int N) {
+    public static double[] WMA(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -205,8 +192,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] DMA(double[] S,
-                               double A) {
+    public static double[] DMA(double[] S, double A) {
         double[] r = new double[S.length];
         r[0] = S[0];
         for (int i = 1; i < S.length; i++) r[i] = A * S[i] + (1 - A) * r[i - 1];
@@ -221,8 +207,7 @@ public class TdxFun {
      * @param A 每一周期的平滑系数数组，长度与 S 相同
      * @return 计算后的 DMA 序列
      */
-    public static double[] DMA(double[] S,
-                               double[] A) {
+    public static double[] DMA(double[] S, double[] A) {
         int n = S.length;
         double[] Y = new double[n];
         if (n == 0) return Y;
@@ -235,8 +220,7 @@ public class TdxFun {
     }
 
 
-    public static double[] AVEDEV(double[] S,
-                                  int N) {
+    public static double[] AVEDEV(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -251,8 +235,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] SLOPE(double[] S,
-                                 int N) {
+    public static double[] SLOPE(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
             if (i + 1 >= N) {
@@ -276,8 +259,7 @@ public class TdxFun {
 
 
     // FORCAST: 线性回归预测 N 周期后的值
-    public static double[] FORCAST(double[] S,
-                                   int N) {
+    public static double[] FORCAST(double[] S, int N) {
         double[] r = new double[S.length];
         Arrays.fill(r, Double.NaN);
         for (int i = N - 1; i < S.length; i++) {
@@ -301,9 +283,7 @@ public class TdxFun {
     }
 
     // LAST: 前 A 到 B 周期内一直满足条件
-    public static boolean[] LAST(boolean[] S,
-                                 int A,
-                                 int B) {
+    public static boolean[] LAST(boolean[] S, int A, int B) {
         int len = S.length;
         boolean[] r = new boolean[len];
         for (int i = A; i < len; i++) {
@@ -320,8 +300,7 @@ public class TdxFun {
     }
 
     // COUNT: 最近 N 天 True 的天数
-    public static int[] COUNT(boolean[] S,
-                              int N) {
+    public static int[] COUNT(boolean[] S, int N) {
         int len = S.length;
         int[] r = new int[len];
         int sum = 0;
@@ -334,8 +313,7 @@ public class TdxFun {
     }
 
     // EVERY: 最近 N 天是否全为 True
-    public static boolean[] EVERY(boolean[] S,
-                                  int N) {
+    public static boolean[] EVERY(boolean[] S, int N) {
         int len = S.length;
         boolean[] r = new boolean[len];
         int[] cnt = COUNT(S, N);
@@ -344,8 +322,7 @@ public class TdxFun {
     }
 
     // EXIST: 最近 N 天是否存在 True
-    public static boolean[] EXIST(boolean[] S,
-                                  int N) {
+    public static boolean[] EXIST(boolean[] S, int N) {
         int len = S.length;
         boolean[] r = new boolean[len];
         int[] cnt = COUNT(S, N);
@@ -354,8 +331,7 @@ public class TdxFun {
     }
 
     // FILTER: 满足条件后 N 周期内屏蔽
-    public static boolean[] FILTER(boolean[] S,
-                                   int N) {
+    public static boolean[] FILTER(boolean[] S, int N) {
         int len = S.length;
         boolean[] r = Arrays.copyOf(S, len);
         for (int i = 0; i < len; i++) {
@@ -393,8 +369,7 @@ public class TdxFun {
     }
 
     // BARSSINCEN: N 周期内第一次 True 到现在的周期数
-    public static int[] BARSSINCEN(boolean[] S,
-                                   int N) {
+    public static int[] BARSSINCEN(boolean[] S, int N) {
         int len = S.length;
         int[] r = new int[len];
         for (int i = N - 1; i < len; i++) {
@@ -410,8 +385,7 @@ public class TdxFun {
     }
 
     // CROSS: 向上金叉
-    public static boolean[] CROSS(double[] S1,
-                                  double[] S2) {
+    public static boolean[] CROSS(double[] S1, double[] S2) {
         int len = S1.length;
         boolean[] r = new boolean[len];
         for (int i = 1; i < len; i++) r[i] = S1[i] > S2[i] && S1[i - 1] <= S2[i - 1];
@@ -419,9 +393,7 @@ public class TdxFun {
     }
 
     // LONGCROSS: N 周期内持续低于后向上交叉
-    public static boolean[] LONGCROSS(double[] S1,
-                                      double[] S2,
-                                      int N) {
+    public static boolean[] LONGCROSS(double[] S1, double[] S2, int N) {
         boolean[] lt = LAST(new boolean[0], 0, 0); // placeholder
         // 实际可调用 LAST(S1<S2, N, 1)
         boolean[] cond = new boolean[S1.length];
@@ -434,8 +406,7 @@ public class TdxFun {
     }
 
     // VALUEWHEN: 条件成立时取 X，否则取上次成立的 X
-    public static double[] VALUEWHEN(boolean[] S,
-                                     double[] X) {
+    public static double[] VALUEWHEN(boolean[] S, double[] X) {
         double[] r = new double[X.length];
         double last = Double.NaN;
         for (int i = 0; i < S.length; i++) {
@@ -446,9 +417,7 @@ public class TdxFun {
     }
 
     // BETWEEN: S 在 A 和 B 之间
-    public static boolean[] BETWEEN(double[] S,
-                                    double[] A,
-                                    double[] B) {
+    public static boolean[] BETWEEN(double[] S, double[] A, double[] B) {
         int len = S.length;
         boolean[] r = new boolean[len];
         for (int i = 0; i < len; i++) r[i] = (A[i] < S[i] && S[i] < B[i]) || (A[i] > S[i] && S[i] > B[i]);
@@ -484,10 +453,11 @@ public class TdxFun {
 
 
     // MACD
-    public static double[][] MACD(double[] close,
-                                  int shortP,
-                                  int longP,
-                                  int m) {
+    public static double[][] MACD(double[] close) {
+        return MACD(close, 12, 26, 9);
+    }
+
+    public static double[][] MACD(double[] close, int shortP, int longP, int m) {
         double[] dif = new double[close.length];
         double[] dea;
         double[] macd = new double[close.length];
@@ -501,13 +471,9 @@ public class TdxFun {
         return new double[][]{rdArray(dif, 3), rdArray(dea, 3), rdArray(macd, 3)};
     }
 
+
     // KDJ
-    public static double[][] KDJ(double[] close,
-                                 double[] high,
-                                 double[] low,
-                                 int n,
-                                 int m1,
-                                 int m2) {
+    public static double[][] KDJ(double[] close, double[] high, double[] low, int n, int m1, int m2) {
         double[] llv = LLV(low, n);
         double[] hhv = HHV(high, n);
         double[] rsv = new double[close.length];
@@ -522,8 +488,7 @@ public class TdxFun {
     }
 
     // RSI
-    public static double[] RSI(double[] close,
-                               int n) {
+    public static double[] RSI(double[] close, int n) {
         double[] dif = new double[close.length];
         double[] ref = REF(close, 1);
         for (int i = 0; i < close.length; i++) dif[i] = close[i] - ref[i];
@@ -537,11 +502,7 @@ public class TdxFun {
     }
 
     // WR
-    public static double[][] WR(double[] close,
-                                double[] high,
-                                double[] low,
-                                int n,
-                                int n1) {
+    public static double[][] WR(double[] close, double[] high, double[] low, int n, int n1) {
         double[] hhvn = HHV(high, n);
         double[] llvn = LLV(low, n);
         double[] wr = new double[close.length];
@@ -554,10 +515,7 @@ public class TdxFun {
     }
 
     // BIAS
-    public static double[][] BIAS(double[] close,
-                                  int l1,
-                                  int l2,
-                                  int l3) {
+    public static double[][] BIAS(double[] close, int l1, int l2, int l3) {
         double[] bias1 = new double[close.length];
         double[] bias2 = new double[close.length];
         double[] bias3 = new double[close.length];
@@ -573,9 +531,7 @@ public class TdxFun {
     }
 
     // BOLL
-    public static double[][] BOLL(double[] close,
-                                  int n,
-                                  int p) {
+    public static double[][] BOLL(double[] close, int n, int p) {
         double[] mid = MA(close, n);
         double[] std = STD(close, n);
         double[] upper = new double[close.length];
@@ -588,9 +544,7 @@ public class TdxFun {
     }
 
     // PSY
-    public static double[][] PSY(double[] close,
-                                 int n,
-                                 int m) {
+    public static double[][] PSY(double[] close, int n, int m) {
         boolean[] up = CROSS(close, REF(close, 1));
         int[] cnt = COUNT(up, n);
         double[] psy = new double[close.length];
@@ -601,10 +555,7 @@ public class TdxFun {
 
 
     // CCI: 平均趋向指数
-    public static double[] CCI(double[] close,
-                               double[] high,
-                               double[] low,
-                               int n) {
+    public static double[] CCI(double[] close, double[] high, double[] low, int n) {
         int len = close.length;
         double[] tp = new double[len];
         for (int i = 0; i < len; i++) tp[i] = (high[i] + low[i] + close[i]) / 3.0;
@@ -618,10 +569,7 @@ public class TdxFun {
     }
 
     // ATR: 平均真实波幅
-    public static double[] ATR(double[] close,
-                               double[] high,
-                               double[] low,
-                               int n) {
+    public static double[] ATR(double[] close, double[] high, double[] low, int n) {
         int len = close.length;
         double[] tr = new double[len];
         double[] refClose = REF(close, 1);
@@ -635,11 +583,7 @@ public class TdxFun {
     }
 
     // BBI: 多空指标
-    public static double[] BBI(double[] close,
-                               int m1,
-                               int m2,
-                               int m3,
-                               int m4) {
+    public static double[] BBI(double[] close, int m1, int m2, int m3, int m4) {
         double[] ma1 = MA(close, m1);
         double[] ma2 = MA(close, m2);
         double[] ma3 = MA(close, m3);
@@ -653,11 +597,7 @@ public class TdxFun {
     }
 
     // DMI: 动向指标
-    public static double[][] DMI(double[] close,
-                                 double[] high,
-                                 double[] low,
-                                 int m1,
-                                 int m2) {
+    public static double[][] DMI(double[] close, double[] high, double[] low, int m1, int m2) {
         int len = close.length;
         double[] refClose = REF(close, 1);
         double[] tr = new double[len];
@@ -694,9 +634,7 @@ public class TdxFun {
     }
 
     // TAQ: 唐安奇通道
-    public static double[][] TAQ(double[] high,
-                                 double[] low,
-                                 int n) {
+    public static double[][] TAQ(double[] high, double[] low, int n) {
         double[] up = HHV(high, n);
         double[] down = LLV(low, n);
         int len = high.length;
@@ -706,11 +644,7 @@ public class TdxFun {
     }
 
     // KTN: 肯特纳通道
-    public static double[][] KTN(double[] close,
-                                 double[] high,
-                                 double[] low,
-                                 int n,
-                                 int m) {
+    public static double[][] KTN(double[] close, double[] high, double[] low, int n, int m) {
         int len = close.length;
         double[] tp = new double[len];
         for (int i = 0; i < len; i++) tp[i] = (high[i] + low[i] + close[i]) / 3.0;
@@ -726,9 +660,7 @@ public class TdxFun {
     }
 
     // TRIX: 三重指数平滑平均
-    public static double[][] TRIX(double[] close,
-                                  int m1,
-                                  int m2) {
+    public static double[][] TRIX(double[] close, int m1, int m2) {
         double[] ema1 = EMA(close, m1);
         double[] ema2 = EMA(ema1, m1);
         double[] ema3 = EMA(ema2, m1);
@@ -743,9 +675,7 @@ public class TdxFun {
     }
 
     // VR: 容量比率
-    public static double[] VR(double[] close,
-                              double[] vol,
-                              int m1) {
+    public static double[] VR(double[] close, double[] vol, int m1) {
         int len = close.length;
         double[] refClose = REF(close, 1);
         double[] upVol = new double[len];
@@ -762,10 +692,7 @@ public class TdxFun {
     }
 
     // CR: 价格动量指标
-    public static double[] CR(double[] high,
-                              double[] low,
-                              double[] close,
-                              int n) {
+    public static double[] CR(double[] high, double[] low, double[] close, int n) {
         int len = close.length;
         double[] mid = REF(Arrays.stream(high).map(h -> 0).toArray(), 1); // placeholder
         // 实际: mid = REF((high+low+close),1)/3
@@ -782,11 +709,7 @@ public class TdxFun {
     }
 
     // EMV: 简易波动指标
-    public static double[][] EMV(double[] high,
-                                 double[] low,
-                                 double[] vol,
-                                 int n,
-                                 int m) {
+    public static double[][] EMV(double[] high, double[] low, double[] vol, int n, int m) {
         int len = high.length;
         double[] maVol = MA(vol, n);
         double[] mid = new double[len];
@@ -803,10 +726,7 @@ public class TdxFun {
 
 
     // DPO: 区间震荡线
-    public static double[][] DPO(double[] close,
-                                 int m1,
-                                 int m2,
-                                 int m3) {
+    public static double[][] DPO(double[] close, int m1, int m2, int m3) {
         double[] maM1 = MA(close, m1);
         double[] refMa = REF(maM1, m2);
         int len = close.length;
@@ -819,11 +739,7 @@ public class TdxFun {
     }
 
     // BRAR: 情绪指标
-    public static double[] BRAR(double[] open,
-                                double[] close,
-                                double[] high,
-                                double[] low,
-                                int m1) {
+    public static double[] BRAR(double[] open, double[] close, double[] high, double[] low, int m1) {
 
         int len = open.length;
 
@@ -847,10 +763,7 @@ public class TdxFun {
     }
 
     // DFMA: 平行线差指标
-    public static double[][] DFMA(double[] close,
-                                  int n1,
-                                  int n2,
-                                  int m) {
+    public static double[][] DFMA(double[] close, int n1, int n2, int m) {
         double[] ma1 = MA(close, n1);
         double[] ma2 = MA(close, n2);
         int len = close.length;
@@ -861,9 +774,7 @@ public class TdxFun {
     }
 
     // MTM: 动量指标
-    public static double[][] MTM(double[] close,
-                                 int n,
-                                 int m) {
+    public static double[][] MTM(double[] close, int n, int m) {
         double[] refClose = REF(close, n);
         double[] mtm = new double[close.length];
         for (int i = 0; i < close.length; i++) mtm[i] = close[i] - refClose[i];
@@ -872,11 +783,7 @@ public class TdxFun {
     }
 
     // MASS: 梅斯线
-    public static double[][] MASS(double[] high,
-                                  double[] low,
-                                  int n1,
-                                  int n2,
-                                  int m) {
+    public static double[][] MASS(double[] high, double[] low, int n1, int n2, int m) {
         int len = high.length;
         double[] hl = new double[len];
         for (int i = 0; i < len; i++) hl[i] = high[i] - low[i];
@@ -898,9 +805,7 @@ public class TdxFun {
 
 
     // ROC: 变动率指标
-    public static double[][] ROC(double[] close,
-                                 int n,
-                                 int m) {
+    public static double[][] ROC(double[] close, int n, int m) {
         double[] refClose = REF(close, n);
         double[] roc = new double[close.length];
         for (int i = 0; i < close.length; i++) roc[i] = 100 * (close[i] - refClose[i]) / refClose[i];
@@ -910,17 +815,14 @@ public class TdxFun {
 
 
     // EXPMA: EMA 指数平均数指标
-    public static double[][] EXPMA(double[] close,
-                                   int n1,
-                                   int n2) {
+    public static double[][] EXPMA(double[] close, int n1, int n2) {
         double[] ema1 = EMA(close, n1);
         double[] ema2 = EMA(close, n2);
         return new double[][]{ema1, ema2};
     }
 
     // OBV: 能量潮指标
-    public static double[] OBV(double[] close,
-                               double[] vol) {
+    public static double[] OBV(double[] close, double[] vol) {
         int len = close.length;
         double[] refClose = REF(close, 1);
         double[] obv = new double[len];
@@ -934,11 +836,7 @@ public class TdxFun {
     }
 
     // MFI: 资金流向指标
-    public static double[] MFI(double[] close,
-                               double[] high,
-                               double[] low,
-                               double[] vol,
-                               int n) {
+    public static double[] MFI(double[] close, double[] high, double[] low, double[] vol, int n) {
         int len = close.length;
         double[] typ = new double[len];
         for (int i = 0; i < len; i++) typ[i] = (high[i] + low[i] + close[i]) / 3.0;
@@ -955,12 +853,7 @@ public class TdxFun {
     }
 
     // ASI: 振动升降指标
-    public static double[][] ASI(double[] open,
-                                 double[] close,
-                                 double[] high,
-                                 double[] low,
-                                 int m1,
-                                 int m2) {
+    public static double[][] ASI(double[] open, double[] close, double[] high, double[] low, int m1, int m2) {
         int len = close.length;
         double[] lc = REF(close, 1);
 
@@ -988,11 +881,7 @@ public class TdxFun {
     }
 
     // XSII: 薛斯通道 II
-    public static double[][] XSII(double[] close,
-                                  double[] high,
-                                  double[] low,
-                                  int n,
-                                  int m) {
+    public static double[][] XSII(double[] close, double[] high, double[] low, int n, int m) {
         int len = close.length;
         double[] tp = new double[len];
         for (int i = 0; i < len; i++) tp[i] = (2 * close[i] + high[i] + low[i]) / 4;
@@ -1043,21 +932,18 @@ public class TdxFun {
 
 
     // ------------------ 0级：核心工具函数 -------------------------------------------------------------------------------
-    public static double rd(double n,
-                            int d) { // 四舍五入取d位小数
+    public static double rd(double n, int d) { // 四舍五入取d位小数
         double factor = Math.pow(10, d);
         return Math.round(n * factor) / factor;
     }
 
-    public static double[] RD(double[] N,
-                              int D) {
+    public static double[] RD(double[] N, int D) {
         double[] result = new double[N.length];
         for (int i = 0; i < N.length; i++) result[i] = rd(N[i], D);
         return result;
     }
 
-    public static double RET(double[] S,
-                             int N) {
+    public static double RET(double[] S, int N) {
         return S[S.length - N];
     }
 
@@ -1073,8 +959,7 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] POW(double[] S,
-                               double N) {
+    public static double[] POW(double[] S, double N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) r[i] = Math.pow(S[i], N);
         return r;
@@ -1104,23 +989,19 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] MAX(double[] S1,
-                               double[] S2) {
+    public static double[] MAX(double[] S1, double[] S2) {
         double[] r = new double[S1.length];
         for (int i = 0; i < S1.length; i++) r[i] = Math.max(S1[i], S2[i]);
         return r;
     }
 
-    public static double[] MIN(double[] S1,
-                               double[] S2) {
+    public static double[] MIN(double[] S1, double[] S2) {
         double[] r = new double[S1.length];
         for (int i = 0; i < S1.length; i++) r[i] = Math.min(S1[i], S2[i]);
         return r;
     }
 
-    public static double[] IF(boolean[] S,
-                              double[] A,
-                              double[] B) {
+    public static double[] IF(boolean[] S, double[] A, double[] B) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) r[i] = S[i] ? A[i] : B[i];
         return r;
@@ -1136,8 +1017,7 @@ public class TdxFun {
      * @param d   保留的小数位数
      * @return 四舍五入后的新数组
      */
-    public static double[] rdArray(double[] arr,
-                                   int d) {
+    public static double[] rdArray(double[] arr, int d) {
         double[] r = new double[arr.length];
         for (int i = 0; i < arr.length; i++) {
             r[i] = rd(arr[i], d);

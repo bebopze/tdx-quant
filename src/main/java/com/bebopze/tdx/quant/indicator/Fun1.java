@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.indicator;
 
-import com.bebopze.tdx.quant.client.EastMoneyKlineHttpClient;
-import com.bebopze.tdx.quant.client.EastMoneyTradeHttpClient;
+import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
@@ -11,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
-import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.REF;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
 
 
 /**
@@ -51,6 +50,10 @@ public class Fun1 {
         initData(stockCode, null);
     }
 
+    public Fun1(String stockCode, int limit) {
+        initData(stockCode, limit);
+    }
+
 
     /**
      * 加载 行情数据
@@ -66,12 +69,12 @@ public class Fun1 {
         // --------------------------- HTTP 获取   个股行情 data
 
         // 实时行情 - API
-        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeHttpClient.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
         SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
 
 
         // 历史行情 - API
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineHttpClient.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -181,7 +184,7 @@ public class Fun1 {
         String stockCode = "300059";
 
 
-        Fun1 fun = new Fun1(stockCode);
+        Fun1 fun = new Fun1(stockCode, 100);
 
 
         // 1、下MA50
@@ -196,6 +199,23 @@ public class Fun1 {
 
 
         boolean sell = 下MA50 || MA20_空;
+
+
+        double[][] macd = MACD(fun.close_arr);
+        Object[] dateArr = fun.date_arr;
+
+
+        int len = macd[0].length;
+        for (int i = len - 10; i < len; i++) {
+
+            Object date = dateArr[i];
+
+            double DIF = macd[0][i];
+            double DEA = macd[1][i];
+            double MACD = macd[2][i];
+
+            System.out.println(date + " " + DIF + " " + DEA + " " + MACD);
+        }
     }
 
 }
