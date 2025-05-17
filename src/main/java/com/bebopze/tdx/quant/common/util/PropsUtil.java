@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
@@ -78,7 +79,9 @@ public class PropsUtil {
      * 通达信 - 根目录
      */
     public static String getTdxPath() {
-        return getProperty("tdx-path");
+        String val = getProperty("tdx-path");
+        // MAC  安装  win虚拟机
+        return SystemUtils.IS_OS_MAC ? val.replace("C:", "/Volumes/[C] Windows 11.hidden") : val;
     }
 
     public static String getSid() {
@@ -91,7 +94,7 @@ public class PropsUtil {
 
 
     public static void main(String[] args) {
-        getTdxPath();
+        String tdxPath = getTdxPath();
         getSid();
         getCookie();
     }

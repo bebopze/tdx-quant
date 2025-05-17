@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
 
 
@@ -41,6 +42,8 @@ public class Fun2 {
     private Object[] date_arr;
 
     private double[] close_arr;
+
+    private double[] ssf_arr = SSF(close_arr);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -110,7 +113,6 @@ public class Fun2 {
 
 
     public boolean[] 上MA(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -130,7 +132,6 @@ public class Fun2 {
     }
 
     public boolean[] 下MA(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -151,7 +152,6 @@ public class Fun2 {
 
 
     public boolean[] MA向上(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -178,7 +178,6 @@ public class Fun2 {
 
 
     public boolean[] MA向下(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -206,7 +205,6 @@ public class Fun2 {
 
 
     public boolean[] MA多(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -224,7 +222,6 @@ public class Fun2 {
 
 
     public boolean[] MA空(int N) {
-
         int len = close_arr.length;
         boolean[] arr = new boolean[len];
 
@@ -235,6 +232,117 @@ public class Fun2 {
 
         for (int i = 0; i < len; i++) {
             arr[i] = 下MA[i] && MA向下[i];
+        }
+
+        return arr;
+    }
+
+
+    // -------------------------------------------- SSF
+
+
+    public boolean[] 上SSF() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            double SSF = ssf_arr[i];
+            double C = close_arr[i];
+
+            arr[i] = C >= SSF;
+        }
+
+        return arr;
+    }
+
+    public boolean[] 下SSF() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            double SSF = ssf_arr[i];
+            double C = close_arr[i];
+
+            arr[i] = C < SSF;
+        }
+
+        return arr;
+    }
+
+
+    public boolean[] SSF向上() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double SSF = ssf_arr[i];
+                double SSF_pre = ssf_arr[i - 1];
+
+                arr[i] = SSF >= SSF_pre;
+            }
+        }
+
+        return arr;
+    }
+
+    public boolean[] SSF向下() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double SSF = ssf_arr[i];
+                double SSF_pre = ssf_arr[i - 1];
+
+                arr[i] = SSF < SSF_pre;
+            }
+        }
+
+        return arr;
+    }
+
+
+    public boolean[] SSF多() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        boolean[] 上SSF = 上SSF();
+        boolean[] SSF向上 = SSF向上();
+
+
+        for (int i = 0; i < len; i++) {
+            arr[i] = 上SSF[i] && SSF向上[i];
+        }
+
+        return arr;
+    }
+
+
+    public boolean[] SSF空() {
+        int len = close_arr.length;
+        boolean[] arr = new boolean[len];
+
+
+        boolean[] 下SSF = 下SSF();
+        boolean[] SSF向下 = SSF向下();
+
+
+        for (int i = 0; i < len; i++) {
+            arr[i] = 下SSF[i] && SSF向下[i];
         }
 
         return arr;

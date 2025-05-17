@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
 
 
@@ -49,6 +50,9 @@ public class Fun1 {
     private Object[] date_arr;
 
     private double[] close_arr;
+
+
+    private double[] ssf_arr = SSF(close_arr);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -128,6 +132,9 @@ public class Fun1 {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // -------------------------------------------- MA
+
+
     public boolean 上MA(int N) {
         // MA20
         double[] MA20_arr = MA(close_arr, N);
@@ -155,9 +162,9 @@ public class Fun1 {
         // last 1
         double MA20 = MA20_arr[MA20_arr.length - 1];
         // last 2
-        double MA20_ref = MA20_arr[MA20_arr.length - 2];
+        double MA20_pre = MA20_arr[MA20_arr.length - 2];
 
-        return MA20 >= MA20_ref;
+        return MA20 >= MA20_pre;
     }
 
 
@@ -169,9 +176,9 @@ public class Fun1 {
         // last 1
         double MA20 = MA20_arr[MA20_arr.length - 1];
         // last 2
-        double MA20_ref = MA20_arr[MA20_arr.length - 2];
+        double MA20_pre = MA20_arr[MA20_arr.length - 2];
 
-        return MA20 < MA20_ref;
+        return MA20 < MA20_pre;
     }
 
 
@@ -188,6 +195,59 @@ public class Fun1 {
         boolean MA向下 = MA向下(N);
 
         return 下MA && MA向下;
+    }
+
+
+    // -------------------------------------------- SSF
+
+
+    public boolean 上SSF() {
+        // last
+        double SSF = ssf_arr[ssf_arr.length - 1];
+
+        return C >= SSF;
+    }
+
+    public boolean 下SSF() {
+        // last
+        double SSF = ssf_arr[ssf_arr.length - 1];
+
+        return C < SSF;
+    }
+
+
+    public boolean SSF向上() {
+        // last 1
+        double SSF = ssf_arr[ssf_arr.length - 1];
+        // last 2
+        double SSF_pre = ssf_arr[ssf_arr.length - 2];
+
+        return SSF >= SSF_pre;
+    }
+
+    public boolean SSF向下() {
+        // last 1
+        double SSF = ssf_arr[ssf_arr.length - 1];
+        // last 2
+        double SSF_pre = ssf_arr[ssf_arr.length - 2];
+
+        return SSF < SSF_pre;
+    }
+
+
+    public boolean SSF多() {
+        boolean 上SSF = 上SSF();
+        boolean SSF向上 = SSF向上();
+
+        return 上SSF && SSF向上;
+    }
+
+
+    public boolean SSF空() {
+        boolean 下SSF = 下SSF();
+        boolean SSF向下 = SSF向下();
+
+        return 下SSF && SSF向下;
     }
 
 
