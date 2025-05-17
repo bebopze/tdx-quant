@@ -213,6 +213,28 @@ public class TdxExtFun {
     }
 
 
+    // ----------------------------------- 60日新高            isNDaysHigh
+
+
+    /**
+     * 是否为   N日新高
+     *
+     * @param values 原始序列（如 最高价序列）
+     * @param N      周期天数
+     * @return 布尔数组，第 i 位为 true 时表示 values[i] 刚好等于过去 N 期（含当期）的最高值
+     */
+    public static boolean[] N日新高(double[] values, int N) {
+        double[] hhv = HHV(values, N);
+        int len = values.length;
+        boolean[] signal = new boolean[len];
+        for (int i = 0; i < len; i++) {
+            // 当期值等于 N 期内最高值，且不是 NaN 时视为新高
+            signal[i] = !Double.isNaN(hhv[i]) && values[i] == hhv[i];
+        }
+        return signal;
+    }
+
+
 //    // ----------------------------------- 月多
 //
 //    /**
