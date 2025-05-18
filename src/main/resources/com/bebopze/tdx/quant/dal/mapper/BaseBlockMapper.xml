@@ -3,46 +3,6 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper">
 
 
-    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
-        <id column="id" jdbcType="BIGINT" property="id"/>
-        <result column="parent_id" jdbcType="BIGINT" property="parentId"/>
-        <result column="level" jdbcType="TINYINT" property="level"/>
-        <result column="type" jdbcType="TINYINT" property="type"/>
-        <result column="code" jdbcType="VARCHAR" property="code"/>
-        <result column="name" jdbcType="VARCHAR" property="name"/>
-        <result column="trade_date" jdbcType="DATE" property="tradeDate"/>
-        <result column="open_price" jdbcType="DECIMAL" property="openPrice"/>
-        <result column="high_price" jdbcType="DECIMAL" property="highPrice"/>
-        <result column="low_price" jdbcType="DECIMAL" property="lowPrice"/>
-        <result column="close_price" jdbcType="DECIMAL" property="closePrice"/>
-        <result column="adj_close_price" jdbcType="DECIMAL" property="adjClosePrice"/>
-        <result column="volume" jdbcType="BIGINT" property="volume"/>
-        <result column="amount" jdbcType="DECIMAL" property="amount"/>
-        <result column="change_pct" jdbcType="DECIMAL" property="changePct"/>
-        <result column="range_pct" jdbcType="DECIMAL" property="rangePct"/>
-        <result column="turnover_pct" jdbcType="DECIMAL" property="turnoverPct"/>
-        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
-        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
-    </resultMap>
-
-    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"
-               type="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
-        <result column="kline_his" jdbcType="LONGVARCHAR" property="klineHis"/>
-    </resultMap>
-
-
-    <sql id="Base_Column_List">
-        id
-        , parent_id, level, type, code, name, trade_date, open_price, high_price,
-        low_price, close_price, adj_close_price, volume, amount,
-        change_pct, range_pct,turnover_pct, gmt_create, gmt_modify
-    </sql>
-
-    <sql id="Blob_Column_List">
-        kline_his
-    </sql>
-
-
     <select id="getIdByCode" resultType="long">
         select id
         from base_block
@@ -50,11 +10,8 @@
     </select>
 
 
-    <select id="getByCode" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
-        select
-        <include refid="Base_Column_List"/>
-        ,
-        <include refid="Blob_Column_List"/>
+    <select id="getByCode" parameterType="java.lang.String" resultType="baseBlockDO">
+        select *
         from base_block
         where code = #{code}
     </select>
@@ -64,7 +21,7 @@
         SELECT id   AS id,
                code AS code
 
-        FROM base_stock
+        FROM base_block
     </select>
 
 

@@ -721,6 +721,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         baseBlockDO.setKlineHis(JSON.toJSONString(klines));
 
 
+        if (CollectionUtils.isEmpty(ldayDTOList)) {
+            return;
+        }
+
+
         // 板块 - 实时行情
         LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
 
