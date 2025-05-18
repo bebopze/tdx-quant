@@ -25,10 +25,22 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * -   /T0002/hq_cache/block_fg.dat               风格板块 - 个股列表
  * -   /T0002/hq_cache/block_zs.dat               指数    - 个股列表
  *
+ *
+ * -    缓存文件   ->   数据不会 自动更新
+ *
+ * -    更新方法：删除 /hq_cache目录     或     block_gn.dat/xxx/... 文件
+ * -            重启 会自动重新生成 最新数据（旧版可用）
+ *
+ *
+ * -    最新版本 通达信    已废弃 此缓存文件（block_gn.dat / block_fg.dat / block_zs.dat）
+ *
+ * -    替代方案  @ExportBlockParser   ->   板块数据导出   解析
+ *
  * @author: bebopze
  * @date: 2025/5/6
  */
 @Slf4j
+@Deprecated
 public class BlockGnParser {
 
 
@@ -41,9 +53,18 @@ public class BlockGnParser {
 
     public static void main(String[] args) {
 
-        parse_gn();
-        parse_fg();
-        parse_zs();
+        List<BlockDatDTO> gn_list = parse_gn();
+        for (BlockDatDTO gn : gn_list) {
+
+            if (gn.code.equals("880703")) {
+                System.out.println(JSON.toJSONString(gn));
+            }
+            System.out.println(JSON.toJSONString(gn));
+        }
+
+
+        // parse_fg();
+        // parse_zs();
 
 
         System.out.println();
@@ -56,8 +77,10 @@ public class BlockGnParser {
      * @return
      */
     public static List<BlockDatDTO> parse_gn() {
+        // delCache("gn");
         return parse("gn");
     }
+
 
     public static List<BlockDatDTO> parse_fg() {
         return parse("fg");
@@ -66,6 +89,21 @@ public class BlockGnParser {
 
     public static List<BlockDatDTO> parse_zs() {
         return parse("zs");
+    }
+
+
+    /**
+     * 定期   删除缓存数据   ->     重启 会自动重新生成 最新缓存数据
+     *
+     *
+     * - 数据不会 自动更新
+     * - 更新方法：删除 /hq_cache目录     或     block_gn.dat/xxx/... 文件
+     *
+     * @param blk
+     */
+    @SneakyThrows
+    public static void delCache(String blk) {
+        Files.deleteIfExists(Paths.get(BASE_PATH + "block_" + blk + ".dat"));
     }
 
 
