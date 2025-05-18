@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class Fun1 {
 
 
     public Fun1(String stockCode) {
-        initData(stockCode, null);
+        initData(stockCode, 500);
     }
 
     public Fun1(String stockCode, int limit) {
@@ -74,8 +75,7 @@ public class Fun1 {
      * @param limit     N日
      */
     public void initData(String stockCode, Integer limit) {
-
-        limit = limit == null ? 500 : limit;
+        Assert.isTrue(limit > 0, "limit必须大于0");
 
 
         // --------------------------- HTTP 获取   个股行情 data

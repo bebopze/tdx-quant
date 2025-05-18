@@ -10,9 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,15 +27,8 @@ import java.util.stream.Collectors;
  * @since 2025-05-09
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStockDO> implements IBaseStockService {
-
-
-    @Override
-    public void test() {
-        BaseStockDO baseStockDO = baseMapper.selectById(1L);
-        BaseStockDO baseStockDO2 = baseMapper.getByCode("000001");
-        System.out.println(baseStockDO);
-    }
 
 
     @Override

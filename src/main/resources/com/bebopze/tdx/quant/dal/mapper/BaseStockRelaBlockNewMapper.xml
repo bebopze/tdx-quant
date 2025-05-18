@@ -16,4 +16,15 @@
     </delete>
 
 
+    <select id="listBlockByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+        SELECT bn.*
+
+        FROM base_stock_rela_block_new r
+                 LEFT JOIN base_stock s ON r.stock_id = s.id
+                 LEFT JOIN base_block_new bn ON r.block_new_id = bn.id
+
+        WHERE s.code = #{stockCode}
+    </select>
+
+
 </mapper>

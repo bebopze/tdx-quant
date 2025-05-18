@@ -1,8 +1,11 @@
 package com.bebopze.tdx.quant.dal.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockNewDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -18,4 +21,6 @@ public interface BaseStockRelaBlockNewMapper extends BaseMapper<BaseStockRelaBlo
     int delByBlockNewId(@Param("blockNewId") Long blockNewId);
 
     int deleteAll();
+
+    List<BaseBlockNewDO> listBlockByStockCode(@Param("stockCode") String stockCode);
 }

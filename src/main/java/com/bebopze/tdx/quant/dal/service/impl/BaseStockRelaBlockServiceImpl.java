@@ -1,11 +1,16 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
  * @since 2025-05-09
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBlockMapper, BaseStockRelaBlockDO> implements IBaseStockRelaBlockService {
 
 
@@ -49,5 +55,11 @@ public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBloc
     @Override
     public int deleteAll() {
         return baseMapper.deleteAll();
+    }
+
+
+    @Override
+    public List<BaseBlockDO> listBlockByStockCode(String stockCode) {
+        return baseMapper.listBlockByStockCode(stockCode);
     }
 }

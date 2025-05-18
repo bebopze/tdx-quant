@@ -86,10 +86,12 @@ public class ExportBlockParser {
 
 
     public static List<ExportBlockDTO> parse_hy_pt() {
+        // 普通行业   ->   880302,煤炭开采,000552,甘肃能化
         return parse(filePath_hy, BlockTypeEnum.HY_PT);
     }
 
     public static List<ExportBlockDTO> parse_hy_yj() {
+        // 研究行业   ->   881002,煤炭开采,000552,甘肃能化
         return parse(filePath_hy, BlockTypeEnum.HY_YJ);
     }
 
@@ -148,8 +150,7 @@ public class ExportBlockParser {
      *
      * @return
      */
-    public static List<ExportBlockDTO> parse(String filePath,
-                                             BlockTypeEnum blockTypeEnum) {
+    public static List<ExportBlockDTO> parse(String filePath, BlockTypeEnum blockTypeEnum) {
 
         List<ExportBlockDTO> dtoList = Lists.newArrayList();
 
