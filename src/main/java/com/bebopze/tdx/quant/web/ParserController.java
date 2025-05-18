@@ -84,7 +84,7 @@ public class ParserController {
 
     @Operation(summary = "个股行情（全量） - 拉取解析入库 ", description = "个股行情（全量） - 拉取解析入库")
     @GetMapping(value = "/stock/fillKlineAll")
-    public Result<Object> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "831175")
+    public Result<Object> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "")
                                             @RequestParam(required = false) String beginStockCode) {
         tdxDataParserService.fillStockKlineAll(beginStockCode);
         return Result.SUC();

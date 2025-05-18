@@ -79,7 +79,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 概念板块 - 个股code列表
         // List<BlockGnParser.BlockDatDTO> blockGnDTOList = BlockGnParser.parse_gn();
-
         List<ExportBlockParser.ExportBlockDTO> blockGnDTOList = ExportBlockParser.parse_gn();
 
 
@@ -88,6 +87,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 个股 - 交易所（深沪京）
         Map<String, Integer> stockCode_marketType_map = Maps.newHashMap();
+
+        // 个股code - 个股name
+        Map<String, String> stockCode_stockName_map = Maps.newHashMap();
 
 
         // （行业）关联code - 板块code
@@ -123,7 +125,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 概念   ->   个股-概念板块          全量个股code
-        fill___stockCode_blockCodeSet_map(stockCode_blockCodeSet_map, allStockCodeSet,
+        fill___stockCode_blockCodeSet_map(stockCode_blockCodeSet_map, stockCode_stockName_map, allStockCodeSet,
 
                                           blockGnDTOList);
 
@@ -158,7 +160,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 个股
-        save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stock__codeIdMap);
+        save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
 
 
         // 板块
@@ -234,6 +236,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     private void fill___stockCode_blockCodeSet_map(Map<String, Set<String>> stockCode_blockCodeSet_map,
+                                                   Map<String, String> stockCode_stockName_map,
                                                    Set<String> allStockCodeSet,
 
                                                    List<ExportBlockParser.ExportBlockDTO> blockGnDTOList) {
@@ -253,6 +256,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             allStockCodeSet.add(stockCode);
+            stockCode_stockName_map.put(stockCode, stockName);
 
 
             // stockCodeList.forEach(stockCode -> {
@@ -280,6 +284,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     private void save2DB___stock(List<String> sortAllStockCodeList,
                                  Map<String, Integer> stockCode_marketType_map,
+                                 Map<String, String> stockCode_stockName_map,
 
                                  Map<String, Long> stock__codeIdMap) {
 
@@ -297,7 +302,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // 个股
             BaseStockDO baseStockDO = new BaseStockDO();
             baseStockDO.setCode(stockCode);
-            baseStockDO.setName(null);
+            baseStockDO.setName(stockCode_stockName_map.get(stockCode));
             baseStockDO.setTdxMarketType(marketType);
 
 
@@ -781,78 +786,37 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // sort
-//        Map<String, Long> sort_codeIdMap = Maps.newTreeMap();
-//        sort_codeIdMap.putAll(codeIdMap);
-//
-//
-//        sort_codeIdMap.forEach((stockCode, stockId) -> {
-//            // pre
-//            if (stockCode.compareTo(beginStockCode) < 0) {
-//                return;
-//            }
-//
-//
-//            int[] count = {0};
-//
-//
-//            fillStockKline(stockCode, stockId);
-//
-//
-//            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
-//
-//
-//            ++count[0];
-//            long time = System.currentTimeMillis() - start[0];
-//
-//
-//            long r1 = time / count[0];
-//            long r2 = count[0] / (time / 1000);
-//            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
-//
-//
-//            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
-//            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-//                     stockCode, stockId, count[0], r1, r2, r3);
-//        });
+        Map<String, Long> sort_codeIdMap = Maps.newTreeMap();
+        sort_codeIdMap.putAll(codeIdMap);
 
 
-        if (StringUtils.isNotEmpty(beginStockCode)) {
-            boolean[] pre = {true};
-
-            codeIdMap.forEach((stockCode, stockId) -> {
-                if (pre[0]) {
-                    if (stockCode.equals(beginStockCode)) {
-                        pre[0] = false;
-                    }
-                } else {
+        int[] count = {0};
+        sort_codeIdMap.forEach((stockCode, stockId) -> {
+            // pre
+            if (beginStockCode != null && stockCode.compareTo(beginStockCode) < 0) {
+                return;
+            }
 
 
-                    int[] count = {0};
+            fillStockKline(stockCode, stockId);
 
 
-                    fillStockKline(stockCode, stockId);
+            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
 
 
-                    // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+            ++count[0];
+            long time = Math.max(System.currentTimeMillis() - start[0], 1);
 
 
-                    ++count[0];
-                    long time = System.currentTimeMillis() - start[0];
+            long r1 = time / count[0];
+            long r2 = count[0] * 1000 / time;
+            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
 
 
-                    long r1 = time / count[0];
-                    long r2 = count[0] / (time / 1000);
-                    String r3 = String.format("%s次 - %ss", count[0], time / 1000);
-
-
-                    // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
-                    log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                             stockCode, stockId, count[0], r1, r2, r3);
-
-                }
-            });
-        }
-
+            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                     stockCode, stockId, count[0], r1, r2, r3);
+        });
 
     }
 
@@ -866,21 +830,38 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Assert.notNull(stockId, "个股信息不存在：" + stockCode);
 
 
-        // ---------------------  拉取数据     ->     东方财富 API
+        // ---------------------  拉取数据     ->     通达信-本地读取   /   东方财富 API
 
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
-        String name = stockKlineHisResp.getName();
-        List<String> klines = stockKlineHisResp.getKlines();
+        // 1、通达信   本地读取
+        List<String> klines = klinesFromTdx(stockCode);
+
+
+        // 2、东方财富 API
+//        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+//
+//        String name = stockKlineHisResp.getName();
+//        List<String> klines = stockKlineHisResp.getKlines();
+
+
+        // 3、同花顺 API
+
+
+        // 4、雪球 API
 
 
         // --------------------- entity
 
         BaseStockDO entity = new BaseStockDO();
         entity.setId(stockId);
-        entity.setName(name);
+        // TODO   entity.setName(name);
         // 历史行情
         entity.setKlineHis(JSON.toJSONString(klines));
+
+
+        if (CollectionUtils.isEmpty(klines)) {
+            return;
+        }
 
 
         // 实时行情   -   last kline
@@ -904,6 +885,43 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- DB
 
         iBaseStockService.updateById(entity);
+    }
+
+    private List<String> klinesFromTdx(String stockCode) {
+
+        // 个股 - 历史行情
+        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
+
+
+        // Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+        List<String> klines = Lists.newArrayList();
+        ldayDTOList.forEach(e -> {
+
+
+            // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
+            // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+
+            // 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+
+            List<Object> kline = Lists.newArrayList(String.valueOf(e.getTradeDate()), e.getOpen(), e.getClose(), e.getHigh(), e.getLow(), e.getVol(), e.getAmount(),
+                                                    e.getRangePct(), e.getChangePct(), e.getChangePrice(), null);
+
+
+            String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+            klines.add(klineStr);
+
+
+            // List<Number> kline = Lists.newArrayList(e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(), e.getChangePct(), null, null);
+            //
+            // date_kline_map.put(String.valueOf(e.getTradeDate()), kline);
+        });
+
+        // baseStockDO.setKlineHis(JSON.toJSONString(date_kline_map));
+        //
+        //
+        // LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
+
+        return klines;
     }
 
 

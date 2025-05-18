@@ -23,28 +23,35 @@ public class ConvertStock {
         // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
         // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-        String[] klineArr = kline.split(",");
+        String[] klineArr = kline.split(",", -1);
 
 
         KlineDTO dto = new KlineDTO();
 
         dto.setDate(klineArr[0]);
 
-        dto.setOpen(BigDecimal.valueOf(new Double(klineArr[1])));
-        dto.setClose(BigDecimal.valueOf(new Double(klineArr[2])));
-        dto.setHigh(BigDecimal.valueOf(new Double(klineArr[3])));
-        dto.setLow(BigDecimal.valueOf(new Double(klineArr[4])));
+        dto.setOpen(of(klineArr[1]));
+        dto.setClose(of(klineArr[2]));
+        dto.setHigh(of(klineArr[3]));
+        dto.setLow(of(klineArr[4]));
 
         dto.setVol(Long.valueOf(klineArr[5]));
-        dto.setAmo(BigDecimal.valueOf(new Double(klineArr[6])));
+        dto.setAmo(of(klineArr[6]));
 
-        dto.setRange_pct(BigDecimal.valueOf(new Double(klineArr[7])));
-        dto.setChange_pct(BigDecimal.valueOf(new Double(klineArr[8])));
-        dto.setChange_price(BigDecimal.valueOf(new Double(klineArr[9])));
-        dto.setTurnover_pct(BigDecimal.valueOf(new Double(klineArr[10])));
-
+        dto.setRange_pct(of(klineArr[7]));
+        dto.setChange_pct(of(klineArr[8]));
+        dto.setChange_price(of(klineArr[9]));
+        dto.setTurnover_pct(of(klineArr[10]));
 
         return dto;
+    }
+
+
+    private static BigDecimal of(String valStr) {
+        if (valStr == null || valStr.isEmpty()) {
+            return null;
+        }
+        return BigDecimal.valueOf(new Double(valStr));
     }
 
 

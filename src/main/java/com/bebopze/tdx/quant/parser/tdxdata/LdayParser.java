@@ -116,7 +116,15 @@ public class LdayParser {
         }
 
 
-        return parseByFilePath(filePath);
+        try {
+            return parseByFilePath(filePath);
+        } catch (Exception e) {
+            log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
+                      stockCode, filePath, e.getMessage(), e);
+        }
+
+
+        return Lists.newArrayList();
     }
 
 
@@ -225,14 +233,19 @@ public class LdayParser {
             }
 
             float changePct = Math.round((close - preClose) / preClose * 100 * 100.0f) / 100.0f;
+            float changePrice = close - preClose;
             preClose = close;
+
+
+            // 振幅       H/L   x100-100
+            float rangePct = high / low * 100 - 100;
 
 
             // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};
             // System.out.println(JSON.toJSONString(item));
 
 
-            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), amount, vol, of(changePct));
+            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), amount, vol, of(changePct), of(changePrice), of(rangePct), null);
 
 
             dtoList.add(dto);
@@ -282,6 +295,16 @@ public class LdayParser {
         private BigDecimal amount;
         private Integer vol;
         private BigDecimal changePct;
+        // 涨跌额       C - pre_C          |          今日收盘价 × 涨跌幅 / (1+涨跌幅)
+        private BigDecimal changePrice;
+        // 振幅       H/L   x100-100
+        private BigDecimal rangePct;
+
+        // ----------------------------------- 自动计算 字段
+
+
+        // 换手率
+        private BigDecimal turnoverPct;
     }
 
 }
