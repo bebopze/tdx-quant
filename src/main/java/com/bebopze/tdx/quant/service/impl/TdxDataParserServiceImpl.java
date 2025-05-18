@@ -2,11 +2,8 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
-import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
@@ -697,16 +694,31 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
 
 
-        Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+        // Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+        List<String> klines = Lists.newArrayList();
+
         ldayDTOList.forEach(x -> {
 
-            // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
-            List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
 
-            date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
+            // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+            // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
+
+
+            // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
+            // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+
+            // 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getClose(), x.getHigh(), x.getLow(), x.getVol(), x.getAmount(),
+                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null);
+
+
+            String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+            klines.add(klineStr);
+
+            // date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
         });
 
-        baseBlockDO.setKlineHis(JSON.toJSONString(date_kline_map));
+        baseBlockDO.setKlineHis(JSON.toJSONString(klines));
 
 
         // 板块 - 实时行情
@@ -760,7 +772,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             long r1 = time / count[0];
-            long r2 = count[0] / (time / 1000);
+            long r2 = count[0] * 1000 / time;
             String r3 = String.format("%s次 - %ss", count[0], time / 1000);
 
 
@@ -805,7 +817,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             ++count[0];
-            long time = Math.max(System.currentTimeMillis() - start[0], 1);
+            long time = System.currentTimeMillis() - start[0];
 
 
             long r1 = time / count[0];

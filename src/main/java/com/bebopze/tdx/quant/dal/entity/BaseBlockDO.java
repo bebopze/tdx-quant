@@ -158,10 +158,10 @@ public class BaseBlockDO implements Serializable {
     private BigDecimal turnoverPct;
 
     /**
-     * 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨跌幅,振幅,换手率]）
+     * 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @TableField("kline_his")
-    @Schema(description = "历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨跌幅,振幅,换手率]）")
+    @Schema(description = "历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
 
     /**
