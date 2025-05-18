@@ -11,11 +11,12 @@ DROP TABLE IF EXISTS `base_block`;
 CREATE TABLE `base_block`
 (
     `id`           bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `parent_id`    bigint unsigned                                              NOT NULL DEFAULT '0' COMMENT '父-ID（行业板块）',
-    `level`        tinyint unsigned                                             NOT NULL DEFAULT '0' COMMENT '行业级别：1-1级行业；2-2级行业；3-3级行业（细分行业）；',
-    `type`         tinyint unsigned                                             NOT NULL COMMENT 'tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；',
     `code`         varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '板块代码',
     `name`         varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '板块名称',
+    `type`         tinyint unsigned                                             NOT NULL COMMENT 'tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；',
+    `parent_id`    bigint unsigned                                              NOT NULL DEFAULT '0' COMMENT '父-ID（行业板块）',
+    `level`        tinyint unsigned                                             NOT NULL DEFAULT '0' COMMENT '行业级别：1-1级行业；2-2级行业；3-3级行业（细分行业）；',
+    `end_level`    tinyint unsigned                                             NOT NULL DEFAULT '0' COMMENT '是否最后一级：0-否；1-是；（行业板块）',
     `trade_date`   date                                                                  DEFAULT NULL COMMENT '交易日期',
     `open`         decimal(10, 3)                                                        DEFAULT NULL COMMENT '开盘价',
     `high`         decimal(10, 3)                                                        DEFAULT NULL COMMENT '最高价',
