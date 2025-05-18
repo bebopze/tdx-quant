@@ -37,6 +37,10 @@ public class QuickOption {
     }
 
 
+    public static void 一键卖出(String code) {
+        一键卖出(new Fun1(code));
+    }
+
     /**
      * 一键清仓     -     指定个股
      *

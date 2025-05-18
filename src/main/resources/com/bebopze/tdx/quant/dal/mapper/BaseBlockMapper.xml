@@ -52,4 +52,13 @@
         where code = #{code}
     </select>
 
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT id   AS id,
+               code AS code
+
+        FROM base_stock
+    </select>
+
+
 </mapper>

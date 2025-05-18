@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockNewService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
  * @since 2025-05-11
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class BaseBlockNewServiceImpl extends ServiceImpl<BaseBlockNewMapper, BaseBlockNewDO> implements IBaseBlockNewService {
 
 
