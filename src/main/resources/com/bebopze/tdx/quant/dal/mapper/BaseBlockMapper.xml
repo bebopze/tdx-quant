@@ -43,6 +43,13 @@
     </sql>
 
 
+    <select id="getIdByCode" resultType="long">
+        select id
+        from base_block
+        where code = #{code}
+    </select>
+
+
     <select id="getByCode" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
         select
         <include refid="Base_Column_List"/>

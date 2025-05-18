@@ -243,7 +243,7 @@ public class ExportBlockParser {
         /**
          * 1-个股；2-板块；
          * -
-         * - 简略方案：至存储 个股 关系，非个股（直接pass）
+         * - 简略方案：只存储 个股 关系，非个股（直接pass）
          */
         private Integer type = 1;
     }

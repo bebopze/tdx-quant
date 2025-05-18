@@ -40,17 +40,15 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
     @Override
     public Long getIdByCode(String code) {
+        return baseMapper.getIdByCode(code);
 
 
-        // return baseMapper.getIdByCode(code);
-
-
-        BaseBlockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseBlockDO>()
-                                                          .select(BaseBlockDO::getId)
-                                                          .eq(BaseBlockDO::getCode, code)
-                                                          .last("LIMIT 1"));
-
-        return entity == null ? null : entity.getId();
+//        BaseBlockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseBlockDO>()
+//                                                          .select(BaseBlockDO::getId)
+//                                                          .eq(BaseBlockDO::getCode, code)
+//                                                          .last("LIMIT 1"));
+//
+//        return entity == null ? null : entity.getId();
     }
 
 

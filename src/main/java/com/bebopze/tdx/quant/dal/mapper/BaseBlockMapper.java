@@ -16,6 +16,8 @@ import java.util.List;
  */
 public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
+    Long getIdByCode(@Param("code") String code);
+
     BaseBlockDO getByCode(@Param("code") String code);
 
     List<BaseBlockDO> listAllSimple();

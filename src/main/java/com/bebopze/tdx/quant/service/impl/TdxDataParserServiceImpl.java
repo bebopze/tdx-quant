@@ -78,7 +78,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 概念板块 - 个股code列表
-        List<BlockGnParser.BlockDatDTO> blockGnDTOList = BlockGnParser.parse_gn();
+        // List<BlockGnParser.BlockDatDTO> blockGnDTOList = BlockGnParser.parse_gn();
+
+        List<ExportBlockParser.ExportBlockDTO> blockGnDTOList = ExportBlockParser.parse_gn();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -127,6 +129,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // -------------------------------------------------------------------------------------------------------------
+        allStockCodeSet.addAll(stockCode_blockCodeSet_map.keySet());
 
 
         log.info("all 板块code     >>>     板块size : {}", tdxzs3DTOList.size());
@@ -155,17 +158,17 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 个股
-        // save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stock__codeIdMap);
+        save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stock__codeIdMap);
 
 
         // 板块
         save2DB___block(tdxzs3DTOList, block__codeIdMap, hyBlock__code_pCode_map);
         // 行业板块 - 父ID
-        // save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap);
+        save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap);
 
 
         // 个股 - 板块
-        // save2DB___stock_rela_block(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
+        save2DB___stock_rela_block(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
     }
 
 
@@ -233,32 +236,38 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private void fill___stockCode_blockCodeSet_map(Map<String, Set<String>> stockCode_blockCodeSet_map,
                                                    Set<String> allStockCodeSet,
 
-                                                   List<BlockGnParser.BlockDatDTO> blockGnDTOList) {
+                                                   List<ExportBlockParser.ExportBlockDTO> blockGnDTOList) {
 
 
         // 概念板块
         blockGnDTOList.forEach(e -> {
 
-            String blockCode = e.getCode();
-            List<String> stockCodeList = e.getStockCodeList();
+
+            String blockCode = e.getBlockCode();
+            String blockName = e.getBlockName();
+
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
+
+            // List<String> stockCodeList = e.getStockCodeList();
 
 
-            allStockCodeSet.addAll(stockCodeList);
+            allStockCodeSet.add(stockCode);
 
 
-            stockCodeList.forEach(stockCode -> {
+            // stockCodeList.forEach(stockCode -> {
 
 
-                Set<String> exist_blockCodeList = stockCode_blockCodeSet_map.get(stockCode);
-                if (CollectionUtils.isEmpty(exist_blockCodeList)) {
+            Set<String> exist_blockCodeList = stockCode_blockCodeSet_map.get(stockCode);
+            if (CollectionUtils.isEmpty(exist_blockCodeList)) {
 
-                    stockCode_blockCodeSet_map.put(stockCode, Sets.newTreeSet(Lists.newArrayList(blockCode)));
+                stockCode_blockCodeSet_map.put(stockCode, Sets.newTreeSet(Lists.newArrayList(blockCode)));
 
-                } else {
+            } else {
 
-                    exist_blockCodeList.add(blockCode);
-                }
-            });
+                exist_blockCodeList.add(blockCode);
+            }
+            // });
         });
 
     }
