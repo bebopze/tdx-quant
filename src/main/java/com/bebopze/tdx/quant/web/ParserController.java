@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,17 +60,33 @@ public class ParserController {
     }
 
 
+    @Operation(summary = "板块行情（指定） - 解析入库", description = "板块行情（指定） - 解析入库")
+    @GetMapping(value = "/block/kline")
+    public Result<Object> fillBlockKline(@RequestParam String blockCode) {
+        tdxDataParserService.fillBlockKline(blockCode);
+        return Result.SUC();
+    }
+
+    @Operation(summary = "板块行情（全量） - 解析入库", description = "板块行情（全量） - 解析入库")
+    @GetMapping(value = "/block/klineAll")
+    public Result<Object> fillBlockKlineAll() {
+        tdxDataParserService.fillBlockKlineAll();
+        return Result.SUC();
+    }
+
+
     @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
-    @GetMapping(value = "/fillStockKline")
+    @GetMapping(value = "/stock/fillKline")
     public Result<Object> fillStockKline(@RequestParam String stockCode) {
         tdxDataParserService.fillStockKline(stockCode);
         return Result.SUC();
     }
 
-    @Operation(summary = "个股行情（全量） - 拉取解析入库", description = "个股行情（全量） - 拉取解析入库")
-    @GetMapping(value = "/fillStockKlineAll")
-    public Result<Object> fillStockKlineAll() {
-        tdxDataParserService.fillStockKlineAll();
+    @Operation(summary = "个股行情（全量） - 拉取解析入库 ", description = "个股行情（全量） - 拉取解析入库")
+    @GetMapping(value = "/stock/fillKlineAll")
+    public Result<Object> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "831175")
+                                            @RequestParam(required = false) String beginStockCode) {
+        tdxDataParserService.fillStockKlineAll(beginStockCode);
         return Result.SUC();
     }
 

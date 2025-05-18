@@ -19,9 +19,14 @@ public interface TdxDataParserService {
     void exportBlockNew();
 
 
+    void fillBlockKline(String blockCode);
+
+    void fillBlockKlineAll();
+
+
     void fillStockKline(String stockCode);
 
-    void fillStockKlineAll();
+    void fillStockKlineAll(String beginStockCode);
 
 
     void xgcz();

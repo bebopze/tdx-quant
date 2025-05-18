@@ -18,8 +18,6 @@ import java.util.Map;
  */
 public interface IBaseStockService extends IService<BaseStockDO> {
 
-    void test();
-
     BaseStockDO getByCode(String code);
 
     Long getIdByCode(String code);

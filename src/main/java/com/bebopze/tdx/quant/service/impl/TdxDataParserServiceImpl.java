@@ -280,39 +280,42 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // 个股
             BaseStockDO baseStockDO = new BaseStockDO();
             baseStockDO.setCode(stockCode);
-            baseStockDO.setName("");
+            baseStockDO.setName(null);
             baseStockDO.setTdxMarketType(marketType);
 
 
-            // 个股 - 实时行情
-            // ...
+            // TODO   个股 - 行情  （TDX 读取）
 
 
-            // 个股 - 历史行情
-            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
-
-
-            Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
-            ldayDTOList.forEach(e -> {
-
-                // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
-                List<Number> kline = Lists.newArrayList(e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(), e.getChangePct(), null, null);
-
-                date_kline_map.put(String.valueOf(e.getTradeDate()), kline);
-            });
-
-            baseStockDO.setKlineHis(JSON.toJSONString(date_kline_map));
-
-
-            LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
-            baseStockDO.setTradeDate(last.getTradeDate());
-            baseStockDO.setOpen(last.getOpen());
-            baseStockDO.setHigh(last.getHigh());
-            baseStockDO.setLow(last.getLow());
-            baseStockDO.setChangePct(last.getClose());
-            baseStockDO.setVolume(Long.valueOf(last.getVol()));
-            baseStockDO.setAmount(last.getAmount());
-            baseStockDO.setChangePct(last.getChangePct());
+//            // 个股 - 实时行情
+//            // ...
+//
+//
+//            // 个股 - 历史行情
+//            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
+//
+//
+//            Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+//            ldayDTOList.forEach(e -> {
+//
+//                // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+//                List<Number> kline = Lists.newArrayList(e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(), e.getChangePct(), null, null);
+//
+//                date_kline_map.put(String.valueOf(e.getTradeDate()), kline);
+//            });
+//
+//            baseStockDO.setKlineHis(JSON.toJSONString(date_kline_map));
+//
+//
+//            LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
+//            baseStockDO.setTradeDate(last.getTradeDate());
+//            baseStockDO.setOpen(last.getOpen());
+//            baseStockDO.setHigh(last.getHigh());
+//            baseStockDO.setLow(last.getLow());
+//            baseStockDO.setChangePct(last.getClose());
+//            baseStockDO.setVolume(Long.valueOf(last.getVol()));
+//            baseStockDO.setAmount(last.getAmount());
+//            baseStockDO.setChangePct(last.getChangePct());
 
 
             Long stockId = iBaseStockService.getIdByCode(stockCode);
@@ -365,34 +368,34 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             baseBlockDO.setParentId(null);
 
 
-            // 板块 - 实时行情
-
-
-            // 板块 - 历史行情
-            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
-
-
-            Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
-            ldayDTOList.forEach(x -> {
-
-                // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
-                List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
-
-                date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
-            });
-
-            baseBlockDO.setKlineHis(JSON.toJSONString(date_kline_map));
-
-
-            LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
-            baseBlockDO.setTradeDate(last.getTradeDate());
-            baseBlockDO.setOpen(last.getOpen());
-            baseBlockDO.setHigh(last.getHigh());
-            baseBlockDO.setLow(last.getLow());
-            baseBlockDO.setClose(last.getClose());
-            baseBlockDO.setVolume(Long.valueOf(last.getVol()));
-            baseBlockDO.setAmount(last.getAmount());
-            baseBlockDO.setChangePct(last.getChangePct());
+//            // 板块 - 实时行情
+//
+//
+//            // 板块 - 历史行情
+//            List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
+//
+//
+//            Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+//            ldayDTOList.forEach(x -> {
+//
+//                // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+//                List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
+//
+//                date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
+//            });
+//
+//            baseBlockDO.setKlineHis(JSON.toJSONString(date_kline_map));
+//
+//
+//            LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
+//            baseBlockDO.setTradeDate(last.getTradeDate());
+//            baseBlockDO.setOpen(last.getOpen());
+//            baseBlockDO.setHigh(last.getHigh());
+//            baseBlockDO.setLow(last.getLow());
+//            baseBlockDO.setClose(last.getClose());
+//            baseBlockDO.setVolume(Long.valueOf(last.getVol()));
+//            baseBlockDO.setAmount(last.getAmount());
+//            baseBlockDO.setChangePct(last.getChangePct());
 
 
             Long blockId = iBaseBlockService.getIdByCode(blockCode);
@@ -657,24 +660,73 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
-    public void fillStockKline(String stockCode) {
-        fillStockKline(stockCode, null);
-        log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
+    public void fillBlockKline(String blockCode) {
+        fillBlockKline(blockCode, null);
     }
 
+    public void fillBlockKline(String blockCode, Long blockId) {
+
+        BaseBlockDO baseBlockDO = new BaseBlockDO();
+        baseBlockDO.setCode(blockCode);
+
+
+        // 板块 - 历史行情
+        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
+
+
+        Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
+        ldayDTOList.forEach(x -> {
+
+            // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+            List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
+
+            date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
+        });
+
+        baseBlockDO.setKlineHis(JSON.toJSONString(date_kline_map));
+
+
+        // 板块 - 实时行情
+        LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
+
+        baseBlockDO.setTradeDate(last.getTradeDate());
+        baseBlockDO.setOpen(last.getOpen());
+        baseBlockDO.setHigh(last.getHigh());
+        baseBlockDO.setLow(last.getLow());
+        baseBlockDO.setClose(last.getClose());
+        baseBlockDO.setVolume(Long.valueOf(last.getVol()));
+        baseBlockDO.setAmount(last.getAmount());
+        baseBlockDO.setChangePct(last.getChangePct());
+
+
+        if (blockId != null) {
+            baseBlockDO.setId(blockId);
+            iBaseBlockService.updateById(baseBlockDO);
+        } else {
+            blockId = iBaseBlockService.getIdByCode(blockCode);
+            baseBlockDO.setId(blockId);
+
+            iBaseBlockService.save(baseBlockDO);
+        }
+
+
+        log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
+    }
+
+
     @Override
-    public void fillStockKlineAll() {
+    public void fillBlockKlineAll() {
         long[] start = {System.currentTimeMillis()};
 
 
-        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
+        Map<String, Long> codeIdMap = iBaseBlockService.codeIdMap();
 
 
         int[] count = {0};
-        codeIdMap.forEach((stockCode, stockId) -> {
+        codeIdMap.forEach((blockCode, blockId) -> {
 
 
-            fillStockKline(stockCode, stockId);
+            fillBlockKline(blockCode, blockId);
 
 
             // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
@@ -690,9 +742,100 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
-            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     stockCode, stockId, count[0], r1, r2, r3);
+            log.info("fillBlockKlineAll suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                     blockCode, blockId, count[0], r1, r2, r3);
         });
+    }
+
+
+    @Override
+    public void fillStockKline(String stockCode) {
+        fillStockKline(stockCode, null);
+        log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
+    }
+
+    @Override
+    public void fillStockKlineAll(String beginStockCode) {
+        long[] start = {System.currentTimeMillis()};
+
+
+        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
+
+
+        // sort
+//        Map<String, Long> sort_codeIdMap = Maps.newTreeMap();
+//        sort_codeIdMap.putAll(codeIdMap);
+//
+//
+//        sort_codeIdMap.forEach((stockCode, stockId) -> {
+//            // pre
+//            if (stockCode.compareTo(beginStockCode) < 0) {
+//                return;
+//            }
+//
+//
+//            int[] count = {0};
+//
+//
+//            fillStockKline(stockCode, stockId);
+//
+//
+//            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+//
+//
+//            ++count[0];
+//            long time = System.currentTimeMillis() - start[0];
+//
+//
+//            long r1 = time / count[0];
+//            long r2 = count[0] / (time / 1000);
+//            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
+//
+//
+//            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+//            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+//                     stockCode, stockId, count[0], r1, r2, r3);
+//        });
+
+
+        if (StringUtils.isNotEmpty(beginStockCode)) {
+            boolean[] pre = {true};
+
+            codeIdMap.forEach((stockCode, stockId) -> {
+                if (pre[0]) {
+                    if (stockCode.equals(beginStockCode)) {
+                        pre[0] = false;
+                    }
+                } else {
+
+
+                    int[] count = {0};
+
+
+                    fillStockKline(stockCode, stockId);
+
+
+                    // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+
+
+                    ++count[0];
+                    long time = System.currentTimeMillis() - start[0];
+
+
+                    long r1 = time / count[0];
+                    long r2 = count[0] / (time / 1000);
+                    String r3 = String.format("%s次 - %ss", count[0], time / 1000);
+
+
+                    // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+                    log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                             stockCode, stockId, count[0], r1, r2, r3);
+
+                }
+            });
+        }
+
+
     }
 
 
