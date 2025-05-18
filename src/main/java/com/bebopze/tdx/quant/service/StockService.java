@@ -1,5 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 
 /**
@@ -9,4 +11,6 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 public interface StockService {
 
     BaseStockDO info(String stockCode);
+
+    StockBlockInfoDTO blockInfo(String stockCode);
 }

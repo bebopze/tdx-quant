@@ -38,4 +38,16 @@ public class StockController {
         return Result.SUC(stockService.info(stockCode));
     }
 
+
+    /**
+     * 个股行情
+     *
+     * @return
+     */
+    @Operation(summary = "个股-板块", description = "个股-板块")
+    @GetMapping(value = "/blockInfo")
+    public Result<Object> blockInfo(@RequestParam String stockCode) {
+        return Result.SUC(stockService.blockInfo(stockCode));
+    }
+
 }

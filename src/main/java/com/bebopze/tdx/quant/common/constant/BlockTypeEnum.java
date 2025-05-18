@@ -35,8 +35,19 @@ public enum BlockTypeEnum {
     private String code;
 
     @Getter
-    private Integer status;
+    private Integer type;
 
     @Getter
     private String desc;
+
+
+    public static String getDescByType(Integer type) {
+        for (BlockTypeEnum value : BlockTypeEnum.values()) {
+            if (value.type.equals(type)) {
+                return value.desc;
+            }
+        }
+        return null;
+    }
+
 }

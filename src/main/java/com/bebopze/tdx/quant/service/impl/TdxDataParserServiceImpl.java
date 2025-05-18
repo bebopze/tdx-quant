@@ -65,6 +65,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<Tdxzs3Parser.Tdxzs3DTO> tdxzs3DTOList = Tdxzs3Parser.parse();
 
 
+        // 仅导入   ->   2/12-行业；4-概念；
+        tdxzs3DTOList = tdxzs3DTOList.stream().filter(e -> {
+            // tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；
+            Integer blockType = e.getBlockType();
+            return blockType.equals(2) || blockType.equals(12) || blockType.equals(4);
+        }).collect(Collectors.toList());
+
+
         // 个股 - 行业板块（研究行业 + 普通行业）
         List<TdxhyParser.TdxhyDTO> tdxhyDTOList = TdxhyParser.parse();
 
@@ -89,7 +97,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // all 个股code
-        Set<String> allStockCodeSet = Sets.newHashSet();
+        Set<String> allStockCodeSet = Sets.newTreeSet();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -147,17 +155,17 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 个股
-        save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stock__codeIdMap);
+        // save2DB___stock(sortAllStockCodeList, stockCode_marketType_map, stock__codeIdMap);
 
 
         // 板块
         save2DB___block(tdxzs3DTOList, block__codeIdMap, hyBlock__code_pCode_map);
         // 行业板块 - 父ID
-        save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap);
+        // save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap);
 
 
         // 个股 - 板块
-        save2DB___stock_rela_block(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
+        // save2DB___stock_rela_block(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
     }
 
 
@@ -364,6 +372,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             baseBlockDO.setName(blockName);
             baseBlockDO.setType(e.getBlockType());
             baseBlockDO.setLevel(e.getLevel());
+            baseBlockDO.setEndLevel(e.getEndLevel());
             // 父级
             baseBlockDO.setParentId(null);
 

@@ -133,6 +133,11 @@ public class Tdxzs3Parser {
                             level = 3;
                             p_TXCode = TXCode.substring(0, 5);
                         }
+
+
+                    } else {
+                        // 仅 行业板块 有该字段   （概念/风格/指数 - 无父子关系）
+                        end_level = "1";
                     }
 
 
@@ -171,7 +176,7 @@ public class Tdxzs3Parser {
                                  Map<String, String> TXCode_code_map) {
 
         dtoList.forEach(e -> {
-            e.setPCode(TXCode_code_map.get(e.getTXCode()));
+            e.setPCode(TXCode_code_map.get(e.getPTXCode()));
         });
     }
 

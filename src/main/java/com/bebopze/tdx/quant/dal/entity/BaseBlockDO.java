@@ -53,6 +53,13 @@ public class BaseBlockDO implements Serializable {
     private Integer level;
 
     /**
+     * 是否最后一级：0-否；1-是；
+     */
+    @TableField("end_level")
+    @Schema(description = "是否最后一级：0-否；1-是；")
+    private Integer endLevel;
+
+    /**
      * tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；
      */
     @TableField("type")
