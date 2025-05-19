@@ -22,5 +22,6 @@ public interface BaseStockRelaBlockNewMapper extends BaseMapper<BaseStockRelaBlo
 
     int deleteAll();
 
-    List<BaseBlockNewDO> listBlockByStockCode(@Param("stockCode") String stockCode);
+    List<BaseBlockNewDO> listBlockByStockCode(@Param("stockCode") String stockCode,
+                                              @Param("type") Integer type);
 }

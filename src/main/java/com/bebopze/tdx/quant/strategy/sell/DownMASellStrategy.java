@@ -1,8 +1,10 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
+import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
+import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
-import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockNewService;
-import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.indicator.Fun1;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
@@ -13,7 +15,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.constant.StockPoolBlockEnum.*;
+import static com.bebopze.tdx.quant.common.constant.BlockPoolEnum.*;
+import static com.bebopze.tdx.quant.common.constant.StockPoolEnum.*;
 
 
 /**
@@ -31,6 +34,12 @@ public class DownMASellStrategy {
     private IBaseStockService baseStockService;
 
     @Autowired
+    private IBaseBlockService baseBlockService;
+
+    @Autowired
+    private IBaseStockRelaBlockService baseStockRelaBlockService;
+
+    @Autowired
     private IBaseStockRelaBlockNewService baseStockRelaBlockNewService;
 
 
@@ -45,8 +54,8 @@ public class DownMASellStrategy {
         String stockCode = "000559";
 
 
-        // 个股 - 自定义板块
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode);
+        // 个股 - 自定义板块（选股池子）
+        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         List<String> stockBlockNewCodeList = baseBlockNewDOList.stream().map(BaseBlockNewDO::getCode).collect(Collectors.toList());
 
 
@@ -77,6 +86,36 @@ public class DownMASellStrategy {
             QuickOption.一键卖出(stockCode);
         }
 
+
+        // 个股 - 系统板块
+        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockService.listBlockByStockCode(stockCode);
+        List<String> stockBlockCodeList = baseBlockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+
+
+        // 基础 - 板块池子
+        List<BaseBlockNewDO> baseBlockList = baseStockRelaBlockNewService.listBlockByStockCodeList(
+
+                // 板块-月多   /   板块-T0
+                Lists.newArrayList(BK_YD, BK_T0,
+                                   // 板块-二阶段   /   板块-三线红   /   板块-牛
+                                   BK_EJD, BK_SXH, BK_N,
+                                   // 板块-60日新高   /   板块-口袋支点
+                                   BK_60RXG, BK_KDZD,
+                                   // 板块-强势卖出
+                        /*BK_YCM,*/ BK_QSMC,
+                                   // 板块-主线   /   板块-主线牛
+                                   BK_ZX, BK_ZXN));
+
+
+        // 持仓   ->   必须 满足以下任一
+
+
+        // 板块-月多
+        baseStockRelaBlockNewService.listBlockByStockCode("", BlockNewTypeEnum.BLOCK.getType());
+
+
+        // 1、in   板块-月多
+        // boolean in_60日新高 = stockBlockCodeList.contains(_60日新高.getBlockNewCode());
     }
 
 

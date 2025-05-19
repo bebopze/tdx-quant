@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @TableName("base_stock_rela_block_new")
-@Schema(name = "BaseStockRelaBlockNewDO", description = "股票-自定义板块 关联")
+@Schema(name = "BaseStockRelaBlockNewDO", description = "股票/板块/指数-自定义板块 关联")
 public class BaseStockRelaBlockNewDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -37,11 +37,18 @@ public class BaseStockRelaBlockNewDO implements Serializable {
     private Long id;
 
     /**
-     * 股票ID
+     * 关联ID：股票ID/板块ID/指数ID
      */
     @TableField("stock_id")
-    @Schema(description = "股票ID")
+    @Schema(description = "关联ID：股票ID/板块ID/指数ID")
     private Long stockId;
+
+    /**
+     * 关联ID类型：1-个股；2-板块；3-指数；
+     */
+    @TableField("type")
+    @Schema(description = "关联ID类型：1-个股；2-板块；3-指数；")
+    private Integer type;
 
     /**
      * 自定义板块ID

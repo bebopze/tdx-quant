@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
@@ -114,7 +115,7 @@ public class StockServiceImpl implements StockService {
         // ------------------------------------------------------------------- 自定义板块
 
 
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode);
+        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         dto.setBaseBlockNewDOList(baseBlockNewDOList);
 
         return dto;

@@ -24,6 +24,7 @@
                  LEFT JOIN base_block_new bn ON r.block_new_id = bn.id
 
         WHERE s.code = #{stockCode}
+          AND r.type = #{type}
     </select>
 
 

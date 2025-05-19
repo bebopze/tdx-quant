@@ -112,17 +112,18 @@ DROP TABLE IF EXISTS `base_stock_rela_block_new`;
 
 CREATE TABLE `base_stock_rela_block_new`
 (
-    `id`           bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `stock_id`     bigint unsigned NOT NULL COMMENT '股票ID',
-    `block_new_id` bigint unsigned NOT NULL COMMENT '自定义板块ID',
-    `gmt_create`   datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `gmt_modify`   datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `id`           bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `stock_id`     bigint unsigned  NOT NULL COMMENT '关联ID：股票ID/板块ID/指数ID',
+    `type`         tinyint unsigned NOT NULL COMMENT '关联ID类型：1-个股；2-板块；3-指数；',
+    `block_new_id` bigint unsigned  NOT NULL COMMENT '自定义板块ID',
+    `gmt_create`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     KEY `idx_stock_id` (`stock_id`) USING BTREE COMMENT '股票ID',
     KEY `idx_block_new_id` (`block_new_id`) USING BTREE COMMENT '自定义板块ID'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci COMMENT ='股票-自定义板块 关联';
+  COLLATE = utf8mb4_general_ci COMMENT ='股票/板块/指数-自定义板块 关联';
 
 
 
