@@ -119,8 +119,8 @@ CREATE TABLE `base_stock_rela_block_new`
     `gmt_create`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_stock_id` (`stock_id`) USING BTREE COMMENT '股票ID',
-    KEY `idx_block_new_id` (`block_new_id`) USING BTREE COMMENT '自定义板块ID'
+    KEY `idx__stock_id__type` (`stock_id`, `type`) USING BTREE COMMENT '股票ID',
+    KEY `idx__block_new_id__type` (`block_new_id`, `type`) USING BTREE COMMENT '自定义板块ID'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='股票/板块/指数-自定义板块 关联';
