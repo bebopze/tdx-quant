@@ -7,6 +7,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 
 /**
  * <p>
@@ -22,8 +27,52 @@ public class BaseBlockNewServiceImpl extends ServiceImpl<BaseBlockNewMapper, Bas
 
 
     @Override
+    public Long getIdByCode(String code) {
+        return baseMapper.getIdByCode(code);
+    }
+
+    @Override
     public BaseBlockNewDO getByCode(String code) {
         return baseMapper.getByCode(code);
+    }
+
+
+    @Override
+    public Map<String, Long> codeIdMap() {
+
+        List<BaseBlockNewDO> entityList = baseMapper.listAllSimple();
+
+        Map<String, Long> code_id_map = entityList.stream()
+                .collect(Collectors.toMap(
+                        BaseBlockNewDO::getCode,
+                        BaseBlockNewDO::getId,
+
+                        (existingKey, newKey) -> existingKey
+                ));
+
+        return code_id_map;
+    }
+
+
+    @Override
+    public Map<String, Long> codeIdMap(Collection<String> blockCodeList) {
+
+        List<BaseBlockNewDO> entityList = listSimpleByCodeList(blockCodeList);
+
+        Map<String, Long> code_id_map = entityList.stream()
+                .collect(Collectors.toMap(
+                        BaseBlockNewDO::getCode,
+                        BaseBlockNewDO::getId,
+
+                        (existingKey, newKey) -> existingKey
+                ));
+
+        return code_id_map;
+    }
+
+    @Override
+    public List<BaseBlockNewDO> listSimpleByCodeList(Collection<String> blockCodeList) {
+        return baseMapper.listSimpleByCodeList(blockCodeList);
     }
 
 }

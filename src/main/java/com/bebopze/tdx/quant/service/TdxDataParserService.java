@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * @author: bebopze
  * @date: 2025/5/7
@@ -12,11 +13,17 @@ import java.util.Map;
 public interface TdxDataParserService {
 
 
-    void tdxData();
+    void importAll();
 
-    void exportBlock();
+    void refreshKlineAll();
 
-    void exportBlockNew();
+
+    void importTdxBlockCfg();
+
+
+    void importBlockReport();
+
+    void importBlockNewReport();
 
 
     void fillBlockKline(String blockCode);
@@ -35,6 +42,4 @@ public interface TdxDataParserService {
     Map<String, List<String>> marketRelaStockCodePrefixList();
 
     JSONObject check();
-
-
 }

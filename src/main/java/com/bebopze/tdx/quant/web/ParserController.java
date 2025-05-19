@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.web;
 
-import com.alibaba.fastjson.JSONObject;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +16,7 @@ import java.util.Map;
 
 
 /**
- * 通达信 - 数据解析
+ * 通达信 - 数据初始化（个股-板块-大盘   关联关系 / 行情）   ->   解析入库
  *
  * @author: bebopze
  * @date: 2025/5/7
@@ -33,59 +32,85 @@ public class ParserController {
 
 
     /**
+     * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
+     *
+     * @return
+     */
+    @Operation(summary = "（股票/板块/自定义板块）数据初始化 - 一键导入", description = "（股票/板块/自定义板块）数据初始化 - 一键导入")
+    @GetMapping(value = "/importAll")
+    public Result<Void> importAll() {
+        tdxDataParserService.importAll();
+        return Result.SUC();
+    }
+
+
+    /**
+     * 通达信 - 行情数据（个股/板块）   一键更新
+     *
+     * @return
+     */
+    @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
+    @GetMapping(value = "/refresh/klineAll")
+    public Result<Void> refreshKlineAll() {
+        tdxDataParserService.refreshKlineAll();
+        return Result.SUC();
+    }
+
+
+    /**
      * 通达信 - 数据解析 入库
      *
      * @return
      */
     @Operation(summary = "通达信（cfg + dat） - 解析入库", description = "通达信 - 解析入库")
-    @GetMapping(value = "/blockCfg")
-    public Result<Object> tdxData() {
-        tdxDataParserService.tdxData();
+    @GetMapping(value = "/import/blockCfg")
+    public Result<Void> importTdxBlockCfg() {
+        tdxDataParserService.importTdxBlockCfg();
         return Result.SUC();
     }
 
 
-    @Operation(summary = "通达信（报表导出 - 系统板块） - 解析入库", description = "通达信（报表导出 - 系统板块） - 解析入库")
-    @GetMapping(value = "/export/block")
-    public Result<Object> exportBlock() {
-        tdxDataParserService.exportBlock();
+    @Operation(summary = "通达信（板块导出 - 系统板块） - 解析入库", description = "通达信（板块导出 - 系统板块） - 解析入库")
+    @GetMapping(value = "/import/blockReport")
+    public Result<Void> importBlockReport() {
+        tdxDataParserService.importBlockReport();
         return Result.SUC();
     }
 
-    @Operation(summary = "通达信（报表导出 - 自定义板块） - 解析入库", description = "通达信（报表导出 - 自定义板块） - 解析入库")
-    @GetMapping(value = "/export/block_new")
-    public Result<Object> exportBlockNew() {
-        tdxDataParserService.exportBlockNew();
+    @Operation(summary = "通达信（板块导出 - 自定义板块） - 解析入库", description = "通达信（板块导出 - 自定义板块） - 解析入库")
+    @GetMapping(value = "/import/blockNewReport")
+    public Result<Object> importBlockNewReport() {
+        tdxDataParserService.importBlockNewReport();
         return Result.SUC();
     }
 
 
     @Operation(summary = "板块行情（指定） - 解析入库", description = "板块行情（指定） - 解析入库")
-    @GetMapping(value = "/block/kline")
-    public Result<Object> fillBlockKline(@RequestParam String blockCode) {
+    @GetMapping(value = "/fill/blockKline")
+    public Result<Void> fillBlockKline(@RequestParam String blockCode) {
         tdxDataParserService.fillBlockKline(blockCode);
         return Result.SUC();
     }
 
-    @Operation(summary = "板块行情（全量） - 解析入库", description = "板块行情（全量） - 解析入库")
-    @GetMapping(value = "/block/klineAll")
-    public Result<Object> fillBlockKlineAll() {
+    @Operation(summary = "板块行情（全部） - 解析入库", description = "板块行情（全部） - 解析入库")
+    @GetMapping(value = "/fill/blockKlineAll")
+    public Result<Void> fillBlockKlineAll() {
         tdxDataParserService.fillBlockKlineAll();
         return Result.SUC();
     }
 
 
     @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
-    @GetMapping(value = "/stock/fillKline")
-    public Result<Object> fillStockKline(@RequestParam String stockCode) {
+    @GetMapping(value = "/fill/stockKline")
+    public Result<Void> fillStockKline(@RequestParam String stockCode) {
         tdxDataParserService.fillStockKline(stockCode);
         return Result.SUC();
     }
 
-    @Operation(summary = "个股行情（全量） - 拉取解析入库 ", description = "个股行情（全量） - 拉取解析入库")
-    @GetMapping(value = "/stock/fillKlineAll")
-    public Result<Object> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "")
-                                            @RequestParam(required = false) String beginStockCode) {
+    @Operation(summary = "个股行情（全部） - 拉取解析入库 ", description = "个股行情（全部） - 拉取解析入库")
+    @GetMapping(value = "/fill/stockKlineAll")
+    public Result<Void> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "")
+                                          @RequestParam(required = false) String beginStockCode) {
         tdxDataParserService.fillStockKlineAll(beginStockCode);
         return Result.SUC();
     }
@@ -96,9 +121,10 @@ public class ParserController {
      *
      * @return
      */
+    @Deprecated
     @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
     @GetMapping(value = "/xgcz")
-    public Result<Object> xgcz() {
+    public Result<Void> xgcz() {
         tdxDataParserService.xgcz();
         return Result.SUC();
     }
@@ -116,15 +142,15 @@ public class ParserController {
     }
 
 
-    /**
-     * 交易所 - 股票代码 前缀
-     *
-     * @return
-     */
-    @Operation(summary = "check", description = "check")
-    @GetMapping(value = "/check")
-    public Result<JSONObject> check() {
-        return Result.SUC(tdxDataParserService.check());
-    }
+//    /**
+//     * 交易所 - 股票代码 前缀
+//     *
+//     * @return
+//     */
+//    @Operation(summary = "check", description = "check")
+//    @GetMapping(value = "/check")
+//    public Result<JSONObject> check() {
+//        return Result.SUC(tdxDataParserService.check());
+//    }
 
 }

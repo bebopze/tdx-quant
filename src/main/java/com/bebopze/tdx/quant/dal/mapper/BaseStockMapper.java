@@ -17,6 +17,9 @@ import java.util.List;
  */
 public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
+
+    Long getIdByCode(@Param("code") String code);
+
     BaseStockDO getByCode(@Param("code") String code);
 
 
@@ -26,5 +29,4 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
     List<BaseStockDO> listSimpleByCodeList(@Param("codeList") Collection<String> stockCodeList);
 
     List<BaseStockDO> listBaseByCodeList(@Param("codeList") Collection<String> stockCodeList);
-
 }

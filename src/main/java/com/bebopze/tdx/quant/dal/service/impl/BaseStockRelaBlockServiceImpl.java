@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockMapper;
@@ -9,7 +8,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 
@@ -30,26 +28,12 @@ public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBloc
     public int deleteByBlockId(Long blockId) {
 
         return baseMapper.deleteByBlockId(blockId);
-
-
-//        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
-//                                              .eq(BaseStockRelaBlockDO::getBlockId, blockId));
-//
-//        return count;
     }
 
 
     @Override
     public int deleteByStockId(Long stockId) {
-
-
         return baseMapper.deleteByStockId(stockId);
-
-
-//        int count = baseMapper.delete(new LambdaQueryWrapper<BaseStockRelaBlockDO>()
-//                                              .eq(BaseStockRelaBlockDO::getStockId, stockId));
-//
-//        return count;
     }
 
     @Override
@@ -62,4 +46,5 @@ public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBloc
     public List<BaseBlockDO> listBlockByStockCode(String stockCode) {
         return baseMapper.listBlockByStockCode(stockCode);
     }
+
 }

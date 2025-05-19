@@ -18,9 +18,10 @@ import java.util.Map;
  */
 public interface IBaseStockService extends IService<BaseStockDO> {
 
+    Long getIdByCode(String code);
+
     BaseStockDO getByCode(String code);
 
-    Long getIdByCode(String code);
 
     Map<String, List<String>> market_stockCodePrefixList_map();
 

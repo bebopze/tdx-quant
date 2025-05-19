@@ -1,13 +1,15 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,27 +30,13 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
     @Override
     public BaseBlockDO getByCode(String code) {
-
-        // return baseMapper.getByCode(code);
-
-
-        BaseBlockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseBlockDO>()
-                                                          .eq(BaseBlockDO::getCode, code));
-        return entity;
+        return baseMapper.getByCode(code);
     }
 
 
     @Override
     public Long getIdByCode(String code) {
         return baseMapper.getIdByCode(code);
-
-
-//        BaseBlockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseBlockDO>()
-//                                                          .select(BaseBlockDO::getId)
-//                                                          .eq(BaseBlockDO::getCode, code)
-//                                                          .last("LIMIT 1"));
-//
-//        return entity == null ? null : entity.getId();
     }
 
 
@@ -67,6 +55,34 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
                 ));
 
         return code_id_map;
+    }
+
+
+    @Override
+    public Map<String, Long> codeIdMap(Collection<String> blockCodeList) {
+
+        List<BaseBlockDO> entityList = listSimpleByCodeList(blockCodeList);
+
+
+        Map<String, Long> code_id_map = entityList.stream()
+                .collect(Collectors.toMap(
+                        BaseBlockDO::getCode,  // 键：从对象中提取 code 字段
+                        BaseBlockDO::getId,    // 值：从对象中提取 id 字段
+
+                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                ));
+
+        return code_id_map;
+    }
+
+
+    @Override
+    public List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList) {
+        if (CollectionUtils.isEmpty(blockCodeList)) {
+            return Collections.emptyList();
+        }
+
+        return baseMapper.listSimpleByCodeList(blockCodeList);
     }
 
 }

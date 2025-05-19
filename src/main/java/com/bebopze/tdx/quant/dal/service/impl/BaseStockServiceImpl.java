@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,30 +32,16 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public BaseStockDO getByCode(String code) {
-
-        // return baseMapper.selectByCode(code);
-
-
-        BaseStockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseStockDO>()
-                                                          .eq(BaseStockDO::getCode, code));
-        return entity;
+    public Long getIdByCode(String code) {
+        return baseMapper.getIdByCode(code);
     }
+
 
     @Override
-    public Long getIdByCode(String code) {
-
-
-        // return baseMapper.getIdByCode(code);
-
-
-        BaseStockDO entity = baseMapper.selectOne(new LambdaQueryWrapper<BaseStockDO>()
-                                                          .select(BaseStockDO::getId)
-                                                          .eq(BaseStockDO::getCode, code)
-                                                          .last("LIMIT 1"));
-
-        return entity == null ? null : entity.getId();
+    public BaseStockDO getByCode(String code) {
+        return baseMapper.getByCode(code);
     }
+
 
     @Override
     public Map<String, List<String>> market_stockCodePrefixList_map() {
@@ -93,9 +79,13 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
     @Override
     public List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList) {
-        List<BaseStockDO> entityList = baseMapper.listSimpleByCodeList(stockCodeList);
-        return entityList;
+        if (CollectionUtils.isEmpty(stockCodeList)) {
+            return Collections.emptyList();
+        }
+
+        return baseMapper.listSimpleByCodeList(stockCodeList);
     }
+
 
     @Override
     public Map<String, Long> codeIdMap(Collection<String> stockCodeList) {

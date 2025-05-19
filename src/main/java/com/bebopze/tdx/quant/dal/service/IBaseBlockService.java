@@ -3,6 +3,8 @@ package com.bebopze.tdx.quant.dal.service;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 
@@ -20,5 +22,11 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     Long getIdByCode(String code);
 
+
     Map<String, Long> codeIdMap();
+
+    Map<String, Long> codeIdMap(Collection<String> blockCodeList);
+
+
+    List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList);
 }

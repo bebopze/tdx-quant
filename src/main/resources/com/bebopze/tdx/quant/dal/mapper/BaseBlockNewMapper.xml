@@ -3,12 +3,61 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseBlockNewMapper">
 
 
-    <select id="getByCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+    <select id="getIdByCode" parameterType="java.lang.String" resultType="long">
+        SELECT id
+
+        FROM base_block_new
+
+        WHERE code = #{code}
+    </select>
+
+    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
         SELECT *
 
         FROM base_block_new
 
         WHERE code = #{code}
+    </select>
+
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+        SELECT id   AS id,
+               code AS code
+
+        FROM base_block_new
+    </select>
+
+
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+
+        SELECT
+
+        id AS id,
+        code AS code
+
+
+        FROM base_block_new
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
+    </select>
+
+
+    <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+        SELECT *
+
+        FROM base_block_new
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
     </select>
 
 

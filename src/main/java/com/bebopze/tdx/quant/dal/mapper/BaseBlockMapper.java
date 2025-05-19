@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,4 +22,6 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
     BaseBlockDO getByCode(@Param("code") String code);
 
     List<BaseBlockDO> listAllSimple();
+
+    List<BaseBlockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);
 }

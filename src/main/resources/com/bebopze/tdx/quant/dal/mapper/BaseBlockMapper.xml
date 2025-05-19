@@ -25,4 +25,23 @@
     </select>
 
 
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+
+        SELECT
+
+        id AS id,
+        code AS code
+
+
+        FROM base_block
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
+    </select>
+
+
 </mapper>

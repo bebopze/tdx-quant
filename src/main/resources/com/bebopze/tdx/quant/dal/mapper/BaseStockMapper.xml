@@ -14,6 +14,14 @@
     </sql>
 
 
+    <select id="getIdByCode" parameterType="java.lang.String" resultType="long">
+        SELECT id
+
+        FROM base_stock
+
+        WHERE code = #{code}
+    </select>
+
     <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
