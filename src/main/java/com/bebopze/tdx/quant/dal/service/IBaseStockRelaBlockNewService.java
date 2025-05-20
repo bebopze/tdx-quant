@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.dal.service;
 
-import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockNewDO;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -22,7 +22,7 @@ public interface IBaseStockRelaBlockNewService extends IService<BaseStockRelaBlo
     int deleteAll();
 
 
-    List<BaseBlockNewDO> listBlockByStockCode(String stockCode, Integer type);
+    List<BaseBlockNewDO> listByStockCode(String stockCode, Integer type);
 
-    List<BaseBlockNewDO> listBlockByStockCodeList(List<BlockPoolEnum> blockPoolEnums);
+    List<BaseBlockDO> listBlockByBlockNewCodeList(List<String> blockCodeList);
 }

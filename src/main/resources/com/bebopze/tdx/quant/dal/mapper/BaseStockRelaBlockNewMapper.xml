@@ -16,8 +16,8 @@
     </delete>
 
 
-    <select id="listBlockByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
-        SELECT bn.*
+    <select id="listByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
+        SELECT DISTINCT bn.*
 
         FROM base_stock_rela_block_new r
                  LEFT JOIN base_stock s ON r.stock_id = s.id
@@ -25,6 +25,35 @@
 
         WHERE s.code = #{stockCode}
           AND r.type = #{type}
+
+        ORDER BY bn.id ASC
+    </select>
+
+
+    <select id="listBlockByBlockNewCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT
+
+        DISTINCT b.*
+
+        FROM base_stock_rela_block_new r
+
+        LEFT JOIN base_block b ON r.stock_id = b.id
+        LEFT JOIN base_block_new bn ON r.block_new_id = bn.id
+
+
+        <where>
+            bn.code IN
+            <foreach collection="blockNewCodeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+
+
+            AND r.type = #{type}
+        </where>
+
+
+        ORDER BY b.id ASC
+
     </select>
 
 

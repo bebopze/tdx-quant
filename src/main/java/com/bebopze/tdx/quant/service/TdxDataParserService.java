@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 
 import java.util.List;
 import java.util.Map;

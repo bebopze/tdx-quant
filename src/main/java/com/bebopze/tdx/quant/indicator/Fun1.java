@@ -53,7 +53,7 @@ public class Fun1 {
     private double[] close_arr;
 
 
-    private double[] ssf_arr = SSF(close_arr);
+    private double[] ssf_arr;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -124,6 +124,9 @@ public class Fun1 {
 
         this.date_arr = date_arr;
         this.close_arr = close_arr;
+
+
+        this.ssf_arr = SSF(close_arr);
     }
 
 

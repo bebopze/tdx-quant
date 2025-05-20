@@ -5,7 +5,9 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.indicator.Fun1;
 import com.bebopze.tdx.quant.service.StrategyService;
+import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +20,18 @@ import java.util.List;
 @Slf4j
 @Service
 public class StrategyServiceImpl implements StrategyService {
+
+
+    @Autowired
+    private DownMASellStrategy sellStrategy;
+
+
+    @Override
+    public void holdingStockRule(String stockCode) {
+
+        sellStrategy.holdingStockRule(stockCode);
+
+    }
 
 
     @Override

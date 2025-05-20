@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.strategy;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
@@ -26,19 +26,19 @@ public class QuickOption {
     /**
      * 一键清仓     -     全部持仓
      *
-     * @param fun1
+     * @param fun
      */
-    public static void 一键清仓(Fun1 fun1) {
+    public static void 一键清仓(Fun1 fun) {
 
     }
 
-    public static void 一键建仓(Fun1 fun1) {
+    public static void 一键建仓(Fun1 fun) {
 
     }
 
 
-    public static void 一键卖出(String code) {
-        一键卖出(new Fun1(code));
+    public static void 一键卖出(String stockCode) {
+        一键卖出(new Fun1(stockCode));
     }
 
     /**
@@ -100,7 +100,7 @@ public class QuickOption {
 
 
     // 等比卖出 - 减仓
-    public static void 等比卖出() {
+    public static void 等比卖出(String stockCode) {
 
 
     }

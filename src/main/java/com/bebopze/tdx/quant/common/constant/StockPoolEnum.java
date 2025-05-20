@@ -14,18 +14,18 @@ import lombok.Getter;
 public enum StockPoolEnum {
 
 
-    _60日新高("60RXG(ZD)", 1, "60日新高"),
+    _60日新高("60RXG(ZD)", "60日新高"),
 
-    RPS三线翻红("SXFH(ZD)", 2, "RPS三线翻红"),
+    RPS三线翻红("SXFH(ZD)", "RPS三线翻红"),
 
 
-    口袋支点("KD(ZD)", 3, "口袋支点"),
+    口袋支点("KD(ZD)", "口袋支点"),
 
-    月多("YD(ZD)", 4, "月多"),
+    月多("YD(ZD)", "月多"),
 
-    大均线多头("DJXDT(ZD)", 5, "大均线多头"),
+    大均线多头("DJXDT(ZD)", "大均线多头"),
 
-    中期池子("ZQCZ(ZD)", 6, "中期池子"),
+    中期池子("ZQCZ(ZD)", "中期池子"),
 
 
     ;
@@ -33,9 +33,6 @@ public enum StockPoolEnum {
 
     @Getter
     private String blockNewCode;
-
-    @Getter
-    private Integer type;
 
     @Getter
     private String desc;

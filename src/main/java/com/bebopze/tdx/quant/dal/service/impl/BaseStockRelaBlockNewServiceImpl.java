@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
+import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockNewDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockNewMapper;
@@ -9,7 +10,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,13 +36,13 @@ public class BaseStockRelaBlockNewServiceImpl extends ServiceImpl<BaseStockRelaB
     }
 
     @Override
-    public List<BaseBlockNewDO> listBlockByStockCode(String stockCode, Integer type) {
-        return baseMapper.listBlockByStockCode(stockCode, type);
+    public List<BaseBlockNewDO> listByStockCode(String stockCode, Integer type) {
+        return baseMapper.listByStockCode(stockCode, type);
     }
 
     @Override
-    public List<BaseBlockNewDO> listBlockByStockCodeList(List<BlockPoolEnum> blockPoolEnums) {
-        return Collections.emptyList();
+    public List<BaseBlockDO> listBlockByBlockNewCodeList(List<String> blockNewCodeList) {
+        return baseMapper.listBlockByBlockNewCodeList(blockNewCodeList, BlockNewTypeEnum.BLOCK.getType());
     }
 
 }

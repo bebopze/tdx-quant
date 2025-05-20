@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;

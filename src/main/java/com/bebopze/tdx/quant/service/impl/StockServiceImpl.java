@@ -45,6 +45,7 @@ public class StockServiceImpl implements StockService {
         return baseStockService.getByCode(stockCode);
     }
 
+
     @Override
     public StockBlockInfoDTO blockInfo(String stockCode) {
 
@@ -115,7 +116,7 @@ public class StockServiceImpl implements StockService {
         // ------------------------------------------------------------------- 自定义板块
 
 
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
+        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         dto.setBaseBlockNewDOList(baseBlockNewDOList);
 
         return dto;

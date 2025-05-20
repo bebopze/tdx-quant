@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -8,11 +9,14 @@ import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.indicator.Fun1;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
+
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.BlockPoolEnum.*;
@@ -49,13 +53,110 @@ public class DownMASellStrategy {
     List<String> block_list = Lists.newArrayList("60RXG", "RPSSXFH", "KDZD", "YD", "ZQCZ");
 
 
-    public void chiGuRule() {
+    /**
+     * 持股 策略
+     *
+     * @param stockCode
+     */
+    public void holdingStockRule(String stockCode) {
 
-        String stockCode = "000559";
 
+        // 个股量化
+        boolean rule1 = rule_stockPool(stockCode);
+
+        if (!rule1) {
+            try {
+                QuickOption.一键卖出(stockCode);
+            } catch (Exception e) {
+            }
+        }
+
+
+        // 板块量化
+        boolean rule2 = rule_blockPool(stockCode);
+
+        if (!rule2) {
+            // 减仓
+            try {
+                QuickOption.等比卖出(stockCode);
+            } catch (Exception e) {
+            }
+        }
+
+
+        // 大盘量化
+        boolean rule3 = true;//rule_market(stockCode);
+
+        if (!rule3) {
+            try {
+                QuickOption.一键清仓(null);
+            } catch (Exception e) {
+            }
+        }
+
+
+        System.out.println("-----------------");
+    }
+
+    private boolean rule_blockPool(String stockCode) {
+
+
+        // 个股 - 系统板块
+        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockService.listBlockByStockCode(stockCode);
+        List<String> stock__blockCodeList = baseBlockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+
+        Map<String, String> stock__block_codeNameMap = baseBlockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 基础 - 板块池子（自定义板块）
+        List<BlockPoolEnum> blockNewPoolEnums = Lists.newArrayList(
+                // 板块-月多   /   板块-T0
+                BK_YD, BK_T0,
+                // 板块-二阶段   /   板块-三线红
+                BK_EJD, BK_SXH,
+                // 板块-60日新高   /   板块-口袋支点
+                BK_60RXG, BK_KDZD,
+
+                // 板块-强势卖出
+                BK_QSMC,
+                // 板块-主线
+                BK_ZX);
+
+        List<String> blockNewPoolCodeList = blockNewPoolEnums.stream().map(BlockPoolEnum::getBlockNewCode).collect(Collectors.toList());
+
+
+        // 板块池 -> 板块列表
+        List<BaseBlockDO> blockNewPool__blockDOList = baseStockRelaBlockNewService.listBlockByBlockNewCodeList(blockNewPoolCodeList);
+        List<String> blockNewPool__blockCodeList = blockNewPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+
+        Map<String, String> blockNewPool__block_codeNameMap = blockNewPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+
+
+        // 持仓个股 - 所属板块   ->   必须 满足以下任一
+
+
+        // List<String> BK_YD__blockList = baseStockRelaBlockNewService.listBlockByBlockNewCodeList(Lists.newArrayList(BK_YD.getBlockNewCode())).stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+        // boolean in_板块月多 = Lists.newArrayList(stock__blockCodeList).retainAll(BK_YD__blockList);
+
+
+        // 交集
+        List<String> in_block = Lists.newArrayList(CollectionUtils.intersection(stock__blockCodeList, blockNewPool__blockCodeList));
+        System.out.println("stock__block " + JSON.toJSONString(stock__block_codeNameMap));
+        System.out.println("blockNewPool__block " + JSON.toJSONString(blockNewPool__block_codeNameMap));
+
+        boolean flag = in_block.size() >= 3;
+
+
+        return flag;
+    }
+
+    private boolean rule_stockPool(String stockCode) {
 
         // 个股 - 自定义板块（选股池子）
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listBlockByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
+        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         List<String> stockBlockNewCodeList = baseBlockNewDOList.stream().map(BaseBlockNewDO::getCode).collect(Collectors.toList());
 
 
@@ -81,41 +182,7 @@ public class DownMASellStrategy {
         boolean in_中期池子 = stockBlockNewCodeList.contains(中期池子.getBlockNewCode());
 
 
-        boolean flag = in_60日新高 || in_RPS三线翻红 || in_口袋支点 || in_月多 || in_大均线多头 || in_中期池子;
-        if (!flag) {
-            QuickOption.一键卖出(stockCode);
-        }
-
-
-        // 个股 - 系统板块
-        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockService.listBlockByStockCode(stockCode);
-        List<String> stockBlockCodeList = baseBlockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
-
-
-        // 基础 - 板块池子
-        List<BaseBlockNewDO> baseBlockList = baseStockRelaBlockNewService.listBlockByStockCodeList(
-
-                // 板块-月多   /   板块-T0
-                Lists.newArrayList(BK_YD, BK_T0,
-                                   // 板块-二阶段   /   板块-三线红   /   板块-牛
-                                   BK_EJD, BK_SXH, BK_N,
-                                   // 板块-60日新高   /   板块-口袋支点
-                                   BK_60RXG, BK_KDZD,
-                                   // 板块-强势卖出
-                        /*BK_YCM,*/ BK_QSMC,
-                                   // 板块-主线   /   板块-主线牛
-                                   BK_ZX, BK_ZXN));
-
-
-        // 持仓   ->   必须 满足以下任一
-
-
-        // 板块-月多
-        baseStockRelaBlockNewService.listBlockByStockCode("", BlockNewTypeEnum.BLOCK.getType());
-
-
-        // 1、in   板块-月多
-        // boolean in_60日新高 = stockBlockCodeList.contains(_60日新高.getBlockNewCode());
+        return in_60日新高 || in_RPS三线翻红 || in_口袋支点 || in_月多 || in_大均线多头 || in_中期池子;
     }
 
 

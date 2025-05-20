@@ -27,6 +27,14 @@ public class StrategyController {
     private StrategyService strategyService;
 
 
+    @Operation(summary = "持仓策略", description = "持仓策略")
+    @GetMapping(value = "/holdingStockRule")
+    public Result<Object> holdingStockRule(@RequestParam String stockCode) {
+        strategyService.holdingStockRule(stockCode);
+        return Result.SUC();
+    }
+
+
     @Operation(summary = "破位卖出", description = "破位卖出")
     @GetMapping(value = "/breakSell")
     public Result<Object> breakSell(@RequestParam String stockCode) {

@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/parser/tdxdata")
-@Tag(name = "tdx parser", description = "tdx解析器 API，如 tdxhy.cfg")
+@Tag(name = "通达信 - 数据初始化", description = "（个股-板块-大盘   关联关系 / 行情）   ->   解析入库")
 public class ParserController {
 
 

@@ -3,6 +3,19 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper">
 
 
+    <sql id="baseInfo">
+        id,  code    ,name   ,type,parent_id,level,end_level,
+
+        trade_date,open,high,low,close ,adj_close,
+
+        volume,amount,
+
+        change_pct,range_pct ,turnover_pct,
+
+        gmt_create,gmt_modify
+    </sql>
+
+
     <select id="getIdByCode" resultType="long">
         select id
         from base_block

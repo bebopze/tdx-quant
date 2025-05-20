@@ -7,5 +7,8 @@ package com.bebopze.tdx.quant.service;
 public interface StrategyService {
 
 
+    void holdingStockRule(String stockCode);
+
     void breakSell();
+
 }
