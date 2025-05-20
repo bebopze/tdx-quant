@@ -26,7 +26,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
  */
 @Slf4j
 @Data
-public class Fun1 {
+public class StockFunLast {
 
     private String stockCode;
     private String stockName;
@@ -59,11 +59,11 @@ public class Fun1 {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public Fun1(String stockCode) {
+    public StockFunLast(String stockCode) {
         initData(stockCode, 500);
     }
 
-    public Fun1(String stockCode, int limit) {
+    public StockFunLast(String stockCode, int limit) {
         initData(stockCode, limit);
     }
 
@@ -262,7 +262,7 @@ public class Fun1 {
         String stockCode = "300059";
 
 
-        Fun1 fun = new Fun1(stockCode, 100);
+        StockFunLast fun = new StockFunLast(stockCode, 100);
 
 
         // 1、下MA50

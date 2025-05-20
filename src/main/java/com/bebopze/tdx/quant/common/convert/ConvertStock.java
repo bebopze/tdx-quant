@@ -1,11 +1,14 @@
 package com.bebopze.tdx.quant.common.convert;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,6 +59,9 @@ public class ConvertStock {
 
 
     public static List<KlineDTO> str2DTO(List<String> klines) {
+        if (CollectionUtils.isEmpty(klines)) {
+            return Collections.emptyList();
+        }
         return klines.stream().map(ConvertStock::str2DTO).collect(Collectors.toList());
     }
 
@@ -79,6 +85,27 @@ public class ConvertStock {
     }
 
 
+    /**
+     * 直接从   klineHis 字符串   取值
+     *
+     * @param klineHis  BaseStockDO / BaseBlockDO     ->     klineHis 字段值
+     * @param fieldName
+     * @return
+     */
+    public static double[] fieldValArr(String klineHis, String fieldName) {
+        List<String> klineList = JSON.parseArray(klineHis, String.class);
+        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(klineList);
+
+        return ConvertStock.fieldValArr(klineDTOList, fieldName);
+    }
+
+    /**
+     * 反射取值
+     *
+     * @param klineDTOList
+     * @param fieldName    KlineDTO 的 字段名
+     * @return
+     */
     @SneakyThrows
     public static double[] fieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
 

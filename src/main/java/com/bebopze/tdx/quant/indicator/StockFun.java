@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -22,7 +23,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
  * @date: 2025/5/16
  */
 @Slf4j
-public class Fun2 {
+public class StockFun {
 
     private String stockCode;
 
@@ -42,14 +43,17 @@ public class Fun2 {
     private Object[] date_arr;
 
     private double[] close_arr;
+    private double[] high_arr;
 
-    private double[] ssf_arr = SSF(close_arr);
+    private double[] ssf_arr;// = SSF(close_arr);
 
 
     // -----------------------------------------------------------------------------------------------------------------
+    //                                            个股 - 行情数据 init
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    public Fun2(String stockCode) {
+    public StockFun(String stockCode) {
         initData(stockCode, null);
     }
 
@@ -91,7 +95,7 @@ public class Fun2 {
 
         Object[] date_arr = ConvertStock.objFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStock.fieldValArr(klineDTOList, "close");
-
+        double[] high_arr = ConvertStock.fieldValArr(klineDTOList, "high");
 
         // --------------------------- init data
 
@@ -104,11 +108,15 @@ public class Fun2 {
 
         this.date_arr = date_arr;
         this.close_arr = close_arr;
+        this.high_arr = high_arr;
+
+
+        this.ssf_arr = SSF(close_arr);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                                指标
+    //                                                  基础指标
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -205,36 +213,42 @@ public class Fun2 {
 
 
     public boolean[] MA多(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
+        return con_merge(上MA(N), MA向上(N));
 
 
-        boolean[] 上MA = 上MA(N);
-        boolean[] MA向上 = MA向上(N);
-
-
-        for (int i = 0; i < len; i++) {
-            arr[i] = 上MA[i] && MA向上[i];
-        }
-
-        return arr;
+//        int len = close_arr.length;
+//        boolean[] arr = new boolean[len];
+//
+//
+//        boolean[] 上MA = 上MA(N);
+//        boolean[] MA向上 = MA向上(N);
+//
+//
+//        for (int i = 0; i < len; i++) {
+//            arr[i] = 上MA[i] && MA向上[i];
+//        }
+//
+//        return arr;
     }
 
 
     public boolean[] MA空(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
+        return con_merge(下MA(N), MA向下(N));
 
 
-        boolean[] 下MA = 下MA(N);
-        boolean[] MA向下 = MA向下(N);
-
-
-        for (int i = 0; i < len; i++) {
-            arr[i] = 下MA[i] && MA向下[i];
-        }
-
-        return arr;
+//        int len = close_arr.length;
+//        boolean[] arr = new boolean[len];
+//
+//
+//        boolean[] 下MA = 下MA(N);
+//        boolean[] MA向下 = MA向下(N);
+//
+//
+//        for (int i = 0; i < len; i++) {
+//            arr[i] = 下MA[i] && MA向下[i];
+//        }
+//
+//        return arr;
     }
 
 
@@ -316,39 +330,67 @@ public class Fun2 {
 
 
     public boolean[] SSF多() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
+        return con_merge(上SSF(), SSF向上());
 
 
-        boolean[] 上SSF = 上SSF();
-        boolean[] SSF向上 = SSF向上();
-
-
-        for (int i = 0; i < len; i++) {
-            arr[i] = 上SSF[i] && SSF向上[i];
-        }
-
-        return arr;
+//        int len = close_arr.length;
+//        boolean[] arr = new boolean[len];
+//
+//
+//        boolean[] 上SSF = 上SSF();
+//        boolean[] SSF向上 = SSF向上();
+//
+//        return con_merge(上SSF, SSF向上);
+//
+//
+//        for (int i = 0; i < len; i++) {
+//            arr[i] = 上SSF[i] && SSF向上[i];
+//        }
+//
+//        return arr;
     }
 
 
     public boolean[] SSF空() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
+        return con_merge(下SSF(), SSF向下());
 
 
-        boolean[] 下SSF = 下SSF();
-        boolean[] SSF向下 = SSF向下();
-
-
-        for (int i = 0; i < len; i++) {
-            arr[i] = 下SSF[i] && SSF向下[i];
-        }
-
-        return arr;
+//        int len = close_arr.length;
+//        boolean[] arr = new boolean[len];
+//
+//
+//        boolean[] 下SSF = 下SSF();
+//        boolean[] SSF向下 = SSF向下();
+//
+//
+//        return con_merge(下SSF, SSF向下);
+//
+//        for (int i = 0; i < len; i++) {
+//            arr[i] = 下SSF[i] && SSF向下[i];
+//        }
+//
+//        return arr;
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  高级指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public boolean[] N日新高(int N) {
+
+        boolean[] N日新高_H_arr = TdxExtFun.N日新高(high_arr, N);
+        boolean[] N日新高_C_arr = TdxExtFun.N日新高(close_arr, N);
+
+
+        // H新高 || C新高
+        return con_or(N日新高_H_arr, N日新高_C_arr);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  复杂指标
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -371,7 +413,7 @@ public class Fun2 {
         String stockCode = "300059";
 
 
-        Fun2 fun = new Fun2(stockCode);
+        StockFun fun = new StockFun(stockCode);
 
 
         // 1、下MA50
@@ -394,6 +436,12 @@ public class Fun2 {
     }
 
 
+    /**
+     * 结果合并   -   AND
+     *
+     * @param arr_list
+     * @return
+     */
     public static boolean[] con_merge(boolean[]... arr_list) {
 
         int len = arr_list[0].length;
@@ -405,6 +453,31 @@ public class Fun2 {
             for (boolean[] arr : arr_list) {
                 acc &= arr[i];
                 if (!acc) break;
+            }
+            result[i] = acc;
+        }
+
+        return result;
+    }
+
+
+    /**
+     * 结果合并   -   OR
+     *
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_or(boolean[]... arr_list) {
+
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            boolean acc = false;
+            for (boolean[] arr : arr_list) {
+                acc = acc || arr[i];
+                if (acc) break;
             }
             result[i] = acc;
         }

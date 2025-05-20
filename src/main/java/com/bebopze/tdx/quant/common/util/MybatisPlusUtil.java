@@ -65,11 +65,11 @@ public class MybatisPlusUtil {
         return SQL_SESSION_FACTORY;
     }
 
-//    // 获取 Mapper 实例
-//    public static <T> T getMapper(Class<T> mapperClass) {
-//        SqlSession session = SQL_SESSION_FACTORY.openSession();
-//        return session.getMapper(mapperClass);
-//    }
+    // 获取 Mapper 实例
+    public static <T> T getMapper(Class<T> mapperClass) {
+        SqlSession session = SQL_SESSION_FACTORY.openSession();
+        return session.getMapper(mapperClass);
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

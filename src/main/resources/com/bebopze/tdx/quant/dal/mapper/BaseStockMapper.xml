@@ -39,6 +39,14 @@
     </select>
 
 
+    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT *,
+               kline_his
+
+        FROM base_stock
+    </select>
+
+
     <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
 
         SELECT

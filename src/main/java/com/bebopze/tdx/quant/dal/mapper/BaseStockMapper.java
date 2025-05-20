@@ -25,6 +25,8 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     List<BaseStockDO> listAllSimple();
 
+    List<BaseStockDO> listAllKline();
+
 
     List<BaseStockDO> listSimpleByCodeList(@Param("codeList") Collection<String> stockCodeList);
 
