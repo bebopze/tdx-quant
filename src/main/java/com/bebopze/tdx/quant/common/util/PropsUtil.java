@@ -81,7 +81,7 @@ public class PropsUtil {
     public static String getTdxPath() {
         String val = getProperty("tdx-path");
         // MAC  安装  win虚拟机
-        return SystemUtils.IS_OS_MAC ? val.replace("C:", "/Volumes/[C] Windows 11.hidden") : val;
+        return SystemUtils.IS_OS_MAC ? val.replace("C:", "/Volumes/[C] Windows 11") : val;
     }
 
     public static String getSid() {
