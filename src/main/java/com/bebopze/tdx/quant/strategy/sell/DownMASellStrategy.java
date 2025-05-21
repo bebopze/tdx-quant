@@ -6,7 +6,7 @@ import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.service.*;
-import com.bebopze.tdx.quant.indicator.Fun1;
+import com.bebopze.tdx.quant.indicator.StockFunLast;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
 
@@ -195,7 +195,7 @@ public class DownMASellStrategy {
         String stockCode = "159941";
 
 
-        Fun1 fun = new Fun1(stockCode);
+        StockFunLast fun = new StockFunLast(stockCode);
 
 
         // --------------------------------------- 个股

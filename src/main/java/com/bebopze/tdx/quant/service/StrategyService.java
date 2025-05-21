@@ -6,6 +6,7 @@ package com.bebopze.tdx.quant.service;
  */
 public interface StrategyService {
 
+    void buyStockRule(String stockCode);
 
     void holdingStockRule(String stockCode);
 

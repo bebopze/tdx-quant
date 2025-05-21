@@ -97,7 +97,9 @@ public class StockFun {
         double[] close_arr = ConvertStock.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStock.fieldValArr(klineDTOList, "high");
 
+
         // --------------------------- init data
+
 
         this.stockCode = stockCode;
 
@@ -214,41 +216,11 @@ public class StockFun {
 
     public boolean[] MA多(int N) {
         return con_merge(上MA(N), MA向上(N));
-
-
-//        int len = close_arr.length;
-//        boolean[] arr = new boolean[len];
-//
-//
-//        boolean[] 上MA = 上MA(N);
-//        boolean[] MA向上 = MA向上(N);
-//
-//
-//        for (int i = 0; i < len; i++) {
-//            arr[i] = 上MA[i] && MA向上[i];
-//        }
-//
-//        return arr;
     }
 
 
     public boolean[] MA空(int N) {
         return con_merge(下MA(N), MA向下(N));
-
-
-//        int len = close_arr.length;
-//        boolean[] arr = new boolean[len];
-//
-//
-//        boolean[] 下MA = 下MA(N);
-//        boolean[] MA向下 = MA向下(N);
-//
-//
-//        for (int i = 0; i < len; i++) {
-//            arr[i] = 下MA[i] && MA向下[i];
-//        }
-//
-//        return arr;
     }
 
 
@@ -331,45 +303,11 @@ public class StockFun {
 
     public boolean[] SSF多() {
         return con_merge(上SSF(), SSF向上());
-
-
-//        int len = close_arr.length;
-//        boolean[] arr = new boolean[len];
-//
-//
-//        boolean[] 上SSF = 上SSF();
-//        boolean[] SSF向上 = SSF向上();
-//
-//        return con_merge(上SSF, SSF向上);
-//
-//
-//        for (int i = 0; i < len; i++) {
-//            arr[i] = 上SSF[i] && SSF向上[i];
-//        }
-//
-//        return arr;
     }
 
 
     public boolean[] SSF空() {
         return con_merge(下SSF(), SSF向下());
-
-
-//        int len = close_arr.length;
-//        boolean[] arr = new boolean[len];
-//
-//
-//        boolean[] 下SSF = 下SSF();
-//        boolean[] SSF向下 = SSF向下();
-//
-//
-//        return con_merge(下SSF, SSF向下);
-//
-//        for (int i = 0; i < len; i++) {
-//            arr[i] = 下SSF[i] && SSF向下[i];
-//        }
-//
-//        return arr;
     }
 
 

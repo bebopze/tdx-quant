@@ -5,7 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
-import com.bebopze.tdx.quant.indicator.Fun1;
+import com.bebopze.tdx.quant.indicator.StockFunLast;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
@@ -28,17 +28,17 @@ public class QuickOption {
      *
      * @param fun
      */
-    public static void 一键清仓(Fun1 fun) {
+    public static void 一键清仓(StockFunLast fun) {
 
     }
 
-    public static void 一键建仓(Fun1 fun) {
+    public static void 一键建仓(StockFunLast fun) {
 
     }
 
 
     public static void 一键卖出(String stockCode) {
-        一键卖出(new Fun1(stockCode));
+        一键卖出(new StockFunLast(stockCode));
     }
 
     /**
@@ -46,7 +46,7 @@ public class QuickOption {
      *
      * @param fun
      */
-    public static void 一键卖出(Fun1 fun) {
+    public static void 一键卖出(StockFunLast fun) {
 
         String stockCode = fun.getStockCode();
         String stockName = fun.getStockName();

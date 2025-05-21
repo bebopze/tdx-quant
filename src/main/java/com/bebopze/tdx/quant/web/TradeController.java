@@ -25,7 +25,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/trade")
-@Tag(name = "交易 - BS/撤单/持仓/...", description = "交易 - BS/撤单/持仓/...")
+@Tag(name = "交易", description = "交易 - BS/撤单/持仓/...")
 public class TradeController {
 
 

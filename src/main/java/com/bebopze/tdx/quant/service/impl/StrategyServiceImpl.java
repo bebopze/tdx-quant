@@ -3,8 +3,9 @@ package com.bebopze.tdx.quant.service.impl;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.indicator.Fun1;
+import com.bebopze.tdx.quant.indicator.StockFunLast;
 import com.bebopze.tdx.quant.service.StrategyService;
+import com.bebopze.tdx.quant.strategy.buy.BuyStockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,17 @@ public class StrategyServiceImpl implements StrategyService {
 
 
     @Autowired
+    private BuyStockStrategy buyStrategy;
+
+    @Autowired
     private DownMASellStrategy sellStrategy;
 
+
+    @Override
+    public void buyStockRule(String stockCode) {
+
+        buyStrategy.buyStockRule(stockCode);
+    }
 
     @Override
     public void holdingStockRule(String stockCode) {
@@ -49,7 +59,7 @@ public class StrategyServiceImpl implements StrategyService {
             //
             String stockCode = stock.getStkcode();
 
-            Fun1 fun = new Fun1(stockCode);
+            StockFunLast fun = new StockFunLast(stockCode);
 
 
         });

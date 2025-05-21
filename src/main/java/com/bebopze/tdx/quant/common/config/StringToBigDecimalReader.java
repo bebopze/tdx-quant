@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.common.config;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.reader.ObjectReader;
-import com.alibaba.fastjson2.reader.ObjectReaderProvider;
 import com.alibaba.fastjson2.JSONReader;
 import lombok.Data;
 
@@ -23,8 +22,8 @@ public class StringToBigDecimalReader implements ObjectReader<BigDecimal> {
 
 
     static {
-        ObjectReaderProvider provider = JSONFactory.getDefaultObjectReaderProvider();
-        provider.register(BigDecimal.class, new StringToBigDecimalReader());
+        JSONFactory.getDefaultObjectReaderProvider()
+                .register(BigDecimal.class, new StringToBigDecimalReader());
     }
 
 
@@ -57,6 +56,7 @@ public class StringToBigDecimalReader implements ObjectReader<BigDecimal> {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
 
     public static void main(String[] args) {
 
