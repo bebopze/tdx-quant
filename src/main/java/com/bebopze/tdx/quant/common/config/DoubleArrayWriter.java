@@ -29,11 +29,7 @@ public class DoubleArrayWriter implements ObjectWriter<double[]> {
 
 
     @Override
-    public void write(JSONWriter writer,
-                      Object object,
-                      Object fieldName,
-                      Type fieldType,
-                      long features) {
+    public void write(JSONWriter writer, Object object, Object fieldName, Type fieldType, long features) {
 
         if (object == null) {
             writer.writeNull();
@@ -53,10 +49,18 @@ public class DoubleArrayWriter implements ObjectWriter<double[]> {
                 writer.writeRaw(',');
             }
 
-            // 写入格式化后的值
-            BigDecimal bd = BigDecimal.valueOf(arr[i]).setScale(2, RoundingMode.HALF_UP);
-            writer.writeDouble(bd.doubleValue());
+
+            // NaN
+            if (Double.isNaN(arr[i])) {
+                writer.writeNull();
+            } else {
+
+                // 写入格式化后的值
+                BigDecimal bd = BigDecimal.valueOf(arr[i]).setScale(2, RoundingMode.HALF_UP);
+                writer.writeDouble(bd.doubleValue());
+            }
         }
+
 
         // 结束数组
         writer.endArray();
@@ -69,17 +73,23 @@ public class DoubleArrayWriter implements ObjectWriter<double[]> {
     public static void main(String[] args) {
 
         double[] arr = {98.64534336782691, 98.36312323612418, 98.19379115710254};
+        double[] arr2 = new double[]{31.044214487300096, 31.138287864534338, 31.26999059266228};
 
         Map map = Maps.newHashMap();
         map.put("arr", arr);
+        map.put("arr2", arr2);
 
 
         String arrJson = JSON.toJSONString(arr);
         String mapJson = JSON.toJSONString(map);
 
+        String arrJson2 = JSON.toJSONString(arr2);
+
 
         System.out.println(arrJson);
+        System.out.println(arrJson2);
         System.out.println(mapJson);
     }
+
 
 }

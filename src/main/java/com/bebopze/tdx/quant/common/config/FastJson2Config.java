@@ -1,32 +1,42 @@
 package com.bebopze.tdx.quant.common.config;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
 import com.alibaba.fastjson2.writer.ObjectWriterPrimitiveImpl;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+
 
 /**
+ * FastJson2
+ *
  * @author: bebopze
  * @date: 2025/5/20
  */
 @Configuration
-public class FastJsonConfig {
+public class FastJson2Config {
 
 
     static {
+
+        // 自定义 解析器
+        registerProvider();
+
+
         JSON.configWriterDateFormat("yyyy-MM-dd HH:mm:ss");
         JSON.configReaderDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
-        JSON.config(JSONWriter.Feature.WriteNullNumberAsZero, // Long等Number类型值为空序列化为0
+        JSON.config(JSONWriter.Feature.WriteNullNumberAsZero,   // Long等Number类型值为空序列化为0
                     JSONWriter.Feature.WriteNullBooleanAsFalse, // Boolean类型值为空序列化为false
-                    JSONWriter.Feature.WriteLongAsString, // Long类型序列化为字符串
-                    JSONWriter.Feature.WriteNullListAsEmpty, // List类型值为空序列化为[]
+                    JSONWriter.Feature.WriteLongAsString,       // Long类型序列化为字符串
+                    JSONWriter.Feature.WriteNullListAsEmpty,    // List类型值为空序列化为[]
                     JSONWriter.Feature.WriteBigDecimalAsPlain,  // BigDecimal类型序列化为非科学计数法
-                    JSONWriter.Feature.PrettyFormat, // 格式化输出
+                    // JSONWriter.Feature.PrettyFormat,         // 格式化输出
                     JSONWriter.Feature.WriteNullStringAsEmpty); // String类型值为空序列化为""
 
         JSON.config(JSONReader.Feature.AllowUnQuotedFieldNames); // 字段名称支持没有双引号的反序列化
@@ -41,5 +51,16 @@ public class FastJsonConfig {
             }
         });
     }
+
+
+    // @PostConstruct
+    public static void registerProvider() {
+        JSONFactory.getDefaultObjectReaderProvider()
+                .register(BigDecimal.class, new StringToBigDecimalReader());
+
+        JSONFactory.getDefaultObjectWriterProvider()
+                .register(double[].class, new DoubleArrayWriter());
+    }
+
 
 }
