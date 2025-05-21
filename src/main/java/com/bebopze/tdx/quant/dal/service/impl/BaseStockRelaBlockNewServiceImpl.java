@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockNewDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockNewMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockNewService;
@@ -38,6 +39,11 @@ public class BaseStockRelaBlockNewServiceImpl extends ServiceImpl<BaseStockRelaB
     @Override
     public List<BaseBlockNewDO> listByStockCode(String stockCode, Integer type) {
         return baseMapper.listByStockCode(stockCode, type);
+    }
+
+    @Override
+    public List<BaseStockDO> listStockByBlockNewCodeList(List<String> blockNewCodeList) {
+        return baseMapper.listStockByBlockNewCodeList(blockNewCodeList, BlockNewTypeEnum.STOCK.getType());
     }
 
     @Override
