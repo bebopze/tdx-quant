@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDate;
@@ -272,7 +273,7 @@ public class LdayParser {
 
 
     private static BigDecimal of(Number val) {
-        return new BigDecimal(String.valueOf(val));
+        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
     }
 
 

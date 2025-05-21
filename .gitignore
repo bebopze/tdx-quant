@@ -9,7 +9,12 @@ target/
 *.cmd
 
 
-**/**/application-**.**
+**/application-*.*
 
 
 wiki/
+
+
+tdx_zip/
+
+
