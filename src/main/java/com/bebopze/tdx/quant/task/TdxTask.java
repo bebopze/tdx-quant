@@ -1,69 +1,63 @@
 package com.bebopze.tdx.quant.task;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 
 
 /**
+ * 定时任务
+ *
  * @author: bebopze
  * @date: 2024/9/27
  */
-// @Scheduled("")
 @Slf4j
 @Component
 public class TdxTask {
 
 
-    @Autowired
-    private ConfigurableApplicationContext context;
-
-
-    // @PostConstruct
-    public void execTask_933() {
-        log.info("---------------------------- 任务 [task_933 - 盘后数据下载]   执行 start ---------------------------- ");
+    @Async
+    @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
+    public void execTask__933_902_921() {
 
 
         // .933   -   [盘后数据下载]
+        log.info("---------------------------- 任务 [task_933 - 盘后数据下载]   执行 start");
         TdxScript.task_933();
-
-
-        // 任务执行完毕后，优雅关闭Spring Boot应用
-        // context.close();
-        log.info("---------------------------- 任务 [task_933 - 盘后数据下载]   执行完毕，优雅关闭Spring Boot应用 ---------------------------- ");
-    }
-
-
-    // @PostConstruct
-    public void execTask_902() {
-        log.info("---------------------------- 任务 [task_902 - 扩展数据管理器]   执行 start ---------------------------- ");
+        log.info("---------------------------- 任务 [task_933 - 盘后数据下载]   执行 end");
 
 
         // .902   -   [扩展数据管理器]
+        log.info("---------------------------- 任务 [task_902 - 扩展数据管理器]   执行 start");
         TdxScript.task_902();
-
-
-        // 任务执行完毕后，优雅关闭Spring Boot应用
-        // context.close();
-        log.info("---------------------------- 任务 [task_902 - 扩展数据管理器]   执行完毕，优雅关闭Spring Boot应用 ---------------------------- ");
-    }
-
-
-    // @PostConstruct
-    public void execTask_921() {
-        log.info("---------------------------- 任务 [task_921 - 自动选股]   执行 start ---------------------------- ");
+        log.info("---------------------------- 任务 [task_902 - 扩展数据管理器]   执行 end");
 
 
         // .921   -   [自动选股]
+        log.info("---------------------------- 任务 [task_921 - 自动选股]   执行 start");
         TdxScript.task_921();
+        log.info("---------------------------- 任务 [task_921 - 自动选股]   执行 end");
 
 
-        // 任务执行完毕后，优雅关闭Spring Boot应用
-        context.close();
-        log.info("---------------------------- 任务 [task_921 - 自动选股]   执行 end，优雅关闭Spring Boot应用 ---------------------------- ");
+    }
+
+
+    @Async
+    @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
+    public void execTask__refreshTdxLdayTask_refreshTdxCwTask() {
+
+
+        log.info("---------------------------- 任务 [refreshTdxLdayTask - 盘后数据下载]   执行 start");
+        TdxZipDownScript.refreshTdxLdayTask();
+        log.info("---------------------------- 任务 [refreshTdxLdayTask - 盘后数据下载]   执行 end");
+
+
+        log.info("---------------------------- 任务 [refreshTdxCwTask - 财务数据下载]   执行 start");
+        TdxZipDownScript.refreshTdxCwTask();
+        log.info("---------------------------- 任务 [refreshTdxCwTask - 财务数据下载]   执行 end");
+
+
     }
 
 
