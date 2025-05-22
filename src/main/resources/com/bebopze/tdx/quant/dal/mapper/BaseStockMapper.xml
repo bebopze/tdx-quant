@@ -32,8 +32,9 @@
 
 
     <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT id   AS id,
-               code AS code
+        SELECT id,
+               code,
+               name
 
         FROM base_stock
     </select>

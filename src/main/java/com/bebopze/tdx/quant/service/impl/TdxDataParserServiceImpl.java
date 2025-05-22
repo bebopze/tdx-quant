@@ -531,7 +531,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<BaseStockDO> allBaseStockDOList = iBaseStockService.listAllSimple();
 
         Map<String, Long> stock__codeIdMap = allBaseStockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, BaseStockDO::getId));
-        Map<String, String> stock__codeNameMap = allBaseStockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, BaseStockDO::getName));
+        Map<String, String> stock__codeNameMap = allBaseStockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, stock -> stock.getName() != null ? stock.getName() : ""));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -621,13 +621,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             Long stockId = stock__codeIdMap.get(stockCode);
             if (stockId == null) {
 
+
                 BaseStockDO stockEntity = new BaseStockDO();
                 stockEntity.setCode(stockCode);
                 stockEntity.setName(stockName);
                 stockEntity.setTdxMarketType(StockMarketEnum.getTdxMarketType(stockCode));
 
+
                 // 等待 排序后，再insert
-                baseStockDOList.add(stockEntity);
+                if (null != stockEntity.getTdxMarketType()) {
+                    baseStockDOList.add(stockEntity);
+                } else {
+                    // 非A股     ==>     B股 + ST   ->   忽略          （900957 - *ST凌云B）
+                    log.error("importBlockReport_____save2DB___block   -   个股 -> 未知类型     >>>     stockCode : {} , e : {}", stockCode, JSON.toJSONString(e));
+                }
 
 
             } else {
@@ -639,6 +646,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                     baseStockDO.setName(stockName);
 
                     iBaseStockService.updateById(baseStockDO);
+
+
+                    // 实在 找不到 stockName     =>     上市失败的   ->   688688 - [蚂蚁集团]
                 }
             }
 
