@@ -1,8 +1,7 @@
 package com.bebopze.tdx.quant.dal.service;
 
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
  * @author bebopze
  * @since 2025-05-09
  */
-public interface IBaseStockRelaBlockService extends IService<BaseStockRelaBlockDO> {
+public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockDO> {
 
     int deleteByBlockId(Long blockId);
 

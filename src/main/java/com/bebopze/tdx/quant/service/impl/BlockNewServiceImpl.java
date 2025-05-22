@@ -26,13 +26,13 @@ public class BlockNewServiceImpl implements BlockNewService {
 
 
     @Autowired
-    private IBaseStockRelaBlockNewService baseStockRelaBlockNewService;
+    private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
     @Override
     public List<BlockNewStockDTO> stockList(String blockNewCode) {
 
-        List<BaseStockDO> baseStockDOList = baseStockRelaBlockNewService.listStockByBlockNewCodeList(Lists.newArrayList(blockNewCode));
+        List<BaseStockDO> baseStockDOList = baseBlockNewRelaStockService.listStockByBlockNewCodeList(Lists.newArrayList(blockNewCode));
         if (CollectionUtils.isEmpty(baseStockDOList)) {
             return Lists.newArrayList();
         }
@@ -51,7 +51,7 @@ public class BlockNewServiceImpl implements BlockNewService {
     @Override
     public List<BlockNewBlockDTO> blockList(String blockNewCode) {
 
-        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockNewService.listBlockByBlockNewCodeList(Lists.newArrayList(blockNewCode));
+        List<BaseBlockDO> baseBlockDOList = baseBlockNewRelaStockService.listBlockByBlockNewCodeList(Lists.newArrayList(blockNewCode));
         if (CollectionUtils.isEmpty(baseBlockDOList)) {
             return Lists.newArrayList();
         }

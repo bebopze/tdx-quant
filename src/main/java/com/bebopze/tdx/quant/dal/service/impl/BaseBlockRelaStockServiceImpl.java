@@ -1,9 +1,9 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockDO;
-import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockMapper;
-import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockService;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
+import com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper;
+import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseStockRelaBlockServiceImpl extends ServiceImpl<BaseStockRelaBlockMapper, BaseStockRelaBlockDO> implements IBaseStockRelaBlockService {
+public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStockMapper, BaseBlockRelaStockDO> implements IBaseBlockRelaStockService {
 
 
     @Override

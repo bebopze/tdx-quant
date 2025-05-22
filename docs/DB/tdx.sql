@@ -87,43 +87,43 @@ CREATE TABLE `base_stock`
   COLLATE = utf8mb4_general_ci COMMENT ='股票-实时行情';
 
 -- ----------------------------
--- Table structure for base_stock_rela_block
+-- Table structure for base_block_rela_stock
 -- ----------------------------
-DROP TABLE IF EXISTS `base_stock_rela_block`;
+DROP TABLE IF EXISTS `base_block_rela_stock`;
 
-CREATE TABLE `base_stock_rela_block`
+CREATE TABLE `base_block_rela_stock`
 (
     `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `stock_id`   bigint unsigned NOT NULL COMMENT '股票ID',
     `block_id`   bigint unsigned NOT NULL COMMENT '板块ID',
+    `stock_id`   bigint unsigned NOT NULL COMMENT '股票ID',
     `gmt_create` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_stock_id` (`stock_id`) USING BTREE COMMENT '股票ID',
-    KEY `idx_block_id` (`block_id`) USING BTREE COMMENT '板块ID'
+    KEY `idx_block_id` (`block_id`) USING BTREE COMMENT '板块ID',
+    KEY `idx_stock_id` (`stock_id`) USING BTREE COMMENT '股票ID'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci COMMENT ='股票-板块 关联';
+  COLLATE = utf8mb4_general_ci COMMENT ='板块-股票 关联';
 
 -- ----------------------------
--- Table structure for base_stock_rela_block_new
+-- Table structure for base_block_new_rela_stock
 -- ----------------------------
-DROP TABLE IF EXISTS `base_stock_rela_block_new`;
+DROP TABLE IF EXISTS `base_block_new_rela_stock`;
 
-CREATE TABLE `base_stock_rela_block_new`
+CREATE TABLE `base_block_new_rela_stock`
 (
     `id`           bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `block_new_id` bigint unsigned  NOT NULL COMMENT '自定义板块ID',
     `stock_id`     bigint unsigned  NOT NULL COMMENT '关联ID：股票ID/板块ID/指数ID',
     `type`         tinyint unsigned NOT NULL COMMENT '关联ID类型：1-个股；2-板块；3-指数；',
-    `block_new_id` bigint unsigned  NOT NULL COMMENT '自定义板块ID',
     `gmt_create`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify`   datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx__stock_id__type` (`stock_id`, `type`) USING BTREE COMMENT '股票ID',
-    KEY `idx__block_new_id__type` (`block_new_id`, `type`) USING BTREE COMMENT '自定义板块ID'
+    KEY `idx__block_new_id__type` (`block_new_id`, `type`) USING BTREE COMMENT '自定义板块ID',
+    KEY `idx__stock_id__type` (`stock_id`, `type`) USING BTREE COMMENT '股票ID'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci COMMENT ='股票/板块/指数-自定义板块 关联';
+  COLLATE = utf8mb4_general_ci COMMENT ='自定义板块 - 股票/板块/指数 关联';
 
 
 

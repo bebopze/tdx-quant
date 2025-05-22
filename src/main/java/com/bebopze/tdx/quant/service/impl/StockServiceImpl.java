@@ -34,10 +34,10 @@ public class StockServiceImpl implements StockService {
     private IBaseBlockNewService baseBlockNewService;
 
     @Autowired
-    private IBaseStockRelaBlockService baseStockRelaBlockService;
+    private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
-    private IBaseStockRelaBlockNewService baseStockRelaBlockNewService;
+    private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
     @Override
@@ -56,7 +56,7 @@ public class StockServiceImpl implements StockService {
         // ------------------------------------------------------------------- 系统板块（行业、概念）
 
 
-        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockService.listBlockByStockCode(stockCode);
+        List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCode(stockCode);
 
 
         Map<Integer, StockBlockInfoDTO.BlockTypeDTO> type_dto_map = Maps.newHashMap();
@@ -116,7 +116,7 @@ public class StockServiceImpl implements StockService {
         // ------------------------------------------------------------------- 自定义板块
 
 
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
+        List<BaseBlockNewDO> baseBlockNewDOList = baseBlockNewRelaStockService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         dto.setBaseBlockNewDOList(baseBlockNewDOList);
 
         return dto;

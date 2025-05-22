@@ -41,10 +41,10 @@ public class DownMASellStrategy {
     private IBaseBlockService baseBlockService;
 
     @Autowired
-    private IBaseStockRelaBlockService baseStockRelaBlockService;
+    private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
-    private IBaseStockRelaBlockNewService baseStockRelaBlockNewService;
+    private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
     /**
@@ -102,7 +102,7 @@ public class DownMASellStrategy {
 
 
         // 个股 - 系统板块
-        List<BaseBlockDO> baseBlockDOList = baseStockRelaBlockService.listBlockByStockCode(stockCode);
+        List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCode(stockCode);
         List<String> stock__blockCodeList = baseBlockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
 
         Map<String, String> stock__block_codeNameMap = baseBlockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
@@ -129,7 +129,7 @@ public class DownMASellStrategy {
 
 
         // 板块池 -> 板块列表
-        List<BaseBlockDO> blockNewPool__blockDOList = baseStockRelaBlockNewService.listBlockByBlockNewCodeList(blockNewPoolCodeList);
+        List<BaseBlockDO> blockNewPool__blockDOList = baseBlockNewRelaStockService.listBlockByBlockNewCodeList(blockNewPoolCodeList);
         List<String> blockNewPool__blockCodeList = blockNewPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
 
         Map<String, String> blockNewPool__block_codeNameMap = blockNewPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
@@ -138,7 +138,7 @@ public class DownMASellStrategy {
         // 持仓个股 - 所属板块   ->   必须 满足以下任一
 
 
-        // List<String> BK_YD__blockList = baseStockRelaBlockNewService.listBlockByBlockNewCodeList(Lists.newArrayList(BK_YD.getBlockNewCode())).stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+        // List<String> BK_YD__blockList = baseBlockNewRelaStockService.listBlockByBlockNewCodeList(Lists.newArrayList(BK_YD.getBlockNewCode())).stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
         // boolean in_板块月多 = Lists.newArrayList(stock__blockCodeList).retainAll(BK_YD__blockList);
 
 
@@ -156,7 +156,7 @@ public class DownMASellStrategy {
     private boolean rule_stockPool(String stockCode) {
 
         // 个股 - 自定义板块（选股池子）
-        List<BaseBlockNewDO> baseBlockNewDOList = baseStockRelaBlockNewService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
+        List<BaseBlockNewDO> baseBlockNewDOList = baseBlockNewRelaStockService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
         List<String> stockBlockNewCodeList = baseBlockNewDOList.stream().map(BaseBlockNewDO::getCode).collect(Collectors.toList());
 
 

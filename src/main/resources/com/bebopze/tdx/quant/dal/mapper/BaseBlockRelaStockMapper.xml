@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockMapper">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper">
 
 
     <delete id="deleteByBlockId" parameterType="long">
         DELETE
-        FROM base_stock_rela_block
+        FROM base_block_rela_stock
         WHERE block_id = #{blockId}
     </delete>
 
 
     <delete id="deleteByStockId" parameterType="long">
         DELETE
-        FROM base_stock_rela_block
+        FROM base_block_rela_stock
         WHERE stock_id = #{stockId}
     </delete>
 
 
     <delete id="deleteAll">
         DELETE
-        FROM base_stock_rela_block
+        FROM base_block_rela_stock
     </delete>
 
 
     <select id="listBlockByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT DISTINCT b.*
 
-        FROM base_stock_rela_block r
+        FROM base_block_rela_stock r
                  LEFT JOIN base_stock s ON r.stock_id = s.id
                  LEFT JOIN base_block b ON r.block_id = b.id
 

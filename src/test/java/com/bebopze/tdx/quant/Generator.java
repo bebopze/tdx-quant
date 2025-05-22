@@ -58,8 +58,8 @@ public class Generator {
                 .strategyConfig(builder -> {
                     builder
                             // 设置需要生成的表名
-                            // .addInclude("base_stock", "base_block", "base_stock_rela_block")
-                            .addInclude("base_block_new", "base_stock_rela_block_new")
+                            // .addInclude("base_stock", "base_block", "base_block_rela_stock")
+                            .addInclude("base_block_new", "base_block_new_rela_stock")
 
                             .entityBuilder()
                             .formatFileName("%sDO")

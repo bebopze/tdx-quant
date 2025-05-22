@@ -23,9 +23,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-@TableName("base_stock_rela_block")
-@Schema(name = "BaseStockRelaBlockDO", description = "股票-板块 关联")
-public class BaseStockRelaBlockDO implements Serializable {
+@TableName("base_block_rela_stock")
+@Schema(name = "BaseBlockRelaStockDO", description = "股票-板块 关联")
+public class BaseBlockRelaStockDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

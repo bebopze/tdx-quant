@@ -4,9 +4,9 @@ import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockRelaBlockNewDO;
-import com.bebopze.tdx.quant.dal.mapper.BaseStockRelaBlockNewMapper;
-import com.bebopze.tdx.quant.dal.service.IBaseStockRelaBlockNewService;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockNewRelaStockDO;
+import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewRelaStockMapper;
+import com.bebopze.tdx.quant.dal.service.IBaseBlockNewRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseStockRelaBlockNewServiceImpl extends ServiceImpl<BaseStockRelaBlockNewMapper, BaseStockRelaBlockNewDO> implements IBaseStockRelaBlockNewService {
+public class BaseBlockNewRelaStockServiceImpl extends ServiceImpl<BaseBlockNewRelaStockMapper, BaseBlockNewRelaStockDO> implements IBaseBlockNewRelaStockService {
 
 
     @Override
