@@ -539,8 +539,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // stockCode - blockCode列表   关联关系
-        Map<String, Set<String>> stockCode_blockCodeSet_map = Maps.newTreeMap();
+        // blockCode - stockCode列表   关联关系
+        Map<String, Set<String>> blockCode_stockCodeSet_map = Maps.newTreeMap();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -554,16 +554,16 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                               stock__codeIdMap,
                                               stock__codeNameMap,
 
-                                              stockCode_blockCodeSet_map);
+                                              blockCode_stockCodeSet_map);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        importBlockReport_____save2DB___stock_rela_block(stockCode_blockCodeSet_map,
+        importBlockReport_____save2DB___block_rela_stock(blockCode_stockCodeSet_map,
 
-                                                         stock__codeIdMap,
-                                                         block__codeIdMap);
+                                                         block__codeIdMap,
+                                                         stock__codeIdMap);
 
 
     }
@@ -575,7 +575,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                                        Map<String, Long> stock__codeIdMap,
                                                        Map<String, String> stock__codeNameMap,
 
-                                                       Map<String, Set<String>> stockCode_blockCodeSet_map) {
+                                                       Map<String, Set<String>> blockCode_stockCodeSet_map) {
 
 
         // blockCode   ->   从小到大   排列
@@ -617,6 +617,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // ------------------------------------------------------
 
 
+            // 是否为 A股       （非A股 => B股 -> 忽略）
+            boolean isAStock = true;
+
+
             // stock -> save2DB
             Long stockId = stock__codeIdMap.get(stockCode);
             if (stockId == null) {
@@ -633,6 +637,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                     baseStockDOList.add(stockEntity);
                 } else {
                     // 非A股     ==>     B股 + ST   ->   忽略          （900957 - *ST凌云B）
+                    isAStock = false;
                     log.error("importBlockReport_____save2DB___block   -   个股 -> 未知类型     >>>     stockCode : {} , e : {}", stockCode, JSON.toJSONString(e));
                 }
 
@@ -656,12 +661,16 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // ------------------------------------------------------
 
 
-            // stockCode - blockCodeSet   关联关系
-            Set<String> blockCodeSet = stockCode_blockCodeSet_map.get(stockCode);
-            if (CollectionUtils.isEmpty(blockCodeSet)) {
-                stockCode_blockCodeSet_map.put(stockCode, Sets.newTreeSet(Sets.newHashSet(blockCode)));
-            } else {
-                blockCodeSet.add(blockCode);
+            // blockCode - stockCodeSet     关联关系
+
+            if (isAStock) {
+
+                Set<String> stockCodeSet = blockCode_stockCodeSet_map.get(blockCode);
+                if (CollectionUtils.isEmpty(stockCodeSet)) {
+                    blockCode_stockCodeSet_map.put(blockCode, Sets.newTreeSet(Sets.newHashSet(stockCode)));
+                } else {
+                    stockCodeSet.add(stockCode);
+                }
             }
 
 
@@ -687,37 +696,36 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private void importBlockReport_____save2DB___stock_rela_block(Map<String, Set<String>> stockCode_blockCodeSet_map,
+    private void importBlockReport_____save2DB___block_rela_stock(Map<String, Set<String>> blockCode_stockCodeSet_map,
 
-                                                                  Map<String, Long> stock__codeIdMap,
-                                                                  Map<String, Long> block__codeIdMap) {
+                                                                  Map<String, Long> block__codeIdMap,
+                                                                  Map<String, Long> stock__codeIdMap) {
 
 
         // 有序
-        stockCode_blockCodeSet_map.forEach((stockCode, blockCodeSet) -> {
+        blockCode_stockCodeSet_map.forEach((blockCode, stockCodeSet) -> {
 
 
-            Long stockId = stock__codeIdMap.get(stockCode);
+            Long blockId = block__codeIdMap.get(blockCode);
 
 
-            // stockId - blockId   关联列表
+            // blockId - stockId   关联列表
             List<BaseStockRelaBlockDO> relaEntityList = Lists.newArrayList();
 
 
             // 有序
-            blockCodeSet.forEach(blockCode -> {
+            stockCodeSet.forEach(stockCode -> {
 
                 BaseStockRelaBlockDO relaEntity = new BaseStockRelaBlockDO();
-                relaEntity.setStockId(stockId);
-                relaEntity.setBlockId(block__codeIdMap.get(blockCode));
-
+                relaEntity.setBlockId(blockId);
+                relaEntity.setStockId(stock__codeIdMap.get(stockCode));
 
                 relaEntityList.add(relaEntity);
             });
 
 
             // del All
-            iBaseStockRelaBlockService.deleteByStockId(stockId);
+            iBaseStockRelaBlockService.deleteByBlockId(blockId);
             // batch insert
             iBaseStockRelaBlockService.saveBatch(relaEntityList, 500);
         });
