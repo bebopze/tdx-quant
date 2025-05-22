@@ -11,7 +11,6 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
@@ -27,7 +26,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * @date: 2025/5/7
  */
 @Slf4j
-public class ExportBlockParser {
+public class BlockReportParser {
 
 
     private static final String filePath_hy = TDX_PATH + "/T0002/export/行业板块.txt";

@@ -104,6 +104,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
+    @Override
+    public List<BaseStockDO> listAllSimple() {
+        return baseMapper.listAllSimple();
+    }
+
 
     @Override
     public Map<String, Long> codeIdMap() {

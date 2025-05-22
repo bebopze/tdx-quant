@@ -54,5 +54,4 @@ public class BlockNewkController {
         return Result.SUC(blockNewService.blockList(blockNewCode));
     }
 
-
 }

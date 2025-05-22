@@ -31,5 +31,7 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     Map<String, Long> codeIdMap(Collection<String> stockCodeList);
 
 
+    List<BaseStockDO> listAllSimple();
+
     Map<String, Long> codeIdMap();
 }
