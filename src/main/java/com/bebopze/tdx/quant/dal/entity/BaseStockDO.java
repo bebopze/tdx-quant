@@ -1,9 +1,14 @@
 package com.bebopze.tdx.quant.dal.entity;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +18,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -144,6 +150,13 @@ public class BaseStockDO implements Serializable {
     private String klineHis;
 
     /**
+     * 扩展数据 指标-JSON（[]）
+     */
+    @TableField(value = "ext_data_his", select = false)
+    @Schema(description = "扩展数据 指标-JSON（[]）")
+    private String extDataHis;
+
+    /**
      * 创建时间
      */
     @TableField("gmt_create")
@@ -156,4 +169,67 @@ public class BaseStockDO implements Serializable {
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
     private LocalDateTime gmtModify;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public List<ExtDataDTO> getExtDataHis() {
+        return ConvertStockExtData.extDataHis2DTOList(extDataHis);
+    }
+
+    public List<KlineDTO> getKLineHis() {
+        return ConvertStockKline.klineHis2DTOList(klineHis);
+    }
+
+
+    public static void main(String[] args) {
+        getRps2();
+    }
+
+    public static ExtDataDTO getRps2() {
+        String rps = "{\n" +
+                "  \"rps10\": [\n" +
+                "    31.04426,\n" +
+                "    31.13828,\n" +
+                "    31.2699\n" +
+                "  ],\n" +
+                "  \"rps20\": [\n" +
+                "    31.04426,\n" +
+                "    31.13828,\n" +
+                "    31.2699\n" +
+                "  ],\n" +
+                "  \"rps50\": [\n" +
+                "    31.04426,\n" +
+                "    31.13828,\n" +
+                "    31.2699\n" +
+                "  ],\n" +
+                "  \"rps120\": [\n" +
+                "    31.04426,\n" +
+                "    31.13828,\n" +
+                "    31.2699\n" +
+                "  ],\n" +
+                "  \"rps250\": [\n" +
+                "    31.04426,\n" +
+                "    31.13828,\n" +
+                "    31.2699\n" +
+                "  ]\n" +
+                "}";
+
+
+        ExtDataDTO rpsDTO = JSON.parseObject(rps, ExtDataDTO.class);
+
+        Object[] date = ConvertStockExtData.objFieldValArr(rps, "date");
+        double[] rps10 = ConvertStockExtData.fieldValArr(rps, "rps10");
+        double[] rps20 = ConvertStockExtData.fieldValArr(rps, "rps20");
+        double[] rps50 = ConvertStockExtData.fieldValArr(rps, "rps50");
+        double[] rps120 = ConvertStockExtData.fieldValArr(rps, "rps120");
+        double[] rps250 = ConvertStockExtData.fieldValArr(rps, "rps250");
+
+
+        System.out.println(JSON.toJSONString(rpsDTO));
+        return rpsDTO;
+    }
+
+
 }
