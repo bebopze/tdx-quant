@@ -8,7 +8,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,7 +54,7 @@ public class ConvertStockKline {
 //    }
 
 
-    public static KlineDTO str2DTO(String kline) {
+    public static KlineDTO strList2DTOList(String kline) {
 
 
         // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
@@ -93,11 +92,17 @@ public class ConvertStockKline {
     }
 
 
-    public static List<KlineDTO> str2DTO(List<String> klines) {
+    public static List<KlineDTO> strList2DTOList(List<String> klines) {
         if (CollectionUtils.isEmpty(klines)) {
             return Collections.emptyList();
         }
-        return klines.stream().map(ConvertStockKline::str2DTO).collect(Collectors.toList());
+        return klines.stream().map(ConvertStockKline::strList2DTOList).collect(Collectors.toList());
+    }
+
+
+    public static List<KlineDTO> str2DTOList(String klineHis, Integer limit) {
+        List<String> klineList = JSON.parseArray(klineHis, String.class);
+        return strList2DTOList(klineList, limit);
     }
 
 
@@ -108,21 +113,21 @@ public class ConvertStockKline {
      * @param limit  最近N日
      * @return
      */
-    public static List<KlineDTO> str2DTO(List<String> klines, int limit) {
+    public static List<KlineDTO> strList2DTOList(List<String> klines, int limit) {
 
         int size = klines.size();
         if (size > limit) {
             List<String> subKlines = klines.subList(size - limit, size);
-            return str2DTO(subKlines);
+            return strList2DTOList(subKlines);
         }
 
-        return str2DTO(klines);
+        return strList2DTOList(klines);
     }
 
 
     public static List<KlineDTO> klineHis2DTOList(String klineHis) {
         List<String> klineList = JSON.parseArray(klineHis, String.class);
-        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(klineList);
+        List<KlineDTO> klineDTOList = strList2DTOList(klineList);
         return klineDTOList;
     }
 

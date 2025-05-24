@@ -12,6 +12,7 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockNewRelaStockService;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.indicator.StockFunLast;
 import com.bebopze.tdx.quant.strategy.QuickOption;
@@ -77,41 +78,20 @@ public class BuyStockStrategy {
     public void holdingStockRule() {
 
 
-        // 板块池子 - 板块列表
-
-        // 基础 - 板块池子（自定义板块）
-        List<BlockPoolEnum> blockPoolEnums = Lists.newArrayList(
-                // 板块-月多   /   板块-T0
-                BK_YD, BK_T0,
-
-                // 板块-二阶段   /   板块-三线红
-                BK_EJD, BK_SXH,
-
-                // 板块-60日新高   /   板块-口袋支点
-                BK_60RXG, BK_KDZD,
-
-                // 板块-主线
-                BK_ZX);
+        // -------------------------------------------------------------------------------------------------------------
+        //                                              板块池
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        // 板块池子 - code列表
-        List<String> blockPoolCodeList = blockPoolEnums.stream().map(BlockPoolEnum::getBlockNewCode).collect(Collectors.toList());
-
-
-        // 板块池子 -> 板块Entity 列表
-        List<BaseBlockDO> blockPool__blockDOList = baseBlockNewRelaStockService.listBlockByBlockNewCodeList(blockPoolCodeList);
-
-        // 板块池子 -> 板块code 列表
-        List<String> blockPool__blockCodeList = blockPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
-        // 板块池子 -> 板块 - code_name map
-        Map<String, String> blockPool__block_codeNameMap = blockPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+        // 板块池子   ->   板块code 列表
+        List<String> filterBlockCodeList = filterBlockPool();
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 板块池子 -> 个股Entity 列表
-        List<BaseStockDO> blockPool__stockDOList = baseBlockRelaStockService.listStockByBlockCodeList(blockPool__blockCodeList);
+        List<BaseStockDO> blockPool__stockDOList = baseBlockRelaStockService.listStockByBlockCodeList(filterBlockCodeList);
 
 
         // 板块池子 -> 个股code 列表
@@ -124,56 +104,17 @@ public class BuyStockStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-
-
+        //                                              个股池
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 股票池子 - 个股列表
-
-        // 基础 - 板块池子（自定义板块）
-        List<StockPoolEnum> stockPoolEnums = Lists.newArrayList(
-                // 60日新高   /   RPS三线翻红   /   月多
-                _60日新高, RPS三线翻红, 月多,
-
-                // 口袋支点
-                口袋支点,
-
-                // 大均线多头
-                大均线多头,
-
-                // 中期池子
-                中期池子);
-
-
-        // 个股池子 - code列表
-        List<String> stockPoolCodeList = stockPoolEnums.stream().map(StockPoolEnum::getBlockNewCode).collect(Collectors.toList());
-
-
         Map<StockPoolEnum, List<BaseStockDO>> stockPool__stockDOList__map = Maps.newHashMap();
         Map<StockPoolEnum, List<String>> stockPool__stockCodeList__map = Maps.newHashMap();
 
 
-        for (StockPoolEnum stockPoolEnum : stockPoolEnums) {
-            List<BaseStockDO> stockPool__stockDOList = baseBlockNewRelaStockService.listStockByBlockNewCodeList(Lists.newArrayList(stockPoolEnum.getBlockNewCode()));
-            List<String> stockPool__stockCodeList = stockPool__stockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
-            stockPool__stockDOList__map.put(stockPoolEnum, stockPool__stockDOList);
-            stockPool__stockCodeList__map.put(stockPoolEnum, stockPool__stockCodeList);
-        }
+        List<BaseStockDO> stockPool__stockDOList = loadStockPool(stockPool__stockDOList__map, stockPool__stockCodeList__map);
 
-
-        // 个股池子 -> 个股Entity 列表
-        List<BaseStockDO> stockPool__stockDOList = stockPool__stockDOList__map.values().stream().flatMap(List::stream)
-                .collect(Collectors.toMap(
-                        BaseStockDO::getCode,   // 以 code 作为 key
-                        stock -> stock,         // value 就是对象本身
-                        (existing, replacement) -> existing  // 遇到重复时保留第一个出现的对象
-                )).
-                values().stream().collect(Collectors.toList());
-
-
-        // 个股池子 -> 个股Entity 列表
-        // List<BaseStockDO> stockPool__stockDOList = baseBlockNewRelaStockService.listStockByBlockNewCodeList(stockPoolCodeList);
 
         // 个股池子 -> 个股code 列表
         List<String> stockPool__stockCodeList = stockPool__stockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
@@ -185,20 +126,21 @@ public class BuyStockStrategy {
 
 
         // 个股池子 -> 板块Entity 列表
-        List<BaseBlockDO> stockPool__blockDOList = baseBlockRelaStockService.listBlockByStockCodeList(stockPool__stockCodeList);
+        // List<BaseBlockDO> stockPool__blockDOList = baseBlockRelaStockService.listBlockByStockCodeList(stockPool__stockCodeList);
 
         // 个股 - 所属板块 -> 板块code 列表
-        List<String> stockPool__blockCodeList = stockPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+        // List<String> stockPool__blockCodeList = stockPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
         // 板块池子 -> 个股 - code_name map
-        Map<String, String> stockPool__block_codeNameMap = stockPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+        // Map<String, String> stockPool__block_codeNameMap = stockPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // -------------------------------------------------------------------------------------------------------------
-
-
+        //                                              个股筛选
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -208,13 +150,13 @@ public class BuyStockStrategy {
         // 2、个股-所属板块   ->   in_板块池子
 
 
-        Collection<String> same__blockCodeList = CollectionUtils.intersection(stockPool__blockCodeList, blockPool__blockCodeList);
+        // Collection<String> same__blockCodeList = CollectionUtils.intersection(stockPool__blockCodeList, blockPool__blockCodeList);
 
 
         Collection<String> same__stockCodeList = CollectionUtils.intersection(blockPool__stockCodeList, stockPool__stockCodeList);
 
 
-        Map<String, String> sameStockPool__codeNameMap = Maps.newHashMap();
+        Map<String, String> sameStockPool__codeNameMap = Maps.newTreeMap();
         stockPool__stock_codeNameMap.forEach((stockCode, stockName) -> {
 
             if (same__stockCodeList.contains(stockCode)) {
@@ -242,7 +184,7 @@ public class BuyStockStrategy {
 
 
         List<String> filterStockCodeList = Lists.newArrayList();
-        Map<String, String> filterStockPool__codeNameMap = Maps.newHashMap();
+        Map<String, String> filterStockPool__codeNameMap = Maps.newTreeMap();
 
 
         same__stockCodeList.forEach(stockCode -> {
@@ -304,6 +246,195 @@ public class BuyStockStrategy {
 
         // 等比 买入前50只
         buyStocks(filterStockCodeList, filterStockPool__codeNameMap);
+    }
+
+    private List<BaseStockDO> loadStockPool(Map<StockPoolEnum, List<BaseStockDO>> stockPool__stockDOList__map,
+                                            Map<StockPoolEnum, List<String>> stockPool__stockCodeList__map) {
+
+
+        // 基础 - 板块池子（自定义板块）
+        List<StockPoolEnum> stockPoolEnums = Lists.newArrayList(
+                // 60日新高   /   RPS三线翻红   /   月多
+                _60日新高, RPS三线翻红, 月多,
+
+                // 口袋支点
+                口袋支点,
+
+                // 大均线多头
+                大均线多头,
+
+                // 中期池子
+                中期池子);
+
+
+        for (StockPoolEnum stockPoolEnum : stockPoolEnums) {
+            List<BaseStockDO> stockPool__stockDOList = baseBlockNewRelaStockService.listStockByBlockNewCodeList(Lists.newArrayList(stockPoolEnum.getBlockNewCode()));
+            List<String> stockPoolEnum__stockCodeList = stockPool__stockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
+
+            stockPool__stockDOList__map.put(stockPoolEnum, stockPool__stockDOList);
+            stockPool__stockCodeList__map.put(stockPoolEnum, stockPoolEnum__stockCodeList);
+        }
+
+
+        // 个股池子 -> 个股Entity 列表
+        List<BaseStockDO> stockPool__stockDOList = stockPool__stockDOList__map.values().stream().flatMap(List::stream)
+                .collect(Collectors.toMap(
+                        BaseStockDO::getCode,
+                        stock -> stock,
+                        (existing, replacement) -> existing
+                )).
+                values().stream().collect(Collectors.toList());
+
+
+        return stockPool__stockDOList;
+
+    }
+
+
+    /**
+     * 板块池子  -  筛选
+     *
+     * @return
+     */
+    private List<String> filterBlockPool() {
+
+        // 板块池子 - 板块列表
+
+        // 基础 - 板块池子（自定义板块）
+        List<BlockPoolEnum> blockPoolEnums = Lists.newArrayList(
+
+                // ----------------- 买B（买进区域）
+
+
+                // 板块-月多   /   板块-T0
+                BK_YD, BK_T0,
+
+                // 板块-二阶段   /   板块-三线红
+                BK_EJD, BK_SXH,
+
+                // 板块-60日新高   /   板块-口袋支点
+                BK_60RXG, BK_KDZD,
+
+                // 板块-主线
+                BK_ZX,
+
+
+                // ----------------- 卖S（淘汰区域）
+
+
+                // 板块-右侧卖
+                BK_YCS);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        Map<BlockPoolEnum, List<BaseBlockDO>> blockPool__blockDOList__map = Maps.newHashMap();
+        Map<BlockPoolEnum, List<String>> blockPool__blockCodeList__map = Maps.newHashMap();
+
+
+        for (BlockPoolEnum blockPoolEnum : blockPoolEnums) {
+            List<BaseBlockDO> blockPool__blockDOList = baseBlockNewRelaStockService.listBlockByBlockNewCodeList(Lists.newArrayList(blockPoolEnum.getBlockNewCode()));
+            List<String> blockPool__blockCodeList = blockPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+
+            blockPool__blockDOList__map.put(blockPoolEnum, blockPool__blockDOList);
+            blockPool__blockCodeList__map.put(blockPoolEnum, blockPool__blockCodeList);
+        }
+
+
+        // 板块池子 -> 板块Entity 列表
+        List<BaseBlockDO> blockPool__blockDOList = blockPool__blockDOList__map.values().stream().flatMap(List::stream)
+                .collect(Collectors.toMap(
+                        BaseBlockDO::getCode,
+                        stock -> stock,
+                        (existing, replacement) -> existing
+                )).
+                values().stream().collect(Collectors.toList());
+
+
+        // 板块池子 -> 板块code 列表
+        List<String> blockPool__blockCodeList = blockPool__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toList());
+        // 板块池子 -> 板块 - code_name map
+        Map<String, String> blockPool__block_codeNameMap = blockPool__blockDOList.stream().collect(Collectors.toMap(BaseBlockDO::getCode, BaseBlockDO::getName));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 板块筛选
+        List<String> filterBlockCodeList = Lists.newArrayList();
+        Map<String, String> filterBlockPool__codeNameMap = Maps.newTreeMap();
+
+
+        // 1、月多
+        // 2、SSF多
+        // 3、NOT(右侧卖)   AND   NOT(左侧卖)
+
+
+        blockPool__blockCodeList.forEach(blockCode -> {
+
+
+            // boolean[] RPS红 = stockFun.RPS红();
+
+            // boolean[] 大均线多头 = stockFun.大均线多头();
+            // boolean[] 月多 = stockFun.月多();
+
+
+            // boolean[] N日新高 = stockFun.N日新高(60);
+
+
+            boolean in_板块_月多 = blockPool__blockCodeList__map.get(BK_YD).contains(blockCode);
+            boolean in_板块_T0 = blockPool__blockCodeList__map.get(BK_T0).contains(blockCode);
+
+            boolean in_板块_二阶段 = blockPool__blockCodeList__map.get(BK_EJD).contains(blockCode);
+            boolean in_板块_三线红 = blockPool__blockCodeList__map.get(BK_SXH).contains(blockCode);
+
+            boolean in_板块_60日新高 = blockPool__blockCodeList__map.get(BK_60RXG).contains(blockCode);
+            boolean in_板块_口袋支点 = blockPool__blockCodeList__map.get(BK_KDZD).contains(blockCode);
+            boolean in_板块_主线 = blockPool__blockCodeList__map.get(BK_ZX).contains(blockCode);
+
+
+            boolean not_in_板块_右侧卖 = !blockPool__blockCodeList__map.get(BK_YCS).contains(blockCode);
+
+
+            boolean flag = in_板块_月多 && (in_板块_T0 || in_板块_二阶段 || in_板块_三线红 || in_板块_60日新高 || in_板块_口袋支点 || in_板块_主线)
+                    && not_in_板块_右侧卖 /*&& SSF多_last*/;
+
+
+            if (flag) {
+
+
+                BaseBlockDO baseBlockDO = baseBlockService.getByCode(blockCode);
+
+
+                BlockFun blockFun = new BlockFun(blockCode, baseBlockDO);
+
+
+                boolean[] SSF多 = blockFun.SSF多();
+                boolean SSF多_last = blockFun.last(SSF多);
+
+
+                if (flag && SSF多_last) {
+                    filterBlockCodeList.add(blockCode);
+                    filterBlockPool__codeNameMap.put(blockCode, blockPool__block_codeNameMap.get(blockCode));
+                }
+            }
+
+
+        });
+
+
+        // 板块淘汰
+
+
+        // 1、下SSF
+        // 2、右侧卖
+
+
+        log.info("板块筛选     >>>     size : {} , filterBlockCodeList : {}",
+                 filterBlockCodeList.size(), JSON.toJSONString(filterBlockPool__codeNameMap));
+
+
+        return filterBlockCodeList;
     }
 
     private void buyStocks(List<String> filterStockCodeList, Map<String, String> filterStockPool__codeNameMap) {

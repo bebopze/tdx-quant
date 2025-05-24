@@ -103,7 +103,7 @@ public class StockFunLast {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(stockKlineHisResp.getKlines(), limit);
+        List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
         Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");

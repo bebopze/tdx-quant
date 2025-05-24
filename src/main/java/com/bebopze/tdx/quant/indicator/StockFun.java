@@ -12,6 +12,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Maps;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,35 +31,37 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
  * @date: 2025/5/16
  */
 @Slf4j
+@NoArgsConstructor
 public class StockFun {
 
-    private String stockCode;
+    String stockCode;
+    String stockName;
 
 
     // 实时行情  -  买5/卖5
-    private SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
+    SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
 
 
     // 历史行情
-    private List<KlineDTO> klineDTOList;
+    List<KlineDTO> klineDTOList;
     // 实时行情
     // private KlineDTO lastKlineDTO;
 
 
-    private double C;
+    double C;
 
-    private Object[] date_arr;
+    Object[] date_arr;
 
-    private double[] close_arr;
-    private double[] high_arr;
-
-
-    private double[] ssf_arr;// = SSF(close_arr);
+    double[] close_arr;
+    double[] high_arr;
 
 
-    private double[] rps50_arr;
-    private double[] rps120_arr;
-    private double[] rps250_arr;
+    double[] ssf_arr;// = SSF(close_arr);
+
+
+    double[] rps50_arr;
+    double[] rps120_arr;
+    double[] rps250_arr;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -67,12 +70,14 @@ public class StockFun {
 
 
     public StockFun(String stockCode) {
+
+        // 个股
         initData(stockCode, null);
     }
 
 
     /**
-     * 加载 行情数据
+     * 加载   个股-行情数据
      *
      * @param stockCode 股票code
      * @param limit     N日
@@ -99,12 +104,15 @@ public class StockFun {
         // --------------------------- resp -> DTO
 
 
+        String stockName = shszQuoteSnapshotResp.getName();
+
+
         // 收盘价 - 实时
         double C = realtimequote.getCurrentPrice().doubleValue();
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(stockKlineHisResp.getKlines(), limit);
+        List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
         Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
@@ -124,6 +132,8 @@ public class StockFun {
 
 
         this.stockCode = stockCode;
+        this.stockName = stockName;
+
 
         this.shszQuoteSnapshotResp = shszQuoteSnapshotResp;
         this.klineDTOList = klineDTOList;
@@ -466,5 +476,6 @@ public class StockFun {
 
         return result;
     }
+
 
 }

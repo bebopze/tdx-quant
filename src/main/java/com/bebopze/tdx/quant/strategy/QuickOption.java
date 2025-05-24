@@ -118,7 +118,7 @@ public class QuickOption {
     public static void 等比买入(List<String> stockCodeList, int N) {
 
 
-        // 权重规则   排序
+        // 权重规则   倒序
         List<String> sort__stockCodeList = scoreSort(stockCodeList, N);
 
 
@@ -270,7 +270,7 @@ public class QuickOption {
             // 历史行情
             StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
             List<String> klines = stockKlineHisResp.getKlines();
-            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.str2DTO(klines), "close");
+            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.strList2DTOList(klines), "close");
 
 
             BigDecimal amount = shszQuoteSnapshotResp.getRealtimequote().getAmount();
@@ -287,6 +287,8 @@ public class QuickOption {
         // ----------------- 规则排名
 
         // 金额 -> 涨幅榜（近10日） -> ...
+
+        // TODO     RPS（50） -> 大均线多头（20） -> 60日新高（10） -> 涨幅榜（10） -> 成交额-近10日（10） -> ...
 
 
         // Step 2: 计算各项指标 & 打分

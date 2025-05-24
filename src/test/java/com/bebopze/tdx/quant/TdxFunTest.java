@@ -44,7 +44,7 @@ public class TdxFunTest {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(stockKlineHisResp.getKlines(), 5000);
+        List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), 5000);
 
 
         Object[] dateArr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
