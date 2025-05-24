@@ -28,6 +28,53 @@ public class ConvertStockExtData {
 
 
     @SneakyThrows
+    public static double[] dto2Arr(String extData) {
+
+
+        // 2025-05-23, 10, 20, 50, 120, 250
+        // 日期,rps10,rps20,rps50,rps120,rps250
+        String[] row_arr = extData.split(",", -1);
+
+
+        ExtDataDTO dto = new ExtDataDTO();
+
+
+        // 获取目标类的 Class 对象
+        Class<?> dtoClass = dto.getClass();
+
+
+        // 按类（ExtDataDTO） 字段顺序     读取 -> set
+        Field[] fields = dtoClass.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+
+            Field field = fields[i];
+            log.debug("Index: {} | Name: {} | Type: {}", i, field.getName(), field.getType().getSimpleName());
+
+
+            // 设置字段可访问（如果字段是 private）
+            field.setAccessible(true);
+
+            // 通过字段名称生成 set 方法名（如 setName）
+            String setMethodName = "set" + StringUtils.capitalize(field.getName());
+
+            // 获取 set 方法
+            Method setMethod = dtoClass.getMethod(setMethodName, field.getType());
+
+
+            // 自动类型转换
+            Object convertVal = TypeConverter.convert(row_arr[i], field.getType());
+
+
+            // 调用 set方法  并传入值
+            setMethod.invoke(dto, convertVal);
+        }
+
+
+        return null;
+    }
+
+
+    @SneakyThrows
     public static ExtDataDTO str2DTO(String extData) {
 
 

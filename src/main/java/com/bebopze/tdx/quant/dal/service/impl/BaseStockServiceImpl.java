@@ -31,6 +31,19 @@ import java.util.stream.Collectors;
 public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStockDO> implements IBaseStockService {
 
 
+    /**
+     * 添加手动注入的方法（因为 baseMapper 是 protected）
+     *
+     * @param mapper
+     */
+    public void injectMapper(BaseStockMapper mapper) {
+        this.baseMapper = mapper;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Override
     public Long getIdByCode(String code) {
         return baseMapper.getIdByCode(code);
@@ -102,6 +115,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
                 ));
 
         return code_id_map;
+    }
+
+    @Override
+    public List<BaseStockDO> listAllKline() {
+        return baseMapper.listAllKline();
     }
 
     @Override

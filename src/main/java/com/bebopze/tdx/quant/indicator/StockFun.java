@@ -3,17 +3,20 @@ package com.bebopze.tdx.quant.indicator;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
+import static com.bebopze.tdx.quant.indicator.StockCache.STOCK_RPS_CACHE;
 
 
 /**
@@ -45,7 +48,13 @@ public class StockFun {
     private double[] close_arr;
     private double[] high_arr;
 
+
     private double[] ssf_arr;// = SSF(close_arr);
+
+
+    private double[] rps50_arr;
+    private double[] rps120_arr;
+    private double[] rps250_arr;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -64,6 +73,7 @@ public class StockFun {
      * @param stockCode 股票code
      * @param limit     N日
      */
+    @SneakyThrows
     public void initData(String stockCode, Integer limit) {
 
         limit = limit == null ? 500 : limit;
@@ -90,12 +100,20 @@ public class StockFun {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), limit);
+        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(stockKlineHisResp.getKlines(), limit);
 
 
-        Object[] date_arr = ConvertStock.objFieldValArr(klineDTOList, "date");
-        double[] close_arr = ConvertStock.fieldValArr(klineDTOList, "close");
-        double[] high_arr = ConvertStock.fieldValArr(klineDTOList, "high");
+        Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
+        double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+        double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
+
+
+        // TODO   RPS（预计算） -> DB获取
+        TdxExtDataFun.calcRps();
+
+        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
+        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
+        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
 
 
         // --------------------------- init data
@@ -114,6 +132,11 @@ public class StockFun {
 
 
         this.ssf_arr = SSF(close_arr);
+
+
+        this.rps50_arr = rps50_arr;
+        this.rps120_arr = rps120_arr;
+        this.rps250_arr = rps250_arr;
     }
 
 

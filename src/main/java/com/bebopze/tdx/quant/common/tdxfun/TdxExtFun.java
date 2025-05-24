@@ -97,7 +97,8 @@ public class TdxExtFun {
             if (Double.isNaN(ref[i]) || ref[i] == 0) {
                 pct[i] = Double.NaN;  // 无法计算或除以0时返回 NaN
             } else {
-                pct[i] = close[i] / ref[i] * 100.0 - 100.0;
+                pct[i] = (close[i] / ref[i] - 1) * 100.0;
+                // pct[i] = close[i] / ref[i] * 100.0 - 100.0;
             }
         }
         return pct;

@@ -178,9 +178,18 @@ public class BaseStockDO implements Serializable {
         return ConvertStockExtData.extDataHis2DTOList(extDataHis);
     }
 
+
     public List<KlineDTO> getKLineHis() {
         return ConvertStockKline.klineHis2DTOList(klineHis);
     }
+
+
+    public String getKLineHisOriginal() {
+        return klineHis;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static void main(String[] args) {

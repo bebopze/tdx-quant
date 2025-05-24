@@ -2,11 +2,13 @@ package com.bebopze.tdx.quant.common.tdxfun;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.FastJson2Config;
-import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
+import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.changePct;
+import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
 
 
 /**
@@ -56,7 +59,6 @@ public class TdxExtDataFun {
         }
     }
 
-
     public static void main(String[] args) {
         FastJson2Config fastJson2Config = new FastJson2Config();
 
@@ -64,84 +66,101 @@ public class TdxExtDataFun {
         test1();
 
 
-        // 加载  最近500日   行情数据
-        int DAY_LIMIT = 100;
-
-        BaseStockMapper mapper = MybatisPlusUtil.getMapper(BaseStockMapper.class);
-
-
         // 从本地DB   加载5000支个股的收盘价序列
-        Map<String, double[]> priceMap = Maps.newHashMap();
-
-        List<BaseStockDO> baseStockDOList = mapper.listAllKline();
-        baseStockDOList.forEach(e -> {
-
-            String stockCode = e.getCode();
-            double[] close_arr = ConvertStock.fieldValArr(e.getKlineHis(), "close");
+        Map<String, double[]> stockCloseArrMap = loadAllStockKline();
 
 
-            // 上市1年
-            if (close_arr.length > 200) {
-                priceMap.put(stockCode, fillNaN(close_arr, DAY_LIMIT));
-
-
-                double[] fillNaN_arr = priceMap.get(stockCode);
-                if (Double.isNaN(fillNaN_arr[0])) {
-                    double v = fillNaN_arr[0];
-                    System.out.println(v == Double.NaN);
-                    System.out.println("fillNaN     >>>     stockCode : " + stockCode);
-                }
-            }
-        });
-
-
-        int N = 50;
-
-        Map<String, double[]> dailyRPS = computeDailyRPS(priceMap, N);
-        System.out.println(JSON.toJSONString(dailyRPS));
+        Map<String, double[]> RPS_N = computeRPS(stockCloseArrMap, 50);
+        System.out.println(JSON.toJSONString(RPS_N));
 
 
         // 打印某只股票的最近几日 RPS
         String stockCode = "300059";
 
-        double[] rps_val = dailyRPS.get(stockCode);
+        double[] rps_val = RPS_N.get(stockCode);
         System.out.println("rps_val : " + JSON.toJSONString(rps_val));
 
 
         System.out.println("最近10日 " + stockCode + " RPS: " +
-                                   Arrays.toString(Arrays.copyOfRange(dailyRPS.get(stockCode), dailyRPS.get(stockCode).length - 10, dailyRPS.get(stockCode).length))
+                                   Arrays.toString(Arrays.copyOfRange(RPS_N.get(stockCode), RPS_N.get(stockCode).length - 10, RPS_N.get(stockCode).length))
         );
     }
 
 
     /**
-     * 填充最近N日的数据，如果 原始数据 不足N日，则不足的天数 补0（NaN）
-     *
-     * @param arr 原始数据
-     * @param N   填充N日
-     * @return
+     * 计算 RPS   ->   save2DB
      */
-    private static double[] fillNaN(double[] arr, int N) {
-        double[] new_arr = new double[N];
+    public static void calcRps() {
+
+        // 从本地DB   加载5000支个股的收盘价序列
+        Map<String, double[]> priceMap = loadAllStockKline();
 
 
-        int M = arr.length;
+        Map<String, double[]> RPS50 = computeRPS(priceMap, 50);
+        Map<String, double[]> RPS120 = computeRPS(priceMap, 120);// 120 -> 100
+        Map<String, double[]> RPS250 = computeRPS(priceMap, 250);// 250 -> 200
 
-        if (N >= M) {
-            // 前 N-M 项补 NaN
-            for (int i = 0; i < N - M; i++) {
-                new_arr[i] = Double.NaN;
-            }
-            // 后 M 项直接拷贝 arr[0..M-1]
-            System.arraycopy(arr, 0, new_arr, N - M, M);
-        } else {
-            // N < M 时，只拷贝最近 N 天的数据（arr 的后 N 项）
-            // arr[M-N .. M-1]
-            System.arraycopy(arr, M - N, new_arr, 0, N);
-        }
 
-        return new_arr;
+        // save -> DB
+        IBaseStockService baseStockService = MybatisPlusUtil.getBaseStockService();
+        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
+
+
+        List<BaseStockDO> baseStockDOList = Lists.newArrayList();
+        RPS50.forEach((stockCode, v) -> {
+
+            BaseStockDO baseStockDO = new BaseStockDO();
+            baseStockDO.setId(codeIdMap.get(stockCode));
+            // baseStockDO.setRps();
+
+            baseStockDOList.add(baseStockDO);
+        });
+        baseStockService.updateBatchById(baseStockDOList, 500);
+
+
+        // TODO   refresh cache
     }
+
+
+    /**
+     * 从本地DB   加载全部（5000+支）个股的 收盘价序列
+     *
+     * @return stock - close_arr
+     */
+    private static Map<String, double[]> loadAllStockKline() {
+        Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
+
+
+        // 加载  最近500日   行情数据
+        int DAY_LIMIT = 500;
+
+
+        BaseStockMapper mapper = MybatisPlusUtil.getMapper(BaseStockMapper.class);
+
+
+        List<BaseStockDO> baseStockDOList = mapper.listAllKline();
+        baseStockDOList.forEach(e -> {
+
+            String stockCode = e.getCode();
+            double[] close_arr = ConvertStockKline.fieldValArr(e.getKLineHis(), "close");
+
+
+            // 上市1年
+            if (close_arr.length > 200) {
+                stockCloseArrMap.put(stockCode, fillNaN(close_arr, DAY_LIMIT));
+
+
+                double[] fillNaN_arr = stockCloseArrMap.get(stockCode);
+                if (Double.isNaN(fillNaN_arr[0])) {
+                    log.debug("fillNaN     >>>     stockCode : {}", stockCode);
+                }
+            }
+        });
+
+
+        return stockCloseArrMap;
+    }
+
 
     private List<double[]> closr_arr__list;
 
@@ -244,18 +263,18 @@ public class TdxExtDataFun {
      *
      * -
      *
-     * @param priceMap 全市场收盘价，key=股票代码，value=按时间顺序的收盘价数组
-     * @param N        计算涨幅的周期（天数）
+     * @param stockCloseArrMap 全市场收盘价，key=股票代码，value=按时间顺序的收盘价数组
+     * @param N                计算涨幅的周期（天数）
      * @return key=股票代码，value=该股按时间序列的 N日 RPS（0–100）
      */
-    public static Map<String, double[]> computeDailyRPS(Map<String, double[]> priceMap, int N) {
+    public static Map<String, double[]> computeRPS(Map<String, double[]> stockCloseArrMap, int N) {
 
         // 1. 首先计算每只股票的 N 日涨幅序列
         Map<String, double[]> pctMap = new HashMap<>();
-        int totalStocks = priceMap.size();
+        int totalStocks = stockCloseArrMap.size();
         int seriesLength = -1;
 
-        for (Map.Entry<String, double[]> entry : priceMap.entrySet()) {
+        for (Map.Entry<String, double[]> entry : stockCloseArrMap.entrySet()) {
 
             double[] close = entry.getValue();
             if (seriesLength < 0) seriesLength = close.length;
@@ -269,7 +288,7 @@ public class TdxExtDataFun {
         //    并计算百分位
         Map<String, double[]> rpsMap = new HashMap<>();
         // 初始化 result arrays
-        for (String stockCode : priceMap.keySet()) {
+        for (String stockCode : stockCloseArrMap.keySet()) {
             rpsMap.put(stockCode, new double[seriesLength]);
         }
 

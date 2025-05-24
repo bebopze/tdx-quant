@@ -8,6 +8,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,41 @@ import java.util.stream.Collectors;
  * @author: bebopze
  * @date: 2025/5/15
  */
-public class ConvertStock {
+public class ConvertStockKline {
+
+
+//    public static String dto2Str(List<KlineDTO> dtoList) {
+//
+//        List<String[]> arrList = dtoList.stream().map(dto -> {
+//            return dto2Str(dto);
+//        }).collect(Collectors.toList());
+//
+//        return JSON.toJSONString(arrList);
+//    }
+//
+//
+//    public static String[] dto2Str(KlineDTO dto) {
+//
+//
+//        // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
+//        // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+//
+//        String[] arr = new String[11];
+//
+//        arr[0] = dto.getDate().toString();
+//        arr[1] = dto.getOpen().toString();
+//        arr[2] = dto.getClose().toString();
+//        arr[3] = dto.getHigh().toString();
+//        arr[4] = dto.getLow().toString();
+//        arr[5] = dto.getVol().toString();
+//        arr[6] = dto.getAmo().toString();
+//        arr[7] = dto.getRange_pct().toString();
+//        arr[8] = dto.getChange_pct().toString();
+//        arr[9] = dto.getChange_price().toString();
+//        arr[10] = dto.getTurnover_pct().toString();
+//
+//        return arr;
+//    }
 
 
     public static KlineDTO str2DTO(String kline) {
@@ -62,7 +97,7 @@ public class ConvertStock {
         if (CollectionUtils.isEmpty(klines)) {
             return Collections.emptyList();
         }
-        return klines.stream().map(ConvertStock::str2DTO).collect(Collectors.toList());
+        return klines.stream().map(ConvertStockKline::str2DTO).collect(Collectors.toList());
     }
 
 
@@ -85,6 +120,12 @@ public class ConvertStock {
     }
 
 
+    public static List<KlineDTO> klineHis2DTOList(String klineHis) {
+        List<String> klineList = JSON.parseArray(klineHis, String.class);
+        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(klineList);
+        return klineDTOList;
+    }
+
     /**
      * 直接从   klineHis 字符串   取值
      *
@@ -93,10 +134,7 @@ public class ConvertStock {
      * @return
      */
     public static double[] fieldValArr(String klineHis, String fieldName) {
-        List<String> klineList = JSON.parseArray(klineHis, String.class);
-        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(klineList);
-
-        return ConvertStock.fieldValArr(klineDTOList, fieldName);
+        return ConvertStockKline.fieldValArr(klineHis2DTOList(klineHis), fieldName);
     }
 
     /**

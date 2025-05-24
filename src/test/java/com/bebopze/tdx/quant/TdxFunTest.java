@@ -3,7 +3,7 @@ package com.bebopze.tdx.quant;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
@@ -44,12 +44,12 @@ public class TdxFunTest {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStock.str2DTO(stockKlineHisResp.getKlines(), 5000);
+        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTO(stockKlineHisResp.getKlines(), 5000);
 
 
-        Object[] dateArr = ConvertStock.objFieldValArr(klineDTOList, "date");
+        Object[] dateArr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
 
-        double[] closeArr = ConvertStock.fieldValArr(klineDTOList, "close");
+        double[] closeArr = ConvertStockKline.fieldValArr(klineDTOList, "close");
 
 
         // --------------------------------- MA

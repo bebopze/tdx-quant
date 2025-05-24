@@ -21,7 +21,7 @@ public class KlineDTO implements Serializable {
     // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
 
-    // 20250501
+    // 2025-05-01
     private String date;
 
 

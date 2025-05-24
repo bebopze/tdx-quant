@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
@@ -1103,7 +1103,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情   -   last kline
-        KlineDTO lastKlineDTO = ConvertStock.str2DTO(klines.get(klines.size() - 1));
+        KlineDTO lastKlineDTO = ConvertStockKline.str2DTO(klines.get(klines.size() - 1));
 
         entity.setTradeDate(lastKlineDTO.getDate());
 

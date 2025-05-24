@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
+import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.dal.service.impl.BaseStockServiceImpl;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.mapping.Environment;
@@ -69,6 +71,15 @@ public class MybatisPlusUtil {
     public static <T> T getMapper(Class<T> mapperClass) {
         SqlSession session = SQL_SESSION_FACTORY.openSession();
         return session.getMapper(mapperClass);
+    }
+
+    public static IBaseStockService getBaseStockService() {
+        BaseStockMapper mapper = getMapper(BaseStockMapper.class);
+
+        BaseStockServiceImpl service = new BaseStockServiceImpl();
+        service.injectMapper(mapper);
+
+        return service;
     }
 
 
