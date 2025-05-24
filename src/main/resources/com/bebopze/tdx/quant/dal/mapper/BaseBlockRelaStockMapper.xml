@@ -24,7 +24,13 @@
 
 
     <select id="listBlockByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
-        SELECT DISTINCT b.*
+        SELECT DISTINCT b.id,
+                        b.code,
+                        b.name,
+                        b.type,
+                        b.parent_id,
+                        b.level,
+                        b.end_level
 
         FROM base_block_rela_stock r
                  LEFT JOIN base_stock s ON r.stock_id = s.id
@@ -33,6 +39,58 @@
         WHERE s.code = #{stockCode}
 
         ORDER BY b.id ASC
+    </select>
+
+
+    <select id="listBlockByStockCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT
+
+        DISTINCT
+
+        b.id,
+        b.code,
+        b.name,
+        b.type,
+        b.parent_id,
+        b.level,
+        b.end_level
+
+
+        FROM base_block_rela_stock r
+        LEFT JOIN base_stock s ON r.stock_id = s.id
+        LEFT JOIN base_block b ON r.block_id = b.id
+
+        <where>
+            s.code IN
+            <foreach collection="stockCodeList" item="stockCode" open="(" separator="," close=")">
+                #{stockCode}
+            </foreach>
+        </where>
+
+        ORDER BY b.id ASC
+    </select>
+
+
+    <select id="listStockByBlockCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT
+
+        DISTINCT
+
+        s.id, s.code, s.name,s.tdx_market_type
+
+
+        FROM base_block_rela_stock r
+        LEFT JOIN base_stock s ON r.stock_id = s.id
+        LEFT JOIN base_block b ON r.block_id = b.id
+
+        <where>
+            b.code IN
+            <foreach collection="blockCodeList" item="blockCode" open="(" separator="," close=")">
+                #{blockCode}
+            </foreach>
+        </where>
+
+        ORDER BY s.id ASC
     </select>
 
 

@@ -21,7 +21,9 @@ public class TdxExtFun {
 
 
     /**
-     * SSF 指标
+     * SSF 指标                          ->   已验证 ✅
+     *
+     *
      * N = 3, M = 21
      * ------------------------------
      * X1 = |C - REF(C, 11)|
@@ -77,7 +79,7 @@ public class TdxExtFun {
 
 
     /**
-     * N日涨幅：C/REF(C, N)  *100-100
+     * N日涨幅：C/REF(C, N)  *100-100                          ->   已验证 ✅
      *
      *
      * -   用于计算 RPS   原始指标               ==>          EXTRS : C/REF(C,N) -1;（陶博士）

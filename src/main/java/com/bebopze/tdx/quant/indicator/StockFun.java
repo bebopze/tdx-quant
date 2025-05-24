@@ -1,22 +1,26 @@
 package com.bebopze.tdx.quant.indicator;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.common.config.FastJson2Config;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
-import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
+import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
-import static com.bebopze.tdx.quant.indicator.StockCache.STOCK_RPS_CACHE;
 
 
 /**
@@ -109,11 +113,11 @@ public class StockFun {
 
 
         // TODO   RPS（预计算） -> DB获取
-        TdxExtDataFun.calcRps();
 
-        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
-        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
-        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
+
+//        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
+//        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
+//        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
 
 
         // --------------------------- init data
@@ -370,6 +374,8 @@ public class StockFun {
 
 
     public static void main(String[] args) {
+        FastJson2Config fastJson2Config = new FastJson2Config();
+
 
         String stockCode = "300059";
 
@@ -388,12 +394,27 @@ public class StockFun {
         boolean[] 下MA100 = fun.MA空(100);
 
 
+        double[] closeArr = fun.close_arr;
+        // double[] ssf = SSF(closeArr);
+
+
+        Object[] date_arr = fun.date_arr;
+        double[] ssf_arr = fun.ssf_arr;
+        boolean[] booleans = fun.SSF多();
+
         boolean[] con = con_merge(下MA50, MA20_空, 下MA100);
 
 
         // 3、RPS三线 < 85
 
 
+        Map<String, BigDecimal> date_ssf_map = Maps.newTreeMap();
+
+        for (int i = 0; i < date_arr.length; i++) {
+            date_ssf_map.put(date_arr[i].toString(), NumUtil.double2Decimal(ssf_arr[i]));
+        }
+
+        System.out.println(JSON.toJSONString(date_ssf_map));
     }
 
 

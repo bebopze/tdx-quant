@@ -2,7 +2,10 @@ package com.bebopze.tdx.quant.client;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONReader;
 import com.bebopze.tdx.quant.common.config.BizException;
+import com.bebopze.tdx.quant.common.config.FastJson2Config;
+import com.bebopze.tdx.quant.common.config.StringToBigDecimalReader;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
@@ -195,32 +198,41 @@ public class EastMoneyTradeAPI {
      */
     public static SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
 
-
         String url = "https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?id=" + stockCode;
+        String result = null;
 
 
-        String result = HttpUtil.doGet(url, null);
+        try {
+            result = HttpUtil.doGet(url, null);
 
 
-        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getString("code").equals(stockCode)) {
-            log.info("/api/SHSZQuoteSnapshot   suc     >>>     stockCode : {} , result : {}", stockCode, result);
+            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+            if (resultJson.getString("code").equals(stockCode)) {
+                log.info("/api/SHSZQuoteSnapshot   suc     >>>     stockCode : {} , result : {}", stockCode, result);
+            }
+
+
+            // ----------------------------- 个股信息
+            SHSZQuoteSnapshotResp resp = JSON.parseObject(result, SHSZQuoteSnapshotResp.class);
+
+
+            // ----------------------------- 买5 / 卖5
+            SHSZQuoteSnapshotResp.FivequoteDTO fivequoteDTO = resp.getFivequote();
+
+
+            // ----------------------------- 实时报价
+            SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequoteDTO = resp.getRealtimequote();
+
+
+            return resp;
+
+
+        } catch (Exception e) {
+
+            log.error("SHSZQuoteSnapshot err     >>>     stockCode : {} , result : {} , exMsg : {}", stockCode, result, e.getMessage(), e);
+
+            throw new BizException(e.getMessage());
         }
-
-
-        // ----------------------------- 个股信息
-        SHSZQuoteSnapshotResp resp = JSON.toJavaObject(resultJson, SHSZQuoteSnapshotResp.class);
-
-
-        // ----------------------------- 买5 / 卖5
-        SHSZQuoteSnapshotResp.FivequoteDTO fivequoteDTO = resp.getFivequote();
-
-
-        // ----------------------------- 实时报价
-        SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequoteDTO = resp.getRealtimequote();
-
-
-        return resp;
     }
 
 

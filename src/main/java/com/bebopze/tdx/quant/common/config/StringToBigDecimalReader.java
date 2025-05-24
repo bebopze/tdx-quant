@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 
 /**
- * fastjson2    全局拦截所有 BigDecimal 字段的反序列化
+ * fastjson2    全局拦截所有   String -> BigDecimal   字段的反序列化
  *
  * 将 空串、空格串 或 "-" 转为 null
  *

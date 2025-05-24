@@ -43,6 +43,13 @@ public class TdxFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * REF                          ->   已验证 ✅
+     *
+     * @param S
+     * @param N
+     * @return
+     */
     public static double[] REF(double[] S, int N) {
         double[] r = new double[S.length];
         Arrays.fill(r, Double.NaN);
@@ -152,6 +159,13 @@ public class TdxFun {
     }
 
 
+    /**
+     * MA                          ->   已验证 ✅
+     *
+     * @param S
+     * @param N
+     * @return
+     */
     public static double[] MA(double[] S, int N) {
         double[] r = new double[S.length];
         double sum = 0;
@@ -164,6 +178,14 @@ public class TdxFun {
         return r;
     }
 
+
+    /**
+     * EMA                          ->   已验证 ✅
+     *
+     * @param S
+     * @param N
+     * @return
+     */
     public static double[] EMA(double[] S, int N) {
         double[] r = new double[S.length];
         double alpha = 2.0 / (N + 1);
@@ -192,33 +214,92 @@ public class TdxFun {
         return r;
     }
 
-    public static double[] DMA(double[] S, double A) {
-        double[] r = new double[S.length];
-        r[0] = S[0];
-        for (int i = 1; i < S.length; i++) r[i] = A * S[i] + (1 - A) * r[i - 1];
-        return r;
-    }
+
+//    public static double[] DMA(double[] S, double A) {
+//        double[] r = new double[S.length];
+//        r[0] = S[0];
+//        for (int i = 1; i < S.length; i++) r[i] = A * S[i] + (1 - A) * r[i - 1];
+//        return r;
+//    }
+//
+//
+//    /**
+//     * 动态移动平均：A 支持序列化平滑因子
+//     *
+//     * @param S 原始序列
+//     * @param A 每一周期的平滑系数数组，长度与 S 相同
+//     * @return 计算后的 DMA 序列
+//     */
+//    public static double[] DMA(double[] S, double[] A) {
+//        int n = S.length;
+//        double[] Y = new double[n];
+//        if (n == 0) return Y;
+//        Y[0] = S[0];
+//        for (int i = 1; i < n; i++) {
+//            double alpha = A[i];
+//            Y[i] = alpha * S[i] + (1 - alpha) * Y[i - 1];
+//        }
+//        return Y;
+//    }
+//    public static double[] DMA(double[] price, double[] weight) {
+//        int len = price.length;
+//        double[] result = new double[len];
+//        if (weight.length != len) throw new IllegalArgumentException("权重数组长度必须与价格数组一致");
+//
+//        // 初始化第一个有效值
+//        result[0] = price[0];
+//
+//        for (int i = 1; i < len; i++) {
+//            result[i] = weight[i] * price[i] + (1 - weight[i]) * result[i - 1];
+//        }
+//        return result;
+//    }
 
 
     /**
-     * 动态移动平均：A 支持序列化平滑因子
+     * 动态移动平均函数                          ->   已验证 ✅
      *
-     * @param S 原始序列
-     * @param A 每一周期的平滑系数数组，长度与 S 相同
-     * @return 计算后的 DMA 序列
+     * @param S 输入数据序列
+     * @param A 平滑因子，可以是 单个值   或   与 S 等长的数组
+     * @return 动态移动平均结果数组
      */
-    public static double[] DMA(double[] S, double[] A) {
-        int n = S.length;
-        double[] Y = new double[n];
-        if (n == 0) return Y;
-        Y[0] = S[0];
-        for (int i = 1; i < n; i++) {
-            double alpha = A[i];
-            Y[i] = alpha * S[i] + (1 - alpha) * Y[i - 1];
-        }
-        return Y;
-    }
+    public static double[] DMA(double[] S, Object A) {
+        if (A instanceof Number) {
+            // 情况1：A 是数字，使用 EMA（alpha = A）
+            double alpha = ((Number) A).doubleValue();
+            double[] result = new double[S.length];
+            result[0] = S[0];
+            for (int i = 1; i < S.length; i++) {
+                result[i] = alpha * S[i] + (1 - alpha) * result[i - 1];
+            }
+            return result;
+        } else if (A instanceof double[]) {
+            // 情况2：A 是 double[] 数组
+            double[] AArray = (double[]) A;
+            if (AArray.length != S.length) {
+                throw new IllegalArgumentException("A数组长度必须与S相同");
+            }
 
+            double[] ACopy = Arrays.copyOf(AArray, AArray.length);
+            // 将 NaN 替换为 1.0
+            for (int i = 0; i < ACopy.length; i++) {
+                if (Double.isNaN(ACopy[i])) {
+                    ACopy[i] = 1.0;
+                }
+            }
+
+            double[] Y = new double[S.length];
+            Y[0] = S[0];
+
+            for (int i = 1; i < S.length; i++) {
+                Y[i] = ACopy[i] * S[i] + (1 - ACopy[i]) * Y[i - 1];
+            }
+
+            return Y;
+        } else {
+            throw new IllegalArgumentException("A 必须是 Number 或 double[] 类型");
+        }
+    }
 
     public static double[] AVEDEV(double[] S, int N) {
         double[] r = new double[S.length];

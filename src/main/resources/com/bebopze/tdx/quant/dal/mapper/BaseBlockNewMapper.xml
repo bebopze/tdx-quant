@@ -29,11 +29,11 @@
 
 
     <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO">
-
         SELECT
 
-        id AS id,
-        code AS code
+        id,
+        code,
+        name
 
 
         FROM base_block_new

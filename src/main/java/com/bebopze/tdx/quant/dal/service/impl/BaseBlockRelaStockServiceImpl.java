@@ -2,12 +2,14 @@ package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 
@@ -45,6 +47,16 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
     @Override
     public List<BaseBlockDO> listBlockByStockCode(String stockCode) {
         return baseMapper.listBlockByStockCode(stockCode);
+    }
+
+    @Override
+    public List<BaseBlockDO> listBlockByStockCodeList(List<String> stockCodeList) {
+        return baseMapper.listBlockByStockCodeList(stockCodeList);
+    }
+
+    @Override
+    public List<BaseStockDO> listStockByBlockCodeList(List<String> blockCodeList) {
+        return baseMapper.listStockByBlockCodeList(blockCodeList);
     }
 
 }

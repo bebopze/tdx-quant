@@ -39,8 +39,10 @@ public class FastJson2Config {
                     // JSONWriter.Feature.PrettyFormat,         // 格式化输出
                     JSONWriter.Feature.WriteNullStringAsEmpty); // String类型值为空序列化为""
 
-        JSON.config(JSONReader.Feature.AllowUnQuotedFieldNames); // 字段名称支持没有双引号的反序列化
-        // 当序列化的值为字符串时直接输出字符串，而不是再加一层引号或双引号，如`JSON.toJSONString("test")`直接输出"test"，而不是"\"test\""
+        JSON.config(JSONReader.Feature.AllowUnQuotedFieldNames, // 字段名称支持没有双引号的反序列化
+                    // 当序列化的值为字符串时直接输出字符串，而不是再加一层引号或双引号，如`JSON.toJSONString("test")`直接输出"test"，而不是"\"test\""
+
+                    JSONReader.Feature.NullOnError);
 
 
         JSON.register(String.class, new ObjectWriterPrimitiveImpl<String>() {
@@ -53,7 +55,6 @@ public class FastJson2Config {
     }
 
 
-    // @PostConstruct
     public static void registerProvider() {
         JSONFactory.getDefaultObjectReaderProvider()
                 .register(BigDecimal.class, new StringToBigDecimalReader());

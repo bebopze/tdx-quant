@@ -33,7 +33,10 @@
     <select id="listStockByBlockNewCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
-        DISTINCT s.*
+        DISTINCT
+
+        s.id, s.code, s.name,s.tdx_market_type
+
 
         FROM base_block_new_rela_stock r
 
@@ -60,7 +63,16 @@
     <select id="listBlockByBlockNewCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT
 
-        DISTINCT b.*
+        DISTINCT
+
+        b.id,
+        b.code,
+        b.name,
+        b.type,
+        b.parent_id,
+        b.level,
+        b.end_level
+
 
         FROM base_block_new_rela_stock r
 

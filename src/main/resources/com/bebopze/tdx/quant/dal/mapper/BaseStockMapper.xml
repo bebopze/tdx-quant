@@ -3,17 +3,6 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockMapper">
 
 
-    <sql id="Base_Column_List">
-        id
-        , code, name, tdx_market_type, trade_date,
-        open_price, high_price, low_price, close_price, adj_close_price, volume, amount,
-        change_pct, range_pct, turnover_pct, gmt_create,  gmt_modify
-    </sql>
-    <sql id="Blob_Column_List">
-        kline_his
-    </sql>
-
-
     <select id="getIdByCode" parameterType="java.lang.String" resultType="long">
         SELECT id
 
@@ -32,9 +21,7 @@
 
 
     <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT id,
-               code,
-               name
+        SELECT id, code, name, tdx_market_type
 
         FROM base_stock
     </select>
@@ -52,8 +39,7 @@
 
         SELECT
 
-        id AS id,
-        code AS code
+        id,code, name, tdx_market_type
 
 
         FROM base_stock
@@ -70,7 +56,8 @@
     <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
-        <include refid="Base_Column_List"/>
+        id,code, name, tdx_market_type
+
 
         FROM base_stock
 

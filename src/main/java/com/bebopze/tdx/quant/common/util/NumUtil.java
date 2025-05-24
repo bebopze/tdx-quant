@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+
 /**
  * @author: bebopze
  * @date: 2025/5/23
@@ -22,6 +23,11 @@ public class NumUtil {
 
     public static double decimal2Double(BigDecimal val, int scale) {
         return val.setScale(scale, RoundingMode.HALF_UP).doubleValue();
+    }
+
+
+    public static BigDecimal double2Decimal(double v) {
+        return new BigDecimal(v).setScale(3, RoundingMode.HALF_UP);
     }
 
 }

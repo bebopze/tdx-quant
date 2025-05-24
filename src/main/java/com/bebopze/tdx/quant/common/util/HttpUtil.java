@@ -49,8 +49,7 @@ public class HttpUtil {
      * @return 响应体字符串
      */
     @SneakyThrows
-    public static String doGet(String url,
-                               Map<String, String> headers) {
+    public static String doGet(String url, Map<String, String> headers) {
 
         HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36");
