@@ -14,6 +14,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.indicator.StockFunLast;
+import com.bebopze.tdx.quant.parser.writer.TdxBlockNewWriter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
@@ -121,9 +122,8 @@ public class QuickOption {
         List<String> sort__stockCodeList = scoreSort(stockCodeList, N);
 
 
-        // write -> TDX
-
-
+        // write   ->   TDX（策略-等比买入）
+        TdxBlockNewWriter.write("CL-DBMR", sort__stockCodeList);
 
 
         // 最小等份   ->   30
