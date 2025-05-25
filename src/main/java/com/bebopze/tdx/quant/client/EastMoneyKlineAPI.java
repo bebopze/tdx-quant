@@ -56,7 +56,7 @@ public class EastMoneyKlineAPI {
     public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum) {
 
 
-        String url = stockKlineHisUrl(stockCode, klineTypeEnum.getType());
+        String url = stockKlineHisUrl(stockCode, klineTypeEnum.getEastMoneyType());
 
 
         String result = HttpUtil.doGet(url, null);
@@ -171,7 +171,7 @@ public class EastMoneyKlineAPI {
         // 截止日期
         String end = "20500101";
         // 日K   ->   limit为空（不限制）
-        String limit = Objects.equals(klt, KlineTypeEnum.DAY.getType()) ? "" : "10000";
+        String limit = Objects.equals(klt, KlineTypeEnum.DAY.getEastMoneyType()) ? "" : "10000";
 
 
         String url = "https://push2his.eastmoney.com/api/qt/stock/kline/get?" +

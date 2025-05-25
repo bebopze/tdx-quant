@@ -23,7 +23,7 @@ public enum StockMarketEnum {
     // 003	0
     // 300	0
     // 301	0
-    SZ("深交所", 0, "sz", "SA", Lists.newArrayList("00", "30")),
+    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("00", "30")),
 
 
     // 600	1
@@ -32,7 +32,7 @@ public enum StockMarketEnum {
     // 605	1
     // 688	1
     // 689	1
-    SH("上交所", 1, "sh", "HA", Lists.newArrayList("60", "68")),
+    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68")),
 
 
     // 430	2
@@ -51,7 +51,7 @@ public enum StockMarketEnum {
     // 872	2
     // 873	2
     // 920	2
-    BJ("北交所", 2, "bj", "B", Lists.newArrayList("43", "83", "87", "92"));
+    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("43", "83", "87", "92"));
 
 
     /**
@@ -72,11 +72,18 @@ public enum StockMarketEnum {
     @Getter
     private String tdxMarketTypeSymbol;
 
+
     /**
      * 东方财富 - 交易所 类型
      */
     @Getter
     private String eastMoneyMarket;
+    /**
+     * 雪球 - 交易所 类型
+     */
+    @Getter
+    private String xueqiuMarket;
+
 
     /**
      * A股 - 股票代码 前缀（前2位）
@@ -115,24 +122,30 @@ public enum StockMarketEnum {
      */
     public static String getEastMoneyMarketByStockCode(String stockCode) {
         StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
-        return stockMarketEnum == null ? null : stockMarketEnum.getEastMoneyMarket();
+        return stockMarketEnum == null ? null : stockMarketEnum.eastMoneyMarket;
     }
 
 
     public static String getMarketSymbol(String stockCode) {
         StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
-        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketTypeSymbol();
+        return stockMarketEnum == null ? null : stockMarketEnum.tdxMarketTypeSymbol;
+    }
+
+
+    public static String getXueqiuMarket(String stockCode) {
+        StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
+        return stockMarketEnum == null ? null : stockMarketEnum.xueqiuMarket;
     }
 
     public static String getMarketSymbol(Integer tdxMarketType) {
         StockMarketEnum stockMarketEnum = getByTdxMarketType(tdxMarketType);
-        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketTypeSymbol();
+        return stockMarketEnum == null ? null : stockMarketEnum.tdxMarketTypeSymbol;
     }
 
 
     public static Integer getTdxMarketType(String stockCode) {
         StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
-        return stockMarketEnum == null ? null : stockMarketEnum.getTdxMarketType();
+        return stockMarketEnum == null ? null : stockMarketEnum.tdxMarketType;
     }
 
 }
