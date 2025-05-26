@@ -29,7 +29,7 @@ public class StrategyController {
 
     @Operation(summary = "买入策略", description = "买入策略")
     @GetMapping(value = "/buyStockRule")
-    public Result<Object> buyStockRule(@RequestParam String stockCode) {
+    public Result<Object> buyStockRule(@RequestParam(required = false) String stockCode) {
         strategyService.buyStockRule(stockCode);
         return Result.SUC();
     }
@@ -37,7 +37,7 @@ public class StrategyController {
 
     @Operation(summary = "持仓策略", description = "持仓策略")
     @GetMapping(value = "/holdingStockRule")
-    public Result<Object> holdingStockRule(@RequestParam String stockCode) {
+    public Result<Object> holdingStockRule(@RequestParam(required = false) String stockCode) {
         strategyService.holdingStockRule(stockCode);
         return Result.SUC();
     }
@@ -45,7 +45,7 @@ public class StrategyController {
 
     @Operation(summary = "破位卖出", description = "破位卖出")
     @GetMapping(value = "/breakSell")
-    public Result<Object> breakSell(@RequestParam String stockCode) {
+    public Result<Object> breakSell(@RequestParam(required = false) String stockCode) {
         strategyService.breakSell();
         return Result.SUC();
     }

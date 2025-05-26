@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.parser.writer;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -64,9 +65,13 @@ public class TdxBlockNewWriter {
             // 覆盖写入
             FileUtils.writeLines(new File(filePath), "UTF-8", codeList, false);
 
+            log.info("write   suc     >>>     blockNewCode : {} , filePath : {},   stockOrBlockCodeList : {}",
+                     blockNewCode, filePath, JSON.toJSONString(stockOrBlockCodeList));
+
+
         } catch (IOException e) {
 
-            log.error("TdxBlockNewWriter#write   err     >>>     blockNewCode : {} , filePath : {},   errMsg : {}",
+            log.error("write   err     >>>     blockNewCode : {} , filePath : {},   errMsg : {}",
                       blockNewCode, filePath, e.getMessage(), e);
         }
     }

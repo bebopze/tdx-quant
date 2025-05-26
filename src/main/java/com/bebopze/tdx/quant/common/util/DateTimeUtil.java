@@ -54,6 +54,45 @@ public class DateTimeUtil {
 
 
     /**
+     * 将 ms 自动格式化为 可读性强的时间字符串（如：1h 30m, 45s, 123ms）
+     *
+     * @param millis 毫秒数
+     * @return 格式化后的时间字符串
+     */
+    public static String format2Hms(long millis) {
+        if (millis < 1000) {
+            return millis + "ms";
+        }
+
+        long seconds = millis / 1000;
+        if (seconds < 60) {
+            double secWithDecimals = Math.round(millis / 100.0) / 10.0; // 保留一位小数
+            return secWithDecimals + "s";
+        }
+
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+
+        if (minutes < 60) {
+            if (remainingSeconds == 0) {
+                return minutes + "min";
+            } else {
+                return minutes + "min " + remainingSeconds + "s";
+            }
+        }
+
+        long hours = minutes / 60;
+        long remainingMinutes = minutes % 60;
+
+        if (remainingMinutes == 0) {
+            return hours + "h";
+        } else {
+            return hours + "h " + remainingMinutes + "min";
+        }
+    }
+
+
+    /**
      * 时间戳 -> LocalDateTime
      *
      * @param timestamp 时间戳（ms）

@@ -23,11 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.common.constant.BuyStrategyStockPoolEnum.CL_DBMR;
 
 
 /**
@@ -123,7 +122,7 @@ public class QuickOption {
 
 
         // write   ->   TDX（策略-等比买入）
-        TdxBlockNewWriter.write("CL-DBMR", sort__stockCodeList);
+        TdxBlockNewWriter.write(CL_DBMR.getBlockNewCode(), sort__stockCodeList);
 
 
         // 最小等份   ->   30

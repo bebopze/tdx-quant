@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.util.DateTimeUtil.format2Hms;
+
 
 /**
  * web层 - 统一拦截
@@ -37,8 +39,10 @@ public class WebHandler {
     public Object doBefore(ProceedingJoinPoint pjp) throws Throwable {
         long startTime = System.currentTimeMillis();
 
+
         // 日志记录
         log(pjp.getArgs());
+
 
         // exec
         Object result = pjp.proceed();
@@ -46,7 +50,8 @@ public class WebHandler {
 
         // 统计时间
         long totalTime = System.currentTimeMillis() - startTime;
-        log.info("totalTime : {}s", Double.valueOf(totalTime) / 1000);
+        log.info("{}   -   totalTime : {}", requestPath(), format2Hms(totalTime));
+
 
         return result;
     }
@@ -70,6 +75,12 @@ public class WebHandler {
         } else {
             log.info(String.join(" ", Arrays.asList(request.getServletPath(), getIpAddress(request), JSON.toJSONString(argList.get(0)))));
         }
+    }
+
+
+    private String requestPath() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        return request.getServletPath();
     }
 
 
