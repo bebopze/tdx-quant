@@ -127,4 +127,107 @@ CREATE TABLE `base_block_new_rela_stock`
 
 
 
+-- ----------------------------
+-- Table structure for bt_task
+-- ----------------------------
+DROP TABLE IF EXISTS `bt_task`;
+CREATE TABLE `bt_task`
+(
+    `id`                bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `buy_strategy`      varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'B策略',
+    `sell_strategy`     varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'S策略',
+    `start_date`        date                                                         NOT NULL COMMENT '回测-起始日期',
+    `end_date`          date                                                         NOT NULL COMMENT '回测-结束日期',
+    `initial_capital`   decimal(20, 2) unsigned                                      NOT NULL COMMENT '初始资金',
+    `final_capital`     decimal(20, 2) unsigned                                               DEFAULT NULL COMMENT '结束资金',
+    `total_day`         smallint unsigned                                                     DEFAULT NULL COMMENT '总天数',
+    `total_return_pct`  decimal(10, 2)                                                        DEFAULT NULL COMMENT '总收益率',
+    `annual_return_pct` decimal(10, 2)                                                        DEFAULT NULL COMMENT '年化收益率',
+    `sharpe_ratio`      decimal(10, 2)                                                        DEFAULT NULL COMMENT '夏普比率',
+    `max_drawdown_pct`  decimal(10, 2)                                                        DEFAULT NULL COMMENT '最大回撤',
+    `win_rate`          decimal(10, 2)                                                        DEFAULT NULL COMMENT '胜率',
+    `profit_factor`     decimal(10, 2)                                                        DEFAULT NULL COMMENT '盈亏比',
+    `gmt_create`        datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`        datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='回测-任务';
+
+-- ----------------------------
+-- Table structure for bt_trade_record
+-- ----------------------------
+DROP TABLE IF EXISTS `bt_trade_record`;
+CREATE TABLE `bt_trade_record`
+(
+    `id`         bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `task_id`    bigint unsigned                                              NOT NULL COMMENT '回测任务ID',
+    `trade_type` tinyint unsigned                                             NOT NULL COMMENT '交易类型：1-买入；2-卖出；',
+    `stock_id`   bigint unsigned                                              NOT NULL COMMENT '股票ID',
+    `stock_code` varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '股票代码',
+    `stock_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票名称',
+    `trade_date` date                                                         NOT NULL COMMENT '交易日期',
+    `price`      decimal(10, 3)                                               NOT NULL COMMENT '交易价格',
+    `quantity`   bigint                                                       NOT NULL COMMENT '交易数量',
+    `amount`     decimal(20, 2) unsigned                                      NOT NULL COMMENT '交易金额',
+    `fee`        decimal(10, 2) unsigned                                      NOT NULL DEFAULT '0.00' COMMENT '交易费用',
+    `gmt_create` datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify` datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx__task_id__trade_type__trade_date` (`task_id`, `trade_type`, `trade_date`) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='回测-BS交易记录';
+
+-- ----------------------------
+-- Table structure for bt_position_record
+-- ----------------------------
+DROP TABLE IF EXISTS `bt_position_record`;
+CREATE TABLE `bt_position_record`
+(
+    `id`                   bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `task_id`              bigint unsigned                                              NOT NULL COMMENT '回测任务ID',
+    `trade_date`           date                                                         NOT NULL COMMENT '交易日',
+    `stock_id`             bigint unsigned                                              NOT NULL COMMENT '股票ID',
+    `stock_code`           varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '股票代码',
+    `stock_name`           varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票名称',
+    `avg_cost_price`       decimal(10, 3)                                               NOT NULL COMMENT '加权平均成本价',
+    `quantity`             int unsigned                                                 NOT NULL COMMENT '持仓数量',
+    `available_quantity`   int unsigned                                                 NOT NULL COMMENT '可用数量',
+    `market_value`         decimal(20, 2)                                               NOT NULL COMMENT '市值',
+    `unrealized_pnl`       decimal(20, 2)                                               NOT NULL COMMENT '浮动盈亏',
+    `unrealized_pnl_ratio` decimal(10, 4)                                               NOT NULL COMMENT '盈亏率',
+    `buy_date`             date                                                         NOT NULL COMMENT '买入日期',
+    `holding_days`         int unsigned                                                 NOT NULL COMMENT '持仓天数',
+    `gmt_create`           datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`           datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `task_id` (`task_id`, `trade_date`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='回测-每日持仓记录';
+
+-- ----------------------------
+-- Table structure for bt_daily_return
+-- ----------------------------
+DROP TABLE IF EXISTS `bt_daily_return`;
+CREATE TABLE `bt_daily_return`
+(
+    `id`               bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `task_id`          bigint unsigned NOT NULL COMMENT '回测任务ID',
+    `trade_date`       date            NOT NULL COMMENT '交易日期',
+    `daily_return`     decimal(10, 4)  NOT NULL COMMENT '当日收益率',
+    `nav`              decimal(20, 4)  NOT NULL COMMENT '净值（初始为1.0000）',
+    `capital`          decimal(20, 2)  NOT NULL COMMENT '期末资金',
+    `benchmark_return` decimal(10, 4)           DEFAULT NULL COMMENT '基准收益（可选）',
+    `gmt_create`       datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`       datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `task_id` (`task_id`, `trade_date`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='回测-每日收益率';
+
+
+
 SET FOREIGN_KEY_CHECKS = 1;
