@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
 import com.bebopze.tdx.quant.common.constant.StockPoolEnum;
+import com.bebopze.tdx.quant.common.domain.dto.BuyStockStrategyResultDTO;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
@@ -47,6 +48,15 @@ import static com.bebopze.tdx.quant.common.constant.StockPoolEnum.中期池子;
 public class BuyStockStrategy {
 
 
+    /**
+     * 买入策略 - result记录
+     */
+    private BuyStockStrategyResultDTO dto = new BuyStockStrategyResultDTO();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Autowired
     private IBaseStockService baseStockService;
 
@@ -60,13 +70,22 @@ public class BuyStockStrategy {
     private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
-    public void buyStockRule(String stockCode) {
+    public BuyStockStrategyResultDTO buyStockRule() {
 
 
+        // 策略1
         holdingStockRule();
 
 
-        System.out.println();
+        // 策略2
+        // ...
+
+
+        // 策略3
+        // ...
+
+
+        return dto;
     }
 
 

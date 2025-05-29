@@ -17,6 +17,11 @@ import java.time.format.DateTimeFormatter;
 public class DateTimeUtil {
 
 
+    private static final DateTimeFormatter yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private static final DateTimeFormatter yyyy_MM_dd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+
     public static void main(String[] args) {
         // 示例毫秒值
         long milliseconds = 3661000;
@@ -111,11 +116,15 @@ public class DateTimeUtil {
 
 
     public static LocalDate parseDate_yyyyMMdd(String dateStr) {
-        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return LocalDate.parse(dateStr, yyyyMMdd);
     }
 
     public static LocalDate parseDate_yyyy_MM_dd(String dateStr) {
-        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return LocalDate.parse(dateStr, yyyy_MM_dd);
     }
 
+
+    public static String format_yyyy_MM_dd(LocalDate date) {
+        return date.format(yyyy_MM_dd);
+    }
 }

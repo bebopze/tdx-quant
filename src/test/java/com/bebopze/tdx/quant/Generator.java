@@ -59,7 +59,9 @@ public class Generator {
                     builder
                             // 设置需要生成的表名
                             // .addInclude("base_stock", "base_block", "base_block_rela_stock")
-                            .addInclude("base_block_new", "base_block_new_rela_stock")
+                            // .addInclude("base_block_new", "base_block_new_rela_stock")
+
+                            .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
                             .entityBuilder()
                             .formatFileName("%sDO")

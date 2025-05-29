@@ -186,6 +186,42 @@ public class ConvertStockKline {
 
 
     @SneakyThrows
+    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+
+        int size = klineDTOList.size();
+        String[] arr = new String[size];
+
+
+        // 一次性查找 Field，并设置可访问
+        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+
+
+        // 遍历 取值
+        for (int i = 0; i < size; i++) {
+            KlineDTO dto = klineDTOList.get(i);
+
+
+            Object value = field.get(dto);
+            if (value == null) {
+
+                arr[i] = null;
+
+            } else if (value instanceof String) {
+
+                arr[i] = (String) value;
+
+            } else {
+                throw new IllegalArgumentException(
+                        String.format("字段 %s 的类型为 %s，无法转换为 String", fieldName, value.getClass().getSimpleName()));
+            }
+        }
+
+
+        return arr;
+    }
+
+
+    @SneakyThrows
     public static Object[] objFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
 
         int size = klineDTOList.size();

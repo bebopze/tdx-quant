@@ -131,7 +131,7 @@ public class ConvertStockExtData {
 
     public static List<ExtDataDTO> str2DTO(List<String> extDataList) {
         if (CollectionUtils.isEmpty(extDataList)) {
-            return Collections.emptyList();
+            return null;
         }
         return extDataList.stream().map(ConvertStockExtData::str2DTO).collect(Collectors.toList());
     }

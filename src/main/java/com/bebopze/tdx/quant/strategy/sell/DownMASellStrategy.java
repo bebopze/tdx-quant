@@ -54,11 +54,20 @@ public class DownMASellStrategy {
 
 
     /**
-     * 持股 策略
+     * S策略
      *
      * @param stockCode
      */
-    public void holdingStockRule(String stockCode) {
+    public void sellStockRule(String stockCode) {
+
+
+        // 1、获取 持仓列表
+
+
+        // 2、持仓个股   =>   逐一扫描 S策略   ->   触发 -> S个股
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 个股量化
@@ -85,6 +94,51 @@ public class DownMASellStrategy {
 
 
         // 大盘量化
+        boolean rule3 = true;//rule_market(stockCode);
+
+        if (!rule3) {
+            try {
+                QuickOption.一键清仓(null);
+            } catch (Exception e) {
+            }
+        }
+
+
+        System.out.println("-----------------");
+    }
+
+    /**
+     * 持股 策略
+     *
+     * @param stockCode
+     */
+    public void holdingStockRule(String stockCode) {
+
+
+        // 个股量化
+        boolean rule1 = rule_stockPool(stockCode);
+
+        if (!rule1) {
+            try {
+                QuickOption.一键卖出(stockCode);
+            } catch (Exception e) {
+            }
+        }
+
+
+        // 板块量化     ->     控制 个股（IN-主线板块）
+        boolean rule2 = rule_blockPool(stockCode);
+
+        if (!rule2) {
+            // 减仓
+            try {
+                QuickOption.等比卖出(stockCode);
+            } catch (Exception e) {
+            }
+        }
+
+
+        // 大盘量化     ->     控制 总仓位
         boolean rule3 = true;//rule_market(stockCode);
 
         if (!rule3) {

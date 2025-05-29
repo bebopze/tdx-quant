@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BtTradeRecordMapper">
+
+
+    <select id="listByTaskIdAndTradeDate" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
+
+        SELECT task_id,
+               trade_type,
+               stock_id,
+               stock_code,
+               stock_name,
+
+
+               SUM(quantity)               AS quantity,
+               SUM(quantity * price + fee) AS total_cost
+
+
+        FROM bt_trade_record
+
+
+        WHERE task_id = #{taskId}
+
+         <![CDATA[     AND trade_date <= #{tradeDate}     ]]>
+
+
+        GROUP BY stock_id, trade_type
+
+    </select>
+
+
+</mapper>

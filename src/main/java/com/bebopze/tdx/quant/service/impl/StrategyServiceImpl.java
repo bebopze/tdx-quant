@@ -33,7 +33,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Override
     public void buyStockRule(String stockCode) {
 
-        buyStrategy.buyStockRule(stockCode);
+        buyStrategy.buyStockRule();
     }
 
     @Override
