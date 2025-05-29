@@ -5,9 +5,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.BuyStockStrategyResultDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
-import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
+import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.strategy.buy.BuyStockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
@@ -20,11 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
 
@@ -110,18 +110,6 @@ public class BackTestStrategy {
         // 0、起始日期 - 起始金额
 
 
-        // -------------------------------------------------- B
-        // 1.1、当日 B策略 -> stockCodeList
-        // 1.2、昨日 B策略 -> stockCodeList
-
-
-        // 买入策略
-        BuyStockStrategyResultDTO resultDTO = buyStockStrategy.buyStockRule();
-
-
-        List<String> stockCodeList = resultDTO.getStockCodeList();
-
-
         // -------------------------------------------------- S
 
 
@@ -129,32 +117,214 @@ public class BackTestStrategy {
 
 
         Long taskId = 1L;
-        LocalDate tradeDate = LocalDate.now();
 
 
-        // 获取 -> 持仓列表
-        List<BtPositionRecordDO> doList = getDailyPositions(taskId, tradeDate);
+        BtTaskDO taskDO = btTaskService.getById(taskId);
+
+        LocalDate tradeDate = taskDO.getStartDate().minusDays(1);
+        LocalDate endDate = taskDO.getEndDate();
 
 
-        // 卖出策略
-        sellStockStrategy.holdingStockRule(null);
+        // 初始资金
+        BigDecimal prevCapital = new BigDecimal(1000000);
+        BigDecimal prevNav = BigDecimal.ONE;     // 初始净值 1.0000
+        // 盈利天数
+        int winCount = 0;
+
+        // 收益率 - 峰值
+        BigDecimal peakNav = BigDecimal.ZERO;
+        // 最大回撤
+        BigDecimal maxDrawdown = BigDecimal.ZERO;
 
 
-        // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
-
-        // 2.2 每日 淘汰策略（S策略 - 2）[排名]走弱 -> 末位淘汰 ->  stockCodeList（对昨日 持股 -> 末位淘汰[设置末尾淘汰 - 分数线/排名线 ]）
-
-
-        // -------------------------------------------------- 账户金额
+        List<BtDailyReturnDO> dailyReturnDOList = Lists.newArrayList();
+        List<BigDecimal> dailyReturnList = Lists.newArrayList();
+        while (!tradeDate.isAfter(endDate)) {
+            tradeDate = tradeDate.plusDays(1);
 
 
-        // 3、每日 - S金额计算
+            // ---------------------------------------------------------------
 
 
-        // 4、每日 - B金额计算
+            // -------------------------------------------------- B
+            // 1.1、当日 B策略 -> stockCodeList
+            // 1.2、昨日 B策略 -> stockCodeList
 
 
-        // 5、每日 - BS汇总
+            // 买入策略
+            BuyStockStrategyResultDTO resultDTO = buyStockStrategy.buyStockRule();
+
+
+            List<String> stockCodeList = resultDTO.getStockCodeList();
+
+
+            // --------------------------------------------------------------- 每日持仓
+
+
+            // 获取 -> 持仓列表
+            List<BtPositionRecordDO> positionRecordDOList = getDailyPositions(taskId, tradeDate);
+            List<String> positionStockCodeList = positionRecordDOList.stream().map(BtPositionRecordDO::getStockCode).collect(Collectors.toList());
+
+
+            // --------------------------------------------------------------- 每日收益
+
+
+            BtDailyReturnDO dailyReturnDO = calcDailyReturn(taskId, tradeDate, positionRecordDOList);
+            dailyReturnList.add(dailyReturnDO.getDailyReturn());
+            dailyReturnDOList.add(dailyReturnDO);
+
+
+            BigDecimal nav = dailyReturnDO.getNav();
+            BigDecimal capital = dailyReturnDO.getCapital();
+
+
+            // 3.5 指标更新
+            // dailyReturns.add(dailyReturn);
+            if (dailyReturnDO.getDailyReturn().compareTo(BigDecimal.ZERO) > 0) winCount++;
+            peakNav = peakNav.max(nav);
+            BigDecimal dd = peakNav.subtract(nav).divide(peakNav, 8, RoundingMode.HALF_UP);
+            maxDrawdown = maxDrawdown.max(dd);
+
+
+            prevNav = nav;
+            prevCapital = capital;
+
+
+            // -------------------------------------------------- 卖出策略
+
+
+            sellStockStrategy.holdingStockRule(positionStockCodeList);
+
+
+            // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
+
+            // 2.2 每日 淘汰策略（S策略 - 2）[排名]走弱 -> 末位淘汰 ->  stockCodeList（对昨日 持股 -> 末位淘汰[设置末尾淘汰 - 分数线/排名线 ]）
+
+
+            // -------------------------------------------------- 账户金额
+
+
+            // 3、每日 - S金额计算
+
+
+            // 4、每日 - B金额计算
+
+
+            // 5、每日 - BS汇总
+
+
+        }
+
+
+        // --------------------------------------------------------------- 总收益
+
+
+        sumTotalReturn(taskId);
+
+
+        // 4. 全期汇总：更新 bt_task
+        int totalDays = (int) (ChronoUnit.DAYS.between(tradeDate, endDate) + 1);
+        BigDecimal finalNav = prevNav;
+        BigDecimal finalCapital = prevCapital;
+
+
+        BigDecimal totalReturn = finalNav.subtract(BigDecimal.ONE);                     // 净值增幅
+        BigDecimal totalReturnPct = totalReturn.multiply(BigDecimal.valueOf(100));      // %
+        BigDecimal annualReturnPct = BigDecimal.valueOf(Math.pow(finalNav.doubleValue(), 252.0 / totalDays) - 1).multiply(BigDecimal.valueOf(100));
+
+
+        // 夏普比率 = 平均日收益 / 日收益标准差 * sqrt(252)
+        double mean = dailyReturnList.stream().mapToDouble(BigDecimal::doubleValue).average().orElse(0);
+        double sd = Math.sqrt(dailyReturnList.stream()
+                                      .mapToDouble(r -> Math.pow(r.doubleValue() - mean, 2)).sum()
+                                      / dailyReturnList.size());
+        BigDecimal sharpe = BigDecimal.valueOf(mean / sd * Math.sqrt(252));
+
+        BigDecimal winRate = BigDecimal.valueOf((double) winCount / totalDays * 100);
+        // 盈亏比 = 所有盈利日平均收益 / 所有亏损日平均亏损
+        double avgWin = dailyReturnList.stream().filter(r -> r.doubleValue() > 0)
+                .mapToDouble(BigDecimal::doubleValue).average().orElse(0);
+        double avgLoss = dailyReturnList.stream().filter(r -> r.doubleValue() < 0)
+                .mapToDouble(BigDecimal::doubleValue).map(Math::abs).average().orElse(0);
+        BigDecimal profitFactor = avgLoss == 0
+                ? BigDecimal.valueOf(Double.POSITIVE_INFINITY)
+                : BigDecimal.valueOf(avgWin / avgLoss);
+
+
+        // BtTaskDO taskDO = new BtTaskDO();
+
+        taskDO.setId(taskId);
+        taskDO.setInitialCapital(new BigDecimal(1000000));
+        taskDO.setFinalCapital(finalCapital);
+        taskDO.setTotalDay(totalDays);
+        taskDO.setTotalReturnPct(totalReturnPct);
+        taskDO.setAnnualReturnPct(annualReturnPct);
+        taskDO.setSharpeRatio(sharpe);
+        taskDO.setMaxDrawdownPct(maxDrawdown);
+        taskDO.setWinRate(winRate);
+        taskDO.setProfitFactor(profitFactor);
+
+
+        btTaskService.updateById(taskDO);
+    }
+
+
+    /**
+     * 计算  ->  每日收益率
+     *
+     * @param taskId
+     * @param tradeDate
+     * @param positionRecordDOList
+     */
+    private BtDailyReturnDO calcDailyReturn(Long taskId,
+                                            LocalDate tradeDate,
+                                            List<BtPositionRecordDO> positionRecordDOList) {
+
+        // 当日 总市值
+        BigDecimal totalMarketValue = BigDecimal.ZERO;
+        for (BtPositionRecordDO positionRecordDO : positionRecordDOList) {
+            // 个股市值
+            BigDecimal stockMarketValue = positionRecordDO.getMarketValue();
+            totalMarketValue = totalMarketValue.add(stockMarketValue);
+        }
+
+
+        // 本金 -> bt_task
+        BigDecimal initialCapital = new BigDecimal(1000000);
+        // 初始净值 1.0000
+        BigDecimal initialNav = BigDecimal.ONE;
+
+
+        // 收益率 = 当日市值 / 本金
+        BigDecimal nav = totalMarketValue.divide(initialCapital, 8, RoundingMode.HALF_UP);
+        // 净值 = 1 + 收益率
+        BigDecimal dailyReturn = initialNav.add(nav).setScale(8, RoundingMode.HALF_UP);
+        // 资金 = 本金 x 收益率
+        BigDecimal capital = initialCapital.multiply(nav).setScale(2, RoundingMode.HALF_UP);
+
+
+        BtDailyReturnDO dailyReturnDO = new BtDailyReturnDO();
+
+        dailyReturnDO.setTaskId(taskId);
+        dailyReturnDO.setTradeDate(tradeDate);
+        dailyReturnDO.setDailyReturn(dailyReturn);
+        dailyReturnDO.setNav(nav);
+        dailyReturnDO.setCapital(capital);
+        dailyReturnDO.setBenchmarkReturn(null);
+
+        btDailyReturnService.save(dailyReturnDO);
+
+
+        return dailyReturnDO;
+    }
+
+
+    /**
+     * 汇总计算 -> 总收益
+     *
+     * @param taskId
+     */
+    private void sumTotalReturn(Long taskId) {
 
 
     }
@@ -261,7 +431,16 @@ public class BackTestStrategy {
 
 
             positionRecordDOList.add(positionRecordDO);
+
+
+            // -----------------------------------------------------
+
+
         }
+
+
+        // save2DB
+        btPositionRecordService.saveBatch(positionRecordDOList);
 
 
         return positionRecordDOList;

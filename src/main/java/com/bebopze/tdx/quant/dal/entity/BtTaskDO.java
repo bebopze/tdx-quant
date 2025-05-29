@@ -85,7 +85,7 @@ public class BtTaskDO implements Serializable {
      */
     @TableField("total_day")
     @Schema(description = "总天数")
-    private Short totalDay;
+    private Integer totalDay;
 
     /**
      * 总收益率

@@ -107,6 +107,14 @@ public class DownMASellStrategy {
         System.out.println("-----------------");
     }
 
+
+    public void holdingStockRule(List<String> stockCodeList) {
+        for (String stockCode : stockCodeList) {
+            holdingStockRule(stockCode);
+        }
+    }
+
+
     /**
      * 持股 策略
      *
