@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.util;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.dal.service.impl.BaseStockServiceImpl;
@@ -54,8 +55,10 @@ public class MybatisPlusUtil {
         config.setMapUnderscoreToCamelCase(true);
         config.setJdbcTypeForNull(null);
         config.setEnvironment(env);
+
         // 手动注册所有 Mapper 接口
         config.addMapper(BaseStockMapper.class);
+        config.addMapper(BaseBlockMapper.class);
 
 
         // 5. 构建 SqlSessionFactory

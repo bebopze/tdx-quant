@@ -28,8 +28,7 @@
 
 
     <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT *,
-               kline_his
+        SELECT *
 
         FROM base_stock
     </select>

@@ -110,7 +110,7 @@ public class DownMASellStrategy {
 
     public void holdingStockRule(List<String> stockCodeList) {
         for (String stockCode : stockCodeList) {
-            holdingStockRule(stockCode);
+            boolean b = holdingStockRule(stockCode);
         }
     }
 
@@ -120,7 +120,7 @@ public class DownMASellStrategy {
      *
      * @param stockCode
      */
-    public void holdingStockRule(String stockCode) {
+    public boolean holdingStockRule(String stockCode) {
 
 
         // 个股量化
@@ -158,6 +158,9 @@ public class DownMASellStrategy {
 
 
         System.out.println("-----------------");
+
+
+        return rule1 && rule2 && rule3;
     }
 
     private boolean rule_blockPool(String stockCode) {

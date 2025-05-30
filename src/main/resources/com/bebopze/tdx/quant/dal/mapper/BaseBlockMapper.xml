@@ -26,6 +26,13 @@
     </select>
 
 
+    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT *
+
+        FROM base_block
+    </select>
+
+
     <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
 
         SELECT

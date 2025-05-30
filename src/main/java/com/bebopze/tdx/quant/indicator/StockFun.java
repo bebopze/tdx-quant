@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
+import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Maps;
 import lombok.NoArgsConstructor;
@@ -364,9 +365,78 @@ public class StockFun {
     }
 
 
+    public boolean[] 大均线多头() {
+       return TdxExtFun.大均线多头(close_arr);
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  复杂指标
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    public boolean[] 月多() {
+        boolean[] 月多_arr = TdxExtFun.月多(close_arr);
+        return 月多_arr;
+    }
+
+
+    public boolean[] RPS三线红(int RPS) {
+        return null;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 结果合并   -   AND
+     *
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_merge(boolean[]... arr_list) {
+
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            boolean acc = true;
+            for (boolean[] arr : arr_list) {
+                acc &= arr[i];
+                if (!acc) break;
+            }
+            result[i] = acc;
+        }
+
+        return result;
+    }
+
+
+    /**
+     * 结果合并   -   OR
+     *
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_or(boolean[]... arr_list) {
+
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            boolean acc = false;
+            for (boolean[] arr : arr_list) {
+                acc = acc || arr[i];
+                if (acc) break;
+            }
+            result[i] = acc;
+        }
+
+        return result;
+    }
 
 
     /**
@@ -425,56 +495,6 @@ public class StockFun {
         }
 
         System.out.println(JSON.toJSONString(date_ssf_map));
-    }
-
-
-    /**
-     * 结果合并   -   AND
-     *
-     * @param arr_list
-     * @return
-     */
-    public static boolean[] con_merge(boolean[]... arr_list) {
-
-        int len = arr_list[0].length;
-        boolean[] result = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            boolean acc = true;
-            for (boolean[] arr : arr_list) {
-                acc &= arr[i];
-                if (!acc) break;
-            }
-            result[i] = acc;
-        }
-
-        return result;
-    }
-
-
-    /**
-     * 结果合并   -   OR
-     *
-     * @param arr_list
-     * @return
-     */
-    public static boolean[] con_or(boolean[]... arr_list) {
-
-        int len = arr_list[0].length;
-        boolean[] result = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            boolean acc = false;
-            for (boolean[] arr : arr_list) {
-                acc = acc || arr[i];
-                if (acc) break;
-            }
-            result[i] = acc;
-        }
-
-        return result;
     }
 
 

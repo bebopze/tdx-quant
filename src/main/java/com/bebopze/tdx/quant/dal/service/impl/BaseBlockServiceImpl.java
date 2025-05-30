@@ -85,4 +85,9 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
         return baseMapper.listSimpleByCodeList(blockCodeList);
     }
 
+    @Override
+    public List<BaseBlockDO> listAllKline() {
+        return baseMapper.listAllKline();
+    }
+
 }

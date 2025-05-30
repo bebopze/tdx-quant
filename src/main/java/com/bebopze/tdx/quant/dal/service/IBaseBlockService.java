@@ -29,4 +29,7 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
 
     List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList);
+
+
+    List<BaseBlockDO> listAllKline();
 }
