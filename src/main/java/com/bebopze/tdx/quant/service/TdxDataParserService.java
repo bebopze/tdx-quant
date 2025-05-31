@@ -1,7 +1,5 @@
 package com.bebopze.tdx.quant.service;
 
-import com.alibaba.fastjson2.JSONObject;
-
 import java.util.List;
 import java.util.Map;
 
@@ -33,13 +31,12 @@ public interface TdxDataParserService {
 
     void fillStockKline(String stockCode);
 
-    void fillStockKlineAll(String beginStockCode);
+    void fillStockKlineAll();
 
 
+    @Deprecated
     void xgcz();
 
 
     Map<String, List<String>> marketRelaStockCodePrefixList();
-
-    JSONObject check();
 }

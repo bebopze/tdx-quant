@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -109,9 +108,8 @@ public class ParserController {
 
     @Operation(summary = "个股行情（全部） - 拉取解析入库 ", description = "个股行情（全部） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKlineAll")
-    public Result<Void> fillStockKlineAll(@Schema(description = "开始（从 上次失败 的位置，继续）", example = "")
-                                          @RequestParam(required = false) String beginStockCode) {
-        tdxDataParserService.fillStockKlineAll(beginStockCode);
+    public Result<Void> fillStockKlineAll() {
+        tdxDataParserService.fillStockKlineAll();
         return Result.SUC();
     }
 
@@ -140,17 +138,5 @@ public class ParserController {
     public Result<Map<String, List<String>>> market_stockCodePrefixList() {
         return Result.SUC(tdxDataParserService.marketRelaStockCodePrefixList());
     }
-
-
-//    /**
-//     * 交易所 - 股票代码 前缀
-//     *
-//     * @return
-//     */
-//    @Operation(summary = "check", description = "check")
-//    @GetMapping(value = "/check")
-//    public Result<JSONObject> check() {
-//        return Result.SUC(tdxDataParserService.check());
-//    }
 
 }

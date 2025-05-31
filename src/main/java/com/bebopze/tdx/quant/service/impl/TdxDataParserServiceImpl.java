@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -101,7 +100,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 行情-个股
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
-            fillStockKlineAll(null);
+            fillStockKlineAll();
         });
     }
 
@@ -784,7 +783,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 8min 55s
         // 3min 13s
         save2DB___stock_rela_blockNew(blockNewCode_stockCodeSet_map,
                                       blockNew__codeIdMap,
@@ -855,15 +853,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         blockNewCode_stockCodeSet_map.keySet().parallelStream().forEach(blockNewCode -> {
             Set<String> stockCodeSet = blockNewCode_stockCodeSet_map.get(blockNewCode);
 
-//        blockNewCode_stockCodeSet_map.forEach((blockNewCode, stockCodeSet) -> {
-
 
             Long blockNewId = blockNew__codeIdMap.get(blockNewCode);
 
 
             List<BaseBlockNewRelaStockDO> relaDOList = Lists.newArrayList();
-            // add 并发竞争
-            // List<BaseBlockNewRelaStockDO> relaDOList = Collections.synchronizedList(Lists.newArrayList());
             stockCodeSet.forEach(stockCode -> {
 
 
@@ -903,14 +897,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             });
 
 
-            try {
-                iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
-                iBaseBlockNewRelaStockService.saveBatch(relaDOList);
-            } catch (Exception ex) {
-                log.error("save2DB___stock_rela_blockNew   并发写入异常     >>>     blockNewId : {} , relaDOList : {} , exMsg : {}",
-                          blockNewId, JSON.toJSONString(relaDOList), ex.getMessage(), ex);
-            }
-
+            iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
+            iBaseBlockNewRelaStockService.saveBatch(relaDOList);
         });
     }
 
@@ -1003,7 +991,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             fillBlockKline(blockCode, blockId);
 
 
-            // ------------------------------------------- 计时（频率）   21ms/次   x 881     ->     总耗时：19s
+            // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
 
 
             int countVal = count.incrementAndGet();
@@ -1015,7 +1003,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String r3 = String.format("%s次 - %ss", countVal, time / 1000);
 
 
-            // blockCode : 880367, blockId : 43 , count : 881 , r1 : 21ms/次 , r2 : 45次/s , r3 : 881次 - 19s
+            // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
             log.info("fillBlockKlineAll suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                      blockCode, blockId, countVal, r1, r2, r3);
         });
@@ -1029,7 +1017,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
-    public void fillStockKlineAll(String beginStockCode) {
+    public void fillStockKlineAll() {
         long[] start = {System.currentTimeMillis()};
         AtomicInteger count = new AtomicInteger(0);
 
@@ -1037,29 +1025,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
 
 
-        // sort
-        // Map<String, Long> sort_codeIdMap = new TreeMap(codeIdMap);
-
-
-        // int[] count = {0};
-
-
         codeIdMap.keySet().parallelStream().forEach(stockCode -> {
             Long stockId = codeIdMap.get(stockCode);
-
-
-//        });
-//        sort_codeIdMap.forEach((stockCode, stockId) -> {
-//            // pre
-//            if (beginStockCode != null && stockCode.compareTo(beginStockCode) < 0) {
-//                return;
-//            }
 
 
             fillStockKline(stockCode, stockId);
 
 
-            // ------------------------------------------- 计时（频率）   10ms/次   x 5500     ->     总耗时：58s
+            // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
 
 
             int countVal = count.incrementAndGet();
@@ -1071,7 +1044,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String r3 = String.format("%s次 - %ss", countVal, time / 1000);
 
 
-            // stockCode : 300480, stockId : 1935 , count : 5424 , r1 : 10ms/次 , r2 : 92次/s , r3 : 5424次 - 58s
+            // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
             log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                      stockCode, stockId, countVal, r1, r2, r3);
         });
@@ -1174,6 +1147,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
+    @Deprecated
     public void xgcz() {
 
 
@@ -1222,11 +1196,5 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         return market_stockCodeList_map;
     }
 
-
-    @Override
-    public JSONObject check() {
-
-        return null;
-    }
 
 }

@@ -91,6 +91,7 @@ public class LdayParser {
         System.out.println("---------------------------------- code：" + stockDataList.get(0).code + "     总数：" + stockDataList.size());
     }
 
+
     /**
      * tdx 盘后数据（xx.day）   -   解析器
      *
@@ -161,6 +162,10 @@ public class LdayParser {
             System.arraycopy(buffer, b, slice, 0, 32);
 
 
+            b += 32;
+            // e += 32;
+
+
             // ---------------------------------------------------------------------------------------------------------
 
 
@@ -210,7 +215,7 @@ public class LdayParser {
             // 收盘价
             float close = (float) byteBuffer.getInt() / 100;
             // 成交额（元）
-            BigDecimal amount = new BigDecimal(byteBuffer.getFloat());
+            BigDecimal amount = BigDecimal.valueOf(byteBuffer.getFloat());
             // 成交量
             int vol = byteBuffer.getInt();
             // 保留字段
@@ -256,10 +261,6 @@ public class LdayParser {
 
 
             dtoList.add(dto);
-
-
-            b += 32;
-            e += 32;
         }
 
 
@@ -313,5 +314,6 @@ public class LdayParser {
         // 换手率
         private BigDecimal turnoverPct;
     }
+
 
 }
