@@ -229,6 +229,12 @@ public class LdayParser {
             }
 
 
+            // 只记录   2010-01-01   以后的数据
+            if (tradeDate.isBefore(LocalDate.of(2010, 1, 1))) {
+                continue;
+            }
+
+
             if (i == 0) {
                 preClose = close;
             }
