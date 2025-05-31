@@ -8,8 +8,8 @@
         SELECT task_id,
                trade_type,
                stock_id,
-               stock_code,
-               stock_name,
+               ANY_VALUE(stock_code)       AS stock_code,
+               ANY_VALUE(stock_name)       AS stock_name,
 
 
                SUM(quantity)               AS quantity,

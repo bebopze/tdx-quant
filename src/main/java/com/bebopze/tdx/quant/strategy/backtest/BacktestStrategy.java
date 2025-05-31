@@ -7,9 +7,9 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
-import com.bebopze.tdx.quant.strategy.buy.BackTestBuyStrategy;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStockStrategy;
-import com.bebopze.tdx.quant.strategy.sell.BackTestSellStrategy;
+import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,10 +41,10 @@ import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
 @Data
 @Slf4j
 @Component
-public class BackTestStrategy {
+public class BacktestStrategy {
 
 
-    public static final ThreadLocal<BackTestStrategy> strategyThreadLocal = new ThreadLocal<>();
+    public static final ThreadLocal<BacktestStrategy> strategyThreadLocal = new ThreadLocal<>();
 
 
     // 加载  最近N日   行情数据
@@ -102,10 +102,10 @@ public class BackTestStrategy {
     private BuyStockStrategy buyStockStrategy;
 
     @Autowired
-    private BackTestBuyStrategy backTestBuyStrategy;
+    private BacktestBuyStrategy backTestBuyStrategy;
 
     @Autowired
-    private BackTestSellStrategy backTestSellStrategy;
+    private BacktestSellStrategy backTestSellStrategy;
 
     @Autowired
     private DownMASellStrategy sellStockStrategy;
@@ -122,7 +122,7 @@ public class BackTestStrategy {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public void testStrategy_01() {
+    public void backtest() {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ public class BackTestStrategy {
         taskDO.setBuyStrategy("");
         taskDO.setSellStrategy("");
         // 回测 - 时间段
-        taskDO.setStartDate(LocalDate.of(2019, 1, 1));
+        taskDO.setStartDate(LocalDate.of(2025, 1, 1));
         taskDO.setEndDate(LocalDate.now());
         // 初始本金
         taskDO.setInitialCapital(new BigDecimal("1000000"));
@@ -384,6 +384,11 @@ public class BackTestStrategy {
 
 
         btTaskService.updateById(taskDO);
+
+
+        // finally {
+        strategyThreadLocal.remove();
+        // }
     }
 
 
@@ -608,7 +613,7 @@ public class BackTestStrategy {
         // TODO   停牌 - 日期-行情 问题（待验证   ->   暂忽略【影响基本为 0】）
 
 
-        blockDOList.forEach(e -> {
+        blockDOList.parallelStream().forEach(e -> {
 
             String blockCode = e.getCode();
             List<KlineDTO> klineDTOList = ConvertStockKline.klineHis2DTOList(e.getKlineHis());
@@ -659,7 +664,7 @@ public class BackTestStrategy {
         // TODO   停牌 - 日期-行情 问题（待验证   ->   暂忽略【影响基本为 0】）
 
 
-        stockDOList.forEach(e -> {
+        stockDOList.parallelStream().forEach(e -> {
 
             String stockCode = e.getCode();
             List<KlineDTO> klineDTOList = e.getKLineHis();

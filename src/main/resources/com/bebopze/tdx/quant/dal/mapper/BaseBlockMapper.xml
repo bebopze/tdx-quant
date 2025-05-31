@@ -10,7 +10,7 @@
     </select>
 
 
-    <select id="getByCode" parameterType="java.lang.String" resultType="baseBlockDO">
+    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         select *
         from base_block
         where code = #{code}

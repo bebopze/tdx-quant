@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.strategy.sell;
+package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.convert.ConvertDate;
@@ -9,7 +9,7 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.QuickOption;
-import com.bebopze.tdx.quant.strategy.backtest.BackTestStrategy;
+import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -19,29 +19,30 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
 /**
- * 回测 - S策略
+ * 回测 - B策略
  *
  * @author: bebopze
  * @date: 2025/5/30
  */
 @Slf4j
 @Component
-public class BackTestSellStrategy extends SellStrategy {
+public class BacktestBuyStrategy extends BuyStrategy {
 
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
 
-    public void initData(BackTestStrategy backTestStrategy) {
+    public void initData(BacktestStrategy backTestStrategy) {
+
+
+        // BackTestStrategy strategy = strategyThreadLocal.get();
+
 
         this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
@@ -55,9 +56,7 @@ public class BackTestSellStrategy extends SellStrategy {
     }
 
 
-    public List<String> rule(BackTestStrategy backTestStrategy,
-                             LocalDate tradeDate,
-                             List<String> positionStockCodeList) {
+    public List<String> rule(BacktestStrategy backTestStrategy, LocalDate tradeDate) {
 
 
         initData(backTestStrategy);
@@ -167,7 +166,7 @@ public class BackTestSellStrategy extends SellStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                  板块 -> 个股
+        //                                                   板块 - 个股
         // -------------------------------------------------------------------------------------------------------------
 
 

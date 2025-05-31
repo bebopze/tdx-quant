@@ -1,16 +1,15 @@
-package com.bebopze.tdx.quant.strategy.buy;
+package com.bebopze.tdx.quant.strategy.sell;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.convert.ConvertDate;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.QuickOption;
-import com.bebopze.tdx.quant.strategy.backtest.BackTestStrategy;
+import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -20,32 +19,29 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.bebopze.tdx.quant.strategy.backtest.BackTestStrategy.strategyThreadLocal;
 
 
 /**
- * 回测 - B策略
+ * 回测 - S策略
  *
  * @author: bebopze
  * @date: 2025/5/30
  */
 @Slf4j
 @Component
-public class BackTestBuyStrategy extends BuyStrategy {
+public class BacktestSellStrategy extends SellStrategy {
 
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
 
-    public void initData(BackTestStrategy backTestStrategy) {
-
-
-        // BackTestStrategy strategy = strategyThreadLocal.get();
-
+    public void initData(BacktestStrategy backTestStrategy) {
 
         this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
@@ -59,7 +55,9 @@ public class BackTestBuyStrategy extends BuyStrategy {
     }
 
 
-    public List<String> rule(BackTestStrategy backTestStrategy, LocalDate tradeDate) {
+    public List<String> rule(BacktestStrategy backTestStrategy,
+                             LocalDate tradeDate,
+                             List<String> positionStockCodeList) {
 
 
         initData(backTestStrategy);
@@ -169,7 +167,7 @@ public class BackTestBuyStrategy extends BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                   板块 - 个股
+        //                                                  板块 -> 个股
         // -------------------------------------------------------------------------------------------------------------
 
 
