@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
@@ -915,7 +916,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
 
 
-        // Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
         List<String> klines = Lists.newArrayList();
 
         ldayDTOList.forEach(x -> {
@@ -935,8 +935,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
             klines.add(klineStr);
-
-            // date_kline_map.put(String.valueOf(x.getTradeDate()), kline);
         });
 
         baseBlockDO.setKlineHis(JSON.toJSONString(klines));
@@ -978,33 +976,34 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillBlockKlineAll() {
         long[] start = {System.currentTimeMillis()};
+        AtomicInteger count = new AtomicInteger(0);
 
 
         Map<String, Long> codeIdMap = iBaseBlockService.codeIdMap();
 
 
-        int[] count = {0};
-        codeIdMap.forEach((blockCode, blockId) -> {
+        codeIdMap.keySet().parallelStream().forEach((blockCode) -> {
+            Long blockId = codeIdMap.get(blockCode);
 
 
             fillBlockKline(blockCode, blockId);
 
 
-            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+            // ------------------------------------------- 计时（频率）   21ms/次   x 881     ->     总耗时：19s
 
 
-            ++count[0];
+            int countVal = count.incrementAndGet();
             long time = System.currentTimeMillis() - start[0];
 
 
-            long r1 = time / count[0];
-            long r2 = count[0] * 1000 / time;
-            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
+            long r1 = time / countVal;
+            long r2 = countVal * 1000 / time;
+            String r3 = String.format("%s次 - %ss", countVal, time / 1000);
 
 
-            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+            // blockCode : 880367, blockId : 43 , count : 881 , r1 : 21ms/次 , r2 : 45次/s , r3 : 881次 - 19s
             log.info("fillBlockKlineAll suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     blockCode, blockId, count[0], r1, r2, r3);
+                     blockCode, blockId, countVal, r1, r2, r3);
         });
     }
 
@@ -1018,42 +1017,49 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillStockKlineAll(String beginStockCode) {
         long[] start = {System.currentTimeMillis()};
+        AtomicInteger count = new AtomicInteger(0);
 
 
         Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
 
 
         // sort
-        Map<String, Long> sort_codeIdMap = Maps.newTreeMap();
-        sort_codeIdMap.putAll(codeIdMap);
+        // Map<String, Long> sort_codeIdMap = new TreeMap(codeIdMap);
 
 
-        int[] count = {0};
-        sort_codeIdMap.forEach((stockCode, stockId) -> {
-            // pre
-            if (beginStockCode != null && stockCode.compareTo(beginStockCode) < 0) {
-                return;
-            }
+        // int[] count = {0};
+
+
+        codeIdMap.keySet().parallelStream().forEach(stockCode -> {
+            Long stockId = codeIdMap.get(stockCode);
+
+
+//        });
+//        sort_codeIdMap.forEach((stockCode, stockId) -> {
+//            // pre
+//            if (beginStockCode != null && stockCode.compareTo(beginStockCode) < 0) {
+//                return;
+//            }
 
 
             fillStockKline(stockCode, stockId);
 
 
-            // ------------------------------------------- 计时（频率）   150ms/次   x 5500     ->     总耗时：15min
+            // ------------------------------------------- 计时（频率）   10ms/次   x 5500     ->     总耗时：58s
 
 
-            ++count[0];
+            int countVal = count.incrementAndGet();
             long time = System.currentTimeMillis() - start[0];
 
 
-            long r1 = time / count[0];
-            long r2 = count[0] * 1000 / time;
-            String r3 = String.format("%s次 - %ss", count[0], time / 1000);
+            long r1 = time / countVal;
+            long r2 = countVal * 1000 / time;
+            String r3 = String.format("%s次 - %ss", countVal, time / 1000);
 
 
-            // stockCode : 600693, stockId : 3266 , count : 552 , r1 : 149ms/次 , r2 : 6次/s , r3 : 552次 - 82s
+            // stockCode : 300480, stockId : 1935 , count : 5424 , r1 : 10ms/次 , r2 : 92次/s , r3 : 5424次 - 58s
             log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     stockCode, stockId, count[0], r1, r2, r3);
+                     stockCode, stockId, countVal, r1, r2, r3);
         });
 
     }
@@ -1131,7 +1137,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
 
 
-        // Map<String, List<Number>> date_kline_map = Maps.newLinkedHashMap();
         List<String> klines = Lists.newArrayList();
         ldayDTOList.forEach(e -> {
 
@@ -1147,17 +1152,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
             klines.add(klineStr);
-
-
-            // List<Number> kline = Lists.newArrayList(e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(), e.getChangePct(), null, null);
-            //
-            // date_kline_map.put(String.valueOf(e.getTradeDate()), kline);
         });
 
-        // baseStockDO.setKlineHis(JSON.toJSONString(date_kline_map));
-        //
-        //
-        // LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
 
         return klines;
     }
