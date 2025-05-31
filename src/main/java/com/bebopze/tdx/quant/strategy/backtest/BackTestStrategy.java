@@ -4,10 +4,12 @@ import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.strategy.buy.BackTestBuyStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStockStrategy;
+import com.bebopze.tdx.quant.strategy.sell.BackTestSellStrategy;
 import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -57,10 +59,14 @@ public class BackTestStrategy {
 
     List<BaseStockDO> stockDOList;
     Map<String, Map<String, Double>> stock__dateCloseMap = Maps.newHashMap();
+    Map<String, Long> stock__codeIdMap = Maps.newHashMap();
+    Map<String, String> stock__codeNameMap = Maps.newHashMap();
 
 
     List<BaseBlockDO> blockDOList;
     Map<String, Map<String, Double>> block__dateCloseMap = Maps.newHashMap();
+    // Map<String, Long> block__codeIdMap = Maps.newHashMap();
+    // Map<String, String> block__codeNameMap = Maps.newHashMap();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -99,6 +105,9 @@ public class BackTestStrategy {
     private BackTestBuyStrategy backTestBuyStrategy;
 
     @Autowired
+    private BackTestSellStrategy backTestSellStrategy;
+
+    @Autowired
     private DownMASellStrategy sellStockStrategy;
 
 
@@ -116,17 +125,14 @@ public class BackTestStrategy {
     public void testStrategy_01() {
 
 
+        // -------------------------------------------------------------------------------------------------------------
+        //                              回测-task   pre   ==>   板块、个股   行情数据 初始化
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // 加载   全量行情数据
 
-//        try {
         initData();
-
-        // do backtest
-
-
-//        } finally {
-//            strategyThreadLocal.remove();
-//        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -176,7 +182,6 @@ public class BackTestStrategy {
         BigDecimal maxDrawdown = BigDecimal.ZERO;
 
 
-        // List<BtDailyReturnDO> dailyReturnDOList = Lists.newArrayList();
         // 每日 收益率
         List<BigDecimal> dailyReturnList = Lists.newArrayList();
 
@@ -185,15 +190,12 @@ public class BackTestStrategy {
             tradeDate = tradeDate.plusDays(1);
 
 
-            // -------------------------------------------------- S
-
-            // B策略 - S策略     =>     彼此不关联 -> 解耦
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            每日持仓（S前）
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // -------------------------------------------------- 卖出策略（ 先S[淘汰]  =>  空余资金  ->  B[新上榜] ）
-
-
-            // --------------------------------------------------------------- 每日持仓（S前）
 
 
             // 获取 -> 持仓列表
@@ -201,7 +203,20 @@ public class BackTestStrategy {
             List<String> positionStockCodeList__S = positionRecordDOList__S.stream().map(BtPositionRecordDO::getStockCode).collect(Collectors.toList());
 
 
-            sellStockStrategy.holdingStockRule(positionStockCodeList__S);
+            // code - DO
+            Map<String, BtPositionRecordDO> stockCode_positionDO_map = Maps.newHashMap();
+            for (BtPositionRecordDO positionRecordDO : positionRecordDOList__S) {
+                stockCode_positionDO_map.put(positionRecordDO.getStockCode(), positionRecordDO);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            S策略
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 卖出策略
+            List<String> sell__stockCodeList = backTestSellStrategy.rule(this, tradeDate, positionStockCodeList__S);
 
 
             // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
@@ -209,27 +224,78 @@ public class BackTestStrategy {
             // 2.2 每日 淘汰策略（S策略 - 2）[排名]走弱 -> 末位淘汰 ->  stockCodeList（对昨日 持股 -> 末位淘汰[设置末尾淘汰 - 分数线/排名线 ]）
 
 
-            // ---------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            S策略 -> 交易 record
+            // ---------------------------------------------------------------------------------------------------------
 
 
-            // -------------------------------------------------- B
-            // 1.1、当日 B策略 -> stockCodeList
-            // 1.2、昨日 B策略 -> stockCodeList
+            for (String stockCode : sell__stockCodeList) {
+
+                BtTradeRecordDO tradeRecordDO = new BtTradeRecordDO();
+                tradeRecordDO.setTradeType(BtTradeTypeEnum.SELL.getTradeType());
+                tradeRecordDO.setStockId(stock__codeIdMap.get(stockCode));
+                tradeRecordDO.setStockCode(stockCode);
+                tradeRecordDO.setStockName(stock__codeNameMap.get(stockCode));
+                tradeRecordDO.setTradeDate(tradeDate);
+                tradeRecordDO.setPrice(NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate)));
+                tradeRecordDO.setQuantity(stockCode_positionDO_map.get(stockCode).getQuantity());
+                // 成交额 = 价格 x 数量
+                tradeRecordDO.setAmount(NumUtil.double2Decimal(tradeRecordDO.getPrice().doubleValue() * tradeRecordDO.getQuantity()));
+                tradeRecordDO.setFee(BigDecimal.ZERO);
+
+
+                btTradeRecordService.save(tradeRecordDO);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            B策略
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 买入策略
             List<String> buy__stockCodeList = backTestBuyStrategy.rule(this, tradeDate);
 
 
-            // --------------------------------------------------------------- 每日持仓
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            B策略 -> 交易 record
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            for (String stockCode : buy__stockCodeList) {
+
+                BtTradeRecordDO tradeRecordDO = new BtTradeRecordDO();
+                tradeRecordDO.setTradeType(BtTradeTypeEnum.BUY.getTradeType());
+                tradeRecordDO.setStockId(stock__codeIdMap.get(stockCode));
+                tradeRecordDO.setStockCode(stockCode);
+                tradeRecordDO.setStockName(stock__codeNameMap.get(stockCode));
+                tradeRecordDO.setTradeDate(tradeDate);
+                tradeRecordDO.setPrice(NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate)));
+                tradeRecordDO.setQuantity(stockCode_positionDO_map.get(stockCode).getQuantity());
+                // 成交额 = 价格 x 数量
+                tradeRecordDO.setAmount(NumUtil.double2Decimal(tradeRecordDO.getPrice().doubleValue() * tradeRecordDO.getQuantity()));
+                tradeRecordDO.setFee(BigDecimal.ZERO);
+
+
+                btTradeRecordService.save(tradeRecordDO);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            每日持仓
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 获取 -> 持仓列表
             List<BtPositionRecordDO> positionRecordDOList = getDailyPositions(taskId, tradeDate);
-            List<String> positionStockCodeList = positionRecordDOList.stream().map(BtPositionRecordDO::getStockCode).collect(Collectors.toList());
 
 
-            // --------------------------------------------------------------- 每日收益
+            btPositionRecordService.saveBatch(positionRecordDOList);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            每日收益
+            // ---------------------------------------------------------------------------------------------------------
 
 
             BtDailyReturnDO dailyReturnDO = calcDailyReturn(taskId, tradeDate, positionRecordDOList);
@@ -266,7 +332,9 @@ public class BackTestStrategy {
         }
 
 
-        // --------------------------------------------------------------- 总收益
+        // -------------------------------------------------------------------------------------------------------------
+        //                                            总收益
+        // -------------------------------------------------------------------------------------------------------------
 
 
         sumTotalReturn(taskId);
@@ -490,7 +558,7 @@ public class BackTestStrategy {
 
 
         // save2DB
-        btPositionRecordService.saveBatch(positionRecordDOList);
+        // btPositionRecordService.saveBatch(positionRecordDOList);
 
 
         return positionRecordDOList;
@@ -601,11 +669,18 @@ public class BackTestStrategy {
             String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
 
 
+            // --------------------------------------------------------
+
+
             Map<String, Double> dateCloseMap = Maps.newHashMap();
             for (int i = 0; i < date_arr.length; i++) {
                 dateCloseMap.put(date_arr[i], close_arr[i]);
             }
             stock__dateCloseMap.put(stockCode, dateCloseMap);
+
+
+            stock__codeIdMap.put(stockCode, e.getId());
+            stock__codeNameMap.put(stockCode, e.getName());
 
 
             // 上市1年
