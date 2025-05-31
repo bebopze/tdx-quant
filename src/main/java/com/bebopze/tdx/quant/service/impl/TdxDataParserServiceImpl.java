@@ -784,6 +784,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 8min 55s
+        // 3min 13s
         save2DB___stock_rela_blockNew(blockNewCode_stockCodeSet_map,
                                       blockNew__codeIdMap,
                                       sotock__codeIdMap,
@@ -850,12 +852,18 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                                Map<String, Long> block__codeIdMap) {
 
 
-        blockNewCode_stockCodeSet_map.forEach((blockNewCode, stockCodeSet) -> {
+        blockNewCode_stockCodeSet_map.keySet().parallelStream().forEach(blockNewCode -> {
+            Set<String> stockCodeSet = blockNewCode_stockCodeSet_map.get(blockNewCode);
+
+//        blockNewCode_stockCodeSet_map.forEach((blockNewCode, stockCodeSet) -> {
+
 
             Long blockNewId = blockNew__codeIdMap.get(blockNewCode);
 
 
             List<BaseBlockNewRelaStockDO> relaDOList = Lists.newArrayList();
+            // add 并发竞争
+            // List<BaseBlockNewRelaStockDO> relaDOList = Collections.synchronizedList(Lists.newArrayList());
             stockCodeSet.forEach(stockCode -> {
 
 
@@ -895,8 +903,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             });
 
 
-            iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
-            iBaseBlockNewRelaStockService.saveBatch(relaDOList);
+            try {
+                iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
+                iBaseBlockNewRelaStockService.saveBatch(relaDOList);
+            } catch (Exception ex) {
+                log.error("save2DB___stock_rela_blockNew   并发写入异常     >>>     blockNewId : {} , relaDOList : {} , exMsg : {}",
+                          blockNewId, JSON.toJSONString(relaDOList), ex.getMessage(), ex);
+            }
+
         });
     }
 
