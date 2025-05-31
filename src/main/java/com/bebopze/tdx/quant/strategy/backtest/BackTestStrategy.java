@@ -36,10 +36,13 @@ import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
  * @author: bebopze
  * @date: 2025/5/27
  */
+@Data
 @Slf4j
 @Component
-@Data
 public class BackTestStrategy {
+
+
+    public static final ThreadLocal<BackTestStrategy> strategyThreadLocal = new ThreadLocal<>();
 
 
     // 加载  最近N日   行情数据
@@ -114,7 +117,16 @@ public class BackTestStrategy {
 
 
         // 加载   全量行情数据
+
+//        try {
         initData();
+
+        // do backtest
+
+
+//        } finally {
+//            strategyThreadLocal.remove();
+//        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -206,11 +218,7 @@ public class BackTestStrategy {
 
 
             // 买入策略
-            // BuyStockStrategyResultDTO resultDTO = buyStockStrategy.buyStockRule();
-            // List<String> stockCodeList = resultDTO.getStockCodeList();
-
-
-            List<String> buyStockCodeList = backTestBuyStrategy.rule(this, tradeDate);
+            List<String> buy__stockCodeList = backTestBuyStrategy.rule(this, tradeDate);
 
 
             // --------------------------------------------------------------- 每日持仓
@@ -513,6 +521,8 @@ public class BackTestStrategy {
 
 
         // ...
+
+        strategyThreadLocal.set(this);
     }
 
     /**

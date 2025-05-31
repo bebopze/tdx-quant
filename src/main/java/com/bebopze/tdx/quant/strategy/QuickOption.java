@@ -252,7 +252,7 @@ public class QuickOption {
      * @param N
      * @return
      */
-    private static List<String> scoreSort(List<String> stockCodeList, int N) {
+    public static List<String> scoreSort(Collection<String> stockCodeList, int N) {
 
         Map<String, BigDecimal> stockCode_amo_map = Maps.newHashMap();
         Map<String, double[]> stockCode_close_map = Maps.newHashMap();

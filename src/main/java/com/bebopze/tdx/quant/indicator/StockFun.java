@@ -12,6 +12,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -68,6 +69,87 @@ public class StockFun {
     // -----------------------------------------------------------------------------------------------------------------
     //                                            个股 - 行情数据 init
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    public StockFun(String stockCode, BaseStockDO baseStockDO) {
+
+
+        // limit = limit == null ? 500 : limit;
+
+
+        // --------------------------- HTTP 获取   个股行情 data
+
+        // 实时行情 - API
+        // SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+        // SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
+
+
+        // 历史行情 - API
+        // StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        // --------------------------- resp -> DTO
+
+
+        // String stockName = shszQuoteSnapshotResp.getName();
+        String stockName = baseStockDO.getName();
+
+
+        // 历史行情
+        List<KlineDTO> klineDTOList = baseStockDO.getKLineHis();
+
+
+        // last
+        KlineDTO klineDTO = klineDTOList.get(klineDTOList.size() - 1);
+
+
+        // 收盘价 - 实时
+        double C = klineDTO.getClose().doubleValue();
+
+
+        // 历史行情
+        // List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
+
+
+        Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
+        double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+        double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
+
+
+        // TODO   RPS（预计算） -> DB获取
+
+
+//        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
+//        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
+//        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
+
+
+        // --------------------------- init data
+
+
+        this.stockCode = stockCode;
+        this.stockName = stockName;
+
+
+        this.shszQuoteSnapshotResp = null;
+        this.klineDTOList = klineDTOList;
+
+        this.C = C;
+
+        this.date_arr = date_arr;
+        this.close_arr = close_arr;
+        this.high_arr = high_arr;
+
+
+        this.ssf_arr = SSF(close_arr);
+
+
+        this.rps50_arr = rps50_arr;
+        this.rps120_arr = rps120_arr;
+        this.rps250_arr = rps250_arr;
+    }
 
 
     public StockFun(String stockCode) {
@@ -366,7 +448,7 @@ public class StockFun {
 
 
     public boolean[] 大均线多头() {
-       return TdxExtFun.大均线多头(close_arr);
+        return TdxExtFun.大均线多头(close_arr);
     }
 
 
