@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.convert;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
@@ -7,10 +8,10 @@ import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
@@ -21,6 +22,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
  * @author: bebopze
  * @date: 2025/5/30
  */
+@Slf4j
 public class ConvertDate {
 
 
@@ -41,12 +43,17 @@ public class ConvertDate {
             BaseBlockDO baseBlockDO = mapper.getByCode(INDEX_BLOCK);
 
             if (baseBlockDO != null) {
+
                 List<KlineDTO> klineDTOList = ConvertStockKline.klineHis2DTOList(baseBlockDO.getKlineHis());
                 String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
 
 
+                // 倒序
+                Collections.reverse(Arrays.asList(date_arr));
+
+
                 // 倒序 idx（今日  ->  上市 第1天）
-                for (int i = date_arr.length - 1; i >= 0; i--) {
+                for (int i = 0; i < date_arr.length; i++) {
                     reverse__dateIndexMap.put(date_arr[i], i);
                 }
             }
@@ -61,14 +68,28 @@ public class ConvertDate {
 
 
     public static boolean getByDate(boolean[] arr, LocalDate date) {
-        init(); // 第一次使用时初始化
 
-        // 倒序 idx
-        int reverse_idx = reverse__dateIndexMap.get(DateTimeUtil.format_yyyy_MM_dd(date));
-        // 正序 idx
-        int idx = arr.length - reverse_idx - 1;
+        // 第一次使用时 初始化
+        init();
 
-        return arr[idx];
+
+        try {
+
+            // 倒序 idx
+            int reverse_idx = reverse__dateIndexMap.get(DateTimeUtil.format_yyyy_MM_dd(date));
+            // 正序 idx
+            int idx = arr.length - reverse_idx - 1;
+
+            return arr[idx];
+
+
+        } catch (Exception e) {
+            log.error("getByDate error     >>>     arr : {} , date : {} , exMsg : {}",
+                      JSON.toJSONString(arr), date, e.getMessage(), e);
+        }
+
+
+        return false;
     }
 
 
@@ -76,6 +97,17 @@ public class ConvertDate {
 
 
     public static void main(String[] args) {
+
+
+        init();
+
+
+        TreeMap<String, Integer> sort__dateIndexMap = new TreeMap<>(reverse__dateIndexMap);
+        System.out.println(JSON.toJSONString(reverse__dateIndexMap));
+        System.out.println(JSON.toJSONString(sort__dateIndexMap));
+
+
+        // ------------------------------------------------------------------------------------
 
 
         List<Integer> list = Lists.newArrayList(1, 2, 3, 4, 5);
@@ -98,5 +130,6 @@ public class ConvertDate {
             System.out.println(reverse_idx + "  " + idx + "     " + val);
         }
     }
+
 
 }
