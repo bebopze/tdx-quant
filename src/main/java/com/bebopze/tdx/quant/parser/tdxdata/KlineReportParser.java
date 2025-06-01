@@ -22,7 +22,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * 导出 通达信-盘后数据     ->     解析获取 历史日线数据
  *
  *
- * -   通达信  ->  34[数据导出]  ->  高级导出  ->  添加品种  ->  全部A股/板块指数
+ * -   通达信  ->  34[数据导出]  ->  高级导出  ->  添加品种  ->  全部A股/板块指数               // 前复权
  *
  *
  * -   行情数据   export目录：/new_tdx/T0002/export/
@@ -50,7 +50,7 @@ public class KlineReportParser {
         String stockCode_zs_sh = "880003";
 
 
-        List<LdayParser.LdayDTO> stockDataList = parseByStockCode(stockCode_bk);
+        List<LdayParser.LdayDTO> stockDataList = parseByStockCode("300059");
         for (LdayParser.LdayDTO e : stockDataList) {
             String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
             System.out.println(JSON.toJSONString(item));
@@ -125,7 +125,6 @@ public class KlineReportParser {
      * @param filePath 文件路径     -    /new_tdx/vipdoc/
      * @return
      */
-    @SneakyThrows
     public static List<LdayParser.LdayDTO> parseByFilePath(String filePath) {
 
         // 股票代码
@@ -136,70 +135,83 @@ public class KlineReportParser {
         double preClose = Double.NaN;
 
 
-        List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
-        for (String line : lines) {
+        LocalDate date = null;
+        try {
+
+            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            for (String line : lines) {
 
 
-            // 处理每一行
-            if (StringUtils.hasText(line)) {
+                // 处理每一行
+                if (StringUtils.hasText(line)) {
 
 
-                // date,O,H,L,C,VOL,AMO
-                // 2023/05/09,16.07,17.32,15.86,16.47,720610432,12118721536.00
+                    // date,O,H,L,C,VOL,AMO
+                    // 2023/05/09,16.07,17.32,15.86,16.47,720610432,12118721536.00
 
 
-                String[] strArr = line.trim().split(",");
+                    String[] strArr = line.trim().split(",");
 
-                if (strArr.length < 7) {
-                    log.warn("line : {}", line);
-                    continue;
-                }
-
-
-                // 日期
-                LocalDate date = DateTimeUtil.parseDate_yyyyMMdd__slash(strArr[0]);
-                // 开盘价
-                double open = Double.parseDouble(strArr[1]);
-                // 最高价
-                double high = Double.parseDouble(strArr[2]);
-                // 最低价
-                double low = Double.parseDouble(strArr[3]);
-                // 收盘价
-                double close = Double.parseDouble(strArr[4]);
-                // 成交量
-                int vol = Integer.parseInt(strArr[5]);
-                // 成交额（元）
-                BigDecimal amount = new BigDecimal(strArr[6]);
+                    if (strArr.length < 7) {
+                        log.warn("line : {}", line);
+                        continue;
+                    }
 
 
-                // 只记录   2010-01-01   以后的数据
-                if (date.isBefore(LocalDate.of(2010, 1, 1))) {
-                    continue;
-                }
+                    // 日期
+                    date = DateTimeUtil.parseDate_yyyyMMdd__slash(strArr[0]);
+                    // 开盘价
+                    double open = Double.parseDouble(strArr[1]);
+                    // 最高价
+                    double high = Double.parseDouble(strArr[2]);
+                    // 最低价
+                    double low = Double.parseDouble(strArr[3]);
+                    // 收盘价
+                    double close = Double.parseDouble(strArr[4]);
+                    // 成交量
+                    long vol = Long.parseLong(strArr[5]);
+                    // 成交额（元）
+                    BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(strArr[6]));
 
 
-                if (Double.isNaN(preClose)) {
+                    // 只记录   2010-01-01   以后的数据
+                    if (date.isBefore(LocalDate.of(2010, 1, 1))) {
+                        continue;
+                    }
+
+
+//                    if (date.isEqual(LocalDate.of(2024, 10, 9))) {
+//                        System.out.println("-------- vol : " + vol);
+//                    }
+
+
+                    if (Double.isNaN(preClose)) {
+                        preClose = close;
+                    }
+
+                    double changePct = Math.round((close - preClose) / preClose * 100 * 100.0f) / 100.0f;
+                    double changePrice = close - preClose;
                     preClose = close;
+
+
+                    // 振幅       H/L   x100-100
+                    double rangePct = low == 0 ? 0 : high / low * 100 - 100;
+
+
+                    // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};
+                    // System.out.println(JSON.toJSONString(item));
+
+
+                    LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), amount, vol, of(changePct), of(changePrice), of(rangePct), null);
+
+
+                    dtoList.add(dto);
                 }
-
-                double changePct = Math.round((close - preClose) / preClose * 100 * 100.0f) / 100.0f;
-                double changePrice = close - preClose;
-                preClose = close;
-
-
-                // 振幅       H/L   x100-100
-                double rangePct = high / low * 100 - 100;
-
-
-                // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};
-                // System.out.println(JSON.toJSONString(item));
-
-
-                LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), amount, vol, of(changePct), of(changePrice), of(rangePct), null);
-
-
-                dtoList.add(dto);
             }
+
+
+        } catch (Exception e) {
+            log.error("err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
         }
 
 
@@ -216,11 +228,6 @@ public class KlineReportParser {
     private static String parseCode(String filePath) {
         //   .../export/A股/SZ#000001.txt
         String[] arr = filePath.split("/");
-        String s1 = arr[arr.length - 1];
-        String[] s1_arr = s1.split("#");
-        String[] s2_arr = s1_arr[1].split("\\.");
-        String s = s2_arr[0];
-
         return arr[arr.length - 1].split("#")[1].split("\\.")[0];
     }
 
@@ -228,38 +235,6 @@ public class KlineReportParser {
     private static BigDecimal of(Number val) {
         return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
     }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-//    @Data
-//    @AllArgsConstructor
-//    public static class LdayDTO implements Serializable {
-//
-//        private String code;
-//
-//        @JsonFormat(pattern = "yyyy-MM-dd")
-//        private LocalDate tradeDate;
-//
-//        private BigDecimal open;
-//        private BigDecimal high;
-//        private BigDecimal low;
-//        private BigDecimal close;
-//        private BigDecimal amount;
-//        private Integer vol;
-//        private BigDecimal changePct;
-//        // 涨跌额       C - pre_C          |          今日收盘价 × 涨跌幅 / (1+涨跌幅)
-//        private BigDecimal changePrice;
-//        // 振幅       H/L   x100-100
-//        private BigDecimal rangePct;
-//
-//        // ----------------------------------- 自动计算 字段
-//
-//
-//        // 换手率
-//        private BigDecimal turnoverPct;
-//    }
 
 
 }

@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 
@@ -25,28 +28,45 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 /**
  * 解析 通达信-盘后数据 获取历史日线数据   -   https://blog.csdn.net/weixin_57522153/article/details/119992838
  * -
- * - 盘后数据目录：/new_tdx/vipdoc/
- *
+ * - 盘后数据目录：/new_tdx/vipdoc/                           // 不复权
  *
  *
  *
  * - 废弃   ==>   不可用
  *
- * -   xx.day文件   -   行情数据 未知bug     ->     90% 行情数据    有偏差       // 仅近1年内 数据基本准确
+ * -   xx.day文件   -   行情数据 未知bug     ->     90% 行情数据    有偏差       // 仅 近半年内   数据基本准确
+ *
+ * -      bug原因：    经验证   xx.day 数据   均为   ->   【不复权】 数据        // 板块/指数 - 不存在 复权  =>  无影响
+ *
  *
  *
  * - 替代方案：  @see  KlineReportParser          // 通达信   -  （行情）数据导出   ->   解析
+ *
+ *
+ * - 终极方案：  东方财富/同花顺/雪球   -   行情API   // 缺点：限流  ->  封IP
+ *
+ *
+ * -
  *
  * @author: bebopze
  * @date: 2024/10/9
  * @see KlineReportParser
  */
 @Slf4j
-@Deprecated
 public class LdayParser {
 
 
     public static void main(String[] args) {
+
+
+//        List<Integer> list1 = Lists.newArrayList(1, 2, 3);
+//        List<Integer> list2 = Lists.newArrayList(1, 2, 3, 4, 5);
+//        int size1 = list1.size();
+//        int size2 = list2.size();
+//        if (size1 < size2) {
+//            List<Integer> list3 = list2.subList(size1, size2);
+//            System.out.println(list3);
+//        }
 
 
 //        String filePath = "/DEL/hsjday (3)/sz/lday/" + "sz300059.day";
@@ -89,10 +109,10 @@ public class LdayParser {
         String stockCode_zs_sh = "880003";
 
 
-        List<LdayDTO> stockDataList = parseByStockCode(stockCode_sz);
+        List<LdayDTO> stockDataList = parseByStockCode("300059");
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
-            System.out.println(JSON.toJSONString(item));
+//            System.out.println(JSON.toJSONString(item));
         }
 
 
@@ -137,7 +157,23 @@ public class LdayParser {
 
 
         try {
-            return parseByFilePath(filePath);
+
+            // 往期数据
+            List<LdayDTO> klineReport__ldayDTOList = Lists.newArrayList();
+            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
+                // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
+                klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+            }
+
+            // 短期数据
+            List<LdayDTO> lday__ldayDTOList = parseByFilePath(filePath);
+
+
+            check(klineReport__ldayDTOList, lday__ldayDTOList);
+
+
+            return merge(klineReport__ldayDTOList, lday__ldayDTOList);
+
         } catch (Exception e) {
             log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
                       stockCode, filePath, e.getMessage(), e);
@@ -172,7 +208,7 @@ public class LdayParser {
 
 
         List<LdayDTO> dtoList = Lists.newArrayList();
-        float preClose = 0.0f;
+        float preClose = Float.NaN;
 
 
         for (int i = 0; i < no; i++) {
@@ -235,9 +271,10 @@ public class LdayParser {
             // 成交额（元）
             BigDecimal amount = BigDecimal.valueOf(byteBuffer.getFloat());
             // 成交量
-            int vol = byteBuffer.getInt();
+            // long vol = byteBuffer.getInt();
+            long vol = byteBuffer.getLong();
             // 保留字段
-            int unUsed = byteBuffer.getInt();
+            // int unUsed = byteBuffer.getInt();
 
 
             int year = date / 10000;
@@ -257,12 +294,13 @@ public class LdayParser {
                 continue;
             }
 
-//            if (tradeDate.isEqual(LocalDate.of(2025, 1, 2))) {
-//                System.out.println("--------");
-//            }
+
+            if (tradeDate.isEqual(LocalDate.of(2024, 10, 9))) {
+                System.out.println("-------- vol : " + vol);
+            }
 
 
-            if (i == 0) {
+            if (Float.isNaN(preClose)) {
                 preClose = close;
             }
 
@@ -306,6 +344,88 @@ public class LdayParser {
     }
 
 
+    private static void check(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
+
+        String stockCode = lday__ldayDTOList.get(0).code;
+
+
+        for (int i = 0; i < klineReport__ldayDTOList.size(); i++) {
+
+            LdayDTO klineReport__ldayDTO = klineReport__ldayDTOList.get(i);
+            LdayDTO lday__ldayDTO = lday__ldayDTOList.get(i);
+
+
+            String dto1 = JSON.toJSONString(klineReport__ldayDTO);
+            String dto2 = JSON.toJSONString(lday__ldayDTO);
+
+            if (!StringUtils.equals(dto1, dto2)) {
+
+                JSONObject json1 = JSON.parseObject(dto1);
+                JSONObject json2 = JSON.parseObject(dto2);
+
+                JSONObject diffFields = getDiffFields(json1, json2);
+                log.error("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                          stockCode, i, klineReport__ldayDTO.tradeDate, diffFields.toJSONString());
+
+            } else {
+
+                log.debug("check suc     >>>     stockCode : {} , idx : {} , date : {}",
+                          stockCode, i, klineReport__ldayDTO.tradeDate);
+            }
+        }
+    }
+
+
+    private static JSONObject getDiffFields(JSONObject json1, JSONObject json2) {
+        JSONObject result = new JSONObject();
+
+        for (String key : json1.keySet()) {
+            Object v1 = json1.get(key);
+            Object v2 = json2.get(key);
+
+            if (!Objects.equals(v1, v2)) {
+                JSONObject diff = new JSONObject();
+                diff.put("v1", v1);
+                diff.put("v2", v2);
+                result.put(key, diff);
+            }
+        }
+
+        return result;
+    }
+
+
+    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
+
+//        // 半年
+//        LocalDate dateLine = LocalDate.now().minusMonths(6);
+//
+//
+//        // 远期
+//        List<LdayDTO> far_dtoList = klineReport__ldayDTOList.stream().filter(e -> e.getTradeDate().isBefore(dateLine)).collect(Collectors.toList());
+//        // 近期
+//        List<LdayDTO> recent_dtoList = lday__ldayDTOList.stream().filter(e -> !e.getTradeDate().isBefore(dateLine)).collect(Collectors.toList());
+//
+//
+//        far_dtoList.addAll(recent_dtoList);
+//
+//
+//        return far_dtoList;
+
+
+        List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
+
+
+        int size1 = klineReport__ldayDTOList.size();
+        int size2 = lday__ldayDTOList.size();
+        if (size1 < size2) {
+            List<LdayDTO> subList = lday__ldayDTOList.subList(size1, size2);
+            dtoList.addAll(subList);
+        }
+
+        return dtoList;
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -323,7 +443,7 @@ public class LdayParser {
         private BigDecimal low;
         private BigDecimal close;
         private BigDecimal amount;
-        private Integer vol;
+        private Long vol;
         private BigDecimal changePct;
         // 涨跌额       C - pre_C          |          今日收盘价 × 涨跌幅 / (1+涨跌幅)
         private BigDecimal changePrice;
