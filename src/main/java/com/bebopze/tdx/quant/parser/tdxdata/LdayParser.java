@@ -27,14 +27,32 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * -
  * - 盘后数据目录：/new_tdx/vipdoc/
  *
+ *
+ *
+ *
+ * - 废弃   ==>   不可用
+ *
+ * -   xx.day文件   -   行情数据 未知bug     ->     90% 行情数据    有偏差       // 仅近1年内 数据基本准确
+ *
+ *
+ * - 替代方案：  @see  KlineReportParser          // 通达信   -  （行情）数据导出   ->   解析
+ *
  * @author: bebopze
  * @date: 2024/10/9
+ * @see KlineReportParser
  */
 @Slf4j
+@Deprecated
 public class LdayParser {
 
 
     public static void main(String[] args) {
+
+
+//        String filePath = "/DEL/hsjday (3)/sz/lday/" + "sz300059.day";
+//        List<LdayDTO> ldayDTOS = parseByFilePath(filePath);
+//        System.out.println();
+
 
         // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/sh/lday/sh000001.day
         // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/31#00700.day
@@ -238,6 +256,10 @@ public class LdayParser {
             if (tradeDate.isBefore(LocalDate.of(2010, 1, 1))) {
                 continue;
             }
+
+//            if (tradeDate.isEqual(LocalDate.of(2025, 1, 2))) {
+//                System.out.println("--------");
+//            }
 
 
             if (i == 0) {
