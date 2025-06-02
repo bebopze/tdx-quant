@@ -1,6 +1,10 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.EMA;
@@ -116,8 +120,9 @@ public class TdxExtFun {
         return new boolean[]{};
     }
 
+
     /**
-     * 均线萌出（多头排列且各均线向上）       - MABreakout
+     * 均线萌出（多头排列 且 各均线向上）       - MABreakout
      *
      * @param close 收盘价序列
      * @return 每个周期是否满足均线萌出
@@ -126,41 +131,34 @@ public class TdxExtFun {
         int len = close.length;
 
         // 计算各周期均线
-        double[] MA5 = MA(close, 5);
         double[] MA10 = MA(close, 10);
         double[] MA20 = MA(close, 20);
         double[] MA50 = MA(close, 50);
         double[] MA100 = MA(close, 100);
-        double[] MA150 = MA(close, 150);
         double[] MA200 = MA(close, 200);
 
         // 将 NaN（不足周期时产生）替换为 0
         MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
         MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA150 = Arrays.stream(MA150).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
         MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
 
-        // 前期均线
-        double[] MA10_1 = REF(MA10, 1);
-        double[] MA20_1 = REF(MA20, 1);
-        double[] MA50_1 = REF(MA50, 1);
-        double[] MA100_1 = REF(MA100, 1);
-        double[] MA200_1 = REF(MA200, 1);
 
         boolean[] result = new boolean[len];
         for (int i = 0; i < len; i++) {
-            boolean bullOrder =
-                    close[i] >= MA10[i]
-                            && MA10[i] >= MA20[i]
-                            && MA20[i] >= MA50[i]
-                            && MA50[i] >= MA100[i]
-                            && MA100[i] >= MA200[i];
-            boolean maUp =
-                    MA10[i] >= MA10_1[i]
-                            && MA20[i] >= MA20_1[i]
-                            && MA50[i] >= MA50_1[i]
-                            && MA100[i] >= MA100_1[i]
-                            && MA200[i] >= MA200_1[i];
+
+            boolean bullOrder = close[i] >= MA10[i]
+                    && MA10[i] >= MA20[i]
+                    && MA20[i] >= MA50[i]
+                    && MA50[i] >= MA100[i]
+                    && MA50[i] >= MA200[i];
+
+            boolean maUp = i > 0
+                    && MA10[i] >= MA10[i - 1]
+                    && MA20[i] >= MA20[i - 1]
+                    && MA50[i] >= MA50[i - 1]
+                    && MA100[i] >= MA100[i - 1]
+                    && MA200[i] >= MA200[i - 1];
+
             result[i] = bullOrder && maUp;
         }
 
@@ -180,23 +178,27 @@ public class TdxExtFun {
      * MA120 := IF(MA(C,120)=DRAWNULL,0,MA(C,120));
      * MA150 := IF(MA(C,150)=DRAWNULL,0,MA(C,150));
      * MA200 := IF(MA(C,200)=DRAWNULL,0,MA(C,200));
-     * <p>
+     *
+     *
      * 预萌出1 :=
      * (C>=MA10 AND MA10>=MA20 AND MA20>=MA50 AND C>=MA100 AND C>=MA200)
      * AND
      * (MA10>=REF(MA10,1) AND MA20>=REF(MA20,1) AND MA50>=REF(MA50,1))
      * AND
      * (MA100>=REF(MA100,1) || MA200>=REF(MA200,1));
-     * <p>
+     *
+     *
      * 预萌出2 :=
      * MA多(5) AND MA多(10) AND MA多(20) AND MA多(50) AND MA多(100) AND MA多(200)
      * AND
-     * (MA100>=MA120 AND MA120>=MA150 AND MA150>=MA200);
-     * <p>
-     * 均线预萌出 := 预萌出1 || 预萌出2;
+     * (MA50≥MA100 AND MA100≥MA200);
+     *
+     *
+     * 均线预萌出 :=  预萌出1 || 预萌出2;
      */
     public static boolean[] 均线预萌出(double[] close) {
         int len = close.length;
+
 
         // 计算各条均线
         double[] MA5 = MA(close, 5);
@@ -216,14 +218,17 @@ public class TdxExtFun {
         MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
 
         // 准备上一期均线
+        double[] MA5_1 = REF(MA5, 1);
         double[] MA10_1 = REF(MA10, 1);
         double[] MA20_1 = REF(MA20, 1);
         double[] MA50_1 = REF(MA50, 1);
         double[] MA100_1 = REF(MA100, 1);
         double[] MA200_1 = REF(MA200, 1);
 
+
         boolean[] result = new boolean[len];
         for (int i = 0; i < len; i++) {
+
             // 预萌出1 条件
             boolean cond1 =
                     close[i] >= MA10[i]
@@ -236,23 +241,26 @@ public class TdxExtFun {
                             && MA50[i] >= MA50_1[i]
                             && (MA100[i] >= MA100_1[i] || MA200[i] >= MA200_1[i]);
 
+
             // 预萌出2 条件：MA多(N) 定义为 close>=MA(N) 且 MA(N)>=REF(MA(N),1)
-            boolean ma5Up = close[i] >= MA5[i] && MA5[i] >= REF(MA5, 1)[i];
+            boolean ma5Up = close[i] >= MA5[i] && MA5[i] >= MA5_1[i];
             boolean ma10Up = close[i] >= MA10[i] && MA10[i] >= MA10_1[i];
             boolean ma20Up = close[i] >= MA20[i] && MA20[i] >= MA20_1[i];
             boolean ma50Up = close[i] >= MA50[i] && MA50[i] >= MA50_1[i];
             boolean ma100Up = close[i] >= MA100[i] && MA100[i] >= MA100_1[i];
             boolean ma200Up = close[i] >= MA200[i] && MA200[i] >= MA200_1[i];
-            // 大均线多头排列：MA100 ≥ MA120 ≥ MA150 ≥ MA200
+
+            // 大均线多头排列：MA50 ≥ MA100 ≥ MA200
             boolean bigMaBull =
-                    MA100[i] >= MA120[i]
-                            && MA120[i] >= MA150[i]
-                            && MA150[i] >= MA200[i];
+                    MA50[i] >= MA100[i]
+                            && MA100[i] >= MA200[i];
 
             boolean cond2 = ma5Up && ma10Up && ma20Up && ma50Up && ma100Up && ma200Up && bigMaBull;
 
+
             result[i] = cond1 || cond2;
         }
+
 
         return result;
     }
@@ -288,22 +296,31 @@ public class TdxExtFun {
     // ----------------------------------- TODO     月多
 
 
-    public static boolean[] 月多(double[] close) {
-        return new boolean[]{};
+    public static boolean[] 月多(String[] dateArr, double[] closeArr, double[] highArr, double[] lowArr) {
+        List<MonthlyBullSignal.DailyBar> dailyBarList = new ArrayList<>();
+
+
+        for (int i = 0; i < dateArr.length; i++) {
+            MonthlyBullSignal.DailyBar dailyBar = new MonthlyBullSignal.DailyBar(DateTimeUtil.parseDate_yyyy_MM_dd(dateArr[i]),
+                                                                                 0.00, highArr[i], lowArr[i], closeArr[i]);
+            dailyBarList.add(dailyBar);
+        }
+
+
+        return MonthlyBullSignal.computeMonthlyBull(dailyBarList);
     }
 
 
-//
 //    /**
-//     * 计算“月多”信号
+//     * 计算“月多”信号                             monthlyBull
 //     *
+//     * @param date  日线交易日期序列
 //     * @param close 日线收盘价序列
 //     * @param high  日线最高价序列
 //     * @param low   日线最低价序列
-//     * @param open  日线开盘价序列
 //     * @return 布尔数组：true 表示月多
 //     */
-//    public static boolean[] monthlyBull(double[] close, double[] high, double[] low, double[] open) {
+//    public static boolean[] 月多(String[] date, double[] close, double[] high, double[] low) {
 //        int len = close.length;
 //
 //        // —— 1. 各周期 MACD ——
@@ -314,16 +331,17 @@ public class TdxExtFun {
 //        double[] macdD = macdDay[2];
 //
 //        // 周线 MACD（假设已有方法按周线重采样后调用）
-//        double[] closeWeek = resampleToWeek(close);
+//        double[] closeWeek = resampleToWeek(date, close);
 //        double[][] macdWeekArr = MACD(closeWeek);
 //        double[] macdW = macdWeekArr[2];
 //
 //        // 月线 MACD（假设已有方法按月线重采样后调用）
-//        double[] closeMonth = resampleToMonth(close);
+//        double[] closeMonth = resampleToMonth(date, close);
 //        double[][] macdMonthArr = MACD(closeMonth);
 //        double[] difM = macdMonthArr[0];
 //        double[] deaM = macdMonthArr[1];
 //        double[] macdM = macdMonthArr[2];
+//
 //
 //        // —— 2. 计算 MACD 月度信号 ——
 //        // 月度比率
@@ -332,14 +350,15 @@ public class TdxExtFun {
 //            double absDIF = Math.abs(difM[i]);
 //            double absDEA = Math.abs(deaM[i]);
 //            double ratio = Math.min(absDEA, absDIF) / Math.max(absDEA, absDIF);
-//            // 接近金叉
-//            boolean nearGolden =
-//                    (BARSLASTCOUNT(difM[i] >= REF(difM, 1)[i]) >= 1.2 * 20 && ratio >= 0.9)
-//                            || (BARSLASTCOUNT(difM[i] > REF(difM, 1)[i]) >= 1 && ratio >= 0.95);
+//
+//            // TODO   接近金叉
+//            // boolean nearGolden =
+//            //        (BARSLASTCOUNT(difM[i] >= REF(difM, 1)[i]) >= 1.2 * 20 && ratio >= 0.9)
+//            //                 || (BARSLASTCOUNT(difM[i] > REF(difM, 1)[i]) >= 1 && ratio >= 0.95);
+//
 //            // 月度金叉
-//            boolean golden =
-//                    macdM[i] >= 0
-//                            || (macdM[i] == HHV(macdM, 9)[i] && nearGolden);
+//            boolean golden = macdM[i] >= 0 || (macdM[i] == HHV(macdM, 9)[i] /*&& nearGolden*/);
+//
 //            macdMonthBull[i] = golden;
 //        }
 //
@@ -366,6 +385,16 @@ public class TdxExtFun {
 //        return result;
 //    }
 //
+//    private static double[] resampleToWeek(String[] date, double[] close) {
+//        double[] weekClose = KlineAggregator.toWeekClose(date, close);
+//        return weekClose;
+//    }
+//
+//    private static double[] resampleToMonth(String[] date, double[] close) {
+//        double[] monthClose = KlineAggregator.toMonthClose(date, close);
+//        return monthClose;
+//    }
+//
 //
 //    // 布尔数组按位 OR
 //    private static boolean[] or(boolean[] a, boolean[] b) {
@@ -374,13 +403,13 @@ public class TdxExtFun {
 //        for (int i = 0; i < n; i++) c[i] = a[i] || b[i];
 //        return c;
 //    }
-//
-//    // ------ 说明 ------
-//    // 1. resampleToWeek / resampleToMonth: 请用已有方法或库实现从日线到周/月线的重采样。
-//    // 2. HHV(arr, n): 计算数组 arr 最近 n 期的最高值序列。
-//    // 3. BARSLASTCOUNT 和 BARSSINCEN: 你已有工具方法直接调用。
-//    // 4. maBreakout / maPreBreakout: 前面定义的“均线萌出”和“均线预萌出”函数。
-//    // 5. mapMonthIndex: 日线索引到月线索引的映射，取决于数据结构，需自行实现。
+
+    // ------ 说明 ------
+    // 1. resampleToWeek / resampleToMonth: 请用已有方法或库实现从日线到周/月线的重采样。
+    // 2. HHV(arr, n): 计算数组 arr 最近 n 期的最高值序列。
+    // 3. BARSLASTCOUNT 和 BARSSINCEN: 你已有工具方法直接调用。
+    // 4. maBreakout / maPreBreakout: 前面定义的“均线萌出”和“均线预萌出”函数。
+    // 5. mapMonthIndex: 日线索引到月线索引的映射，取决于数据结构，需自行实现。
 
 
 }
