@@ -1,15 +1,17 @@
-package com.bebopze.tdx.quant.parser.tdxdata;
+package com.bebopze.tdx.quant.parser.check;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,30 +27,31 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 
 
 /**
- * 自定义指标  -  check
+ * Java指标（TdxFun）  -   check       ==>       TdxFun指标  -  通达信指标          计算结果对比
  *
  *
- * -   通达信  ->  自定义指标  ->  34[数据导出]
+ *
+ * -   [通达信指标] 计算结果导出          =>          通达信   ->   自定义指标（副图公式）  ->   34[数据导出]
  *
  *
- * -   行情数据   export目录：/new_tdx/T0002/export/
+ * -   export目录：/new_tdx/T0002/export/
  *
  * @author: bebopze
  * @date: 2025/6/2
  */
 @Slf4j
-public class TdxFunCheckReportParser {
+public class TdxFunCheck {
 
 
     public static void main(String[] args) {
-
-
-        // ----------
 
 
         String stockCode_sz = "000001";
@@ -64,7 +67,7 @@ public class TdxFunCheckReportParser {
         List<TdxFunResultDTO> stockDataList = parseByStockCode("300059");
         for (TdxFunResultDTO row : stockDataList) {
             // String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
-            System.out.println(JSON.toJSONString(row));
+            // System.out.println(JSON.toJSONString(row));
         }
 
 
@@ -93,7 +96,7 @@ public class TdxFunCheckReportParser {
             // 通达信 - 指标result
             List<TdxFunResultDTO> tdx__rowList = parseByFilePath(filePath);
             // Java - 指标result
-            List<TdxFunResultDTO> java__rowList = calcFromJava(stockCode);
+            List<TdxFunResultDTO> java__rowList = calcByJava(stockCode);
 
 
             // check
@@ -113,7 +116,194 @@ public class TdxFunCheckReportParser {
     }
 
 
-    private static List<TdxFunResultDTO> calcFromJava(String stockCode) {
+    private static void check(List<TdxFunResultDTO> tdx__rowList, List<TdxFunResultDTO> java__rowList) {
+
+        // 起始日期
+        LocalDate dateLine = tdx__rowList.get(0).getDate();
+        java__rowList = java__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
+
+
+        // ----------
+
+
+        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("close", "vol", "MA", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
+        Set<String> failSet = Sets.newHashSet();
+
+
+        for (int i = 0; i < tdx__rowList.size(); i++) {
+            TdxFunResultDTO dto1 = tdx__rowList.get(i);
+            TdxFunResultDTO dto2 = java__rowList.get(i);
+
+
+            LocalDate date = dto1.getDate();
+
+
+            // ------------------------------------------------------ 固定：TDX 系统指标
+
+
+            // C     ->     SUC
+            if (!(equals(dto1.getClose(), dto2.getClose()) && equals(dto1.getVol(), dto2.getVol()))) {
+                failSet.add("close");
+                failSet.add("vol");
+                log.error("check fail     >>>     close   -   {} , {} , {}", date, dto1.getClose(), dto2.getClose());
+                log.error("check fail     >>>     vol   -   {} , {} , {}", date, dto1.getVol(), dto2.getVol());
+            }
+
+
+            // -------------------------------- 基础指标（系统）
+
+
+            // MA     ->     SUC
+            if (!(equals(dto1.getMA5(), dto2.getMA5(), 0.0001) && equals(dto1.getMA10(), dto2.getMA10(), 0.0001)
+                    && equals(dto1.getMA20(), dto2.getMA20(), 0.0001) && equals(dto1.getMA50(), dto2.getMA50(), 0.0001)
+                    && equals(dto1.getMA100(), dto2.getMA100(), 0.0001) && equals(dto1.getMA200(), dto2.getMA200(), 0.0001))) {
+
+                failSet.add("MA");
+                log.error("check fail     >>>     MA   -   {} , {} , {}", date, dto1.getMA5(), dto2.getMA5());
+            }
+
+
+            // MACD     ->     SUC
+            if (!(equals(dto1.getMACD(), dto2.getMACD(), 0.015)
+                    && equals(dto1.getDIF(), dto2.getDIF())
+                    && equals(dto1.getDEA(), dto2.getDEA()))) {
+
+                failSet.add("MACD");
+                log.error("check fail     >>>     MACD   -   {} , {} , {}", date, dto1.getMACD(), dto2.getMACD());
+            }
+
+
+            // SAR     ->     FAIL
+            if (equals(dto1.getSAR(), dto2.getSAR())) {
+                log.info("check     >>>     SAR   suc");
+            } else {
+                failSet.add("SAR");
+                log.error("check fail     >>>     SAR   -   {} , {} , {}", date, dto1.getSAR(), dto2.getSAR());
+            }
+
+
+            // -------------------------------- 简单指标
+
+
+            // MA多     ->     SUC
+            if (!equals(dto1.getMA20多(), dto2.getMA20多())) {
+                failSet.add("MA多");
+                log.error("check fail     >>>     MA多   -   {} , {} , {}", date, dto1.getMA20多(), dto2.getMA20多());
+            }
+            // MA空     ->     SUC
+            if (!equals(dto1.getMA20空(), dto2.getMA20空())) {
+                failSet.add("MA空");
+                log.error("check fail     >>>     MA空   -   {} , {} , {}", date, dto1.getMA20空(), dto2.getMA20空());
+            }
+
+
+            // SSF     ->     SUC
+            if (!equals(dto1.getSSF(), dto2.getSSF())) {
+                failSet.add("SSF");
+                log.error("check fail     >>>     SSF   -   {} , {} , {}", date, dto1.getSSF(), dto2.getSSF());
+            }
+
+
+            // SSF多     ->     SUC
+            if (!equals(dto1.getSSF多(), dto2.getSSF多())) {
+                failSet.add("SSF多");
+                log.error("check fail     >>>     SSF多   -   {} , {} , {}", date, dto1.getSSF多(), dto2.getSSF多());
+            }
+            // SSF空     ->     SUC
+            if (!equals(dto1.getSSF空(), dto2.getSSF空())) {
+                failSet.add("SSF空");
+                log.error("check fail     >>>     SSF空   -   {} , {} , {}", date, dto1.getSSF空(), dto2.getSSF空());
+            }
+
+
+            // -------------------------------- 高级指标
+
+
+            // N日新高     ->     SUC
+            if (!equals(dto1.get_60日新高(), dto2.get_60日新高())) {
+                failSet.add("N日新高");
+                log.error("check fail     >>>     N日新高   -   {} , {} , {}", date, dto1.get_60日新高(), dto2.get_60日新高());
+            }
+
+
+            // 均线预萌出     ->     SUC
+            if (!equals(dto1.get均线预萌出(), dto2.get均线预萌出())) {
+                failSet.add("均线预萌出");
+                log.error("check fail     >>>     均线预萌出   -   {} , {} , {}", date, dto1.get均线预萌出(), dto2.get均线预萌出());
+            }
+
+
+            // 均线萌出     ->     SUC
+            if (!equals(dto1.get均线萌出(), dto2.get均线萌出())) {
+                failSet.add("均线萌出");
+                log.error("check fail     >>>     均线萌出   -   {} , {} , {}", date, dto1.get均线萌出(), dto2.get均线萌出());
+            }
+
+
+            // 大均线多头     ->     FAIL
+            if (equals(dto1.get大均线多头(), dto2.get大均线多头())) {
+                log.info("check suc      >>>     大均线多头   -   {} , {} , {}", date, dto1.get大均线多头(), dto2.get大均线多头());
+            } else {
+                failSet.add("大均线多头");
+                log.error("check fail     >>>     大均线多头   -   {} , {} , {}", date, dto1.get大均线多头(), dto2.get大均线多头());
+            }
+
+
+            // -------------------------------- 复杂指标
+
+
+            // 月多     ->     FAIL
+            if (equals(dto1.get月多(), dto2.get月多())) {
+                log.info("check suc     >>>     月多");
+            } else {
+                failSet.add("月多");
+                log.error("check fail     >>>     月多   -   {} , {} , {}", date, dto1.get月多(), dto2.get月多());
+            }
+
+
+            // RPS三线红     ->     FAIL
+            if (equals(dto1.getRPS三线红(), dto2.getRPS三线红())) {
+                log.info("check suc     >>>     RPS三线红");
+            } else {
+                failSet.add("RPS三线红");
+                log.error("check fail     >>>     RPS三线红   -   {} , {} , {}", date, dto1.getRPS三线红(), dto2.getRPS三线红());
+            }
+        }
+
+
+        sucSet.removeAll(failSet);
+
+
+        log.info("check suc      >>>     {}", JSON.toJSONString(sucSet));
+        log.error("check fail     >>>     {}", JSON.toJSONString(failSet));
+    }
+
+
+    private static boolean equals(Number a, Number b) {
+        return equals(a, b, 0.0005);     // ±0.05% 误差
+    }
+
+    private static boolean equals(Number a, Number b, double precision) {
+        if (Objects.equals(a, b)) {
+            return true;
+        }
+
+
+        if (a == null || b == null || a.doubleValue() == 0 || b.doubleValue() == 0) {
+            // return Objects.equals(a, b);
+            return false;
+        }
+
+
+        double val = a.doubleValue() / b.doubleValue();
+        return NumUtil.between(val, 1 - precision, 1 + precision);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static List<TdxFunResultDTO> calcByJava(String stockCode) {
         List<TdxFunResultDTO> dtoList = Lists.newArrayList();
 
 
@@ -175,6 +365,8 @@ public class TdxFunCheckReportParser {
 
 
             TdxFunResultDTO dto = new TdxFunResultDTO();
+            dto.setCode(stockCode);
+
 
             dto.setDate(DateTimeUtil.parseDate_yyyy_MM_dd(dateStr));
             dto.setOpen(open_arr[i]);
@@ -186,12 +378,12 @@ public class TdxFunCheckReportParser {
 
             // -------------------------------- 基础指标（系统）
 
-            dto.setMA5(MA5[i]);
-            dto.setMA10(MA10[i]);
-            dto.setMA20(MA20[i]);
-            dto.setMA50(MA50[i]);
-            dto.setMA100(MA100[i]);
-            dto.setMA200(MA200[i]);
+            dto.setMA5(of(MA5[i]));
+            dto.setMA10(of(MA10[i]));
+            dto.setMA20(of(MA20[i]));
+            dto.setMA50(of(MA50[i]));
+            dto.setMA100(of(MA100[i]));
+            dto.setMA200(of(MA200[i]));
 
 
             dto.setMACD(MACD[i]);
@@ -208,7 +400,7 @@ public class TdxFunCheckReportParser {
             dto.setMA20多(bool2Int(MA20多[i]));
             dto.setMA20空(bool2Int(MA20空[i]));
 
-            dto.setSSF(ssf_arr[i]);
+            dto.setSSF(of(ssf_arr[i]));
             dto.setSSF多(bool2Int(SSF多[i]));
             dto.setSSF空(bool2Int(SSF空[i]));
 
@@ -239,12 +431,7 @@ public class TdxFunCheckReportParser {
     }
 
 
-    private static void check(List<TdxFunResultDTO> tdx__rowList, List<TdxFunResultDTO> java__rowList) {
-
-
-        TdxFunResultDTO dto = new TdxFunResultDTO();
-
-    }
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -253,7 +440,7 @@ public class TdxFunCheckReportParser {
      * @param filePath 文件路径     -    /new_tdx/T0002/export/
      * @return
      */
-    public static List<TdxFunResultDTO> parseByFilePath(String filePath) {
+    private static List<TdxFunResultDTO> parseByFilePath(String filePath) {
 
 
         // 股票代码
@@ -422,8 +609,9 @@ public class TdxFunCheckReportParser {
     }
 
 
-    private static BigDecimal of(Number val) {
-        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+    private static double of(Number val) {
+        if (null == val || (val instanceof Double && Double.isNaN((Double) val))) return Double.NaN;
+        return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP).doubleValue();
     }
 
     private static Integer bool2Int(boolean bool) {
@@ -523,11 +711,6 @@ public class TdxFunCheckReportParser {
 
         // RPS三线红
         private Integer RPS三线红;
-
-
-        //
-
-
     }
 
 
