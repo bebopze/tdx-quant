@@ -116,53 +116,25 @@ public class TdxExtFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static boolean[] 大均线多头(double[] close) {
-        return new boolean[]{};
-    }
-
-
     /**
-     * 均线萌出（多头排列 且 各均线向上）       - MABreakout
+     * N日新高                                       - isNDaysHigh
      *
-     * @param close 收盘价序列
-     * @return 每个周期是否满足均线萌出
+     * @param high 原始序列（如 最高价序列）
+     * @param N    周期天数
+     * @return 布尔数组，第 i 位为 true 时表示 high[i] 刚好等于过去 N 期（含当期）的最高值
      */
-    public static boolean[] 均线萌出(double[] close) {
-        int len = close.length;
+    public static boolean[] N日新高(double[] high, int N) {
+        double[] hhv = HHV(high, N);
 
-        // 计算各周期均线
-        double[] MA10 = MA(close, 10);
-        double[] MA20 = MA(close, 20);
-        double[] MA50 = MA(close, 50);
-        double[] MA100 = MA(close, 100);
-        double[] MA200 = MA(close, 200);
+        int len = high.length;
+        boolean[] signal = new boolean[len];
 
-        // 将 NaN（不足周期时产生）替换为 0
-        MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-
-
-        boolean[] result = new boolean[len];
         for (int i = 0; i < len; i++) {
-
-            boolean bullOrder = close[i] >= MA10[i]
-                    && MA10[i] >= MA20[i]
-                    && MA20[i] >= MA50[i]
-                    && MA50[i] >= MA100[i]
-                    && MA50[i] >= MA200[i];
-
-            boolean maUp = i > 0
-                    && MA10[i] >= MA10[i - 1]
-                    && MA20[i] >= MA20[i - 1]
-                    && MA50[i] >= MA50[i - 1]
-                    && MA100[i] >= MA100[i - 1]
-                    && MA200[i] >= MA200[i - 1];
-
-            result[i] = bullOrder && maUp;
+            // 当期值等于 N 期内最高值，且不是 NaN 时视为新高
+            signal[i] = !Double.isNaN(hhv[i]) && high[i] == hhv[i];
         }
 
-        return result;
+        return signal;
     }
 
 
@@ -266,25 +238,148 @@ public class TdxExtFun {
     }
 
 
-    // ----------------------------------- 60日新高            isNDaysHigh
+    /**
+     * 均线萌出（多头排列 且 各均线向上）       - MABreakout
+     *
+     * @param close 收盘价序列
+     * @return 每个周期是否满足均线萌出
+     */
+    public static boolean[] 均线萌出(double[] close) {
+        int len = close.length;
+
+
+        // 计算各周期均线
+        double[] MA10 = MA(close, 10);
+        double[] MA20 = MA(close, 20);
+        double[] MA50 = MA(close, 50);
+        double[] MA100 = MA(close, 100);
+        double[] MA200 = MA(close, 200);
+
+        // 将 NaN（不足周期时产生）替换为 0
+        MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+
+
+        boolean[] result = new boolean[len];
+        for (int i = 0; i < len; i++) {
+
+            boolean bullOrder = close[i] >= MA10[i]
+                    && MA10[i] >= MA20[i]
+                    && MA20[i] >= MA50[i]
+                    && MA50[i] >= MA100[i]
+                    && MA50[i] >= MA200[i];
+
+            boolean maUp = i > 0
+                    && MA10[i] >= MA10[i - 1]
+                    && MA20[i] >= MA20[i - 1]
+                    && MA50[i] >= MA50[i - 1]
+                    && MA100[i] >= MA100[i - 1]
+                    && MA200[i] >= MA200[i - 1];
+
+            result[i] = bullOrder && maUp;
+        }
+
+
+        return result;
+    }
 
 
     /**
-     * 是否为   N日新高
+     * 计算“大均线多头”布尔序列                            - largeMABull
      *
-     * @param values 原始序列（如 最高价序列）
-     * @param N      周期天数
-     * @return 布尔数组，第 i 位为 true 时表示 values[i] 刚好等于过去 N 期（含当期）的最高值
+     * 伪代码：
+     *
+     * MA50 := IF(MA(C, 50)=DRAWNULL, 0, MA(C, 50));
+     * MA60 := IF(MA(C, 60)=DRAWNULL, 0, MA(C, 60));
+     * MA100:= IF(MA(C,100)=DRAWNULL, 0, MA(C,100));
+     * MA120:= IF(MA(C,120)=DRAWNULL, 0, MA(C,120));
+     * MA200:= IF(MA(C,200)=DRAWNULL, 0, MA(C,200));
+     * MA250:= IF(MA(C,250)=DRAWNULL, 0, MA(C,250));
+     *
+     * 大均线多头 :=
+     * (C > MA50 && MA50 > MA100 && MA100 > MA200
+     * && MA50 >= REF(MA50,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
+     * ||
+     * (C > MA60 && MA60 > MA100 && MA100 > MA200
+     * && MA60 >= REF(MA60,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
+     * ||
+     * (C > MA50 && MA50 > MA120 && MA120 > MA250
+     * && MA50 >= REF(MA50,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1))
+     * ||
+     * (C > MA60 && MA60 > MA120 && MA120 > MA250
+     * && MA60 >= REF(MA60,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1));
+     *
+     * @param close 日线收盘价数组
+     * @return 与 close 等长的布尔数组，true 表示当日满足“大均线多头”
      */
-    public static boolean[] N日新高(double[] values, int N) {
-        double[] hhv = HHV(values, N);
-        int len = values.length;
-        boolean[] signal = new boolean[len];
-        for (int i = 0; i < len; i++) {
-            // 当期值等于 N 期内最高值，且不是 NaN 时视为新高
-            signal[i] = !Double.isNaN(hhv[i]) && values[i] == hhv[i];
+    public static boolean[] 大均线多头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA50 = MA(close, 50);
+        double[] MA60 = MA(close, 60);
+        double[] MA100 = MA(close, 100);
+        double[] MA120 = MA(close, 120);
+        double[] MA200 = MA(close, 200);
+        double[] MA250 = MA(close, 250);
+
+        // 2. 将 NaN（周期不足）替换为 0
+        MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA60 = Arrays.stream(MA60).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA120 = Arrays.stream(MA120).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA250 = Arrays.stream(MA250).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+
+        // 3. 计算上一日同周期均线（REF）
+        double[] MA50_1 = REF(MA50, 1);
+        double[] MA60_1 = REF(MA60, 1);
+        double[] MA100_1 = REF(MA100, 1);
+        double[] MA120_1 = REF(MA120, 1);
+        double[] MA200_1 = REF(MA200, 1);
+        double[] MA250_1 = REF(MA250, 1);
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+        for (int i = 1; i < n; i++) {
+
+            boolean cond1 = close[i] > MA50[i]
+                    && MA50[i] > MA100[i]
+                    && MA100[i] > MA200[i]
+                    && MA50[i] >= MA50_1[i]
+                    && MA100[i] >= MA100_1[i]
+                    && MA200[i] >= MA200_1[i];
+
+            boolean cond2 = close[i] > MA60[i]
+                    && MA60[i] > MA100[i]
+                    && MA100[i] > MA200[i]
+                    && MA60[i] >= MA60_1[i]
+                    && MA100[i] >= MA100_1[i]
+                    && MA200[i] >= MA200_1[i];
+
+            boolean cond3 = close[i] > MA50[i]
+                    && MA50[i] > MA120[i]
+                    && MA120[i] > MA250[i]
+                    && MA50[i] >= MA50_1[i]
+                    && MA120[i] >= MA120_1[i]
+                    && MA250[i] >= MA250_1[i];
+
+            boolean cond4 = close[i] > MA60[i]
+                    && MA60[i] > MA120[i]
+                    && MA120[i] > MA250[i]
+                    && MA60[i] >= MA60_1[i]
+                    && MA120[i] >= MA120_1[i]
+                    && MA250[i] >= MA250_1[i];
+
+
+            result[i] = cond1 || cond2 || cond3 || cond4;
         }
-        return signal;
+
+
+        return result;
     }
 
 
