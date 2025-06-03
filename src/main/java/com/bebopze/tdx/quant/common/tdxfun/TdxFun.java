@@ -6,11 +6,13 @@ import java.util.stream.IntStream;
 
 /**
  * 通达信/同花顺  函数库     -     Java实现
- * -
- * -
- * - MyTT.py     Java版                               https://github.com/mpquant/MyTT/blob/main/MyTT.py
- * -
- * - 转换自  原作者 mpquant  的  Python实现
+ *
+ *
+ * -    MyTT.py          Java版                               https://github.com/mpquant/MyTT/blob/main/MyTT.py
+ * -    MyTT_plus.py     Java版                               https://github.com/mpquant/MyTT/blob/main/MyTT_plus.py
+ *
+ *
+ * -    转换自  原作者 mpquant  的  Python实现
  *
  * @author: bebopze
  * @date: 2025/5/13
@@ -32,9 +34,6 @@ public class TdxFun {
         System.out.println("BARSLAST(cond): " + Arrays.toString(BARSLAST(cond)));
         System.out.println("CROSS MA(3) vs MA(5): " + Arrays.toString(CROSS(MA(a, 3), MA(a, 5))));
     }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -1106,7 +1105,171 @@ public class TdxFun {
         return r;
     }
 
+
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                              MyTT_plus.py
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static double[] SAR(double[] high, double[] low) {
+        return SAR(high, low, 10, 2, 20);
+    }
+
+    /**
+     * 计算通用的 SAR（抛物转向）指标
+     *
+     * @param high HIGH 序列
+     * @param low  LOW 序列
+     * @param N    计算周期
+     * @param S    AF 步长百分比，例如 2 表示 2%
+     * @param M    AF 极限百分比，例如 20 表示 20%
+     * @return 与输入等长的 SAR 数组，不计算前 N 个元素，填 NaN
+     */
+    public static double[] SAR(double[] high, double[] low, int N, double S, double M) {
+        int length = high.length;
+        double fStep = S / 100.0;
+        double fMax = M / 100.0;
+
+        // 计算 HHV(HIGH, N) 并 REF 1
+        double[] hhvN = HHV(high, N);
+        double[] sHhv = REF(hhvN, 1);
+        // 计算 LLV(LOW, N) 并 REF 1
+        double[] llvN = LLV(low, N);
+        double[] sLlv = REF(llvN, 1);
+
+        double[] sarX = new double[length];
+        Arrays.fill(sarX, Double.NaN);
+
+        boolean isLong = false;
+        if (N >= 2 && high[N - 1] > high[N - 2]) {
+            isLong = true;
+        }
+        boolean bFirst = true;
+        double af = 0.0;
+
+        for (int i = N; i < length; i++) {
+            if (bFirst) {
+                af = fStep;
+                sarX[i] = isLong ? sLlv[i] : sHhv[i];
+                bFirst = false;
+            } else {
+                double ep = isLong ? sHhv[i] : sLlv[i];
+                if (isLong) {
+                    if (high[i] > ep) {
+                        ep = high[i];
+                        af = Math.min(af + fStep, fMax);
+                    }
+                } else {
+                    if (low[i] < ep) {
+                        ep = low[i];
+                        af = Math.min(af + fStep, fMax);
+                    }
+                }
+                sarX[i] = sarX[i - 1] + af * (ep - sarX[i - 1]);
+            }
+
+            if (isLong) {
+                if (low[i] < sarX[i]) {
+                    isLong = false;
+                    bFirst = true;
+                }
+            } else {
+                if (high[i] > sarX[i]) {
+                    isLong = true;
+                    bFirst = true;
+                }
+            }
+        }
+        return sarX;
+    }
+
+
+    public static double[] TDX_SAR(double[] high, double[] low) {
+        return TDX_SAR(high, low, 2, 20);
+    }
+
+    /**
+     * 计算通达信 SAR(TDX_SAR) 算法，结果与通达信完全一致
+     *
+     * @param high     HIGH 序列
+     * @param low      LOW 序列
+     * @param iAFStep  AF 步长（整数）。例如传 2 表示 2%
+     * @param iAFLimit AF 极限（整数）。例如传 20 表示 20%
+     * @return 与输入等长的 SAR 数组
+     */
+    public static double[] TDX_SAR(double[] high, double[] low, int iAFStep, int iAFLimit) {
+        int n = high.length;
+        double afStep = iAFStep / 100.0;
+        double afLimit = iAFLimit / 100.0;
+
+        double[] sarX = new double[n];
+        if (n == 0) {
+            return sarX;
+        }
+        // 初始化
+        boolean bull = true;
+        double af = afStep;
+        double ep = high[0];
+        sarX[0] = low[0];
+
+        for (int i = 1; i < n; i++) {
+            if (bull) {
+                // 多头状态
+                if (high[i] > ep) {
+                    ep = high[i];
+                    af = Math.min(af + afStep, afLimit);
+                }
+            } else {
+                // 空头状态
+                if (low[i] < ep) {
+                    ep = low[i];
+                    af = Math.min(af + afStep, afLimit);
+                }
+            }
+            // 计算 SAR
+            sarX[i] = sarX[i - 1] + af * (ep - sarX[i - 1]);
+
+            // 修正 SAR
+            if (bull) {
+                sarX[i] = Math.min(Math.min(sarX[i], low[i]), low[i - 1]);
+                sarX[i] = Math.max(sarX[i], sarX[i - 1]);
+            } else {
+                sarX[i] = Math.max(Math.max(sarX[i], high[i]), high[i - 1]);
+                sarX[i] = Math.min(sarX[i], sarX[i - 1]);
+            }
+
+            // 判断是否反转
+            if (bull) {
+                if (low[i] < sarX[i]) {
+                    // 多头转空头
+                    bull = false;
+                    double tmpSar = ep;
+                    ep = low[i];
+                    af = afStep;
+                    if (high[i - 1] == tmpSar) {
+                        sarX[i] = tmpSar;
+                    } else {
+                        sarX[i] = tmpSar + af * (ep - tmpSar);
+                    }
+                }
+            } else {
+                if (high[i] > sarX[i]) {
+                    // 空头转多头
+                    bull = true;
+                    ep = high[i];
+                    af = afStep;
+                    sarX[i] = Math.min(low[i], low[i - 1]);
+                }
+            }
+        }
+        return sarX;
+    }
 
 
 }
