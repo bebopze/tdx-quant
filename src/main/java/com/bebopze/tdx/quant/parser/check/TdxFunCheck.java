@@ -190,10 +190,8 @@ public class TdxFunCheck {
             }
 
 
-            // SAR     ->     FAIL
-            if (equals(dto1.getSAR(), dto2.getSAR())) {
-                log.info("check     >>>     SAR   suc");
-            } else {
+            // SAR     ->     SUC
+            if (!equals(dto1.getSAR(), dto2.getSAR())) {
                 failCountMap.put("SAR", failCountMap.getOrDefault("SAR", 0) + 1);
             }
 
@@ -324,9 +322,9 @@ public class TdxFunCheck {
 
                 if (!equals(_v1, _v2)) {
 
-                    if (key.equals("MA100")) {
+                    if (key.equals("SAR")) {
                         boolean equals = equals(_v1, _v2);
-                        System.out.println();
+                        log.debug("debug key   ---------   {} , v1 : {} , v2 : {}", key, v1, v2);
                     }
                     JSONObject diff = new JSONObject();
                     diff.put("v1", v1);
@@ -351,7 +349,7 @@ public class TdxFunCheck {
     }
 
     private static boolean equals(Number a, Number b) {
-        return equals(a, b, 0.0005);     // ±0.05% 误差
+        return equals(a, b, 0.0005);     // ±0.05%   比值误差
     }
 
     private static boolean equals(Number a, Number b, double precision) {
@@ -368,7 +366,7 @@ public class TdxFunCheck {
 
         // 差值
         double diffVal = a.doubleValue() - b.doubleValue();
-        boolean equal1 = NumUtil.between(diffVal, -0.001001, 0.001001);
+        boolean equal1 = NumUtil.between(diffVal, -0.001001, 0.001001);     // ±0.001   差值误差
 
 
         if (b.doubleValue() == 0) {
@@ -421,7 +419,7 @@ public class TdxFunCheck {
         double[] MACD = macd[2];
 
 
-        double[] SAR = null; //TdxFun.SAR();
+        double[] SAR = TdxFun.TDX_SAR(high_arr, low_arr);
 
 
         boolean[] MA20多 = fun.MA多(20);
@@ -475,7 +473,7 @@ public class TdxFunCheck {
             dto.setDEA(DEA[i]);
 
 
-            // dto.setSAR(SAR[i]);
+            dto.setSAR(of(SAR[i], 3));
 
 
             // -------------------------------- 简单指标
@@ -694,8 +692,12 @@ public class TdxFunCheck {
 
 
     private static double of(Number val) {
+        return of(val, 3);
+    }
+
+    private static double of(Number val, int newScale) {
         if (null == val || (val instanceof Double && Double.isNaN((Double) val))) return Double.NaN;
-        return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP).doubleValue();
+        return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
     }
 
     private static Integer bool2Int(boolean bool) {
