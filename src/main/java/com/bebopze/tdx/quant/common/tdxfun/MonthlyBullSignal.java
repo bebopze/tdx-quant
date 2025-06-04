@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
@@ -131,7 +130,7 @@ public class MonthlyBullSignal {
         }
 
 
-        // 辅助：在 日→周/日→月 映射时，找到“最近一个不大于当前日的周/月索引”
+        // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int[] dayToWeek = new int[nDays];
         int wPointer = 0;
         for (int i = 0; i < nDays; i++) {
@@ -391,7 +390,8 @@ public class MonthlyBullSignal {
             monthIndexMap.put(monthDate[i], i);
         }
 
-        // 辅助：在 日→周/日→月 映射时，找到“最近一个不大于当前日的周/月索引”
+
+        // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int[] dayToWeek = new int[nDays];
         int wPointer = 0;
         for (int i = 0; i < nDays; i++) {
@@ -400,18 +400,6 @@ public class MonthlyBullSignal {
                 wPointer++;
             }
             dayToWeek[i] = wPointer;
-
-
-//            while (wPointer < nWeeks) {
-//                LocalDate dateWeek = weeklyBars.get(wPointer).date;
-//
-//                if (!d.isAfter(dateWeek)) {
-//                    dayToWeek[i] = wPointer;
-//                    break;
-//                } else {
-//                    wPointer++;
-//                }
-//            }
         }
 
 
@@ -419,23 +407,10 @@ public class MonthlyBullSignal {
         int mPointer = 0;
         for (int i = 0; i < nDays; i++) {
             LocalDate d = dayDate[i];
-//            while (mPointer + 1 < nMonths && monthlyBars.get(mPointer + 1).date.isAfter(d)) {
             while (mPointer < nMonths - 1 && monthlyBars.get(mPointer).date.isBefore(d)) {
                 mPointer++;
             }
             dayToMonth[i] = mPointer;
-
-
-//            while (mPointer < nMonths) {
-//                LocalDate dateMonth = monthlyBars.get(mPointer).date;
-//
-//                if (!d.isAfter(dateMonth)) {
-//                    dayToMonth[i] = mPointer;
-//                    break;
-//                } else {
-//                    mPointer++;
-//                }
-//            }
         }
 
 
@@ -530,16 +505,17 @@ public class MonthlyBullSignal {
 
 
     /**
-     * 将日线数据聚合成周线数据（取周一到周五为同一周期）
+     * 将日线数据聚合成周线数据（取 周一到周五 为同一周期）
      */
     public static List<DailyBar> aggregateToWeekly(List<DailyBar> dailyBars) {
-        // 使用 ISO 周为准：一周从周一到周日
+        // 使用 ISO 周为准：一周 从周一到周日
         WeekFields wf = WeekFields.ISO;
 
 
         return dailyBars.stream()
                         .collect(Collectors.groupingBy(
-                                bar -> bar.date.getYear() * 100 + bar.date.get(wf.weekOfWeekBasedYear()),
+                                // 构造 key = "YYYY-WW" 形式，保证 不同年份同周号 不会冲突
+                                bar -> bar.date.get(wf.weekBasedYear()) + "-" + bar.date.get(wf.weekOfWeekBasedYear()),
                                 LinkedHashMap::new, // 保留插入顺序
                                 Collectors.toList()
                         ))
@@ -571,6 +547,7 @@ public class MonthlyBullSignal {
 
         return dailyBars.stream()
                         .collect(Collectors.groupingBy(
+                                // key  ->  yyyy-MM
                                 bar -> YearMonth.from(bar.date),
                                 LinkedHashMap::new,
                                 Collectors.toList()
@@ -598,6 +575,12 @@ public class MonthlyBullSignal {
     }
 
 
+    /**
+     * 日 - 周idx
+     *
+     * @param dailyBars
+     * @return
+     */
     public static Map<LocalDate, Integer> weekIndexMap(List<DailyBar> dailyBars) {
         Map<LocalDate, Integer> weekIndexMap = Maps.newLinkedHashMap();
 
@@ -607,31 +590,15 @@ public class MonthlyBullSignal {
         int nWeeks = weeklyBars.size();
 
 
-        int nDays = dailyBars.size();
-
-
-        // 辅助：在 日→周/日→月 映射时，找到“最近一个不大于当前日的周/月索引”
+        // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int wPointer = 0;
-        for (int i = 0; i < nDays; i++) {
-            LocalDate d = dailyBars.get(i).date;
+        for (DailyBar dailyBar : dailyBars) {
+            LocalDate d = dailyBar.date;
 
-//            while (wPointer < nWeeks - 1 && weeklyBars.get(wPointer).date.isBefore(d)) {
-//                wPointer++;
-//            }
-//            weekIndexMap.put(d, wPointer);
-
-
-            while (wPointer < nWeeks) {
-                LocalDate dateWeek = weeklyBars.get(wPointer).date;
-
-                if (!d.isAfter(dateWeek)) {
-                    // dayToWeek[i] = wPointer;
-                    weekIndexMap.put(d, wPointer);
-                    break;
-                } else {
-                    wPointer++;
-                }
+            while (wPointer < nWeeks - 1 && weeklyBars.get(wPointer).date.isBefore(d)) {
+                wPointer++;
             }
+            weekIndexMap.put(d, wPointer);
         }
 
 
@@ -639,6 +606,12 @@ public class MonthlyBullSignal {
     }
 
 
+    /**
+     * 日 - 月idx
+     *
+     * @param dailyBars
+     * @return
+     */
     public static Map<LocalDate, Integer> monthIndexMap(List<DailyBar> dailyBars) {
         Map<LocalDate, Integer> monthIndexMap = Maps.newLinkedHashMap();
 
@@ -648,13 +621,10 @@ public class MonthlyBullSignal {
         int nMonths = monthlyBars.size();
 
 
-        int nDays = dailyBars.size();
-
-
-        // 辅助：在 日→周/日→月 映射时，找到“最近一个不大于当前日的周/月索引”
+        // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int mPointer = 0;
-        for (int i = 0; i < nDays; i++) {
-            LocalDate d = dailyBars.get(i).date;
+        for (DailyBar dailyBar : dailyBars) {
+            LocalDate d = dailyBar.date;
 
             while (mPointer < nMonths - 1 && monthlyBars.get(mPointer).date.isBefore(d)) {
                 mPointer++;
