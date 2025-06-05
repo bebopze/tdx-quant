@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -101,8 +102,11 @@ public class ParserController {
 
     @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKline")
-    public Result<Void> fillStockKline(@RequestParam String stockCode) {
-        tdxDataParserService.fillStockKline(stockCode);
+    public Result<Void> fillStockKline(@RequestParam(defaultValue = "300059") String stockCode,
+                                       @Schema(description = "API类型：1-通达信；2-东方财富；3-同花顺；4-雪球；5-腾讯；", example = "1")
+                                       @RequestParam(required = false, defaultValue = "1") Integer apiType) {
+
+        tdxDataParserService.fillStockKline(stockCode, apiType);
         return Result.SUC();
     }
 

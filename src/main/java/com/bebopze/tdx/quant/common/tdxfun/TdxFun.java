@@ -435,7 +435,13 @@ public class TdxFun {
         return r;
     }
 
-    // BARSLASTCOUNT: 连续 True 的周期数
+
+    /**
+     * BARSLASTCOUNT: 连续 True 的周期数                     ->   已验证 ✅
+     *
+     * @param S
+     * @return
+     */
     public static int[] BARSLASTCOUNT(boolean[] S) {
         int len = S.length;
         int[] r = new int[len];

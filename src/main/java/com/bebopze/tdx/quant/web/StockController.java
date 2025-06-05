@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.BaseStockDTO;
 import com.bebopze.tdx.quant.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,7 +35,7 @@ public class StockController {
      */
     @Operation(summary = "个股行情", description = "个股行情")
     @GetMapping(value = "/info")
-    public Result<Object> info(@RequestParam String stockCode) {
+    public Result<BaseStockDTO> info(@RequestParam String stockCode) {
         return Result.SUC(stockService.info(stockCode));
     }
 

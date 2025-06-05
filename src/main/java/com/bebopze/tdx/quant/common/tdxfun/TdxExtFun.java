@@ -1,8 +1,9 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,6 +18,20 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.EMA;
  * @date: 2025/5/17
  */
 public class TdxExtFun {
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  周期转换 指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static List<KlineAggregator.PeriodDTO> toWeek(String[] date, double[] value) {
+        return KlineAggregator.toWeekly(date, value);
+    }
+
+    public static List<KlineAggregator.PeriodDTO> toMonth(String[] date, double[] value) {
+        return KlineAggregator.toMonthly(date, value);
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -178,15 +193,11 @@ public class TdxExtFun {
         double[] MA20 = MA(close, 20);
         double[] MA50 = MA(close, 50);
         double[] MA100 = MA(close, 100);
-        double[] MA120 = MA(close, 120);
-        double[] MA150 = MA(close, 150);
         double[] MA200 = MA(close, 200);
 
         // 将不足周期时的 NaN 置为 0（对应 DRAWNULL）
         MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
         MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA120 = Arrays.stream(MA120).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA150 = Arrays.stream(MA150).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
         MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
 
         // 准备上一期均线
@@ -286,7 +297,7 @@ public class TdxExtFun {
 
 
     /**
-     * 计算“大均线多头”布尔序列                            - largeMABull
+     * 计算“大均线多头”布尔序列                            - bigMaBull
      *
      * 伪代码：
      *
@@ -388,123 +399,22 @@ public class TdxExtFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    // ----------------------------------- TODO     月多
+    // ----------------------------------- 月多
 
 
-    public static boolean[] 月多(String[] dateArr, double[] closeArr, double[] highArr, double[] lowArr) {
-        List<MonthlyBullSignal.DailyBar> dailyBarList = new ArrayList<>();
+    public static boolean[] 月多(String[] date, double[] open, double[] high, double[] low, double[] close) {
 
+        List<MonthlyBullSignal.KlineBar> dailyKlines = Lists.newArrayList();
+        for (int i = 0; i < date.length; i++) {
+            LocalDate _date = DateTimeUtil.parseDate_yyyy_MM_dd(date[i]);
 
-        for (int i = 0; i < dateArr.length; i++) {
-            MonthlyBullSignal.DailyBar dailyBar = new MonthlyBullSignal.DailyBar(DateTimeUtil.parseDate_yyyy_MM_dd(dateArr[i]),
-                                                                                 0.00, highArr[i], lowArr[i], closeArr[i]);
-            dailyBarList.add(dailyBar);
+            MonthlyBullSignal.KlineBar klineBar = new MonthlyBullSignal.KlineBar(_date, open[i], high[i], low[i], close[i]);
+            dailyKlines.add(klineBar);
         }
 
 
-        return MonthlyBullSignal.computeMonthlyBull(dailyBarList);
+        return MonthlyBullSignal.computeMonthlyBull(dailyKlines);
     }
-
-
-//    /**
-//     * 计算“月多”信号                             monthlyBull
-//     *
-//     * @param date  日线交易日期序列
-//     * @param close 日线收盘价序列
-//     * @param high  日线最高价序列
-//     * @param low   日线最低价序列
-//     * @return 布尔数组：true 表示月多
-//     */
-//    public static boolean[] 月多(String[] date, double[] close, double[] high, double[] low) {
-//        int len = close.length;
-//
-//        // —— 1. 各周期 MACD ——
-//        // 日线 MACD
-//        double[][] macdDay = MACD(close);
-//        double[] difDay = macdDay[0];
-//        double[] deaDay = macdDay[1];
-//        double[] macdD = macdDay[2];
-//
-//        // 周线 MACD（假设已有方法按周线重采样后调用）
-//        double[] closeWeek = resampleToWeek(date, close);
-//        double[][] macdWeekArr = MACD(closeWeek);
-//        double[] macdW = macdWeekArr[2];
-//
-//        // 月线 MACD（假设已有方法按月线重采样后调用）
-//        double[] closeMonth = resampleToMonth(date, close);
-//        double[][] macdMonthArr = MACD(closeMonth);
-//        double[] difM = macdMonthArr[0];
-//        double[] deaM = macdMonthArr[1];
-//        double[] macdM = macdMonthArr[2];
-//
-//
-//        // —— 2. 计算 MACD 月度信号 ——
-//        // 月度比率
-//        boolean[] macdMonthBull = new boolean[closeMonth.length];
-//        for (int i = 0; i < closeMonth.length; i++) {
-//            double absDIF = Math.abs(difM[i]);
-//            double absDEA = Math.abs(deaM[i]);
-//            double ratio = Math.min(absDEA, absDIF) / Math.max(absDEA, absDIF);
-//
-//            // TODO   接近金叉
-//            // boolean nearGolden =
-//            //        (BARSLASTCOUNT(difM[i] >= REF(difM, 1)[i]) >= 1.2 * 20 && ratio >= 0.9)
-//            //                 || (BARSLASTCOUNT(difM[i] > REF(difM, 1)[i]) >= 1 && ratio >= 0.95);
-//
-//            // 月度金叉
-//            boolean golden = macdM[i] >= 0 || (macdM[i] == HHV(macdM, 9)[i] /*&& nearGolden*/);
-//
-//            macdMonthBull[i] = golden;
-//        }
-//
-//        // —— 3. 计算 “SAR 周多” ——
-//        double[] sarWeek = SAR(high, low, /* period=WEEK*/ 5);
-//        boolean[] sarWeekBull = new boolean[len];
-//        for (int i = 0; i < len; i++) {
-//            sarWeekBull[i] = close[i] >= sarWeek[i];
-//        }
-//
-//        // —— 4. 汇总“月多”：月度金叉 & (SAR 周多 || BARSSINCEN(均线萌出||预萌出, 2)==0) ——
-//        boolean[] maOut = 均线萌出(close);
-//        boolean[] maPre = 均线预萌出(close);
-//        int[] barsSince = BARSSINCEN(or(maOut, maPre), 2);
-//
-//        boolean[] result = new boolean[len];
-//        // 对齐月线与日线索引：假设 `mapMonthIndex(i)` 将日线索引映射到对应的月线索引
-//        for (int i = 0; i < len; i++) {
-//            int mi = mapMonthIndex(i);
-//            boolean mBull = macdMonthBull[mi];
-//            result[i] = mBull && (sarWeekBull[i] || barsSince[i] == 0);
-//        }
-//
-//        return result;
-//    }
-//
-//    private static double[] resampleToWeek(String[] date, double[] close) {
-//        double[] weekClose = KlineAggregator.toWeekClose(date, close);
-//        return weekClose;
-//    }
-//
-//    private static double[] resampleToMonth(String[] date, double[] close) {
-//        double[] monthClose = KlineAggregator.toMonthClose(date, close);
-//        return monthClose;
-//    }
-//
-//
-//    // 布尔数组按位 OR
-//    private static boolean[] or(boolean[] a, boolean[] b) {
-//        int n = a.length;
-//        boolean[] c = new boolean[n];
-//        for (int i = 0; i < n; i++) c[i] = a[i] || b[i];
-//        return c;
-//    }
-
-    // ------ 说明 ------
-    // 1. resampleToWeek / resampleToMonth: 请用已有方法或库实现从日线到周/月线的重采样。
-    // 2. HHV(arr, n): 计算数组 arr 最近 n 期的最高值序列。
-    // 3. BARSLASTCOUNT 和 BARSSINCEN: 你已有工具方法直接调用。
-    // 4. maBreakout / maPreBreakout: 前面定义的“均线萌出”和“均线预萌出”函数。
-    // 5. mapMonthIndex: 日线索引到月线索引的映射，取决于数据结构，需自行实现。
 
 
 }

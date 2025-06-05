@@ -17,11 +17,10 @@ import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
-import static com.bebopze.tdx.quant.parser.check.TdxFunCheck.bool2Int;
 
 
 /**
- * 完整实现通达信“月多”量化公式：
+ * 通达信“月多”量化公式：
  *
  * MA20 := MA(C,20);
  * MA50 := IF(MA(C,50)=DRAWNULL,0,MA(C,50));
@@ -52,9 +51,11 @@ import static com.bebopze.tdx.quant.parser.check.TdxFunCheck.bool2Int;
  *
  * 月多 := MACD月多 && (SAR周多 || BARSSINCEN(“均线萌出”||“均线预萌出”,2) == 0)
  *
+ *
+ *
+ *
+ *
  * 最终输出：按日序列返回 boolean[]，每个交易日 i 若为“月多”则为 true，否则为 false。
- *
- *
  *
  *
  *
@@ -73,11 +74,11 @@ public class MonthlyBullSignal {
     /**
      * 整体计算“月多”信号   并返回布尔数组
      *
-     * @param klineDTOS
+     * @param dailyKlines 日K 序列
      * @return
      */
-    public static boolean[] computeMonthlyBull(List<KlineDTO> klineDTOS) {
-        int nDays = klineDTOS.size();
+    public static boolean[] computeMonthlyBull(List<KlineBar> dailyKlines) {
+        int nDays = dailyKlines.size();
 
 
         // 1. 提取日线 close, high, low 数组
@@ -86,7 +87,7 @@ public class MonthlyBullSignal {
         double[] dayLow = new double[nDays];
         LocalDate[] dayDate = new LocalDate[nDays];
         for (int i = 0; i < nDays; i++) {
-            KlineDTO bar = klineDTOS.get(i);
+            KlineBar bar = dailyKlines.get(i);
             dayDate[i] = bar.date;
             dayClose[i] = bar.close;
             dayHigh[i] = bar.high;
@@ -95,14 +96,14 @@ public class MonthlyBullSignal {
 
 
         // 2. 聚合到周线和月线
-        List<KlineDTO> weeklyBars = aggregateToWeekly(klineDTOS);
+        List<KlineBar> weeklyBars = aggregateToWeekly(dailyKlines);
         int nWeeks = weeklyBars.size();
         double[] weekClose = new double[nWeeks];
         double[] weekHigh = new double[nWeeks];
         double[] weekLow = new double[nWeeks];
         LocalDate[] weekDate = new LocalDate[nWeeks];
         for (int i = 0; i < nWeeks; i++) {
-            KlineDTO bar = weeklyBars.get(i);
+            KlineBar bar = weeklyBars.get(i);
             weekDate[i] = bar.date;
             weekClose[i] = bar.close;
             weekHigh[i] = bar.high;
@@ -110,12 +111,12 @@ public class MonthlyBullSignal {
         }
 
 
-        List<KlineDTO> monthlyBars = aggregateToMonthly(klineDTOS);
+        List<KlineBar> monthlyBars = aggregateToMonthly(dailyKlines);
         int nMonths = monthlyBars.size();
         double[] monthClose = new double[nMonths];
         LocalDate[] monthDate = new LocalDate[nMonths];
         for (int i = 0; i < nMonths; i++) {
-            KlineDTO bar = monthlyBars.get(i);
+            KlineBar bar = monthlyBars.get(i);
             monthDate[i] = bar.date;
             monthClose[i] = bar.close;
         }
@@ -173,6 +174,7 @@ public class MonthlyBullSignal {
         double[] DIF_D = macdDayArr[0];
         double[] DEA_D = macdDayArr[1];
         double[] MACD_D = macdDayArr[2];
+        // MACD_D -> 10日的最高值
         double[] HHV_MACD_10 = HHV(MACD_D, 10);
 
         // 4.3 周线 MACD
@@ -190,17 +192,8 @@ public class MonthlyBullSignal {
         // 4.5 SAR 计算（周线）
         double[] SAR_W = TDX_SAR(weekHigh, weekLow);
 
-        // 4.6 日线“均线预萌出/均线萌出”布尔序列
+        // 4.6 日线“均线预萌出”布尔序列
         boolean[] preBreak = 均线预萌出(dayClose);
-        // boolean[] breakout = 均线萌出(dayClose);
-        // boolean[] orBreak = new boolean[nDays];
-        // for (int i = 0; i < nDays; i++) {
-        //     orBreak[i] = preBreak[i] || breakout[i];
-        // }
-
-        // 5. 逐日计算“月多”信号
-        boolean[] monthlyBull = new boolean[nDays];
-        // int[] barsSinceBreak = BARSSINCEN(orBreak, 2);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -229,6 +222,10 @@ public class MonthlyBullSignal {
         int[] barsLastCount__DIF_M_bull_2 = BARSLASTCOUNT(DIF_M_bull2);
 
         // -------------------------------------------------------------------------------------------------------------
+
+
+        // 5. 逐日计算“月多”信号
+        boolean[] monthlyBull = new boolean[nDays];
 
 
         for (int i = 0; i < nDays; i++) {
@@ -281,16 +278,14 @@ public class MonthlyBullSignal {
             // --------------------------------------------------------------------------------- debug
 
 
-            if (dayDate[i].isEqual(LocalDate.of(2024, 9, 6))) {
-                // log.debug("均线预萌出 : {} , 均线萌出 : {} , or萌出 : {}", preBreak[i], breakout[i], orBreak[i]);
-
-                log.debug("MACD月_比率 : {}", ratio);
-                log.debug("DIF : {} , DEA : {} , MACD : {}", DIF_D[i], DEA_D[i], MACD_D[i]);
-                log.debug("MACD_月金叉 : {} , MACD_周金叉 : {} , MACD_日上0轴 : {} , MACD月多 : {} , SAR周多 : {} , 均线预萌出 : {} , 月多 : {}",
-                          bool2Int(macdMonthCross), bool2Int(macdWeekCross), bool2Int(macdDayAbove0), bool2Int(macdMonthBull), bool2Int(sarWeekBull), bool2Int(preBreak[i]), bool2Int(monthlyBull[i]));
-
-                System.out.println();
-            }
+//            if (dayDate[i].isEqual(LocalDate.of(2024, 9, 6))) {
+//                log.debug("MACD月_比率 : {}", ratio);
+//                log.debug("DIF : {} , DEA : {} , MACD : {}", DIF_D[i], DEA_D[i], MACD_D[i]);
+//                log.debug("MACD_月金叉 : {} , MACD_周金叉 : {} , MACD_日上0轴 : {} , MACD月多 : {} , SAR周多 : {} , 均线预萌出 : {} , 月多 : {}",
+//                          bool2Int(macdMonthCross), bool2Int(macdWeekCross), bool2Int(macdDayAbove0), bool2Int(macdMonthBull), bool2Int(sarWeekBull), bool2Int(preBreak[i]), bool2Int(monthlyBull[i]));
+//
+//                System.out.println();
+//            }
         }
 
 
@@ -300,94 +295,100 @@ public class MonthlyBullSignal {
 
     /**
      * 将日线数据聚合成周线数据（取 周一到周五 为同一周期）
+     *
+     * @param dailyKlines
+     * @return
      */
-    public static List<KlineDTO> aggregateToWeekly(List<KlineDTO> klineDTOS) {
+    public static List<KlineBar> aggregateToWeekly(List<KlineBar> dailyKlines) {
         // 使用 ISO 周为准：一周 从周一到周日
         WeekFields wf = WeekFields.ISO;
 
 
-        return klineDTOS.stream()
-                        .collect(Collectors.groupingBy(
-                                // 构造 key = "YYYY-WW" 形式，保证 不同年份同周号 不会冲突
-                                bar -> bar.date.get(wf.weekBasedYear()) + "-" + bar.date.get(wf.weekOfWeekBasedYear()),
-                                LinkedHashMap::new, // 保留插入顺序
-                                Collectors.toList()
-                        ))
-                        .values().stream()
-                        .map(group -> {
+        return dailyKlines.stream()
+                          .collect(Collectors.groupingBy(
+                                  // 构造 key = "YYYY-WW" 形式，保证 不同年份同周号 不会冲突
+                                  bar -> bar.date.get(wf.weekBasedYear()) + "-" + bar.date.get(wf.weekOfWeekBasedYear()),
+                                  LinkedHashMap::new, // 保留插入顺序
+                                  Collectors.toList()
+                          ))
+                          .values().stream()
+                          .map(group -> {
 
-                            // 对每个周的列表，取 High 的最大、Low 的最小、Open 为首、Close 为尾
-                            group.sort(Comparator.comparing(b -> b.date));
+                              // 对每个周的列表，取 High 的最大、Low 的最小、Open 为首、Close 为尾
+                              group.sort(Comparator.comparing(b -> b.date));
 
-                            // 用周最后一个交易日的日期代表
-                            LocalDate date = group.get(group.size() - 1).date;
+                              // 用周最后一个交易日的日期代表
+                              LocalDate date = group.get(group.size() - 1).date;
 
-                            double open = group.get(0).open;
-                            double close = group.get(group.size() - 1).close;
-                            double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
-                            double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
+                              double open = group.get(0).open;
+                              double close = group.get(group.size() - 1).close;
+                              double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
+                              double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
 
-                            return new KlineDTO(date, open, high, low, close);
+                              return new KlineBar(date, open, high, low, close);
 
-                        })
-                        .sorted(Comparator.comparing(w -> w.date))
-                        .collect(Collectors.toList());
+                          })
+                          .sorted(Comparator.comparing(w -> w.date))
+                          .collect(Collectors.toList());
     }
 
     /**
      * 将日线数据聚合成月线数据（以自然月为周期）
+     *
+     * @param dailyKlines
+     * @return
      */
-    public static List<KlineDTO> aggregateToMonthly(List<KlineDTO> klineDTOS) {
+    public static List<KlineBar> aggregateToMonthly(List<KlineBar> dailyKlines) {
 
-        return klineDTOS.stream()
-                        .collect(Collectors.groupingBy(
-                                // key  ->  yyyy-MM
-                                bar -> YearMonth.from(bar.date),
-                                LinkedHashMap::new,
-                                Collectors.toList()
-                        ))
-                        .values().stream()
-                        .map(group -> {
+        return dailyKlines.stream()
+                          .collect(Collectors.groupingBy(
+                                  // key  ->  yyyy-MM
+                                  bar -> YearMonth.from(bar.date),
+                                  LinkedHashMap::new,
+                                  Collectors.toList()
+                          ))
+                          .values().stream()
+                          .map(group -> {
 
 
-                            // 对每个自然月，取 High 最大、Low 最小、Open 首、Close 尾
-                            group.sort(Comparator.comparing(b -> b.date));
+                              // 对每个自然月，取 High 最大、Low 最小、Open 首、Close 尾
+                              group.sort(Comparator.comparing(b -> b.date));
 
-                            // 用当月最后一个交易日的日期代表
-                            LocalDate date = group.get(group.size() - 1).date;
+                              // 用当月最后一个交易日的日期代表
+                              LocalDate date = group.get(group.size() - 1).date;
 
-                            double open = group.get(0).open;
-                            double close = group.get(group.size() - 1).close;
-                            double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
-                            double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
+                              double open = group.get(0).open;
+                              double close = group.get(group.size() - 1).close;
+                              double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
+                              double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
 
-                            return new KlineDTO(date, open, high, low, close);
+                              return new KlineBar(date, open, high, low, close);
 
-                        })
-                        .sorted(Comparator.comparing(m -> m.date))
-                        .collect(Collectors.toList());
+                          })
+                          .sorted(Comparator.comparing(m -> m.date))
+                          .collect(Collectors.toList());
     }
 
 
     /**
      * 日 - 周idx
      *
-     * @param klineDTOS
+     * @param dailyKlines
      * @return
      */
-    public static Map<LocalDate, Integer> weekIndexMap(List<KlineDTO> klineDTOS) {
+    public static Map<LocalDate, Integer> weekIndexMap(List<KlineBar> dailyKlines) {
         Map<LocalDate, Integer> weekIndexMap = Maps.newLinkedHashMap();
 
 
         // 2. 聚合到周线和月线
-        List<KlineDTO> weeklyBars = aggregateToWeekly(klineDTOS);
+        List<KlineBar> weeklyBars = aggregateToWeekly(dailyKlines);
         int nWeeks = weeklyBars.size();
 
 
         // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int wPointer = 0;
-        for (KlineDTO klineDTO : klineDTOS) {
-            LocalDate d = klineDTO.date;
+        for (KlineBar klineBar : dailyKlines) {
+            LocalDate d = klineBar.date;
 
             while (wPointer < nWeeks - 1 && weeklyBars.get(wPointer).date.isBefore(d)) {
                 wPointer++;
@@ -403,22 +404,22 @@ public class MonthlyBullSignal {
     /**
      * 日 - 月idx
      *
-     * @param klineDTOS
+     * @param dailyKlines
      * @return
      */
-    public static Map<LocalDate, Integer> monthIndexMap(List<KlineDTO> klineDTOS) {
+    public static Map<LocalDate, Integer> monthIndexMap(List<KlineBar> dailyKlines) {
         Map<LocalDate, Integer> monthIndexMap = Maps.newLinkedHashMap();
 
 
         // 2. 聚合到周线和月线
-        List<KlineDTO> monthlyBars = aggregateToMonthly(klineDTOS);
+        List<KlineBar> monthlyBars = aggregateToMonthly(dailyKlines);
         int nMonths = monthlyBars.size();
 
 
         // 辅助：在 日→周/日→月 映射时，找到“最近一个 ≥ 当前日的周/月索引”
         int mPointer = 0;
-        for (KlineDTO klineDTO : klineDTOS) {
-            LocalDate d = klineDTO.date;
+        for (KlineBar klineBar : dailyKlines) {
+            LocalDate d = klineBar.date;
 
             while (mPointer < nMonths - 1 && monthlyBars.get(mPointer).date.isBefore(d)) {
                 mPointer++;
@@ -443,11 +444,11 @@ public class MonthlyBullSignal {
 
 
     /**
-     * 日线 K 线数据结构
+     * K线   数据结构
      */
     @Data
     @AllArgsConstructor
-    public static class KlineDTO {
+    public static class KlineBar {
         public LocalDate date;
         public double open, high, low, close;
     }
@@ -461,12 +462,11 @@ public class MonthlyBullSignal {
      */
     public static void main(String[] args) {
 
-//        String stockCode = "300468";
         String stockCode = "300059";
 
 
-        List<KlineDTO> klineDTOS = loadDailyBars(stockCode);
-        boolean[] signals = computeMonthlyBull(klineDTOS);
+        List<KlineBar> dailyKlines = loadDailyBars(stockCode);
+        boolean[] signals = computeMonthlyBull(dailyKlines);
 
 
         int n = signals.length;
@@ -478,8 +478,7 @@ public class MonthlyBullSignal {
 
 
         for (int i = n - limit; i < n; i++) {
-            System.out.printf("%s -> %s%n", klineDTOS.get(i).date,
-                              signals[i] ? "月多" : "---");
+            System.out.printf("%s -> %s%n", dailyKlines.get(i).date, signals[i] ? "月多" : "---");
         }
     }
 
@@ -487,7 +486,7 @@ public class MonthlyBullSignal {
     /**
      * 加载日线数据（示例：请改为你的数据库加载逻辑）
      */
-    private static List<KlineDTO> loadDailyBars(String stockCode) {
+    private static List<KlineBar> loadDailyBars(String stockCode) {
 
         BaseStockMapper mapper = MybatisPlusUtil.getMapper(BaseStockMapper.class);
         BaseStockDO stockDO = mapper.getByCode(stockCode);
@@ -497,41 +496,12 @@ public class MonthlyBullSignal {
 
 
         // 从 DB 读取
-        List<KlineDTO> bars = klineDTOList.stream().map(e -> {
-            KlineDTO klineDTO = new KlineDTO(e.getDate(), e.getOpen().doubleValue(), e.getHigh().doubleValue(), e.getLow().doubleValue(), e.getClose().doubleValue());
-            return klineDTO;
+        List<KlineBar> dailyBars = klineDTOList.stream().map(e -> {
+            KlineBar klineBar = new KlineBar(e.getDate(), e.getOpen().doubleValue(), e.getHigh().doubleValue(), e.getLow().doubleValue(), e.getClose().doubleValue());
+            return klineBar;
         }).collect(Collectors.toList());
 
-
-//        String[] date = ConvertStockKline.strFieldValArr(klineDTOList, "date");
-//
-//        double[] close = ConvertStockKline.fieldValArr(klineDTOList, "close");
-//        double[] high = ConvertStockKline.fieldValArr(klineDTOList, "high");
-//        double[] low = ConvertStockKline.fieldValArr(klineDTOList, "low");
-//
-//
-//        double[] sar = TDX_SAR(high, low);
-//
-//        for (int i = 0; i < date.length; i++) {
-//            System.out.printf("%s     %.2f - %s       %.2f - %s     \n",
-//                              date[i],
-//                              sar[i], close[i] > sar[i] ? "多" : "空",
-//                              sar[i], close[i] > sar[i] ? "多" : "空");
-//        }
-//
-//
-//        double[][] macd = MACD(close);
-//        double[] dif = macd[0];
-//        double[] dea = macd[1];
-//        double[] _macd = macd[2];
-//
-//
-//        for (int i = 100; i < date.length; i++) {
-//            System.out.printf("%s     %s     %s     %s     %s     %s     %s     %s", date[i], close[i], high[i], low[i], NumUtil.double2Decimal(sar[i]), dif[i], dea[i], _macd[i]);
-//            System.out.println();
-//        }
-
-        return bars;
+        return dailyBars;
     }
 
 

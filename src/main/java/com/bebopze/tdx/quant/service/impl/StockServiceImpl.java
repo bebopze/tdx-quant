@@ -1,6 +1,9 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.BaseStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
@@ -9,9 +12,11 @@ import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +46,27 @@ public class StockServiceImpl implements StockService {
 
 
     @Override
-    public BaseStockDO info(String stockCode) {
-        return baseStockService.getByCode(stockCode);
+    public BaseStockDTO info(String stockCode) {
+        BaseStockDO entity = baseStockService.getByCode(stockCode);
+
+
+        BaseStockDTO dto = new BaseStockDTO();
+        if (entity != null) {
+            dto.setKlineHis(entity.getKLineHisOriginal());
+            BeanUtils.copyProperties(entity, dto);
+
+
+            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(entity.getKLineHisOriginal(), 100);
+
+            Map<String, Object> klineMap = new HashMap<>();
+            klineMap.put("date", ConvertStockKline.strFieldValArr(klineDTOList, "date"));
+            klineMap.put("close", ConvertStockKline.fieldValArr(klineDTOList, "close"));
+
+            dto.setKlineMap(klineMap);
+        }
+
+
+        return dto;
     }
 
 

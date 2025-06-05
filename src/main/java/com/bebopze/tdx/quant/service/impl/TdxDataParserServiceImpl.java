@@ -1,10 +1,13 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
+import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
@@ -955,7 +958,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         baseBlockDO.setHigh(last.getHigh());
         baseBlockDO.setLow(last.getLow());
         baseBlockDO.setClose(last.getClose());
-        baseBlockDO.setVolume(Long.valueOf(last.getVol()));
+        baseBlockDO.setVolume(last.getVol());
         baseBlockDO.setAmount(last.getAmount());
         baseBlockDO.setChangePct(last.getChangePct());
 
@@ -1011,8 +1014,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
-    public void fillStockKline(String stockCode) {
-        fillStockKline(stockCode, null);
+    public void fillStockKline(String stockCode, Integer apiType) {
+        fillStockKline(stockCode, null, apiType);
         log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
     }
 
@@ -1029,7 +1032,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             Long stockId = codeIdMap.get(stockCode);
 
 
-            fillStockKline(stockCode, stockId);
+            fillStockKline(stockCode, stockId, 1);
 
 
             // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
@@ -1052,7 +1055,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private void fillStockKline(String stockCode, Long stockId) {
+    private void fillStockKline(String stockCode, Long stockId, Integer apiType) {
 
 
         // --------------------- ID
@@ -1064,15 +1067,22 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ---------------------  拉取数据     ->     通达信-本地读取   /   东方财富 API
 
 
+        List<String> klines = null;
+
+
         // 1、通达信   本地读取
-        List<String> klines = klinesFromTdx(stockCode);
+        if (apiType == null || apiType == 1) {
 
+            klines = klinesFromTdx(stockCode);
 
-        // 2、东方财富 API
-//        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-//
-//        String name = stockKlineHisResp.getName();
-//        List<String> klines = stockKlineHisResp.getKlines();
+        } else if (apiType == 2) {
+
+            // 2、东方财富 API
+            StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+
+            // String name = stockKlineHisResp.getName();
+            klines = stockKlineHisResp.getKlines();
+        }
 
 
         // 3、同花顺 API
@@ -1096,7 +1106,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情   -   last kline
-        KlineDTO lastKlineDTO = ConvertStockKline.strList2DTOList(klines.get(klines.size() - 1));
+        KlineDTO lastKlineDTO = ConvertStockKline.klines2DTOList(klines.get(klines.size() - 1));
 
         entity.setTradeDate(lastKlineDTO.getDate());
 

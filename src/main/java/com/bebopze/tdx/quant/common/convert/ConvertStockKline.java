@@ -54,7 +54,7 @@ public class ConvertStockKline {
 //    }
 
 
-    public static KlineDTO strList2DTOList(String kline) {
+    public static KlineDTO klines2DTOList(String kline) {
 
 
         // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
@@ -92,17 +92,14 @@ public class ConvertStockKline {
     }
 
 
-    public static List<KlineDTO> strList2DTOList(List<String> klines) {
-        if (CollectionUtils.isEmpty(klines)) {
-            return Collections.emptyList();
-        }
-        return klines.stream().map(ConvertStockKline::strList2DTOList).collect(Collectors.toList());
+    public static List<KlineDTO> str2DTOList(String klineHis) {
+        List<String> klineList = JSON.parseArray(klineHis, String.class);
+        return klines2DTOList(klineList, klineList.size());
     }
-
 
     public static List<KlineDTO> str2DTOList(String klineHis, Integer limit) {
         List<String> klineList = JSON.parseArray(klineHis, String.class);
-        return strList2DTOList(klineList, limit);
+        return klines2DTOList(klineList, limit);
     }
 
 
@@ -113,23 +110,24 @@ public class ConvertStockKline {
      * @param limit  最近N日
      * @return
      */
-    public static List<KlineDTO> strList2DTOList(List<String> klines, int limit) {
+    public static List<KlineDTO> klines2DTOList(List<String> klines, int limit) {
 
         int size = klines.size();
         if (size > limit) {
             List<String> subKlines = klines.subList(size - limit, size);
-            return strList2DTOList(subKlines);
+            return klines2DTOList(subKlines);
         }
 
-        return strList2DTOList(klines);
+        return klines2DTOList(klines);
     }
 
-
-    public static List<KlineDTO> klineHis2DTOList(String klineHis) {
-        List<String> klineList = JSON.parseArray(klineHis, String.class);
-        List<KlineDTO> klineDTOList = strList2DTOList(klineList);
-        return klineDTOList;
+    public static List<KlineDTO> klines2DTOList(List<String> klines) {
+        if (CollectionUtils.isEmpty(klines)) {
+            return Collections.emptyList();
+        }
+        return klines.stream().map(ConvertStockKline::klines2DTOList).collect(Collectors.toList());
     }
+
 
     /**
      * 直接从   klineHis 字符串   取值
@@ -139,7 +137,7 @@ public class ConvertStockKline {
      * @return
      */
     public static double[] fieldValArr(String klineHis, String fieldName) {
-        return ConvertStockKline.fieldValArr(klineHis2DTOList(klineHis), fieldName);
+        return ConvertStockKline.fieldValArr(str2DTOList(klineHis), fieldName);
     }
 
     /**
@@ -185,40 +183,40 @@ public class ConvertStockKline {
     }
 
 
-    @SneakyThrows
-    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
-
-        int size = klineDTOList.size();
-        String[] arr = new String[size];
-
-
-        // 一次性查找 Field，并设置可访问
-        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
-
-
-        // 遍历 取值
-        for (int i = 0; i < size; i++) {
-            KlineDTO dto = klineDTOList.get(i);
-
-
-            Object value = field.get(dto);
-            if (value == null) {
-
-                arr[i] = null;
-
-            } else if (value instanceof String) {
-
-                arr[i] = (String) value;
-
-            } else {
-                throw new IllegalArgumentException(
-                        String.format("字段 %s 的类型为 %s，无法转换为 String", fieldName, value.getClass().getSimpleName()));
-            }
-        }
-
-
-        return arr;
-    }
+//    @SneakyThrows
+//    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+//
+//        int size = klineDTOList.size();
+//        String[] arr = new String[size];
+//
+//
+//        // 一次性查找 Field，并设置可访问
+//        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+//
+//
+//        // 遍历 取值
+//        for (int i = 0; i < size; i++) {
+//            KlineDTO dto = klineDTOList.get(i);
+//
+//
+//            Object value = field.get(dto);
+//            if (value == null) {
+//
+//                arr[i] = null;
+//
+//            } else if (value instanceof String) {
+//
+//                arr[i] = (String) value;
+//
+//            } else {
+//                throw new IllegalArgumentException(
+//                        String.format("字段 %s 的类型为 %s，无法转换为 String", fieldName, value.getClass().getSimpleName()));
+//            }
+//        }
+//
+//
+//        return arr;
+//    }
 
 
     @SneakyThrows
@@ -245,6 +243,31 @@ public class ConvertStockKline {
     }
 
 
+    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+        Object[] arr = objFieldValArr(klineDTOList, fieldName);
+
+
+        String[] new_arr = new String[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            new_arr[i] = (String) arr[i];
+        }
+
+        return new_arr;
+    }
+
+    public static long[] longFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+        Object[] arr = objFieldValArr(klineDTOList, fieldName);
+
+
+        long[] new_arr = new long[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            new_arr[i] = (long) arr[i];
+        }
+
+        return new_arr;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -260,6 +283,4 @@ public class ConvertStockKline {
 //        KlineDTO klineDTO = str2DTO(kline);
 //        System.out.println(klineDTO);
     }
-
-
 }

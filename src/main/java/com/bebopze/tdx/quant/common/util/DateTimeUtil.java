@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 public class DateTimeUtil {
 
 
+    private static final DateTimeFormatter yyyyMMdd__slash = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
     private static final DateTimeFormatter yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private static final DateTimeFormatter yyyy_MM_dd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -114,6 +116,10 @@ public class DateTimeUtil {
         return localDateTime;
     }
 
+
+    public static LocalDate parseDate_yyyyMMdd__slash(String dateStr) {
+        return LocalDate.parse(dateStr, yyyyMMdd__slash);
+    }
 
     public static LocalDate parseDate_yyyyMMdd(String dateStr) {
         return LocalDate.parse(dateStr, yyyyMMdd);

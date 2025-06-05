@@ -44,7 +44,7 @@ public class ConvertDate {
 
             if (baseBlockDO != null) {
 
-                List<KlineDTO> klineDTOList = ConvertStockKline.klineHis2DTOList(baseBlockDO.getKlineHis());
+                List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(baseBlockDO.getKlineHis());
                 String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
 
 

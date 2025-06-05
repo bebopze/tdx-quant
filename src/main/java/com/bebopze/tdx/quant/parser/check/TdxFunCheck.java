@@ -413,13 +413,13 @@ public class TdxFunCheck {
             System.out.println();
 
 
-            List<KlineDTO> tdx__listDateInWeek = listDateInWeek(tdx__rowList, i);
-            List<KlineDTO> java__listDateInWeek = listDateInWeek(java__rowList, i);
+            List<KlineBar> tdx__listDateInWeek = listDateInWeek(tdx__rowList, i);
+            List<KlineBar> java__listDateInWeek = listDateInWeek(java__rowList, i);
 
 
             for (int k = 0; k < tdx__listDateInWeek.size(); k++) {
-                KlineDTO t = tdx__listDateInWeek.get(k);
-                KlineDTO j = java__listDateInWeek.get(k);
+                KlineBar t = tdx__listDateInWeek.get(k);
+                KlineBar j = java__listDateInWeek.get(k);
 
                 log.debug("tdx      {}     -     {}   {} {} {} {}", dto1.dateWeek, t.date, t.open, t.high, t.low, t.close);
                 log.debug("java     {}     -     {}   {} {} {} {}", dto2.dateWeek, j.date, j.open, j.high, j.low, j.close);
@@ -434,7 +434,7 @@ public class TdxFunCheck {
         }
     }
 
-    private static List<KlineDTO> listDateInWeek(List<TdxFunResultDTO> rowList, int idx) {
+    private static List<KlineBar> listDateInWeek(List<TdxFunResultDTO> rowList, int idx) {
 
         TdxFunResultDTO dto = rowList.get(idx);
         LocalDate dateWeek = dto.dateWeek;
@@ -445,7 +445,7 @@ public class TdxFunCheck {
 
 
         // convert
-        return weekDTOList.stream().map(w -> new KlineDTO(w.date, w.open, w.high, w.low, w.close)).collect(Collectors.toList());
+        return weekDTOList.stream().map(w -> new KlineBar(w.date, w.open, w.high, w.low, w.close)).collect(Collectors.toList());
     }
 
 
@@ -506,36 +506,36 @@ public class TdxFunCheck {
 
 
         // 周K
-        List<KlineDTO> dayList = Lists.newArrayList();
+        List<KlineBar> dayList = Lists.newArrayList();
         for (int i = 0; i < date_arr.length; i++) {
-            KlineDTO dto = new KlineDTO(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
+            KlineBar dto = new KlineBar(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
             dayList.add(dto);
         }
         dayList.sort(Comparator.comparing(d -> d.date));
 
 
         // 周K
-        List<KlineDTO> weeklyList = aggregateToWeekly(dayList);
+        List<KlineBar> weeklyList = aggregateToWeekly(dayList);
         Map<LocalDate, Integer> weekIndexMap = weekIndexMap(dayList);
 
         int w_size = weeklyList.size();
-        LocalDate[] dateWeek = weeklyList.stream().map(KlineDTO::getDate).collect(Collectors.toList()).toArray(new LocalDate[w_size]);
-        Double[] openWeek = weeklyList.stream().map(KlineDTO::getOpen).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] highWeek = weeklyList.stream().map(KlineDTO::getHigh).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] lowWeek = weeklyList.stream().map(KlineDTO::getLow).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] closeWeek = weeklyList.stream().map(KlineDTO::getClose).collect(Collectors.toList()).toArray(new Double[w_size]);
+        LocalDate[] dateWeek = weeklyList.stream().map(KlineBar::getDate).collect(Collectors.toList()).toArray(new LocalDate[w_size]);
+        Double[] openWeek = weeklyList.stream().map(KlineBar::getOpen).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] highWeek = weeklyList.stream().map(KlineBar::getHigh).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] lowWeek = weeklyList.stream().map(KlineBar::getLow).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] closeWeek = weeklyList.stream().map(KlineBar::getClose).collect(Collectors.toList()).toArray(new Double[w_size]);
 
 
         // 月K
-        List<KlineDTO> monthlyList = aggregateToMonthly(dayList);
+        List<KlineBar> monthlyList = aggregateToMonthly(dayList);
         Map<LocalDate, Integer> monthIndexMap = monthIndexMap(dayList);
 
         int m_size = monthlyList.size();
-        LocalDate[] dateMonth = monthlyList.stream().map(KlineDTO::getDate).collect(Collectors.toList()).toArray(new LocalDate[m_size]);
-        Double[] openMonth = monthlyList.stream().map(KlineDTO::getOpen).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] highMonth = monthlyList.stream().map(KlineDTO::getHigh).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] lowMonth = monthlyList.stream().map(KlineDTO::getLow).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] closeMonth = monthlyList.stream().map(KlineDTO::getClose).collect(Collectors.toList()).toArray(new Double[m_size]);
+        LocalDate[] dateMonth = monthlyList.stream().map(KlineBar::getDate).collect(Collectors.toList()).toArray(new LocalDate[m_size]);
+        Double[] openMonth = monthlyList.stream().map(KlineBar::getOpen).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] highMonth = monthlyList.stream().map(KlineBar::getHigh).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] lowMonth = monthlyList.stream().map(KlineBar::getLow).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] closeMonth = monthlyList.stream().map(KlineBar::getClose).collect(Collectors.toList()).toArray(new Double[m_size]);
 
 
         double[] MA5 = TdxFun.MA(close_arr, 5);

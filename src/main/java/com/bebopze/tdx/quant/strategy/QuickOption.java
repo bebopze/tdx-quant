@@ -269,7 +269,7 @@ public class QuickOption {
             // 历史行情
             StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
             List<String> klines = stockKlineHisResp.getKlines();
-            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.strList2DTOList(klines), "close");
+            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.klines2DTOList(klines), "close");
 
 
             BigDecimal amount = shszQuoteSnapshotResp.getRealtimequote().getAmount();

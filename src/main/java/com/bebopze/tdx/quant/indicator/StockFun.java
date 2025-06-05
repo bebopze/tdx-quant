@@ -10,11 +10,10 @@ import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
-import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
-import lombok.NoArgsConstructor;
+import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +32,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
  * @date: 2025/5/16
  */
 @Slf4j
-@NoArgsConstructor
+@Data
 public class StockFun {
 
     String stockCode;
@@ -52,10 +51,13 @@ public class StockFun {
 
     double C;
 
-    Object[] date_arr;
-
-    double[] close_arr;
+    String[] date_arr;
+    double[] open_arr;
     double[] high_arr;
+    double[] low_arr;
+    double[] close_arr;
+    long[] vol_arr;
+    double[] amo_arr;
 
 
     double[] ssf_arr;// = SSF(close_arr);
@@ -113,9 +115,13 @@ public class StockFun {
         // List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
-        Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
+        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
+        double[] low_arr = ConvertStockKline.fieldValArr(klineDTOList, "low");
+        double[] open_arr = ConvertStockKline.fieldValArr(klineDTOList, "open");
+        long[] vol_arr = ConvertStockKline.longFieldValArr(klineDTOList, "vol");
+        double[] amo_arr = ConvertStockKline.fieldValArr(klineDTOList, "amo");
 
 
         // TODO   RPS（预计算） -> DB获取
@@ -139,8 +145,12 @@ public class StockFun {
         this.C = C;
 
         this.date_arr = date_arr;
-        this.close_arr = close_arr;
+        this.open_arr = open_arr;
         this.high_arr = high_arr;
+        this.low_arr = low_arr;
+        this.close_arr = close_arr;
+        this.vol_arr = vol_arr;
+        this.amo_arr = amo_arr;
 
 
         this.ssf_arr = SSF(close_arr);
@@ -195,10 +205,10 @@ public class StockFun {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
+        List<KlineDTO> klineDTOList = ConvertStockKline.klines2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
-        Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
+        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
 
@@ -235,6 +245,11 @@ public class StockFun {
         this.rps120_arr = rps120_arr;
         this.rps250_arr = rps250_arr;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  基础指标
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -447,6 +462,16 @@ public class StockFun {
     }
 
 
+    public boolean[] 均线预萌出() {
+        return TdxExtFun.均线预萌出(close_arr);
+    }
+
+
+    public boolean[] 均线萌出() {
+        return TdxExtFun.均线萌出(close_arr);
+    }
+
+
     public boolean[] 大均线多头() {
         return TdxExtFun.大均线多头(close_arr);
     }
@@ -458,8 +483,7 @@ public class StockFun {
 
 
     public boolean[] 月多() {
-        boolean[] 月多_arr = TdxExtFun.月多(close_arr);
-        return 月多_arr;
+        return TdxExtFun.月多(date_arr, open_arr, high_arr, low_arr, close_arr);
     }
 
 
@@ -560,7 +584,7 @@ public class StockFun {
         // double[] ssf = SSF(closeArr);
 
 
-        Object[] date_arr = fun.date_arr;
+        String[] date_arr = fun.date_arr;
         double[] ssf_arr = fun.ssf_arr;
         boolean[] booleans = fun.SSF多();
 

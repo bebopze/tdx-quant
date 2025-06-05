@@ -29,7 +29,7 @@ public class BlockFun extends StockFun {
 
 
     public BlockFun(String blockCode, BaseBlockDO baseBlockDO) {
-        // super();
+        super(null);
 
 
         this.baseBlockDO = baseBlockDO;
@@ -81,7 +81,7 @@ public class BlockFun extends StockFun {
         List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(baseBlockDO.getKlineHis(), limit);
 
 
-        Object[] date_arr = ConvertStockKline.objFieldValArr(klineDTOList, "date");
+        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
 

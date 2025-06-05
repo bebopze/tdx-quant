@@ -29,7 +29,7 @@ public interface TdxDataParserService {
     void fillBlockKlineAll();
 
 
-    void fillStockKline(String stockCode);
+    void fillStockKline(String stockCode, Integer apiType);
 
     void fillStockKlineAll();
 

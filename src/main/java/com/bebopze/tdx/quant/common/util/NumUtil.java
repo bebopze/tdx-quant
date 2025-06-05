@@ -30,4 +30,18 @@ public class NumUtil {
         return new BigDecimal(v).setScale(3, RoundingMode.HALF_UP);
     }
 
+
+    /**
+     * 判断 value 是否在 [min, max] 区间内（包含边界）
+     *
+     * @param value
+     * @param min
+     * @param max
+     * @return
+     */
+    public static boolean between(double value, double min, double max) {
+        return value >= min && value <= max;
+    }
+
+
 }

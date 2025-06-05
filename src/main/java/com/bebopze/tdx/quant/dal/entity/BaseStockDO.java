@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -180,10 +181,11 @@ public class BaseStockDO implements Serializable {
 
 
     public List<KlineDTO> getKLineHis() {
-        return ConvertStockKline.klineHis2DTOList(klineHis);
+        return ConvertStockKline.str2DTOList(klineHis);
     }
 
 
+    @JsonIgnore
     public String getKLineHisOriginal() {
         return klineHis;
     }
