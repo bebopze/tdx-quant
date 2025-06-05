@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.parser.check;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.bebopze.tdx.quant.common.tdxfun.MonthlyBullSignal;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
@@ -20,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,8 +28,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +40,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.MonthlyBullSignal.*;
  *
  *
  *
- * -   [通达信指标] 计算结果导出          =>          通达信   ->   自定义指标（副图公式）  ->   34[数据导出]
+ * -   [通达信指标] 计算结果导出          =>          通达信   ->   自定义指标（主图叠加）  ->   34[数据导出]
  *
  *
  * -   export目录：/new_tdx/T0002/export/
@@ -55,18 +53,6 @@ public class TdxFunCheck {
 
 
     public static void main(String[] args) {
-
-
-        WeekFields wf = WeekFields.ISO;
-
-
-        LocalDate now = LocalDate.now();
-
-        YearMonth yearMonth = YearMonth.from(now);
-        System.out.println(yearMonth);
-
-        int i = now.getYear() * 100 + now.get(wf.weekOfWeekBasedYear());
-        System.out.println();
 
 
         List<TdxFunResultDTO> stockDataList = parseByStockCode("300059");
@@ -157,13 +143,16 @@ public class TdxFunCheck {
                 JSONObject json2 = JSON.parseObject(jsonStr2);
 
                 JSONObject diffFields = getDiffFields(json1, json2);
-                log.error("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
-                          tdx__rowList.get(0).code, i, date, diffFields.toJSONString());
+                if (MapUtils.isNotEmpty(diffFields)) {
+                    log.error("check diffFields - err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                              tdx__rowList.get(0).code, i, date, diffFields.toJSONString());
+                }
 
             } else {
 
-                log.debug("check suc     >>>     stockCode : {} , idx : {} , date : {}",
-                          tdx__rowList.get(0).code, i, date);
+                int x = 1;
+                // log.debug("check diffFields - suc     >>>     stockCode : {} , idx : {} , date : {}",
+                //           tdx__rowList.get(0).code, i, date);
             }
 
 
@@ -313,17 +302,15 @@ public class TdxFunCheck {
             // -------------------------------- 复杂指标
 
 
-            // 月多     ->     FAIL
-            if (equals(dto1.get月多(), dto2.get月多())) {
-                log.info("check suc     >>>     月多");
-            } else {
+            // 月多     ->     SUC
+            if (!equals(dto1.get月多(), dto2.get月多())) {
                 failCountMap.put("月多", failCountMap.getOrDefault("月多", 0) + 1);
             }
 
 
             // RPS三线红     ->     FAIL
             if (equals(dto1.getRPS三线红(), dto2.getRPS三线红())) {
-                log.info("check suc     >>>     RPS三线红");
+                int x = 1;
             } else {
                 failCountMap.put("RPS三线红", failCountMap.getOrDefault("RPS三线红", 0) + 1);
             }
@@ -426,13 +413,13 @@ public class TdxFunCheck {
             System.out.println();
 
 
-            List<MonthlyBullSignal.DailyBar> tdx__listDateInWeek = listDateInWeek(tdx__rowList, i);
-            List<MonthlyBullSignal.DailyBar> java__listDateInWeek = listDateInWeek(java__rowList, i);
+            List<KlineDTO> tdx__listDateInWeek = listDateInWeek(tdx__rowList, i);
+            List<KlineDTO> java__listDateInWeek = listDateInWeek(java__rowList, i);
 
 
             for (int k = 0; k < tdx__listDateInWeek.size(); k++) {
-                DailyBar t = tdx__listDateInWeek.get(k);
-                DailyBar j = java__listDateInWeek.get(k);
+                KlineDTO t = tdx__listDateInWeek.get(k);
+                KlineDTO j = java__listDateInWeek.get(k);
 
                 log.debug("tdx      {}     -     {}   {} {} {} {}", dto1.dateWeek, t.date, t.open, t.high, t.low, t.close);
                 log.debug("java     {}     -     {}   {} {} {} {}", dto2.dateWeek, j.date, j.open, j.high, j.low, j.close);
@@ -447,7 +434,7 @@ public class TdxFunCheck {
         }
     }
 
-    private static List<DailyBar> listDateInWeek(List<TdxFunResultDTO> rowList, int idx) {
+    private static List<KlineDTO> listDateInWeek(List<TdxFunResultDTO> rowList, int idx) {
 
         TdxFunResultDTO dto = rowList.get(idx);
         LocalDate dateWeek = dto.dateWeek;
@@ -458,7 +445,7 @@ public class TdxFunCheck {
 
 
         // convert
-        return weekDTOList.stream().map(w -> new DailyBar(w.date, w.open, w.high, w.low, w.close)).collect(Collectors.toList());
+        return weekDTOList.stream().map(w -> new KlineDTO(w.date, w.open, w.high, w.low, w.close)).collect(Collectors.toList());
     }
 
 
@@ -473,7 +460,6 @@ public class TdxFunCheck {
 
 
         if (a == null || b == null) {
-            // return Objects.equals(a, b);
             return false;
         }
 
@@ -520,41 +506,36 @@ public class TdxFunCheck {
 
 
         // 周K
-        List<MonthlyBullSignal.DailyBar> dayList = Lists.newArrayList();
+        List<KlineDTO> dayList = Lists.newArrayList();
         for (int i = 0; i < date_arr.length; i++) {
-            MonthlyBullSignal.DailyBar dto = new MonthlyBullSignal.DailyBar(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
+            KlineDTO dto = new KlineDTO(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
             dayList.add(dto);
         }
         dayList.sort(Comparator.comparing(d -> d.date));
 
 
-        // 月多 - debug
-        List<DailyBar> dailyBars = computeMonthlyBull2(dayList);
-        log.debug("   ");
-
-
         // 周K
-        List<MonthlyBullSignal.DailyBar> weeklyList = aggregateToWeekly(dayList);
+        List<KlineDTO> weeklyList = aggregateToWeekly(dayList);
         Map<LocalDate, Integer> weekIndexMap = weekIndexMap(dayList);
 
         int w_size = weeklyList.size();
-        LocalDate[] dateWeek = weeklyList.stream().map(DailyBar::getDate).collect(Collectors.toList()).toArray(new LocalDate[w_size]);
-        Double[] openWeek = weeklyList.stream().map(DailyBar::getOpen).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] highWeek = weeklyList.stream().map(DailyBar::getHigh).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] lowWeek = weeklyList.stream().map(DailyBar::getLow).collect(Collectors.toList()).toArray(new Double[w_size]);
-        Double[] closeWeek = weeklyList.stream().map(DailyBar::getClose).collect(Collectors.toList()).toArray(new Double[w_size]);
+        LocalDate[] dateWeek = weeklyList.stream().map(KlineDTO::getDate).collect(Collectors.toList()).toArray(new LocalDate[w_size]);
+        Double[] openWeek = weeklyList.stream().map(KlineDTO::getOpen).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] highWeek = weeklyList.stream().map(KlineDTO::getHigh).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] lowWeek = weeklyList.stream().map(KlineDTO::getLow).collect(Collectors.toList()).toArray(new Double[w_size]);
+        Double[] closeWeek = weeklyList.stream().map(KlineDTO::getClose).collect(Collectors.toList()).toArray(new Double[w_size]);
 
 
         // 月K
-        List<MonthlyBullSignal.DailyBar> monthlyList = aggregateToMonthly(dayList);
+        List<KlineDTO> monthlyList = aggregateToMonthly(dayList);
         Map<LocalDate, Integer> monthIndexMap = monthIndexMap(dayList);
 
         int m_size = monthlyList.size();
-        LocalDate[] dateMonth = monthlyList.stream().map(DailyBar::getDate).collect(Collectors.toList()).toArray(new LocalDate[m_size]);
-        Double[] openMonth = monthlyList.stream().map(DailyBar::getOpen).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] highMonth = monthlyList.stream().map(DailyBar::getHigh).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] lowMonth = monthlyList.stream().map(DailyBar::getLow).collect(Collectors.toList()).toArray(new Double[m_size]);
-        Double[] closeMonth = monthlyList.stream().map(DailyBar::getClose).collect(Collectors.toList()).toArray(new Double[m_size]);
+        LocalDate[] dateMonth = monthlyList.stream().map(KlineDTO::getDate).collect(Collectors.toList()).toArray(new LocalDate[m_size]);
+        Double[] openMonth = monthlyList.stream().map(KlineDTO::getOpen).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] highMonth = monthlyList.stream().map(KlineDTO::getHigh).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] lowMonth = monthlyList.stream().map(KlineDTO::getLow).collect(Collectors.toList()).toArray(new Double[m_size]);
+        Double[] closeMonth = monthlyList.stream().map(KlineDTO::getClose).collect(Collectors.toList()).toArray(new Double[m_size]);
 
 
         double[] MA5 = TdxFun.MA(close_arr, 5);
@@ -870,7 +851,7 @@ public class TdxFunCheck {
 
 
         dto.set月多(row.getInteger("月多"));
-        dto.setRPS三线红(row.getInteger("RPS三线红"));
+        // dto.setRPS三线红(row.getInteger("RPS三线红"));
 
 
         return dto;
@@ -899,7 +880,7 @@ public class TdxFunCheck {
         return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
     }
 
-    private static Integer bool2Int(boolean bool) {
+    public static Integer bool2Int(boolean bool) {
         return bool ? 1 : 0;
     }
 
@@ -918,7 +899,7 @@ public class TdxFunCheck {
         // ------------------------------------------------------ 固定：TDX 系统指标（行情数据）
 
 
-        // -------------------------------- 日线
+        // -------------------------------- 日K
 
 
         @JsonFormat(pattern = "yyyy-MM-dd")
@@ -932,7 +913,7 @@ public class TdxFunCheck {
         private long vol;
 
 
-        // -------------------------------- 周线
+        // -------------------------------- 周K
 
 
         @JsonFormat(pattern = "yyyy-MM-dd")
@@ -946,11 +927,11 @@ public class TdxFunCheck {
         private long volWeek;
 
 
-        private LocalDate startDateWeek;
-        private LocalDate endDateWeek;
+        // private LocalDate startDateWeek;
+        // private LocalDate endDateWeek;
 
 
-        // -------------------------------- 月线
+        // -------------------------------- 月K
 
 
         @JsonFormat(pattern = "yyyy-MM-dd")
@@ -1027,8 +1008,6 @@ public class TdxFunCheck {
 
         // 月多
         private Integer 月多;
-
-        private List<MonthlyBullSignal.DailyBar> dailyBars;
 
 
         // RPS三线红
