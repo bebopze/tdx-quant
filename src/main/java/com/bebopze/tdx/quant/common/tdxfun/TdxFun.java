@@ -448,10 +448,19 @@ public class TdxFun {
         return r;
     }
 
-    // BARSSINCEN: N 周期内第一次 True 到现在的周期数
+
+    /**
+     * BARSSINCEN:  N 周期内第一次 True 到现在的周期数（NaN  ->  -1）                ->   已验证 ✅
+     *
+     * @param S
+     * @param N
+     * @return
+     */
     public static int[] BARSSINCEN(boolean[] S, int N) {
         int len = S.length;
         int[] r = new int[len];
+        Arrays.fill(r, -1);
+
         for (int i = N - 1; i < len; i++) {
             int idx = -1;
             for (int j = i - N + 1; j <= i; j++)
@@ -459,7 +468,7 @@ public class TdxFun {
                     idx = j;
                     break;
                 }
-            r[i] = (idx == -1 ? 0 : i - idx);
+            r[i] = (idx == -1 ? -1 : i - idx);
         }
         return r;
     }
@@ -548,7 +557,7 @@ public class TdxFun {
         for (int i = 0; i < close.length; i++) {
             macd[i] = (dif[i] - dea[i]) * 2;
         }
-        return new double[][]{rdArray(dif, 3), rdArray(dea, 3), rdArray(macd, 3)};
+        return new double[][]{rdArray(dif, 5), rdArray(dea, 5), rdArray(macd, 5)};
     }
 
 
