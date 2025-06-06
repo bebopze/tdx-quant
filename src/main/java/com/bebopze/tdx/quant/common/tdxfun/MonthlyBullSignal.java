@@ -492,7 +492,7 @@ public class MonthlyBullSignal {
         BaseStockDO stockDO = mapper.getByCode(stockCode);
 
 
-        List<com.bebopze.tdx.quant.common.domain.dto.KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(stockDO.getKLineHisOriginal(), 5000);
+        List<com.bebopze.tdx.quant.common.domain.dto.KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(stockDO.getKlineHis(), 5000);
 
 
         // 从 DB 读取

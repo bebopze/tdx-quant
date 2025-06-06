@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
@@ -13,8 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -24,6 +26,7 @@ import java.util.Map;
 @Slf4j
 @Service
 public class ExtDataServiceImpl implements ExtDataService {
+
 
     @Autowired
     private IBaseStockService baseStockService;
@@ -39,7 +42,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // code - date_arr
-        Map<String, Object[]> stockDateArrMap = Maps.newHashMap();
+        Map<String, String[]> stockDateArrMap = Maps.newHashMap();
         // code - close_arr
         Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
         // code - id
@@ -59,11 +62,11 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 计算RPS
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(stockCloseArrMap, 10);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(stockCloseArrMap, 20);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(stockCloseArrMap, 50);
-        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(stockCloseArrMap, 120);// 120 -> 100
-        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(stockCloseArrMap, 250);// 250 -> 200
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(stockDateArrMap, stockCloseArrMap, 10);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(stockDateArrMap, stockCloseArrMap, 20);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(stockDateArrMap, stockCloseArrMap, 50);
+        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(stockDateArrMap, stockCloseArrMap, 120);// 120 -> 100
+        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(stockDateArrMap, stockCloseArrMap, 250);// 250 -> 200
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -72,10 +75,12 @@ public class ExtDataServiceImpl implements ExtDataService {
         // save -> DB
 
 
-        List<BaseStockDO> baseStockDOList = Lists.newArrayList();
+        //
 
 
-        stockDateArrMap.forEach((stockCode, date_arr) -> {
+        stockDateArrMap.keySet().parallelStream().forEach(stockCode -> {
+            String[] date_arr = stockDateArrMap.get(stockCode);
+
 
             double[] rps10_arr = RPS10.get(stockCode);
             double[] rps20_arr = RPS20.get(stockCode);
@@ -84,30 +89,34 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250_arr = RPS250.get(stockCode);
 
 
-            List<ExtDataDTO> extDataDTOList = Lists.newArrayList();
+            List<String> extDatas = Lists.newArrayList();
             for (int i = 0; i < date_arr.length; i++) {
 
-                ExtDataDTO dto = new ExtDataDTO();
-                dto.setDate(String.valueOf(date_arr[i]));
-                dto.setRps10(rps10_arr[i]);
-                dto.setRps20(rps20_arr[i]);
-                dto.setRps50(rps50_arr[i]);
-                dto.setRps120(rps120_arr[i]);
-                dto.setRps250(rps250_arr[i]);
+                // 2025-05-13,91,92,93,94,95
+                // 日期,RPS10,RPS20,RPS50,RPS120,RPS250
 
-                extDataDTOList.add(dto);
+                // 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
+
+                List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
+
+
+                String extDataStr = extData.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+                extDatas.add(extDataStr);
             }
 
 
-            BaseStockDO baseStockDO = new BaseStockDO();
-            baseStockDO.setId(codeIdMap.get(stockCode));
-            baseStockDO.setExtDataHis(JSON.toJSONString(extDataDTOList));
+            BaseStockDO stockDO = new BaseStockDO();
+            stockDO.setId(codeIdMap.get(stockCode));
+            stockDO.setExtDataHis(JSON.toJSONString(extDatas));
 
-            baseStockDOList.add(baseStockDO);
+            try {
+                baseStockService.updateById(stockDO);
+                System.out.println();
+            } catch (Exception e) {
+                log.error("stockDO : {} , exMsg : {}", JSON.toJSONString(stockDO), e.getMessage(), e);
+                System.out.println();
+            }
         });
-
-
-        baseStockService.updateBatchById(baseStockDOList, 500);
     }
 
 
@@ -124,7 +133,7 @@ public class ExtDataServiceImpl implements ExtDataService {
      * @return stock - close_arr
      */
     private void loadAllStockKline(Map<String, double[]> stockCloseArrMap,
-                                   Map<String, Object[]> stockDateArrMap,
+                                   Map<String, String[]> stockDateArrMap,
                                    Map<String, Long> codeIdMap) {
 
 
@@ -141,24 +150,18 @@ public class ExtDataServiceImpl implements ExtDataService {
             Long stockId = e.getId();
             String stockCode = e.getCode();
 
-            double[] close_arr = ConvertStockKline.fieldValArr(e.getKLineHis(), "close");
-            Object[] date_arr = ConvertStockKline.objFieldValArr(e.getKLineHis(), "date");
+            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
+            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
 
 
             // 上市1年
             if (close_arr.length > 200) {
 
-                // stockCloseArrMap.put(stockCode, fillNaN(close_arr, DAY_LIMIT));
+
                 stockCloseArrMap.put(stockCode, close_arr);
                 stockDateArrMap.put(stockCode, date_arr);
 
                 codeIdMap.put(stockCode, stockId);
-
-
-                double[] fillNaN_arr = stockCloseArrMap.get(stockCode);
-                if (Double.isNaN(fillNaN_arr[0])) {
-                    log.debug("fillNaN     >>>     stockCode : {}", stockCode);
-                }
             }
         });
     }
@@ -193,5 +196,12 @@ public class ExtDataServiceImpl implements ExtDataService {
         return new_arr;
     }
 
+
+    private static Number of(Number val) {
+        if (Double.isNaN(val.doubleValue())) {
+            return val;
+        }
+        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+    }
 
 }

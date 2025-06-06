@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.common.util;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Lists;
 import com.google.gson.stream.JsonReader;
@@ -53,7 +52,7 @@ public class JsonFileWriterAndReader {
                 writer.name("code").value(data.getCode());
                 writer.name("name").value(data.getName());
                 writer.name("tdxMarketType").value(data.getTdxMarketType());
-                writer.name("klineHis").value(data.getKLineHisOriginal());
+                writer.name("klineHis").value(data.getKlineHis());
 
 
                 writer.endObject();

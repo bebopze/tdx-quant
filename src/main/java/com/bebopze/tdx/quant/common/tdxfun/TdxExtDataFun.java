@@ -11,11 +11,11 @@ import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.changePct;
 import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
 
 
@@ -67,10 +67,13 @@ public class TdxExtDataFun {
 
 
         // 从本地DB   加载5000支个股的收盘价序列
-        Map<String, double[]> stockCloseArrMap = loadAllStockKline();
+        AllStockKlineDTO dto = loadAllStockKline();
+        Map<String, String[]> stockDateArrMap = dto.stockDateArrMap;
+        Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
+        Map<String, Long> codeIdMap = dto.codeIdMap;
 
 
-        Map<String, double[]> RPS_N = computeRPS(stockCloseArrMap, 50);
+        Map<String, double[]> RPS_N = computeRPS(stockDateArrMap, stockCloseArrMap, 50);
         System.out.println(JSON.toJSONString(RPS_N));
 
 
@@ -93,12 +96,14 @@ public class TdxExtDataFun {
     public static void calcRps() {
 
         // 从本地DB   加载5000支个股的收盘价序列
-        Map<String, double[]> priceMap = loadAllStockKline();
+        AllStockKlineDTO dto = loadAllStockKline();
+        Map<String, String[]> stockDateArrMap = dto.stockDateArrMap;
+        Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
+        // Map<String, Long> codeIdMap = dto.codeIdMap;
 
-
-        Map<String, double[]> RPS50 = computeRPS(priceMap, 50);
-        Map<String, double[]> RPS120 = computeRPS(priceMap, 120);// 120 -> 100
-        Map<String, double[]> RPS250 = computeRPS(priceMap, 250);// 250 -> 200
+        Map<String, double[]> RPS50 = computeRPS(stockDateArrMap, stockCloseArrMap, 50);
+        Map<String, double[]> RPS120 = computeRPS(stockDateArrMap, stockCloseArrMap, 120); // 120 -> 100
+        Map<String, double[]> RPS250 = computeRPS(stockDateArrMap, stockCloseArrMap, 250); // 250 -> 200
 
 
         // save -> DB
@@ -122,13 +127,29 @@ public class TdxExtDataFun {
     }
 
 
+    @Data
+    @AllArgsConstructor
+    public static class AllStockKlineDTO {
+        // code - date_arr
+        Map<String, String[]> stockDateArrMap;
+        // code - close_arr
+        Map<String, double[]> stockCloseArrMap;
+        // code - id
+        Map<String, Long> codeIdMap;
+    }
+
     /**
      * 从本地DB   加载全部（5000+支）个股的 收盘价序列
      *
      * @return stock - close_arr
      */
-    private static Map<String, double[]> loadAllStockKline() {
+    public static AllStockKlineDTO loadAllStockKline() {
+        // code - date_arr
+        Map<String, String[]> stockDateArrMap = Maps.newHashMap();
+        // code - close_arr
         Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
+        // code - id
+        Map<String, Long> codeIdMap = Maps.newHashMap();
 
 
         // 加载  最近500日   行情数据
@@ -142,7 +163,8 @@ public class TdxExtDataFun {
         baseStockDOList.forEach(e -> {
 
             String stockCode = e.getCode();
-            double[] close_arr = ConvertStockKline.fieldValArr(e.getKLineHis(), "close");
+            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
+            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
 
 
             // 上市1年
@@ -158,7 +180,7 @@ public class TdxExtDataFun {
         });
 
 
-        return stockCloseArrMap;
+        return new AllStockKlineDTO(stockDateArrMap, stockCloseArrMap, codeIdMap);
     }
 
 
@@ -180,78 +202,8 @@ public class TdxExtDataFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    /**
-//     * 计算  全市场个股的 N日 RPS   （N日涨幅 - 排名百分比）
-//     *
-//     *
-//     * 计算  N日 RPS：
-//     *
-//     * 1、计算  全市场个股（假设共5000只） 的   N日涨幅
-//     * 2、全部个股 N日涨幅   从小到大排序
-//     * 3、个股N日RPS : 个股N日涨幅 在总排名 中的百分比（0–100）
-//     *
-//     *
-//     * -
-//     *
-//     * @param priceMap 全市场收盘价，key=股票代码，value=该股按时间顺序的收盘价数组
-//     * @param N        计算涨幅的周期
-//     * @return key=股票代码，value=该股 N日涨幅 在全市场中的 百分位排名（0–100）
-//     */
-//    public static Map<String, Double> computeRPS(Map<String, double[]> priceMap, int N) {
-//
-//
-//        // 1. 计算每只股票的 N 日涨幅（调用前面定义的 changePct）
-//        Map<String, Double> pctMap = new HashMap<>();
-//        for (Map.Entry<String, double[]> entry : priceMap.entrySet()) {
-//
-//            String symbol = entry.getKey();
-//            double[] close = entry.getValue();
-//            double[] pctArr = changePct(close, N);
-//
-//            // 取序列最后一期的涨幅 作为当前涨幅
-//            double latestPct = pctArr[pctArr.length - 1];
-//            pctMap.put(symbol, latestPct);
-//        }
-//
-//
-//        // 2. 将所有涨幅值排序，准备计算百分位
-//        List<Double> allPcts = new ArrayList<>(pctMap.values());
-//        Collections.sort(allPcts);
-//
-//        int total = allPcts.size();
-//
-//
-//        // 3. 对每只股票，计算其涨幅在排序列表中的位置 rank（<= 当前值的数量），然后转换为百分位
-//        Map<String, Double> rpsMap = new HashMap<>();
-//        for (Map.Entry<String, Double> entry : pctMap.entrySet()) {
-//
-//            String symbol = entry.getKey();
-//            double pct = entry.getValue();
-//
-//            // 找到第一个大于 pct 的索引位置 idx
-//            int idx = Collections.binarySearch(allPcts, pct);
-//            if (idx < 0) {
-//                idx = -idx - 1;
-//            } else {
-//                // 如果有重复值，binarySearch 可能返回任意一个，需调整到最后一个相同值
-//                while (idx + 1 < total && Objects.equals(allPcts.get(idx + 1), pct)) {
-//                    idx++;
-//                }
-//                idx++;
-//            }
-//
-//            // 百分位 = idx / total * 100
-//            double percentile = idx * 100.0 / total;
-//            rpsMap.put(symbol, percentile);
-//        }
-//
-//
-//        return rpsMap;
-//    }
-
-
     /**
-     * 计算  全市场个股   N日RPS   序列     （RPS = N日涨幅 -> 总排名百分比）
+     * 计算  全市场个股   N日RPS   序列     （RPS = N日涨幅 -> 总排名百分位）            calculateNDayRPS
      *
      *
      * 计算  N日 RPS：
@@ -267,68 +219,99 @@ public class TdxExtDataFun {
      * @param N                计算涨幅的周期（天数）
      * @return key=股票代码，value=该股按时间序列的 N日 RPS（0–100）
      */
-    public static Map<String, double[]> computeRPS(Map<String, double[]> stockCloseArrMap, int N) {
 
-        // 1. 首先计算每只股票的 N 日涨幅序列
-        Map<String, double[]> pctMap = new HashMap<>();
-        int totalStocks = stockCloseArrMap.size();
-        int seriesLength = -1;
+    /**
+     * 计算全市场个股的 N 日 RPS 序列。
+     *
+     * @param N                N 日涨幅周期
+     * @param stockDateArrMap  Map<股票代码, String[] 日期序列>，日期按升序排列
+     * @param stockCloseArrMap Map<股票代码, double[] 收盘价序列>，与日期数组一一对应
+     * @return Map<股票代码, double [ ]>     double[] 与该股日期序列长度一致，若无 RPS 则为 NaN
+     */
+    public static Map<String, double[]> computeRPS(Map<String, String[]> stockDateArrMap,
+                                                   Map<String, double[]> stockCloseArrMap,
+                                                   int N) {
 
-        for (Map.Entry<String, double[]> entry : stockCloseArrMap.entrySet()) {
 
-            double[] close = entry.getValue();
-            if (seriesLength < 0) seriesLength = close.length;
-            double[] pct = changePct(close, N);
+        // 1. 为每个股票构建：Map<日期, N日涨幅>，并同时收集所有“有效涨幅”的日期
+        Map<String, TreeMap<String, Double>> returnsMap = new HashMap<>();
+        Set<String> allDates = new TreeSet<>();  // 按自然升序保存所有出现过的涨幅日期
 
-            pctMap.put(entry.getKey(), pct);
+        for (String code : stockDateArrMap.keySet()) {
+            String[] dates = stockDateArrMap.get(code);
+            double[] closes = stockCloseArrMap.get(code);
+            TreeMap<String, Double> codeReturns = new TreeMap<>();
+
+            if (dates.length > N) {
+                for (int i = N; i < dates.length; i++) {
+                    double prev = closes[i - N];
+                    if (prev != 0) {
+                        double pct = (closes[i] / prev - 1.0) * 100.0;
+                        String dt = dates[i];
+                        codeReturns.put(dt, pct);
+                        allDates.add(dt);
+                    }
+                }
+            }
+            returnsMap.put(code, codeReturns);
         }
 
+        // 2. 为每个股票预分配 RPS 结果数组，长度与其日期序列一致，填充 NaN
+        Map<String, double[]> rpsResult = new HashMap<>();
+        Map<String, Map<String, Integer>> dateIndexMap = new HashMap<>();
 
-        // 2. 对每个交易日 t，从所有股票的 pctMap 中收集该日的 N日涨幅值，排序
-        //    并计算百分位
-        Map<String, double[]> rpsMap = new HashMap<>();
-        // 初始化 result arrays
-        for (String stockCode : stockCloseArrMap.keySet()) {
-            rpsMap.put(stockCode, new double[seriesLength]);
+        for (String code : stockDateArrMap.keySet()) {
+            String[] dates = stockDateArrMap.get(code);
+            int len = dates.length;
+            double[] rpsArr = new double[len];
+            Arrays.fill(rpsArr, Double.NaN);
+            rpsResult.put(code, rpsArr);
+
+            // 构建 日期->索引 映射，便于后续快速定位
+            Map<String, Integer> idxMap = new HashMap<>();
+            for (int i = 0; i < len; i++) {
+                idxMap.put(dates[i], i);
+            }
+            dateIndexMap.put(code, idxMap);
         }
 
-        // 对每个交易日
-        for (int t = 0; t < seriesLength; t++) {
-
-            // 收集当日所有股票的涨幅
-            List<StockPct> list = new ArrayList<>(totalStocks);
-            for (Map.Entry<String, double[]> entry : pctMap.entrySet()) {
-                double[] pctSeq = entry.getValue();
-                double pct = pctSeq[t];
-                list.add(new StockPct(entry.getKey(), pct));
-            }
-
-            // 按 pct 升序排序（NaN 放在开头）
-            list.sort(Comparator.comparingDouble(sp -> Double.isNaN(sp.pct) ? Double.NEGATIVE_INFINITY : sp.pct));
-
-
-            // 3. 计算每个股票的百分位 = (排名位置+1) / total * 100
-            // 如果存在相同值，我们采用“最后一个相同值的位置”来计算，以保证并列股票同分位
-            Map<String, Integer> lastIndex = new HashMap<>();
-            for (int i = 0; i < list.size(); i++) {
-                lastIndex.put(list.get(i).stockCode, i);
-            }
-            for (StockPct sp : list) {
-                int idx = lastIndex.get(sp.stockCode);
-                double percentile = (idx + 1) * 100.0 / totalStocks;
-                rpsMap.get(sp.stockCode)[t] = percentile;
+        // 3. 构建“按日期聚合所有股票涨幅”的结构：Map<日期, List< (code, pct) >>
+        Map<String, List<Map.Entry<String, Double>>> dateToList = new TreeMap<>();
+        for (String date : allDates) {
+            dateToList.put(date, new ArrayList<>());
+        }
+        for (String code : returnsMap.keySet()) {
+            TreeMap<String, Double> codeReturns = returnsMap.get(code);
+            for (Map.Entry<String, Double> e : codeReturns.entrySet()) {
+                String date = e.getKey();
+                double pct = e.getValue();
+                dateToList.get(date).add(new AbstractMap.SimpleEntry<>(code, pct));
             }
         }
 
+        // 4. 对每个日期，按涨幅升序排序，计算 RPS 并写入对应股票的结果数组
+        for (String date : dateToList.keySet()) {
+            List<Map.Entry<String, Double>> list = dateToList.get(date);
+            int m = list.size();
+            if (m == 0) continue;
 
-        return rpsMap;
-    }
+            list.sort(Comparator.comparingDouble(Map.Entry::getValue));
 
-    // 辅助类：存储单只股票在某一日的涨幅
-    @AllArgsConstructor
-    private static class StockPct {
-        String stockCode;
-        double pct;
+            if (m == 1) {
+                String code = list.get(0).getKey();
+                int idx = dateIndexMap.get(code).get(date);
+                rpsResult.get(code)[idx] = 100.0;
+            } else {
+                for (int i = 0; i < m; i++) {
+                    String code = list.get(i).getKey();
+                    double rps = (i * 1.0 / (m - 1)) * 100.0;
+                    int idx = dateIndexMap.get(code).get(date);
+                    rpsResult.get(code)[idx] = rps;
+                }
+            }
+        }
+
+        return rpsResult;
     }
 
 

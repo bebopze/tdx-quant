@@ -5,7 +5,9 @@ import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.FastJson2Config;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
@@ -63,6 +65,8 @@ public class StockFun {
     double[] ssf_arr;// = SSF(close_arr);
 
 
+    double[] rps10_arr;
+    double[] rps20_arr;
     double[] rps50_arr;
     double[] rps120_arr;
     double[] rps250_arr;
@@ -100,7 +104,9 @@ public class StockFun {
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = baseStockDO.getKLineHis();
+        List<KlineDTO> klineDTOList = baseStockDO.getKlineDTOList();
+        // 扩展数据
+        List<ExtDataDTO> extDataDTOList = baseStockDO.getExtDataDTOList();
 
 
         // last
@@ -122,6 +128,13 @@ public class StockFun {
         double[] open_arr = ConvertStockKline.fieldValArr(klineDTOList, "open");
         long[] vol_arr = ConvertStockKline.longFieldValArr(klineDTOList, "vol");
         double[] amo_arr = ConvertStockKline.fieldValArr(klineDTOList, "amo");
+
+
+        double[] rps10_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS10");
+        double[] rps20_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS20");
+        double[] rps50_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS50");
+        double[] rps120_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS120");
+        double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS250");
 
 
         // TODO   RPS（预计算） -> DB获取
@@ -156,6 +169,8 @@ public class StockFun {
         this.ssf_arr = SSF(close_arr);
 
 
+        this.rps10_arr = rps10_arr;
+        this.rps20_arr = rps20_arr;
         this.rps50_arr = rps50_arr;
         this.rps120_arr = rps120_arr;
         this.rps250_arr = rps250_arr;

@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -146,6 +147,7 @@ public class BaseStockDO implements Serializable {
     /**
      * 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
+    @JsonIgnore
     @TableField(value = "kline_his", select = false)
     @Schema(description = "历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
@@ -153,8 +155,9 @@ public class BaseStockDO implements Serializable {
     /**
      * 扩展数据 指标-JSON（[]）
      */
+    @JsonIgnore
     @TableField(value = "ext_data_his", select = false)
-    @Schema(description = "扩展数据 指标-JSON（[]）")
+    @Schema(description = "扩展数据 指标-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
     private String extDataHis;
 
     /**
@@ -175,20 +178,26 @@ public class BaseStockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public List<ExtDataDTO> getExtDataHis() {
-        return ConvertStockExtData.extDataHis2DTOList(extDataHis);
-    }
-
-
-    public List<KlineDTO> getKLineHis() {
+    public List<KlineDTO> getKlineDTOList() {
+        if (klineHis == null) {
+            return Collections.emptyList();
+        }
         return ConvertStockKline.str2DTOList(klineHis);
     }
 
 
-    @JsonIgnore
-    public String getKLineHisOriginal() {
-        return klineHis;
+    public List<ExtDataDTO> getExtDataDTOList() {
+        if (extDataHis == null) {
+            return Collections.emptyList();
+        }
+        return ConvertStockExtData.extDataHis2DTOList(extDataHis);
     }
+
+
+//    @JsonIgnore
+//    public String getKlineHis() {
+//        return klineHis;
+//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

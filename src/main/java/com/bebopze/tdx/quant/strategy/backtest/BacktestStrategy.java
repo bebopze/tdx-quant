@@ -667,7 +667,7 @@ public class BacktestStrategy {
         stockDOList.parallelStream().forEach(e -> {
 
             String stockCode = e.getCode();
-            List<KlineDTO> klineDTOList = e.getKLineHis();
+            List<KlineDTO> klineDTOList = e.getKlineDTOList();
 
 
             double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
