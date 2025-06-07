@@ -27,10 +27,12 @@ public class TdxExtFun {
 
     public static List<KlineAggregator.PeriodDTO> toWeek(String[] date, double[] value) {
         return KlineAggregator.toWeekly(date, value);
+        // List<MonthlyBullSignal.KlineBar> weeklyBarList = MonthlyBullSignal.aggregateToWeekly(dailyKlines);
     }
 
     public static List<KlineAggregator.PeriodDTO> toMonth(String[] date, double[] value) {
         return KlineAggregator.toMonthly(date, value);
+        // List<MonthlyBullSignal.KlineBar> monthlyBarList = MonthlyBullSignal.aggregateToMonthly(dailyKlines);
     }
 
 
@@ -399,9 +401,16 @@ public class TdxExtFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    // ----------------------------------- 月多
-
-
+    /**
+     * 月多
+     *
+     * @param date
+     * @param open
+     * @param high
+     * @param low
+     * @param close
+     * @return
+     */
     public static boolean[] 月多(String[] date, double[] open, double[] high, double[] low, double[] close) {
 
         List<MonthlyBullSignal.KlineBar> dailyKlines = Lists.newArrayList();
@@ -414,6 +423,30 @@ public class TdxExtFun {
 
 
         return MonthlyBullSignal.computeMonthlyBull(dailyKlines);
+    }
+
+
+    /**
+     * RPS三线红
+     *
+     * @param rps50
+     * @param rps120
+     * @param rps250
+     * @param RPS
+     * @return
+     */
+    public static boolean[] RPS三线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+        int n = rps50.length;
+
+        boolean[] result = new boolean[n];
+        for (int i = 0; i < n; i++) {
+
+            result[i] = rps50[i] >= RPS
+                    && rps120[i] >= RPS
+                    && rps250[i] >= RPS;
+        }
+
+        return result;
     }
 
 
