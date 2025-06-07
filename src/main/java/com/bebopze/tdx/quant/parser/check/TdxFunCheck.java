@@ -323,10 +323,8 @@ public class TdxFunCheck {
             }
 
 
-            // RPS三线红     ->     FAIL
-            if (equals(dto1.getRPS三线红(), dto2.getRPS三线红())) {
-                int x = 1;
-            } else {
+            // RPS三线红     ->     SUC
+            if (!equals(dto1.getRPS三线红(), dto2.getRPS三线红())) {
                 failCountMap.compute("RPS三线红", (k, v) -> (v == null ? 1 : v + 1));
             }
         }
@@ -706,7 +704,7 @@ public class TdxFunCheck {
 
 
             dto.set月多(bool2Int(月多_arr[i]));
-            // dto.setRPS三线红(bool2Int(RPS三线红_arr[i]));
+            dto.setRPS三线红(bool2Int(RPS三线红_arr[i]));
 
 
             dtoList.add(dto);
@@ -905,7 +903,7 @@ public class TdxFunCheck {
 
 
         dto.set月多(row.getInteger("月多"));
-        // dto.setRPS三线红(row.getInteger("RPS三线红"));
+        dto.setRPS三线红(row.getInteger("RPS三线红"));
 
 
         return dto;

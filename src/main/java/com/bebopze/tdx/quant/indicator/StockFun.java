@@ -503,7 +503,7 @@ public class StockFun {
 
 
     public boolean[] RPS三线红(int RPS) {
-        return null;
+        return TdxExtFun.RPS三线红(rps50_arr, rps120_arr, rps250_arr, RPS);
     }
 
 
