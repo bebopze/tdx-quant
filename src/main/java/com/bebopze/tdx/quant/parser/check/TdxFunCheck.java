@@ -117,7 +117,7 @@ public class TdxFunCheck {
         // ----------
 
 
-        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
+        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "RPS", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
         Map<String, Integer> failCountMap = Maps.newHashMap();
 
 
@@ -176,7 +176,7 @@ public class TdxFunCheck {
                     && equals(dto1.vol, dto2.vol))) {
 
 
-                failCountMap.put("日K", failCountMap.getOrDefault("日K", 0) + 1);
+                failCountMap.compute("日K", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -190,7 +190,7 @@ public class TdxFunCheck {
                     && equals(dto1.volWeek, dto2.volWeek))) {
 
 
-                failCountMap.put("周K", failCountMap.getOrDefault("周K", 0) + 1);
+                failCountMap.compute("周K", (k, v) -> (v == null ? 1 : v + 1));
 
                 // 打印：周 -> 日   列表
                 debugWeek(dto1, dto2, tdx__rowList, java__rowList, i);
@@ -207,7 +207,7 @@ public class TdxFunCheck {
                     && equals(dto1.volMonth, dto2.volMonth))) {
 
 
-                failCountMap.put("月K", failCountMap.getOrDefault("月K", 0) + 1);
+                failCountMap.compute("月K", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -220,11 +220,26 @@ public class TdxFunCheck {
 
 
             // MA     ->     SUC
-            if (!(equals(dto1.getMA5(), dto2.getMA5(), 0.001) && equals(dto1.getMA10(), dto2.getMA10(), 0.001)
-                    && equals(dto1.getMA20(), dto2.getMA20(), 0.001) && equals(dto1.getMA50(), dto2.getMA50(), 0.001)
-                    && equals(dto1.getMA100(), dto2.getMA100(), 0.001) && equals(dto1.getMA200(), dto2.getMA200(), 0.001))) {
+            double ma_precision = 0.001;
+            if (!(equals(dto1.getMA5(), dto2.getMA5(), ma_precision) && equals(dto1.getMA10(), dto2.getMA10(), ma_precision)
+                    && equals(dto1.getMA20(), dto2.getMA20(), ma_precision) && equals(dto1.getMA50(), dto2.getMA50(), ma_precision)
+                    && equals(dto1.getMA100(), dto2.getMA100(), ma_precision) && equals(dto1.getMA200(), dto2.getMA200(), ma_precision))) {
 
-                failCountMap.put("MA", failCountMap.getOrDefault("MA", 0) + 1);
+                failCountMap.compute("MA", (k, v) -> (v == null ? 1 : v + 1));
+            }
+
+
+            // RPS     ->     SUC
+            double rpx_diff = 0.15;
+            double rpx_precision = 0.025;
+            if (date.isAfter(LocalDate.of(2015, 1, 1)) && dto1.getRPS250() != null && dto1.getRPS250() > 0
+                    && !(equals(dto1.getRPS10(), dto2.getRPS10(), rpx_diff, rpx_precision)
+                    && equals(dto1.getRPS20(), dto2.getRPS20(), rpx_diff, rpx_precision)
+                    && equals(dto1.getRPS50(), dto2.getRPS50(), rpx_diff, rpx_precision)
+                    && equals(dto1.getRPS120(), dto2.getRPS120(), rpx_diff, rpx_precision)
+                    && equals(dto1.getRPS250(), dto2.getRPS250(), rpx_diff, rpx_precision))) {
+
+                failCountMap.compute("RPS", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -233,13 +248,13 @@ public class TdxFunCheck {
                     && equals(dto1.getDIF(), dto2.getDIF())
                     && equals(dto1.getDEA(), dto2.getDEA()))) {
 
-                failCountMap.put("MACD", failCountMap.getOrDefault("MACD", 0) + 1);
+                failCountMap.compute("MACD", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // SAR     ->     SUC
             if (!equals(dto1.getSAR(), dto2.getSAR())) {
-                failCountMap.put("SAR", failCountMap.getOrDefault("SAR", 0) + 1);
+                failCountMap.compute("SAR", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -248,27 +263,27 @@ public class TdxFunCheck {
 
             // MA多     ->     SUC
             if (!equals(dto1.getMA20多(), dto2.getMA20多())) {
-                failCountMap.put("MA多", failCountMap.getOrDefault("MA多", 0) + 1);
+                failCountMap.compute("MA多", (k, v) -> (v == null ? 1 : v + 1));
             }
             // MA空     ->     SUC
             if (!equals(dto1.getMA20空(), dto2.getMA20空())) {
-                failCountMap.put("MA空", failCountMap.getOrDefault("MA空", 0) + 1);
+                failCountMap.compute("MA空", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // SSF     ->     SUC
             if (!equals(dto1.getSSF(), dto2.getSSF())) {
-                failCountMap.put("SSF", failCountMap.getOrDefault("SSF", 0) + 1);
+                failCountMap.compute("SSF", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // SSF多     ->     SUC
             if (!equals(dto1.getSSF多(), dto2.getSSF多())) {
-                failCountMap.put("SSF多", failCountMap.getOrDefault("SSF多", 0) + 1);
+                failCountMap.compute("SSF多", (k, v) -> (v == null ? 1 : v + 1));
             }
             // SSF空     ->     SUC
             if (!equals(dto1.getSSF空(), dto2.getSSF空())) {
-                failCountMap.put("SSF空", failCountMap.getOrDefault("SSF空", 0) + 1);
+                failCountMap.compute("SSF空", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -277,25 +292,25 @@ public class TdxFunCheck {
 
             // N日新高     ->     SUC
             if (!equals(dto1.get_60日新高(), dto2.get_60日新高())) {
-                failCountMap.put("N日新高", failCountMap.getOrDefault("N日新高", 0) + 1);
+                failCountMap.compute("N日新高", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // 均线预萌出     ->     SUC
             if (!equals(dto1.get均线预萌出(), dto2.get均线预萌出())) {
-                failCountMap.put("均线预萌出", failCountMap.getOrDefault("均线预萌出", 0) + 1);
+                failCountMap.compute("均线预萌出", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // 均线萌出     ->     SUC
             if (!equals(dto1.get均线萌出(), dto2.get均线萌出())) {
-                failCountMap.put("均线萌出", failCountMap.getOrDefault("均线萌出", 0) + 1);
+                failCountMap.compute("均线萌出", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
             // 大均线多头     ->     SUC
             if (!equals(dto1.get大均线多头(), dto2.get大均线多头())) {
-                failCountMap.put("大均线多头", failCountMap.getOrDefault("大均线多头", 0) + 1);
+                failCountMap.compute("大均线多头", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -304,7 +319,7 @@ public class TdxFunCheck {
 
             // 月多     ->     SUC
             if (!equals(dto1.get月多(), dto2.get月多())) {
-                failCountMap.put("月多", failCountMap.getOrDefault("月多", 0) + 1);
+                failCountMap.compute("月多", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -312,7 +327,7 @@ public class TdxFunCheck {
             if (equals(dto1.getRPS三线红(), dto2.getRPS三线红())) {
                 int x = 1;
             } else {
-                failCountMap.put("RPS三线红", failCountMap.getOrDefault("RPS三线红", 0) + 1);
+                failCountMap.compute("RPS三线红", (k, v) -> (v == null ? 1 : v + 1));
             }
         }
 
@@ -361,13 +376,24 @@ public class TdxFunCheck {
             Object v2 = json2.get(key);
 
 
+            double dif = 0.001001;
+            double precision = 0.0005;
+            if (key.contains("RPS")) {
+                double rps_val = Double.parseDouble(v1.toString());
+                if (rps_val == 0) continue;
+
+                dif = 0.15;
+                precision = 0.025;
+            }
+
+
             if (v2 instanceof Number) {
 
                 BigDecimal _v1 = new BigDecimal(String.valueOf(v1));
                 BigDecimal _v2 = new BigDecimal(String.valueOf(v2));
 
 
-                if (!equals(_v1, _v2)) {
+                if (!equals(_v1, _v2, dif, precision)) {
 
                     JSONObject diff = new JSONObject();
                     diff.put("v1", v1);
@@ -450,10 +476,16 @@ public class TdxFunCheck {
 
 
     private static boolean equals(Number a, Number b) {
-        return equals(a, b, 0.0005);     // ±0.05%   比值误差
+        // ±0.05%   比值误差
+        return equals(a, b, 0.0005);
     }
 
     private static boolean equals(Number a, Number b, double precision) {
+        // ±0.001   差值误差
+        return equals(a, b, 0.001001, precision);
+    }
+
+    private static boolean equals(Number a, Number b, double diff, double precision) {
         if (Objects.equals(a, b)) {
             return true;
         }
@@ -466,7 +498,7 @@ public class TdxFunCheck {
 
         // 差值
         double diffVal = a.doubleValue() - b.doubleValue();
-        boolean equal1 = NumUtil.between(diffVal, -0.001001, 0.001001);     // ±0.001   差值误差
+        boolean equal1 = NumUtil.between(diffVal, -diff, diff);   // ±0.001   差值误差
 
 
         if (b.doubleValue() == 0) {
@@ -476,7 +508,7 @@ public class TdxFunCheck {
 
         // 百分比
         double val = a.doubleValue() / b.doubleValue();
-        boolean equal2 = NumUtil.between(val, 1 - precision, 1 + precision);
+        boolean equal2 = NumUtil.between(val, 1 - precision, 1 + precision);   // ±0.05%   比值误差
 
         return equal1 || equal2;
     }
@@ -503,6 +535,13 @@ public class TdxFunCheck {
         double[] high_arr = fun.getHigh_arr();
         double[] low_arr = fun.getLow_arr();
         long[] vol_arr = fun.getVol_arr();
+
+
+        double[] rps10_arr = fun.getRps10_arr();
+        double[] rps20_arr = fun.getRps20_arr();
+        double[] rps50_arr = fun.getRps50_arr();
+        double[] rps120_arr = fun.getRps120_arr();
+        double[] rps250_arr = fun.getRps250_arr();
 
 
         // 周K
@@ -576,7 +615,7 @@ public class TdxFunCheck {
 
 
         for (int i = 0; i < date_arr.length; i++) {
-            String dateStr = date_arr[i];
+            // String dateStr = date_arr[i];
 
 
             TdxFunResultDTO dto = new TdxFunResultDTO();
@@ -624,6 +663,13 @@ public class TdxFunCheck {
             dto.setMA50(of(MA50[i]));
             dto.setMA100(of(MA100[i]));
             dto.setMA200(of(MA200[i]));
+
+
+            dto.setRPS10(of(rps10_arr[i]));
+            dto.setRPS20(of(rps20_arr[i]));
+            dto.setRPS50(of(rps50_arr[i]));
+            dto.setRPS120(of(rps120_arr[i]));
+            dto.setRPS250(of(rps250_arr[i]));
 
 
             dto.setMACD(MACD[i]);
@@ -814,6 +860,14 @@ public class TdxFunCheck {
         dto.setMA200(row.getDouble("MA200"));
 
 
+        // ------- RPS
+        dto.setRPS10(row.getDouble("RPS10"));
+        dto.setRPS20(row.getDouble("RPS20"));
+        dto.setRPS50(row.getDouble("RPS50"));
+        dto.setRPS120(row.getDouble("RPS120"));
+        dto.setRPS250(row.getDouble("RPS250"));
+
+
         // ------- MACD
         dto.setMACD(row.getDouble("MACD"));
         dto.setDIF(row.getDouble("DIF"));
@@ -958,6 +1012,14 @@ public class TdxFunCheck {
         private Double MA50;
         private Double MA100;
         private Double MA200;
+
+
+        // RPS
+        private Double RPS10;
+        private Double RPS20;
+        private Double RPS50;
+        private Double RPS120;
+        private Double RPS250;
 
 
         // MACD

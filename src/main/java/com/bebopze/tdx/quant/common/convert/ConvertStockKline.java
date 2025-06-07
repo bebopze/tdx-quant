@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 
@@ -183,6 +184,34 @@ public class ConvertStockKline {
     }
 
 
+    @SneakyThrows
+    public static TreeMap<String, Double> fieldDateValMap(List<KlineDTO> klineDTOList,
+                                                          String fieldName) {
+
+
+        int size = klineDTOList.size();
+
+
+        // 一次性查找 Field，并设置可访问
+        Field kField = FieldUtils.getDeclaredField(KlineDTO.class, "date", true);
+        Field vField = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+
+
+        // 遍历 取值
+        TreeMap<String, Double> map = new TreeMap<>();
+        for (int i = 0; i < size; i++) {
+            KlineDTO dto = klineDTOList.get(i);
+
+
+            String key = (String) kField.get(dto);
+            double value = ((Number) vField.get(dto)).doubleValue();
+
+            map.put(key, value);
+        }
+
+        return map;
+    }
+
 //    @SneakyThrows
 //    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
 //
@@ -283,4 +312,6 @@ public class ConvertStockKline {
 //        KlineDTO klineDTO = str2DTO(kline);
 //        System.out.println(klineDTO);
     }
+
+
 }

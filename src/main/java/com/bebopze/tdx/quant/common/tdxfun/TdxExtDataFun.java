@@ -233,9 +233,39 @@ public class TdxExtDataFun {
                                                    int N) {
 
 
+//        Map<String, TreeMap<String, Double>> stockPriceMap = Maps.newHashMap();
+
+
         // 1. 为每个股票构建：Map<日期, N日涨幅>，并同时收集所有“有效涨幅”的日期
         Map<String, TreeMap<String, Double>> returnsMap = new HashMap<>();
         Set<String> allDates = new TreeSet<>();  // 按自然升序保存所有出现过的涨幅日期
+
+
+//        TreeMap<String, Double> datePctMap = new TreeMap<>();
+//
+//
+//        stockPriceMap.forEach((code, dateCloseMap) -> {
+//
+//
+//            int size = dateCloseMap.size();
+//            double prev = Double.NaN;
+//            if (size > N) {
+//
+//                for (Map.Entry<String, Double> entry : dateCloseMap.entrySet()) {
+//                    String date = entry.getKey();
+//                    Double close = entry.getValue();
+//
+//
+//                    if (!Double.isNaN(prev)) {
+//                        double pct = (close / prev - 1.0) * 100.0;
+//                        datePctMap.put(date, pct);
+//                        allDates.add(date);
+//                    }
+//                    prev = close;
+//                    returnsMap.put(code, datePctMap);
+//                }
+//            }
+//        });
 
         for (String code : stockDateArrMap.keySet()) {
             String[] dates = stockDateArrMap.get(code);

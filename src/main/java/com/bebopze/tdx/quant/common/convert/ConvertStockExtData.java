@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
@@ -176,7 +175,7 @@ public class ConvertStockExtData {
      * 反射取值
      *
      * @param dtoList
-     * @param fieldName KlineDTO 的 字段名
+     * @param fieldName ExtDataDTO 的 字段名
      * @return
      */
     @SneakyThrows
@@ -187,7 +186,7 @@ public class ConvertStockExtData {
 
 
         // 一次性查找 Field，并设置可访问
-        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+        Field field = FieldUtils.getDeclaredField(ExtDataDTO.class, fieldName, true);
 
 
         // 遍历 取值
@@ -227,7 +226,7 @@ public class ConvertStockExtData {
 
 
         // 一次性查找 Field，并设置可访问
-        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
+        Field field = FieldUtils.getDeclaredField(ExtDataDTO.class, fieldName, true);
 
 
         // 遍历 取值

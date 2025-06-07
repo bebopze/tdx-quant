@@ -302,7 +302,7 @@ public class LdayParser {
                 }
 
                 List<Integer> unUsedList = byteList.subList(28, 32);
-                log.warn("保留字段     >>>     unUsed : {} , unUsedList : {}", unUsed, unUsedList);
+                log.debug("保留字段     >>>     unUsed : {} , unUsedList : {}", unUsed, unUsedList);
             }
 
 
@@ -339,7 +339,7 @@ public class LdayParser {
 
 
             // 振幅       H/L   x100-100
-            float rangePct = high / low * 100 - 100;
+            float rangePct = (high / low - 1) * 100;
 
 
             // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};

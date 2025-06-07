@@ -130,11 +130,11 @@ public class StockFun {
         double[] amo_arr = ConvertStockKline.fieldValArr(klineDTOList, "amo");
 
 
-        double[] rps10_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS10");
-        double[] rps20_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS20");
-        double[] rps50_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS50");
-        double[] rps120_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS120");
-        double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "RPS250");
+        double[] rps10_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps10");
+        double[] rps20_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps20");
+        double[] rps50_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps50");
+        double[] rps120_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps120");
+        double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps250");
 
 
         // TODO   RPS（预计算） -> DB获取

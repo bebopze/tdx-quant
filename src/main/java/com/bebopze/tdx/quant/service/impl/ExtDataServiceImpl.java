@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 
@@ -41,6 +42,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         // 预加载 行情数据
 
 
+        Map<String, TreeMap<String, Double>> stockPriceMap = Maps.newHashMap();
+
         // code - date_arr
         Map<String, String[]> stockDateArrMap = Maps.newHashMap();
         // code - close_arr
@@ -55,7 +58,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 加载 -> 解析数据
-        loadAllStockKline(stockCloseArrMap, stockDateArrMap, codeIdMap);
+        loadAllStockKline(stockCloseArrMap, stockDateArrMap, stockPriceMap, codeIdMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -96,7 +99,6 @@ public class ExtDataServiceImpl implements ExtDataService {
                 // 日期,RPS10,RPS20,RPS50,RPS120,RPS250
 
                 // 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
-
                 List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
 
 
@@ -134,6 +136,7 @@ public class ExtDataServiceImpl implements ExtDataService {
      */
     private void loadAllStockKline(Map<String, double[]> stockCloseArrMap,
                                    Map<String, String[]> stockDateArrMap,
+                                   Map<String, TreeMap<String, Double>> stockPriceMap,
                                    Map<String, Long> codeIdMap) {
 
 
@@ -153,15 +156,19 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
             String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
 
+            TreeMap<String, Double> dateCloseMap = ConvertStockKline.fieldDateValMap(e.getKlineDTOList(), "close");
 
-            // 上市1年
-            if (close_arr.length > 200) {
 
+            // 上市50天
+            if (close_arr.length >= 50) {
 
                 stockCloseArrMap.put(stockCode, close_arr);
                 stockDateArrMap.put(stockCode, date_arr);
 
                 codeIdMap.put(stockCode, stockId);
+
+
+                stockPriceMap.put(stockCode, dateCloseMap);
             }
         });
     }
