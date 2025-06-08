@@ -16,6 +16,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,10 +36,11 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
  */
 @Slf4j
 @Data
+@NoArgsConstructor
 public class StockFun {
 
-    String stockCode;
-    String stockName;
+    String code;
+    String name;
 
 
     // 实时行情  -  买5/卖5
@@ -77,7 +79,7 @@ public class StockFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public StockFun(String stockCode, BaseStockDO baseStockDO) {
+    public StockFun(String code, BaseStockDO baseStockDO) {
 
 
         // limit = limit == null ? 500 : limit;
@@ -137,19 +139,11 @@ public class StockFun {
         double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps250");
 
 
-        // TODO   RPS（预计算） -> DB获取
-
-
-//        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
-//        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
-//        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
-
-
         // --------------------------- init data
 
 
-        this.stockCode = stockCode;
-        this.stockName = stockName;
+        this.code = code;
+        this.name = stockName;
 
 
         this.shszQuoteSnapshotResp = null;
@@ -177,10 +171,10 @@ public class StockFun {
     }
 
 
-    public StockFun(String stockCode) {
+    public StockFun(String code) {
 
         // 个股
-        initData(stockCode, null);
+        initData(code, null);
     }
 
 
@@ -239,8 +233,8 @@ public class StockFun {
         // --------------------------- init data
 
 
-        this.stockCode = stockCode;
-        this.stockName = stockName;
+        this.code = stockCode;
+        this.name = stockName;
 
 
         this.shszQuoteSnapshotResp = shszQuoteSnapshotResp;

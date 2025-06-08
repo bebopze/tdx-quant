@@ -25,11 +25,11 @@ public class ExtDataDTO implements Serializable {
 
 
     // ---------------------------------------------------
-    private double rps10;
-    private double rps20;
-    private double rps50;
-    private double rps120;
-    private double rps250;
+    private double rps10;  // -> 板块 rps5
+    private double rps20;  // -> 板块 rps10
+    private double rps50;  // -> 板块 rps15
+    private double rps120; // -> 板块 rps20
+    private double rps250; // -> 板块 rps50
 
 
     // ---------------------------------------------------

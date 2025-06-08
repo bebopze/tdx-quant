@@ -6,8 +6,11 @@ import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
+import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
@@ -111,13 +114,15 @@ public class TdxFunCheck {
 
         // 起始日期
         LocalDate dateLine = tdx__rowList.get(0).getDate();
+        // LocalDate dateLine = LocalDate.of(2015, 1, 1);
+        // tdx__rowList = tdx__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
         java__rowList = java__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
 
 
         // ----------
 
 
-        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "RPS", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
+        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "RPS", "板块RPS", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
         Map<String, Integer> failCountMap = Maps.newHashMap();
 
 
@@ -241,6 +246,16 @@ public class TdxFunCheck {
 
                 failCountMap.compute("RPS", (k, v) -> (v == null ? 1 : v + 1));
             }
+            // 板块RPS     ->     SUC
+            if (date.isAfter(LocalDate.of(2015, 1, 1)) && dto1.getBK_RPS50() != null && dto1.getBK_RPS50() > 0
+                    && !(equals(dto1.getBK_RPS5(), dto2.getBK_RPS5(), rpx_diff * 5, rpx_precision)
+                    && equals(dto1.getBK_RPS10(), dto2.getBK_RPS10(), rpx_diff * 5, rpx_precision)
+                    && equals(dto1.getBK_RPS15(), dto2.getBK_RPS15(), rpx_diff * 5, rpx_precision)
+                    && equals(dto1.getBK_RPS20(), dto2.getBK_RPS20(), rpx_diff * 5, rpx_precision)
+                    && equals(dto1.getBK_RPS50(), dto2.getBK_RPS50(), rpx_diff * 5, rpx_precision))) {
+
+                failCountMap.compute("板块RPS", (k, v) -> (v == null ? 1 : v + 1));
+            }
 
 
             // MACD     ->     SUC
@@ -339,10 +354,11 @@ public class TdxFunCheck {
         Set<String> failSet = Sets.newHashSet(failCountMap.keySet());
 
 
+        int total = tdx__rowList.size();
         failCountMap.forEach((k, count) -> {
 
             // 百分比（%）
-            double failPct = (double) count / tdx__rowList.size() * 100;
+            double failPct = (double) count / total * 100;
             failPctMap.put(k, of(failPct) + "%");
 
 
@@ -380,7 +396,7 @@ public class TdxFunCheck {
                 double rps_val = Double.parseDouble(v1.toString());
                 if (rps_val == 0) continue;
 
-                dif = 0.15;
+                dif = key.contains("BK_RPS") ? 0.5 : 0.15;
                 precision = 0.025;
             }
 
@@ -523,16 +539,29 @@ public class TdxFunCheck {
         BaseStockDO stockDO = mapper.getByCode(stockCode);
 
 
-        StockFun fun = new StockFun(stockCode, stockDO);
-        String[] date_arr = fun.getDate_arr();
-        double[] close_arr = fun.getClose_arr();
-        double[] ssf_arr = fun.getSsf_arr();
+        BaseBlockMapper blockMapper = MybatisPlusUtil.getMapper(BaseBlockMapper.class);
+        String blockCode = "880493";
+        BaseBlockDO blockDO = blockMapper.getByCode(blockCode);
 
+        BlockFun blockFun = new BlockFun(blockCode, blockDO);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        StockFun fun = new StockFun(stockCode, stockDO);
+
+
+        String[] date_arr = fun.getDate_arr();
 
         double[] open_arr = fun.getOpen_arr();
         double[] high_arr = fun.getHigh_arr();
         double[] low_arr = fun.getLow_arr();
+        double[] close_arr = fun.getClose_arr();
         long[] vol_arr = fun.getVol_arr();
+
+
+        double[] ssf_arr = fun.getSsf_arr();
 
 
         double[] rps10_arr = fun.getRps10_arr();
@@ -541,8 +570,14 @@ public class TdxFunCheck {
         double[] rps120_arr = fun.getRps120_arr();
         double[] rps250_arr = fun.getRps250_arr();
 
+        double[] bk_rps5_arr = blockFun.getRps10_arr();
+        double[] bk_rps10_arr = blockFun.getRps20_arr();
+        double[] bk_rps15_arr = blockFun.getRps50_arr();
+        double[] bk_rps20_arr = blockFun.getRps120_arr();
+        double[] bk_rps50_arr = blockFun.getRps250_arr();
 
-        // 周K
+
+        // 日K
         List<KlineBar> dayList = Lists.newArrayList();
         for (int i = 0; i < date_arr.length; i++) {
             KlineBar dto = new KlineBar(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
@@ -612,6 +647,25 @@ public class TdxFunCheck {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        String[] block_date_arr = blockFun.getDate_arr();
+
+        LocalDate stock_startDate = DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[0]);
+        LocalDate block_startDate = DateTimeUtil.parseDate_yyyy_MM_dd(block_date_arr[0]);
+
+
+        int diffDays = 0;
+        if (stock_startDate.isBefore(block_startDate)) {
+            diffDays = -1 * Arrays.asList(date_arr).indexOf(block_date_arr[0]);
+        } else {
+            diffDays = Arrays.asList(block_date_arr).indexOf(date_arr[0]);
+        }
+
+        List<String> block_date_list = Arrays.asList(block_date_arr);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         for (int i = 0; i < date_arr.length; i++) {
             // String dateStr = date_arr[i];
 
@@ -668,6 +722,22 @@ public class TdxFunCheck {
             dto.setRPS50(of(rps50_arr[i]));
             dto.setRPS120(of(rps120_arr[i]));
             dto.setRPS250(of(rps250_arr[i]));
+
+            // 板块RPS
+            int bk_idx = i + diffDays;
+            if (bk_idx >= 0) {
+
+                String stock_date = date_arr[i];
+                bk_idx = block_date_list.indexOf(stock_date);
+
+                if (bk_idx != -1) {
+                    dto.setBK_RPS5(of(bk_rps5_arr[bk_idx]));
+                    dto.setBK_RPS10(of(bk_rps10_arr[bk_idx]));
+                    dto.setBK_RPS15(of(bk_rps15_arr[bk_idx]));
+                    dto.setBK_RPS20(of(bk_rps20_arr[bk_idx]));
+                    dto.setBK_RPS50(of(bk_rps50_arr[bk_idx]));
+                }
+            }
 
 
             dto.setMACD(MACD[i]);
@@ -865,6 +935,12 @@ public class TdxFunCheck {
         dto.setRPS120(row.getDouble("RPS120"));
         dto.setRPS250(row.getDouble("RPS250"));
 
+        dto.setBK_RPS5(row.getDouble("板块RPS5"));
+        dto.setBK_RPS10(row.getDouble("板块RPS10"));
+        dto.setBK_RPS15(row.getDouble("板块RPS15"));
+        dto.setBK_RPS20(row.getDouble("板块RPS20"));
+        dto.setBK_RPS50(row.getDouble("板块RPS50"));
+
 
         // ------- MACD
         dto.setMACD(row.getDouble("MACD"));
@@ -1018,6 +1094,13 @@ public class TdxFunCheck {
         private Double RPS50;
         private Double RPS120;
         private Double RPS250;
+
+        // 板块RPS
+        private Double BK_RPS5;
+        private Double BK_RPS10;
+        private Double BK_RPS15;
+        private Double BK_RPS20;
+        private Double BK_RPS50;
 
 
         // MACD
