@@ -31,5 +31,10 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
     List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList);
 
 
+    /**
+     * 细分行业 + 概念板块
+     *
+     * @return
+     */
     List<BaseBlockDO> listAllKline();
 }

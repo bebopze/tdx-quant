@@ -4,6 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +18,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <p>
@@ -116,13 +123,6 @@ public class BaseBlockDO implements Serializable {
     private BigDecimal close;
 
     /**
-     * 复权后收盘价（可选）
-     */
-    @TableField("adj_close")
-    @Schema(description = "复权后收盘价（可选）")
-    private BigDecimal adjClose;
-
-    /**
      * 成交量
      */
     @TableField("volume")
@@ -160,9 +160,18 @@ public class BaseBlockDO implements Serializable {
     /**
      * 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
+    @JsonIgnore
     @TableField(value = "kline_his", select = false)
     @Schema(description = "历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
+
+    /**
+     * 扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）
+     */
+    @JsonIgnore
+    @TableField(value = "ext_data_his", select = false)
+    @Schema(description = "扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）")
+    private String extDataHis;
 
     /**
      * 创建时间
@@ -179,13 +188,23 @@ public class BaseBlockDO implements Serializable {
     private LocalDateTime gmtModify;
 
 
-//    // -----------------------------------------------------------------------------------------------------------------
-//
-//
-//    /**
-//     * 父级 - 板块代码
-//     */
-//    @TableField(value = "p_code", exist = false)
-//    @Schema(description = "父级 - 板块代码")
-//    private transient String pCode;
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public List<KlineDTO> getKlineDTOList() {
+        if (klineHis == null) {
+            return Collections.emptyList();
+        }
+        return ConvertStockKline.str2DTOList(klineHis);
+    }
+
+
+    public List<ExtDataDTO> getExtDataDTOList() {
+        if (extDataHis == null) {
+            return Collections.emptyList();
+        }
+        return ConvertStockExtData.extDataHis2DTOList(extDataHis);
+    }
+
+
 }

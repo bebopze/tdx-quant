@@ -1106,7 +1106,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情   -   last kline
-        KlineDTO lastKlineDTO = ConvertStockKline.klines2DTOList(klines.get(klines.size() - 1));
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 1));
 
         entity.setTradeDate(lastKlineDTO.getDate());
 

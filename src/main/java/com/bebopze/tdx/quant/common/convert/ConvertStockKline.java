@@ -15,47 +15,15 @@ import java.util.stream.Collectors;
 
 
 /**
+ * kline_his   ->   dtoList
+ *
  * @author: bebopze
  * @date: 2025/5/15
  */
 public class ConvertStockKline {
 
 
-//    public static String dto2Str(List<KlineDTO> dtoList) {
-//
-//        List<String[]> arrList = dtoList.stream().map(dto -> {
-//            return dto2Str(dto);
-//        }).collect(Collectors.toList());
-//
-//        return JSON.toJSONString(arrList);
-//    }
-//
-//
-//    public static String[] dto2Str(KlineDTO dto) {
-//
-//
-//        // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
-//        // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
-//
-//        String[] arr = new String[11];
-//
-//        arr[0] = dto.getDate().toString();
-//        arr[1] = dto.getOpen().toString();
-//        arr[2] = dto.getClose().toString();
-//        arr[3] = dto.getHigh().toString();
-//        arr[4] = dto.getLow().toString();
-//        arr[5] = dto.getVol().toString();
-//        arr[6] = dto.getAmo().toString();
-//        arr[7] = dto.getRange_pct().toString();
-//        arr[8] = dto.getChange_pct().toString();
-//        arr[9] = dto.getChange_price().toString();
-//        arr[10] = dto.getTurnover_pct().toString();
-//
-//        return arr;
-//    }
-
-
-    public static KlineDTO klines2DTOList(String kline) {
+    public static KlineDTO kline2DTO(String kline) {
 
 
         // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
@@ -126,7 +94,7 @@ public class ConvertStockKline {
         if (CollectionUtils.isEmpty(klines)) {
             return Collections.emptyList();
         }
-        return klines.stream().map(ConvertStockKline::klines2DTOList).collect(Collectors.toList());
+        return klines.stream().map(ConvertStockKline::kline2DTO).collect(Collectors.toList());
     }
 
 
@@ -185,8 +153,8 @@ public class ConvertStockKline {
 
 
     @SneakyThrows
-    public static TreeMap<String, Double> fieldDateValMap(List<KlineDTO> klineDTOList,
-                                                          String fieldName) {
+    public static TreeMap<String, Double> fieldDatePriceMap(List<KlineDTO> klineDTOList,
+                                                            String fieldName) {
 
 
         int size = klineDTOList.size();

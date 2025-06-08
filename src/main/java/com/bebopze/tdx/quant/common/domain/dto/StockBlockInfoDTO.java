@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.dto;
 
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import lombok.Data;
 
@@ -30,7 +29,7 @@ public class StockBlockInfoDTO implements Serializable {
     public static class BlockTypeDTO implements Serializable {
 
 
-        List<BlockDTO> blockDTOList;
+        private List<BlockDTO> blockDTOList;
 
 
         /**

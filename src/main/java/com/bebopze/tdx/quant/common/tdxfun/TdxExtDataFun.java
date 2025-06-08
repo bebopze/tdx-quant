@@ -223,13 +223,13 @@ public class TdxExtDataFun {
     /**
      * 计算全市场个股的 N 日 RPS 序列。
      *
-     * @param N                N 日涨幅周期
-     * @param stockDateArrMap  Map<股票代码, String[] 日期序列>，日期按升序排列
-     * @param stockCloseArrMap Map<股票代码, double[] 收盘价序列>，与日期数组一一对应
-     * @return Map<股票代码, double [ ]>     double[] 与该股日期序列长度一致，若无 RPS 则为 NaN
+     * @param N            N 日涨幅周期
+     * @param codeDateMap  Map<股票代码, String[] 日期序列>，日期按升序排列
+     * @param codeCloseMap Map<股票代码, double[] 收盘价序列>，与日期数组一一对应
+     * @return Map<股票代码, double [ ]>            double[] 与该股日期序列长度一致，若无 RPS 则为 NaN
      */
-    public static Map<String, double[]> computeRPS(Map<String, String[]> stockDateArrMap,
-                                                   Map<String, double[]> stockCloseArrMap,
+    public static Map<String, double[]> computeRPS(Map<String, String[]> codeDateMap,
+                                                   Map<String, double[]> codeCloseMap,
                                                    int N) {
 
 
@@ -267,9 +267,9 @@ public class TdxExtDataFun {
 //            }
 //        });
 
-        for (String code : stockDateArrMap.keySet()) {
-            String[] dates = stockDateArrMap.get(code);
-            double[] closes = stockCloseArrMap.get(code);
+        for (String code : codeDateMap.keySet()) {
+            String[] dates = codeDateMap.get(code);
+            double[] closes = codeCloseMap.get(code);
             TreeMap<String, Double> codeReturns = new TreeMap<>();
 
             if (dates.length > N) {
@@ -290,8 +290,8 @@ public class TdxExtDataFun {
         Map<String, double[]> rpsResult = new HashMap<>();
         Map<String, Map<String, Integer>> dateIndexMap = new HashMap<>();
 
-        for (String code : stockDateArrMap.keySet()) {
-            String[] dates = stockDateArrMap.get(code);
+        for (String code : codeDateMap.keySet()) {
+            String[] dates = codeDateMap.get(code);
             int len = dates.length;
             double[] rpsArr = new double[len];
             Arrays.fill(rpsArr, Double.NaN);

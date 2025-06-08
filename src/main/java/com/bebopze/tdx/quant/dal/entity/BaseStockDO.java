@@ -103,13 +103,6 @@ public class BaseStockDO implements Serializable {
     private BigDecimal close;
 
     /**
-     * 复权后收盘价（可选）
-     */
-    @TableField("adj_close")
-    @Schema(description = "复权后收盘价（可选）")
-    private BigDecimal adjClose;
-
-    /**
      * 成交量
      */
     @TableField("volume")
@@ -153,11 +146,11 @@ public class BaseStockDO implements Serializable {
     private String klineHis;
 
     /**
-     * 扩展数据 指标-JSON（[]）
+     * 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
      */
     @JsonIgnore
     @TableField(value = "ext_data_his", select = false)
-    @Schema(description = "扩展数据 指标-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
+    @Schema(description = "扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
     private String extDataHis;
 
     /**
@@ -191,64 +184,6 @@ public class BaseStockDO implements Serializable {
             return Collections.emptyList();
         }
         return ConvertStockExtData.extDataHis2DTOList(extDataHis);
-    }
-
-
-//    @JsonIgnore
-//    public String getKlineHis() {
-//        return klineHis;
-//    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    public static void main(String[] args) {
-        getRps2();
-    }
-
-    public static ExtDataDTO getRps2() {
-        String rps = "{\n" +
-                "  \"rps10\": [\n" +
-                "    31.04426,\n" +
-                "    31.13828,\n" +
-                "    31.2699\n" +
-                "  ],\n" +
-                "  \"rps20\": [\n" +
-                "    31.04426,\n" +
-                "    31.13828,\n" +
-                "    31.2699\n" +
-                "  ],\n" +
-                "  \"rps50\": [\n" +
-                "    31.04426,\n" +
-                "    31.13828,\n" +
-                "    31.2699\n" +
-                "  ],\n" +
-                "  \"rps120\": [\n" +
-                "    31.04426,\n" +
-                "    31.13828,\n" +
-                "    31.2699\n" +
-                "  ],\n" +
-                "  \"rps250\": [\n" +
-                "    31.04426,\n" +
-                "    31.13828,\n" +
-                "    31.2699\n" +
-                "  ]\n" +
-                "}";
-
-
-        ExtDataDTO rpsDTO = JSON.parseObject(rps, ExtDataDTO.class);
-
-        Object[] date = ConvertStockExtData.objFieldValArr(rps, "date");
-        double[] rps10 = ConvertStockExtData.fieldValArr(rps, "rps10");
-        double[] rps20 = ConvertStockExtData.fieldValArr(rps, "rps20");
-        double[] rps50 = ConvertStockExtData.fieldValArr(rps, "rps50");
-        double[] rps120 = ConvertStockExtData.fieldValArr(rps, "rps120");
-        double[] rps250 = ConvertStockExtData.fieldValArr(rps, "rps250");
-
-
-        System.out.println(JSON.toJSONString(rpsDTO));
-        return rpsDTO;
     }
 
 

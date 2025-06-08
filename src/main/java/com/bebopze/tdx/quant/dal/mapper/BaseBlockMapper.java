@@ -24,6 +24,12 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
     List<BaseBlockDO> listAllSimple();
 
+
+    /**
+     * 细分行业 + 概念板块
+     *
+     * @return
+     */
     List<BaseBlockDO> listAllKline();
 
 
