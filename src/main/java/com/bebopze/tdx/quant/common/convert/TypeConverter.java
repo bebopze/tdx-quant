@@ -1,13 +1,14 @@
 package com.bebopze.tdx.quant.common.convert;
 
-
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Date;
+import java.util.Objects;
+
 
 /**
+ * 类型转换
+ *
  * @author: bebopze
  * @date: 2025/5/23
  */
@@ -15,7 +16,9 @@ public class TypeConverter {
 
 
     public static Object convert(Object value, Class<?> targetType) {
-        if (value == null) return null;
+        if (value == null || (Objects.equals("", value) && targetType != String.class)) {
+            return null;
+        }
 
 
         if (targetType.isAssignableFrom(value.getClass())) {

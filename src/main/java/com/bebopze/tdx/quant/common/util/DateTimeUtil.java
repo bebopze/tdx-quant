@@ -151,4 +151,20 @@ public class DateTimeUtil {
     }
 
 
+    public static LocalDate min(LocalDate date1, LocalDate date2) {
+        if (date1 == null || date2 == null) {
+            throw new IllegalArgumentException("日期不能为空");
+        }
+        return date1.isBefore(date2) ? date1 : date2;
+    }
+
+
+    public static LocalDate max(LocalDate date1, LocalDate date2) {
+        if (date1 == null || date2 == null) {
+            throw new IllegalArgumentException("日期不能为空");
+        }
+        return date1.isAfter(date2) ? date1 : date2;
+    }
+
+
 }

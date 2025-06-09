@@ -1,9 +1,12 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -144,13 +147,19 @@ public class ExtDataServiceImpl implements ExtDataService {
             String code = e.getCode();
 
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
+            List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList();
 
 
-            LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
-            double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+            KlineArrDTO klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
+            ExtDataArrDTO extDataArrDTO = ConvertStock.dtoList2Arr2(extDataDTOList);
 
 
-            TreeMap<LocalDate, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(klineDTOList, "close");
+            LocalDate[] date_arr = klineArrDTO.date;
+            double[] close_arr = klineArrDTO.close;
+
+
+            // TreeMap<LocalDate, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(klineDTOList, "close");
+            TreeMap<LocalDate, Double> dateCloseMap = klineArrDTO.getDateCloseMap();
 
 
             data.codeDateMap.put(code, date_arr);
@@ -230,28 +239,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
 
 
-//        long start = System.currentTimeMillis();
-//
-//
-//        // 计算 -> RPS
-//        List<Integer> periods = Lists.newArrayList(10, 20, 50, 120, 250);
-//
-//
-//        Map<Integer, Map<String, double[]>> resultMap = Maps.newConcurrentMap();
-//        periods.parallelStream().forEach(N -> {
-//            Map<String, double[]> RPS_N = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, N);
-//            resultMap.put(N, RPS_N);
-//        });
-//        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
-//
-//
-//        Map<String, double[]> RPS10 = resultMap.get(10);
-//        Map<String, double[]> RPS20 = resultMap.get(20);
-//        Map<String, double[]> RPS50 = resultMap.get(50);
-//        Map<String, double[]> RPS120 = resultMap.get(120);
-//        Map<String, double[]> RPS250 = resultMap.get(250);
-
-
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -261,6 +248,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         data.codeDateMap.keySet().parallelStream().forEach(code -> {
             LocalDate[] date_arr = data.codeDateMap.get(code);
 
+            int length = date_arr.length;
+
 
             double[] rps10_arr = RPS10.get(code);
             double[] rps20_arr = RPS20.get(code);
@@ -269,20 +258,8 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250_arr = RPS250.get(code);
 
 
-            // List<String> extDatas = Lists.newArrayList();
-            List<ExtDataDTO> dtoList = Collections.synchronizedList(Lists.newArrayList());
-            for (int i = 0; i < date_arr.length; i++) {
-
-                // 2025-05-13,91,92,93,94,95
-                // 日期,RPS10,RPS20,RPS50,RPS120,RPS250
-
-                // 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
-                // List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
-
-
-                // String extDataStr = extData.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-                // extDatas.add(extDataStr);
-
+            List<ExtDataDTO> dtoList = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
 
                 ExtDataDTO dto = new ExtDataDTO();
                 dto.setDate(date_arr[i]);
@@ -297,13 +274,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             data.extDataMap.put(code, dtoList);
-
-
-            // BaseStockDO stockDO = new BaseStockDO();
-            // stockDO.setId(data.codeIdMap.get(code));
-            // stockDO.setExtDataHis(JSON.toJSONString(extDatas));
-
-            // baseStockService.updateById(stockDO);
         });
     }
 
@@ -324,8 +294,14 @@ public class ExtDataServiceImpl implements ExtDataService {
             // --------------------------------------------------------
 
 
+            long start = System.currentTimeMillis();
+
+
             // 计算 -> 指标
             StockFun fun = new StockFun(code, stockDO);
+
+
+            double[] SSF = fun.SSF();
 
 
             boolean[] SSF多 = fun.SSF多();
@@ -341,11 +317,17 @@ public class ExtDataServiceImpl implements ExtDataService {
             boolean[] RPS三线红 = fun.RPS三线红(80);
 
 
+            log.info("stockFun 指标计算 - 个股     >>>     code : {} , totalTime : {}", code, DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+
+
             // --------------------------------------------------------
 
 
             for (int i = 0; i < dtoList.size(); i++) {
                 ExtDataDTO dto = dtoList.get(i);
+
+
+                dto.setSSF(of(SSF[i], 3));
 
 
                 dto.setSSF多(SSF多[i]);
@@ -391,6 +373,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         data.codeDateMap.keySet().parallelStream().forEach(code -> {
             LocalDate[] date_arr = data.codeDateMap.get(code);
 
+            int length = date_arr.length;
+
 
             double[] rps10_arr = RPS5.get(code);
             double[] rps20_arr = RPS10.get(code);
@@ -399,9 +383,8 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250_arr = RPS50.get(code);
 
 
-            List<ExtDataDTO> dtoList = Collections.synchronizedList(Lists.newArrayList());
-            for (int i = 0; i < date_arr.length; i++) {
-
+            List<ExtDataDTO> dtoList = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
 
                 ExtDataDTO dto = new ExtDataDTO();
                 dto.setDate(date_arr[i]);
@@ -412,8 +395,6 @@ public class ExtDataServiceImpl implements ExtDataService {
                 dto.setRps250(of(rps250_arr[i]));
 
                 dtoList.add(dto);
-
-
             }
 
 
@@ -441,6 +422,9 @@ public class ExtDataServiceImpl implements ExtDataService {
             BlockFun fun = new BlockFun(code, blockDO);
 
 
+            double[] SSF = fun.SSF();
+
+
             boolean[] SSF多 = fun.SSF多();
 
 
@@ -459,6 +443,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
             for (int i = 0; i < dtoList.size(); i++) {
                 ExtDataDTO dto = dtoList.get(i);
+
+
+                dto.setSSF(of(SSF[i], 3));
 
 
                 dto.setSSF多(SSF多[i]);
@@ -524,11 +511,11 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
 
-    private static Number of(Number val) {
+    private static double of(Number val, int setScale) {
         if (Double.isNaN(val.doubleValue())) {
-            return val;
+            return Double.NaN;
         }
-        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+        return new BigDecimal(String.valueOf(val)).setScale(setScale, RoundingMode.HALF_UP).doubleValue();
     }
 
 
@@ -537,11 +524,17 @@ public class ExtDataServiceImpl implements ExtDataService {
         return val.setScale(3, RoundingMode.HALF_UP).doubleValue();
     }
 
+
     private static double of(double val) {
+        return of(val, 2);
+    }
+
+    private static double of(double val, int setScale) {
         if (Double.isNaN(val)) {
             return val;
         }
-        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP).doubleValue();
+        return BigDecimal.valueOf(val).setScale(setScale, RoundingMode.HALF_UP).doubleValue();
     }
+
 
 }

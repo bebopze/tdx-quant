@@ -31,4 +31,7 @@ public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockD
     List<BaseBlockDO> listBlockByStockCodeList(List<String> stockCodeList);
 
     List<BaseStockDO> listStockByBlockCodeList(List<String> blockCodeList);
+
+
+    List<BaseBlockRelaStockDO> listAll();
 }

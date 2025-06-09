@@ -95,7 +95,12 @@ public class ConvertStockExtData {
             // 自动类型转换
             Object convertVal = null;
             if (i <= row_len - 1) {
-                convertVal = TypeConverter.convert(row_arr[i], field.getType());
+                try {
+                    convertVal = TypeConverter.convert(row_arr[i], field.getType());
+                } catch (Exception e) {
+                    log.error("convert err     >>>     idx : {} , row : {} , fieldType : {} , convertVal : {} , exMsg : {}",
+                              i, row_arr[i], field.getType(), convertVal, e.getMessage(), e);
+                }
             }
 
 
@@ -108,7 +113,18 @@ public class ConvertStockExtData {
     }
 
 
-    public static List<ExtDataDTO> str2DTO(List<String> extDataList) {
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                              kline -> DTO
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static List<ExtDataDTO> strList2DTOList(List<String> extDataList) {
         if (CollectionUtils.isEmpty(extDataList)) {
             return null;
         }
@@ -123,21 +139,21 @@ public class ConvertStockExtData {
      * @param limit       最近N日
      * @return
      */
-    public static List<ExtDataDTO> str2DTO(List<String> extDataList, int limit) {
+    public static List<ExtDataDTO> strList2DTOList(List<String> extDataList, int limit) {
 
         int size = extDataList.size();
         if (size > limit) {
             List<String> subList = extDataList.subList(size - limit, size);
-            return str2DTO(subList);
+            return strList2DTOList(subList);
         }
 
-        return str2DTO(extDataList);
+        return strList2DTOList(extDataList);
     }
 
 
     public static List<ExtDataDTO> extDataHis2DTOList(String extDataHis) {
         List<String> klineList = JSON.parseArray(extDataHis, String.class);
-        List<ExtDataDTO> dtoList = ConvertStockExtData.str2DTO(klineList);
+        List<ExtDataDTO> dtoList = ConvertStockExtData.strList2DTOList(klineList);
         return dtoList;
     }
 
@@ -237,6 +253,14 @@ public class ConvertStockExtData {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                              DTO -> kline
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static String dtoList2JsonStr(List<ExtDataDTO> dtoList) {
         List<String> strList = dtoList2StrList(dtoList);
         return JSON.toJSONString(strList);
@@ -290,7 +314,7 @@ public class ConvertStockExtData {
 
 
         List<String> list = Lists.newArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9");
-        str2DTO(list, 10);
+        strList2DTOList(list, 10);
 
 
         String extData = "2025-05-23,10,20,50,120,250";

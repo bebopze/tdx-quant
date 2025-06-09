@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -1002,7 +1004,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             long r1 = time / countVal;
-            long r2 = countVal * 1000 / time;
+            long r2 = countVal * 1000L / time;
             String r3 = String.format("%s次 - %ss", countVal, time / 1000);
 
 
@@ -1110,23 +1112,24 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         entity.setTradeDate(lastKlineDTO.getDate());
 
-        entity.setOpen(lastKlineDTO.getOpen());
-        entity.setClose(lastKlineDTO.getClose());
-        entity.setHigh(lastKlineDTO.getHigh());
-        entity.setLow(lastKlineDTO.getLow());
+        entity.setOpen(of(lastKlineDTO.getOpen()));
+        entity.setClose(of(lastKlineDTO.getClose()));
+        entity.setHigh(of(lastKlineDTO.getHigh()));
+        entity.setLow(of(lastKlineDTO.getLow()));
 
         entity.setVolume(lastKlineDTO.getVol());
-        entity.setAmount(lastKlineDTO.getAmo());
+        entity.setAmount(of(lastKlineDTO.getAmo()));
 
-        entity.setRangePct(lastKlineDTO.getRange_pct());
-        entity.setChangePct(lastKlineDTO.getChange_pct());
-        entity.setTurnoverPct(lastKlineDTO.getTurnover_pct());
+        entity.setRangePct(of(lastKlineDTO.getRange_pct()));
+        entity.setChangePct(of(lastKlineDTO.getChange_pct()));
+        entity.setTurnoverPct(of(lastKlineDTO.getTurnover_pct()));
 
 
         // --------------------- DB
 
         iBaseStockService.updateById(entity);
     }
+
 
     private List<String> klinesFromTdx(String stockCode) {
 
@@ -1156,45 +1159,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    @Override
-    @Deprecated
-    public void xgcz() {
-
-
-        // 60日新高
-        String filePath_60rxg = TDX_PATH + "/T0002/blocknew/60rxg.blk";
-
-        List<BlockNewParser.BlockNewDTO> dtoList_60rxg = BlockNewParser.parse(filePath_60rxg);
-
-
-        List<BaseBlockNewRelaStockDO> entityList = Lists.newArrayList();
-
-
-        BaseBlockNewDO baseBlockNewDO = iBaseBlockNewService.getByCode("60rxg");
-        Long blockNewId = baseBlockNewDO.getId();
-
-
-        List<String> stockCodeList = dtoList_60rxg.stream().map(BlockNewParser.BlockNewDTO::getStockCode).collect(Collectors.toList());
-        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap(stockCodeList);
-
-
-        dtoList_60rxg.forEach(e -> {
-
-            String stockCode = e.getStockCode();
-            Integer tdxMarketType = e.getTdxMarketType();
-
-
-            BaseBlockNewRelaStockDO entity = new BaseBlockNewRelaStockDO();
-            entity.setStockId(codeIdMap.get(stockCode));
-            entity.setBlockNewId(blockNewId);
-
-            entityList.add(entity);
-        });
-
-
-        iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
-
-        iBaseBlockNewRelaStockService.saveBatch(entityList);
+    private BigDecimal of(Double val) {
+        return new BigDecimal(val);
     }
 
 

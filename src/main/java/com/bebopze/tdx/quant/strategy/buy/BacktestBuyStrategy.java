@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -39,7 +40,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
 
-    public void initData(BacktestStrategy backTestStrategy) {
+    public void initData(BacktestCache data) {
 
 
         // BackTestStrategy strategy = strategyThreadLocal.get();
@@ -48,19 +49,19 @@ public class BacktestBuyStrategy extends BuyStrategy {
         // this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
 
-        this.blockDOList = backTestStrategy.getBlockDOList();
-        this.block__dateCloseMap = backTestStrategy.getBlock__dateCloseMap();
+        this.blockDOList = data.getBlockDOList();
+        this.block__dateCloseMap = data.getBlock__dateCloseMap();
 
 
-        this.stockDOList = backTestStrategy.getStockDOList();
-        this.stock__dateCloseMap = backTestStrategy.getStock__dateCloseMap();
+        this.stockDOList = data.getStockDOList();
+        this.stock__dateCloseMap = data.getStock__dateCloseMap();
     }
 
 
-    public List<String> rule(BacktestStrategy backTestStrategy, LocalDate tradeDate) {
+    public List<String> rule(BacktestCache data, LocalDate tradeDate) {
 
 
-        initData(backTestStrategy);
+        initData(data);
 
 
         // -------------------------------------------------------------------------------------------------------------

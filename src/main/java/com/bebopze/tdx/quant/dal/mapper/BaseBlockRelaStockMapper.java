@@ -31,4 +31,7 @@ public interface BaseBlockRelaStockMapper extends BaseMapper<BaseBlockRelaStockD
     List<BaseBlockDO> listBlockByStockCodeList(@Param("stockCodeList") List<String> stockCodeList);
 
     List<BaseStockDO> listStockByBlockCodeList(@Param("blockCodeList") List<String> blockCodeList);
+
+
+    List<BaseBlockRelaStockDO> listAll();
 }

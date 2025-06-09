@@ -1,8 +1,10 @@
 package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -10,9 +12,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -23,6 +23,33 @@ import java.util.stream.Collectors;
  * @date: 2025/5/15
  */
 public class ConvertStockKline {
+
+
+    /**
+     * 通过反射，将 KlineDTO 类的字段按声明顺序封装成一个 Object[] 数组
+     *
+     *
+     * - 字段顺序 必须保留（Java反射 默认 返回字段顺序为 声明顺序）
+     *
+     * @param dto
+     * @return
+     */
+    @SneakyThrows
+    public static Object[] dto2Arr(KlineDTO dto) {
+        List<Object> result = new ArrayList<>();
+
+        Field[] fields = dto.getClass().getDeclaredFields();
+
+        for (Field field : fields) {
+            // 设置字段可访问（如果字段是 private）
+            field.setAccessible(true);
+
+            Object value = field.get(dto);
+            result.add(value);
+        }
+
+        return result.toArray();
+    }
 
 
     public static KlineDTO kline2DTO(String kline) {
@@ -55,6 +82,9 @@ public class ConvertStockKline {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     private static LocalDate ofDate(String valStr) {
         if (valStr == null || valStr.isEmpty()) {
             return null;
@@ -62,12 +92,23 @@ public class ConvertStockKline {
         return DateTimeUtil.parseDate_yyyy_MM_dd(valStr);
     }
 
-    private static BigDecimal of(String valStr) {
+    private static Double of(String valStr) {
         if (valStr == null || valStr.isEmpty()) {
             return null;
         }
-        return BigDecimal.valueOf(new Double(valStr));
+        return BigDecimal.valueOf(new Double(valStr)).doubleValue();
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                              kline -> DTO
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static List<KlineDTO> str2DTOList(String klineHis) {
@@ -248,6 +289,63 @@ public class ConvertStockKline {
         }
 
         return new_arr;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                              DTO -> kline
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static String dtoList2JsonStr(List<KlineDTO> dtoList) {
+        List<String> strList = dtoList2StrList(dtoList);
+        return JSON.toJSONString(strList);
+    }
+
+    public static List<String> dtoList2StrList(List<KlineDTO> dtoList) {
+        List<Object[]> arrList = dtoList2ArrList(dtoList);
+
+        List<String> extDatas = Lists.newArrayList();
+        for (Object[] arr : arrList) {
+            String extDataStr = Arrays.stream(arr).map(ConvertStockKline::typeConvert).collect(Collectors.joining(","));
+            extDatas.add(extDataStr);
+        }
+
+        return extDatas;
+    }
+
+
+    public static List<Object[]> dtoList2ArrList(List<KlineDTO> dtoList) {
+        List<Object[]> arrList = Lists.newArrayList();
+
+        for (int i = 0; i < dtoList.size(); i++) {
+            KlineDTO dto = dtoList.get(i);
+
+            // 按 DTO类 字段顺序  ->  Object[]
+            Object[] arr = dto2Arr(dto);
+            arrList.add(arr);
+        }
+
+        return arrList;
+    }
+
+
+    private static String typeConvert(Object obj) {
+        if (obj == null) {
+            return "";
+        }
+
+        if (obj instanceof Boolean) {
+            return (Boolean) obj ? "1" : "0";
+        }
+
+        return obj.toString();
     }
 
 

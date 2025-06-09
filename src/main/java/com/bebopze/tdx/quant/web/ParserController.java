@@ -119,20 +119,6 @@ public class ParserController {
 
 
     /**
-     * 通达信 - 数据解析 入库
-     *
-     * @return
-     */
-    @Deprecated
-    @Operation(summary = "通达信 - 数据解析 入库", description = "通达信 - 数据解析 入库")
-    @GetMapping(value = "/xgcz")
-    public Result<Void> xgcz() {
-        tdxDataParserService.xgcz();
-        return Result.SUC();
-    }
-
-
-    /**
      * 交易所 - 股票代码 前缀
      *
      * @return

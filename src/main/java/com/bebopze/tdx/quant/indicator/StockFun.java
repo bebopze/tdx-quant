@@ -5,9 +5,11 @@ import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.FastJson2Config;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
@@ -25,7 +27,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
 
 
@@ -47,11 +48,23 @@ public class StockFun {
     // 实时行情  -  买5/卖5
     SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
 
+    // 实时行情
+    // private KlineDTO lastKlineDTO;
+
+
+    // ------------------------------------
 
     // 历史行情
     List<KlineDTO> klineDTOList;
-    // 实时行情
-    // private KlineDTO lastKlineDTO;
+    // 扩展数据（预计算 指标）
+    List<ExtDataDTO> extDataDTOList;
+
+
+    KlineArrDTO klineArrDTO;
+    ExtDataArrDTO extDataArrDTO;
+
+
+    // ------------------------------------
 
 
     double C;
@@ -69,7 +82,7 @@ public class StockFun {
     double[] amo_arr;
 
 
-    double[] ssf_arr;// = SSF(close_arr);
+    double[] ssf_arr;
 
 
     double[] rps10_arr;
@@ -80,40 +93,26 @@ public class StockFun {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
     //                                            个股 - 行情数据 init
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public StockFun(String code, BaseStockDO baseStockDO) {
-
-
-        // limit = limit == null ? 500 : limit;
-
-
-        // --------------------------- HTTP 获取   个股行情 data
-
-        // 实时行情 - API
-        // SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-        // SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
-
-
-        // 历史行情 - API
-        // StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+    public StockFun(String code, BaseStockDO stockDO) {
 
 
         // -------------------------------------------------------------------------------------------------------------
 
-        // --------------------------- resp -> DTO
 
-
-        // String stockName = shszQuoteSnapshotResp.getName();
-        String stockName = baseStockDO.getName();
+        String stockName = stockDO.getName();
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = baseStockDO.getKlineDTOList();
-        // 扩展数据
-        List<ExtDataDTO> extDataDTOList = baseStockDO.getExtDataDTOList();
+        klineDTOList = stockDO.getKlineDTOList();
+        // 扩展数据（预计算 指标）
+        extDataDTOList = stockDO.getExtDataDTOList();
 
 
         // last
@@ -121,30 +120,43 @@ public class StockFun {
 
 
         // 收盘价 - 实时
-        double C = klineDTO.getClose().doubleValue();
+        C = klineDTO.getClose();
 
 
-        // 历史行情
-        // List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
+        // -----------------------------------------------
 
 
-        LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
-        double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
-        double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
-        double[] low_arr = ConvertStockKline.fieldValArr(klineDTOList, "low");
-        double[] open_arr = ConvertStockKline.fieldValArr(klineDTOList, "open");
-        long[] vol_arr = ConvertStockKline.longFieldValArr(klineDTOList, "vol");
-        double[] amo_arr = ConvertStockKline.fieldValArr(klineDTOList, "amo");
+        klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
+        extDataArrDTO = ConvertStock.dtoList2Arr2(extDataDTOList);
 
 
-        double[] rps10_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps10");
-        double[] rps20_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps20");
-        double[] rps50_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps50");
-        double[] rps120_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps120");
-        double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps250");
+        // -----------------------------------------------
+
+        date_arr = klineArrDTO.date;
+
+        open_arr = klineArrDTO.open;
+        high_arr = klineArrDTO.high;
+        low_arr = klineArrDTO.low;
+        close_arr = klineArrDTO.close;
+
+        vol_arr = klineArrDTO.vol;
+        amo_arr = klineArrDTO.amo;
 
 
-        Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
+        // -----------------------------------------------
+
+
+        rps10_arr = extDataArrDTO.rps10_arr;
+        rps20_arr = extDataArrDTO.rps20_arr;
+        rps50_arr = extDataArrDTO.rps50_arr;
+        rps120_arr = extDataArrDTO.rps120_arr;
+        rps250_arr = extDataArrDTO.rps250_arr;
+
+
+        // -----------------------------------------------
+
+
+        dateIndexMap = Maps.newHashMap();
         for (int i = 0; i < date_arr.length; i++) {
             dateIndexMap.put(date_arr[i], i);
         }
@@ -158,33 +170,33 @@ public class StockFun {
 
 
         this.shszQuoteSnapshotResp = null;
-        this.klineDTOList = klineDTOList;
-
-        this.C = C;
 
 
-        this.dateIndexMap = dateIndexMap;
+//        this.C = C;
 
 
-        this.date_arr = date_arr;
-        this.open_arr = open_arr;
-        this.high_arr = high_arr;
-        this.low_arr = low_arr;
-        this.close_arr = close_arr;
-        this.vol_arr = vol_arr;
-        this.amo_arr = amo_arr;
+//        this.dateIndexMap = dateIndexMap;
+//
+//
+//        this.date_arr = date_arr;
+//        this.open_arr = open_arr;
+//        this.high_arr = high_arr;
+//        this.low_arr = low_arr;
+//        this.close_arr = close_arr;
+//        this.vol_arr = vol_arr;
+//        this.amo_arr = amo_arr;
 
 
-        this.ssf_arr = SSF(close_arr);
+//        this.rps10_arr = rps10_arr;
+//        this.rps20_arr = rps20_arr;
+//        this.rps50_arr = rps50_arr;
+//        this.rps120_arr = rps120_arr;
+//        this.rps250_arr = rps250_arr;
 
 
-        this.rps10_arr = rps10_arr;
-        this.rps20_arr = rps20_arr;
-        this.rps50_arr = rps50_arr;
-        this.rps120_arr = rps120_arr;
-        this.rps250_arr = rps250_arr;
+//         this.ssf_arr = SSF(close_arr);
 
-
+        ssf_arr = extDataArrDTO.ssf_arr;
     }
 
 
@@ -264,12 +276,14 @@ public class StockFun {
         this.high_arr = high_arr;
 
 
-        this.ssf_arr = SSF(close_arr);
+        this.ssf_arr = SSF();
 
 
         this.rps50_arr = rps50_arr;
         this.rps120_arr = rps120_arr;
         this.rps250_arr = rps250_arr;
+
+
     }
 
 
@@ -386,6 +400,12 @@ public class StockFun {
 
 
     // -------------------------------------------- SSF
+
+
+    public double[] SSF() {
+        ssf_arr = TdxExtFun.SSF(close_arr);
+        return ssf_arr;
+    }
 
 
     public boolean[] 上SSF() {

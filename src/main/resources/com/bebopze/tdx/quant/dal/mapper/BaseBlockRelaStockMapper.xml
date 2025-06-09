@@ -94,4 +94,11 @@
     </select>
 
 
+    <select id="listAll" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO">
+        SELECT *
+
+        FROM base_block_rela_stock
+    </select>
+
+
 </mapper>

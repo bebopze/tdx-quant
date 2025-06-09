@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.tdxfun.Tools;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -44,26 +46,68 @@ public class BacktestSellStrategy extends SellStrategy {
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
 
-    public void initData(BacktestStrategy backTestStrategy) {
+//    public void initData(BacktestCache data) {
+//
+//        // this.dateIndexMap = backTestStrategy.getDateIndexMap();
+//
+//
+//        this.blockDOList = backTestStrategy.getBlockDOList();
+//        this.block__dateCloseMap = backTestStrategy.getBlock__dateCloseMap();
+//
+//
+//        this.stockDOList = backTestStrategy.getStockDOList();
+//        this.stock__dateCloseMap = backTestStrategy.getStock__dateCloseMap();
+//    }
 
-        // this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
-
-        this.blockDOList = backTestStrategy.getBlockDOList();
-        this.block__dateCloseMap = backTestStrategy.getBlock__dateCloseMap();
-
-
-        this.stockDOList = backTestStrategy.getStockDOList();
-        this.stock__dateCloseMap = backTestStrategy.getStock__dateCloseMap();
-    }
-
-
-    public List<String> rule(BacktestStrategy backTestStrategy,
+    public List<String> rule(BacktestCache data,
                              LocalDate tradeDate,
                              List<String> positionStockCodeList) {
 
 
-        initData(backTestStrategy);
+        // initData(data);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
+
+
+        List<String> collect = positionStockCodeList.parallelStream().filter(stockCode -> {
+            BaseStockDO stockDO = data.codeStockMap.get(stockCode);
+
+
+            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+            // 是否淘汰
+            boolean flag = false;
+
+
+            // 1、个股     ==>     月多 -> 月空
+
+            Tools.extData(stockDO.getExtDataHis());
+
+
+            // 2、SSF空
+
+
+            // 3、高位（中期涨幅_MA20 > 100）   ->   长上影/大阴线
+
+
+            return flag;
+
+        }).collect(Collectors.toList());
+
+
+        // 2.2 每日 淘汰策略（S策略 - 2）[排名]走弱 -> 末位淘汰 ->  stockCodeList（对昨日 持股 -> 末位淘汰[设置末尾淘汰 - 分数线/排名线 ]）
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // -------------------------------------------------------------------------------------------------------------

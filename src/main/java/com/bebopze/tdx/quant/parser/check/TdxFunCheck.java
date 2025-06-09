@@ -561,7 +561,8 @@ public class TdxFunCheck {
         long[] vol_arr = fun.getVol_arr();
 
 
-        double[] ssf_arr = fun.getSsf_arr();
+        // double[] ssf_arr = fun.getSsf_arr();
+        double[] ssf_arr = fun.SSF();
 
 
         double[] rps10_arr = fun.getRps10_arr();

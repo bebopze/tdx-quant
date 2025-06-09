@@ -12,8 +12,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
-
 
 /**
  * 基础指标   -   序列化（返回 数组）
@@ -92,7 +90,7 @@ public class BlockFun extends StockFun {
 
 
         // 收盘价 - 实时
-        double C = klineDTO.getClose().doubleValue();
+        double C = klineDTO.getClose();
 
 
         LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
@@ -142,7 +140,7 @@ public class BlockFun extends StockFun {
         this.amo_arr = amo_arr;
 
 
-        this.ssf_arr = SSF(close_arr);
+        this.ssf_arr = SSF();
 
 
         this.rps10_arr = rps5_arr;

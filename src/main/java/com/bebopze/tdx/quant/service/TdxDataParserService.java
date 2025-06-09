@@ -34,9 +34,5 @@ public interface TdxDataParserService {
     void fillStockKlineAll();
 
 
-    @Deprecated
-    void xgcz();
-
-
     Map<String, List<String>> marketRelaStockCodePrefixList();
 }

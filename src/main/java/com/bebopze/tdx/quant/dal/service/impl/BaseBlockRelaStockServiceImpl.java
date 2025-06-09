@@ -59,4 +59,9 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
         return baseMapper.listStockByBlockCodeList(blockCodeList);
     }
 
+    @Override
+    public List<BaseBlockRelaStockDO> listAll() {
+        return baseMapper.listAll();
+    }
+
 }
