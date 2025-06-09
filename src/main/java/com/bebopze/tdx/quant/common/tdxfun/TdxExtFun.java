@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.google.common.collect.Lists;
 
 import java.time.LocalDate;
@@ -411,13 +410,11 @@ public class TdxExtFun {
      * @param close
      * @return
      */
-    public static boolean[] 月多(String[] date, double[] open, double[] high, double[] low, double[] close) {
+    public static boolean[] 月多(LocalDate[] date, double[] open, double[] high, double[] low, double[] close) {
 
         List<MonthlyBullSignal.KlineBar> dailyKlines = Lists.newArrayList();
         for (int i = 0; i < date.length; i++) {
-            LocalDate _date = DateTimeUtil.parseDate_yyyy_MM_dd(date[i]);
-
-            MonthlyBullSignal.KlineBar klineBar = new MonthlyBullSignal.KlineBar(_date, open[i], high[i], low[i], close[i]);
+            MonthlyBullSignal.KlineBar klineBar = new MonthlyBullSignal.KlineBar(date[i], open[i], high[i], low[i], close[i]);
             dailyKlines.add(klineBar);
         }
 

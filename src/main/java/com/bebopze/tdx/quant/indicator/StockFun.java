@@ -21,6 +21,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,11 @@ public class StockFun {
 
     double C;
 
-    String[] date_arr;
+
+    Map<LocalDate, Integer> dateIndexMap;
+
+
+    LocalDate[] date_arr;
     double[] open_arr;
     double[] high_arr;
     double[] low_arr;
@@ -123,7 +128,7 @@ public class StockFun {
         // List<KlineDTO> klineDTOList = ConvertStockKline.strList2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
-        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
+        LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
         double[] low_arr = ConvertStockKline.fieldValArr(klineDTOList, "low");
@@ -139,6 +144,12 @@ public class StockFun {
         double[] rps250_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps250");
 
 
+        Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
+        for (int i = 0; i < date_arr.length; i++) {
+            dateIndexMap.put(date_arr[i], i);
+        }
+
+
         // --------------------------- init data
 
 
@@ -150,6 +161,10 @@ public class StockFun {
         this.klineDTOList = klineDTOList;
 
         this.C = C;
+
+
+        this.dateIndexMap = dateIndexMap;
+
 
         this.date_arr = date_arr;
         this.open_arr = open_arr;
@@ -168,6 +183,8 @@ public class StockFun {
         this.rps50_arr = rps50_arr;
         this.rps120_arr = rps120_arr;
         this.rps250_arr = rps250_arr;
+
+
     }
 
 
@@ -217,7 +234,7 @@ public class StockFun {
         List<KlineDTO> klineDTOList = ConvertStockKline.klines2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
-        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
+        LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
 
@@ -593,7 +610,7 @@ public class StockFun {
         // double[] ssf = SSF(closeArr);
 
 
-        String[] date_arr = fun.date_arr;
+        LocalDate[] date_arr = fun.date_arr;
         double[] ssf_arr = fun.ssf_arr;
         boolean[] booleans = fun.SSF多();
 

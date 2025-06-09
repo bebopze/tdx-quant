@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.domain.dto;
 
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -22,7 +21,7 @@ public class KlineDTO implements Serializable {
 
 
     // 2025-05-01
-    private String date;
+    private LocalDate date;
 
 
     // --------------- price 规则（ 2位小数 ）
@@ -57,10 +56,4 @@ public class KlineDTO implements Serializable {
     private BigDecimal turnover_pct;
 
 
-    // ---------------------------------------------------
-
-
-    public LocalDate getDate() {
-        return DateTimeUtil.parseDate_yyyy_MM_dd(date);
-    }
 }

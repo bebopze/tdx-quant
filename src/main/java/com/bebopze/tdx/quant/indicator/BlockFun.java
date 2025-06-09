@@ -5,9 +5,12 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.SSF;
 
@@ -92,7 +95,7 @@ public class BlockFun extends StockFun {
         double C = klineDTO.getClose().doubleValue();
 
 
-        String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
+        LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
         double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
         double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
         double[] low_arr = ConvertStockKline.fieldValArr(klineDTOList, "low");
@@ -108,6 +111,12 @@ public class BlockFun extends StockFun {
         double[] rps50_arr = ConvertStockExtData.fieldValArr(extDataDTOList, "rps250");
 
 
+        Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
+        for (int i = 0; i < date_arr.length; i++) {
+            dateIndexMap.put(date_arr[i], i);
+        }
+
+
         // --------------------------- init data
 
 
@@ -119,6 +128,10 @@ public class BlockFun extends StockFun {
         this.klineDTOList = klineDTOList;
 
         this.C = C;
+
+
+        this.dateIndexMap = dateIndexMap;
+
 
         this.date_arr = date_arr;
         this.open_arr = open_arr;

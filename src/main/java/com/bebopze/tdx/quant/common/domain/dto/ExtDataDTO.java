@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.dto;
 
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.indicator.StockFun;
 import com.google.common.collect.Maps;
 import lombok.Data;
 
@@ -21,40 +22,51 @@ public class ExtDataDTO implements Serializable {
 
 
     // 2025-05-01
-    private String date;
+    private LocalDate date;
 
 
     // ---------------------------------------------------
-    private double rps10;  // -> 板块 rps5
-    private double rps20;  // -> 板块 rps10
-    private double rps50;  // -> 板块 rps15
-    private double rps120; // -> 板块 rps20
-    private double rps250; // -> 板块 rps50
+    private Double rps10;  // -> 板块 rps5
+    private Double rps20;  // -> 板块 rps10
+    private Double rps50;  // -> 板块 rps15
+    private Double rps120; // -> 板块 rps20
+    private Double rps250; // -> 板块 rps50
 
 
     // ---------------------------------------------------
 
 
-    public LocalDate getDate() {
-        return DateTimeUtil.parseDate_yyyy_MM_dd(date);
-    }
+    private Boolean SSF多;
 
 
-    public static void main(String[] args) {
+    private Boolean N日新高;
+    private Boolean 均线预萌出;
+    private Boolean 均线萌出;
+    private Boolean 大均线多头;
 
-        Field[] fields = ExtDataDTO.class.getDeclaredFields();
 
-        // 可选：按声明（自定义）顺序排序（JVM 通常已保留顺序，但非强制）
-        // Arrays.sort(fields, Comparator.comparing(Field::getName)); // 如果你用字段名排序
+    private Boolean 月多;
+    private Boolean RPS三线红;
 
-        Map<String, Integer> map = Maps.newHashMap();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            map.put(field.getName(), i);
-            System.out.println("Index: " + i + " | Name: " + field.getName() + " | Type: " + field.getType().getSimpleName());
-        }
 
-        System.out.println("字段：[" + map.keySet() + "]");
-    }
+    // ---------------------------------------------------
+
+
+//    public static void main(String[] args) {
+//
+//        Field[] fields = ExtDataDTO.class.getDeclaredFields();
+//
+//        // 可选：按声明（自定义）顺序排序（JVM 通常已保留顺序，但非强制）
+//        // Arrays.sort(fields, Comparator.comparing(Field::getName)); // 如果你用字段名排序
+//
+//        Map<String, Integer> map = Maps.newHashMap();
+//        for (int i = 0; i < fields.length; i++) {
+//            Field field = fields[i];
+//            map.put(field.getName(), i);
+//            System.out.println("Index: " + i + " | Name: " + field.getName() + " | Type: " + field.getType().getSimpleName());
+//        }
+//
+//        System.out.println("字段：[" + map.keySet() + "]");
+//    }
 
 }

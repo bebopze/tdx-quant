@@ -552,7 +552,7 @@ public class TdxFunCheck {
         StockFun fun = new StockFun(stockCode, stockDO);
 
 
-        String[] date_arr = fun.getDate_arr();
+        LocalDate[] date_arr = fun.getDate_arr();
 
         double[] open_arr = fun.getOpen_arr();
         double[] high_arr = fun.getHigh_arr();
@@ -580,7 +580,7 @@ public class TdxFunCheck {
         // 日K
         List<KlineBar> dayList = Lists.newArrayList();
         for (int i = 0; i < date_arr.length; i++) {
-            KlineBar dto = new KlineBar(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]), open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
+            KlineBar dto = new KlineBar(date_arr[i], open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
             dayList.add(dto);
         }
         dayList.sort(Comparator.comparing(d -> d.date));
@@ -647,10 +647,10 @@ public class TdxFunCheck {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        String[] block_date_arr = blockFun.getDate_arr();
+        LocalDate[] block_date_arr = blockFun.getDate_arr();
 
-        LocalDate stock_startDate = DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[0]);
-        LocalDate block_startDate = DateTimeUtil.parseDate_yyyy_MM_dd(block_date_arr[0]);
+        LocalDate stock_startDate = date_arr[0];
+        LocalDate block_startDate = block_date_arr[0];
 
 
         int diffDays = 0;
@@ -660,7 +660,7 @@ public class TdxFunCheck {
             diffDays = Arrays.asList(block_date_arr).indexOf(date_arr[0]);
         }
 
-        List<String> block_date_list = Arrays.asList(block_date_arr);
+        List<LocalDate> block_date_list = Arrays.asList(block_date_arr);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -678,7 +678,7 @@ public class TdxFunCheck {
 
 
             // 日K
-            dto.setDate(DateTimeUtil.parseDate_yyyy_MM_dd(date_arr[i]));
+            dto.setDate(date_arr[i]);
             dto.setOpen(open_arr[i]);
             dto.setHigh(high_arr[i]);
             dto.setLow(low_arr[i]);
@@ -727,7 +727,7 @@ public class TdxFunCheck {
             int bk_idx = i + diffDays;
             if (bk_idx >= 0) {
 
-                String stock_date = date_arr[i];
+                LocalDate stock_date = date_arr[i];
                 bk_idx = block_date_list.indexOf(stock_date);
 
                 if (bk_idx != -1) {

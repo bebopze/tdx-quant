@@ -1,7 +1,10 @@
 package com.bebopze.tdx.quant.common.convert;
 
 
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
 
 /**
@@ -26,15 +29,16 @@ public class TypeConverter {
         } else if (targetType == Double.class || targetType == double.class) {
             return Double.parseDouble(value.toString());
         } else if (targetType == Boolean.class || targetType == boolean.class) {
+            if (value.equals("1")) {
+                value = true;
+            } else if (value.equals("0")) {
+                value = false;
+            }
             return Boolean.parseBoolean(value.toString());
         } else if (targetType == String.class) {
             return value.toString();
-        } else if (targetType == Date.class) {
-            try {
-                return new SimpleDateFormat("yyyy-MM-dd").parse(value.toString());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot parse date: " + value);
-            }
+        } else if (targetType == LocalDate.class) {
+            return DateTimeUtil.parseDate_yyyy_MM_dd(value.toString());
         } else if (targetType.isEnum()) {
             // 处理枚举类型（如：value 是字符串，转换为枚举）
             return Enum.valueOf((Class<Enum>) targetType, value.toString());

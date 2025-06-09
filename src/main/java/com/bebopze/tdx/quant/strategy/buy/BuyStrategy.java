@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +25,11 @@ public abstract class BuyStrategy {
 
 
     List<BaseStockDO> stockDOList;
-    Map<String, Map<String, Double>> stock__dateCloseMap = Maps.newHashMap();
+    Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
 
 
     List<BaseBlockDO> blockDOList;
-    Map<String, Map<String, Double>> block__dateCloseMap = Maps.newHashMap();
+    Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
 
 
     void initData() {

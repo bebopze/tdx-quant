@@ -38,7 +38,7 @@ public class DateTimeUtil {
     }
 
 
-    // ----------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -133,4 +133,22 @@ public class DateTimeUtil {
     public static String format_yyyy_MM_dd(LocalDate date) {
         return date.format(yyyy_MM_dd);
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static boolean inDateArr(LocalDate date, LocalDate[] dateArr) {
+        return between(date, dateArr[0], dateArr[dateArr.length - 1]);
+    }
+
+
+    public static boolean between(LocalDate now, LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("起始和结束日期不能为空");
+        }
+        return !now.isBefore(startDate) && !now.isAfter(endDate);
+    }
+
+
 }

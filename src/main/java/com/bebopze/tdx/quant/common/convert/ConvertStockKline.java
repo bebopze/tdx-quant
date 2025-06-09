@@ -2,12 +2,14 @@ package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
@@ -34,7 +36,7 @@ public class ConvertStockKline {
 
         KlineDTO dto = new KlineDTO();
 
-        dto.setDate(klineArr[0]);
+        dto.setDate(ofDate(klineArr[0]));
 
         dto.setOpen(of(klineArr[1]));
         dto.setClose(of(klineArr[2]));
@@ -52,6 +54,13 @@ public class ConvertStockKline {
         return dto;
     }
 
+
+    private static LocalDate ofDate(String valStr) {
+        if (valStr == null || valStr.isEmpty()) {
+            return null;
+        }
+        return DateTimeUtil.parseDate_yyyy_MM_dd(valStr);
+    }
 
     private static BigDecimal of(String valStr) {
         if (valStr == null || valStr.isEmpty()) {
@@ -153,8 +162,8 @@ public class ConvertStockKline {
 
 
     @SneakyThrows
-    public static TreeMap<String, Double> fieldDatePriceMap(List<KlineDTO> klineDTOList,
-                                                            String fieldName) {
+    public static TreeMap<LocalDate, Double> fieldDatePriceMap(List<KlineDTO> klineDTOList,
+                                                               String fieldName) {
 
 
         int size = klineDTOList.size();
@@ -166,12 +175,12 @@ public class ConvertStockKline {
 
 
         // 遍历 取值
-        TreeMap<String, Double> map = new TreeMap<>();
+        TreeMap<LocalDate, Double> map = new TreeMap<>();
         for (int i = 0; i < size; i++) {
             KlineDTO dto = klineDTOList.get(i);
 
 
-            String key = (String) kField.get(dto);
+            LocalDate key = (LocalDate) kField.get(dto);
             double value = ((Number) vField.get(dto)).doubleValue();
 
             map.put(key, value);
@@ -179,41 +188,6 @@ public class ConvertStockKline {
 
         return map;
     }
-
-//    @SneakyThrows
-//    public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
-//
-//        int size = klineDTOList.size();
-//        String[] arr = new String[size];
-//
-//
-//        // 一次性查找 Field，并设置可访问
-//        Field field = FieldUtils.getDeclaredField(KlineDTO.class, fieldName, true);
-//
-//
-//        // 遍历 取值
-//        for (int i = 0; i < size; i++) {
-//            KlineDTO dto = klineDTOList.get(i);
-//
-//
-//            Object value = field.get(dto);
-//            if (value == null) {
-//
-//                arr[i] = null;
-//
-//            } else if (value instanceof String) {
-//
-//                arr[i] = (String) value;
-//
-//            } else {
-//                throw new IllegalArgumentException(
-//                        String.format("字段 %s 的类型为 %s，无法转换为 String", fieldName, value.getClass().getSimpleName()));
-//            }
-//        }
-//
-//
-//        return arr;
-//    }
 
 
     @SneakyThrows
@@ -239,6 +213,18 @@ public class ConvertStockKline {
         return arr;
     }
 
+
+    public static LocalDate[] dateFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
+        Object[] arr = objFieldValArr(klineDTOList, fieldName);
+
+
+        LocalDate[] new_arr = new LocalDate[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            new_arr[i] = (LocalDate) arr[i];
+        }
+
+        return new_arr;
+    }
 
     public static String[] strFieldValArr(List<KlineDTO> klineDTOList, String fieldName) {
         Object[] arr = objFieldValArr(klineDTOList, fieldName);

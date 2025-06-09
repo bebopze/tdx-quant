@@ -1,24 +1,31 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.indicator.BlockFun;
+import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.ExtDataService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -31,6 +38,30 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ExtDataServiceImpl implements ExtDataService {
+
+
+    @Data
+    public static class DataDTO {
+        Map<String, List<ExtDataDTO>> extDataMap = Maps.newConcurrentMap();
+
+
+        List<BaseStockDO> stockDOList = Lists.newArrayList();
+        List<BaseBlockDO> blockDOList = Lists.newArrayList();
+
+
+        Map<String, TreeMap<LocalDate, Double>> codePriceMap = Maps.newConcurrentMap();
+
+
+        // code - date_arr
+        Map<String, LocalDate[]> codeDateMap = Maps.newConcurrentMap();
+        // code - close_arr
+        Map<String, double[]> codeCloseMap = Maps.newConcurrentMap();
+
+
+        // code - id
+        Map<String, Long> codeIdMap = Maps.newConcurrentMap();
+        Map<String, BaseBlockDO> codeEntityMap = Maps.newConcurrentMap();
+    }
 
 
     @Autowired
@@ -49,74 +80,22 @@ public class ExtDataServiceImpl implements ExtDataService {
         // 预加载 行情数据
 
 
-        Map<String, TreeMap<String, Double>> codePriceMap = Maps.newHashMap();
-
-        // code - date_arr
-        Map<String, String[]> codeDateMap = Maps.newHashMap();
-        // code - close_arr
-        Map<String, double[]> codeCloseMap = Maps.newHashMap();
-        // code - id
-        Map<String, Long> codeIdMap = Maps.newHashMap();
-
-
         // -------------------------------------------------------------------------------------------------------------
 
         // 从本地DB   加载全部（5000+支） 个股的   收盘价序列/日期序列/ code-id
 
 
         // 加载 -> 解析数据
-        loadAllStockKline(codeDateMap, codeCloseMap, codePriceMap, codeIdMap);
+        DataDTO dataDTO = loadAllStockKline();
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 计算RPS
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 10);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 20);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 50);
-        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 120);// 120 -> 100
-        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 250);// 250 -> 200
+        task__RPS(dataDTO);
 
 
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // save -> DB
-
-
-        codeDateMap.keySet().parallelStream().forEach(code -> {
-            String[] date_arr = codeDateMap.get(code);
-
-
-            double[] rps10_arr = RPS10.get(code);
-            double[] rps20_arr = RPS20.get(code);
-            double[] rps50_arr = RPS50.get(code);
-            double[] rps120_arr = RPS120.get(code);
-            double[] rps250_arr = RPS250.get(code);
-
-
-            List<String> extDatas = Lists.newArrayList();
-            for (int i = 0; i < date_arr.length; i++) {
-
-                // 2025-05-13,91,92,93,94,95
-                // 日期,RPS10,RPS20,RPS50,RPS120,RPS250
-
-                // 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
-                List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
-
-
-                String extDataStr = extData.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-                extDatas.add(extDataStr);
-            }
-
-
-            BaseStockDO stockDO = new BaseStockDO();
-            stockDO.setId(codeIdMap.get(code));
-            stockDO.setExtDataHis(JSON.toJSONString(extDatas));
-
-            baseStockService.updateById(stockDO);
-        });
+        task__stockFun(dataDTO);
     }
 
 
@@ -126,47 +105,291 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // -------------------------------------------------------------------------------------------------------------
 
-        // 预加载 行情数据
-
-
-        Map<String, TreeMap<String, Double>> codePriceMap = Maps.newHashMap();
-
-        // code - date_arr
-        Map<String, String[]> codeDateMap = Maps.newHashMap();
-        // code - close_arr
-        Map<String, double[]> codeCloseMap = Maps.newHashMap();
-        // code - id
-        Map<String, Long> codeIdMap = Maps.newHashMap();
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        // 从本地DB   加载全部（5000+支） 个股的   收盘价序列/日期序列/ code-id
+        // 从本地DB   加载全部（380+支） 板块的   收盘价序列/日期序列/ code-id
 
 
         // 加载 -> 解析数据
-        loadAllBlockKline(codeDateMap, codeCloseMap, codePriceMap, codeIdMap);
+        DataDTO data = loadAllBlockKline();
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 计算RPS
-        Map<String, double[]> RPS5 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 5);
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 10);
-        Map<String, double[]> RPS15 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 15);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 20);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(codeDateMap, codeCloseMap, 50);
+        blockTask__RPS(data);
+
+
+        blockTask__BlockFun(data);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 从本地DB   加载全部（5000+支）个股的 收盘价序列
+     *
+     * @return stock - close_arr
+     */
+    private DataDTO loadAllStockKline() {
+        DataDTO data = new DataDTO();
+
+
+        data.stockDOList = baseStockService.listAllKline();
+        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+
+
+        data.stockDOList.parallelStream().forEach(e -> {
+
+            Long id = e.getId();
+            String code = e.getCode();
+
+            List<KlineDTO> klineDTOList = e.getKlineDTOList();
+
+
+            LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
+            double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+
+
+            TreeMap<LocalDate, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(klineDTOList, "close");
+
+
+            data.codeDateMap.put(code, date_arr);
+            data.codeCloseMap.put(code, close_arr);
+
+            data.codeIdMap.put(code, id);
+
+
+            data.codePriceMap.put(code, dateCloseMap);
+        });
+
+
+        return data;
+    }
+
+
+    /**
+     * 从本地DB   加载全部（380+支）板块的 收盘价序列
+     *
+     * @return stock - close_arr
+     */
+    private DataDTO loadAllBlockKline() {
+        DataDTO data = new DataDTO();
+
+
+        // 加载  最近500日   行情数据
+        int DAY_LIMIT = 500;
+
+
+        data.blockDOList = baseBlockService.listAllKline();
+        data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+
+
+        data.blockDOList.parallelStream().forEach(e -> {
+
+            Long id = e.getId();
+            String code = e.getCode();
+
+            List<KlineDTO> klineDTOList = e.getKlineDTOList();
+
+
+            LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
+            double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+
+
+            TreeMap<LocalDate, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(klineDTOList, "close");
+
+
+            data.codeCloseMap.put(code, close_arr);
+            data.codeDateMap.put(code, date_arr);
+
+            data.codeIdMap.put(code, id);
+
+
+            data.codePriceMap.put(code, dateCloseMap);
+        });
+
+
+        return data;
+    }
+
+
+    private void task__RPS(DataDTO data) {
+
+
+        long start = System.currentTimeMillis();
+
+
+        // 计算 -> RPS
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50);
+        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 120); // 120 -> 100
+        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250); // 250 -> 200
+
+
+        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+
+
+//        long start = System.currentTimeMillis();
+//
+//
+//        // 计算 -> RPS
+//        List<Integer> periods = Lists.newArrayList(10, 20, 50, 120, 250);
+//
+//
+//        Map<Integer, Map<String, double[]>> resultMap = Maps.newConcurrentMap();
+//        periods.parallelStream().forEach(N -> {
+//            Map<String, double[]> RPS_N = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, N);
+//            resultMap.put(N, RPS_N);
+//        });
+//        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+//
+//
+//        Map<String, double[]> RPS10 = resultMap.get(10);
+//        Map<String, double[]> RPS20 = resultMap.get(20);
+//        Map<String, double[]> RPS50 = resultMap.get(50);
+//        Map<String, double[]> RPS120 = resultMap.get(120);
+//        Map<String, double[]> RPS250 = resultMap.get(250);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // save -> DB
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        codeDateMap.keySet().parallelStream().forEach(code -> {
-            String[] date_arr = codeDateMap.get(code);
+        data.codeDateMap.keySet().parallelStream().forEach(code -> {
+            LocalDate[] date_arr = data.codeDateMap.get(code);
+
+
+            double[] rps10_arr = RPS10.get(code);
+            double[] rps20_arr = RPS20.get(code);
+            double[] rps50_arr = RPS50.get(code);
+            double[] rps120_arr = RPS120.get(code);
+            double[] rps250_arr = RPS250.get(code);
+
+
+            // List<String> extDatas = Lists.newArrayList();
+            List<ExtDataDTO> dtoList = Collections.synchronizedList(Lists.newArrayList());
+            for (int i = 0; i < date_arr.length; i++) {
+
+                // 2025-05-13,91,92,93,94,95
+                // 日期,RPS10,RPS20,RPS50,RPS120,RPS250
+
+                // 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
+                // List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
+
+
+                // String extDataStr = extData.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+                // extDatas.add(extDataStr);
+
+
+                ExtDataDTO dto = new ExtDataDTO();
+                dto.setDate(date_arr[i]);
+                dto.setRps10(of(rps10_arr[i]));
+                dto.setRps20(of(rps20_arr[i]));
+                dto.setRps50(of(rps50_arr[i]));
+                dto.setRps120(of(rps120_arr[i]));
+                dto.setRps250(of(rps250_arr[i]));
+
+                dtoList.add(dto);
+            }
+
+
+            data.extDataMap.put(code, dtoList);
+
+
+            // BaseStockDO stockDO = new BaseStockDO();
+            // stockDO.setId(data.codeIdMap.get(code));
+            // stockDO.setExtDataHis(JSON.toJSONString(extDatas));
+
+            // baseStockService.updateById(stockDO);
+        });
+    }
+
+
+    private void task__stockFun(DataDTO data) {
+
+
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+
+            String code = stockDO.getCode();
+            List<ExtDataDTO> dtoList = data.extDataMap.get(code);
+
+
+            // fill -> RPS
+            stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
+
+
+            // --------------------------------------------------------
+
+
+            // 计算 -> 指标
+            StockFun fun = new StockFun(code, stockDO);
+
+
+            boolean[] SSF多 = fun.SSF多();
+
+
+            boolean[] N日新高 = fun.N日新高(60);
+            boolean[] 均线预萌出 = fun.均线预萌出();
+            boolean[] 均线萌出 = fun.均线萌出();
+            boolean[] 大均线多头 = fun.大均线多头();
+
+
+            boolean[] 月多 = fun.月多();
+            boolean[] RPS三线红 = fun.RPS三线红(80);
+
+
+            // --------------------------------------------------------
+
+
+            for (int i = 0; i < dtoList.size(); i++) {
+                ExtDataDTO dto = dtoList.get(i);
+
+
+                dto.setSSF多(SSF多[i]);
+
+
+                dto.setN日新高(N日新高[i]);
+                dto.set均线预萌出(均线预萌出[i]);
+                dto.set均线萌出(均线萌出[i]);
+                dto.set大均线多头(大均线多头[i]);
+
+
+                dto.set月多(月多[i]);
+                dto.setRPS三线红(RPS三线红[i]);
+            }
+
+
+            List<String> extDatas = ConvertStockExtData.dtoList2StrList(dtoList);
+
+
+            BaseStockDO entity = new BaseStockDO();
+            entity.setId(data.codeIdMap.get(code));
+            entity.setExtDataHis(JSON.toJSONString(extDatas));
+
+            baseStockService.updateById(entity);
+        });
+    }
+
+
+    private void blockTask__RPS(DataDTO data) {
+
+
+        // 计算 -> RPS
+        Map<String, double[]> RPS5 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 5);
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
+        Map<String, double[]> RPS15 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 15);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        data.codeDateMap.keySet().parallelStream().forEach(code -> {
+            LocalDate[] date_arr = data.codeDateMap.get(code);
 
 
             double[] rps10_arr = RPS5.get(code);
@@ -176,112 +399,99 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250_arr = RPS50.get(code);
 
 
-            List<String> extDatas = Lists.newArrayList();
+            List<ExtDataDTO> dtoList = Collections.synchronizedList(Lists.newArrayList());
             for (int i = 0; i < date_arr.length; i++) {
 
-                // 2025-05-13,91,92,93,94,95
-                // 日期,RPS5,RPS10,RPS15,RPS20,RPS50
 
-                // 扩展数据-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）
-                List<Object> extData = Lists.newArrayList(date_arr[i], of(rps10_arr[i]), of(rps20_arr[i]), of(rps50_arr[i]), of(rps120_arr[i]), of(rps250_arr[i]));
+                ExtDataDTO dto = new ExtDataDTO();
+                dto.setDate(date_arr[i]);
+                dto.setRps10(of(rps10_arr[i]));
+                dto.setRps20(of(rps20_arr[i]));
+                dto.setRps50(of(rps50_arr[i]));
+                dto.setRps120(of(rps120_arr[i]));
+                dto.setRps250(of(rps250_arr[i]));
+
+                dtoList.add(dto);
 
 
-                String extDataStr = extData.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-                extDatas.add(extDataStr);
             }
 
 
-            BaseBlockDO blockDO = new BaseBlockDO();
-            blockDO.setId(codeIdMap.get(code));
-            blockDO.setExtDataHis(JSON.toJSONString(extDatas));
-
-            baseBlockService.updateById(blockDO);
+            data.extDataMap.put(code, dtoList);
         });
-
     }
 
-
-    /**
-     * 从本地DB   加载全部（5000+支）个股的 收盘价序列
-     *
-     * @return stock - close_arr
-     */
-    private void loadAllStockKline(Map<String, String[]> stockDateArrMap,
-                                   Map<String, double[]> stockCloseArrMap,
-                                   Map<String, TreeMap<String, Double>> codePriceMap,
-                                   Map<String, Long> codeIdMap) {
+    private void blockTask__BlockFun(DataDTO data) {
 
 
-        List<BaseStockDO> baseStockDOList = baseStockService.listAllKline();
-        baseStockDOList.forEach(e -> {
+        data.blockDOList.parallelStream().forEach(blockDO -> {
 
-            Long id = e.getId();
-            String code = e.getCode();
-
-
-            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
-            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
+            String code = blockDO.getCode();
+            List<ExtDataDTO> dtoList = data.extDataMap.get(code);
 
 
-            TreeMap<String, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(e.getKlineDTOList(), "close");
+            // fill -> RPS
+            blockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
 
 
-            // 上市50天
-            if (close_arr.length >= 50) {
-
-                stockCloseArrMap.put(code, close_arr);
-                stockDateArrMap.put(code, date_arr);
-
-                codeIdMap.put(code, id);
+            // --------------------------------------------------------
 
 
-                codePriceMap.put(code, dateCloseMap);
+            // 计算 -> 指标
+            BlockFun fun = new BlockFun(code, blockDO);
+
+
+            boolean[] SSF多 = fun.SSF多();
+
+
+            boolean[] N日新高 = fun.N日新高(60);
+            boolean[] 均线预萌出 = fun.均线预萌出();
+            boolean[] 均线萌出 = fun.均线萌出();
+            boolean[] 大均线多头 = fun.大均线多头();
+
+
+            boolean[] 月多 = fun.月多();
+            boolean[] RPS三线红 = fun.RPS三线红(80);
+
+
+            // --------------------------------------------------------
+
+
+            for (int i = 0; i < dtoList.size(); i++) {
+                ExtDataDTO dto = dtoList.get(i);
+
+
+                dto.setSSF多(SSF多[i]);
+
+
+                dto.setN日新高(N日新高[i]);
+                dto.set均线预萌出(均线预萌出[i]);
+                dto.set均线萌出(均线萌出[i]);
+                dto.set大均线多头(大均线多头[i]);
+
+
+                dto.set月多(月多[i]);
+                try {
+                    dto.setRPS三线红(RPS三线红[i]);
+                } catch (Exception e) {
+                    log.error("code : {} , blockDO : {} , exMsg : {}", code, blockDO, e.getMessage(), e);
+                }
             }
+
+
+            List<String> extDatas = ConvertStockExtData.dtoList2StrList(dtoList);
+
+
+            BaseBlockDO entity = new BaseBlockDO();
+            entity.setId(data.codeIdMap.get(code));
+            entity.setExtDataHis(JSON.toJSONString(extDatas));
+
+            baseBlockService.updateById(entity);
         });
     }
 
 
-    /**
-     * 从本地DB   加载全部（380+支）板块的 收盘价序列
-     *
-     * @return stock - close_arr
-     */
-    private void loadAllBlockKline(Map<String, String[]> codeDateMap,
-                                   Map<String, double[]> codeCloseMap,
-                                   Map<String, TreeMap<String, Double>> codePriceMap,
-                                   Map<String, Long> codeIdMap) {
-
-
-        // 加载  最近500日   行情数据
-        int DAY_LIMIT = 500;
-
-
-        List<BaseBlockDO> blockDOList = baseBlockService.listAllKline();
-        blockDOList.forEach(e -> {
-
-            Long id = e.getId();
-            String code = e.getCode();
-
-            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
-            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
-
-
-            TreeMap<String, Double> dateCloseMap = ConvertStockKline.fieldDatePriceMap(e.getKlineDTOList(), "close");
-
-
-            // 上市50天
-            if (close_arr.length >= 50) {
-
-                codeCloseMap.put(code, close_arr);
-                codeDateMap.put(code, date_arr);
-
-                codeIdMap.put(code, id);
-
-
-                codePriceMap.put(code, dateCloseMap);
-            }
-        });
-    }
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -319,6 +529,19 @@ public class ExtDataServiceImpl implements ExtDataService {
             return val;
         }
         return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+    }
+
+
+    private static double of(BigDecimal val) {
+        if (null == val) return Double.NaN;
+        return val.setScale(3, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    private static double of(double val) {
+        if (Double.isNaN(val)) {
+            return val;
+        }
+        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
 }

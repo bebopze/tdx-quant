@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
@@ -68,7 +69,7 @@ public class TdxExtDataFun {
 
         // 从本地DB   加载5000支个股的收盘价序列
         AllStockKlineDTO dto = loadAllStockKline();
-        Map<String, String[]> stockDateArrMap = dto.stockDateArrMap;
+        Map<String, LocalDate[]> stockDateArrMap = dto.stockDateArrMap;
         Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
         Map<String, Long> codeIdMap = dto.codeIdMap;
 
@@ -97,7 +98,7 @@ public class TdxExtDataFun {
 
         // 从本地DB   加载5000支个股的收盘价序列
         AllStockKlineDTO dto = loadAllStockKline();
-        Map<String, String[]> stockDateArrMap = dto.stockDateArrMap;
+        Map<String, LocalDate[]> stockDateArrMap = dto.stockDateArrMap;
         Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
         // Map<String, Long> codeIdMap = dto.codeIdMap;
 
@@ -131,7 +132,7 @@ public class TdxExtDataFun {
     @AllArgsConstructor
     public static class AllStockKlineDTO {
         // code - date_arr
-        Map<String, String[]> stockDateArrMap;
+        Map<String, LocalDate[]> stockDateArrMap;
         // code - close_arr
         Map<String, double[]> stockCloseArrMap;
         // code - id
@@ -145,7 +146,7 @@ public class TdxExtDataFun {
      */
     public static AllStockKlineDTO loadAllStockKline() {
         // code - date_arr
-        Map<String, String[]> stockDateArrMap = Maps.newHashMap();
+        Map<String, LocalDate[]> stockDateArrMap = Maps.newHashMap();
         // code - close_arr
         Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
         // code - id
@@ -228,7 +229,7 @@ public class TdxExtDataFun {
      * @param codeCloseMap Map<股票代码, double[] 收盘价序列>，与日期数组一一对应
      * @return Map<股票代码, double [ ]>            double[] 与该股日期序列长度一致，若无 RPS 则为 NaN
      */
-    public static Map<String, double[]> computeRPS(Map<String, String[]> codeDateMap,
+    public static Map<String, double[]> computeRPS(Map<String, LocalDate[]> codeDateMap,
                                                    Map<String, double[]> codeCloseMap,
                                                    int N) {
 
@@ -237,8 +238,8 @@ public class TdxExtDataFun {
 
 
         // 1. 为每个股票构建：Map<日期, N日涨幅>，并同时收集所有“有效涨幅”的日期
-        Map<String, TreeMap<String, Double>> returnsMap = new HashMap<>();
-        Set<String> allDates = new TreeSet<>();  // 按自然升序保存所有出现过的涨幅日期
+        Map<String, TreeMap<LocalDate, Double>> returnsMap = new HashMap<>();
+        Set<LocalDate> allDates = new TreeSet<>();  // 按自然升序保存所有出现过的涨幅日期
 
 
 //        TreeMap<String, Double> datePctMap = new TreeMap<>();
@@ -268,37 +269,37 @@ public class TdxExtDataFun {
 //        });
 
         for (String code : codeDateMap.keySet()) {
-            String[] dates = codeDateMap.get(code);
+            LocalDate[] dates = codeDateMap.get(code);
             double[] closes = codeCloseMap.get(code);
-            TreeMap<String, Double> codeReturns = new TreeMap<>();
+            TreeMap<LocalDate, Double> dayReturns = new TreeMap<>();
 
             if (dates.length > N) {
                 for (int i = N; i < dates.length; i++) {
                     double prev = closes[i - N];
                     if (prev != 0) {
                         double pct = (closes[i] / prev - 1.0) * 100.0;
-                        String dt = dates[i];
-                        codeReturns.put(dt, pct);
+                        LocalDate dt = dates[i];
+                        dayReturns.put(dt, pct);
                         allDates.add(dt);
                     }
                 }
             }
-            returnsMap.put(code, codeReturns);
+            returnsMap.put(code, dayReturns);
         }
 
         // 2. 为每个股票预分配 RPS 结果数组，长度与其日期序列一致，填充 NaN
         Map<String, double[]> rpsResult = new HashMap<>();
-        Map<String, Map<String, Integer>> dateIndexMap = new HashMap<>();
+        Map<String, Map<LocalDate, Integer>> dateIndexMap = new HashMap<>();
 
         for (String code : codeDateMap.keySet()) {
-            String[] dates = codeDateMap.get(code);
+            LocalDate[] dates = codeDateMap.get(code);
             int len = dates.length;
             double[] rpsArr = new double[len];
             Arrays.fill(rpsArr, Double.NaN);
             rpsResult.put(code, rpsArr);
 
             // 构建 日期->索引 映射，便于后续快速定位
-            Map<String, Integer> idxMap = new HashMap<>();
+            Map<LocalDate, Integer> idxMap = new HashMap<>();
             for (int i = 0; i < len; i++) {
                 idxMap.put(dates[i], i);
             }
@@ -306,21 +307,21 @@ public class TdxExtDataFun {
         }
 
         // 3. 构建“按日期聚合所有股票涨幅”的结构：Map<日期, List< (code, pct) >>
-        Map<String, List<Map.Entry<String, Double>>> dateToList = new TreeMap<>();
-        for (String date : allDates) {
+        Map<LocalDate, List<Map.Entry<String, Double>>> dateToList = new TreeMap<>();
+        for (LocalDate date : allDates) {
             dateToList.put(date, new ArrayList<>());
         }
         for (String code : returnsMap.keySet()) {
-            TreeMap<String, Double> codeReturns = returnsMap.get(code);
-            for (Map.Entry<String, Double> e : codeReturns.entrySet()) {
-                String date = e.getKey();
+            TreeMap<LocalDate, Double> codeReturns = returnsMap.get(code);
+            for (Map.Entry<LocalDate, Double> e : codeReturns.entrySet()) {
+                LocalDate date = e.getKey();
                 double pct = e.getValue();
                 dateToList.get(date).add(new AbstractMap.SimpleEntry<>(code, pct));
             }
         }
 
         // 4. 对每个日期，按涨幅升序排序，计算 RPS 并写入对应股票的结果数组
-        for (String date : dateToList.keySet()) {
+        for (LocalDate date : dateToList.keySet()) {
             List<Map.Entry<String, Double>> list = dateToList.get(date);
             int m = list.size();
             if (m == 0) continue;

@@ -1,9 +1,7 @@
 package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.common.convert.ConvertDate;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
@@ -21,6 +19,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.blockFunMap;
+import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.stockFunMap;
 
 
 /**
@@ -44,7 +45,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
         // BackTestStrategy strategy = strategyThreadLocal.get();
 
 
-        this.dateIndexMap = backTestStrategy.getDateIndexMap();
+        // this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
 
         this.blockDOList = backTestStrategy.getBlockDOList();
@@ -67,9 +68,11 @@ public class BacktestBuyStrategy extends BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        List<String> filter__blockCodeList = Lists.newArrayList();
-        for (BaseBlockDO baseBlockDO : blockDOList) {
-            String blockCode = baseBlockDO.getCode();
+        List<String> filter__blockCodeList = Collections.synchronizedList(Lists.newArrayList());
+        blockDOList.parallelStream().forEach(blockDO -> {
+
+
+            String blockCode = blockDO.getCode();
 
 
             // 1、in__板块-月多
@@ -86,31 +89,34 @@ public class BacktestBuyStrategy extends BuyStrategy {
             // 5、xxx
 
 
-            BlockFun blockFun = new BlockFun(blockCode, baseBlockDO);
+            BlockFun fun = blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
 
 
-            boolean[] 月多_arr = blockFun.月多();
-
-            boolean[] _60日新高_arr = blockFun.N日新高(60);
-            boolean[] RPS三线红_arr = blockFun.RPS三线红(80);
-
-            boolean[] 大均线多头_arr = blockFun.大均线多头();
-
-            boolean[] SSF多_arr = blockFun.SSF多();
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
-            boolean 月多 = getByDate(月多_arr, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, tradeDate);
-            boolean RPS三线红 = getByDate(RPS三线红_arr, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, tradeDate);
-            boolean SSF多 = getByDate(SSF多_arr, tradeDate);
+            boolean[] 月多_arr = fun.月多();
+
+            boolean[] _60日新高_arr = fun.N日新高(60);
+            boolean[] RPS三线红_arr = fun.RPS三线红(80);
+
+            boolean[] 大均线多头_arr = fun.大均线多头();
+
+            boolean[] SSF多_arr = fun.SSF多();
+
+
+            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
+            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
 
 
             boolean flag = 月多 && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
             if (flag) {
                 filter__blockCodeList.add(blockCode);
             }
-        }
+        });
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -118,9 +124,11 @@ public class BacktestBuyStrategy extends BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        List<String> filter__stockCodeList = Lists.newArrayList();
-        for (BaseStockDO baseStockDO : stockDOList) {
-            String stockCode = baseStockDO.getCode();
+        List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
+        stockDOList.parallelStream().forEach(stockDO -> {
+
+
+            String stockCode = stockDO.getCode();
 
 
             // 1、in__60日新高
@@ -138,7 +146,10 @@ public class BacktestBuyStrategy extends BuyStrategy {
             // 6、xxx
 
 
-            StockFun fun = new StockFun(stockCode, baseStockDO);
+            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
             boolean[] 月多_arr = fun.月多();
@@ -151,18 +162,18 @@ public class BacktestBuyStrategy extends BuyStrategy {
             boolean[] SSF多_arr = fun.SSF多();
 
 
-            boolean 月多 = getByDate(月多_arr, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, tradeDate);
-            boolean RPS三线红 = getByDate(RPS三线红_arr, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, tradeDate);
-            boolean SSF多 = getByDate(SSF多_arr, tradeDate);
+            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
+            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
 
 
             boolean flag = _60日新高 && 月多 && (RPS三线红 || 大均线多头) && SSF多;
             if (flag) {
                 filter__stockCodeList.add(stockCode);
             }
-        }
+        });
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -279,9 +290,9 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
         // Step 4: 按得分排序，取前N名
         List<QuickOption.StockScore> topNStocks = scoredStocks.stream()
-                .sorted(Comparator.comparingDouble((QuickOption.StockScore s) -> -s.getScore()))
-                .limit(N)
-                .collect(Collectors.toList());
+                                                              .sorted(Comparator.comparingDouble((QuickOption.StockScore s) -> -s.getScore()))
+                                                              .limit(N)
+                                                              .collect(Collectors.toList());
 
 
         // 输出结果或进一步操作
@@ -292,17 +303,15 @@ public class BacktestBuyStrategy extends BuyStrategy {
     }
 
 
-    private boolean getByDate(boolean[] arr, LocalDate date) {
+    public static boolean getByDate(boolean[] arr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
+        Integer idx = dateIndexMap.get(tradeDate);
 
-        boolean result = ConvertDate.getByDate(arr, date);
+        if (null == idx) {
+            // 当前 交易日  ->  未上市/停牌
+            return false;
+        }
 
-
-        int idx = dateIndexMap.get(DateTimeUtil.format_yyyy_MM_dd(date));
-        boolean result2 = arr[idx];
-
-
-        log.debug("getByDate     >>>     {}", result == result2);
-        return result2;
+        return arr[idx];
     }
 
 

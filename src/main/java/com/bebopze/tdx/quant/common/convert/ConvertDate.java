@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
@@ -29,7 +30,12 @@ public class ConvertDate {
     /**
      * 倒序 idx（今日  ->  上市 第1天）
      */
-    public static final Map<String, Integer> reverse__dateIndexMap = Maps.newHashMap();
+    public static final Map<LocalDate, Integer> reverse__dateIndexMap = Maps.newTreeMap();
+
+
+    public static final Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
+    public static final List<LocalDate> dateList = Lists.newArrayList();
+
 
     private static boolean initialized = false;
 
@@ -44,18 +50,26 @@ public class ConvertDate {
 
             if (baseBlockDO != null) {
 
-                List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(baseBlockDO.getKlineHis());
-                String[] date_arr = ConvertStockKline.strFieldValArr(klineDTOList, "date");
+                List<KlineDTO> klineDTOList = baseBlockDO.getKlineDTOList();
+                LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
 
 
-                // 倒序
-                Collections.reverse(Arrays.asList(date_arr));
-
-
-                // 倒序 idx（今日  ->  上市 第1天）
                 for (int i = 0; i < date_arr.length; i++) {
-                    reverse__dateIndexMap.put(date_arr[i], i);
+                    LocalDate date = date_arr[i];
+
+                    dateIndexMap.put(date, i);
+                    dateList.add(date);
                 }
+
+
+//                // 倒序
+//                Collections.reverse(Arrays.asList(date_arr));
+//
+//
+//                // 倒序 idx（今日  ->  上市 第1天）
+//                for (int i = 0; i < date_arr.length; i++) {
+//                    reverse__dateIndexMap.put(date_arr[i], i);
+//                }
             }
 
 
@@ -75,21 +89,55 @@ public class ConvertDate {
 
         try {
 
-            // 倒序 idx
-            int reverse_idx = reverse__dateIndexMap.get(DateTimeUtil.format_yyyy_MM_dd(date));
-            // 正序 idx
-            int idx = arr.length - reverse_idx - 1;
+            // // 倒序 idx
+            // Integer reverse_idx = reverse__dateIndexMap.get(date);
+            // // 正序 idx
+            // int idx = arr.length - reverse_idx - 1;
+            //
+            // return arr[idx];
+
+
+            Integer idx = dateIndexMap.get(date);
+            if (idx == null) {
+                log.error("");
+                return false;
+            }
 
             return arr[idx];
 
 
         } catch (Exception e) {
-            log.error("getByDate error     >>>     arr : {} , date : {} , exMsg : {}",
-                      JSON.toJSONString(arr), date, e.getMessage(), e);
+            log.error("getByDate error     >>>     reverse__dateIndexMap size : {} , arr size : {} , date : {} , exMsg : {}",
+                      reverse__dateIndexMap.size(), arr.length, date, e.getMessage(), e);
         }
 
 
         return false;
+    }
+
+
+    public static LocalDate tradeDateIncr(LocalDate tradeDate) {
+
+        // 第一次使用时 初始化
+        init();
+
+
+        Integer idx = dateIndexMap.get(tradeDate);
+
+        // 非交易日
+        while (idx == null) {
+            // 下一自然日   ->   直至 交易日
+            tradeDate = tradeDate.plusDays(1);
+            idx = dateIndexMap.get(tradeDate);
+
+
+            if (!DateTimeUtil.between(tradeDate, dateList.get(0), dateList.get(dateList.size() - 1))) {
+                throw new BizException(String.format("[日期：%s]非法，超出有效交易日范围", tradeDate));
+            }
+        }
+
+
+        return dateList.get(idx + 1);
     }
 
 
@@ -102,7 +150,7 @@ public class ConvertDate {
         init();
 
 
-        TreeMap<String, Integer> sort__dateIndexMap = new TreeMap<>(reverse__dateIndexMap);
+        TreeMap<LocalDate, Integer> sort__dateIndexMap = new TreeMap<>(reverse__dateIndexMap);
         System.out.println(JSON.toJSONString(reverse__dateIndexMap));
         System.out.println(JSON.toJSONString(sort__dateIndexMap));
 
