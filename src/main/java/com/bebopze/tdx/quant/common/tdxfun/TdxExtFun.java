@@ -714,4 +714,83 @@ public class TdxExtFun {
     }
 
 
+    /**
+     * 计算 上影大阴 信号                                     - upperShadowBigBear
+     *
+     *
+     * - TODO       高位 - 爆量/上影/大阴
+     *
+     * @param close  收盘价序列
+     * @param high   最高价序列
+     * @param low    最低价序列
+     * @param is20CM 布尔序列，true 表示涨跌幅限制20%的标的，false 表示5%
+     * @return 布尔序列，true 表示当天为上影大阴
+     */
+    public static boolean[] 上影大阴(double[] close,
+                                     double[] high,
+                                     double[] low,
+                                     boolean[] is20CM) {
+
+        int n = close.length;
+        if (high.length != n || low.length != n || is20CM.length != n) {
+            throw new IllegalArgumentException("非法数据：数组长度不一致");
+        }
+
+
+        boolean[] signal = new boolean[n];
+
+
+        // 计算 涨幅、振幅、上影线比例
+        double[] pctChange = new double[n];
+        double[] amplitude = new double[n];
+        double[] upperShadowRatio = new double[n];
+
+        // Arrays.fill(pctChange, Double.NaN);
+        // Arrays.fill(amplitude, Double.NaN);
+        // Arrays.fill(upperShadowRatio, Double.NaN);
+
+
+        for (int i = 0; i < n; i++) {
+            // 涨幅： (C/REF(C,1) -1) *100
+            if (i > 0 && close[i - 1] != 0) {
+                pctChange[i] = (close[i] / close[i - 1] - 1.0) * 100.0;
+            }
+            // 振幅： (H/L -1) *100
+            if (low[i] != 0) {
+                amplitude[i] = (high[i] / low[i] - 1.0) * 100.0;
+            }
+            // 上影线比例： (C - L)/(H - L)
+            double range = high[i] - low[i];
+            if (range != 0) {
+                upperShadowRatio[i] = (close[i] - low[i]) / range;
+            }
+        }
+
+
+        // 计算上影大阴： 上影线比例 < 0.4   并且 (跌幅 或 振幅 超限)          ==>          收盘价 位于振幅 下1/3
+
+        // 上影线_比例 < 0.4     AND     (  IF(_20CM, 涨幅<-9, 涨幅<-4.5)   ||   IF(_20CM, 振幅>10, 振幅>5)  )
+
+
+        for (int i = 0; i < n; i++) {
+            boolean condShadow = /*!Double.isNaN(upperShadowRatio[i]) &&*/ upperShadowRatio[i] < 0.4;
+            boolean condFall;
+            boolean condAmp;
+
+            if (is20CM[i]) {
+                condFall = pctChange[i] < -9.0;
+                condAmp = amplitude[i] > 10.0;
+            } else {
+                condFall = pctChange[i] < -4.5;
+                condAmp = amplitude[i] > 5.0;
+            }
+
+            signal[i] = condShadow && (condFall || condAmp);
+        }
+
+
+        return signal;
+    }
+
+
 }
