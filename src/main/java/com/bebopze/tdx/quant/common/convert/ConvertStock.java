@@ -35,6 +35,9 @@ public class ConvertStock {
             arrDTO.close[i] = dto.getClose();
             arrDTO.vol[i] = dto.getVol();
             arrDTO.amo[i] = dto.getAmo();
+
+
+            arrDTO.dateCloseMap.put(dto.getDate(), dto.getClose());
         }
 
 
@@ -62,17 +65,12 @@ public class ConvertStock {
             arrDTO.rps250_arr[i] = dto.getRps250();
 
 
-            try {
-                arrDTO.ssf_arr[i] = of(dto.getSSF());
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
+            arrDTO.ssf_arr[i] = of(dto.getSSF());
 
-            try {
-                arrDTO.SSF多[i] = of(dto.getSSF多());
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
+            arrDTO.MA20多[i] = of(dto.getMA20多());
+            arrDTO.MA20空[i] = of(dto.getSSF空());
+            arrDTO.SSF多[i] = of(dto.getSSF多());
+            arrDTO.SSF空[i] = of(dto.getSSF空());
 
             arrDTO.N日新高[i] = of(dto.getN日新高());
             arrDTO.均线预萌出[i] = of(dto.get均线预萌出());

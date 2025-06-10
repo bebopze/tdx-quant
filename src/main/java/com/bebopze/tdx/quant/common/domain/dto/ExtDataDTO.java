@@ -39,7 +39,10 @@ public class ExtDataDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    private Boolean MA20多;
+    private Boolean MA20空;
     private Boolean SSF多;
+    private Boolean SSF空;
 
 
     private Boolean N日新高;

@@ -304,7 +304,10 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] SSF = fun.SSF();
 
 
+            boolean[] MA20多 = fun.MA多(20);
+            boolean[] MA20空 = fun.MA空(20);
             boolean[] SSF多 = fun.SSF多();
+            boolean[] SSF空 = fun.SSF空();
 
 
             boolean[] N日新高 = fun.N日新高(60);
@@ -330,7 +333,10 @@ public class ExtDataServiceImpl implements ExtDataService {
                 dto.setSSF(of(SSF[i], 3));
 
 
+                dto.setMA20多(MA20多[i]);
+                dto.setMA20空(MA20空[i]);
                 dto.setSSF多(SSF多[i]);
+                dto.setSSF空(SSF空[i]);
 
 
                 dto.setN日新高(N日新高[i]);
@@ -425,7 +431,10 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] SSF = fun.SSF();
 
 
+            boolean[] MA20多 = fun.MA多(20);
+            boolean[] MA20空 = fun.MA空(20);
             boolean[] SSF多 = fun.SSF多();
+            boolean[] SSF空 = fun.SSF空();
 
 
             boolean[] N日新高 = fun.N日新高(60);
@@ -448,7 +457,10 @@ public class ExtDataServiceImpl implements ExtDataService {
                 dto.setSSF(of(SSF[i], 3));
 
 
+                dto.setMA20多(MA20多[i]);
+                dto.setMA20空(MA20空[i]);
                 dto.setSSF多(SSF多[i]);
+                dto.setSSF空(SSF空[i]);
 
 
                 dto.setN日新高(N日新高[i]);

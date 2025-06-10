@@ -35,7 +35,11 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    public boolean[] MA20多;
+    public boolean[] MA20空;
+
     public boolean[] SSF多;
+    public boolean[] SSF空;
 
 
     public boolean[] N日新高;
@@ -62,7 +66,11 @@ public class ExtDataArrDTO implements Serializable {
         this.ssf_arr = new double[size];
 
 
+        this.MA20多 = new boolean[size];
+        this.MA20空 = new boolean[size];
+
         this.SSF多 = new boolean[size];
+        this.SSF空 = new boolean[size];
 
         this.N日新高 = new boolean[size];
         this.均线预萌出 = new boolean[size];

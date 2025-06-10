@@ -5,16 +5,23 @@ import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 
 import java.util.List;
 
+
 /**
+ * -
+ *
  * @author: bebopze
  * @date: 2025/6/10
  */
+@Deprecated
 public class Tools {
 
 
     public static void extData(String extDataHis) {
 
+
         List<ExtDataDTO> extDataDTOList = ConvertStockExtData.extDataHis2DTOList(extDataHis);
 
     }
+
+
 }
