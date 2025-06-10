@@ -1,10 +1,10 @@
 package com.bebopze.tdx.quant.dal.entity;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
@@ -184,6 +184,28 @@ public class BaseStockDO implements Serializable {
             return Collections.emptyList();
         }
         return ConvertStockExtData.extDataHis2DTOList(extDataHis);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 涨跌幅 限制
+     *
+     * @return
+     */
+    public int getChangePctLimit() {
+        return StockLimitEnum.getChangePctLimit(code, name);
+    }
+
+    /**
+     * 是否 20CM（含30CM）
+     *
+     * @return
+     */
+    public boolean is20CM() {
+        return StockLimitEnum.is20CM(code, name);
     }
 
 
