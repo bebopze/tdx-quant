@@ -1132,6 +1132,102 @@ public class TdxFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 固定窗口 HHV：返回序列在过去 N 个元素中的最大值，前 N-1 个结果为 NaN
+     *
+     * @param S 输入序列
+     * @param N 固定窗口大小
+     */
+    public static double[] _HHV(double[] S, int N) {
+        int len = S.length;
+        double[] res = new double[len];
+        Arrays.fill(res, Double.NaN);
+        for (int i = 0; i < len; i++) {
+            if (i + 1 >= N) {
+                double max = Double.NEGATIVE_INFINITY;
+                for (int j = i + 1 - N; j <= i; j++) {
+                    if (!Double.isNaN(S[j]) && S[j] > max) {
+                        max = S[j];
+                    }
+                }
+                res[i] = (max == Double.NEGATIVE_INFINITY ? Double.NaN : max);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 可变窗口 HHV：窗口大小由 N[i] 决定
+     *
+     * @param S 输入序列
+     * @param N 窗口大小序列，可包含 NaN
+     */
+    public static double[] HHV(double[] S, int[] N) {
+        int len = S.length;
+        if (N.length != len) throw new IllegalArgumentException("N length must match S length");
+        double[] res = new double[len];
+        Arrays.fill(res, Double.NaN);
+        for (int i = 0; i < len; i++) {
+            int window = N[i];
+            if (window > 0 && window <= i + 1) {
+                double max = Double.NEGATIVE_INFINITY;
+                for (int j = i + 1 - window; j <= i; j++) {
+                    if (!Double.isNaN(S[j]) && S[j] > max) {
+                        max = S[j];
+                    }
+                }
+                res[i] = (max == Double.NEGATIVE_INFINITY ? Double.NaN : max);
+            }
+        }
+        return res;
+    }
+
+
+    /**
+     * 固定窗口 LLV：返回序列在过去 N 个元素中的最小值，前 N-1 个结果为 NaN
+     */
+    public static double[] _LLV(double[] S, int N) {
+        int len = S.length;
+        double[] res = new double[len];
+        Arrays.fill(res, Double.NaN);
+        for (int i = 0; i < len; i++) {
+            if (i + 1 >= N) {
+                double min = Double.POSITIVE_INFINITY;
+                for (int j = i + 1 - N; j <= i; j++) {
+                    if (!Double.isNaN(S[j]) && S[j] < min) {
+                        min = S[j];
+                    }
+                }
+                res[i] = (min == Double.POSITIVE_INFINITY ? Double.NaN : min);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 可变窗口 LLV：窗口大小由 N[i] 决定
+     */
+    public static double[] LLV(double[] S, int[] N) {
+        int len = S.length;
+        if (N.length != len) throw new IllegalArgumentException("N length must match S length");
+        double[] res = new double[len];
+        Arrays.fill(res, Double.NaN);
+        for (int i = 0; i < len; i++) {
+            int window = N[i];
+            if (window > 0 && window <= i + 1) {
+                double min = Double.POSITIVE_INFINITY;
+                for (int j = i + 1 - window; j <= i; j++) {
+                    if (!Double.isNaN(S[j]) && S[j] < min) {
+                        min = S[j];
+                    }
+                }
+                res[i] = (min == Double.POSITIVE_INFINITY ? Double.NaN : min);
+            }
+        }
+        return res;
+    }
+
+
     public static double[] SAR(double[] high, double[] low) {
         return SAR(high, low, 10, 2, 20);
     }

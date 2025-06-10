@@ -34,6 +34,7 @@ public class ExtDataDTO implements Serializable {
 
 
     private Double SSF;
+    private Double 中期涨幅;
 
 
     // ---------------------------------------------------

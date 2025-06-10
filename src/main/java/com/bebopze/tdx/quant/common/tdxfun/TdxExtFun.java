@@ -36,6 +36,232 @@ public class TdxExtFun {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+    //                                                  简单指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                      MA
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static boolean[] 上MA(double[] close, int N) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        // MA20
+        double[] MA20_arr = MA(close, N);
+
+
+        for (int i = 0; i < len; i++) {
+            double MA20 = MA20_arr[i];
+            double C = close[i];
+
+            arr[i] = C >= MA20;
+        }
+
+        return arr;
+    }
+
+    public static boolean[] 下MA(double[] close, int N) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        // MA20
+        double[] MA20_arr = MA(close, N);
+
+
+        for (int i = 0; i < len; i++) {
+            double MA20 = MA20_arr[i];
+            double C = close[i];
+
+            arr[i] = C < MA20;
+        }
+
+        return arr;
+    }
+
+
+    public static boolean[] MA向上(double[] close, int N) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        // MA20
+        double[] MA20_arr = MA(close, N);
+
+
+        for (int i = 0; i < len; i++) {
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double MA20 = MA20_arr[i];
+                double MA20_pre = MA20_arr[i - 1];
+
+                arr[i] = MA20 >= MA20_pre;
+            }
+        }
+
+        return arr;
+    }
+
+
+    public static boolean[] MA向下(double[] close, int N) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        // MA20
+        double[] MA20_arr = MA(close, N);
+
+
+        for (int i = 0; i < len; i++) {
+
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double MA20 = MA20_arr[i];
+                double MA20_pre = MA20_arr[i - 1];
+
+                arr[i] = MA20 < MA20_pre;
+            }
+        }
+
+        return arr;
+    }
+
+
+    public static boolean[] MA多(double[] close, int N) {
+        return con_merge(上MA(close, N), MA向上(close, N));
+    }
+
+
+    public static boolean[] MA空(double[] close, int N) {
+        return con_merge(下MA(close, N), MA向下(close, N));
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                      SSF
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static boolean[] 上SSF(double[] close, double[] ssf) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            double SSF = ssf[i];
+            double C = close[i];
+
+            arr[i] = C >= SSF;
+        }
+
+        return arr;
+    }
+
+    public static boolean[] 下SSF(double[] close, double[] ssf) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            double SSF = ssf[i];
+            double C = close[i];
+
+            arr[i] = C < SSF;
+        }
+
+        return arr;
+    }
+
+
+    public static boolean[] SSF向上(double[] close, double[] ssf) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double SSF = ssf[i];
+                double SSF_pre = ssf[i - 1];
+
+                arr[i] = SSF >= SSF_pre;
+            }
+        }
+
+        return arr;
+    }
+
+    public static boolean[] SSF向下(double[] close, double[] ssf) {
+        int len = close.length;
+        boolean[] arr = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+
+            if (i == 0) {
+                arr[i] = false;
+
+            } else {
+                double SSF = ssf[i];
+                double SSF_pre = ssf[i - 1];
+
+                arr[i] = SSF < SSF_pre;
+            }
+        }
+
+        return arr;
+    }
+
+
+    public static boolean[] SSF多(double[] close, double[] ssf) {
+        return con_merge(上SSF(close, ssf), SSF向上(close, ssf));
+    }
+
+
+    public static boolean[] SSF空(double[] close, double[] ssf) {
+        return con_merge(下SSF(close, ssf), SSF向下(close, ssf));
+    }
+
+
+    /**
+     * 结果合并   -   AND
+     *
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_merge(boolean[]... arr_list) {
+
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            boolean acc = true;
+            for (boolean[] arr : arr_list) {
+                acc &= arr[i];
+                if (!acc) break;
+            }
+            result[i] = acc;
+        }
+
+        return result;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
     //                                                  基础指标
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -95,6 +321,47 @@ public class TdxExtFun {
         double[] dmaC = DMA(close, x5);         // 先动态移动平均，平滑因子序列为 X5
         double[] ssf = EMA(dmaC, 2);         // 再对结果做 2 周期指数平滑
         return ssf;
+    }
+
+
+    /**
+     * 中期涨幅N
+     *
+     * @param high
+     * @param low
+     * @param close
+     * @param N
+     * @return
+     */
+    public static double[] 中期涨幅N(double[] high, double[] low, double[] close, int N) {
+        int len = close.length;
+
+
+        // L_DAY :   BARSLAST(MA空)  +  NL_DAY
+        int[] L_DAY = BARSLAST(MA空(close, N));
+
+
+        for (int i = 0; i < L_DAY.length; i++) {
+            L_DAY[i] += 15;
+        }
+
+        // _L    :   LLV(L,   L_DAY)
+        double[] L = LLV(low, L_DAY);
+
+
+        // 中期涨幅 :   IF(上MA || MA向上,           H / _L  *100 -100,     0)
+
+        boolean[] 上MA = 上MA(close, N);
+        boolean[] MA向上 = MA向上(close, N);
+
+
+        double[] 中期涨幅 = new double[len];
+        for (int i = 0; i < L.length; i++) {
+            中期涨幅[i] = (上MA[i] || MA向上[i]) ? (high[i] / L[i] - 1) * 100.00f : 0.0;
+        }
+
+
+        return 中期涨幅;
     }
 
 

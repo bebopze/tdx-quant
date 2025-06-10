@@ -32,6 +32,9 @@ public class ExtDataArrDTO implements Serializable {
     public double[] ssf_arr;
 
 
+    public double[] 中期涨幅;
+
+
     // ---------------------------------------------------
 
 
@@ -64,11 +67,11 @@ public class ExtDataArrDTO implements Serializable {
 
 
         this.ssf_arr = new double[size];
+        this.中期涨幅 = new double[size];
 
 
         this.MA20多 = new boolean[size];
         this.MA20空 = new boolean[size];
-
         this.SSF多 = new boolean[size];
         this.SSF空 = new boolean[size];
 

@@ -66,6 +66,7 @@ public class ConvertStock {
 
 
             arrDTO.ssf_arr[i] = of(dto.getSSF());
+            arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
 
             arrDTO.MA20多[i] = of(dto.getMA20多());
             arrDTO.MA20空[i] = of(dto.getSSF空());

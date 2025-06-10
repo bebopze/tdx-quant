@@ -131,23 +131,23 @@ public class BlockFun extends StockFun {
         this.dateIndexMap = dateIndexMap;
 
 
-        this.date_arr = date_arr;
-        this.open_arr = open_arr;
-        this.high_arr = high_arr;
-        this.low_arr = low_arr;
-        this.close_arr = close_arr;
-        this.vol_arr = vol_arr;
-        this.amo_arr = amo_arr;
+        this.date = date_arr;
+        this.open = open_arr;
+        this.high = high_arr;
+        this.low = low_arr;
+        this.close = close_arr;
+        this.vol = vol_arr;
+        this.amo = amo_arr;
 
 
-        this.ssf_arr = SSF();
+        this.ssf = SSF();
 
 
-        this.rps10_arr = rps5_arr;
-        this.rps20_arr = rps10_arr;
-        this.rps50_arr = rps15_arr;
-        this.rps120_arr = rps20_arr;
-        this.rps250_arr = rps50_arr;
+        this.rps10 = rps5_arr;
+        this.rps20 = rps10_arr;
+        this.rps50 = rps15_arr;
+        this.rps120 = rps20_arr;
+        this.rps250 = rps50_arr;
     }
 
 

@@ -27,7 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MA;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.con_merge;
 
 
 /**
@@ -73,23 +73,23 @@ public class StockFun {
     Map<LocalDate, Integer> dateIndexMap;
 
 
-    LocalDate[] date_arr;
-    double[] open_arr;
-    double[] high_arr;
-    double[] low_arr;
-    double[] close_arr;
-    long[] vol_arr;
-    double[] amo_arr;
+    LocalDate[] date;
+    double[] open;
+    double[] high;
+    double[] low;
+    double[] close;
+    long[] vol;
+    double[] amo;
 
 
-    double[] ssf_arr;
+    double[] ssf;
 
 
-    double[] rps10_arr;
-    double[] rps20_arr;
-    double[] rps50_arr;
-    double[] rps120_arr;
-    double[] rps250_arr;
+    double[] rps10;
+    double[] rps20;
+    double[] rps50;
+    double[] rps120;
+    double[] rps250;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -132,33 +132,33 @@ public class StockFun {
 
         // -----------------------------------------------
 
-        date_arr = klineArrDTO.date;
+        date = klineArrDTO.date;
 
-        open_arr = klineArrDTO.open;
-        high_arr = klineArrDTO.high;
-        low_arr = klineArrDTO.low;
-        close_arr = klineArrDTO.close;
+        open = klineArrDTO.open;
+        high = klineArrDTO.high;
+        low = klineArrDTO.low;
+        close = klineArrDTO.close;
 
-        vol_arr = klineArrDTO.vol;
-        amo_arr = klineArrDTO.amo;
+        vol = klineArrDTO.vol;
+        amo = klineArrDTO.amo;
 
 
         // -----------------------------------------------
 
 
-        rps10_arr = extDataArrDTO.rps10_arr;
-        rps20_arr = extDataArrDTO.rps20_arr;
-        rps50_arr = extDataArrDTO.rps50_arr;
-        rps120_arr = extDataArrDTO.rps120_arr;
-        rps250_arr = extDataArrDTO.rps250_arr;
+        rps10 = extDataArrDTO.rps10_arr;
+        rps20 = extDataArrDTO.rps20_arr;
+        rps50 = extDataArrDTO.rps50_arr;
+        rps120 = extDataArrDTO.rps120_arr;
+        rps250 = extDataArrDTO.rps250_arr;
 
 
         // -----------------------------------------------
 
 
         dateIndexMap = Maps.newHashMap();
-        for (int i = 0; i < date_arr.length; i++) {
-            dateIndexMap.put(date_arr[i], i);
+        for (int i = 0; i < date.length; i++) {
+            dateIndexMap.put(date[i], i);
         }
 
 
@@ -196,7 +196,7 @@ public class StockFun {
 
 //         this.ssf_arr = SSF(close_arr);
 
-        ssf_arr = extDataArrDTO.ssf_arr;
+        ssf = extDataArrDTO.ssf_arr;
     }
 
 
@@ -271,131 +271,59 @@ public class StockFun {
 
         this.C = C;
 
-        this.date_arr = date_arr;
-        this.close_arr = close_arr;
-        this.high_arr = high_arr;
+        this.date = date_arr;
+        this.close = close_arr;
+        this.high = high_arr;
 
 
-        this.ssf_arr = SSF();
+        this.ssf = SSF();
 
 
-        this.rps50_arr = rps50_arr;
-        this.rps120_arr = rps120_arr;
-        this.rps250_arr = rps250_arr;
+        this.rps50 = rps50;
+        this.rps120 = rps120;
+        this.rps250 = rps250;
 
 
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                                  基础指标
-    // -----------------------------------------------------------------------------------------------------------------
 
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  基础指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
     public boolean[] 上MA(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        // MA20
-        double[] MA20_arr = MA(close_arr, N);
-
-
-        for (int i = 0; i < len; i++) {
-            double MA20 = MA20_arr[i];
-            double C = close_arr[i];
-
-            arr[i] = C >= MA20;
-        }
-
-        return arr;
+        return TdxExtFun.上MA(close, N);
     }
 
     public boolean[] 下MA(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        // MA20
-        double[] MA20_arr = MA(close_arr, N);
-
-
-        for (int i = 0; i < len; i++) {
-            double MA20 = MA20_arr[i];
-            double C = close_arr[i];
-
-            arr[i] = C < MA20;
-        }
-
-        return arr;
+        return TdxExtFun.下MA(close, N);
     }
 
 
     public boolean[] MA向上(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        // MA20
-        double[] MA20_arr = MA(close_arr, N);
-
-
-        for (int i = 0; i < len; i++) {
-
-            if (i == 0) {
-                arr[i] = false;
-
-            } else {
-                double MA20 = MA20_arr[i];
-                double MA20_pre = MA20_arr[i - 1];
-
-                arr[i] = MA20 >= MA20_pre;
-            }
-        }
-
-        return arr;
+        return TdxExtFun.MA向上(close, N);
     }
 
 
     public boolean[] MA向下(int N) {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        // MA20
-        double[] MA20_arr = MA(close_arr, N);
-
-
-        for (int i = 0; i < len; i++) {
-
-
-            if (i == 0) {
-                arr[i] = false;
-
-            } else {
-                double MA20 = MA20_arr[i];
-                double MA20_pre = MA20_arr[i - 1];
-
-                arr[i] = MA20 < MA20_pre;
-            }
-        }
-
-        return arr;
+        return TdxExtFun.MA向下(close, N);
     }
 
 
     public boolean[] MA多(int N) {
-        return con_merge(上MA(N), MA向上(N));
+        return TdxExtFun.MA多(close, N);
     }
 
 
     public boolean[] MA空(int N) {
-        return con_merge(下MA(N), MA向下(N));
+        return TdxExtFun.MA空(close, N);
     }
 
 
@@ -403,92 +331,44 @@ public class StockFun {
 
 
     public double[] SSF() {
-        ssf_arr = TdxExtFun.SSF(close_arr);
-        return ssf_arr;
+        ssf = TdxExtFun.SSF(close);
+        return ssf;
     }
 
 
     public boolean[] 上SSF() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            double SSF = ssf_arr[i];
-            double C = close_arr[i];
-
-            arr[i] = C >= SSF;
-        }
-
-        return arr;
+        return TdxExtFun.上SSF(close, ssf);
     }
 
     public boolean[] 下SSF() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            double SSF = ssf_arr[i];
-            double C = close_arr[i];
-
-            arr[i] = C < SSF;
-        }
-
-        return arr;
+        return TdxExtFun.下SSF(close, ssf);
     }
 
 
     public boolean[] SSF向上() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-
-            if (i == 0) {
-                arr[i] = false;
-
-            } else {
-                double SSF = ssf_arr[i];
-                double SSF_pre = ssf_arr[i - 1];
-
-                arr[i] = SSF >= SSF_pre;
-            }
-        }
-
-        return arr;
+        return TdxExtFun.SSF向上(close, ssf);
     }
 
     public boolean[] SSF向下() {
-        int len = close_arr.length;
-        boolean[] arr = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-
-            if (i == 0) {
-                arr[i] = false;
-
-            } else {
-                double SSF = ssf_arr[i];
-                double SSF_pre = ssf_arr[i - 1];
-
-                arr[i] = SSF < SSF_pre;
-            }
-        }
-
-        return arr;
+        return TdxExtFun.SSF向下(close, ssf);
     }
 
 
     public boolean[] SSF多() {
-        return con_merge(上SSF(), SSF向上());
+        return TdxExtFun.SSF多(close, ssf);
     }
 
 
     public boolean[] SSF空() {
-        return con_merge(下SSF(), SSF向下());
+        return TdxExtFun.SSF空(close, ssf);
+    }
+
+
+    // -------------------------------------------- 中期涨幅
+
+
+    public double[] 中期涨幅N(int N) {
+        return TdxExtFun.中期涨幅N(high, low, close, N);
     }
 
 
@@ -499,8 +379,8 @@ public class StockFun {
 
     public boolean[] N日新高(int N) {
 
-        boolean[] N日新高_H_arr = TdxExtFun.N日新高(high_arr, N);
-        boolean[] N日新高_C_arr = TdxExtFun.N日新高(close_arr, N);
+        boolean[] N日新高_H_arr = TdxExtFun.N日新高(high, N);
+        boolean[] N日新高_C_arr = TdxExtFun.N日新高(close, N);
 
 
         // H新高 || C新高
@@ -509,17 +389,17 @@ public class StockFun {
 
 
     public boolean[] 均线预萌出() {
-        return TdxExtFun.均线预萌出(close_arr);
+        return TdxExtFun.均线预萌出(close);
     }
 
 
     public boolean[] 均线萌出() {
-        return TdxExtFun.均线萌出(close_arr);
+        return TdxExtFun.均线萌出(close);
     }
 
 
     public boolean[] 大均线多头() {
-        return TdxExtFun.大均线多头(close_arr);
+        return TdxExtFun.大均线多头(close);
     }
 
 
@@ -529,41 +409,16 @@ public class StockFun {
 
 
     public boolean[] 月多() {
-        return TdxExtFun.月多(date_arr, open_arr, high_arr, low_arr, close_arr);
+        return TdxExtFun.月多(date, open, high, low, close);
     }
 
 
     public boolean[] RPS三线红(int RPS) {
-        return TdxExtFun.RPS三线红(rps50_arr, rps120_arr, rps250_arr, RPS);
+        return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * 结果合并   -   AND
-     *
-     * @param arr_list
-     * @return
-     */
-    public static boolean[] con_merge(boolean[]... arr_list) {
-
-        int len = arr_list[0].length;
-        boolean[] result = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            boolean acc = true;
-            for (boolean[] arr : arr_list) {
-                acc &= arr[i];
-                if (!acc) break;
-            }
-            result[i] = acc;
-        }
-
-        return result;
-    }
 
 
     /**
@@ -626,12 +481,12 @@ public class StockFun {
         boolean[] 下MA100 = fun.MA空(100);
 
 
-        double[] closeArr = fun.close_arr;
+        double[] closeArr = fun.close;
         // double[] ssf = SSF(closeArr);
 
 
-        LocalDate[] date_arr = fun.date_arr;
-        double[] ssf_arr = fun.ssf_arr;
+        LocalDate[] date_arr = fun.date;
+        double[] ssf_arr = fun.ssf;
         boolean[] booleans = fun.SSF多();
 
         boolean[] con = con_merge(下MA50, MA20_空, 下MA100);

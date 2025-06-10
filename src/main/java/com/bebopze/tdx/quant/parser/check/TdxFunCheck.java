@@ -552,30 +552,30 @@ public class TdxFunCheck {
         StockFun fun = new StockFun(stockCode, stockDO);
 
 
-        LocalDate[] date_arr = fun.getDate_arr();
+        LocalDate[] date_arr = fun.getDate();
 
-        double[] open_arr = fun.getOpen_arr();
-        double[] high_arr = fun.getHigh_arr();
-        double[] low_arr = fun.getLow_arr();
-        double[] close_arr = fun.getClose_arr();
-        long[] vol_arr = fun.getVol_arr();
+        double[] open_arr = fun.getOpen();
+        double[] high_arr = fun.getHigh();
+        double[] low_arr = fun.getLow();
+        double[] close_arr = fun.getClose();
+        long[] vol_arr = fun.getVol();
 
 
         // double[] ssf_arr = fun.getSsf_arr();
         double[] ssf_arr = fun.SSF();
 
 
-        double[] rps10_arr = fun.getRps10_arr();
-        double[] rps20_arr = fun.getRps20_arr();
-        double[] rps50_arr = fun.getRps50_arr();
-        double[] rps120_arr = fun.getRps120_arr();
-        double[] rps250_arr = fun.getRps250_arr();
+        double[] rps10_arr = fun.getRps10();
+        double[] rps20_arr = fun.getRps20();
+        double[] rps50_arr = fun.getRps50();
+        double[] rps120_arr = fun.getRps120();
+        double[] rps250_arr = fun.getRps250();
 
-        double[] bk_rps5_arr = blockFun.getRps10_arr();
-        double[] bk_rps10_arr = blockFun.getRps20_arr();
-        double[] bk_rps15_arr = blockFun.getRps50_arr();
-        double[] bk_rps20_arr = blockFun.getRps120_arr();
-        double[] bk_rps50_arr = blockFun.getRps250_arr();
+        double[] bk_rps5_arr = blockFun.getRps10();
+        double[] bk_rps10_arr = blockFun.getRps20();
+        double[] bk_rps15_arr = blockFun.getRps50();
+        double[] bk_rps20_arr = blockFun.getRps120();
+        double[] bk_rps50_arr = blockFun.getRps250();
 
 
         // 日K
@@ -648,7 +648,7 @@ public class TdxFunCheck {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        LocalDate[] block_date_arr = blockFun.getDate_arr();
+        LocalDate[] block_date_arr = blockFun.getDate();
 
         LocalDate stock_startDate = date_arr[0];
         LocalDate block_startDate = block_date_arr[0];

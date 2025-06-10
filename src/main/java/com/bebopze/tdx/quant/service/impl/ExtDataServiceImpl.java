@@ -302,6 +302,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             double[] SSF = fun.SSF();
+            double[] 中期涨幅 = fun.中期涨幅N(20);
 
 
             boolean[] MA20多 = fun.MA多(20);
@@ -331,6 +332,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
                 dto.setSSF(of(SSF[i], 3));
+                dto.set中期涨幅(of(中期涨幅[i], 3));
 
 
                 dto.setMA20多(MA20多[i]);
@@ -429,6 +431,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             double[] SSF = fun.SSF();
+            double[] 中期涨幅 = fun.中期涨幅N(20);
 
 
             boolean[] MA20多 = fun.MA多(20);
@@ -455,6 +458,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
                 dto.setSSF(of(SSF[i], 3));
+                dto.set中期涨幅(of(中期涨幅[i]));
 
 
                 dto.setMA20多(MA20多[i]);
