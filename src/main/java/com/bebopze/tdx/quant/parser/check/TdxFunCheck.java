@@ -302,6 +302,12 @@ public class TdxFunCheck {
             }
 
 
+            // 中期涨幅     ->     FAIL
+            if (!equals(dto1.get中期涨幅(), dto2.get中期涨幅())) {
+                failCountMap.compute("中期涨幅", (k, v) -> (v == null ? 1 : v + 1));
+            }
+
+
             // -------------------------------- 高级指标
 
 
@@ -552,36 +558,35 @@ public class TdxFunCheck {
         StockFun fun = new StockFun(stockCode, stockDO);
 
 
-        LocalDate[] date_arr = fun.getDate();
+        LocalDate[] date = fun.getDate();
 
-        double[] open_arr = fun.getOpen();
-        double[] high_arr = fun.getHigh();
-        double[] low_arr = fun.getLow();
-        double[] close_arr = fun.getClose();
-        long[] vol_arr = fun.getVol();
-
-
-        // double[] ssf_arr = fun.getSsf_arr();
-        double[] ssf_arr = fun.SSF();
+        double[] open = fun.getOpen();
+        double[] high = fun.getHigh();
+        double[] low = fun.getLow();
+        double[] close = fun.getClose();
+        long[] vol = fun.getVol();
 
 
-        double[] rps10_arr = fun.getRps10();
-        double[] rps20_arr = fun.getRps20();
-        double[] rps50_arr = fun.getRps50();
-        double[] rps120_arr = fun.getRps120();
-        double[] rps250_arr = fun.getRps250();
+        double[] ssf = fun.SSF();
 
-        double[] bk_rps5_arr = blockFun.getRps10();
-        double[] bk_rps10_arr = blockFun.getRps20();
-        double[] bk_rps15_arr = blockFun.getRps50();
-        double[] bk_rps20_arr = blockFun.getRps120();
-        double[] bk_rps50_arr = blockFun.getRps250();
+
+        double[] rps10 = fun.getRps10();
+        double[] rps20 = fun.getRps20();
+        double[] rps50 = fun.getRps50();
+        double[] rps120 = fun.getRps120();
+        double[] rps250 = fun.getRps250();
+
+        double[] bk_rps5 = blockFun.getRps10();
+        double[] bk_rps10 = blockFun.getRps20();
+        double[] bk_rps15 = blockFun.getRps50();
+        double[] bk_rps20 = blockFun.getRps120();
+        double[] bk_rps50 = blockFun.getRps250();
 
 
         // 日K
         List<KlineBar> dayList = Lists.newArrayList();
-        for (int i = 0; i < date_arr.length; i++) {
-            KlineBar dto = new KlineBar(date_arr[i], open_arr[i], high_arr[i], low_arr[i], close_arr[i]);
+        for (int i = 0; i < date.length; i++) {
+            KlineBar dto = new KlineBar(date[i], open[i], high[i], low[i], close[i]);
             dayList.add(dto);
         }
         dayList.sort(Comparator.comparing(d -> d.date));
@@ -611,64 +616,66 @@ public class TdxFunCheck {
         Double[] closeMonth = monthlyList.stream().map(KlineBar::getClose).collect(Collectors.toList()).toArray(new Double[m_size]);
 
 
-        double[] MA5 = TdxFun.MA(close_arr, 5);
-        double[] MA10 = TdxFun.MA(close_arr, 10);
-        double[] MA20 = TdxFun.MA(close_arr, 20);
-        double[] MA50 = TdxFun.MA(close_arr, 50);
-        double[] MA100 = TdxFun.MA(close_arr, 100);
-        double[] MA200 = TdxFun.MA(close_arr, 200);
+        double[] MA5 = TdxFun.MA(close, 5);
+        double[] MA10 = TdxFun.MA(close, 10);
+        double[] MA20 = TdxFun.MA(close, 20);
+        double[] MA50 = TdxFun.MA(close, 50);
+        double[] MA100 = TdxFun.MA(close, 100);
+        double[] MA200 = TdxFun.MA(close, 200);
 
 
-        double[][] macd = TdxFun.MACD(close_arr);
+        double[][] macd = TdxFun.MACD(close);
         double[] DIF = macd[0];
         double[] DEA = macd[1];
         double[] MACD = macd[2];
 
 
-        double[] SAR = TdxFun.TDX_SAR(high_arr, low_arr);
+        double[] SAR = TdxFun.TDX_SAR(high, low);
 
 
-        boolean[] MA20多 = fun.MA多(20);
-        boolean[] MA20空 = fun.MA空(20);
+        double[] 中期涨幅 = fun.中期涨幅N(20);
+
 
         boolean[] SSF多 = fun.SSF多();
         boolean[] SSF空 = fun.SSF空();
+        boolean[] MA20多 = fun.MA多(20);
+        boolean[] MA20空 = fun.MA空(20);
 
 
-        boolean[] _60日新高_arr = fun.N日新高(60);
-        boolean[] 均线预萌出_arr = fun.均线预萌出();
-        boolean[] 均线萌出_arr = fun.均线萌出();
-        boolean[] 大均线多头_arr = fun.大均线多头();
+        boolean[] _60日新高 = fun.N日新高(60);
+        boolean[] 均线预萌出 = fun.均线预萌出();
+        boolean[] 均线萌出 = fun.均线萌出();
+        boolean[] 大均线多头 = fun.大均线多头();
 
 
-        boolean[] 月多_arr = fun.月多();
-        boolean[] RPS三线红_arr = fun.RPS三线红(80);
+        boolean[] 月多 = fun.月多();
+        boolean[] RPS三线红 = fun.RPS三线红(80);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        LocalDate[] block_date_arr = blockFun.getDate();
+        LocalDate[] block_date = blockFun.getDate();
 
-        LocalDate stock_startDate = date_arr[0];
-        LocalDate block_startDate = block_date_arr[0];
+        LocalDate stock_startDate = date[0];
+        LocalDate block_startDate = block_date[0];
 
 
         int diffDays = 0;
         if (stock_startDate.isBefore(block_startDate)) {
-            diffDays = -1 * Arrays.asList(date_arr).indexOf(block_date_arr[0]);
+            diffDays = -1 * Arrays.asList(date).indexOf(block_date[0]);
         } else {
-            diffDays = Arrays.asList(block_date_arr).indexOf(date_arr[0]);
+            diffDays = Arrays.asList(block_date).indexOf(date[0]);
         }
 
-        List<LocalDate> block_date_list = Arrays.asList(block_date_arr);
+        List<LocalDate> block_date_list = Arrays.asList(block_date);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        for (int i = 0; i < date_arr.length; i++) {
-            // String dateStr = date_arr[i];
+        for (int i = 0; i < date.length; i++) {
+            // String dateStr = date[i];
 
 
             TdxFunResultDTO dto = new TdxFunResultDTO();
@@ -679,12 +686,12 @@ public class TdxFunCheck {
 
 
             // 日K
-            dto.setDate(date_arr[i]);
-            dto.setOpen(open_arr[i]);
-            dto.setHigh(high_arr[i]);
-            dto.setLow(low_arr[i]);
-            dto.setClose(close_arr[i]);
-            dto.setVol(vol_arr[i]);
+            dto.setDate(date[i]);
+            dto.setOpen(open[i]);
+            dto.setHigh(high[i]);
+            dto.setLow(low[i]);
+            dto.setClose(close[i]);
+            dto.setVol(vol[i]);
 
 
             // 周K
@@ -718,25 +725,25 @@ public class TdxFunCheck {
             dto.setMA200(of(MA200[i]));
 
 
-            dto.setRPS10(of(rps10_arr[i]));
-            dto.setRPS20(of(rps20_arr[i]));
-            dto.setRPS50(of(rps50_arr[i]));
-            dto.setRPS120(of(rps120_arr[i]));
-            dto.setRPS250(of(rps250_arr[i]));
+            dto.setRPS10(of(rps10[i]));
+            dto.setRPS20(of(rps20[i]));
+            dto.setRPS50(of(rps50[i]));
+            dto.setRPS120(of(rps120[i]));
+            dto.setRPS250(of(rps250[i]));
 
             // 板块RPS
             int bk_idx = i + diffDays;
             if (bk_idx >= 0) {
 
-                LocalDate stock_date = date_arr[i];
+                LocalDate stock_date = date[i];
                 bk_idx = block_date_list.indexOf(stock_date);
 
                 if (bk_idx != -1) {
-                    dto.setBK_RPS5(of(bk_rps5_arr[bk_idx]));
-                    dto.setBK_RPS10(of(bk_rps10_arr[bk_idx]));
-                    dto.setBK_RPS15(of(bk_rps15_arr[bk_idx]));
-                    dto.setBK_RPS20(of(bk_rps20_arr[bk_idx]));
-                    dto.setBK_RPS50(of(bk_rps50_arr[bk_idx]));
+                    dto.setBK_RPS5(of(bk_rps5[bk_idx]));
+                    dto.setBK_RPS10(of(bk_rps10[bk_idx]));
+                    dto.setBK_RPS15(of(bk_rps15[bk_idx]));
+                    dto.setBK_RPS20(of(bk_rps20[bk_idx]));
+                    dto.setBK_RPS50(of(bk_rps50[bk_idx]));
                 }
             }
 
@@ -755,27 +762,30 @@ public class TdxFunCheck {
             dto.setMA20多(bool2Int(MA20多[i]));
             dto.setMA20空(bool2Int(MA20空[i]));
 
-            dto.setSSF(of(ssf_arr[i]));
+            dto.setSSF(of(ssf[i]));
             dto.setSSF多(bool2Int(SSF多[i]));
             dto.setSSF空(bool2Int(SSF空[i]));
+
+
+            dto.set中期涨幅(of(中期涨幅[i]));
 
 
             // -------------------------------- 高级指标
 
 
-            dto.set_60日新高(bool2Int(_60日新高_arr[i]));
-            dto.set均线预萌出(bool2Int(均线预萌出_arr[i]));
-            dto.set均线萌出(bool2Int(均线萌出_arr[i]));
+            dto.set_60日新高(bool2Int(_60日新高[i]));
+            dto.set均线预萌出(bool2Int(均线预萌出[i]));
+            dto.set均线萌出(bool2Int(均线萌出[i]));
 
 
-            dto.set大均线多头(bool2Int(大均线多头_arr[i]));
+            dto.set大均线多头(bool2Int(大均线多头[i]));
 
 
             // -------------------------------- 复杂指标
 
 
-            dto.set月多(bool2Int(月多_arr[i]));
-            dto.setRPS三线红(bool2Int(RPS三线红_arr[i]));
+            dto.set月多(bool2Int(月多[i]));
+            dto.setRPS三线红(bool2Int(RPS三线红[i]));
 
 
             dtoList.add(dto);
@@ -967,6 +977,10 @@ public class TdxFunCheck {
         dto.setSSF空(row.getInteger("SSF空"));
 
 
+        // ------- 中期涨幅
+        dto.setSSF(row.getDouble("中期涨幅"));
+
+
         // ------------------------------------------------ 高级指标
 
 
@@ -1126,6 +1140,10 @@ public class TdxFunCheck {
         private Double SSF;
         private Integer SSF多;
         private Integer SSF空;
+
+
+        // 中期涨幅
+        private Double 中期涨幅;
 
 
         // -------------------------------- 高级指标

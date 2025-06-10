@@ -58,15 +58,19 @@ public class ConvertStock {
             arrDTO.date[i] = dto.getDate();
 
 
-            arrDTO.rps10_arr[i] = dto.getRps10();
-            arrDTO.rps20_arr[i] = dto.getRps20();
-            arrDTO.rps50_arr[i] = dto.getRps50();
-            arrDTO.rps120_arr[i] = dto.getRps120();
-            arrDTO.rps250_arr[i] = dto.getRps250();
+            arrDTO.rps10[i] = dto.getRps10();
+            arrDTO.rps20[i] = dto.getRps20();
+            arrDTO.rps50[i] = dto.getRps50();
+            arrDTO.rps120[i] = dto.getRps120();
+            arrDTO.rps250[i] = dto.getRps250();
 
 
-            arrDTO.ssf_arr[i] = of(dto.getSSF());
+            arrDTO.SSF[i] = of(dto.getSSF());
+
+
             arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
+            arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
+
 
             arrDTO.MA20多[i] = of(dto.getMA20多());
             arrDTO.MA20空[i] = of(dto.getSSF空());

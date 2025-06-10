@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.FastJson2Config;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
+import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
@@ -146,11 +147,11 @@ public class StockFun {
         // -----------------------------------------------
 
 
-        rps10 = extDataArrDTO.rps10_arr;
-        rps20 = extDataArrDTO.rps20_arr;
-        rps50 = extDataArrDTO.rps50_arr;
-        rps120 = extDataArrDTO.rps120_arr;
-        rps250 = extDataArrDTO.rps250_arr;
+        rps10 = extDataArrDTO.rps10;
+        rps20 = extDataArrDTO.rps20;
+        rps50 = extDataArrDTO.rps50;
+        rps120 = extDataArrDTO.rps120;
+        rps250 = extDataArrDTO.rps250;
 
 
         // -----------------------------------------------
@@ -196,7 +197,7 @@ public class StockFun {
 
 //         this.ssf_arr = SSF(close_arr);
 
-        ssf = extDataArrDTO.ssf_arr;
+        ssf = extDataArrDTO.SSF;
     }
 
 
@@ -369,6 +370,16 @@ public class StockFun {
 
     public double[] 中期涨幅N(int N) {
         return TdxExtFun.中期涨幅N(high, low, close, N);
+    }
+
+    // 高位-爆量/上影/大阴
+    public boolean[] 高位爆量上影大阴() {
+        return TdxExtFun.高位爆量上影大阴(high, low, close, amo, is20CM());
+    }
+
+
+    public boolean is20CM() {
+        return StockLimitEnum.is20CM(code, name);
     }
 
 

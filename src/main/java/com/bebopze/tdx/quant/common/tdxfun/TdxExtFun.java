@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
+import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -16,6 +18,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.EMA;
  * @author: bebopze
  * @date: 2025/5/17
  */
+@Slf4j
 public class TdxExtFun {
 
 
@@ -342,8 +345,12 @@ public class TdxExtFun {
 
 
         for (int i = 0; i < L_DAY.length; i++) {
+            // + NL_DAY （ 10~20 ）
             L_DAY[i] += 15;
+            // L_DAY[i] = Math.min(L_DAY[i], 100) + 15;
         }
+        log.debug("中期涨幅N     >>>     L_DAY : {}", JSON.toJSONString(L_DAY));
+
 
         // _L    :   LLV(L,   L_DAY)
         double[] L = LLV(low, L_DAY);
@@ -358,10 +365,79 @@ public class TdxExtFun {
         double[] 中期涨幅 = new double[len];
         for (int i = 0; i < L.length; i++) {
             中期涨幅[i] = (上MA[i] || MA向上[i]) ? (high[i] / L[i] - 1) * 100.00f : 0.0;
+
+            if (Double.isNaN(中期涨幅[i]) || Double.isInfinite(中期涨幅[i])) {
+                log.error("中期涨幅N     >>>     idx : {} , high : {} , L : {} , 中期涨幅 : {}", i, high[i], L[i], 中期涨幅[i]);
+            }
         }
 
 
         return 中期涨幅;
+    }
+
+
+    /**
+     * 高位 - 爆量/上影/大阴
+     *
+     * @param high
+     * @param low
+     * @param close
+     * @param amo
+     * @param is20CM
+     * @return
+     */
+    public static boolean[] 高位爆量上影大阴(double[] high,
+                                             double[] low,
+                                             double[] close,
+                                             double[] amo,
+                                             boolean is20CM) {
+
+
+        int len = close.length;
+        boolean[] result = new boolean[len];
+
+
+        // { ------------------ 高位爆量 }
+        //
+        // AMO_MA5  :=  MA(AMO, 5);
+        // AMO_MA10 :=  MA(AMO,10);
+        // 上影大阴 :=  上影大阴.上影大阴;
+        //
+        //
+        // 高位爆量_1 :=  AMO/AMO_MA5>=1.9   AND   AMO/AMO_MA10>=2.1;
+        //
+        // 高位爆量_2 :=  NOT(高位爆量_1)    AND   AMO / REF( HHV(AMO,10) ,1) >= 1.35     {AND     AMO_亿>=10};
+        //
+        //
+        //
+        // 高位爆量上影 :=  (倍  AND  (高位爆量_1  ||  高位爆量_2   ||   上影大阴)  )   ||   (中期涨幅>100 AND 上影大阴  AND  高位爆量_1)       NODRAW;
+
+
+        // 高位
+        double[] 中期涨幅 = 中期涨幅N(high, low, close, 20);
+
+        // 爆量
+        boolean[] 爆量 = 爆量(amo);
+
+        // 上影大阴
+        boolean[] 上影大阴 = 上影大阴(high, low, close, is20CM);
+
+
+        for (int i = 0; i < len; i++) {
+
+            // 高位
+            boolean 高位 = is20CM ? 中期涨幅[i] >= 125 : 中期涨幅[i] >= 85;
+
+
+            // 高位- 爆量/上影/大阴
+            boolean b1 = 高位 && (爆量[i] || 上影大阴[i]);
+            boolean b2 = 中期涨幅[i] > 100 && 爆量[i] && 上影大阴[i];
+
+
+            result[i] = b1 || b2;
+        }
+
+        return result;
     }
 
 
@@ -715,29 +791,26 @@ public class TdxExtFun {
 
 
     /**
-     * 计算 上影大阴 信号                                     - upperShadowBigBear
+     * 上影大阴                                     - upperShadowBigBear
      *
      *
      * - TODO       高位 - 爆量/上影/大阴
      *
-     * @param close  收盘价序列
      * @param high   最高价序列
      * @param low    最低价序列
-     * @param is20CM 布尔序列，true 表示涨跌幅限制20%的标的，false 表示5%
+     * @param close  收盘价序列
+     * @param is20CM 涨跌幅限制 20%/30%     true/false
      * @return 布尔序列，true 表示当天为上影大阴
      */
-    public static boolean[] 上影大阴(double[] close,
-                                     double[] high,
-                                     double[] low,
-                                     boolean[] is20CM) {
+    public static boolean[] 上影大阴(double[] high, double[] low, double[] close, boolean is20CM) {
 
         int n = close.length;
-        if (high.length != n || low.length != n || is20CM.length != n) {
+        if (high.length != n || low.length != n) {
             throw new IllegalArgumentException("非法数据：数组长度不一致");
         }
 
 
-        boolean[] signal = new boolean[n];
+        boolean[] result = new boolean[n];
 
 
         // 计算 涨幅、振幅、上影线比例
@@ -777,7 +850,7 @@ public class TdxExtFun {
             boolean condFall;
             boolean condAmp;
 
-            if (is20CM[i]) {
+            if (is20CM) {
                 condFall = pctChange[i] < -9.0;
                 condAmp = amplitude[i] > 10.0;
             } else {
@@ -785,11 +858,59 @@ public class TdxExtFun {
                 condAmp = amplitude[i] > 5.0;
             }
 
-            signal[i] = condShadow && (condFall || condAmp);
+            result[i] = condShadow && (condFall || condAmp);
         }
 
 
-        return signal;
+        return result;
+    }
+
+
+    public static boolean[] 爆量(double[] amo) {
+        int n = amo.length;
+        boolean[] result = new boolean[n];
+
+
+        // { ------------------ 高位爆量 }
+        //
+        // AMO_MA5  :=  MA(AMO, 5);
+        // AMO_MA10 :=  MA(AMO,10);
+        // 上影大阴 :=  上影大阴.上影大阴;
+        //
+        //
+        // 高位爆量_1 :=  AMO/AMO_MA5>=1.9   AND   AMO/AMO_MA10>=2.1;
+        //
+        // 高位爆量_2 :=  NOT(高位爆量_1)    AND   AMO / REF( HHV(AMO,10) ,1) >= 1.35     {AND     AMO_亿>=10};
+        //
+        //
+        //
+        // 高位爆量上影 :=  (倍  AND  (高位爆量_1  ||  高位爆量_2   ||   上影大阴)  )   ||   (中期涨幅>100 AND 上影大阴  AND  高位爆量_1)       NODRAW;
+
+
+        // AMO_MA5  :=  MA(AMO, 5);
+        // AMO_MA10 :=  MA(AMO,10);
+        double[] AMO_MA5 = MA(amo, 5);
+        double[] AMO_MA10 = MA(amo, 10);
+
+
+        double[] AMO_H10 = HHV(amo, 10);
+        double[] REF1_AMO_H10 = REF(AMO_H10, 1);
+
+
+        for (int i = 0; i < n; i++) {
+
+            // 高位爆量_1 :=  AMO/AMO_MA5>=1.9   AND   AMO/AMO_MA10>=2.1;
+            boolean 高位爆量_1 = amo[i] / AMO_MA5[i] >= 1.9 && amo[i] / AMO_MA10[i] >= 2.1;
+
+            // 高位爆量_2 :=  NOT(高位爆量_1)    AND   AMO / REF( HHV(AMO,10) ,1) >= 1.35     {AND     AMO_亿>=10};
+            boolean 高位爆量_2 = !高位爆量_1 && amo[i] / REF1_AMO_H10[i] >= 1.35;
+
+
+            result[i] = 高位爆量_1 || 高位爆量_2;
+        }
+
+
+        return result;
     }
 
 

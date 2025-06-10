@@ -19,20 +19,21 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
-    public double[] rps10_arr;
-    public double[] rps20_arr;
-    public double[] rps50_arr;
-    public double[] rps120_arr;
-    public double[] rps250_arr;
+    public double[] rps10;
+    public double[] rps20;
+    public double[] rps50;
+    public double[] rps120;
+    public double[] rps250;
 
 
     // ---------------------------------------------------
 
 
-    public double[] ssf_arr;
+    public double[] SSF;
 
 
     public double[] 中期涨幅;
+    public boolean[] 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
     // ---------------------------------------------------
@@ -55,19 +56,25 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] RPS三线红;
 
 
+    // ---------------------------------------------------
+
+
     public ExtDataArrDTO(int size) {
         this.date = new LocalDate[size];
 
 
-        this.rps10_arr = new double[size];
-        this.rps20_arr = new double[size];
-        this.rps50_arr = new double[size];
-        this.rps120_arr = new double[size];
-        this.rps250_arr = new double[size];
+        this.rps10 = new double[size];
+        this.rps20 = new double[size];
+        this.rps50 = new double[size];
+        this.rps120 = new double[size];
+        this.rps250 = new double[size];
 
 
-        this.ssf_arr = new double[size];
+        this.SSF = new double[size];
+
+
         this.中期涨幅 = new double[size];
+        this.高位爆量上影大阴 = new boolean[size];
 
 
         this.MA20多 = new boolean[size];

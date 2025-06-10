@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -251,11 +252,11 @@ public class ExtDataServiceImpl implements ExtDataService {
             int length = date_arr.length;
 
 
-            double[] rps10_arr = RPS10.get(code);
-            double[] rps20_arr = RPS20.get(code);
-            double[] rps50_arr = RPS50.get(code);
-            double[] rps120_arr = RPS120.get(code);
-            double[] rps250_arr = RPS250.get(code);
+            double[] rps10 = RPS10.get(code);
+            double[] rps20 = RPS20.get(code);
+            double[] rps50 = RPS50.get(code);
+            double[] rps120 = RPS120.get(code);
+            double[] rps250 = RPS250.get(code);
 
 
             List<ExtDataDTO> dtoList = new ArrayList<>(length);
@@ -263,11 +264,11 @@ public class ExtDataServiceImpl implements ExtDataService {
 
                 ExtDataDTO dto = new ExtDataDTO();
                 dto.setDate(date_arr[i]);
-                dto.setRps10(of(rps10_arr[i]));
-                dto.setRps20(of(rps20_arr[i]));
-                dto.setRps50(of(rps50_arr[i]));
-                dto.setRps120(of(rps120_arr[i]));
-                dto.setRps250(of(rps250_arr[i]));
+                dto.setRps10(of(rps10[i]));
+                dto.setRps20(of(rps20[i]));
+                dto.setRps50(of(rps50[i]));
+                dto.setRps120(of(rps120[i]));
+                dto.setRps250(of(rps250[i]));
 
                 dtoList.add(dto);
             }
@@ -279,6 +280,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
     private void task__stockFun(DataDTO data) {
+        AtomicInteger count = new AtomicInteger(0);
+        long start = System.currentTimeMillis();
 
 
         data.stockDOList.parallelStream().forEach(stockDO -> {
@@ -294,7 +297,10 @@ public class ExtDataServiceImpl implements ExtDataService {
             // --------------------------------------------------------
 
 
-            long start = System.currentTimeMillis();
+            long stock_start = System.currentTimeMillis();
+
+
+            // --------------------------------------------------------
 
 
             // 计算 -> 指标
@@ -302,7 +308,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             double[] SSF = fun.SSF();
+
             double[] 中期涨幅 = fun.中期涨幅N(20);
+            boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
 
 
             boolean[] MA20多 = fun.MA多(20);
@@ -321,7 +329,12 @@ public class ExtDataServiceImpl implements ExtDataService {
             boolean[] RPS三线红 = fun.RPS三线红(80);
 
 
-            log.info("stockFun 指标计算 - 个股     >>>     code : {} , totalTime : {}", code, DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+            // --------------------------------------------------------
+
+
+            long end = System.currentTimeMillis();
+            log.info("stockFun 指标计算 - 个股     >>>     code : {} , count : {} , stockTime : {} , totalTime : {} ",
+                     code, count.incrementAndGet(), DateTimeUtil.format2Hms(end - stock_start), DateTimeUtil.format2Hms(end - start));
 
 
             // --------------------------------------------------------
@@ -332,7 +345,14 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
                 dto.setSSF(of(SSF[i], 3));
-                dto.set中期涨幅(of(中期涨幅[i], 3));
+
+
+                try {
+                    dto.set中期涨幅(of(中期涨幅[i], 3));
+                } catch (Exception e) {
+                    log.error("code : {} , stockDO : {} , exMsg : {}", code, JSON.toJSONString(stockDO), e.getMessage(), e);
+                }
+                dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
 
 
                 dto.setMA20多(MA20多[i]);
@@ -411,6 +431,8 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
     private void blockTask__BlockFun(DataDTO data) {
+        AtomicInteger count = new AtomicInteger(0);
+        long start = System.currentTimeMillis();
 
 
         data.blockDOList.parallelStream().forEach(blockDO -> {
@@ -426,12 +448,20 @@ public class ExtDataServiceImpl implements ExtDataService {
             // --------------------------------------------------------
 
 
+            long block_start = System.currentTimeMillis();
+
+
+            // --------------------------------------------------------
+
+
             // 计算 -> 指标
             BlockFun fun = new BlockFun(code, blockDO);
 
 
             double[] SSF = fun.SSF();
+
             double[] 中期涨幅 = fun.中期涨幅N(20);
+            boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
 
 
             boolean[] MA20多 = fun.MA多(20);
@@ -453,12 +483,22 @@ public class ExtDataServiceImpl implements ExtDataService {
             // --------------------------------------------------------
 
 
+            long end = System.currentTimeMillis();
+            log.info("blockFun 指标计算 - 板块     >>>     code : {} , count : {} , blockTime : {} , totalTime : {} ",
+                     code, count.incrementAndGet(), DateTimeUtil.format2Hms(end - block_start), DateTimeUtil.format2Hms(end - start));
+
+
+            // --------------------------------------------------------
+
+
             for (int i = 0; i < dtoList.size(); i++) {
                 ExtDataDTO dto = dtoList.get(i);
 
 
                 dto.setSSF(of(SSF[i], 3));
+
                 dto.set中期涨幅(of(中期涨幅[i]));
+                dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
 
 
                 dto.setMA20多(MA20多[i]);
@@ -474,11 +514,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
                 dto.set月多(月多[i]);
-                try {
-                    dto.setRPS三线红(RPS三线红[i]);
-                } catch (Exception e) {
-                    log.error("code : {} , blockDO : {} , exMsg : {}", code, blockDO, e.getMessage(), e);
-                }
+                dto.setRPS三线红(RPS三线红[i]);
             }
 
 
@@ -548,7 +584,10 @@ public class ExtDataServiceImpl implements ExtDataService {
     private static double of(double val, int setScale) {
         if (Double.isNaN(val)) {
             return val;
+        } else if (Double.isInfinite(val)) {
+            return 0;
         }
+
         return BigDecimal.valueOf(val).setScale(setScale, RoundingMode.HALF_UP).doubleValue();
     }
 

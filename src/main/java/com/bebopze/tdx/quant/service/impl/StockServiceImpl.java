@@ -59,7 +59,7 @@ public class StockServiceImpl implements StockService {
             List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(entity.getKlineHis(), 100);
 
             Map<String, Object> klineMap = new HashMap<>();
-            klineMap.put("date", ConvertStockKline.strFieldValArr(klineDTOList, "date"));
+            klineMap.put("date", ConvertStockKline.dateFieldValArr(klineDTOList, "date"));
             klineMap.put("close", ConvertStockKline.fieldValArr(klineDTOList, "close"));
 
             dto.setKlineMap(klineMap);

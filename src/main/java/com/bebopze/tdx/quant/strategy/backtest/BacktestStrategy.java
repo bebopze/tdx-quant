@@ -272,7 +272,6 @@ public class BacktestStrategy {
 
 
         // 持仓个股   ->   匹配 淘汰
-        positionStockCodeList__S.removeAll(sell__stockCodeList);
 
 
         // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）

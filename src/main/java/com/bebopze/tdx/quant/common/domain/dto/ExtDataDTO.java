@@ -34,7 +34,9 @@ public class ExtDataDTO implements Serializable {
 
 
     private Double SSF;
+
     private Double 中期涨幅;
+    public Boolean 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
     // ---------------------------------------------------
