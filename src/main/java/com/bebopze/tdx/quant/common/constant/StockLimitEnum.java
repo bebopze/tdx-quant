@@ -156,7 +156,7 @@ public enum StockLimitEnum {
      * @return
      */
     public static boolean is5CM(String stockName) {
-        return stockName.contains("ST");
+        return stockName != null && stockName.contains("ST");
     }
 
 

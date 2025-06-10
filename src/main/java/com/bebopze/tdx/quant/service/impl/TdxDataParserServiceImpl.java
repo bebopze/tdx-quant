@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
@@ -23,14 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 
 
 /**
@@ -972,7 +970,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             blockId = iBaseBlockService.getIdByCode(blockCode);
             baseBlockDO.setId(blockId);
 
-            iBaseBlockService.save(baseBlockDO);
+            iBaseBlockService.saveOrUpdate(baseBlockDO);
         }
 
 
@@ -1005,7 +1003,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             long r1 = time / countVal;
             long r2 = countVal * 1000L / time;
-            String r3 = String.format("%s次 - %ss", countVal, time / 1000);
+            String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
             // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
@@ -1046,11 +1044,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             long r1 = time / countVal;
             long r2 = countVal * 1000 / time;
-            String r3 = String.format("%s次 - %ss", countVal, time / 1000);
+            String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
             // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
-            log.info("fillStockKline suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+            log.info("fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                      stockCode, stockId, countVal, r1, r2, r3);
         });
 
@@ -1160,15 +1158,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     private BigDecimal of(Double val) {
-        return new BigDecimal(val);
+        return val == null || Double.isNaN(val) ? null : new BigDecimal(val);
     }
 
 
     @Override
     public Map<String, List<String>> marketRelaStockCodePrefixList() {
-
         Map<String, List<String>> market_stockCodeList_map = iBaseStockService.market_stockCodePrefixList_map();
-
         return market_stockCodeList_map;
     }
 

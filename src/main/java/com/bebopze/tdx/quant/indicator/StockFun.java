@@ -374,7 +374,7 @@ public class StockFun {
 
     // 高位-爆量/上影/大阴
     public boolean[] 高位爆量上影大阴() {
-        return TdxExtFun.高位爆量上影大阴(high, low, close, amo, is20CM());
+        return TdxExtFun.高位爆量上影大阴(high, low, close, amo, is20CM(), date);
     }
 
 

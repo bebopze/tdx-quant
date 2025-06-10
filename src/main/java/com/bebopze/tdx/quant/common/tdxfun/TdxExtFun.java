@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
-import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
@@ -347,9 +346,8 @@ public class TdxExtFun {
         for (int i = 0; i < L_DAY.length; i++) {
             // + NL_DAY （ 10~20 ）
             L_DAY[i] += 15;
-            // L_DAY[i] = Math.min(L_DAY[i], 100) + 15;
         }
-        log.debug("中期涨幅N     >>>     L_DAY : {}", JSON.toJSONString(L_DAY));
+        // log.debug("中期涨幅N     >>>     L_DAY : {}", JSON.toJSONString(L_DAY));
 
 
         // _L    :   LLV(L,   L_DAY)
@@ -364,12 +362,10 @@ public class TdxExtFun {
 
         double[] 中期涨幅 = new double[len];
         for (int i = 0; i < L.length; i++) {
+            if (Double.isNaN(L[i]) || L[i] == 0) continue;
             中期涨幅[i] = (上MA[i] || MA向上[i]) ? (high[i] / L[i] - 1) * 100.00f : 0.0;
-
-            if (Double.isNaN(中期涨幅[i]) || Double.isInfinite(中期涨幅[i])) {
-                log.error("中期涨幅N     >>>     idx : {} , high : {} , L : {} , 中期涨幅 : {}", i, high[i], L[i], 中期涨幅[i]);
-            }
         }
+        // log.debug("中期涨幅N     >>>     中期涨幅 : {}", 中期涨幅);
 
 
         return 中期涨幅;
@@ -384,13 +380,16 @@ public class TdxExtFun {
      * @param close
      * @param amo
      * @param is20CM
+     * @param date
      * @return
      */
     public static boolean[] 高位爆量上影大阴(double[] high,
                                              double[] low,
                                              double[] close,
                                              double[] amo,
-                                             boolean is20CM) {
+                                             boolean is20CM,
+
+                                             LocalDate[] date) {
 
 
         int len = close.length;
@@ -425,19 +424,61 @@ public class TdxExtFun {
 
         for (int i = 0; i < len; i++) {
 
+//            if (date[i].isAfter(LocalDate.of(2020, 7, 10))) {
+//                log.debug("------- date : {} , 中期涨幅 : {}", date[i], 中期涨幅[i]);
+//                int x = 0;
+//            }
+
+
             // 高位
-            boolean 高位 = is20CM ? 中期涨幅[i] >= 125 : 中期涨幅[i] >= 85;
+            // boolean 高位 = is20CM ? 中期涨幅[i] >= 115 : 中期涨幅[i] >= 85;
+            double 中期涨幅_H5 = max(中期涨幅, i, 5);
+            boolean 高位1 = is20CM ? 中期涨幅_H5 >= 115 : 中期涨幅_H5 >= 85;
+            boolean 高位2 = is20CM ? 中期涨幅_H5 >= 95 : 中期涨幅_H5 >= 75;
+            boolean 高位3 = is20CM ? 中期涨幅_H5 >= 90 : 中期涨幅_H5 >= 70;
 
 
             // 高位- 爆量/上影/大阴
-            boolean b1 = 高位 && (爆量[i] || 上影大阴[i]);
-            boolean b2 = 中期涨幅[i] > 100 && 爆量[i] && 上影大阴[i];
+            boolean b1 = 高位1 && (爆量[i] || 上影大阴[i]);     // 强势卖[强]   ->   高位 - 爆量（大涨）
+            boolean b2 = 高位2 && 上影大阴[i];                 // 左侧卖[中]   ->   高位 - 长上影/大阴线
+            boolean b3 = 高位3 && 爆量[i] && 上影大阴[i];       // 右侧卖[弱]   ->  "高位" - 爆量 + 上影大阴（主力  ->  提前[做盘失败]  清仓式 跑路）
 
 
-            result[i] = b1 || b2;
+            result[i] = b1 || b2 || b3;
+
+
+//            if (高位 && i > 2000) {
+//                log.debug("高位爆量上影大阴     >>>     idx : {} , date : {} , 高位 : {} , 中期涨幅 : {} , 爆量 : {} , 上影大阴 : {} , result : {}", i, date[i], 高位, 中期涨幅[i], 爆量[i], 上影大阴[i], result[i]);
+//                int x = 1;
+//            }
         }
 
         return result;
+    }
+
+    /**
+     * 近N日   最大值
+     *
+     * @param arr 序列
+     * @param idx 当日 - idx
+     * @param N   近N日
+     * @return
+     */
+    private static double max(double[] arr, int idx, int N) {
+        int len = arr.length;
+        double max = 0;
+
+        for (int i = 0; i < N; i++) {
+
+            int _idx = idx - i;
+            if (_idx >= 0 && _idx < len) {
+
+                double v = arr[_idx];
+                max = Math.max(max, v);
+            }
+        }
+
+        return max;
     }
 
 

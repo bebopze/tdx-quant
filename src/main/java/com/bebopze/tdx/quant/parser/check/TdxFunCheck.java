@@ -122,7 +122,7 @@ public class TdxFunCheck {
         // ----------
 
 
-        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "RPS", "板块RPS", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
+        Set<String> sucSet = Sets.newLinkedHashSet(Lists.newArrayList("日K", "周K", "月K", "MA", "RPS", "板块RPS", "MACD", "SAR", "MA多", "MA空", "SSF", "SSF多", "SSF空", "中期涨幅", "高位爆量上影大阴", "N日新高", "均线预萌出", "均线萌出", "大均线多头", "月多", "RPS三线红"));
         Map<String, Integer> failCountMap = Maps.newHashMap();
 
 
@@ -235,24 +235,24 @@ public class TdxFunCheck {
 
 
             // RPS     ->     SUC
-            double rpx_diff = 0.15;
-            double rpx_precision = 0.025;
+            double rps_diff = 0.15;
+            double rps_precision = 0.025;
             if (date.isAfter(LocalDate.of(2015, 1, 1)) && dto1.getRPS250() != null && dto1.getRPS250() > 0
-                    && !(equals(dto1.getRPS10(), dto2.getRPS10(), rpx_diff, rpx_precision)
-                    && equals(dto1.getRPS20(), dto2.getRPS20(), rpx_diff, rpx_precision)
-                    && equals(dto1.getRPS50(), dto2.getRPS50(), rpx_diff, rpx_precision)
-                    && equals(dto1.getRPS120(), dto2.getRPS120(), rpx_diff, rpx_precision)
-                    && equals(dto1.getRPS250(), dto2.getRPS250(), rpx_diff, rpx_precision))) {
+                    && !(equals(dto1.getRPS10(), dto2.getRPS10(), rps_diff, rps_precision)
+                    && equals(dto1.getRPS20(), dto2.getRPS20(), rps_diff, rps_precision)
+                    && equals(dto1.getRPS50(), dto2.getRPS50(), rps_diff, rps_precision)
+                    && equals(dto1.getRPS120(), dto2.getRPS120(), rps_diff, rps_precision)
+                    && equals(dto1.getRPS250(), dto2.getRPS250(), rps_diff, rps_precision))) {
 
                 failCountMap.compute("RPS", (k, v) -> (v == null ? 1 : v + 1));
             }
             // 板块RPS     ->     SUC
             if (date.isAfter(LocalDate.of(2015, 1, 1)) && dto1.getBK_RPS50() != null && dto1.getBK_RPS50() > 0
-                    && !(equals(dto1.getBK_RPS5(), dto2.getBK_RPS5(), rpx_diff * 5, rpx_precision)
-                    && equals(dto1.getBK_RPS10(), dto2.getBK_RPS10(), rpx_diff * 5, rpx_precision)
-                    && equals(dto1.getBK_RPS15(), dto2.getBK_RPS15(), rpx_diff * 5, rpx_precision)
-                    && equals(dto1.getBK_RPS20(), dto2.getBK_RPS20(), rpx_diff * 5, rpx_precision)
-                    && equals(dto1.getBK_RPS50(), dto2.getBK_RPS50(), rpx_diff * 5, rpx_precision))) {
+                    && !(equals(dto1.getBK_RPS5(), dto2.getBK_RPS5(), rps_diff * 5, rps_precision)
+                    && equals(dto1.getBK_RPS10(), dto2.getBK_RPS10(), rps_diff * 5, rps_precision)
+                    && equals(dto1.getBK_RPS15(), dto2.getBK_RPS15(), rps_diff * 5, rps_precision)
+                    && equals(dto1.getBK_RPS20(), dto2.getBK_RPS20(), rps_diff * 5, rps_precision)
+                    && equals(dto1.getBK_RPS50(), dto2.getBK_RPS50(), rps_diff * 5, rps_precision))) {
 
                 failCountMap.compute("板块RPS", (k, v) -> (v == null ? 1 : v + 1));
             }
@@ -302,9 +302,14 @@ public class TdxFunCheck {
             }
 
 
-            // 中期涨幅     ->     FAIL
-            if (!equals(dto1.get中期涨幅(), dto2.get中期涨幅())) {
+            // 中期涨幅     ->     SUC
+            if (!equals(dto1.get中期涨幅(), dto2.get中期涨幅(), rps_diff, rps_precision)) {
                 failCountMap.compute("中期涨幅", (k, v) -> (v == null ? 1 : v + 1));
+            }
+
+            // 高位爆量上影大阴     ->     SUC
+            if (!equals(dto1.get高位爆量上影大阴(), dto2.get高位爆量上影大阴())) {
+                failCountMap.compute("高位爆量上影大阴", (k, v) -> (v == null ? 1 : v + 1));
             }
 
 
@@ -398,7 +403,7 @@ public class TdxFunCheck {
 
             double dif = 0.001001;
             double precision = 0.0005;
-            if (key.contains("RPS")) {
+            if (key.contains("RPS") || key.contains("中期涨幅")) {
                 double rps_val = Double.parseDouble(v1.toString());
                 if (rps_val == 0) continue;
 
@@ -634,6 +639,7 @@ public class TdxFunCheck {
 
 
         double[] 中期涨幅 = fun.中期涨幅N(20);
+        boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
 
 
         boolean[] SSF多 = fun.SSF多();
@@ -768,6 +774,7 @@ public class TdxFunCheck {
 
 
             dto.set中期涨幅(of(中期涨幅[i]));
+            dto.set高位爆量上影大阴(bool2Int(高位爆量上影大阴[i]));
 
 
             // -------------------------------- 高级指标
@@ -978,7 +985,8 @@ public class TdxFunCheck {
 
 
         // ------- 中期涨幅
-        dto.setSSF(row.getDouble("中期涨幅"));
+        dto.set中期涨幅(row.getDouble("中期涨幅"));
+        dto.set高位爆量上影大阴(row.getInteger("高位上影大阴"));
 
 
         // ------------------------------------------------ 高级指标
@@ -1019,7 +1027,9 @@ public class TdxFunCheck {
     }
 
     private static double of(Number val, int newScale) {
-        if (null == val || (val instanceof Double && Double.isNaN((Double) val))) return Double.NaN;
+        if (null == val || (val instanceof Double && (Double.isNaN((Double) val) || Double.isInfinite((Double) val)))) {
+            return Double.NaN;
+        }
         return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
     }
 
@@ -1144,6 +1154,8 @@ public class TdxFunCheck {
 
         // 中期涨幅
         private Double 中期涨幅;
+        // 高位-爆量/上影/大阴
+        private Integer 高位爆量上影大阴;
 
 
         // -------------------------------- 高级指标
