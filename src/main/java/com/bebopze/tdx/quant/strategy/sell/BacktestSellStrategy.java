@@ -2,18 +2,16 @@ package com.bebopze.tdx.quant.strategy.sell;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
-import com.bebopze.tdx.quant.common.tdxfun.Tools;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.QuickOption;
-import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -74,34 +72,61 @@ public class BacktestSellStrategy extends SellStrategy {
         // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
 
 
-        List<String> collect = positionStockCodeList.parallelStream().filter(stockCode -> {
+        List<String> sell__stockCodeList = positionStockCodeList.parallelStream().filter(stockCode -> {
             BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 
             StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
 
 
+            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
+            // -------------------------------------------
+
+
             // 是否淘汰
-            boolean flag = false;
+            boolean flag_S = false;
 
 
-            // 1、个股     ==>     月多 -> 月空
+            // -------------------------------------------
 
-            Tools.extData(stockDO.getExtDataHis());
+
+            // 1、月空
+            boolean[] 月多_arr = extDataArrDTO.月多;
+            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
+            if (!月多) {
+                flag_S = true;
+                return true;
+            }
 
 
             // 2、SSF空
+            boolean[] SSF空_arr = extDataArrDTO.SSF空;
+            boolean SSF空 = getByDate(SSF空_arr, dateIndexMap, tradeDate);
+            if (SSF空) {
+                flag_S = true;
+                return true;
+            }
 
 
-            // 3、高位（中期涨幅_MA20 > 100）   ->   长上影/大阴线
+            // 3、高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
+            // double[] 中期涨幅 = extDataArrDTO.中期涨幅;
+            boolean[] 高位爆量上影大阴_arr = extDataArrDTO.高位爆量上影大阴;
+            boolean 高位爆量上影大阴 = getByDate(高位爆量上影大阴_arr, dateIndexMap, tradeDate);
+            if (高位爆量上影大阴) {
+                flag_S = true;
+                return true;
+            }
 
 
-            return flag;
+            return flag_S;
 
         }).collect(Collectors.toList());
+
+
+        return sell__stockCodeList;
 
 
         // 2.2 每日 淘汰策略（S策略 - 2）[排名]走弱 -> 末位淘汰 ->  stockCodeList（对昨日 持股 -> 末位淘汰[设置末尾淘汰 - 分数线/排名线 ]）
@@ -115,140 +140,140 @@ public class BacktestSellStrategy extends SellStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        AtomicInteger count = new AtomicInteger(0);
-
-        List<String> filter__blockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        blockDOList.parallelStream().forEach(blockDO -> {
-            log.info("sellRule - filter板块     >>>     count : {}", count.incrementAndGet());
-
-
-            String blockCode = blockDO.getCode();
-
-
-            // 1、in__板块-月多
-
-
-            // 2、in__板块-60日新高
-
-            // 3、in__板块-RPS三线红
-
-
-            // 4、in__板块占比-TOP1
-
-
-            // 5、xxx
-
-
-            BlockFun fun = blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
-
-
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-            boolean[] 月多_arr = fun.月多();
-
-            boolean[] _60日新高_arr = fun.N日新高(60);
-            boolean[] RPS三线红_arr = fun.RPS三线红(80);
-
-            boolean[] 大均线多头_arr = fun.大均线多头();
-
-            boolean[] SSF多_arr = fun.SSF多();
-
-
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
-            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
-            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
-
-
-            boolean flag = 月多 && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
-            if (flag) {
-                filter__blockCodeList.add(blockCode);
-            }
-        });
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                                      个股
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        AtomicInteger count2 = new AtomicInteger(0);
-
-        List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        stockDOList.parallelStream().forEach(stockDO -> {
-            log.info("sellRule - filter个股     >>>     count : {}", count2.incrementAndGet());
-
-
-            String stockCode = stockDO.getCode();
-
-
-            // 1、in__60日新高
-
-            // 2、in__月多
-
-
-            // 3、in__RPS三线红
-
-            // 4、in__大均线多头
-
-
-            // 5、SSF多
-
-            // 6、xxx
-
-
-            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
-
-
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-            boolean[] 月多_arr = fun.月多();
-
-            boolean[] _60日新高_arr = fun.N日新高(60);
-            boolean[] RPS三线红_arr = fun.RPS三线红(80);
-
-            boolean[] 大均线多头_arr = fun.大均线多头();
-
-            boolean[] SSF多_arr = fun.SSF多();
-
-
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
-            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
-            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
-
-
-            boolean flag = _60日新高 && 月多 && (RPS三线红 || 大均线多头) && SSF多;
-            if (flag) {
-                filter__stockCodeList.add(stockCode);
-            }
-        });
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                                  板块 -> 个股
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCodeList(filter__stockCodeList);
-
-        List<BaseStockDO> baseStockDOList = baseBlockRelaStockService.listStockByBlockCodeList(filter__blockCodeList);
-        List<String> filterBlock__stockCodeList = baseStockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
-
-
-        // 交集
-        Collection<String> intersection__stockCodeList = CollectionUtils.intersection(filterBlock__stockCodeList, filter__stockCodeList);
-
-
-        // 按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = scoreSort(intersection__stockCodeList, 30);
-
-
-        return filterSort__stockCodeList;
+//        AtomicInteger count = new AtomicInteger(0);
+//
+//        List<String> filter__blockCodeList = Collections.synchronizedList(Lists.newArrayList());
+//        blockDOList.parallelStream().forEach(blockDO -> {
+//            log.info("sellRule - filter板块     >>>     count : {}", count.incrementAndGet());
+//
+//
+//            String blockCode = blockDO.getCode();
+//
+//
+//            // 1、in__板块-月多
+//
+//
+//            // 2、in__板块-60日新高
+//
+//            // 3、in__板块-RPS三线红
+//
+//
+//            // 4、in__板块占比-TOP1
+//
+//
+//            // 5、xxx
+//
+//
+//            BlockFun fun = blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
+//
+//
+//            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+//
+//
+//            boolean[] 月多_arr = fun.月多();
+//
+//            boolean[] _60日新高_arr = fun.N日新高(60);
+//            boolean[] RPS三线红_arr = fun.RPS三线红(80);
+//
+//            boolean[] 大均线多头_arr = fun.大均线多头();
+//
+//            boolean[] SSF多_arr = fun.SSF多();
+//
+//
+//            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
+//            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+//            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+//            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+//            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
+//
+//
+//            boolean flag = 月多 && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
+//            if (flag) {
+//                filter__blockCodeList.add(blockCode);
+//            }
+//        });
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//        //                                                      个股
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        AtomicInteger count2 = new AtomicInteger(0);
+//
+//        List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
+//        stockDOList.parallelStream().forEach(stockDO -> {
+//            log.info("sellRule - filter个股     >>>     count : {}", count2.incrementAndGet());
+//
+//
+//            String stockCode = stockDO.getCode();
+//
+//
+//            // 1、in__60日新高
+//
+//            // 2、in__月多
+//
+//
+//            // 3、in__RPS三线红
+//
+//            // 4、in__大均线多头
+//
+//
+//            // 5、SSF多
+//
+//            // 6、xxx
+//
+//
+//            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+//
+//
+//            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+//
+//
+//            boolean[] 月多_arr = fun.月多();
+//
+//            boolean[] _60日新高_arr = fun.N日新高(60);
+//            boolean[] RPS三线红_arr = fun.RPS三线红(80);
+//
+//            boolean[] 大均线多头_arr = fun.大均线多头();
+//
+//            boolean[] SSF多_arr = fun.SSF多();
+//
+//
+//            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
+//            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+//            boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+//            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+//            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
+//
+//
+//            boolean flag = _60日新高 && 月多 && (RPS三线红 || 大均线多头) && SSF多;
+//            if (flag) {
+//                filter__stockCodeList.add(stockCode);
+//            }
+//        });
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//        //                                                  板块 -> 个股
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCodeList(filter__stockCodeList);
+//
+//        List<BaseStockDO> baseStockDOList = baseBlockRelaStockService.listStockByBlockCodeList(filter__blockCodeList);
+//        List<String> filterBlock__stockCodeList = baseStockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
+//
+//
+//        // 交集
+//        Collection<String> intersection__stockCodeList = CollectionUtils.intersection(filterBlock__stockCodeList, filter__stockCodeList);
+//
+//
+//        // 按照 规则打分 -> sort
+//        List<String> filterSort__stockCodeList = scoreSort(intersection__stockCodeList, 30);
+//
+//
+//        return filterSort__stockCodeList;
     }
 
 
