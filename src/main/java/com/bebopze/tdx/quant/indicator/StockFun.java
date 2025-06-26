@@ -104,9 +104,6 @@ public class StockFun {
     public StockFun(String code, BaseStockDO stockDO) {
 
 
-        // -------------------------------------------------------------------------------------------------------------
-
-
         String stockName = stockDO.getName();
 
 
@@ -199,6 +196,9 @@ public class StockFun {
 
         ssf = extDataArrDTO.SSF;
     }
+
+
+    // -------------------------------------------------------------------------------------------------------------
 
 
     public StockFun(String code) {

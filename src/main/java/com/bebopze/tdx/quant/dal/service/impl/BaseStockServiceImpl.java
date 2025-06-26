@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,6 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.blockFunMap;
 
 
 /**
@@ -77,12 +80,16 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             String code_prefix = (String) row.get("code_prefix");
 
 
-            List<String> stockCodePrefixList = market_stockCodePrefixList_map.get(market_type);
-            if (CollectionUtils.isEmpty(stockCodePrefixList)) {
-                market_stockCodePrefixList_map.put(market_type, Lists.newArrayList(code_prefix));
-            } else {
-                stockCodePrefixList.add(code_prefix);
-            }
+            market_stockCodePrefixList_map.computeIfAbsent(market_type, k -> Lists.newArrayList())
+                                          .add(code_prefix);
+
+
+//            List<String> stockCodePrefixList = market_stockCodePrefixList_map.get(market_type);
+//            if (CollectionUtils.isEmpty(stockCodePrefixList)) {
+//                market_stockCodePrefixList_map.put(market_type, Lists.newArrayList(code_prefix));
+//            } else {
+//                stockCodePrefixList.add(code_prefix);
+//            }
         });
 
 
@@ -107,12 +114,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseStockDO::getCode,  // 键：从对象中提取 code 字段
-                        BaseStockDO::getId,    // 值：从对象中提取 id 字段
+                                                  .collect(Collectors.toMap(
+                                                          BaseStockDO::getCode,  // 键：从对象中提取 code 字段
+                                                          BaseStockDO::getId,    // 值：从对象中提取 id 字段
 
-                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
-                ));
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
 
         return code_id_map;
     }
@@ -135,12 +142,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseStockDO::getCode,
-                        BaseStockDO::getId,
+                                                  .collect(Collectors.toMap(
+                                                          BaseStockDO::getCode,
+                                                          BaseStockDO::getId,
 
-                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
-                ));
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
 
         return code_id_map;
     }

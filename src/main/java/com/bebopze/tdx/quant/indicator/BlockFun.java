@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.indicator;
 
+import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class BlockFun extends StockFun {
 
 
-    private BaseBlockDO baseBlockDO;
+    private BaseBlockDO blockDO;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,20 +32,95 @@ public class BlockFun extends StockFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public BlockFun(String blockCode, BaseBlockDO baseBlockDO) {
+    public BlockFun(String code, BaseBlockDO blockDO) {
         // super(null);
 
 
-        this.baseBlockDO = baseBlockDO;
+        this.blockDO = blockDO;
 
-        // 板块
-        initData(blockCode, null);
+
+        String blockName = blockDO.getName();
+
+
+        // 历史行情
+        klineDTOList = blockDO.getKlineDTOList();
+        // 扩展数据（预计算 指标）
+        extDataDTOList = blockDO.getExtDataDTOList();
+
+
+        // last
+        KlineDTO klineDTO = klineDTOList.get(klineDTOList.size() - 1);
+
+
+        // 收盘价 - 实时
+        C = klineDTO.getClose();
+
+
+        // -----------------------------------------------
+
+
+        klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
+        extDataArrDTO = ConvertStock.dtoList2Arr2(extDataDTOList);
+
+
+        // -----------------------------------------------
+
+        date = klineArrDTO.date;
+
+        open = klineArrDTO.open;
+        high = klineArrDTO.high;
+        low = klineArrDTO.low;
+        close = klineArrDTO.close;
+
+        vol = klineArrDTO.vol;
+        amo = klineArrDTO.amo;
+
+
+        // -----------------------------------------------
+
+
+        rps10 = extDataArrDTO.rps10;
+        rps20 = extDataArrDTO.rps20;
+        rps50 = extDataArrDTO.rps50;
+        rps120 = extDataArrDTO.rps120;
+        rps250 = extDataArrDTO.rps250;
+
+
+        // -----------------------------------------------
+
+
+        dateIndexMap = Maps.newHashMap();
+        for (int i = 0; i < date.length; i++) {
+            dateIndexMap.put(date[i], i);
+        }
+
+
+        // --------------------------- init data
+
+
+        this.code = code;
+        this.name = blockName;
+
+
+        this.shszQuoteSnapshotResp = null;
+
+
+        ssf = extDataArrDTO.SSF;
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                            板块 - 行情数据 init
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    public BlockFun(String blockCode) {
+        // super(null);
+
+
+        // 板块
+        initData(blockCode, null);
+    }
 
 
     /**
@@ -76,13 +152,13 @@ public class BlockFun extends StockFun {
         // --------------------------- resp -> DTO
 
 
-        String blockName = baseBlockDO.getName();
+        String blockName = blockDO.getName();
 
 
         // 历史行情
-        List<KlineDTO> klineDTOList = baseBlockDO.getKlineDTOList();
+        List<KlineDTO> klineDTOList = blockDO.getKlineDTOList();
         // 扩展数据
-        List<ExtDataDTO> extDataDTOList = baseBlockDO.getExtDataDTOList();
+        List<ExtDataDTO> extDataDTOList = blockDO.getExtDataDTOList();
 
 
         // last

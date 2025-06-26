@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -49,28 +51,29 @@ public class BacktestBuyStrategy extends BuyStrategy {
         // this.dateIndexMap = backTestStrategy.getDateIndexMap();
 
 
-        this.blockDOList = data.getBlockDOList();
-        this.block__dateCloseMap = data.getBlock__dateCloseMap();
-
-
-        this.stockDOList = data.getStockDOList();
-        this.stock__dateCloseMap = data.getStock__dateCloseMap();
+//        this.blockDOList = data.getBlockDOList();
+//        this.block__dateCloseMap = data.getBlock__dateCloseMap();
+//
+//
+//        this.stockDOList = data.getStockDOList();
+//        this.stock__dateCloseMap = data.getStock__dateCloseMap();
     }
 
 
     public List<String> rule(BacktestCache data, LocalDate tradeDate) {
 
 
-        initData(data);
+        // initData(data);
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                      板块
+        //                                                主线板块
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 主线板块（月多2   ->   月多 + N日新高/RPS三线红/大均线多头 + SSF多）
         List<String> filter__blockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        blockDOList.parallelStream().forEach(blockDO -> {
+        data.blockDOList/*.parallelStream()*/.forEach(blockDO -> {
 
 
             String blockCode = blockDO.getCode();
@@ -93,40 +96,54 @@ public class BacktestBuyStrategy extends BuyStrategy {
             BlockFun fun = blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
 
 
+            // KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+
+
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
-            boolean[] 月多_arr = fun.月多();
+            // -------------------------------------------
 
-            boolean[] _60日新高_arr = fun.N日新高(60);
-            boolean[] RPS三线红_arr = fun.RPS三线红(80);
 
-            boolean[] 大均线多头_arr = fun.大均线多头();
+            // 是否买入
+            // boolean signal_B = false;
 
-            boolean[] SSF多_arr = fun.SSF多();
+
+            // -------------------------------------------
+
+
+            boolean[] 月多_arr = extDataArrDTO.月多;
+
+            boolean[] N日新高_arr = extDataArrDTO.N日新高;
+            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+
+            boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
+
+            boolean[] SSF多_arr = extDataArrDTO.SSF多;
 
 
             boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+            boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
             boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
             boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
             boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
 
 
-            boolean flag = 月多 && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
-            if (flag) {
+            boolean signal_B = 月多 /*&& _60日新高*/ && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
+            if (signal_B) {
                 filter__blockCodeList.add(blockCode);
             }
         });
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                      个股
+        //                                            （强势）个股
         // -------------------------------------------------------------------------------------------------------------
 
 
         List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        stockDOList.parallelStream().forEach(stockDO -> {
+        data.stockDOList/*.parallelStream()*/.forEach(stockDO -> {
 
 
             String stockCode = stockDO.getCode();
@@ -150,50 +167,81 @@ public class BacktestBuyStrategy extends BuyStrategy {
             StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
 
 
+            // KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+
+
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
-            boolean[] 月多_arr = fun.月多();
+            // -------------------------------------------
 
-            boolean[] _60日新高_arr = fun.N日新高(60);
-            boolean[] RPS三线红_arr = fun.RPS三线红(80);
 
-            boolean[] 大均线多头_arr = fun.大均线多头();
+            // 是否买入
+            // boolean signal_B = false;
 
-            boolean[] SSF多_arr = fun.SSF多();
+
+            // -------------------------------------------
+
+
+            boolean[] 月多_arr = extDataArrDTO.月多;
+
+            boolean[] N日新高_arr = extDataArrDTO.N日新高;
+            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+
+            boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
+
+            boolean[] SSF多_arr = extDataArrDTO.SSF多;
 
 
             boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            boolean _60日新高 = getByDate(_60日新高_arr, dateIndexMap, tradeDate);
+            boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
             boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
             boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
             boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
 
 
-            boolean flag = _60日新高 && 月多 && (RPS三线红 || 大均线多头) && SSF多;
-            if (flag) {
+            boolean signal_B = 月多 && _60日新高 && (RPS三线红 || 大均线多头) && SSF多;
+            if (signal_B) {
                 filter__stockCodeList.add(stockCode);
             }
         });
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                   板块 - 个股
+        //                                              个股 -> IN 主线板块
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCodeList(filter__stockCodeList);
-
-        List<BaseStockDO> baseStockDOList = baseBlockRelaStockService.listStockByBlockCodeList(filter__blockCodeList);
-        List<String> filterBlock__stockCodeList = baseStockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toList());
-
-
-        // 交集
-        Collection<String> intersection__stockCodeList = CollectionUtils.intersection(filterBlock__stockCodeList, filter__stockCodeList);
+        // 个股   ->   IN 主线板块
+        List<String> filter__stockCodeList2 = filter__stockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
+            List<String> blockCodeList = data.stockCode_blockCodeList_Map.getOrDefault(stockCode, Collections.emptyList());
 
 
-        // 按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = scoreSort(intersection__stockCodeList, 30);
+            // B（主线板块）
+            boolean block_B = false;
+            for (String blockCode : blockCodeList) {
+
+                block_B = filter__blockCodeList.contains(blockCode);
+                if (block_B) {
+                    log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
+                              stockCode, data.stock__codeNameMap.get(stockCode),
+                              blockCode, data.block__codeNameMap.get(blockCode));
+                    break;
+                }
+            }
+
+
+            return block_B;
+        }).collect(Collectors.toList());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // TODO     按照 规则打分 -> sort
+        // List<String> filterSort__stockCodeList = scoreSort(filter__stockCodeList2, 30);
+        List<String> filterSort__stockCodeList = filter__stockCodeList2.stream().limit(30).collect(Collectors.toList());
 
 
         return filterSort__stockCodeList;
@@ -297,7 +345,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
 
         // 输出结果或进一步操作
-        topNStocks.forEach(JSON::toJSONString);
+        // topNStocks.forEach(JSON::toJSONString);
 
 
         return topNStocks.stream().map(QuickOption.StockScore::getStockCode).collect(Collectors.toList());
@@ -323,10 +371,10 @@ public class BacktestBuyStrategy extends BuyStrategy {
      * @param tradeDate
      * @return
      */
-    private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(blockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-        return closePrice == null ? 0.0 : closePrice;
-    }
+//    private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
+//        Double closePrice = data.stock__dateCloseMap.get(blockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
+//        return closePrice == null ? 0.0 : closePrice;
+//    }
 
     /**
      * 个股   指定日期 -> 收盘价
@@ -335,9 +383,9 @@ public class BacktestBuyStrategy extends BuyStrategy {
      * @param tradeDate
      * @return
      */
-    private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(stockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-        return closePrice == null ? 0.0 : closePrice;
-    }
+//    private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
+//        Double closePrice = data.stock__dateCloseMap.get(stockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
+//        return closePrice == null ? 0.0 : closePrice;
+//    }
 
 }

@@ -225,8 +225,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap);
 
 
-        // 个股 - 板块
-        save2DB___stock_rela_block(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
+        // 板块 - 个股
+        save2DB___block_rela_stock(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
     }
 
 
@@ -456,7 +456,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private void save2DB___stock_rela_block(List<String> sortAllStockCodeList,
+    private void save2DB___block_rela_stock(List<String> sortAllStockCodeList,
                                             Map<String, Long> stock__codeIdMap,
                                             Map<String, Set<String>> stockCode_blockCodeSet_map,
                                             Map<String, Long> block__codeIdMap) {
@@ -478,7 +478,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             blockCodeSet.forEach(blockCode -> {
 
-                // 个股 - 板块
+                // 板块 - 个股
                 BaseBlockRelaStockDO baseBlockRelaStockDO = new BaseBlockRelaStockDO();
                 baseBlockRelaStockDO.setStockId(stockId);
                 baseBlockRelaStockDO.setBlockId(block__codeIdMap.get(blockCode));
@@ -582,7 +582,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // blockCode   ->   从小到大   排列
-        Collections.sort(dtoList, Comparator.comparing(BlockReportParser.ExportBlockDTO::getBlockCode));
+        dtoList.sort(Comparator.comparing(BlockReportParser.ExportBlockDTO::getBlockCode));
 
 
         List<BaseStockDO> baseStockDOList = Lists.newArrayList();

@@ -121,4 +121,17 @@ public class BtTradeRecordDO implements Serializable {
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
     private LocalDateTime gmtModify;
+
+
+    // ---------------------------------------------------------
+
+
+    /**
+     * 更新时间
+     */
+    @TableField(value = "total_cost", exist = false)
+    @Schema(description = "总成本")
+    private LocalDateTime totalCost;
+
+
 }

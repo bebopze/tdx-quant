@@ -123,10 +123,10 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal unrealizedPnlRatio;
 
     /**
-     * 买入日期
+     * 首次-买入日期
      */
     @TableField("buy_date")
-    @Schema(description = "买入日期")
+    @Schema(description = "首次-买入日期")
     private LocalDate buyDate;
 
     /**

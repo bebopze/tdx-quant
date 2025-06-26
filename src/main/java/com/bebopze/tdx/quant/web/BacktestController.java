@@ -26,7 +26,7 @@ public class BacktestController {
     private BacktestService backTestService;
 
 
-    @GetMapping("/backtest")
+    @GetMapping("/exec")
     public Result<Void> backtest() {
         backTestService.backtest();
         return Result.SUC();

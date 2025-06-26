@@ -72,7 +72,7 @@ public class BacktestSellStrategy extends SellStrategy {
         // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
 
 
-        List<String> sell__stockCodeList = positionStockCodeList.parallelStream().filter(stockCode -> {
+        List<String> sell__stockCodeList = positionStockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
             BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 

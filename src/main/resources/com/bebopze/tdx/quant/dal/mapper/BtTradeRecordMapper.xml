@@ -5,6 +5,22 @@
 
     <select id="listByTaskIdAndTradeDate" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
 
+        SELECT *
+
+
+        FROM bt_trade_record
+
+
+        WHERE task_id = #{taskId}
+
+         <![CDATA[     AND trade_date <= #{tradeDate}
+        ]]>
+
+    </select>
+
+
+    <select id="listByTaskIdAndTradeDate_2" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
+
         SELECT task_id,
                trade_type,
                stock_id,
@@ -13,7 +29,10 @@
 
 
                SUM(quantity)               AS quantity,
-               SUM(quantity * price + fee) AS total_cost
+               SUM(quantity * price + fee) AS total_cost,
+
+
+               *
 
 
         FROM bt_trade_record

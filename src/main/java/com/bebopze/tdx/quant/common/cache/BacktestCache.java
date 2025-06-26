@@ -33,6 +33,7 @@ public class BacktestCache {
      */
     public List<BaseStockDO> stockDOList;
     public Map<String, BaseStockDO> codeStockMap = Maps.newHashMap();
+    public Map<Long, String> stock__idCodeMap = Maps.newHashMap();
     public Map<String, Long> stock__codeIdMap = Maps.newHashMap();
     public Map<String, String> stock__codeNameMap = Maps.newHashMap();
     public Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
@@ -43,6 +44,7 @@ public class BacktestCache {
      */
     public List<BaseBlockDO> blockDOList;
     public Map<String, BaseBlockDO> codeBlockMap = Maps.newHashMap();
+    public Map<Long, String> block__idCodeMap = Maps.newHashMap();
     public Map<String, Long> block__codeIdMap = Maps.newHashMap();
     public Map<String, String> block__codeNameMap = Maps.newHashMap();
     public Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
@@ -51,12 +53,13 @@ public class BacktestCache {
     /**
      * 个股 - 板块
      */
-    public Map<Long, List<Long>> stockId_blockIdList_Map = Maps.newHashMap();
+    public Map<String, List<String>> stockCode_blockCodeList_Map = Maps.newHashMap();
+    // public Map<Long, List<Long>> stockId_blockIdList_Map = Maps.newHashMap();
 
 
     /**
      * 板块 - 个股
      */
-    public Map<Long, List<Long>> blockId_stockIdList_Map = Maps.newHashMap();
-
+    public Map<String, List<String>> blockCode_stockCodeList_Map = Maps.newHashMap();
+    // public Map<Long, List<Long>> blockId_stockIdList_Map = Maps.newHashMap();
 }

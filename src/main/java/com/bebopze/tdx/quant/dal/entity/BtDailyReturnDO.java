@@ -67,14 +67,42 @@ public class BtDailyReturnDO implements Serializable {
     private BigDecimal nav;
 
     /**
-     * 期末资金
+     * 总资金 = 持仓市值 + 可用资金
      */
     @TableField("capital")
-    @Schema(description = "期末资金")
+    @Schema(description = "总资金")
     private BigDecimal capital;
 
     /**
-     * 基准收益（可选）
+     * 持仓市值
+     */
+    @TableField("market_value")
+    @Schema(description = "持仓市值")
+    private BigDecimal marketValue;
+
+    /**
+     * 可用资金
+     */
+    @TableField("avl_capital")
+    @Schema(description = "可用资金")
+    private BigDecimal avlCapital;
+
+    /**
+     * 买入金额
+     */
+    @TableField("buy_capital")
+    @Schema(description = "买入金额")
+    private BigDecimal buyCapital;
+
+    /**
+     * 卖出金额
+     */
+    @TableField("sell_capital")
+    @Schema(description = "卖出金额")
+    private BigDecimal sellCapital;
+
+    /**
+     * 基准收益（沪深300、标普500、行业指数、...）
      */
     @TableField("benchmark_return")
     @Schema(description = "基准收益（可选）")

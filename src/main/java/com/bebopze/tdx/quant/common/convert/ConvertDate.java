@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -138,6 +139,37 @@ public class ConvertDate {
 
 
         return dateList.get(idx + 1);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 两个交易日   间隔天数(交易日)
+     *
+     * @param start
+     * @param end
+     * @param dateIndexMap 交易日-idx
+     * @return
+     */
+    public static int between(LocalDate start, LocalDate end, Map<LocalDate, Integer> dateIndexMap) {
+        Assert.isTrue(!start.isAfter(end), "start不能大于end");
+        // Assert.isTrue(!start.isBefore(dateList.get(0)), "start非法");
+        // Assert.isTrue(!end.isAfter(dateList.get(dateList.size() - 1)), "end非法");
+
+
+        // start = DateTimeUtil.max(start, dateList.get(0));
+        // end = DateTimeUtil.min(end, dateList.get(dateList.size() - 1));
+
+
+        Integer idx1 = dateIndexMap.get(start);
+        Integer idx2 = dateIndexMap.get(end);
+
+        Assert.notNull(idx1, "start非交易日");
+        Assert.notNull(idx2, "end非交易日");
+
+        return idx2 - idx1;
     }
 
 

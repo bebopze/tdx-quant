@@ -18,18 +18,18 @@ import java.util.Map;
 public abstract class BuyStrategy {
 
 
-    /**
-     * 交易日 - 基准
-     */
-    Map<String, Integer> dateIndexMap = Maps.newHashMap();
-
-
-    List<BaseStockDO> stockDOList;
-    Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
-
-
-    List<BaseBlockDO> blockDOList;
-    Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
+//    /**
+//     * 交易日 - 基准
+//     */
+//    Map<String, Integer> dateIndexMap = Maps.newHashMap();
+//
+//
+//    List<BaseStockDO> stockDOList;
+//    Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
+//
+//
+//    List<BaseBlockDO> blockDOList;
+//    Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
 
 
     void initData() {
