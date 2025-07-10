@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.google.common.collect.Lists;
@@ -56,7 +55,7 @@ public class ConvertStockKline {
 
 
         // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
-        // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+        // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
         String[] klineArr = kline.split(",", -1);
 
@@ -66,9 +65,10 @@ public class ConvertStockKline {
         dto.setDate(ofDate(klineArr[0]));
 
         dto.setOpen(of(klineArr[1]));
-        dto.setClose(of(klineArr[2]));
-        dto.setHigh(of(klineArr[3]));
-        dto.setLow(of(klineArr[4]));
+        dto.setHigh(of(klineArr[2]));
+        dto.setLow(of(klineArr[3]));
+        dto.setClose(of(klineArr[4]));
+
 
         dto.setVol(Long.valueOf(klineArr[5]));
         dto.setAmo(of(klineArr[6]));

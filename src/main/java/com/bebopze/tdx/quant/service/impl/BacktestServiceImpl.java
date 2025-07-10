@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 
 /**
  * 回测
@@ -27,9 +29,8 @@ public class BacktestServiceImpl implements BacktestService {
 
 
     @Override
-    public void backtest() {
-
-        backTestStrategy.backtest();
+    public void backtest(LocalDate startDate, LocalDate endDate) {
+        backTestStrategy.backtest(startDate, endDate);
     }
 
     @Override

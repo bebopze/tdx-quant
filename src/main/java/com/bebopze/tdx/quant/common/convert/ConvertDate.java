@@ -154,7 +154,7 @@ public class ConvertDate {
      * @return
      */
     public static int between(LocalDate start, LocalDate end, Map<LocalDate, Integer> dateIndexMap) {
-        Assert.isTrue(!start.isAfter(end), "start不能大于end");
+        Assert.isTrue(!start.isAfter(end), String.format("start[%s]不能大于end[%s]", start, end));
         // Assert.isTrue(!start.isBefore(dateList.get(0)), "start非法");
         // Assert.isTrue(!end.isAfter(dateList.get(dateList.size() - 1)), "end非法");
 
@@ -166,8 +166,9 @@ public class ConvertDate {
         Integer idx1 = dateIndexMap.get(start);
         Integer idx2 = dateIndexMap.get(end);
 
-        Assert.notNull(idx1, "start非交易日");
-        Assert.notNull(idx2, "end非交易日");
+        Assert.notNull(idx1, String.format("start[%s]非交易日", start));
+        Assert.notNull(idx2, String.format("end[%s]非交易日", end));
+
 
         return idx2 - idx1;
     }

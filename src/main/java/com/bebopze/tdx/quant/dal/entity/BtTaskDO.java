@@ -81,6 +81,20 @@ public class BtTaskDO implements Serializable {
     private BigDecimal finalCapital;
 
     /**
+     * 初始净值
+     */
+    @Schema(description = "初始净值")
+    @TableField("initial_nav")
+    private BigDecimal initialNav;
+
+    /**
+     * 结束净值
+     */
+    @TableField("final_nav")
+    @Schema(description = "结束净值")
+    private BigDecimal finalNav;
+
+    /**
      * 总天数
      */
     @TableField("total_day")

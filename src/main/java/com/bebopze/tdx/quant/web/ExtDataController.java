@@ -26,16 +26,16 @@ public class ExtDataController {
     private ExtDataService extDataService;
 
 
-    @Operation(summary = "个股 - RPS计算", description = "个股 - RPS计算")
-    @GetMapping(value = "/stock/calcRps")
+    @Operation(summary = "个股 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
+    @GetMapping(value = "/stock/calc")
     public Result<Void> calcStockRps() {
         extDataService.calcStockRps();
         return Result.SUC();
     }
 
 
-    @Operation(summary = "板块 - RPS计算", description = "板块 - RPS计算")
-    @GetMapping(value = "/block/calcRps")
+    @Operation(summary = "板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
+    @GetMapping(value = "/block/calc")
     public Result<Void> calcBlockRps() {
         extDataService.calcBlockRps();
         return Result.SUC();

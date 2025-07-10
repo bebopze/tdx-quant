@@ -75,8 +75,8 @@ public class QuickOption {
 
         // 持仓个股
         CcStockInfo ccStockInfo = fun.getQueryCreditNewPosResp().getStocks().stream()
-                .filter(e -> Objects.equals(e.getStkcode(), stockCode))
-                .findAny().orElse(null);
+                                     .filter(e -> Objects.equals(e.getStkcode(), stockCode))
+                                     .findAny().orElse(null);
         Assert.notNull(ccStockInfo, String.format("当前个股 [%s-%s] 无持仓", stockCode, stockName));
 
         // 可卖数量
@@ -254,98 +254,101 @@ public class QuickOption {
      */
     public static List<String> scoreSort(Collection<String> stockCodeList, int N) {
 
-        Map<String, BigDecimal> stockCode_amo_map = Maps.newHashMap();
-        Map<String, double[]> stockCode_close_map = Maps.newHashMap();
-        Map<String, String> stockCode_stockName_map = Maps.newHashMap();
+//        Map<String, BigDecimal> stockCode_amo_map = Maps.newHashMap();
+//        Map<String, double[]> stockCode_close_map = Maps.newHashMap();
+//        Map<String, String> stockCode_stockName_map = Maps.newHashMap();
+//
+//
+//        // Step 1: 获取数据
+//        for (String stockCode : stockCodeList) {
+//
+//            // 实时行情
+//            SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+//            String stockName = shszQuoteSnapshotResp.getName();
+//
+//            // 历史行情
+//            StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+//            List<String> klines = stockKlineHisResp.getKlines();
+//            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.klines2DTOList(klines), "close");
+//
+//
+//            BigDecimal amount = shszQuoteSnapshotResp.getRealtimequote().getAmount();
+//            stockCode_amo_map.put(stockCode, amount);
+//            stockCode_close_map.put(stockCode, close);
+//            stockCode_stockName_map.put(stockCode, stockName);
+//
+//
+//            // 间隔50ms
+//            SleepUtils.sleep(50);
+//        }
+//
+//
+//        // ----------------- 规则排名
+//
+//        // 金额 -> 涨幅榜（近10日） -> ...
+//
+//        // TODO     RPS（50） -> 大均线多头（20） -> 60日新高（10） -> 涨幅榜（10） -> 成交额-近10日（10） -> ...
+//
+//
+//        // Step 2: 计算各项指标 & 打分
+//        List<StockScore> scoredStocks = Lists.newArrayList();
+//
+//        // 用于归一化处理
+//        double maxAmount = 0;
+//        double maxRecentReturn = 0;
+//        double maxMidReturn = 0;
+//
+//
+//        // Step 2.1: 遍历所有股票，计算原始值
+//        for (String code : stockCodeList) {
+//            String stockName = stockCode_stockName_map.get(code);
+//
+//
+//            double[] closes = stockCode_close_map.get(code);
+//            if (closes == null || closes.length < 20) continue;
+//
+//            // 近10日涨幅：(今日收盘价 / 10日前收盘价 - 1)
+//            double changePct_d10 = (closes[closes.length - 1] / closes[closes.length - 11]) - 1;
+//
+//            // 中期涨幅：(今日收盘价 / 20日前收盘价 - 1)
+//            double midReturn = (closes[closes.length - 1] / closes[closes.length - 21]) - 1;
+//
+//            BigDecimal amount = stockCode_amo_map.get(code);
+//
+//            // 更新最大值用于归一化
+//            maxAmount = Math.max(maxAmount, amount.doubleValue());
+//            maxRecentReturn = Math.max(maxRecentReturn, Math.abs(changePct_d10));
+//            maxMidReturn = Math.max(maxMidReturn, Math.abs(midReturn));
+//
+//            scoredStocks.add(new StockScore(code, stockName, amount.doubleValue(), changePct_d10, midReturn, 0));
+//        }
+//
+//
+//        // Step 3: 归一化 & 加权打分
+//        for (StockScore s : scoredStocks) {
+//            double amountScore = s.amount / maxAmount * 50;            // 权重50%
+//            double recentScore = s.changePct_d10 / maxRecentReturn * 30;             // 权重30%
+//            double midScore = s.midTermChangePct / maxMidReturn * 20;                // 权重20%
+//
+//            s.score = amountScore + recentScore + midScore;
+//        }
+//
+//
+//        // Step 4: 按得分排序，取前N名
+//        List<StockScore> topNStocks = scoredStocks.stream()
+//                                                  .sorted(Comparator.comparingDouble((StockScore s) -> -s.score))
+//                                                  .limit(N)
+//                                                  .collect(Collectors.toList());
+//
+//
+//        // 输出结果或进一步操作
+//        topNStocks.forEach(JSON::toJSONString);
+//
+//
+//        return topNStocks.stream().map(StockScore::getStockCode).collect(Collectors.toList());
 
 
-        // Step 1: 获取数据
-        for (String stockCode : stockCodeList) {
-
-            // 实时行情
-            SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-            String stockName = shszQuoteSnapshotResp.getName();
-
-            // 历史行情
-            StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-            List<String> klines = stockKlineHisResp.getKlines();
-            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.klines2DTOList(klines), "close");
-
-
-            BigDecimal amount = shszQuoteSnapshotResp.getRealtimequote().getAmount();
-            stockCode_amo_map.put(stockCode, amount);
-            stockCode_close_map.put(stockCode, close);
-            stockCode_stockName_map.put(stockCode, stockName);
-
-
-            // 间隔50ms
-            SleepUtils.sleep(50);
-        }
-
-
-        // ----------------- 规则排名
-
-        // 金额 -> 涨幅榜（近10日） -> ...
-
-        // TODO     RPS（50） -> 大均线多头（20） -> 60日新高（10） -> 涨幅榜（10） -> 成交额-近10日（10） -> ...
-
-
-        // Step 2: 计算各项指标 & 打分
-        List<StockScore> scoredStocks = Lists.newArrayList();
-
-        // 用于归一化处理
-        double maxAmount = 0;
-        double maxRecentReturn = 0;
-        double maxMidReturn = 0;
-
-
-        // Step 2.1: 遍历所有股票，计算原始值
-        for (String code : stockCodeList) {
-            String stockName = stockCode_stockName_map.get(code);
-
-
-            double[] closes = stockCode_close_map.get(code);
-            if (closes == null || closes.length < 20) continue;
-
-            // 近10日涨幅：(今日收盘价 / 10日前收盘价 - 1)
-            double changePct_d10 = (closes[closes.length - 1] / closes[closes.length - 11]) - 1;
-
-            // 中期涨幅：(今日收盘价 / 20日前收盘价 - 1)
-            double midReturn = (closes[closes.length - 1] / closes[closes.length - 21]) - 1;
-
-            BigDecimal amount = stockCode_amo_map.get(code);
-
-            // 更新最大值用于归一化
-            maxAmount = Math.max(maxAmount, amount.doubleValue());
-            maxRecentReturn = Math.max(maxRecentReturn, Math.abs(changePct_d10));
-            maxMidReturn = Math.max(maxMidReturn, Math.abs(midReturn));
-
-            scoredStocks.add(new StockScore(code, stockName, amount, changePct_d10, midReturn, 0));
-        }
-
-
-        // Step 3: 归一化 & 加权打分
-        for (StockScore s : scoredStocks) {
-            double amountScore = s.amount.doubleValue() / maxAmount * 50;            // 权重50%
-            double recentScore = s.changePct_d10 / maxRecentReturn * 30;             // 权重30%
-            double midScore = s.midTermChangePct / maxMidReturn * 20;                // 权重20%
-
-            s.score = amountScore + recentScore + midScore;
-        }
-
-
-        // Step 4: 按得分排序，取前N名
-        List<StockScore> topNStocks = scoredStocks.stream()
-                .sorted(Comparator.comparingDouble((StockScore s) -> -s.score))
-                .limit(N)
-                .collect(Collectors.toList());
-
-
-        // 输出结果或进一步操作
-        topNStocks.forEach(JSON::toJSONString);
-
-
-        return topNStocks.stream().map(StockScore::getStockCode).collect(Collectors.toList());
+        return null;
     }
 
 
@@ -405,11 +408,21 @@ public class QuickOption {
     @AllArgsConstructor
     public static class StockScore {
 
-        String stockCode;
-        String stockName;
-        BigDecimal amount;           // 成交额
-        double changePct_d10;        // 近10日涨幅
-        double midTermChangePct;     // 中期涨幅
-        double score;                // 总分
+        public String stockCode;
+        public String stockName;
+
+        public double RPS和;                 // RPS和
+        public double midTermChangePct;     // 中期涨幅
+        public int 大均线多头;                // 大均线多头
+        public int N日新高;                  // 60日新高
+        public double amount;               // 成交额
+
+        public double score;                // 总分
+
+
+
+
     }
+
+
 }

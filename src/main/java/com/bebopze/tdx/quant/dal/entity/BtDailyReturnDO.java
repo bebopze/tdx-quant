@@ -60,6 +60,13 @@ public class BtDailyReturnDO implements Serializable {
     private BigDecimal dailyReturn;
 
     /**
+     * 当日盈亏额
+     */
+    @TableField("profit_loss_amount")
+    @Schema(description = "当日盈亏额")
+    private BigDecimal profitLossAmount;
+
+    /**
      * 净值（初始为1.0000）
      */
     @TableField("nav")

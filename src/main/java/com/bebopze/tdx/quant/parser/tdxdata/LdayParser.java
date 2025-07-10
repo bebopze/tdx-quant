@@ -324,9 +324,9 @@ public class LdayParser {
             }
 
 
-            if (tradeDate.isEqual(LocalDate.of(2024, 10, 9))) {
-                System.out.println("-------- vol : " + vol);
-            }
+//            if (tradeDate.isEqual(LocalDate.of(2024, 10, 9))) {
+//                System.out.println("-------- vol : " + vol);
+//            }
 
 
             if (Float.isNaN(preClose)) {

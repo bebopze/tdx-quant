@@ -4,7 +4,9 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -27,7 +29,6 @@ import org.springframework.util.Assert;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,13 @@ public class BacktestStrategy {
     // 统计
     Stat x = new Stat();
     // private static ThreadLocal<Stat> x = new ThreadLocal<>();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private LocalDate endTradeDate_cache = null;
+    private List<BtTradeRecordDO> doList_cache = Lists.newArrayList();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -111,7 +119,8 @@ public class BacktestStrategy {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public synchronized void backtest() {
+    public synchronized void backtest(LocalDate startDate, LocalDate endDate) {
+        log.info("backtest start     >>>     startDate:{} , endDate : {}", startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -120,7 +129,7 @@ public class BacktestStrategy {
 
 
         // 数据初始化   ->   加载 全量行情数据
-        initData();
+        initData(startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -128,10 +137,7 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        BtTaskDO taskDO = createBacktestTask();
-
-
-        Long taskId = taskDO.getId();
+        BtTaskDO taskDO = createBacktestTask(startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -140,26 +146,16 @@ public class BacktestStrategy {
 
 
         LocalDate tradeDate = taskDO.getStartDate().minusDays(1);
-        LocalDate endDate = DateTimeUtil.min(taskDO.getEndDate(), data.dateList.get(data.dateList.size() - 1));
+        endDate = DateTimeUtil.min(taskDO.getEndDate(), data.dateList.get(data.dateList.size() - 1));
 
 
-        // 初始资金
+        // 总资金
         x.prevCapital = taskDO.getInitialCapital();
-        // 初始净值 1.0000
-        // x.prevNav = BigDecimal.ONE; // taskDO.getInitNav;
-
         // 可用金额
         x.prevAvlCapital = taskDO.getInitialCapital();
 
 
-        // ----------------  汇总 统计
-
-        // 盈利天数
-        // int winCount = 0;
-        // 收益率 - 峰值
-        // x.peakNav = of(0.000001);
-        // 最大回撤
-        // BigDecimal maxDrawdown = BigDecimal.ZERO;
+        // ----------------
 
 
         // 每日 收益率
@@ -173,9 +169,9 @@ public class BacktestStrategy {
 
             try {
                 // 每日 - 回测（B/S）
-                execBacktestDaily(taskId, tradeDate, dailyReturnList, taskDO);
+                execBacktestDaily(tradeDate, dailyReturnList, taskDO);
             } catch (Exception e) {
-                log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskId, tradeDate, e.getMessage(), e);
+                log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
             }
         }
 
@@ -186,20 +182,25 @@ public class BacktestStrategy {
 
 
         sumTotalReturn(taskDO, dailyReturnList);
+
+
+        log.info("backtest end     >>>     startDate:{} , endDate : {}", startDate, endDate);
     }
 
 
-    private BtTaskDO createBacktestTask() {
+    private BtTaskDO createBacktestTask(LocalDate startDate, LocalDate endDate) {
 
         BtTaskDO taskDO = new BtTaskDO();
         // BS策略
         taskDO.setBuyStrategy("Buy-Strategy-1");
         taskDO.setSellStrategy("Sell-Strategy-1");
         // 回测 - 时间段
-        taskDO.setStartDate(LocalDate.of(2025, 1, 1));
-        taskDO.setEndDate(LocalDate.now());
+        taskDO.setStartDate(startDate);
+        taskDO.setEndDate(endDate);
         // 初始本金
-        taskDO.setInitialCapital(new BigDecimal(1000_000));
+        taskDO.setInitialCapital(BigDecimal.valueOf(100_0000));
+        // 初始净值
+        taskDO.setInitialNav(BigDecimal.valueOf(1.0000));
 
         btTaskService.save(taskDO);
 
@@ -208,12 +209,12 @@ public class BacktestStrategy {
     }
 
 
-    private void execBacktestDaily(Long taskId, LocalDate tradeDate, List<BigDecimal> dailyReturnList,
-                                   BtTaskDO taskDO
-                                   /*int[] winCount,
-                                   BigDecimal[] peakNav,
-                                   BigDecimal[] maxDrawdown,
-                                   BigDecimal[] prevNav, BigDecimal[] prevCapital, BigDecimal[] prevAvlCapital*/) {
+    private void execBacktestDaily(LocalDate tradeDate,
+                                   List<BigDecimal> dailyReturnList,
+                                   BtTaskDO taskDO) {
+
+
+        Long taskId = taskDO.getId();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -241,9 +242,12 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        Map<String, String> sell_infoMap = Maps.newHashMap();
+
+
         // 卖出策略
-        List<String> sell__stockCodeList = backTestSellStrategy.rule(data, tradeDate, positionStockCodeList__S);
-        log.info("卖出策略     >>>     {} , size : {} , sell__stockCodeList : {}", tradeDate, sell__stockCodeList.size(), JSON.toJSONString(sell__stockCodeList));
+        List<String> sell__stockCodeList = backTestSellStrategy.rule(data, tradeDate, positionStockCodeList__S, sell_infoMap);
+        log.info("S策略     >>>     {} , size : {} , sell__stockCodeList : {} , sell_infoMap : {}", tradeDate, sell__stockCodeList.size(), JSON.toJSONString(sell__stockCodeList), JSON.toJSONString(sell_infoMap));
 
 
         // 持仓个股   ->   匹配 淘汰
@@ -272,6 +276,7 @@ public class BacktestStrategy {
             tradeRecordDO.setStockCode(stockCode);
             tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
             tradeRecordDO.setTradeDate(tradeDate);
+            tradeRecordDO.setTradeSignal(sell_infoMap.get(stockCode));
             tradeRecordDO.setPrice(NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate)));
             tradeRecordDO.setQuantity(stockCode_positionDO_Map.get(stockCode).getQuantity());
             // 成交额 = 价格 x 数量
@@ -292,9 +297,17 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // TODO     同一日  同时满足       S策略（高位爆量上影大阴）   +   B策略（月多,60日新高,SSF多,RPS三线红,大均线多头）
+
+        // TODO       ==>       S半仓   /   S（清仓） -> 不B
+
+
+        Map<String, String> buy_infoMap = Maps.newHashMap();
+
+
         // 买入策略
-        List<String> buy__stockCodeList = backTestBuyStrategy.rule(data, tradeDate);
-        log.info("买入策略     >>>     {} , size : {} , buy__stockCodeList : {}", tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList));
+        List<String> buy__stockCodeList = backTestBuyStrategy.rule(data, tradeDate, buy_infoMap);
+        log.info("B策略     >>>     {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}", tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -352,6 +365,7 @@ public class BacktestStrategy {
                 tradeRecordDO.setStockCode(stockCode);
                 tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
                 tradeRecordDO.setTradeDate(tradeDate);
+                tradeRecordDO.setTradeSignal(buy_infoMap.get(stockCode));
 
                 // 收盘价
                 BigDecimal close = NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate));
@@ -365,6 +379,12 @@ public class BacktestStrategy {
                 tradeRecordDO.setAmount(of(amount));
 
                 tradeRecordDO.setFee(BigDecimal.ZERO);
+
+
+                // 买入0股（     amount -> (0,1)     ）
+                if (qty < 1) {
+                    continue;
+                }
 
 
                 btTradeRecordService.save(tradeRecordDO);
@@ -419,7 +439,7 @@ public class BacktestStrategy {
 
 
             // 汇总统计 - 指标更新
-            if (dailyReturnDO.getDailyReturn().compareTo(BigDecimal.ZERO) > 0) x.winCount++;
+            if (dailyReturnDO.getDailyReturn().doubleValue() > 0) x.winCount++;
             // 波峰净值
             x.peakNav = x.peakNav.max(nav);
             // 回撤 =（波峰净值 - 当日净值） / 波峰净值
@@ -504,10 +524,16 @@ public class BacktestStrategy {
         // 净值 = 总资金 / 本金
         BigDecimal nav = capital.divide(initialCapital, 8, RoundingMode.HALF_UP);
 
-        // 当日收益率 = 当日市值 / 昨日市值 - 1
-        BigDecimal dailyReturn = capital.divide(prevCapital, 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE);
-        log.debug("calcDailyReturn     >>>     date : {} , marketValue : {} , avlCapital : {} , capital : {} , prevCapital : {} , dailyReturn : {} , nav : {}",
-                  tradeDate, marketValue, avlCapital, capital, prevCapital, dailyReturn, nav);
+        // 当日盈亏额 = 当日总资金 - 昨日总资金
+        BigDecimal profitLossAmount = capital.subtract(prevCapital);
+
+        // 当日收益率 = 当日总资金 / 昨日总资金 - 1
+        // BigDecimal dailyReturn = capital.divide(prevCapital, 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE);
+
+        // 当日收益率 = 当日盈亏额 / 昨日总资金
+        BigDecimal dailyReturn = profitLossAmount.divide(prevCapital, 6, RoundingMode.HALF_UP);
+        log.debug("calcDailyReturn     >>>     date : {} , marketValue : {} , avlCapital : {} , capital : {} , prevCapital : {} , profitLossAmount : {} , dailyReturn : {} , nav : {}",
+                  tradeDate, marketValue, avlCapital, capital, prevCapital, profitLossAmount, dailyReturn, nav);
 
 
         BtDailyReturnDO dailyReturnDO = new BtDailyReturnDO();
@@ -516,6 +542,8 @@ public class BacktestStrategy {
         dailyReturnDO.setTradeDate(tradeDate);
         // 当日收益率
         dailyReturnDO.setDailyReturn(dailyReturn);
+        // 当日盈亏额
+        dailyReturnDO.setProfitLossAmount(profitLossAmount);
         // 净值
         dailyReturnDO.setNav(nav);
         // 总资金
@@ -535,10 +563,6 @@ public class BacktestStrategy {
         btDailyReturnService.save(dailyReturnDO);
 
 
-        // -----
-        // prevCapital[0] = currCapital;
-
-
         return dailyReturnDO;
     }
 
@@ -549,21 +573,21 @@ public class BacktestStrategy {
      * @param taskDO
      * @param dailyReturnList
      */
-    private void sumTotalReturn(BtTaskDO taskDO,
-                                /*BigDecimal[] prevNav,
-                                BigDecimal[] prevCapital,
-                                int[] winCount,
-                                BigDecimal[] maxDrawdown,*/
-                                List<BigDecimal> dailyReturnList) {
+    private void sumTotalReturn(BtTaskDO taskDO, List<BigDecimal> dailyReturnList) {
 
 
         // 4. 全期汇总：更新 bt_task
-        int totalDays = (int) (ChronoUnit.DAYS.between(taskDO.getStartDate(), taskDO.getEndDate()) + 1);
+
+
+        // 持仓天数   ->   间隔  N个交易日
+        int totalDays = between(tradeDateIncr(taskDO.getStartDate()), tradeDateIncr(taskDO.getEndDate()), data.dateIndexMap);
+
+
         BigDecimal finalNav = x.prevNav;
         BigDecimal finalCapital = x.prevCapital;
 
 
-        BigDecimal totalReturn = finalNav.subtract(BigDecimal.ONE);                     // 净值增幅
+        BigDecimal totalReturn = finalNav.subtract(BigDecimal.ONE);         // 净值增幅
         BigDecimal totalReturnPct = totalReturn.multiply(of(100));      // %
         BigDecimal annualReturnPct = of(Math.pow(finalNav.doubleValue(), 252.0 / totalDays) - 1).multiply(of(100));
 
@@ -586,11 +610,8 @@ public class BacktestStrategy {
                 : of(avgWin / avgLoss);
 
 
-        // BtTaskDO taskDO = new BtTaskDO();
-
-        // taskDO.setId(taskId);
-        // taskDO.setInitialCapital(new BigDecimal(1000000));
         taskDO.setFinalCapital(finalCapital);
+        taskDO.setFinalNav(finalNav);
         taskDO.setTotalDay(totalDays);
         taskDO.setTotalReturnPct(totalReturnPct);
         taskDO.setAnnualReturnPct(annualReturnPct);
@@ -613,10 +634,103 @@ public class BacktestStrategy {
      */
     private List<BtPositionRecordDO> getDailyPositions(Long taskId, LocalDate endTradeDate) {
 
-        List<BtTradeRecordDO> doList = btTradeRecordService.listByTaskIdAndTradeDate(taskId, endTradeDate);
+
+        // 每次  ->  全量查询
+        // 拿到某任务到指定日期的所有交易记录（已按 trade_date、id 升序）
+        List<BtTradeRecordDO> allTrades = btTradeRecordService.listByTaskIdAndTradeDate(taskId, endTradeDate);
 
 
-        // 1. 汇总买卖
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 1、全量 B/S记录     =>     当前B/S（未清仓）   +   历史B/S（已清仓）
+
+
+        // 每次  ->  增量查询     +     历史记录（cache）
+
+
+        LocalDate startTradeDate = endTradeDate_cache == null ? null :
+                endTradeDate_cache.isEqual(endTradeDate) ? endTradeDate_cache : endTradeDate_cache.plusDays(1);
+
+
+        List<BtTradeRecordDO> doList = btTradeRecordService.listByTaskIdAndTradeDate(taskId, startTradeDate, endTradeDate);
+
+
+        endTradeDate_cache = endTradeDate;
+        doList_cache.addAll(doList);
+        doList = doList_cache;
+
+
+        if (allTrades.size() != doList.size()) {
+            log.error("getDailyPositions - BtTradeRecordDOList err     >>>     {} , {}", allTrades.size(), doList.size());
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 2、剔除   ->   历史B/S（已清仓）
+
+
+        // 当前B/S（未清仓）
+        List<BtTradeRecordDO> doList2 = Lists.newArrayList();
+
+
+        // 2. 构建 FIFO 队列：stockCode -> 队列里存 剩余的买单
+        Map<String, Deque<MutableTrade>> buyQueues = new HashMap<>();
+
+
+        // 3. 遍历所有记录，构建/抵销
+        for (BtTradeRecordDO tr : allTrades) {
+
+            String code = tr.getStockCode();
+            int qty = tr.getQuantity();
+
+
+            if (Objects.equals(tr.getTradeType(), BtTradeTypeEnum.BUY.getTradeType())) {
+
+                // 买入：入队
+                buyQueues.computeIfAbsent(code, k -> new LinkedList<>()).addLast(new MutableTrade(tr, qty));
+
+            } else {
+
+                // 卖出：用 FIFO 队头买单抵销
+                Deque<MutableTrade> queue = buyQueues.get(code);
+                int remaining = qty;
+                while (remaining > 0 && queue != null && !queue.isEmpty()) {
+                    MutableTrade head = queue.peekFirst();
+                    if (head.remainingQty > remaining) {
+                        head.remainingQty -= remaining;
+                        remaining = 0;
+                    } else {
+                        remaining -= head.remainingQty;
+                        queue.pollFirst(); // 这个买单完全抵销
+                    }
+                }
+
+                // （可选）如果 remaining>0，说明卖空或超卖，按业务处理
+            }
+        }
+
+
+        // 4. 从各队列里收集所有剩余的买单，转换回原 DTO 并把 quantity 调成剩余数量
+        for (Deque<MutableTrade> queue : buyQueues.values()) {
+            for (MutableTrade mt : queue) {
+
+                BtTradeRecordDO openBuy = mt.original;
+                openBuy.setQuantity(mt.remainingQty);
+
+                doList2.add(openBuy);
+            }
+        }
+
+        // doList2 中即为“当前未清仓”的买入记录（quantity 已是剩余量）
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 3. 汇总买卖
         Map<Long, Integer> quantityMap = Maps.newHashMap();     // 个股持仓 -   总数量
         Map<Long, Integer> avlQuantityMap = Maps.newHashMap();  // 个股持仓 - 可用数量（T+1）
         Map<Long, Double> amountMap = Maps.newHashMap();        // 个股持仓 -   总成本（买入价格 x 买入数量   ->   累加）
@@ -624,7 +738,7 @@ public class BacktestStrategy {
         Map<Long, PositionInfo> idInfoMap = Maps.newHashMap();  //
 
 
-        for (BtTradeRecordDO tradeRecordDO : doList) {
+        for (BtTradeRecordDO tradeRecordDO : doList2) {
 
 
             Long stockId = tradeRecordDO.getStockId();
@@ -663,9 +777,17 @@ public class BacktestStrategy {
                 idInfoMap.put(stockId, positionInfo);
 
             } else {
-                // 更新 -> 首次买入日期（用于计算 持仓天数）
-                LocalDate buyDate = tradeDate.isBefore(positionInfo.buyDate) ? tradeDate : positionInfo.buyDate;
-                positionInfo.setBuyDate(buyDate);
+
+                // LocalDate buyDate = tradeDate.isBefore(positionInfo.buyDate) ? tradeDate : positionInfo.buyDate;
+
+
+                // 更新  ->  最近一次  首次买入日期（用于计算 持仓天数）     =>     最近一次  avlQuantity = 0
+                if (avlQuantityMap.get(stockId) == 0) {
+                    // 最近一次
+                    // LocalDate buyDate = tradeDate.isAfter(positionInfo.buyDate) ? tradeDate : positionInfo.buyDate;
+                    LocalDate buyDate = tradeDate.isBefore(positionInfo.buyDate) ? tradeDate : positionInfo.buyDate;
+                    positionInfo.setBuyDate(buyDate);
+                }
             }
         }
 
@@ -688,6 +810,13 @@ public class BacktestStrategy {
             double totalCost = amountMap.getOrDefault(stockId, 0.0);
             // 平均成本 = 总成本 / 持仓数量
             double avgCost = totalCost / qty;
+
+
+            // 每次B/S   ->   成本/收益/收益率   ->   独立事件（边界）     ==>     否则，上次B/S 亏损  ->  合并计入  本次B/S   =>   亏损 -> 负数bug（总成本 负数 -> 平均成本 负数）     =>     市值 爆减bug
+            if (avgCost < 0) {
+                log.error("getDailyPositions - avgCost err     >>>     totalCost : {} , qty : {} , avgCost : {}", totalCost, qty, avgCost);
+            }
+
 
             // 当日收盘价
             double closePrice = getClosePrice(positionInfo.stockCode, endTradeDate);
@@ -741,7 +870,8 @@ public class BacktestStrategy {
     }
 
 
-    private synchronized void initData() {
+    private synchronized void initData(LocalDate startDate, LocalDate endDate) {
+
         // 重新初始化   统计数据
         x = new Stat();
 
@@ -752,7 +882,7 @@ public class BacktestStrategy {
 
 
         // 加载   全量行情数据 - 个股
-        loadAllStockKline();
+        loadAllStockKline(startDate, endDate);
 
 
         // 加载   全量行情数据 - 板块
@@ -772,7 +902,14 @@ public class BacktestStrategy {
      *
      * @return
      */
-    private void loadAllStockKline() {
+    private void loadAllStockKline(LocalDate startDate, LocalDate endDate) {
+
+
+        startDate = startDate == null ? LocalDate.now().minusYears(3) : startDate;
+        endDate = endDate == null ? LocalDate.now() : endDate;
+
+
+        // -----------------------------------------------------------------------------
 
 
         // DB 数据加载
@@ -780,25 +917,62 @@ public class BacktestStrategy {
         // 空数据 过滤
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
                 // TODO   基金北向
-                && e.getAmount().doubleValue() > 10 * 100000000).collect(Collectors.toList());
+                && e.getAmount().doubleValue() > 1 * 1_0000_0000).collect(Collectors.toList());
 
 
-        // -----------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 行情起点
-        LocalDate dateLine = LocalDate.of(2023, 1, 1);
+        LocalDate dateLine_start = startDate.minusYears(1);
+        LocalDate dateLine_end = endDate;
 
 
         // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
         data.stockDOList.parallelStream().forEach(e -> {
 
+
+            // klineHis
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            klineDTOList = klineDTOList.parallelStream().filter(d -> d.getDate().isAfter(dateLine)).sorted(Comparator.comparing(KlineDTO::getDate)).collect(Collectors.toList());
+            klineDTOList = klineDTOList.parallelStream()
+                                       .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
+                                               // 过滤  ->  负价格（前复权）
+                                               && k.getClose() > 0)
+                                       .sorted(Comparator.comparing(KlineDTO::getDate))
+                                       .collect(Collectors.toList());
 
 
             e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+
+
+            // -----------------------------------------------------------------------------
+
+
+            // extDataHis -> 必须同步 截取（数据对齐）
+
+
+            // klineHis   ->   过滤后的 dateSet（   HashSet  ->  set.contains，只要 O(1)   ）
+            Set<LocalDate> dateSet = klineDTOList.stream()
+                                                 .map(KlineDTO::getDate)
+                                                 .collect(Collectors.toSet());
+
+
+            // 同步对齐 dateSet   ->   扩展数据
+            List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
+                                               .filter(x -> !x.getDate().isBefore(dateLine_start) && !x.getDate().isAfter(dateLine_end))
+                                               .filter(x -> dateSet.contains(x.getDate()))
+                                               .sorted(Comparator.comparing(ExtDataDTO::getDate))
+                                               .collect(Collectors.toList());
+
+            e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
         });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 空行情 过滤（时间段内 -> 未上市）
+        data.stockDOList = data.stockDOList.stream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
 
 
         // -----------------------------------------------------------------------------
@@ -916,19 +1090,17 @@ public class BacktestStrategy {
 
 
     /**
-     * 统计
+     * 统计数据
      */
     @Data
     public static class Stat {
 
-        // 初始资金
+        // 总资金
         BigDecimal prevCapital;
-
-        // 初始净值 1.0000
-        BigDecimal prevNav = BigDecimal.ONE;
-
-        // 可用金额
+        // 可用资金
         BigDecimal prevAvlCapital;
+        // 净值 1.0000
+        BigDecimal prevNav = BigDecimal.ONE;
 
 
         // -----------------------------------------
@@ -968,14 +1140,14 @@ public class BacktestStrategy {
      * @return
      */
     public static int between(LocalDate start, LocalDate end, Map<LocalDate, Integer> dateIndexMap) {
-        Assert.isTrue(!start.isAfter(end), "start不能大于end");
+        Assert.isTrue(!start.isAfter(end), String.format("start[%s]不能大于end[%s]", start, end));
 
 
         Integer idx1 = dateIndexMap.get(start);
         Integer idx2 = dateIndexMap.get(end);
 
-        Assert.notNull(idx1, "start非交易日");
-        Assert.notNull(idx2, "end非交易日");
+        Assert.notNull(idx1, String.format("start[%s]非交易日", start));
+        Assert.notNull(idx2, String.format("end[%s]非交易日", end));
 
         return idx2 - idx1;
     }
@@ -987,6 +1159,19 @@ public class BacktestStrategy {
 
     private static BigDecimal of(Number val) {
         return BigDecimal.valueOf(val.doubleValue()).setScale(4, RoundingMode.HALF_UP);
+    }
+
+
+    /**
+     * 辅助类：包装一条买入记录及其剩余可抵销数量
+     **/
+    @Data
+    @AllArgsConstructor
+    private static class MutableTrade {
+        // 买入记录
+        final BtTradeRecordDO original;
+        // 剩余可抵销数量
+        int remainingQty;
     }
 
 }

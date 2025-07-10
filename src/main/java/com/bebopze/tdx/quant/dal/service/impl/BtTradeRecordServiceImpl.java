@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,8 +20,18 @@ import java.util.List;
 @Service
 public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, BtTradeRecordDO> implements IBtTradeRecordService {
 
+
     @Override
     public List<BtTradeRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate) {
         return baseMapper.listByTaskIdAndTradeDate(taskId, tradeDate);
+    }
+
+
+    @Override
+    public List<BtTradeRecordDO> listByTaskIdAndTradeDate(Long taskId,
+                                                          LocalDate startTradeDate,
+                                                          LocalDate endTradeDate) {
+
+        return baseMapper.listByTaskIdAndTradeDateRange(taskId, startTradeDate, endTradeDate);
     }
 }

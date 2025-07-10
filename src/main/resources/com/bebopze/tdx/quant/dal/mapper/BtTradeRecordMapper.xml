@@ -19,6 +19,28 @@
     </select>
 
 
+    <select id="listByTaskIdAndTradeDateRange" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
+
+        SELECT *
+
+
+        FROM bt_trade_record
+
+
+        WHERE task_id = #{taskId}
+
+
+        <if test="startTradeDate != null">
+            <![CDATA[     AND trade_date >= #{startTradeDate}     ]]>
+        </if>
+
+
+        <![CDATA[     AND trade_date <= #{endTradeDate}
+        ]]>
+
+    </select>
+
+
     <select id="listByTaskIdAndTradeDate_2" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
 
         SELECT task_id,

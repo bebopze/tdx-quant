@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.common.config;
 
+import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateConverter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -33,5 +35,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
+
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        // web参数   日期格式
+        registry.addConverter(new StringToLocalDateConverter("yyyy-MM-dd"));
+    }
+
 
 }

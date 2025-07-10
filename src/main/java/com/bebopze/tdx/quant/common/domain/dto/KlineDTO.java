@@ -16,7 +16,7 @@ import java.time.LocalDate;
 public class KlineDTO implements Serializable {
 
 
-    // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+    // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
 
     // 2025-05-01

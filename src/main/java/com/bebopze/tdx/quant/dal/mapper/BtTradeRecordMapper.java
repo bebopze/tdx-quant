@@ -17,6 +17,12 @@ import java.util.List;
  */
 public interface BtTradeRecordMapper extends BaseMapper<BtTradeRecordDO> {
 
+
     List<BtTradeRecordDO> listByTaskIdAndTradeDate(@Param("taskId") Long taskId,
                                                    @Param("tradeDate") LocalDate tradeDate);
+
+
+    List<BtTradeRecordDO> listByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
+                                                        @Param("startTradeDate") LocalDate startTradeDate,
+                                                        @Param("endTradeDate") LocalDate endTradeDate);
 }

@@ -62,4 +62,33 @@ public class BacktestCache {
      */
     public Map<String, List<String>> blockCode_stockCodeList_Map = Maps.newHashMap();
     // public Map<Long, List<Long>> blockId_stockIdList_Map = Maps.newHashMap();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Override
+    public String toString() {
+        // toString  ->  OOM
+        return "BacktestCache{" +
+                "dateIndexMap=" + dateIndexMap.size() +
+                ", dateList=" + dateList.size() +
+                ", stockDOList=" + stockDOList.size() +
+                ", codeStockMap=" + codeStockMap.size() +
+                ", stock__idCodeMap=" + stock__idCodeMap.size() +
+                ", stock__codeIdMap=" + stock__codeIdMap.size() +
+                ", stock__codeNameMap=" + stock__codeNameMap.size() +
+                ", stock__dateCloseMap=" + stock__dateCloseMap.size() +
+                ", blockDOList=" + blockDOList.size() +
+                ", codeBlockMap=" + codeBlockMap.size() +
+                ", block__idCodeMap=" + block__idCodeMap.size() +
+                ", block__codeIdMap=" + block__codeIdMap.size() +
+                ", block__codeNameMap=" + block__codeNameMap.size() +
+                ", block__dateCloseMap=" + block__dateCloseMap.size() +
+                ", stockCode_blockCodeList_Map=" + stockCode_blockCodeList_Map.size() +
+                ", blockCode_stockCodeList_Map=" + blockCode_stockCodeList_Map.size() +
+                '}';
+    }
+
+
 }

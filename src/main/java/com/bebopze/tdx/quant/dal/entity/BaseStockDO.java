@@ -138,11 +138,11 @@ public class BaseStockDO implements Serializable {
     private BigDecimal turnoverPct;
 
     /**
-     * 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+     * 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @JsonIgnore
     @TableField(value = "kline_his", select = false)
-    @Schema(description = "历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
+    @Schema(description = "历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
 
     /**

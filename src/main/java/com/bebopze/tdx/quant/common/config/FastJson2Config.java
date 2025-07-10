@@ -5,6 +5,8 @@ import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
 import com.alibaba.fastjson2.writer.ObjectWriterPrimitiveImpl;
+import com.bebopze.tdx.quant.common.config.convert.DoubleArrayWriter;
+import com.bebopze.tdx.quant.common.config.convert.StringToBigDecimalReader;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Type;

@@ -930,11 +930,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
 
 
-            // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
-            // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+            // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
+            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-            // 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
-            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getClose(), x.getHigh(), x.getLow(), x.getVol(), x.getAmount(),
+            // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
                                                     x.getRangePct(), x.getChangePct(), x.getChangePrice(), null);
 
 
@@ -1139,12 +1139,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         ldayDTOList.forEach(e -> {
 
 
-            // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
-            // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+            // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
+            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-            // 历史行情-JSON（[日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
 
-            List<Object> kline = Lists.newArrayList(String.valueOf(e.getTradeDate()), e.getOpen(), e.getClose(), e.getHigh(), e.getLow(), e.getVol(), e.getAmount(),
+            List<Object> kline = Lists.newArrayList(String.valueOf(e.getTradeDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(),
                                                     e.getRangePct(), e.getChangePct(), e.getChangePrice(), null);
 
 

@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.config;
+package com.bebopze.tdx.quant.common.config.convert;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONFactory;
