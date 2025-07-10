@@ -97,6 +97,9 @@ public class BacktestSellStrategy extends SellStrategy {
             }
 
 
+            // TODO     最大 亏损线  ->  -7% 止损
+
+
             return false;
 
         }).collect(Collectors.toList());

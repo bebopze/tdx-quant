@@ -3,8 +3,6 @@ package com.bebopze.tdx.quant.common.constant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.Objects;
-
 
 /**
  * 东方财富 - 交易API 参数
