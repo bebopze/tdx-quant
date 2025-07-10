@@ -63,7 +63,7 @@ public class BacktestStrategy {
 
 
     private LocalDate endTradeDate_cache = null;
-    private List<BtTradeRecordDO> doList_cache = Lists.newArrayList();
+    private List<BtTradeRecordDO> allTrades__cache = Lists.newArrayList();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -314,6 +314,12 @@ public class BacktestStrategy {
         //                                            B策略 -> 交易 record
         // -------------------------------------------------------------------------------------------------------------
 
+
+//        if (tradeDate.isAfter(LocalDate.of(2022, 3, 10)) && tradeDate.isBefore(LocalDate.of(2022, 3, 19))) {
+//            log.debug("debug - 交易数据 交叉验证     >>>     tradeDate : {}", tradeDate);
+//        }
+
+
         // 可用金额  =  昨日 可用金额  +  今日 卖出金额     //  -  今日 买入金额
         BigDecimal avlCapital = x.prevAvlCapital.add(sellCapital);
 
@@ -406,6 +412,12 @@ public class BacktestStrategy {
 
             log.debug("B策略 -> 交易 record - end     >>>     date : {} , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {} , buyCapital : {}",
                       tradeDate, x.prevAvlCapital, sellCapital, avlCapital, x.prevCapital, buyCapital);
+
+
+        } else {
+
+            // 剩余 可用资金  =  可用资金 - 买入总金额（0）
+            x.prevAvlCapital = avlCapital;
         }
 
 
@@ -637,7 +649,7 @@ public class BacktestStrategy {
 
         // 每次  ->  全量查询
         // 拿到某任务到指定日期的所有交易记录（已按 trade_date、id 升序）
-        List<BtTradeRecordDO> allTrades = btTradeRecordService.listByTaskIdAndTradeDate(taskId, endTradeDate);
+        // List<BtTradeRecordDO> allTrades_ = btTradeRecordService.listByTaskIdAndTradeDate(taskId, endTradeDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -653,17 +665,17 @@ public class BacktestStrategy {
                 endTradeDate_cache.isEqual(endTradeDate) ? endTradeDate_cache : endTradeDate_cache.plusDays(1);
 
 
-        List<BtTradeRecordDO> doList = btTradeRecordService.listByTaskIdAndTradeDate(taskId, startTradeDate, endTradeDate);
+        List<BtTradeRecordDO> allTrades = btTradeRecordService.listByTaskIdAndTradeDate(taskId, startTradeDate, endTradeDate);
 
 
         endTradeDate_cache = endTradeDate;
-        doList_cache.addAll(doList);
-        doList = doList_cache;
+        allTrades__cache.addAll(allTrades);
+        allTrades = allTrades__cache;
 
 
-        if (allTrades.size() != doList.size()) {
-            log.error("getDailyPositions - BtTradeRecordDOList err     >>>     {} , {}", allTrades.size(), doList.size());
-        }
+//        if (allTrades_.size() != allTrades.size()) {
+//            log.error("getDailyPositions - BtTradeRecordDOList err     >>>     {} , {}", allTrades.size(), doList.size());
+//        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -676,11 +688,11 @@ public class BacktestStrategy {
         List<BtTradeRecordDO> doList2 = Lists.newArrayList();
 
 
-        // 2. 构建 FIFO 队列：stockCode -> 队列里存 剩余的买单
+        // 构建 FIFO 队列：stockCode -> 队列里存 剩余的买单
         Map<String, Deque<MutableTrade>> buyQueues = new HashMap<>();
 
 
-        // 3. 遍历所有记录，构建/抵销
+        // 遍历所有记录，构建/抵销
         for (BtTradeRecordDO tr : allTrades) {
 
             String code = tr.getStockCode();
@@ -713,7 +725,7 @@ public class BacktestStrategy {
         }
 
 
-        // 4. 从各队列里收集所有剩余的买单，转换回原 DTO 并把 quantity 调成剩余数量
+        // 从各队列里收集所有剩余的买单，转换回原 DTO 并把 quantity 调成剩余数量
         for (Deque<MutableTrade> queue : buyQueues.values()) {
             for (MutableTrade mt : queue) {
 
@@ -959,8 +971,8 @@ public class BacktestStrategy {
 
             // 同步对齐 dateSet   ->   扩展数据
             List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
-                                               .filter(x -> !x.getDate().isBefore(dateLine_start) && !x.getDate().isAfter(dateLine_end))
-                                               .filter(x -> dateSet.contains(x.getDate()))
+                                               // .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end))
+                                               .filter(k -> dateSet.contains(k.getDate()))
                                                .sorted(Comparator.comparing(ExtDataDTO::getDate))
                                                .collect(Collectors.toList());
 
