@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,9 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
 import static com.bebopze.tdx.quant.common.tdxfun.Tools.*;
-import static com.bebopze.tdx.quant.parser.check.TdxFunCheck.bool2Int;
-import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.blockFunMap;
-import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.stockFunMap;
+import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
 
 /**
@@ -62,7 +62,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
             // 5、xxx
 
 
-            BlockFun fun = blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
+            BlockFun fun = data.blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -170,7 +170,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
             String stockCode = stockDO.getCode();
 
 
-            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+            StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
@@ -326,7 +326,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
         // 个股   ->   IN 主线板块
         List<String> filter__stockCodeList2 = filter__stockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
-            List<String> blockCodeList = data.stockCode_blockCodeList_Map.getOrDefault(stockCode, Collections.emptyList());
+            Set<String> blockCodeList = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
 
 
             // B（主线板块）
@@ -406,7 +406,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
             // BUY策略   ->   已完成init
             // StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
-            StockFun fun = stockFunMap.get(code);
+            StockFun fun = data.stockFunMap.get(code);
 
 
             KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
@@ -510,28 +510,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
     }
 
 
-    public static boolean getByDate(boolean[] arr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
-        Integer idx = dateIndexMap.get(tradeDate);
 
-        if (null == idx) {
-            // 当前 交易日  ->  未上市/停牌
-            return false;
-        }
-
-        return arr[idx];
-    }
-
-
-    public static double getByDate(double[] arr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
-        Integer idx = dateIndexMap.get(tradeDate);
-
-        if (null == idx) {
-            // 当前 交易日  ->  未上市/停牌
-            return Double.NaN;
-        }
-
-        return arr[idx];
-    }
 
 
 /**

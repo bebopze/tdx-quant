@@ -36,5 +36,9 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
      *
      * @return
      */
+    List<BaseBlockDO> listAllRpsKline();
+
     List<BaseBlockDO> listAllKline();
+
+    List<BaseBlockDO> listAllSimple();
 }

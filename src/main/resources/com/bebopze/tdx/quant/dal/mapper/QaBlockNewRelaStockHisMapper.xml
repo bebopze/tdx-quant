@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper">
+
+
+    <delete id="deleteAll">
+
+        DELETE FROM qa_block_new_rela_stock_his
+
+
+        WHERE block_new_id = #{blockNewId}
+
+        <if test="date != null">
+            AND date = {date}
+        </if>
+
+    </delete>
+
+
+    <select id="listByDateAndLimit" resultType="com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO">
+        SELECT *
+
+        FROM qa_block_new_rela_stock_his
+
+
+        WHERE
+
+        <![CDATA[     date <= #{date}     ]]>
+
+        ORDER BY date DESC
+
+
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+
+</mapper>

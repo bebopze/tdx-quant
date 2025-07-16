@@ -25,6 +25,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
  * @date: 2025/5/30
  */
 @Slf4j
+@Deprecated
 public class ConvertDate {
 
 

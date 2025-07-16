@@ -39,7 +39,7 @@ public class StockBlockInfoDTO implements Serializable {
         private String blockTypeDesc;
 
 
-        public String getBlockType() {
+        public String getBlockTypeDesc() {
             return BlockTypeEnum.getDescByType(blockType);
         }
     }

@@ -28,61 +28,63 @@ public class Generator {
 
         FastAutoGenerator.create(url, username, password)
 
-                .globalConfig(builder -> builder
-                        .author("bebopze")
-                        .enableSpringdoc()
-                        .outputDir(Paths.get(System.getProperty("user.dir")) + "/src/main/java")
-                        .commentDate("yyyy-MM-dd")
-                )
+                         .globalConfig(builder -> builder
+                                 .author("bebopze")
+                                 .enableSpringdoc()
+                                 .outputDir(Paths.get(System.getProperty("user.dir")) + "/src/main/java")
+                                 .commentDate("yyyy-MM-dd")
+                         )
 
-                .dataSourceConfig(builder ->
-                                          builder.typeConvertHandler((globalConfig, typeRegistry, metaInfo) -> {
-                                              int typeCode = metaInfo.getJdbcType().TYPE_CODE;
-                                              if (typeCode == Types.TINYINT) {
-                                                  // 自定义类型转换
-                                                  return DbColumnType.INTEGER;
-                                              }
-                                              return typeRegistry.getColumnType(metaInfo);
-                                          })
-                )
+                         .dataSourceConfig(builder ->
+                                                   builder.typeConvertHandler((globalConfig, typeRegistry, metaInfo) -> {
+                                                       int typeCode = metaInfo.getJdbcType().TYPE_CODE;
+                                                       if (typeCode == Types.TINYINT) {
+                                                           // 自定义类型转换
+                                                           return DbColumnType.INTEGER;
+                                                       }
+                                                       return typeRegistry.getColumnType(metaInfo);
+                                                   })
+                         )
 
-                .packageConfig(builder -> builder
-                        .parent("com.bebopze.tdx.quant.dal2")
-                        .entity("entity")
-                        .mapper("mapper")
-                        .service("service")
-                        .serviceImpl("service.impl")
-                        .xml("mapper.xml")
-                )
+                         .packageConfig(builder -> builder
+                                 .parent("com.bebopze.tdx.quant.dal2")
+                                 .entity("entity")
+                                 .mapper("mapper")
+                                 .service("service")
+                                 .serviceImpl("service.impl")
+                                 .xml("mapper.xml")
+                         )
 
-                .strategyConfig(builder -> {
-                    builder
-                            // 设置需要生成的表名
-                            // .addInclude("base_stock", "base_block", "base_block_rela_stock")
-                            // .addInclude("base_block_new", "base_block_new_rela_stock")
+                         .strategyConfig(builder -> {
+                             builder
+                                     // 设置需要生成的表名
+                                     // .addInclude("base_stock", "base_block", "base_block_rela_stock")
+                                     // .addInclude("base_block_new", "base_block_new_rela_stock")
 
-                            .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
+                                     // .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
-                            .entityBuilder()
-                            .formatFileName("%sDO")
-                            // 启用 Lombok
-                            .enableLombok()
-                            // 启用字段注解
-                            .enableTableFieldAnnotation()
-                            .enableFileOverride()
+                                     .addInclude("qa_block_new_rela_stock_his")
 
-
-                            .mapperBuilder().enableFileOverride()
-                            .serviceBuilder().enableFileOverride()
+                                     .entityBuilder()
+                                     .formatFileName("%sDO")
+                                     // 启用 Lombok
+                                     .enableLombok()
+                                     // 启用字段注解
+                                     .enableTableFieldAnnotation()
+                                     .enableFileOverride()
 
 
-                            // 不生成 Controller
-                            .controllerBuilder().disable();
-                })
+                                     .mapperBuilder().enableFileOverride()
+                                     .serviceBuilder().enableFileOverride()
 
-                // 使用 Freemarker引擎模板，默认的是 Velocity引擎模板
-                .templateEngine(new FreemarkerTemplateEngine())
-                .execute();
+
+                                     // 不生成 Controller
+                                     .controllerBuilder().disable();
+                         })
+
+                         // 使用 Freemarker引擎模板，默认的是 Velocity引擎模板
+                         .templateEngine(new FreemarkerTemplateEngine())
+                         .execute();
     }
 
 }

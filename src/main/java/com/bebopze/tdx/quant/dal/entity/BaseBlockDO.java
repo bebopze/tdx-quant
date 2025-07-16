@@ -46,11 +46,46 @@ public class BaseBlockDO implements Serializable {
     private Long id;
 
     /**
+     * 板块代码
+     */
+    @TableField("code")
+    @Schema(description = "板块代码")
+    private String code;
+
+    /**
+     * 板块名称
+     */
+    @TableField("name")
+    @Schema(description = "板块名称")
+    private String name;
+
+    /**
+     * 板块代码-path
+     */
+    @TableField("code_path")
+    @Schema(description = "板块代码-path")
+    private String codePath;
+
+    /**
+     * 板块名称-path
+     */
+    @TableField("name_path")
+    @Schema(description = "板块名称-path")
+    private String namePath;
+
+    /**
      * 父-ID（行业板块）
      */
     @TableField("parent_id")
     @Schema(description = "父-ID（行业板块）")
     private Long parentId;
+
+    /**
+     * tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；
+     */
+    @TableField("type")
+    @Schema(description = "tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；")
+    private Integer type;
 
     /**
      * 行业级别：1-1级行业；2-2级行业；3-3级行业（细分行业）；
@@ -65,27 +100,6 @@ public class BaseBlockDO implements Serializable {
     @TableField("end_level")
     @Schema(description = "是否最后一级：0-否；1-是；")
     private Integer endLevel;
-
-    /**
-     * tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；
-     */
-    @TableField("type")
-    @Schema(description = "tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；")
-    private Integer type;
-
-    /**
-     * 板块代码
-     */
-    @TableField("code")
-    @Schema(description = "板块代码")
-    private String code;
-
-    /**
-     * 板块名称
-     */
-    @TableField("name")
-    @Schema(description = "板块名称")
-    private String name;
 
     /**
      * 交易日期

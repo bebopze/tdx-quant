@@ -24,13 +24,19 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
     List<BaseBlockDO> listAllSimple();
 
-
     /**
-     * 细分行业 + 概念板块
+     * 全量板块   =>   2-普通行业   +   4-概念板块   +   12-研究行业
      *
      * @return
      */
     List<BaseBlockDO> listAllKline();
+
+    /**
+     * 细分行业 + 概念板块     =>     板块指数RPS
+     *
+     * @return
+     */
+    List<BaseBlockDO> listAllRpsKline();
 
 
     List<BaseBlockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);

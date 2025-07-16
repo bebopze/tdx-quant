@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 /**
@@ -34,9 +35,6 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private IBaseBlockService baseBlockService;
-
-    @Autowired
-    private IBaseBlockNewService baseBlockNewService;
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
@@ -75,6 +73,7 @@ public class StockServiceImpl implements StockService {
 
         StockBlockInfoDTO dto = new StockBlockInfoDTO();
         dto.setStockCode(stockCode);
+        dto.setStockName(Optional.ofNullable(baseStockService.getSimpleByCode(stockCode)).map(BaseStockDO::getName).orElse(""));
 
 
         // ------------------------------------------------------------------- 系统板块（行业、概念）

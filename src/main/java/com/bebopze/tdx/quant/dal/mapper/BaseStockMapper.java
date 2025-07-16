@@ -22,6 +22,8 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     BaseStockDO getByCode(@Param("code") String code);
 
+    BaseStockDO getSimpleByCode(@Param("code") String code);
+
 
     List<BaseStockDO> listAllSimple();
 

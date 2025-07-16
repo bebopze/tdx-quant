@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -126,7 +127,7 @@ public class ConvertStockExtData {
 
     public static List<ExtDataDTO> strList2DTOList(List<String> extDataList) {
         if (CollectionUtils.isEmpty(extDataList)) {
-            return null;
+            return Collections.emptyList();
         }
         return extDataList.stream().map(ConvertStockExtData::str2DTO).collect(Collectors.toList());
     }

@@ -30,6 +30,13 @@
         SELECT *
 
         FROM base_block
+    </select>
+
+
+    <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT *
+
+        FROM base_block
 
         WHERE end_level = 1
           and (type = 2 or type = 4)

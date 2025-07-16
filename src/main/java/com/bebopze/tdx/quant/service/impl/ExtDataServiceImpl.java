@@ -190,7 +190,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         int DAY_LIMIT = 500;
 
 
-        data.blockDOList = baseBlockService.listAllKline();
+        data.blockDOList = baseBlockService.listAllRpsKline();
         data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
 
 

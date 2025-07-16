@@ -9,6 +9,7 @@ import java.util.List;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.EMA;
+import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
 
 /**
@@ -159,12 +160,17 @@ public class TdxExtFun {
         boolean[] arr = new boolean[len];
 
 
-        for (int i = 0; i < len; i++) {
-            double SSF = ssf[i];
-            double C = close[i];
+        try {
+            for (int i = 0; i < len; i++) {
+                double SSF = ssf[i];
+                double C = close[i];
 
-            arr[i] = C >= SSF;
+                arr[i] = C >= SSF;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+
 
         return arr;
     }
@@ -263,6 +269,38 @@ public class TdxExtFun {
     }
 
 
+    /**
+     * 结果合并   -   求和 -> 比较
+     *
+     * @param N        sum >= N
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_sumCompare(int N, boolean[]... arr_list) {
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+
+            int count = 0;
+            boolean acc = false;
+
+            for (boolean[] arr : arr_list) {
+                count += bool2Int(arr[i]);
+                if (count >= N) {
+                    acc = true;
+                    break;
+                }
+            }
+
+            result[i] = acc;
+        }
+
+        return result;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  基础指标
     // -----------------------------------------------------------------------------------------------------------------
@@ -284,6 +322,7 @@ public class TdxExtFun {
     public static double[] SSF(double[] close) {
         int len = close.length;
         int N = 3, M = 21;
+
         // X1: |C - REF(C,11)|
         double[] ref11 = REF(close, 11);
         double[] x1 = new double[len];
@@ -322,6 +361,7 @@ public class TdxExtFun {
         // SSF = EMA(DMA(C, X5), 2)
         double[] dmaC = DMA(close, x5);         // 先动态移动平均，平滑因子序列为 X5
         double[] ssf = EMA(dmaC, 2);         // 再对结果做 2 周期指数平滑
+
         return ssf;
     }
 
@@ -804,6 +844,75 @@ public class TdxExtFun {
 
 
         return MonthlyBullSignal.computeMonthlyBull(dailyKlines);
+    }
+
+
+    /**
+     * RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+     *
+     * @param rps50
+     * @param rps120
+     * @param rps250
+     * @param RPS1
+     * @param RPS2
+     * @param RPS3
+     * @return
+     */
+    public static boolean[] RPS红(double[] rps50, double[] rps120, double[] rps250, int RPS1, int RPS2, int RPS3) {
+        // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+
+
+        int n = rps50.length;
+
+        boolean[] result = new boolean[n];
+        for (int i = 0; i < n; i++) {
+
+
+            double rps_50 = rps50[i];
+            double rps_120 = rps120[i];
+            double rps_250 = rps250[i];
+
+
+            boolean RPS一线红 = rps_50 >= RPS1 || rps_120 >= RPS1 || rps_250 >= RPS1;
+            boolean RPS双线红 = bool2Int(rps_50 >= RPS2) + bool2Int(rps_120 >= RPS2) + bool2Int(rps_250 >= RPS2) >= 2;
+            boolean RPS三线红 = rps_50 >= RPS3 && rps_120 >= RPS3 && rps_250 >= RPS3;
+
+
+            result[i] = RPS一线红 || RPS双线红 || RPS三线红;
+        }
+
+        return result;
+    }
+
+
+    public static boolean[] RPS一线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+        int n = rps50.length;
+
+        boolean[] result = new boolean[n];
+        for (int i = 0; i < n; i++) {
+
+            result[i] = rps50[i] >= RPS
+                    || rps120[i] >= RPS
+                    || rps250[i] >= RPS;
+        }
+
+        return result;
+    }
+
+    public static boolean[] RPS双线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+        int n = rps50.length;
+
+        boolean[] result = new boolean[n];
+        for (int i = 0; i < n; i++) {
+
+            boolean c1 = rps50[i] >= RPS;
+            boolean c2 = rps120[i] >= RPS;
+            boolean c3 = rps250[i] >= RPS;
+
+            result[i] = bool2Int(c1) + bool2Int(c2) + bool2Int(c3) >= 2;
+        }
+
+        return result;
     }
 
 

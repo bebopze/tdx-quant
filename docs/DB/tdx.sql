@@ -12,8 +12,10 @@ CREATE TABLE `base_block`
     `id`           bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `code`         varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '板块代码',
     `name`         varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '板块名称',
-    `type`         tinyint unsigned                                             NOT NULL COMMENT 'tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；',
+    `code_path`    varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '板块code-路径',
+    `name_path`    varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '板块name-路径',
     `parent_id`    bigint unsigned                                              NOT NULL DEFAULT '0' COMMENT '父-ID（行业板块）',
+    `type`         tinyint unsigned                                             NOT NULL COMMENT 'tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；',
     `level`        tinyint unsigned                                             NOT NULL DEFAULT '0' COMMENT '行业级别：1-1级行业；2-2级行业；3-3级行业（细分行业）；',
     `end_level`    tinyint unsigned                                             NOT NULL DEFAULT '0' COMMENT '是否最后一级：0-否；1-是；（行业板块）',
     `trade_date`   date                                                                  DEFAULT NULL COMMENT '交易日期',
@@ -231,6 +233,37 @@ CREATE TABLE `bt_trade_record`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='回测-BS交易记录';
+
+
+
+-- ----------------------------
+-- Table structure for qa_block_new_rela_stock_his
+-- ----------------------------
+
+
+CREATE TABLE `qa_block_new_rela_stock_his`
+(
+    `id`              bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `block_new_id`    bigint unsigned  NOT NULL COMMENT '自定义板块ID',
+    `date`            date             NOT NULL COMMENT '日期',
+    `stock_id_list`   text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '关联ID列表：股票ID/板块ID/指数ID（逗号分隔）',
+    `type`            tinyint unsigned NOT NULL COMMENT '关联ID类型：1-个股；2-板块；3-指数；',
+    `result`          longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '汇总-分析结果JSON（一级研究行业 + 概念板块）',
+    `gn_result`       longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '概念板块-分析结果JSON',
+    `yjhy_lv1_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '一级研究行业-分析结果JSON',
+    `yjhy_lv2_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '二级研究行业-分析结果JSON',
+    `yjhy_lv3_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '三级研究行业-分析结果JSON',
+    `pthy_lv1_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '一级普通行业-分析结果JSON',
+    `pthy_lv2_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '二级普通行业-分析结果JSON',
+    `pthy_lv3_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '三级普通行业-分析结果JSON',
+    `gmt_create`      datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`      datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx__block_new_id__type__date` (`block_new_id`, `type`, `date`) USING BTREE,
+    KEY `idx_date` (`date`) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='量化分析 - 每日';
 
 
 

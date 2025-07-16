@@ -22,6 +22,8 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     BaseStockDO getByCode(String code);
 
+    BaseStockDO getSimpleByCode(String code);
+
 
     Map<String, List<String>> market_stockCodePrefixList_map();
 
@@ -36,4 +38,5 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     List<BaseStockDO> listAllSimple();
 
     Map<String, Long> codeIdMap();
+
 }

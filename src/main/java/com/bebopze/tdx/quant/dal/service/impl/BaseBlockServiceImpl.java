@@ -47,12 +47,12 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseBlockDO::getCode,
-                        BaseBlockDO::getId,
+                                                  .collect(Collectors.toMap(
+                                                          BaseBlockDO::getCode,
+                                                          BaseBlockDO::getId,
 
-                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
-                ));
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
 
         return code_id_map;
     }
@@ -65,12 +65,12 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseBlockDO::getCode,  // 键：从对象中提取 code 字段
-                        BaseBlockDO::getId,    // 值：从对象中提取 id 字段
+                                                  .collect(Collectors.toMap(
+                                                          BaseBlockDO::getCode,  // 键：从对象中提取 code 字段
+                                                          BaseBlockDO::getId,    // 值：从对象中提取 id 字段
 
-                        (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
-                ));
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
 
         return code_id_map;
     }
@@ -85,9 +85,21 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
         return baseMapper.listSimpleByCodeList(blockCodeList);
     }
 
+
+    @Override
+    public List<BaseBlockDO> listAllSimple() {
+        return baseMapper.listAllSimple();
+    }
+
     @Override
     public List<BaseBlockDO> listAllKline() {
         return baseMapper.listAllKline();
     }
+
+    @Override
+    public List<BaseBlockDO> listAllRpsKline() {
+        return baseMapper.listAllRpsKline();
+    }
+
 
 }

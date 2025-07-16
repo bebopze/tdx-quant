@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections4.CollectionUtils;
@@ -17,8 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy.blockFunMap;
 
 
 /**
@@ -56,6 +53,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Override
     public BaseStockDO getByCode(String code) {
         return baseMapper.getByCode(code);
+    }
+
+    @Override
+    public BaseStockDO getSimpleByCode(String code) {
+        return baseMapper.getSimpleByCode(code);
     }
 
 

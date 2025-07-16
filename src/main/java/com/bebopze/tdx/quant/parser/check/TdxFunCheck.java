@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 import static com.bebopze.tdx.quant.common.tdxfun.MonthlyBullSignal.*;
+import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
 
 /**
@@ -1033,9 +1034,9 @@ public class TdxFunCheck {
         return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
     }
 
-    public static Integer bool2Int(boolean bool) {
-        return bool ? 1 : 0;
-    }
+//    public static Integer bool2Int(boolean bool) {
+//        return bool ? 1 : 0;
+//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

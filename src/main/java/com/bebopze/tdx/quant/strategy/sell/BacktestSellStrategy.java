@@ -2,11 +2,8 @@ package com.bebopze.tdx.quant.strategy.sell;
 
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +11,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategy.getByDate;
+import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
 
 
 /**
@@ -26,11 +23,6 @@ import static com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategy.getByDate;
 @Slf4j
 @Component
 public class BacktestSellStrategy extends SellStrategy {
-
-
-    public static final Map<String, StockFun> stockFunMap = Maps.newConcurrentMap();
-
-    public static final Map<String, BlockFun> blockFunMap = Maps.newConcurrentMap();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -52,7 +44,7 @@ public class BacktestSellStrategy extends SellStrategy {
             BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 
-            StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+            StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -117,7 +109,7 @@ public class BacktestSellStrategy extends SellStrategy {
      * @return
      */
     private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(blockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
+        Double closePrice = stock__dateCloseMap.get(blockCode).get(tradeDate);
         return closePrice == null ? 0.0 : closePrice;
     }
 
@@ -129,7 +121,7 @@ public class BacktestSellStrategy extends SellStrategy {
      * @return
      */
     private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(stockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
+        Double closePrice = stock__dateCloseMap.get(stockCode).get(tradeDate);
         return closePrice == null ? 0.0 : closePrice;
     }
 

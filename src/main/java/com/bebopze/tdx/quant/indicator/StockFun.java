@@ -28,7 +28,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.con_merge;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.*;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.COUNT;
+import static com.bebopze.tdx.quant.common.util.BoolUtil.*;
 
 
 /**
@@ -426,6 +428,114 @@ public class StockFun {
 
     public boolean[] RPS三线红(int RPS) {
         return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  选股公式
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 创N日新高   ->    N日新高   +   形态(均线)  +  强度(RPS)   过滤
+     *
+     * @param N
+     * @return
+     */
+    public boolean[] 创N日新高(int N) {
+
+
+        // CON_1 :=  COUNT(N日新高(N),  5);
+        // CON_2 :=  SSF多     AND     N日涨幅(3) > -10;
+        // CON_3 :=  MA多(5) + MA多(10) + MA多(20) + MA多(50)  >=  3;
+
+        // CON_4 :=  RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+        // CON_5 :=  周多   ||   大均线多头;
+        //
+        // CON_1 AND CON_2 AND CON_3     AND     (CON_4 || CON_5);
+
+
+        // --------------------------------------------------------------- N日新高[近5日] / SSF多 / N日涨幅[非-妖顶]
+
+
+        boolean[] con_1 = int2Bool(COUNT(N日新高(N), 5));
+
+
+        boolean[] con_2 = SSF多();
+
+
+        boolean[] con_3 = new boolean[close.length];
+        double[] N日涨幅 = changePct(close, 3);
+        for (int i = 0; i < N日涨幅.length; i++) {
+            con_3[i] = N日涨幅[i] >= -10;
+        }
+
+
+        boolean[] con_4 = con_sumCompare(3, MA多(5), MA多(10), MA多(20), MA多(50));
+
+
+        boolean[] con_A = con_merge(con_1, con_2, con_3, con_4);
+
+
+        // --------------------------------------------------------------- RPS / 均线形态
+
+
+        boolean[] con_5 = TdxExtFun.RPS红(rps50, rps120, rps250, 95, 90, 85);
+        boolean[] con_6 = TdxExtFun.大均线多头(close);
+        boolean[] con_7 = TdxExtFun.均线预萌出(close);
+
+        boolean[] con_B = con_or(con_5, con_6, con_7);
+
+
+        return con_merge(con_A, con_B);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  统计指标（百日新高/...）
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 百日新高（开盘啦APP）     ->     近5日内创百日新高，并且未大幅回落
+     *
+     * @param N
+     * @return
+     */
+    public boolean[] 百日新高(int N) {
+
+
+        // CON_1 :=  COUNT(N日新高(N),  5);
+        // CON_2 :=  SSF多     AND     N日涨幅(3) > -10;
+        // CON_3 :=  MA多(5) + MA多(10) + MA多(20) + MA多(50)  >=  3;
+
+        // CON_4 :=  RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+        // CON_5 :=  周多   ||   大均线多头;
+        //
+        // CON_1 AND CON_2 AND CON_3     AND     (CON_4 || CON_5);
+
+
+        // --------------------------------------------------------------- N日新高[近5日] / SSF多 / N日涨幅[非-妖顶]
+
+
+        // 1、近5日内 创百日新高
+        boolean[] con_1 = int2Bool(COUNT(N日新高(N), 5));
+
+
+        // 2、未 大幅回落
+
+        // MA10 支撑线
+        boolean[] con_2 = MA多(10);
+
+        // 3日涨跌幅 > -10%
+        boolean[] con_3 = new boolean[close.length];
+        double[] N日涨幅 = changePct(close, 3);
+        for (int i = 0; i < N日涨幅.length; i++) {
+            con_3[i] = N日涨幅[i] >= -10;
+        }
+
+
+        return con_merge(con_1, con_2, con_3);
     }
 
 
