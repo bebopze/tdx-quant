@@ -13,8 +13,7 @@
 
         WHERE task_id = #{taskId}
 
-         <![CDATA[     AND trade_date <= #{tradeDate}
-        ]]>
+          AND trade_date = #{tradeDate}
 
     </select>
 

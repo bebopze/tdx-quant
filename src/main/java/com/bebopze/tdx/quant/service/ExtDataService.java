@@ -7,7 +7,7 @@ package com.bebopze.tdx.quant.service;
  */
 public interface ExtDataService {
 
-    void calcStockRps();
+    void calcStockExtData();
 
-    void calcBlockRps();
+    void calcBlockExtData();
 }

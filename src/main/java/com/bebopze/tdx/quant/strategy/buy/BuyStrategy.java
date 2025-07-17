@@ -1,8 +1,6 @@
 package com.bebopze.tdx.quant.strategy.buy;
 
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.google.common.collect.Maps;
+import com.bebopze.tdx.quant.common.cache.BacktestCache;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,55 +13,25 @@ import java.util.Map;
  * @author: bebopze
  * @date: 2025/5/30
  */
-public abstract class BuyStrategy {
-
-
-//    /**
-//     * 交易日 - 基准
-//     */
-//    Map<String, Integer> dateIndexMap = Maps.newHashMap();
-//
-//
-//    List<BaseStockDO> stockDOList;
-//    Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
-//
-//
-//    List<BaseBlockDO> blockDOList;
-//    Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
-
-
-    void initData() {
-
-    }
+public interface BuyStrategy {
 
 
     /**
-     * 不指定 -> 默认  全量个股（DB）
+     * 策略标识
      *
-     * @return -       符合 B策略 结果列表
+     * @return
      */
-    List<String> rule() {
-        return null;
-    }
+    String key();
 
 
     /**
-     * 指定 个股
+     * 根据 B策略     筛选出   ->   待买入 的 stockCodeList
      *
-     * @param stockCode
-     * @return -          是否符合 B策略
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     * @return
      */
-    boolean rule(String stockCode) {
-        return false;
-    }
+    List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap);
 
-    /**
-     * 指定 个股列表
-     *
-     * @param stockCodeList
-     * @return -              符合 B策略 结果列表
-     */
-    List<String> rule(List<String> stockCodeList) {
-        return null;
-    }
 }

@@ -10,9 +10,7 @@ import lombok.Data;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -139,6 +137,44 @@ public class BacktestCache {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    /**
+     * 1级 - 研究行业
+     *
+     * @param stockCode
+     * @return
+     */
+    public String getYjhyLv1(String stockCode) {
+        BaseBlockDO block = getBlock(stockCode, 12, 1);
+        return null == block ? null : block.getCode() + "-" + block.getName();
+    }
+
+    /**
+     * 2级 - 普通行业
+     *
+     * @param stockCode
+     * @return
+     */
+    public String getPthyLv2(String stockCode) {
+        BaseBlockDO block = getBlock(stockCode, 2, 2);
+        return null == block ? null : block.getCode() + "-" + block.getName();
+    }
+
+
+    public BaseBlockDO getBlock(String stockCode, int type, int pLevel) {
+
+        Set<String> blockCodeSet = stockCode_blockCodeSet_Map.get(stockCode);
+
+        return blockCodeSet.stream().map(blockCode -> {
+                               BaseBlockDO pBlock = getPBlock(blockCode, pLevel);
+                               return pBlock == null || pBlock.getType() != type ? null : pBlock;
+                           })
+                           .filter(Objects::nonNull)
+                           .findFirst().orElse(null);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
     public static BaseBlockDO getPBlock(String blockCode, int pLevel) {
         Assert.isTrue(1 <= pLevel && pLevel <= 3, String.format("[pLevel:%s]有误", pLevel));
@@ -146,6 +182,11 @@ public class BacktestCache {
 
         BaseBlockDO blockDO = codeBlockMap.get(blockCode);
         Assert.notNull(blockDO, String.format("blockCode:[%s]有误", blockCode));
+
+
+        if (blockDO.getType() == 4) {
+            return null;
+        }
 
 
         Integer level = blockDO.getLevel();

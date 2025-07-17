@@ -11,6 +11,7 @@ import com.bebopze.tdx.quant.service.InitDataService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +63,7 @@ public class IndexServiceImpl implements IndexService {
 
 
     @Override
-    public Map nDayHighRate(LocalDate date, int N) {
+    public Map<String, Integer> nDayHighRate(LocalDate date, int N) {
 
         List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByDateAndLimit(date, N);
 
@@ -80,6 +81,7 @@ public class IndexServiceImpl implements IndexService {
             BlockTopInfo blockTopInfo = infoList.get(0);
             String blockCode = blockTopInfo.getBlockCode();
             String blockName = blockTopInfo.getBlockName();
+
 
             rateMap.merge(blockCode + "-" + blockName, 1, Integer::sum);
         });
@@ -368,7 +370,7 @@ public class IndexServiceImpl implements IndexService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     @Data

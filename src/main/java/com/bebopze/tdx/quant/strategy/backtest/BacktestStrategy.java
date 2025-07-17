@@ -4,26 +4,18 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.InitDataService;
-import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategy;
-import com.bebopze.tdx.quant.strategy.buy.BuyStockStrategy;
-import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
-import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
+import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
+import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -33,8 +25,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
 
 /**
@@ -48,11 +38,6 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 @Component
 public class BacktestStrategy {
 
-
-    // 加载  最近N日   行情数据
-    // int DAY_LIMIT = 2000;
-
-    boolean init = false;
 
     BacktestCache data = new BacktestCache();
 
@@ -102,23 +87,17 @@ public class BacktestStrategy {
 
 
     @Autowired
-    private BuyStockStrategy buyStockStrategy;
+    private BuyStrategyFactory buyStrategyFactory;
 
     @Autowired
-    private BacktestBuyStrategy backTestBuyStrategy;
-
-    @Autowired
-    private BacktestSellStrategy backTestSellStrategy;
-
-    @Autowired
-    private DownMASellStrategy sellStockStrategy;
+    private SellStrategyFactory sellStrategyFactory;
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public synchronized void backtest(LocalDate startDate, LocalDate endDate) {
-        log.info("backtest start     >>>     startDate:{} , endDate : {}", startDate, endDate);
+    public synchronized Long backtest(LocalDate startDate, LocalDate endDate) {
+        log.info("backtest start     >>>     startDate : {} , endDate : {}", startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -182,14 +161,17 @@ public class BacktestStrategy {
         sumTotalReturn(taskDO, dailyReturnList);
 
 
-        log.info("backtest end     >>>     startDate:{} , endDate : {}", startDate, endDate);
+        log.info("backtest end     >>>     startDate : {} , endDate : {}", startDate, endDate);
+
+
+        return taskDO.getId();
     }
 
 
     private BtTaskDO createBacktestTask(LocalDate startDate, LocalDate endDate) {
 
         BtTaskDO taskDO = new BtTaskDO();
-        // BS策略
+        // B/S策略
         taskDO.setBuyStrategy("Buy-Strategy-1");
         taskDO.setSellStrategy("Sell-Strategy-1");
         // 回测 - 时间段
@@ -244,7 +226,7 @@ public class BacktestStrategy {
 
 
         // 卖出策略
-        List<String> sell__stockCodeList = backTestSellStrategy.rule(data, tradeDate, positionStockCodeList__S, sell_infoMap);
+        List<String> sell__stockCodeList = sellStrategyFactory.get("A").rule(data, tradeDate, positionStockCodeList__S, sell_infoMap);
         log.info("S策略     >>>     {} , size : {} , sell__stockCodeList : {} , sell_infoMap : {}", tradeDate, sell__stockCodeList.size(), JSON.toJSONString(sell__stockCodeList), JSON.toJSONString(sell_infoMap));
 
 
@@ -300,11 +282,11 @@ public class BacktestStrategy {
         // TODO       ==>       S半仓   /   S（清仓） -> 不B
 
 
-        Map<String, String> buy_infoMap = Maps.newHashMap();
+        Map<String, String> buy_infoMap = Maps.newConcurrentMap();
 
 
         // 买入策略
-        List<String> buy__stockCodeList = backTestBuyStrategy.rule(data, tradeDate, buy_infoMap);
+        List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap);
         log.info("B策略     >>>     {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}", tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
 
 
@@ -482,7 +464,7 @@ public class BacktestStrategy {
     }
 
 
-    private LocalDate tradeDateIncr(LocalDate tradeDate) {
+    public LocalDate tradeDateIncr(LocalDate tradeDate) {
         Integer idx = data.dateIndexMap.get(tradeDate);
 
         // 非交易日
@@ -663,7 +645,7 @@ public class BacktestStrategy {
                 endTradeDate_cache.isEqual(endTradeDate) ? endTradeDate_cache : endTradeDate_cache.plusDays(1);
 
 
-        List<BtTradeRecordDO> allTrades = btTradeRecordService.listByTaskIdAndTradeDate(taskId, startTradeDate, endTradeDate);
+        List<BtTradeRecordDO> allTrades = btTradeRecordService.listByTaskIdAndTradeDateRange(taskId, startTradeDate, endTradeDate);
 
 
         endTradeDate_cache = endTradeDate;
@@ -885,218 +867,13 @@ public class BacktestStrategy {
         // 重新初始化   统计数据
         x = new Stat();
 
+        endTradeDate_cache = null;
+        allTrades__cache = Lists.newArrayList();
 
+
+        // 全量行情
         data = initDataService.initData(startDate, endDate, false);
-
-
-//        if (init) {
-//            return;
-//        }
-//
-//
-//        // 加载   全量行情数据 - 个股
-//        loadAllStockKline(startDate, endDate);
-//
-//
-//        // 加载   全量行情数据 - 板块
-//        loadAllBlockKline();
-//
-//
-//        // 板块-个股  /  个股-板块
-//        loadAllBlockRelaStock();
-//
-//
-//        init = true;
     }
-
-
-//    /**
-//     * 从本地DB   加载   全部个股（5000+）
-//     *
-//     * @return
-//     */
-//    private void loadAllStockKline(LocalDate startDate, LocalDate endDate) {
-//
-//
-//        startDate = startDate == null ? LocalDate.now().minusYears(3) : startDate;
-//        endDate = endDate == null ? LocalDate.now() : endDate;
-//
-//
-//        // -----------------------------------------------------------------------------
-//
-//
-//        // DB 数据加载
-//        data.stockDOList = baseStockService.listAllKline();
-//        // 空数据 过滤
-//        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
-//                // TODO   基金北向
-//                && e.getAmount().doubleValue() > 1 * 1_0000_0000).collect(Collectors.toList());
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // 行情起点
-//        LocalDate dateLine_start = startDate.minusYears(1);
-//        LocalDate dateLine_end = endDate;
-//
-//
-//        // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
-//        data.stockDOList.parallelStream().forEach(e -> {
-//
-//
-//            // klineHis
-//            List<KlineDTO> klineDTOList = e.getKlineDTOList();
-//            klineDTOList = klineDTOList.parallelStream()
-//                                       .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
-//                                               // 过滤  ->  负价格（前复权）
-//                                               && k.getClose() > 0)
-//                                       .sorted(Comparator.comparing(KlineDTO::getDate))
-//                                       .collect(Collectors.toList());
-//
-//
-//            e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
-//
-//
-//            // -----------------------------------------------------------------------------
-//
-//
-//            // extDataHis -> 必须同步 截取（数据对齐）
-//
-//
-//            // klineHis   ->   过滤后的 dateSet（   HashSet  ->  set.contains，只要 O(1)   ）
-//            Set<LocalDate> dateSet = klineDTOList.stream()
-//                                                 .map(KlineDTO::getDate)
-//                                                 .collect(Collectors.toSet());
-//
-//
-//            // 同步对齐 dateSet   ->   扩展数据
-//            List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
-//                                               // .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end))
-//                                               .filter(k -> dateSet.contains(k.getDate()))
-//                                               .sorted(Comparator.comparing(ExtDataDTO::getDate))
-//                                               .collect(Collectors.toList());
-//
-//            e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
-//        });
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // 空行情 过滤（时间段内 -> 未上市）
-//        data.stockDOList = data.stockDOList.stream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
-//
-//
-//        // -----------------------------------------------------------------------------
-//
-//
-//        data.stockDOList.forEach(e -> {
-//
-//
-//            String stockCode = e.getCode();
-//            List<KlineDTO> klineDTOList = e.getKlineDTOList();
-//
-//
-//            LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
-//            double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
-//
-//
-//            // --------------------------------------------------------
-//
-//
-//            data.codeStockMap.put(stockCode, e);
-//            data.stock__idCodeMap.put(e.getId(), stockCode);
-//            data.stock__codeIdMap.put(stockCode, e.getId());
-//            data.stock__codeNameMap.put(stockCode, StringUtils.defaultString(e.getName()));
-//
-//
-//            Map<LocalDate, Double> dateCloseMap = Maps.newHashMap();
-//            for (int i = 0; i < date_arr.length; i++) {
-//                dateCloseMap.put(date_arr[i], close_arr[i]);
-//            }
-//            data.stock__dateCloseMap.put(stockCode, dateCloseMap);
-//        });
-//    }
-//
-//
-//    /**
-//     * 从本地DB   加载   全部板块（380+）
-//     *
-//     * @return
-//     */
-//    private void loadAllBlockKline() {
-//
-//
-//        data.blockDOList = baseBlockService.listAllKline();
-//
-//
-//        // -------
-//
-//
-//        data.blockDOList.forEach(e -> {
-//
-//            String blockCode = e.getCode();
-//            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(e.getKlineHis());
-//
-//
-//            LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
-//            double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
-//
-//
-//            // -----------------------------------------------------------
-//
-//
-//            // 交易日 基准     ->     基准板块（代替 -> 大盘指数）
-//            if (Objects.equals(blockCode, INDEX_BLOCK)) {
-//                for (int i = 0; i < date_arr.length; i++) {
-//                    data.dateIndexMap.put(date_arr[i], i);
-//                    data.dateList.add(date_arr[i]);
-//                }
-//            }
-//
-//
-//            // -----------------------------------------------------------
-//
-//
-//            data.codeBlockMap.put(blockCode, e);
-//            data.block__idCodeMap.put(e.getId(), blockCode);
-//            data.block__codeIdMap.put(blockCode, e.getId());
-//            data.block__codeNameMap.put(blockCode, e.getName());
-//
-//
-//            Map<LocalDate, Double> dateCloseMap = Maps.newHashMap();
-//            for (int i = 0; i < date_arr.length; i++) {
-//                dateCloseMap.put(date_arr[i], close_arr[i]);
-//            }
-//            data.block__dateCloseMap.put(blockCode, dateCloseMap);
-//        });
-//    }
-//
-//
-//    /**
-//     * 从本地DB   加载全部   板块-个股
-//     */
-//    private void loadAllBlockRelaStock() {
-//
-//        List<BaseBlockRelaStockDO> relaList = baseBlockRelaStockService.listAll();
-//
-//        for (BaseBlockRelaStockDO rela : relaList) {
-//
-//            Long blockId = rela.getBlockId();
-//            Long stockId = rela.getStockId();
-//            String blockCode = data.block__idCodeMap.get(blockId);
-//            String stockCode = data.stock__idCodeMap.get(stockId);
-//
-//
-//            // data.blockId_stockIdList_Map.computeIfAbsent(blockId, k -> Lists.newArrayList()).add(stockId);
-//            // data.stockId_blockIdList_Map.computeIfAbsent(stockId, k -> Lists.newArrayList()).add(blockId);
-//
-//
-//            data.blockCode_stockCodeList_Map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
-//            data.stockCode_blockCodeList_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(blockCode);
-//        }
-//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

@@ -22,12 +22,19 @@ import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
  */
 @Slf4j
 @Component
-public class BacktestSellStrategy extends SellStrategy {
+public class BacktestSellStrategy implements SellStrategy {
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Override
+    public String key() {
+        return "A";
+    }
+
+
+    @Override
     public List<String> rule(BacktestCache data,
                              LocalDate tradeDate,
                              List<String> positionStockCodeList,
@@ -40,7 +47,7 @@ public class BacktestSellStrategy extends SellStrategy {
         // 2.1、当日 S策略（破位 -> S淘汰） -> stockCodeList（对昨日 持股 -> S淘汰）
 
 
-        List<String> sell__stockCodeList = positionStockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
+        List<String> sell__stockCodeList = positionStockCodeList.stream().filter(stockCode -> {
             BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 
@@ -49,6 +56,16 @@ public class BacktestSellStrategy extends SellStrategy {
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+            // -------------------------------------------
+
+
+            // 当日 - 停牌（600446  ->  2023-05-10）
+            Integer idx = dateIndexMap.get(tradeDate);
+            if (idx == null) {
+                return false;
+            }
 
 
             // -------------------------------------------
@@ -100,29 +117,5 @@ public class BacktestSellStrategy extends SellStrategy {
         return sell__stockCodeList;
     }
 
-
-    /**
-     * 个股   指定日期 -> 收盘价
-     *
-     * @param blockCode
-     * @param tradeDate
-     * @return
-     */
-    private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(blockCode).get(tradeDate);
-        return closePrice == null ? 0.0 : closePrice;
-    }
-
-    /**
-     * 个股   指定日期 -> 收盘价
-     *
-     * @param stockCode
-     * @param tradeDate
-     * @return
-     */
-    private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
-        Double closePrice = stock__dateCloseMap.get(stockCode).get(tradeDate);
-        return closePrice == null ? 0.0 : closePrice;
-    }
 
 }

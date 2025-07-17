@@ -77,7 +77,7 @@ public class TdxTask {
      * 行情数据 更新 -> DB
      */
     @Async
-    @Scheduled(cron = "0 00 16 ? * 1-5", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__reresKlineAll() {
 
 

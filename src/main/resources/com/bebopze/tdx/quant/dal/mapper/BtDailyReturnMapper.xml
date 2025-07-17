@@ -2,4 +2,42 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BtDailyReturnMapper">
 
+
+    <select id="getByTaskIdAndTradeDate" resultType="com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO">
+
+        SELECT *
+
+
+        FROM bt_daily_return
+
+
+        WHERE task_id = #{taskId}
+
+          AND trade_date = #{tradeDate}
+
+    </select>
+
+
+    <select id="listByTaskIdAndTradeDateRange" resultType="com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO">
+
+        SELECT *
+
+
+        FROM bt_daily_return
+
+
+        WHERE task_id = #{taskId}
+
+
+        <if test="startTradeDate != null">
+            <![CDATA[     AND trade_date >= #{startTradeDate}     ]]>
+        </if>
+
+
+        <![CDATA[     AND trade_date <= #{endTradeDate}
+        ]]>
+
+    </select>
+
+
 </mapper>

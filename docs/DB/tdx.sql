@@ -122,8 +122,6 @@ CREATE TABLE `base_stock`
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='股票-实时行情';
 
-
-
 -- ----------------------------
 -- Table structure for bt_daily_return
 -- ----------------------------
@@ -214,33 +212,30 @@ CREATE TABLE `bt_task`
 DROP TABLE IF EXISTS `bt_trade_record`;
 CREATE TABLE `bt_trade_record`
 (
-    `id`           bigint unsigned                                              NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `task_id`      bigint unsigned                                              NOT NULL COMMENT '回测任务ID',
-    `trade_type`   tinyint unsigned                                             NOT NULL COMMENT '交易类型：1-买入；2-卖出；',
-    `trade_signal` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '交易信号',
-    `stock_id`     bigint unsigned                                              NOT NULL COMMENT '股票ID',
-    `stock_code`   varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '股票代码',
-    `stock_name`   varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票名称',
-    `trade_date`   date                                                         NOT NULL COMMENT '交易日期',
-    `price`        decimal(10, 3) unsigned                                      NOT NULL COMMENT '交易价格',
-    `quantity`     int unsigned                                                 NOT NULL COMMENT '交易数量',
-    `amount`       decimal(20, 2) unsigned                                      NOT NULL COMMENT '交易金额',
-    `fee`          decimal(10, 2) unsigned                                      NOT NULL DEFAULT '0.00' COMMENT '交易费用',
-    `gmt_create`   datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `gmt_modify`   datetime                                                     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `id`           bigint unsigned                                               NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `task_id`      bigint unsigned                                               NOT NULL COMMENT '回测任务ID',
+    `trade_type`   tinyint unsigned                                              NOT NULL COMMENT '交易类型：1-买入；2-卖出；',
+    `trade_signal` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '交易信号',
+    `stock_id`     bigint unsigned                                               NOT NULL COMMENT '股票ID',
+    `stock_code`   varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci   NOT NULL COMMENT '股票代码',
+    `stock_name`   varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '股票名称',
+    `trade_date`   date                                                          NOT NULL COMMENT '交易日期',
+    `price`        decimal(10, 3) unsigned                                       NOT NULL COMMENT '交易价格',
+    `quantity`     int unsigned                                                  NOT NULL COMMENT '交易数量',
+    `amount`       decimal(20, 2) unsigned                                       NOT NULL COMMENT '交易金额',
+    `fee`          decimal(10, 2) unsigned                                       NOT NULL DEFAULT '0.00' COMMENT '交易费用',
+    `gmt_create`   datetime                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`   datetime                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     KEY `idx__task_id__trade_date__trade_type` (`task_id`, `trade_date`, `trade_type`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='回测-BS交易记录';
 
-
-
 -- ----------------------------
 -- Table structure for qa_block_new_rela_stock_his
 -- ----------------------------
-
-
+DROP TABLE IF EXISTS `qa_block_new_rela_stock_his`;
 CREATE TABLE `qa_block_new_rela_stock_his`
 (
     `id`              bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',

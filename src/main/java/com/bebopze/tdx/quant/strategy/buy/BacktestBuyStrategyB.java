@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,9 +30,16 @@ import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
  */
 @Slf4j
 @Component
-public class BacktestBuyStrategy extends BuyStrategy {
+public class BacktestBuyStrategyB implements BuyStrategy {
 
 
+    @Override
+    public String key() {
+        return "B";
+    }
+
+
+    @Override
     public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap) {
 
 
@@ -42,7 +50,10 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
         // 主线板块（月多2   ->   月多 + N日新高/RPS三线红/大均线多头 + SSF多）
         List<String> filter__blockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.blockDOList/*.parallelStream()*/.forEach(blockDO -> {
+
+
+        // 扩展数据（板块指数RPS）     =>     2-细分行业（end_level=1）   +   4-概念板块
+        data.blockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getExtDataHis())).forEach(blockDO -> {
 
 
             String blockCode = blockDO.getCode();
@@ -103,7 +114,6 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
             boolean[] N日新高_arr = extDataArrDTO.N日新高;
             boolean[] 均线预萌出_arr = extDataArrDTO.均线预萌出;
-            boolean[] 均线萌出_arr = extDataArrDTO.均线萌出;
             boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
 
 
@@ -123,7 +133,6 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
             boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
             boolean 均线预萌出 = getByDate(均线预萌出_arr, dateIndexMap, tradeDate);
-            // boolean 均线萌出 = getByDate(均线萌出_arr, dateIndexMap, tradeDate);
             boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
 
 
@@ -131,27 +140,30 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
 
             // RPS一线红90/RPS双线红85/RPS三线红80
-            boolean con_1 = RPS一线红 || RPS双线红 || RPS三线红;
+
+            boolean con_1 = _60日新高;
+
+            boolean con_2 = RPS一线红 || RPS双线红 || RPS三线红;
 
 
             // 低位（中期涨幅<50）
-            boolean con_2 = 中期涨幅 < 50;
+            boolean con_3 = 中期涨幅 < 50;
 
             // SSF多 + MA20多
-            boolean con_3 = SSF多 && MA20多;
+            boolean con_4 = SSF多 && MA20多;
 
 
             // 月多/均线预萌出/大均线多头
-            boolean con_4 = 月多 || 均线预萌出 || 大均线多头;
+            boolean con_5 = 月多 || 均线预萌出 || 大均线多头;
 
             //  RPS三线红/口袋支点/60日新高
-            boolean con_5 = RPS三线红 || _60日新高 /*|| 口袋支点*/;
+            boolean con_6 = RPS三线红 || _60日新高 /*|| 口袋支点*/;
 
 
             // boolean signal_B = 月多 /*&& _60日新高*/ && (_60日新高 || RPS三线红 || 大均线多头) && SSF多;
 
 
-            boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5;
+            boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5 && con_6;
             if (signal_B) {
                 filter__blockCodeList.add(blockCode);
             }
@@ -164,7 +176,7 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
 
         List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.stockDOList/*.parallelStream()*/.forEach(stockDO -> {
+        data.stockDOList.parallelStream().forEach(stockDO -> {
 
 
             String stockCode = stockDO.getCode();
@@ -174,6 +186,16 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+            // -------------------------------------------
+
+
+            // 当日 - 停牌（003005  ->  2022-10-27）
+            Integer idx = dateIndexMap.get(tradeDate);
+            if (idx == null) {
+                return;
+            }
 
 
             // -------------------------------------------
@@ -212,12 +234,12 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
 
             boolean[] 月多_arr = extDataArrDTO.月多;
-            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+            // boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
 
 
             boolean[] N日新高_arr = extDataArrDTO.N日新高;
             boolean[] 均线预萌出_arr = extDataArrDTO.均线预萌出;
-            boolean[] 均线萌出_arr = extDataArrDTO.均线萌出;
+            // boolean[] 均线萌出_arr = extDataArrDTO.均线萌出;
             boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
 
 
@@ -261,22 +283,26 @@ public class BacktestBuyStrategy extends BuyStrategy {
             // B  =>  RPS一线红95/RPS双线红90/RPS三线红85   +   低位（中期涨幅<50）   +   SSF多 + MA20多   +   月多/均线预萌出/大均线多头   +   RPS三线红/口袋支点/60日新高
 
 
+            // 必须 创新高
+            boolean con_1 = _60日新高;
+
+
             // RPS一线红95/RPS双线红90/RPS三线红85
-            boolean con_1 = RPS一线红 || RPS双线红 || RPS三线红;
+            boolean con_2 = RPS一线红 || RPS双线红 || RPS三线红;
 
 
             // 低位（中期涨幅<50）
-            boolean con_2 = fun.is20CM() ? 中期涨幅 < 70 : 中期涨幅 < 50;
+            boolean con_3 = fun.is20CM() ? 中期涨幅 < 70 : 中期涨幅 < 50;
 
             // SSF多 + MA20多
-            boolean con_3 = SSF多 && MA20多;
+            boolean con_4 = SSF多 && MA20多;
 
 
             // 月多/均线预萌出/大均线多头
-            boolean con_4 = 月多 || 均线预萌出 || 大均线多头;
+            boolean con_5 = 月多 || 均线预萌出 || 大均线多头;
 
             // RPS三线红/口袋支点/60日新高
-            boolean con_5 = RPS三线红 || _60日新高 /*|| 口袋支点*/;
+            // boolean con_6 = RPS三线红 || _60日新高  /*|| 口袋支点*/;
 
 
             // boolean signal_B = 月多 && _60日新高 && (RPS三线红 || 大均线多头) && SSF多;
@@ -294,6 +320,14 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
                 // 动态收集所有为 true 的信号名称，按固定顺序拼接
                 List<String> info = Lists.newArrayList();
+
+
+                // 行业板块
+                String pthyLv2 = data.getPthyLv2(stockCode);
+                String getYjhyLv1 = data.getYjhyLv1(stockCode);
+                info.add(pthyLv2);
+                info.add(getYjhyLv1 + "     ");
+
 
                 if (RPS一线红) info.add("RPS一线红");
                 if (RPS双线红) info.add("RPS双线红");
@@ -508,9 +542,6 @@ public class BacktestBuyStrategy extends BuyStrategy {
 
         return topNStocks.stream().map(QuickOption.StockScore::getStockCode).collect(Collectors.toList());
     }
-
-
-
 
 
 /**

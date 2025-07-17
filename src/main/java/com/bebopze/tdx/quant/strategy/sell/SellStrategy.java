@@ -1,13 +1,11 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
-
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.google.common.collect.Maps;
+import com.bebopze.tdx.quant.common.cache.BacktestCache;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * S策略
@@ -15,55 +13,30 @@ import java.util.Map;
  * @author: bebopze
  * @date: 2025/5/31
  */
-public abstract class SellStrategy {
+public interface SellStrategy {
 
 
     /**
-     * 交易日 - 基准
-     */
-    Map<String, Integer> dateIndexMap = Maps.newHashMap();
-
-
-    List<BaseStockDO> stockDOList;
-    Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
-
-
-    List<BaseBlockDO> blockDOList;
-    Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
-
-
-    void initData() {
-
-    }
-
-
-    /**
-     * 不指定 -> 默认  全量个股（DB）
+     * 策略 标识
      *
-     * @return -       符合 S策略 结果列表
+     * @return
      */
-    List<String> rule() {
-        return null;
-    }
+    String key();
 
 
     /**
-     * 指定 个股
+     * 根据 S策略     筛选出   ->   待卖出 的 stockCodeList
      *
-     * @param stockCode
-     * @return -          是否符合 S策略
+     * @param data
+     * @param tradeDate
+     * @param positionStockCodeList
+     * @param sell_infoMap
+     * @return
      */
-    boolean rule(String stockCode) {
-        return false;
-    }
+    List<String> rule(BacktestCache data,
+                      LocalDate tradeDate,
+                      List<String> positionStockCodeList,
 
-    /**
-     * 指定 个股列表
-     *
-     * @param stockCodeList
-     * @return -              符合 S策略 结果列表
-     */
-    List<String> rule(List<String> stockCodeList) {
-        return null;
-    }
+                      Map<String, String> sell_infoMap);
+
 }

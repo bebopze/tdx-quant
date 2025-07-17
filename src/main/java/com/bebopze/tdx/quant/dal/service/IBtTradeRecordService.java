@@ -18,5 +18,6 @@ public interface IBtTradeRecordService extends IService<BtTradeRecordDO> {
 
     List<BtTradeRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate);
 
-    List<BtTradeRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate startTradeDate, LocalDate endTradeDate);
+    List<BtTradeRecordDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startTradeDate, LocalDate endTradeDate);
+
 }

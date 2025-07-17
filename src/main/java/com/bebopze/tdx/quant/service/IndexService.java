@@ -12,5 +12,5 @@ public interface IndexService {
 
     void nDayHighTask(int N);
 
-    Map nDayHighRate(LocalDate date, int N);
+    Map<String, Integer> nDayHighRate(LocalDate date, int N);
 }

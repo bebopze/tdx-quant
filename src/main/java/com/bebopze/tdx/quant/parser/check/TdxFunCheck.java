@@ -501,17 +501,17 @@ public class TdxFunCheck {
     }
 
 
-    private static boolean equals(Number a, Number b) {
+    public static boolean equals(Number a, Number b) {
         // ±0.05%   比值误差
         return equals(a, b, 0.0005);
     }
 
-    private static boolean equals(Number a, Number b, double precision) {
+    public static boolean equals(Number a, Number b, double precision) {
         // ±0.001   差值误差
         return equals(a, b, 0.001001, precision);
     }
 
-    private static boolean equals(Number a, Number b, double diff, double precision) {
+    public static boolean equals(Number a, Number b, double diff, double precision) {
         if (Objects.equals(a, b)) {
             return true;
         }

@@ -280,30 +280,34 @@ public class LdayParser {
             float close = (float) byteBuffer.getInt() / 100;
             // 成交额（元）
             BigDecimal amount = BigDecimal.valueOf(byteBuffer.getFloat());
+
             // 成交量
             long vol = byteBuffer.getInt();     // 负数bug + 复权bug
             if (vol < 0) {
+
                 // stockCode : 002364 , idx : 3612 , date : 2025-03-13 , diffFields : {"vol":{"v1":"88832504","v2":"2911100"}}
                 // stockCode : 002518 , idx : 3466 , date : 2025-03-13 , diffFields : {"vol":{"v1":"46390892","v2":"16293000"}}
                 // stockCode : 601988 , idx : 1303 , date : 2015-06-09 , diffFields : {"vol":{"v1":"4795353100","v2":"47953531"}}
                 // stockCode : 601988 , idx : 1323 , date : 2015-07-08 , diffFields : {"vol":{"v1":"5109897400","v2":"51098974"}}
                 // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
+
                 // vol &= 0xFFFFFFFFL;
                 long signedVol = vol;
                 vol = Integer.toUnsignedLong((int) vol);
                 log.warn("{}   -   {}   {} -> {}", code, date, signedVol, vol);
             }
+
             // 保留字段
             int unUsed = byteBuffer.getInt();
-            if (unUsed != 0) {
-                List<Integer> byteList = Lists.newArrayList();
-                for (byte x : byteBuffer.array()) {
-                    byteList.add((int) x);
-                }
-
-                List<Integer> unUsedList = byteList.subList(28, 32);
-                log.debug("保留字段     >>>     unUsed : {} , unUsedList : {}", unUsed, unUsedList);
-            }
+//            if (unUsed != 0) {
+//                List<Integer> byteList = Lists.newArrayList();
+//                for (byte x : byteBuffer.array()) {
+//                    byteList.add((int) x);
+//                }
+//
+//                List<Integer> unUsedList = byteList.subList(28, 32);
+//                log.debug("保留字段     >>>     unUsed : {} , unUsedList : {}", unUsed, unUsedList);
+//            }
 
 
             int year = date / 10000;

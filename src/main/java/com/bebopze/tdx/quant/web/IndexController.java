@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewStockDTO;
 import com.bebopze.tdx.quant.service.IndexService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,8 +50,8 @@ public class IndexController {
      */
     @Operation(summary = "百日新高 - 近N日", description = "百日新高 - 近N日 占比分布")
     @GetMapping(value = "/nDayHigh/rate")
-    public Result<Map> nDayHighRate(@RequestParam(defaultValue = "2025-07-16") LocalDate date,
-                                    @RequestParam(defaultValue = "10") int N) {
+    public Result<Map<String, Integer>> nDayHighRate(@RequestParam(defaultValue = "2025-07-16") LocalDate date,
+                                                     @RequestParam(defaultValue = "10") int N) {
 
         return Result.SUC(indexService.nDayHighRate(date, N));
     }

@@ -418,10 +418,6 @@ public class QuickOption {
         public double amount;               // 成交额
 
         public double score;                // 总分
-
-
-
-
     }
 
 
