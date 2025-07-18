@@ -44,10 +44,10 @@ public class BaseBlockRelaStockDO implements Serializable {
     private Long stockId;
 
     /**
-     * 板块ID
+     * 板块ID（3级行业 + 概念板块 => end_level=1）
      */
     @TableField("block_id")
-    @Schema(description = "板块ID")
+    @Schema(description = "板块ID（3级行业 + 概念板块 => end_level=1）")
     private Long blockId;
 
     /**

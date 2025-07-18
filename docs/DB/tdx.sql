@@ -81,7 +81,7 @@ DROP TABLE IF EXISTS `base_block_rela_stock`;
 CREATE TABLE `base_block_rela_stock`
 (
     `id`         bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `block_id`   bigint unsigned NOT NULL COMMENT '板块ID',
+    `block_id`   bigint unsigned NOT NULL COMMENT '板块ID（3级行业 + 概念板块 => end_level=1）',
     `stock_id`   bigint unsigned NOT NULL COMMENT '股票ID',
     `gmt_create` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -214,12 +214,12 @@ CREATE TABLE `bt_trade_record`
 (
     `id`           bigint unsigned                                               NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `task_id`      bigint unsigned                                               NOT NULL COMMENT '回测任务ID',
+    `trade_date`   date                                                          NOT NULL COMMENT '交易日期',
     `trade_type`   tinyint unsigned                                              NOT NULL COMMENT '交易类型：1-买入；2-卖出；',
     `trade_signal` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '交易信号',
     `stock_id`     bigint unsigned                                               NOT NULL COMMENT '股票ID',
     `stock_code`   varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci   NOT NULL COMMENT '股票代码',
     `stock_name`   varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci  NOT NULL COMMENT '股票名称',
-    `trade_date`   date                                                          NOT NULL COMMENT '交易日期',
     `price`        decimal(10, 3) unsigned                                       NOT NULL COMMENT '交易价格',
     `quantity`     int unsigned                                                  NOT NULL COMMENT '交易数量',
     `amount`       decimal(20, 2) unsigned                                       NOT NULL COMMENT '交易金额',

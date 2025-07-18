@@ -125,6 +125,7 @@ public class BacktestServiceImpl implements BacktestService {
             String stockCodeName = stockCode + "-" + stockName;
 
 
+            // String gn = data.getGn(stockCode);
             // String yjhyLv1 = data.getYjhyLv1(stockCode);
             String pthyLv2 = data.getPthyLv2(stockCode);
 

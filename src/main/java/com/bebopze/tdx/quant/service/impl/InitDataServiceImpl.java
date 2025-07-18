@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
@@ -259,9 +260,11 @@ public class InitDataServiceImpl implements InitDataService {
      */
     private void loadAllBlockRelaStock() {
 
+
+        // 板块-个股   =>   lv3级【end_level=1】   ->     3级-行业（普通/研究） + 概念板块
         List<BaseBlockRelaStockDO> relaList = baseBlockRelaStockService.listAll();
 
-        int count = 0;
+
         for (BaseBlockRelaStockDO rela : relaList) {
 
             Long blockId = rela.getBlockId();
@@ -285,6 +288,34 @@ public class InitDataServiceImpl implements InitDataService {
 
             data.blockCode_stockCodeSet_Map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
             data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(blockCode);
+
+
+            // ---------------------------------------------------------- lv1 / lv2   =>   根据 lv3 倒推计算
+
+
+            // lv3 -> lv2 -> lv1
+
+
+            BaseBlockDO blockDO = data.codeBlockMap.get(blockCode);
+
+            // 过滤   4-概念板块（废止   概念-行业   关联   ==>   经回测 -> 板块数据 污染严重 -> 收益 严重下降↓）
+            if (blockDO.getType() == 4) {
+                return;
+            }
+
+
+            // 880981-880305-880306          TDX 能源-电力-水力发电
+            String[] codePathArr = blockDO.getCodePath().split("-");
+            if (codePathArr.length > 1) {
+
+                for (int i = 0; i < codePathArr.length - 1; i++) {
+                    String pCode = codePathArr[i];
+
+                    data.blockCode_stockCodeSet_Map.computeIfAbsent(pCode, k -> Sets.newHashSet()).add(stockCode);
+                    data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(pCode);
+                }
+            }
+
         }
     }
 

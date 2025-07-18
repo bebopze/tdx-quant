@@ -24,10 +24,15 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * -        概念板块code,概念板块name,普通行业code,普通行业name,研究行业code,研究行业name
  * -        880519,碳中和,880456,环境保护,881469,环保
  *
+ *
+ *
+ * - 废止   概念-行业   关联     ==>     经回测   ->   板块数据 污染严重   ->   收益 严重下降↓
+ *
  * @author: bebopze
  * @date: 2025/7/19
  */
 @Slf4j
+@Deprecated
 public class GnRelaHyParser {
 
 

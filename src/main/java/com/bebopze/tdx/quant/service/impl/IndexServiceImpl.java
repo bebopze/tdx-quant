@@ -11,7 +11,6 @@ import com.bebopze.tdx.quant.service.InitDataService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +62,7 @@ public class IndexServiceImpl implements IndexService {
 
 
     @Override
-    public Map<String, Integer> nDayHighRate(LocalDate date, int N) {
+    public Map<String, Integer> nDayHighRate(LocalDate date, int resultType, int N) {
 
         List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByDateAndLimit(date, N);
 
@@ -71,9 +70,22 @@ public class IndexServiceImpl implements IndexService {
         Map<String, Integer> rateMap = Maps.newHashMap();
         entityList.forEach(e -> {
 
+
             // String result = e.getResult();
-            // String result = e.getYjhyLv1Result();   // 1级 研究行业  ->  30个
-            String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
+            // String result = e.getYjhyLv1Result();      // 1级 研究行业  ->  30个
+            // String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
+
+
+            String result = null;
+            if (resultType == 2) {
+                result = e.getPthyLv2Result();      //  2级  普通行业  ->  56个
+            } else if (resultType == 4) {
+                result = e.getGnResult();           // (3级) 概念板块  ->  380个
+            } else if (resultType == 12) {
+                result = e.getYjhyLv1Result();      //  1级  研究行业  ->  30个
+            } else if (resultType == 0) {
+                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
+            }
 
             List<BlockTopInfo> infoList = JSON.parseArray(result, BlockTopInfo.class);
 
@@ -302,11 +314,12 @@ public class IndexServiceImpl implements IndexService {
         gn_map.forEach((blockCode, stockCodeSet) -> {
 
             BaseBlockDO block_lv2 = BacktestCache.getPBlock(blockCode, 2);
-            pthy_2_map.computeIfAbsent(block_lv2.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
+            if (null != block_lv2) {
+                pthy_2_map.computeIfAbsent(block_lv2.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
 
-
-            BaseBlockDO block_lv1 = BacktestCache.getPBlock(block_lv2.getCode(), 1);
-            pthy_1_map.computeIfAbsent(block_lv1.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
+                BaseBlockDO block_lv1 = BacktestCache.getPBlock(block_lv2.getCode(), 1);
+                pthy_1_map.computeIfAbsent(block_lv1.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
+            }
         });
 
 

@@ -421,7 +421,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 概念 - 行业
-        Map<String, String> gnCode__hyCode__map = GnRelaHyParser.gnCode__hyCode__map();
+        // Map<String, String> gnCode__hyCode__map = GnRelaHyParser.gnCode__hyCode__map();
 
 
         // ----------------------------------- 遍历 - save
@@ -434,10 +434,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String pCode = e.getPCode();
 
 
-            // ----------------------------------- 概念 - 行业
-            if (e.getBlockType() == 4) {
-                pCode = gnCode__hyCode__map.get(blockCode);
-            }
+//            // ----------------------------------- 概念 - 行业
+//            if (e.getBlockType() == 4) {
+//                pCode = gnCode__hyCode__map.get(blockCode);
+//            }
 
 
             // -----------------------------------

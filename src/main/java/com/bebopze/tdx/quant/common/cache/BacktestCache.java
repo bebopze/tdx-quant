@@ -184,13 +184,14 @@ public class BacktestCache {
         Assert.notNull(blockDO, String.format("blockCode:[%s]有误", blockCode));
 
 
-        if (blockDO.getType() == 4) {
-            return null;
-        }
+//        if (blockDO.getType() == 4) {
+//            return null;
+//        }
 
 
         Integer level = blockDO.getLevel();
-        Assert.isTrue(pLevel <= level, String.format("当前[blockCode:%s] 的 [level:%s] < [pLevel:%s]，", blockCode, level, pLevel));
+//        Assert.isTrue(blockDO.getType() == 4 || pLevel <= level,
+//                      String.format("当前[blockCode:%s] 的 [level:%s] < [pLevel:%s]，", blockCode, level, pLevel));
 
         if (level == pLevel) {
             return blockDO;
@@ -198,7 +199,7 @@ public class BacktestCache {
 
 
         Long parentId = blockDO.getParentId();
-        if (null != parentId) {
+        if (null != parentId && parentId != 0) {
             String pCode = block__idCodeMap.get(parentId);
             BaseBlockDO pBlockDO = codeBlockMap.get(pCode);
             assert pBlockDO != null;

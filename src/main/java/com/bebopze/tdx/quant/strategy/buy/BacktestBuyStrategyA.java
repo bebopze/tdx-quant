@@ -53,7 +53,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 主线板块
-        Map<String, Integer> blockCode_count_Map = indexService.nDayHighRate(tradeDate, 10);
+        Map<String, Integer> blockCode_count_Map = indexService.nDayHighRate(tradeDate, 2, 10);
         Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
 
 
