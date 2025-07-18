@@ -232,9 +232,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    // -------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
     //                                              关联关系
-    // -------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     private void fill___txCode_blockCode_map(Map<String, String> txCodeBlockCodeMap,
@@ -420,6 +420,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Collections.sort(tdxzs3DTOList, Comparator.comparing(Tdxzs3Parser.Tdxzs3DTO::getCode));
 
 
+        // 概念 - 行业
+        Map<String, String> gnCode__hyCode__map = GnRelaHyParser.gnCode__hyCode__map();
+
+
         // ----------------------------------- 遍历 - save
 
         tdxzs3DTOList.forEach(e -> {
@@ -428,6 +432,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String blockName = e.getName();
 
             String pCode = e.getPCode();
+
+
+            // ----------------------------------- 概念 - 行业
+            if (e.getBlockType() == 4) {
+                pCode = gnCode__hyCode__map.get(blockCode);
+            }
+
+
+            // -----------------------------------
 
 
             BaseBlockDO baseBlockDO = new BaseBlockDO();
@@ -456,7 +469,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             // 父级（行业板块）
             if (StringUtils.isNotEmpty(pCode)) {
-                hyBlock__code_pCode_map.put(blockCode, e.getPCode());
+                hyBlock__code_pCode_map.put(blockCode, pCode);
             }
 
 

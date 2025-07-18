@@ -401,6 +401,9 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
             double rpsScore = maxRPS和 == 0 ? 0 : s.RPS和 / maxRPS和 * 50;                         // 权重50%
+
+            // double 新高天数Score = 新高天数 == 0 ? 0 : s.RPS和 / maxRPS和 * 50;                   // 权重30%（新高天数）
+
             double amountScore = maxAmount == 0 ? 0 : s.amount / maxAmount * 20;                  // 权重20%
             double 大均线Score = max大均线多头 == 0 ? 0 : s.大均线多头 / max大均线多头 * 10;            // 权重10%
             double 新高Score = maxN日新高 == 0 ? 0 : s.N日新高 / maxN日新高 * 10;                     // 权重10%

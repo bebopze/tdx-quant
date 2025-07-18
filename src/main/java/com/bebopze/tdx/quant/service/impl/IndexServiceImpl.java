@@ -297,6 +297,19 @@ public class IndexServiceImpl implements IndexService {
         });
 
 
+        // --------------- 概念 - LV2-普通行业
+
+        gn_map.forEach((blockCode, stockCodeSet) -> {
+
+            BaseBlockDO block_lv2 = BacktestCache.getPBlock(blockCode, 2);
+            pthy_2_map.computeIfAbsent(block_lv2.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
+
+
+            BaseBlockDO block_lv1 = BacktestCache.getPBlock(block_lv2.getCode(), 1);
+            pthy_1_map.computeIfAbsent(block_lv1.getCode(), k -> Sets.newHashSet()).addAll(stockCodeSet);
+        });
+
+
         // -------------------------------------------------------------------------------------------------------------
 
 

@@ -449,18 +449,6 @@ public class BacktestStrategy {
             log.error("peakNav : {} , prevCapital : {} , maxDrawdown : {} , exMsg : {}",
                       x.peakNav, x.prevCapital, x.maxDrawdown, e.getMessage(), e);
         }
-
-
-        // -------------------------------------------------- 账户金额
-
-
-        // 3、每日 - S金额计算
-
-
-        // 4、每日 - B金额计算
-
-
-        // 5、每日 - BS汇总
     }
 
 
