@@ -38,11 +38,11 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private Long id;
 
     /**
-     * 自定义板块ID
+     * 自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
      */
     @TableField("block_new_id")
-    @Schema(description = "自定义板块ID")
-    private Long blockNewId;
+    @Schema(description = "自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；")
+    private Integer blockNewId;
 
     /**
      * 日期
@@ -57,13 +57,6 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     @TableField("stock_id_list")
     @Schema(description = "关联ID列表：股票ID/板块ID/指数ID（逗号分隔）")
     private String stockIdList;
-
-    /**
-     * 关联ID类型：1-个股；2-板块；3-指数；
-     */
-    @TableField("type")
-    @Schema(description = "关联ID类型：1-个股；2-板块；3-指数；")
-    private Integer type;
 
     /**
      * 概念板块-分析结果JSON

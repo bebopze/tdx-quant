@@ -16,7 +16,7 @@ import java.util.List;
  */
 public interface IQaBlockNewRelaStockHisService extends IService<QaBlockNewRelaStockHisDO> {
 
-    int deleteAll(Long blockNewId, LocalDate date);
+    int deleteAll(Integer blockNewId, LocalDate date);
 
-    List<QaBlockNewRelaStockHisDO> listByDateAndLimit(LocalDate date, int limit);
+    List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit);
 }

@@ -17,7 +17,7 @@
     </delete>
 
 
-    <select id="listByDateAndLimit" resultType="com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO">
+    <select id="listByBlockNewIdDateAndLimit" resultType="com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO">
         SELECT *
 
         FROM qa_block_new_rela_stock_his
@@ -25,7 +25,10 @@
 
         WHERE
 
-        <![CDATA[     date <= #{date}     ]]>
+
+        block_new_id = #{blockNewId}
+
+        <![CDATA[     AND date <= #{date}     ]]>
 
         ORDER BY date DESC
 

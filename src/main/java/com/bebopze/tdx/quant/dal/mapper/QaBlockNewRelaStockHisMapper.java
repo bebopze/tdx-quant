@@ -17,10 +17,11 @@ import java.util.List;
  */
 public interface QaBlockNewRelaStockHisMapper extends BaseMapper<QaBlockNewRelaStockHisDO> {
 
-    int deleteAll(@Param("blockNewId") Long blockNewId,
+    int deleteAll(@Param("blockNewId") Integer blockNewId,
                   @Param("date") LocalDate date);
 
-    List<QaBlockNewRelaStockHisDO> listByDateAndLimit(@Param("date") LocalDate date,
-                                                      @Param("limit") int limit);
+    List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(@Param("blockNewId") Integer blockNewId,
+                                                                @Param("date") LocalDate date,
+                                                                @Param("limit") int limit);
 
 }

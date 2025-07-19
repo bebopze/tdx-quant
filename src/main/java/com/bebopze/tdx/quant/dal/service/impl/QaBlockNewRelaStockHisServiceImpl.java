@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,13 +22,14 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
 
 
     @Override
-    public int deleteAll(Long blockNewId, LocalDate date) {
+    public int deleteAll(Integer blockNewId, LocalDate date) {
         return baseMapper.deleteAll(blockNewId, date);
     }
 
     @Override
-    public List<QaBlockNewRelaStockHisDO> listByDateAndLimit(LocalDate date, int limit) {
-        return baseMapper.listByDateAndLimit(date, limit);
+    public List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit) {
+        return baseMapper.listByBlockNewIdDateAndLimit(blockNewId, date, limit);
     }
+
 
 }

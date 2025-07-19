@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 import static com.bebopze.tdx.quant.common.tdxfun.MonthlyBullSignal.*;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
+import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 
 
 /**
@@ -371,7 +372,7 @@ public class TdxFunCheck {
 
             // 百分比（%）
             double failPct = (double) count / total * 100;
-            failPctMap.put(k, of(failPct) + "%");
+            failPctMap.put(k, NumUtil.of(failPct) + "%");
 
 
             // 失败率 > 1%     =>     fail
@@ -1023,16 +1024,16 @@ public class TdxFunCheck {
     }
 
 
-    private static double of(Number val) {
-        return of(val, 3);
-    }
-
-    private static double of(Number val, int newScale) {
-        if (null == val || (val instanceof Double && (Double.isNaN((Double) val) || Double.isInfinite((Double) val)))) {
-            return Double.NaN;
-        }
-        return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
-    }
+//    private static double of(Number val) {
+//        return of(val, 3);
+//    }
+//
+//    private static double of(Number val, int newScale) {
+//        if (null == val || (val instanceof Double && (Double.isNaN((Double) val) || Double.isInfinite((Double) val)))) {
+//            return Double.NaN;
+//        }
+//        return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
+//    }
 
 //    public static Integer bool2Int(boolean bool) {
 //        return bool ? 1 : 0;

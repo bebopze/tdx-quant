@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
@@ -848,14 +849,77 @@ public class TdxExtFun {
 
 
     /**
+     * RPS三线和 - sum value
+     *
+     * @param rps10
+     * @param rps20
+     * @param rps50
+     * @param rps120
+     * @param rps250
+     * @return
+     */
+    public static double[] RPS三线和(double[] rps10,
+                                     double[] rps20,
+                                     double[] rps50,
+                                     double[] rps120,
+                                     double[] rps250) {
+
+        int n = rps50.length;
+
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+
+            double v1 = rps10[i] + rps20[i] + rps50[i];
+            double v2 = rps50[i] + rps120[i] + NumUtil.NanTo0(rps250[i]);
+
+            result[i] = Math.max(v1, v2);
+        }
+
+        return result;
+    }
+
+    /**
+     * RPS三线和 - sum value >= RPS
+     *
+     * @param rps10
+     * @param rps20
+     * @param rps50
+     * @param rps120
+     * @param rps250
+     * @param RPS
+     * @return
+     */
+    public static boolean[] RPS三线和2(double[] rps10,
+                                       double[] rps20,
+                                       double[] rps50,
+                                       double[] rps120,
+                                       double[] rps250,
+                                       double RPS) {
+
+        int n = rps50.length;
+
+        boolean[] result = new boolean[n];
+        for (int i = 0; i < n; i++) {
+
+            double v1 = rps10[i] + rps20[i] + rps50[i];
+            double v2 = rps50[i] + rps120[i] + NumUtil.NanTo0(rps250[i]);
+
+            result[i] = Math.max(v1, v2) >= RPS;
+        }
+
+        return result;
+    }
+
+
+    /**
      * RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
      *
      * @param rps50
      * @param rps120
      * @param rps250
-     * @param RPS1
-     * @param RPS2
-     * @param RPS3
+     * @param RPS1   RPS一线红
+     * @param RPS2   RPS双线红
+     * @param RPS3   RPS三线红
      * @return
      */
     public static boolean[] RPS红(double[] rps50, double[] rps120, double[] rps250, int RPS1, int RPS2, int RPS3) {

@@ -426,8 +426,23 @@ public class StockFun {
     }
 
 
+    public double[] RPS三线和() {
+        return TdxExtFun.RPS三线和(rps10, rps20, rps50, rps120, rps250);
+    }
+
+    public boolean[] RPS三线和2(double RPS) {
+        return TdxExtFun.RPS三线和2(rps10, rps20, rps50, rps120, rps250, RPS);
+    }
+
+
     public boolean[] RPS三线红(int RPS) {
         return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
+    }
+
+
+    public boolean[] RPS红(int RPS) {
+        // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+        return TdxExtFun.RPS红(rps50, rps120, rps250, Math.max(RPS + 10, 100), Math.max(RPS + 5, 100), RPS);
     }
 
 

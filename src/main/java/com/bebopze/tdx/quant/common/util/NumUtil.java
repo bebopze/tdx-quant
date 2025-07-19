@@ -44,4 +44,23 @@ public class NumUtil {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static double of(Number val) {
+        return of(val, 3);
+    }
+
+    public static double of(Number val, int newScale) {
+        if (null == val || (val instanceof Double && (Double.isNaN((Double) val) || Double.isInfinite((Double) val)))) {
+            return Double.NaN;
+        }
+        return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
+    }
+
+
+    public static double NanTo0(double v) {
+        return Double.isNaN(v) ? 0 : v;
+    }
+
 }

@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -53,7 +54,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 主线板块
-        Map<String, Integer> blockCode_count_Map = indexService.nDayHighRate(tradeDate, 2, 10);
+        Map<String, Integer> blockCode_count_Map = indexService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
         Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
 
 
@@ -428,29 +429,5 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         return topNStocks.stream().map(QuickOption.StockScore::getStockCode).collect(Collectors.toList());
     }
 
-
-/**
- * 个股   指定日期 -> 收盘价
- *
- * @param blockCode
- * @param tradeDate
- * @return
- */
-//    private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
-//        Double closePrice = data.stock__dateCloseMap.get(blockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-//        return closePrice == null ? 0.0 : closePrice;
-//    }
-
-/**
- * 个股   指定日期 -> 收盘价
- *
- * @param stockCode
- * @param tradeDate
- * @return
- */
-//    private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
-//        Double closePrice = data.stock__dateCloseMap.get(stockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-//        return closePrice == null ? 0.0 : closePrice;
-//    }
 
 }

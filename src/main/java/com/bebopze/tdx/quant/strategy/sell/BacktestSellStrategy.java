@@ -11,8 +11,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
-
 
 /**
  * 回测 - S策略
@@ -79,29 +77,28 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
             // 1、月空
-            boolean[] 月多_arr = extDataArrDTO.月多;
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            if (!月多) {
-                sell_infoMap.put(stockCode, "月空" + ",idx-" + dateIndexMap.get(tradeDate));
+            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean MA20空 = extDataArrDTO.MA20空[idx];
+            if (!月多 && MA20空) {
+                sell_infoMap.put(stockCode, "月空" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, "MA20空" + ",idx-" + idx);
                 return true;
             }
 
 
             // 2、SSF空
-            boolean[] SSF空_arr = extDataArrDTO.SSF空;
-            boolean SSF空 = getByDate(SSF空_arr, dateIndexMap, tradeDate);
+            boolean SSF空 = extDataArrDTO.SSF空[idx];
             if (SSF空) {
-                sell_infoMap.put(stockCode, "SSF空" + ",idx-" + dateIndexMap.get(tradeDate));
+                sell_infoMap.put(stockCode, "SSF空" + ",idx-" + idx);
                 return true;
             }
 
 
             // 3、高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
             // double[] 中期涨幅 = extDataArrDTO.中期涨幅;
-            boolean[] 高位爆量上影大阴_arr = extDataArrDTO.高位爆量上影大阴;
-            boolean 高位爆量上影大阴 = getByDate(高位爆量上影大阴_arr, dateIndexMap, tradeDate);
+            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
             if (高位爆量上影大阴) {
-                sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + dateIndexMap.get(tradeDate));
+                sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + idx);
                 return true;
             }
 

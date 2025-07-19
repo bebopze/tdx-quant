@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -286,6 +287,15 @@ public class InitDataServiceImpl implements InitDataService {
 //            }
 
 
+            if (null == stockCode) {
+                // null   =>   基金北向 过滤
+                log.debug("loadAllBlockRelaStock - null     >>>     blockCode : [{}-{}] , stockCode : [{}-{}]",
+                          blockId, blockCode, stockId, stockCode);
+
+                continue;
+            }
+
+
             data.blockCode_stockCodeSet_Map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
             data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(blockCode);
 
@@ -298,25 +308,38 @@ public class InitDataServiceImpl implements InitDataService {
 
             BaseBlockDO blockDO = data.codeBlockMap.get(blockCode);
 
+
             // 过滤   4-概念板块（废止   概念-行业   关联   ==>   经回测 -> 板块数据 污染严重 -> 收益 严重下降↓）
             if (blockDO.getType() == 4) {
-                return;
+                continue;
             }
 
 
             // 880981-880305-880306          TDX 能源-电力-水力发电
-            String[] codePathArr = blockDO.getCodePath().split("-");
-            if (codePathArr.length > 1) {
+            String codePath = blockDO.getCodePath();
+            if (StringUtils.isNotBlank(codePath)) {
 
-                for (int i = 0; i < codePathArr.length - 1; i++) {
-                    String pCode = codePathArr[i];
+                String[] codePathArr = codePath.split("-");
+                if (codePathArr.length > 1) {
 
-                    data.blockCode_stockCodeSet_Map.computeIfAbsent(pCode, k -> Sets.newHashSet()).add(stockCode);
-                    data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(pCode);
+                    for (int i = 0; i < codePathArr.length - 1; i++) {
+                        String pCode = codePathArr[i];
+
+                        data.blockCode_stockCodeSet_Map.computeIfAbsent(pCode, k -> Sets.newHashSet()).add(stockCode);
+                        data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(pCode);
+                    }
                 }
             }
-
         }
+
+
+        // 数量 不对   =>   基金北向 过滤
+        log.debug("loadAllBlockRelaStock - size     >>>     blockCode_stockCodeSet_Map.size : {}", data.blockCode_stockCodeSet_Map.size());
+        log.debug("loadAllBlockRelaStock - size     >>>     stockCode_blockCodeSet_Map.size : {}", data.stockCode_blockCodeSet_Map.size());
+
+
+        log.debug("loadAllBlockRelaStock - map     >>>     blockCode_stockCodeSet_Map.size : {}", JSON.toJSONString(data.blockCode_stockCodeSet_Map));
+        log.debug("loadAllBlockRelaStock - map     >>>     stockCode_blockCodeSet_Map.size : {}", JSON.toJSONString(data.stockCode_blockCodeSet_Map));
     }
 
 

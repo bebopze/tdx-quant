@@ -6,11 +6,13 @@ import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
 import com.alibaba.fastjson2.writer.ObjectWriterPrimitiveImpl;
 import com.bebopze.tdx.quant.common.config.convert.DoubleArrayWriter;
+import com.bebopze.tdx.quant.common.config.convert.StringSetDeserializer;
 import com.bebopze.tdx.quant.common.config.convert.StringToBigDecimalReader;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.Set;
 
 
 /**
@@ -41,6 +43,7 @@ public class FastJson2Config {
                     // JSONWriter.Feature.PrettyFormat,         // 格式化输出
                     JSONWriter.Feature.WriteNullStringAsEmpty); // String类型值为空序列化为""
 
+
         JSON.config(JSONReader.Feature.AllowUnQuotedFieldNames, // 字段名称支持没有双引号的反序列化
                     // 当序列化的值为字符串时直接输出字符串，而不是再加一层引号或双引号，如`JSON.toJSONString("test")`直接输出"test"，而不是"\"test\""
 
@@ -59,10 +62,13 @@ public class FastJson2Config {
 
     public static void registerProvider() {
         JSONFactory.getDefaultObjectReaderProvider()
-                .register(BigDecimal.class, new StringToBigDecimalReader());
+                   .register(BigDecimal.class, new StringToBigDecimalReader());
 
         JSONFactory.getDefaultObjectWriterProvider()
-                .register(double[].class, new DoubleArrayWriter());
+                   .register(double[].class, new DoubleArrayWriter());
+
+//        JSONFactory.getDefaultObjectReaderProvider()
+//                   .register(Set.class, new StringSetDeserializer());
     }
 
 
