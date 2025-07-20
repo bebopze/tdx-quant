@@ -7,7 +7,7 @@ import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -36,7 +36,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
     @Autowired
-    private IndexService indexService;
+    private TopBlockService topBlockService;
 
 
     @Override
@@ -55,7 +55,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 主线板块
-        Map<String, Integer> blockCode_count_Map = indexService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
+        Map<String, Integer> blockCode_count_Map = topBlockService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
         // Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
 
         // 仅取 TOP1 板块

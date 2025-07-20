@@ -1,10 +1,9 @@
 package com.bebopze.tdx.quant.common.config.convert;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.reader.ObjectReader;
-import com.bebopze.tdx.quant.service.impl.IndexServiceImpl;
+import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -70,12 +69,12 @@ public class StringSetDeserializer implements ObjectReader<Set<String>> {
                 "}\n";
 
 
-        List<IndexServiceImpl.BlockTopInfoDTO> infoList = JSON.parseArray(result, IndexServiceImpl.BlockTopInfoDTO.class);
+        List<TopBlockServiceImpl.BlockTopInfoDTO> infoList = JSON.parseArray(result, TopBlockServiceImpl.BlockTopInfoDTO.class);
 
 
         String result2 = "[{\"blockId\":1,\"blockCode\":\"BK001\",\"blockName\":\"新能源\",\"stockCodeSet\":[\"002755\",\"000001\"]}]";
 
-        List<IndexServiceImpl.BlockTopInfoDTO> dtoList = new Gson().fromJson(result, new TypeToken<List<IndexServiceImpl.BlockTopInfoDTO>>() {
+        List<TopBlockServiceImpl.BlockTopInfoDTO> dtoList = new Gson().fromJson(result, new TypeToken<List<TopBlockServiceImpl.BlockTopInfoDTO>>() {
         }.getType());
 
 
