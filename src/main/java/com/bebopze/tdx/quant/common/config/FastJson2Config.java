@@ -40,6 +40,7 @@ public class FastJson2Config {
                     JSONWriter.Feature.WriteLongAsString,       // Long类型序列化为字符串
                     JSONWriter.Feature.WriteNullListAsEmpty,    // List类型值为空序列化为[]
                     JSONWriter.Feature.WriteBigDecimalAsPlain,  // BigDecimal类型序列化为非科学计数法
+                    JSONWriter.Feature.WriteNonStringValueAsString, // 4.58890016E8   ->   458890016
                     // JSONWriter.Feature.PrettyFormat,         // 格式化输出
                     JSONWriter.Feature.WriteNullStringAsEmpty); // String类型值为空序列化为""
 

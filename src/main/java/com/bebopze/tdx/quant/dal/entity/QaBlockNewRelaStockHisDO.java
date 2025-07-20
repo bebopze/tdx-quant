@@ -59,32 +59,18 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private String stockIdList;
 
     /**
+     * 汇总-分析结果JSON（二级普通行业 + 概念板块）
+     */
+    @TableField("result")
+    @Schema(description = "汇总-分析结果JSON（二级普通行业 + 概念板块）")
+    private String result;
+
+    /**
      * 概念板块-分析结果JSON
      */
     @TableField("gn_result")
     @Schema(description = "概念板块-分析结果JSON")
     private String gnResult;
-
-    /**
-     * 一级研究行业-分析结果JSON
-     */
-    @TableField("yjhy_lv1_result")
-    @Schema(description = "一级研究行业-分析结果JSON")
-    private String yjhyLv1Result;
-
-    /**
-     * 二级研究行业-分析结果JSON
-     */
-    @TableField("yjhy_lv2_result")
-    @Schema(description = "二级研究行业-分析结果JSON")
-    private String yjhyLv2Result;
-
-    /**
-     * 三级研究行业-分析结果JSON
-     */
-    @TableField("yjhy_lv3_result")
-    @Schema(description = "三级研究行业-分析结果JSON")
-    private String yjhyLv3Result;
 
     /**
      * 一级普通行业-分析结果JSON
@@ -108,11 +94,25 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private String pthyLv3Result;
 
     /**
-     * 汇总-分析结果JSON（一级研究行业 + 概念板块）
+     * 一级研究行业-分析结果JSON
      */
-    @TableField("result")
-    @Schema(description = "汇总-分析结果JSON（一级研究行业 + 概念板块）")
-    private String result;
+    @TableField("yjhy_lv1_result")
+    @Schema(description = "一级研究行业-分析结果JSON")
+    private String yjhyLv1Result;
+
+    /**
+     * 二级研究行业-分析结果JSON
+     */
+    @TableField("yjhy_lv2_result")
+    @Schema(description = "二级研究行业-分析结果JSON")
+    private String yjhyLv2Result;
+
+    /**
+     * 三级研究行业-分析结果JSON
+     */
+    @TableField("yjhy_lv3_result")
+    @Schema(description = "三级研究行业-分析结果JSON")
+    private String yjhyLv3Result;
 
     /**
      * 创建时间

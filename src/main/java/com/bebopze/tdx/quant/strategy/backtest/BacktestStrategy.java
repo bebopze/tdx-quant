@@ -471,6 +471,25 @@ public class BacktestStrategy {
         return data.dateList.get(idx + 1);
     }
 
+    public LocalDate tradeDateDecr(LocalDate tradeDate) {
+        Integer idx = data.dateIndexMap.get(tradeDate);
+
+        // 非交易日
+        while (idx == null) {
+            // 下一自然日   ->   直至 交易日
+            tradeDate = tradeDate.plusDays(1);
+            idx = data.dateIndexMap.get(tradeDate);
+
+
+            if (!DateTimeUtil.between(tradeDate, data.dateList.get(0), data.dateList.get(data.dateList.size() - 1))) {
+                throw new BizException(String.format("[日期：%s]非法，超出有效交易日范围", tradeDate));
+            }
+        }
+
+
+        return data.dateList.get(idx + 1);
+    }
+
 
     /**
      * 计算  ->  每日收益率
@@ -846,6 +865,17 @@ public class BacktestStrategy {
      */
     private double getClosePrice(String stockCode, LocalDate tradeDate) {
         Double closePrice = data.stock__dateCloseMap.get(stockCode).get(tradeDate);
+
+
+        // 停牌
+        int count = 0;
+        while (closePrice == null && count++ < 500) {
+            // 交易日 往前一位
+            tradeDate = tradeDateDecr(tradeDate);
+            closePrice = data.stock__dateCloseMap.get(stockCode).get(tradeDate);
+        }
+
+
         return closePrice == null ? 0.0 : closePrice;
     }
 

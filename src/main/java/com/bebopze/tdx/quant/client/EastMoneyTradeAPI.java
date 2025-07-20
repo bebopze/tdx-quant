@@ -239,7 +239,7 @@ public class EastMoneyTradeAPI {
      * - https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param req
-     * @return
+     * @return 委托编号
      */
     public static Integer submitTradeV2(SubmitTradeV2Req req) {
 

@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 
 /**
- * 买入（融资/担保） / 卖出
+ * 东方财富   -   买入（融资/担保） / 卖出
  *
  * @author: bebopze
  * @date: 2025/4/29
@@ -39,11 +39,14 @@ public class SubmitTradeV2Req {
     // ------------------------------------------- 根据 tradeTypeEnum / stockCode   ->   自动计算 填充
 
 
+    // 交易类型
     private String tradeType;
 
+    // 信用交易类型
     private String xyjylx;
 
 
+    // 市场
     private String market;
 
 

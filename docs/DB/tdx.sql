@@ -239,22 +239,21 @@ DROP TABLE IF EXISTS `qa_block_new_rela_stock_his`;
 CREATE TABLE `qa_block_new_rela_stock_his`
 (
     `id`              bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `block_new_id`    bigint unsigned  NOT NULL COMMENT '自定义板块ID',
+    `block_new_id`    tinyint unsigned NOT NULL COMMENT '自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；',
     `date`            date             NOT NULL COMMENT '日期',
     `stock_id_list`   text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '关联ID列表：股票ID/板块ID/指数ID（逗号分隔）',
-    `type`            tinyint unsigned NOT NULL COMMENT '关联ID类型：1-个股；2-板块；3-指数；',
-    `result`          longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '汇总-分析结果JSON（一级研究行业 + 概念板块）',
+    `result`          longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '汇总-分析结果JSON（二级普通行业 + 概念板块）',
     `gn_result`       longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '概念板块-分析结果JSON',
-    `yjhy_lv1_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '一级研究行业-分析结果JSON',
-    `yjhy_lv2_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '二级研究行业-分析结果JSON',
-    `yjhy_lv3_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '三级研究行业-分析结果JSON',
     `pthy_lv1_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '一级普通行业-分析结果JSON',
     `pthy_lv2_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '二级普通行业-分析结果JSON',
     `pthy_lv3_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '三级普通行业-分析结果JSON',
+    `yjhy_lv1_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '一级研究行业-分析结果JSON',
+    `yjhy_lv2_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '二级研究行业-分析结果JSON',
+    `yjhy_lv3_result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '三级研究行业-分析结果JSON',
     `gmt_create`      datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modify`      datetime         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx__block_new_id__type__date` (`block_new_id`, `type`, `date`) USING BTREE,
+    KEY `idx__block_new_id__date` (`block_new_id`, `date`) USING BTREE,
     KEY `idx_date` (`date`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4

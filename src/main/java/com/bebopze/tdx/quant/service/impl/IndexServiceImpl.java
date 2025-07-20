@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
@@ -106,7 +105,6 @@ public class IndexServiceImpl implements IndexService {
 
 
             List<BlockTopInfoDTO> infoList = JSON.parseArray(result, BlockTopInfoDTO.class);
-            JSONArray objects1 = JSON.parseArray(result);
 
 
             BlockTopInfoDTO blockTopInfoDTO = infoList.get(0);
@@ -175,7 +173,8 @@ public class IndexServiceImpl implements IndexService {
                     // 保证6位补零（反序列化 bug ： 002755   ->   2755）
                     stockCode = String.format("%06d", Integer.parseInt(stockCode));
 
-                    log.debug("topBlockRateInfo - 反序列化bug：补0     >>>     stockCode : {}", stockCode);
+                    log.debug("topBlockRateInfo - 反序列化bug：补0     >>>     stockCode : {} , stockName : {}",
+                              stockCode, data.codeStockMap.get(stockCode).getName());
                     return;
                 }
 
@@ -189,6 +188,7 @@ public class IndexServiceImpl implements IndexService {
 
                 Integer idx = dateIndexMap.get(date);
                 if (idx == null) {
+                    // 停牌  /  当前date -> 非交易日
                     return;
                 }
 
@@ -225,7 +225,7 @@ public class IndexServiceImpl implements IndexService {
         // block - TOP （主线板块 TOP1 - 天数）
         List<TopBlockDTO> topBlockList = rateMap.entrySet().stream().map(entry -> {
                                                     String block = entry.getKey();
-                                                    int totalTopDay = entry.getValue();
+                                                    int topDay = entry.getValue();
 
                                                     String[] blockArr = block.split("-");
 
@@ -234,10 +234,10 @@ public class IndexServiceImpl implements IndexService {
                                                     String blockName = blockArr[1];
                                                     List<TopStockDTO> topStockList = blockCode_topStockList_map.get(blockCode);
 
-                                                    TopBlockDTO topBlockDTO = new TopBlockDTO(blockCode, blockName, totalTopDay, topStockList);
+                                                    TopBlockDTO topBlockDTO = new TopBlockDTO(blockCode, blockName, topDay, topStockList);
                                                     return topBlockDTO;
                                                 })
-                                                .sorted(Comparator.comparing(TopBlockDTO::getTotalTopDay).reversed())
+                                                .sorted(Comparator.comparing(TopBlockDTO::getTopDay).reversed())
                                                 .collect(Collectors.toList());
 
 
@@ -253,7 +253,7 @@ public class IndexServiceImpl implements IndexService {
     public static class TopBlockDTO {
         private String blockCode;
         private String blockName;
-        private int totalTopDay;
+        private int topDay;
 
         // 当日最强
         private List<TopStockDTO> topStockList;
@@ -397,25 +397,6 @@ public class IndexServiceImpl implements IndexService {
     private void blockSum(LocalDate date, Set<String> filter_stockCodeSet, Integer blockNewId) {
 
 
-        QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
-        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
-        entity.setBlockNewId(blockNewId);
-        entity.setDate(date);
-        entity.setStockIdList(String.join(",", filter_stockCodeSet));
-
-
-        List<BlockTopInfoDTO> pthy_lv1_List = Lists.newArrayList();
-        List<BlockTopInfoDTO> pthy_lv2_List = Lists.newArrayList();
-        List<BlockTopInfoDTO> pthy_lv3_List = Lists.newArrayList();
-
-
-        List<BlockTopInfoDTO> yjhy_lv1_List = Lists.newArrayList();
-        List<BlockTopInfoDTO> yjhy_lv2_List = Lists.newArrayList();
-        List<BlockTopInfoDTO> yjhy_lv3_List = Lists.newArrayList();
-
-        List<BlockTopInfoDTO> gnList = Lists.newArrayList();
-
-
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -492,88 +473,12 @@ public class IndexServiceImpl implements IndexService {
 
         // ----------------- map -> DTO
 
-        convertMap2Dto__addList(pthy_3_map, pthy_lv3_List);
-        convertMap2Dto__addList(gn_map, gnList);
-        convertMap2Dto__addList(yjhy_3_map, yjhy_lv3_List);
+        List<BlockTopInfoDTO> pthy_lv3_List = convertMap2DTOList(pthy_3_map);
+        List<BlockTopInfoDTO> gnList = convertMap2DTOList(gn_map);
+        List<BlockTopInfoDTO> yjhy_lv3_List = convertMap2DTOList(yjhy_3_map);
 
 
         // -----------------------------------------------------------------------------------
-
-
-//        // 遍历板块
-//        data.blockDOList.forEach(blockDO -> {
-//
-//
-//            String blockCode = blockDO.getCode();
-//            Integer type = blockDO.getType();
-//            Integer endLevel = blockDO.getEndLevel();
-//
-//
-//            // 板块 - 个股列表
-//            // Set<String> blockCode_stockCodeSet = data.blockCode_stockCodeSet_Map.getOrDefault(blockCode, Collections.emptySet());
-//            Set<String> blockCode_stockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(blockCode, Collections.emptySet());
-//
-//
-//            // 百日新高（个股列表）   ->   按  板块  分类
-//            filter_stockCodeSet.forEach(stockCode -> {
-//
-//                Set<String> blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Collections.emptySet());
-//
-//
-//                blockCodeSet.forEach(blockCode -> {
-//
-//                });
-//
-//
-//                // 百日新高（个股）  ->   in 板块
-//                if (blockCode_stockCodeSet.contains(stockCode)) {
-//
-//
-//                    // 板块 - 分类（百日新高-个股）
-//
-//
-//                    // tdx板块类型：1-暂无（保留）；2-普通行业-二级分类/细分行业；3-地区板块；4-概念板块；5-风格板块；12-研究行业-一级/二级/三级分类；
-//
-//
-//                    // 2-普通行业 - 一级/二级/三级分类（细分行业）
-//                    if (Objects.equals(type, 2) && Objects.equals(endLevel, 1)) {
-//                        pthy_3_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
-//                    }
-//                    // 4-概念板块
-//                    else if (Objects.equals(type, 4)) {
-//                        gn_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
-//                    }
-//                    // 12-研究行业 - 一级/二级/三级分类
-//                    else if (Objects.equals(type, 12) && Objects.equals(endLevel, 1)) {
-//                        yjhy_3_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
-//                    }
-//                }
-//            });
-//
-//
-//            // ----------------- info
-//            BlockTopInfo info = new BlockTopInfo();
-//            info.setBlockId(data.block__codeIdMap.get(blockCode));
-//            info.setBlockCode(blockCode);
-//            info.setBlockName(data.block__codeNameMap.get(blockCode));
-//
-//
-//            if (Objects.equals(type, 2) && Objects.equals(endLevel, 1)) {
-//
-//                info.setStockCodeSet(pthy_3_map.get(blockCode));
-//                pthy_lv3_List.add(info);
-//
-//            } else if (Objects.equals(type, 4)) {
-//
-//                info.setStockCodeSet(gn_map.get(blockCode));
-//                gnList.add(info);
-//
-//            } else if (Objects.equals(type, 12) && Objects.equals(endLevel, 1)) {
-//
-//                info.setStockCodeSet(yjhy_3_map.get(blockCode));
-//                yjhy_lv3_List.add(info);
-//            }
-//        });
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -620,12 +525,12 @@ public class IndexServiceImpl implements IndexService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        convertMap2Dto__addList(pthy_2_map, pthy_lv2_List);
-        convertMap2Dto__addList(pthy_1_map, pthy_lv1_List);
+        List<BlockTopInfoDTO> pthy_lv2_List = convertMap2DTOList(pthy_2_map);
+        List<BlockTopInfoDTO> pthy_lv1_List = convertMap2DTOList(pthy_1_map);
 
 
-        convertMap2Dto__addList(yjhy_2_map, yjhy_lv2_List);
-        convertMap2Dto__addList(yjhy_1_map, yjhy_lv1_List);
+        List<BlockTopInfoDTO> yjhy_lv2_List = convertMap2DTOList(yjhy_2_map);
+        List<BlockTopInfoDTO> yjhy_lv1_List = convertMap2DTOList(yjhy_1_map);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -633,7 +538,6 @@ public class IndexServiceImpl implements IndexService {
 
         // 行业 + 概念
         List<BlockTopInfoDTO> resultList = Lists.newArrayList();
-
 
         resultList.addAll(gnList);
         resultList.addAll(pthy_lv2_List);
@@ -643,6 +547,14 @@ public class IndexServiceImpl implements IndexService {
 
 
         // 百日新高 result  ->  DB
+
+
+        QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
+
+        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+        entity.setBlockNewId(blockNewId);
+        entity.setDate(date);
+        entity.setStockIdList(String.join(",", filter_stockCodeSet));
 
 
         entity.setYjhyLv1Result(JSON.toJSONString(sortAndRank(yjhy_lv1_List)));
@@ -666,10 +578,9 @@ public class IndexServiceImpl implements IndexService {
      * map -> DTO List
      *
      * @param blockCode_stockCodeSet_map
-     * @param dtoList
      */
-    private void convertMap2Dto__addList(Map<String, Set<String>> blockCode_stockCodeSet_map,
-                                         List<BlockTopInfoDTO> dtoList) {
+    private List<BlockTopInfoDTO> convertMap2DTOList(Map<String, Set<String>> blockCode_stockCodeSet_map) {
+        List<BlockTopInfoDTO> dtoList = Lists.newArrayList();
 
         blockCode_stockCodeSet_map.forEach((blockCode, stockCodeSet) -> {
 
@@ -684,12 +595,18 @@ public class IndexServiceImpl implements IndexService {
 
             dtoList.add(dto);
         });
+
+        return dtoList;
     }
 
 
-    private List<BlockTopInfoDTO> sortAndRank(List<BlockTopInfoDTO> infoList) {
+    private List<BlockTopInfoDTO> sortAndRank(List<BlockTopInfoDTO> dtoList) {
 
-        List<BlockTopInfoDTO> sortList = infoList.stream().filter(e -> e.getSize() > 0).sorted(Comparator.comparing(BlockTopInfoDTO::getSize).reversed()).collect(Collectors.toList());
+        List<BlockTopInfoDTO> sortList = dtoList.stream()
+                                                .filter(e -> e.getSize() > 0)
+                                                .sorted(Comparator.comparing(BlockTopInfoDTO::getSize).reversed())
+                                                .collect(Collectors.toList());
+
         for (int i = 0; i < sortList.size(); i++) {
             sortList.get(i).setRank(i + 1);
         }

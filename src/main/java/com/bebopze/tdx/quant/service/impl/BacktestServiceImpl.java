@@ -287,7 +287,6 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 交易记录
-        // List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDateRange(taskId, preTradeDate, tradeDate);
         List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDate(taskId, tradeDate);
 
 

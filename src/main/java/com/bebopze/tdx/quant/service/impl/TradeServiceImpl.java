@@ -39,6 +39,7 @@ public class TradeServiceImpl implements TradeService {
         return resp;
     }
 
+
     @Override
     public SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
         SHSZQuoteSnapshotResp dto = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
@@ -52,6 +53,7 @@ public class TradeServiceImpl implements TradeService {
         SubmitTradeV2Req req = convert2Req(param);
 
 
+        // 委托编号
         Integer wtdh = EastMoneyTradeAPI.submitTradeV2(req);
         return wtdh;
     }
@@ -134,5 +136,6 @@ public class TradeServiceImpl implements TradeService {
 
         return req;
     }
+
 
 }

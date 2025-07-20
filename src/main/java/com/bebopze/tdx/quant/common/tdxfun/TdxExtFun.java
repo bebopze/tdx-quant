@@ -245,6 +245,18 @@ public class TdxExtFun {
     }
 
 
+    public static double[] C_SSF_偏离率(double[] close, double[] ssf) {
+        int n = close.length;
+
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = NumUtil.of((close[i] / ssf[i] - 1) * 100);
+        }
+
+        return result;
+    }
+
+
     /**
      * 结果合并   -   AND
      *

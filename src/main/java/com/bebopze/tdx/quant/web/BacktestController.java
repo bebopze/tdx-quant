@@ -43,7 +43,7 @@ public class BacktestController {
     }
 
 
-    @Operation(summary = "check - 回测数据", description = "逐日check - 回测数据")
+    @Operation(summary = "check - 回测数据", description = "逐日 交叉check - 回测数据")
     @GetMapping("/check")
     public Result<Void> checkBacktest(@RequestParam(defaultValue = "1") Long taskId) {
         backTestService.checkBacktest(taskId);

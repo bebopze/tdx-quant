@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.strategy.QuickOption;
@@ -55,7 +56,10 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
         // 主线板块
         Map<String, Integer> blockCode_count_Map = indexService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
-        Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
+        // Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
+
+        // 仅取 TOP1 板块
+        Set<String> filter__blockCodeSet = Sets.newHashSet(blockCode_count_Map.keySet().iterator().next().split("-")[0]);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -86,13 +90,6 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             }
 
 
-            // -------------------------------------------
-
-
-            // 是否买入
-            // boolean signal_B = false;
-
-
             // --------------------------------------------------------------------------------------
 
             double[] rps50_arr = extDataArrDTO.rps50;
@@ -114,39 +111,23 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             // --------------------------------------------------------------------------------------
 
 
-            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
+            // double 中期涨幅 = getByDate(extDataArrDTO.中期涨幅, dateIndexMap, tradeDate);
 
 
-            boolean[] SSF多_arr = extDataArrDTO.SSF多;
-            boolean[] MA20多_arr = extDataArrDTO.MA20多;
+            boolean SSF多 = getByDate(extDataArrDTO.SSF多, dateIndexMap, tradeDate);
+            boolean MA20多 = getByDate(extDataArrDTO.MA20多, dateIndexMap, tradeDate);
 
 
-            boolean[] 月多_arr = extDataArrDTO.月多;
-            // boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+            boolean 月多 = getByDate(extDataArrDTO.月多, dateIndexMap, tradeDate);
+            // boolean RPS三线红 = getByDate(extDataArrDTO.RPS三线红, dateIndexMap, tradeDate);
 
 
-            boolean[] N日新高_arr = extDataArrDTO.N日新高;
-            boolean[] 均线预萌出_arr = extDataArrDTO.均线预萌出;
-            boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
+            boolean _60日新高 = getByDate(extDataArrDTO.N日新高, dateIndexMap, tradeDate);
+            boolean 均线预萌出 = getByDate(extDataArrDTO.均线预萌出, dateIndexMap, tradeDate);
+            boolean 大均线多头 = getByDate(extDataArrDTO.大均线多头, dateIndexMap, tradeDate);
 
 
-            // -------------------------------------------
-
-
-            double 中期涨幅 = getByDate(中期涨幅_arr, dateIndexMap, tradeDate);
-
-
-            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
-            boolean MA20多 = getByDate(MA20多_arr, dateIndexMap, tradeDate);
-
-
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            // boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
-
-
-            boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
-            boolean 均线预萌出 = getByDate(均线预萌出_arr, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+            boolean 高位爆量上影大阴 = getByDate(extDataArrDTO.高位爆量上影大阴, dateIndexMap, tradeDate);
 
 
             // -------------------------------------------
@@ -187,9 +168,20 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             boolean con_5 = /*RPS三线红 ||*/ _60日新高 /*|| 口袋支点*/;
 
 
-            boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5;
+            // 偏离率 < 10%
+            double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
+            boolean con_6 = C_SSF_偏离率 < 10;
 
 
+            // 非卖点
+            boolean con_7 = !高位爆量上影大阴;
+
+
+            // -------------------------------------------
+
+
+            // 是否买入
+            boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5 && con_6 && con_7;
             if (signal_B) {
 
                 filter__stockCodeList.add(stockCode);
@@ -357,7 +349,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
             // RPS和
             double RPS和1 = rps10 + rps20 + rps50;
-            double RPS和2 = rps50 + rps120 + rps250;
+            double RPS和2 = rps50 + rps120 + NumUtil.NanTo0(rps250);
 
             double RPS和 = Math.max(RPS和1, RPS和2);
 
@@ -401,32 +393,47 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             // RPS（50） ->  成交额-近10日（10） ->  大均线多头（10） ->  60日新高（10） ->  涨幅榜（10）  ->   ...
 
 
-            double rpsScore = maxRPS和 == 0 ? 0 : s.RPS和 / maxRPS和 * 50;                         // 权重50%
+            double rpsScore = NaNor0(maxRPS和) ? 0 : s.RPS和 / maxRPS和 * 50;                         // 权重50%
 
-            // double 新高天数Score = 新高天数 == 0 ? 0 : s.RPS和 / maxRPS和 * 50;                   // 权重30%（新高天数）
+            // double 新高天数Score = 新高天数 == 0 ? 0 : s.RPS和 / maxRPS和 * 50;                      // 权重30%（新高天数）
 
-            double amountScore = maxAmount == 0 ? 0 : s.amount / maxAmount * 20;                  // 权重20%
-            double 大均线Score = max大均线多头 == 0 ? 0 : s.大均线多头 / max大均线多头 * 10;            // 权重10%
-            double 新高Score = maxN日新高 == 0 ? 0 : s.N日新高 / maxN日新高 * 10;                     // 权重10%
-            double midScore = maxMidReturn == 0 ? 0 : s.midTermChangePct / maxMidReturn * 10;     // 权重10%
+            double amountScore = NaNor0(maxAmount) ? 0 : s.amount / maxAmount * 20;                  // 权重20%
+            double 大均线Score = NaNor0(max大均线多头) ? 0 : s.大均线多头 / max大均线多头 * 10;            // 权重10%
+            double 新高Score = NaNor0(maxN日新高) ? 0 : s.N日新高 / maxN日新高 * 10;                     // 权重10%
+            double midScore = NaNor0(maxMidReturn) ? 0 : s.midTermChangePct / maxMidReturn * 10;     // 权重10%
 
 
-            s.score = rpsScore + amountScore + 大均线Score + 新高Score + midScore;
+            s.score = NumUtil.of(rpsScore + amountScore + 大均线Score + 新高Score + midScore);
+
+
+//            if (Double.isNaN(s.score)) {
+//                log.debug("scoreSort - NaN     >>>     rpsScore : {} , amountScore : {} , 大均线Score : {} , 新高Score : {} , midScore : {} , score : {}",
+//                          rpsScore, amountScore, 大均线Score, 新高Score, midScore, s.score);
+//            }
+
         }
 
 
         // Step 4: 按得分排序，取前N名
         List<QuickOption.StockScore> topNStocks = scoredStocks.stream()
-                                                              .sorted(Comparator.comparingDouble((QuickOption.StockScore s) -> -s.getScore()))
+                                                              .sorted(Comparator.comparing((QuickOption.StockScore::getScore)).reversed())
                                                               .limit(N)
                                                               .collect(Collectors.toList());
 
 
         // 输出结果或进一步操作
-        topNStocks.forEach(JSON::toJSONString);
+        if (topNStocks.size() < scoredStocks.size() /*|| scoredStocks.size() > N / 2*/) {
+            log.debug("scoreSort     >>>     前->后 : [{}->{}] , topNStocks : {}",
+                      scoredStocks.size(), topNStocks.size(), JSON.toJSONString(topNStocks));
+        }
 
 
         return topNStocks.stream().map(QuickOption.StockScore::getStockCode).collect(Collectors.toList());
+    }
+
+
+    private static boolean NaNor0(double val) {
+        return Double.isNaN(val) || val == 0;
     }
 
 

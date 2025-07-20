@@ -76,7 +76,7 @@ public class BacktestSellStrategy implements SellStrategy {
             // -------------------------------------------
 
 
-            // 1、月空
+            // 月空
             boolean 月多 = extDataArrDTO.月多[idx];
             boolean MA20空 = extDataArrDTO.MA20空[idx];
             if (!月多 && MA20空) {
@@ -86,7 +86,7 @@ public class BacktestSellStrategy implements SellStrategy {
             }
 
 
-            // 2、SSF空
+            // SSF空
             boolean SSF空 = extDataArrDTO.SSF空[idx];
             if (SSF空) {
                 sell_infoMap.put(stockCode, "SSF空" + ",idx-" + idx);
@@ -94,11 +94,18 @@ public class BacktestSellStrategy implements SellStrategy {
             }
 
 
-            // 3、高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
-            // double[] 中期涨幅 = extDataArrDTO.中期涨幅;
+            // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
             boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
             if (高位爆量上影大阴) {
                 sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + idx);
+                return true;
+            }
+
+
+            // 偏离率 > 25%
+            double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
+            if (C_SSF_偏离率 > 25) {
+                sell_infoMap.put(stockCode, "C_SSF_偏离率>25%" + ",idx-" + idx);
                 return true;
             }
 
