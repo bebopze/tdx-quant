@@ -12,6 +12,7 @@ import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.service.InitDataService;
+import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -19,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,6 +51,9 @@ public class IndexServiceImpl implements IndexService {
     @Autowired
     private InitDataService initDataService;
 
+    @Autowired
+    @Lazy
+    private BacktestStrategy backtestStrategy;
 
     @Autowired
     private IQaBlockNewRelaStockHisService qaBlockNewRelaStockHisService;
@@ -131,7 +136,7 @@ public class IndexServiceImpl implements IndexService {
 
 
         Map<String, Integer> rateMap = Maps.newHashMap();
-        entityList.forEach(e -> {
+        for (QaBlockNewRelaStockHisDO e : entityList) {
 
 
             // String result = e.getResult();
@@ -166,16 +171,16 @@ public class IndexServiceImpl implements IndexService {
 
             // TOP1 板块  -  stockCodeSet
             Map<String, Double> stockCode_rps强度_map = Maps.newHashMap();
-            dto.getStockCodeSet().stream().forEach(stockCode -> {
+            for (String stockCode : dto.getStockCodeSet()) {
 
 
                 if (stockCode.length() < 6) {
                     // 保证6位补零（反序列化 bug ： 002755   ->   2755）
                     stockCode = String.format("%06d", Integer.parseInt(stockCode));
 
+
                     log.debug("topBlockRateInfo - 反序列化bug：补0     >>>     stockCode : {} , stockName : {}",
                               stockCode, data.codeStockMap.get(stockCode).getName());
-                    return;
                 }
 
 
@@ -187,16 +192,19 @@ public class IndexServiceImpl implements IndexService {
 
 
                 Integer idx = dateIndexMap.get(date);
-                if (idx == null) {
-                    // 停牌  /  当前date -> 非交易日
-                    return;
+                // 停牌  /  当前date -> 非交易日
+                int count = 0;
+                while (idx == null && count++ < 50) {
+                    // 交易日 往前一位
+                    date = backtestStrategy.tradeDateDecr(date);
+                    idx = dateIndexMap.get(date);
                 }
 
 
                 // 个股 - RPS强度
                 double RPS三线和 = fun.RPS三线和()[idx];
                 stockCode_rps强度_map.put(stockCode, NumUtil.of(RPS三线和));
-            });
+            }
 
 
             // 按 rps强度 倒序排序
@@ -219,7 +227,7 @@ public class IndexServiceImpl implements IndexService {
 
 
             blockCode_topStockList_map.put(blockCode, topStockDTOList);
-        });
+        }
 
 
         // block - TOP （主线板块 TOP1 - 天数）

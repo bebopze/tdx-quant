@@ -468,6 +468,7 @@ public class BacktestStrategy {
         }
 
 
+        // 下一个
         return data.dateList.get(idx + 1);
     }
 
@@ -476,8 +477,8 @@ public class BacktestStrategy {
 
         // 非交易日
         while (idx == null) {
-            // 下一自然日   ->   直至 交易日
-            tradeDate = tradeDate.plusDays(1);
+            // 上一自然日   ->   直至 交易日
+            tradeDate = tradeDate.minusDays(1);
             idx = data.dateIndexMap.get(tradeDate);
 
 
@@ -487,7 +488,8 @@ public class BacktestStrategy {
         }
 
 
-        return data.dateList.get(idx + 1);
+        // 上一个
+        return data.dateList.get(idx - 1);
     }
 
 
@@ -867,7 +869,7 @@ public class BacktestStrategy {
         Double closePrice = data.stock__dateCloseMap.get(stockCode).get(tradeDate);
 
 
-        // 停牌
+        // 停牌（603039 -> 2023-04-03）
         int count = 0;
         while (closePrice == null && count++ < 500) {
             // 交易日 往前一位

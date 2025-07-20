@@ -882,7 +882,7 @@ public class TdxExtFun {
         for (int i = 0; i < n; i++) {
 
             double v1 = rps10[i] + rps20[i] + rps50[i];
-            double v2 = rps50[i] + rps120[i] + NumUtil.NanTo0(rps250[i]);
+            double v2 = rps50[i] + NumUtil.NaN_0(rps120[i]) + NumUtil.NaN_0(rps250[i]);
 
             result[i] = Math.max(v1, v2);
         }
@@ -914,7 +914,7 @@ public class TdxExtFun {
         for (int i = 0; i < n; i++) {
 
             double v1 = rps10[i] + rps20[i] + rps50[i];
-            double v2 = rps50[i] + rps120[i] + NumUtil.NanTo0(rps250[i]);
+            double v2 = rps50[i] + NumUtil.NaN_0(rps120[i]) + NumUtil.NaN_0(rps250[i]);
 
             result[i] = Math.max(v1, v2) >= RPS;
         }

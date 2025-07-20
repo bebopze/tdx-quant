@@ -59,7 +59,7 @@ public class NumUtil {
     }
 
 
-    public static double NanTo0(double v) {
+    public static double NaN_0(double v) {
         return Double.isNaN(v) ? 0 : v;
     }
 

@@ -349,7 +349,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
             // RPS和
             double RPS和1 = rps10 + rps20 + rps50;
-            double RPS和2 = rps50 + rps120 + NumUtil.NanTo0(rps250);
+            double RPS和2 = rps50 + rps120 + NumUtil.NaN_0(rps250);
 
             double RPS和 = Math.max(RPS和1, RPS和2);
 
