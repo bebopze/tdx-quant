@@ -137,7 +137,7 @@ CREATE TABLE `bt_daily_return`
     `capital`            decimal(20, 2)  NOT NULL COMMENT '总资金',
     `market_value`       decimal(20, 2)  NOT NULL COMMENT '持仓市值',
     `avl_capital`        decimal(20, 2)  NOT NULL COMMENT '可用资金',
-    `buy_capital`        decimal(20, 2)  NOT NULL COMMENT '买日金额',
+    `buy_capital`        decimal(20, 2)  NOT NULL COMMENT '买入金额',
     `sell_capital`       decimal(20, 2)  NOT NULL COMMENT '卖出金额',
     `benchmark_return`   decimal(10, 4)           DEFAULT NULL COMMENT '基准收益（可选）',
     `gmt_create`         datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -257,7 +257,43 @@ CREATE TABLE `qa_block_new_rela_stock_his`
     KEY `idx_date` (`date`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_general_ci COMMENT ='量化分析 - 每日';
+  COLLATE = utf8mb4_general_ci COMMENT ='量化分析 - 主线板块';
+
+-- ----------------------------
+-- Table structure for qa_market_mid_cycle
+-- ----------------------------
+DROP TABLE IF EXISTS `qa_market_mid_cycle`;
+CREATE TABLE `qa_market_mid_cycle`
+(
+    `id`                      bigint unsigned        NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `date`                    date                   NOT NULL COMMENT '日期',
+    `market_bull_bear_status` tinyint unsigned       NOT NULL DEFAULT '0' COMMENT '大盘-牛熊：1-牛市；2-熊市；',
+    `market_mid_status`       tinyint unsigned       NOT NULL DEFAULT '0' COMMENT '大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；',
+    `market_low_day`          int unsigned           NOT NULL DEFAULT '0' COMMENT '底_DAY',
+    `market_high_day`         int unsigned           NOT NULL DEFAULT '0' COMMENT '顶_DAY',
+    `ma50_pct`                decimal(5, 2) unsigned NOT NULL COMMENT 'MA50占比（%）',
+    `position_pct`            decimal(5, 2) unsigned NOT NULL COMMENT '仓位占比（%）',
+    `stock_month_bull_pct`    decimal(5, 2) unsigned NOT NULL COMMENT '个股月多-占比（%）',
+    `block_month_bull_pct`    decimal(5, 2) unsigned NOT NULL COMMENT '板块月多-占比（%）',
+    `high_num`                int unsigned           NOT NULL COMMENT '新高数量',
+    `low_num`                 int unsigned           NOT NULL COMMENT '新低数量',
+    `all_stock_num`           int unsigned           NOT NULL COMMENT '全A数量',
+    `high_low_diff`           int                    NOT NULL COMMENT '差值',
+    `bs1_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '左侧试仓-占比（%）',
+    `bs2_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '左侧买-占比（%）',
+    `bs3_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '右侧买-占比（%）',
+    `bs4_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '强势卖出-占比（%）',
+    `bs5_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '左侧卖-占比（%）',
+    `bs6_pct`                 decimal(5, 2) unsigned NOT NULL COMMENT '右侧卖-占比（%）',
+    `right_buy_pct`           decimal(5, 2) unsigned NOT NULL COMMENT '右侧B-占比（%）',
+    `right_sell_pct`          decimal(5, 2) unsigned NOT NULL COMMENT '右侧S-占比（%）',
+    `gmt_create`              datetime               NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modify`              datetime               NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_date` (`date`) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='量化分析 - 大盘中期顶底';
 
 
 

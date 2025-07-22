@@ -53,6 +53,7 @@ public class JsonFileWriterAndReader {
                 writer.name("name").value(data.getName());
                 writer.name("tdxMarketType").value(data.getTdxMarketType());
                 writer.name("klineHis").value(data.getKlineHis());
+                writer.name("extDataHis").value(data.getExtDataHis());
 
 
                 writer.endObject();
@@ -98,14 +99,17 @@ public class JsonFileWriterAndReader {
             while (reader.hasNext()) {
                 String filedName = reader.nextName();
                 switch (filedName) {
+
                     case "id":
                         Long id = reader.nextLong();
                         entity.setId(id);
                         break;
+
                     case "code":
                         String code = reader.nextString();
                         entity.setCode(code);
                         break;
+
                     case "name":
                         if (reader.peek() == JsonToken.NULL) {
                             reader.nextNull();
@@ -115,10 +119,12 @@ public class JsonFileWriterAndReader {
                             entity.setName(name);
                         }
                         break;
+
                     case "tdxMarketType":
                         Integer tdxMarketType = reader.nextInt();
                         entity.setTdxMarketType(tdxMarketType);
                         break;
+
                     case "klineHis":
                         if (reader.peek() == JsonToken.NULL) {
                             reader.nextNull();
@@ -128,8 +134,20 @@ public class JsonFileWriterAndReader {
                             entity.setKlineHis(klineHis);
                         }
                         break;
+
+                    case "extDataHis":
+                        if (reader.peek() == JsonToken.NULL) {
+                            reader.nextNull();
+                            log.warn("extDataHis 为空     >>>     entity : {}", JSON.toJSONString(entity));
+                        } else {
+                            String extDataHis = reader.nextString();
+                            entity.setExtDataHis(extDataHis);
+                        }
+                        break;
+
                     default:
-                        reader.skipValue(); // 跳过未知字段
+                        // 跳过未知字段
+                        reader.skipValue();
                         break;
                 }
             }

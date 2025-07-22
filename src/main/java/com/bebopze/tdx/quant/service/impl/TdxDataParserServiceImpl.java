@@ -12,6 +12,7 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
+import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,6 +60,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private IBaseBlockNewRelaStockService iBaseBlockNewRelaStockService;
 
 
+    @Autowired
+    private IndexService indexService;
+
+
     /**
      * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
      */
@@ -80,6 +85,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         importBlockReport();
         //      自定义板块 - 个股     关联关系
         importBlockNewReport();
+
+
+        // ------------------------------------------------------------------------ 大盘量化
+
+
+        indexService.importMarketMidCycle();
 
 
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）

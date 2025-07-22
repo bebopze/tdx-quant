@@ -63,7 +63,7 @@ public class Generator {
 
                                      // .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
-                                     .addInclude("qa_block_new_rela_stock_his")
+                                     .addInclude(/*"qa_block_new_rela_stock_his",*/ "qa_market_mid_cycle")
 
                                      .entityBuilder()
                                      .formatFileName("%sDO")

@@ -899,10 +899,10 @@ public class TdxFunCheck {
         TdxFunResultDTO dto = new TdxFunResultDTO();
 
 
-        // ------------------------------------------------ 固定：TDX 系统指标
-
-
         dto.setCode(code);
+
+
+        // ------------------------------------------------------ 固定：TDX 系统指标
 
 
         // 时间	    开盘	    最高	    最低	    收盘	         成交量
@@ -934,6 +934,9 @@ public class TdxFunCheck {
         dto.setLowMonth(row.getDouble("L_M"));
         dto.setCloseMonth(row.getDouble("C_M"));
         // dto.setVolMonth(row.getLong("VOL_M"));
+
+
+        // ------------------------------------------------------ 自定义 指标
 
 
         // ------------------------------------------------ 基础指标（系统）

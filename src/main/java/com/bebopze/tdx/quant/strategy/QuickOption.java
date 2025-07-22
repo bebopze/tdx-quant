@@ -411,7 +411,7 @@ public class QuickOption {
         public String stockCode;
         public String stockName;
 
-        public double RPS和;                 // RPS和
+        public double RPS和;                // RPS和
         public double midTermChangePct;     // 中期涨幅
         public int 大均线多头;                // 大均线多头
         public int N日新高;                  // 60日新高

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.QaMarketMidCycleMapper">
+
+
+    <delete id="deleteAll">
+        DELETE
+        FROM qa_market_mid_cycle
+
+        /*   TRUNCATE TABLE qa_market_mid_cycle   */
+    </delete>
+
+
+    <select id="getByDate" resultType="com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO">
+        SELECT *
+
+        FROM qa_market_mid_cycle
+
+        WHERE date = #{date}
+    </select>
+
+
+</mapper>

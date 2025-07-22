@@ -3,7 +3,7 @@
 # 运行环境、端口
 spring.profiles.active: prod
 server.port: 7001
-spring.application.name: tdx-script
+spring.application.name: tdx-quant
 
 
 # 404 交给异常处理器处理
