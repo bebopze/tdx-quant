@@ -8,7 +8,7 @@ import java.util.Map;
 
 
 /**
- * B策略
+ * B策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
  *
  * @author: bebopze
  * @date: 2025/5/30
@@ -26,6 +26,9 @@ public interface BuyStrategy {
 
     /**
      * 根据 B策略     筛选出   ->   待买入 的 stockCodeList
+     *
+     *
+     * -     买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
      *
      * @param data
      * @param tradeDate

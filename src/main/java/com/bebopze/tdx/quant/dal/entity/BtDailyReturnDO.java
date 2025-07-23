@@ -88,6 +88,20 @@ public class BtDailyReturnDO implements Serializable {
     private BigDecimal marketValue;
 
     /**
+     * 仓位占比（%）
+     */
+    @Schema(description = "仓位占比（%）")
+    @TableField("position_pct")
+    private BigDecimal positionPct;
+
+    /**
+     * 仓位上限占比（%）
+     */
+    @Schema(description = "仓位上限占比（%）")
+    @TableField("position_limit_pct")
+    private BigDecimal positionLimitPct;
+
+    /**
      * 可用资金
      */
     @TableField("avl_capital")

@@ -39,6 +39,14 @@ public class BacktestBuyStrategyB implements BuyStrategy {
     }
 
 
+    /**
+     * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
+     *
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     * @return
+     */
     @Override
     public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap) {
 

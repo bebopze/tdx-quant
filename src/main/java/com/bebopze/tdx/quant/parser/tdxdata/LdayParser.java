@@ -56,6 +56,12 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 public class LdayParser {
 
 
+    /**
+     * 只记录   2017-1-1   以后的数据
+     */
+    private static final LocalDate KLINE_START_DATE = LocalDate.of(2017, 1, 1);
+
+
     public static void main(String[] args) {
 
 
@@ -322,8 +328,8 @@ public class LdayParser {
             }
 
 
-            // 只记录   2010-01-01   以后的数据
-            if (tradeDate.isBefore(LocalDate.of(2010, 1, 1))) {
+            // 只记录   2017-01-01   以后的数据
+            if (tradeDate.isBefore(KLINE_START_DATE)) {
                 continue;
             }
 

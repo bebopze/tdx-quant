@@ -466,7 +466,7 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
     private static boolean amountEquals(double a, double b) {
-        return Math.abs(a - b) <= 1 || equals(a, b);
+        return Math.abs(a - b) <= 1 || TdxFunCheck.equals(a, b, 500, 0.01);
     }
 
     private static boolean intEquals(double a, double b) {

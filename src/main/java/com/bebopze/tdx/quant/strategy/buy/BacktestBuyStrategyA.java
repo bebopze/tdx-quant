@@ -6,7 +6,9 @@ import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
+import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
@@ -14,7 +16,9 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +40,9 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
     @Autowired
+    private IndexService indexService;
+
+    @Autowired
     private TopBlockService topBlockService;
 
 
@@ -45,12 +52,32 @@ public class BacktestBuyStrategyA implements BuyStrategy {
     }
 
 
+    /**
+     * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
+     *
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     * @return
+     */
     @Override
     public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap) {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                主线板块
+        //                                                1、大盘 -> 仓位
+        // -------------------------------------------------------------------------------------------------------------
+
+        QaMarketMidCycleDO qaMarketMidCycleDO = indexService.marketInfo(tradeDate);
+        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+
+
+        // 总仓位-上限
+        BigDecimal positionPct = qaMarketMidCycleDO.getPositionPct();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                                                2、主线板块
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -63,7 +90,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                            （强势）个股
+        //                                                3、（强势）个股
         // -------------------------------------------------------------------------------------------------------------
 
 

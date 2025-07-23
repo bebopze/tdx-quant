@@ -109,6 +109,13 @@ public class BtTradeRecordDO implements Serializable {
     private BigDecimal amount;
 
     /**
+     * 仓位占比（%）
+     */
+    @Schema(description = "仓位占比（%）")
+    @TableField("position_pct")
+    private BigDecimal positionPct;
+
+    /**
      * 交易费用
      */
     @TableField("fee")

@@ -130,6 +130,10 @@ public class ConvertStockKline {
      * @return
      */
     public static List<KlineDTO> klines2DTOList(List<String> klines, int limit) {
+        if (CollectionUtils.isEmpty(klines)) {
+            return Lists.newArrayList();
+        }
+
 
         int size = klines.size();
         if (size > limit) {

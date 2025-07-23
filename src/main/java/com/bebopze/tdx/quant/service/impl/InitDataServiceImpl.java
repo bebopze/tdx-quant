@@ -219,7 +219,7 @@ public class InitDataServiceImpl implements InitDataService {
         data.blockDOList.forEach(e -> {
 
             String blockCode = e.getCode();
-            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(e.getKlineHis());
+            List<KlineDTO> klineDTOList = e.getKlineDTOList();
 
 
             LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
