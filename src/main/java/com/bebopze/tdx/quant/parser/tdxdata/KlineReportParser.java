@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
+import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
 
 
 /**
@@ -174,8 +175,8 @@ public class KlineReportParser {
                     BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(strArr[6]));
 
 
-                    // 只记录   2010-01-01   以后的数据
-                    if (date.isBefore(LocalDate.of(2010, 1, 1))) {
+                    // 只记录   2017-01-01   以后的数据
+                    if (date.isBefore(KLINE_START_DATE)) {
                         continue;
                     }
 

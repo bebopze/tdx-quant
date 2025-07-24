@@ -19,6 +19,7 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,9 +58,9 @@ public class LdayParser {
 
 
     /**
-     * 只记录   2017-1-1   以后的数据
+     * 只记录   2017-01-01   以后的数据
      */
-    private static final LocalDate KLINE_START_DATE = LocalDate.of(2017, 1, 1);
+    public static final LocalDate KLINE_START_DATE = LocalDate.of(2017, 1, 1);
 
 
     public static void main(String[] args) {
@@ -172,17 +173,34 @@ public class LdayParser {
         }
 
 
+        // ---------------------------------------------------------------
+
+
+        // 往期数据  ->  报表
+        List<LdayDTO> klineReport__ldayDTOList = null;
+        // 短期数据  ->  xx.day
+        List<LdayDTO> lday__ldayDTOList = null;
+
+
         try {
 
-            // 往期数据
-            List<LdayDTO> klineReport__ldayDTOList = Lists.newArrayList();
+            // 往期数据  ->  报表
+            klineReport__ldayDTOList = Lists.newArrayList();
             if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
+
                 // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
                 klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+
+
+                // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
+                if (size(klineReport__ldayDTOList) > 0) {
+                    klineReport__ldayDTOList.remove(klineReport__ldayDTOList.size() - 1);
+                }
             }
 
-            // 短期数据
-            List<LdayDTO> lday__ldayDTOList = parseByFilePath(filePath);
+
+            // 短期数据  ->  xx.day
+            lday__ldayDTOList = parseByFilePath(filePath);
 
 
             check(klineReport__ldayDTOList, lday__ldayDTOList);
@@ -190,9 +208,18 @@ public class LdayParser {
 
             return merge(klineReport__ldayDTOList, lday__ldayDTOList);
 
+
         } catch (Exception e) {
-            log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
-                      stockCode, filePath, e.getMessage(), e);
+
+
+            if (size(klineReport__ldayDTOList) == 0 && size(lday__ldayDTOList) == 0) {
+                // 准 新股  ->  未上市/上市失败                    688688 蚂蚁金服
+                log.warn("parseByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                         stockCode, filePath, size(klineReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+            } else {
+                log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , klineReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                          stockCode, filePath, size(klineReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+            }
         }
 
 
@@ -388,7 +415,29 @@ public class LdayParser {
         String stockCode = lday__ldayDTOList.get(0).code;
 
 
-        for (int i = 0; i < klineReport__ldayDTOList.size(); i++) {
+        // ---------------------------------------------
+
+
+        int size1 = klineReport__ldayDTOList.size();
+        int size2 = lday__ldayDTOList.size();
+
+        int size = Math.min(size1, size2);
+
+
+        if (size1 >= size2) {
+            if (size1 - size2 <= 1) {
+                // 839680（*ST广道）
+                log.warn("check err - 退市股     >>>     klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", size1, size2);
+            } else {
+                log.error("check err     >>>     klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", size1, size2);
+            }
+        }
+
+
+        // ---------------------------------------------
+
+
+        for (int i = 0; i < size; i++) {
 
             LdayDTO dto1 = klineReport__ldayDTOList.get(i);
             LdayDTO dto2 = lday__ldayDTOList.get(i);
@@ -439,7 +488,8 @@ public class LdayParser {
     }
 
 
-    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
+    private static List<LdayDTO> merge
+            (List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
 
 //        // 半年
 //        LocalDate dateLine = LocalDate.now().minusMonths(6);
@@ -468,6 +518,11 @@ public class LdayParser {
         }
 
         return dtoList;
+    }
+
+
+    private static int size(Collection list) {
+        return list == null ? 0 : list.size();
     }
 
 
