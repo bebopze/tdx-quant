@@ -14,6 +14,7 @@ import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -86,7 +87,8 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         // Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
 
         // 仅取 TOP1 板块
-        Set<String> filter__blockCodeSet = Sets.newHashSet(blockCode_count_Map.keySet().iterator().next().split("-")[0]);
+        Set<String> filter__blockCodeSet = MapUtils.isEmpty(blockCode_count_Map) ? Sets.newHashSet() :
+                Sets.newHashSet(blockCode_count_Map.keySet().iterator().next().split("-")[0]);
 
 
         // -------------------------------------------------------------------------------------------------------------

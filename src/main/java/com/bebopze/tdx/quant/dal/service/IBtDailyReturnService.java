@@ -20,4 +20,6 @@ public interface IBtDailyReturnService extends IService<BtDailyReturnDO> {
     BtDailyReturnDO getByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate);
 
     List<BtDailyReturnDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
+
+    List<BtDailyReturnDO> listByTaskId(Long taskId);
 }

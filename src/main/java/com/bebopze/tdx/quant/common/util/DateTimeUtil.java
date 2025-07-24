@@ -143,11 +143,11 @@ public class DateTimeUtil {
     }
 
 
-    public static boolean between(LocalDate now, LocalDate startDate, LocalDate endDate) {
+    public static boolean between(LocalDate date, LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("起始和结束日期不能为空");
         }
-        return !now.isBefore(startDate) && !now.isAfter(endDate);
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
     }
 
 

@@ -1,6 +1,9 @@
 package com.bebopze.tdx.quant.task;
 
+import com.bebopze.tdx.quant.service.ExtDataService;
+import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
+import com.bebopze.tdx.quant.service.TopBlockService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -21,6 +24,16 @@ public class TdxTask {
 
     @Autowired
     private TdxDataParserService tdxDataParserService;
+
+    @Autowired
+    private ExtDataService extDataService;
+
+
+    @Autowired
+    private IndexService indexService;
+
+    @Autowired
+    private TopBlockService topBlockService;
 
 
     /**
@@ -79,13 +92,24 @@ public class TdxTask {
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__reresKlineAll() {
-
-
         log.info("---------------------------- 任务 [reresKlineAll - 行情数据 更新入库]   执行 start");
+
+
+        // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll();
+
+        // 扩展（指标）  ->  ext_data_his
+        extDataService.refreshExtDataAll();
+
+
+        // 主线板块
+        topBlockService.refreshAll();
+
+        // 大盘量化
+        indexService.importMarketMidCycle();
+
+
         log.info("---------------------------- 任务 [reresKlineAll - 行情数据 更新入库]   执行 end");
-
-
     }
 
 

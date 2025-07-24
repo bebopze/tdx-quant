@@ -75,7 +75,10 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         LocalDate tradeDate = taskDO.getStartDate().minusDays(1);
-        LocalDate endDate = DateTimeUtil.min(taskDO.getEndDate(), data.dateList.get(data.dateList.size() - 1));
+        LocalDate endDate = DateTimeUtil.min(taskDO.getEndDate(), data.endDate());
+
+
+        // ---------------------------------------------------------
 
 
         while (tradeDate.isBefore(endDate)) {

@@ -13,6 +13,9 @@ import java.util.Map;
 public interface TopBlockService {
 
 
+    void refreshAll();
+
+
     /**
      * @param N
      */

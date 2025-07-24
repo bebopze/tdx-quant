@@ -63,6 +63,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     @Override
+    public void refreshAll() {
+        int N = 10;
+
+
+        nDayHighTask(N);
+        changePctTopTask(N);
+    }
+
+
+    @Override
     public void nDayHighTask(int N) {
 
         data = initDataService.initData();

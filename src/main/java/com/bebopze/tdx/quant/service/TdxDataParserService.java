@@ -13,6 +13,9 @@ public interface TdxDataParserService {
 
     void importAll();
 
+    /**
+     * 行情（kline_his）  ->   板块 + 个股
+     */
     void refreshKlineAll();
 
 

@@ -116,25 +116,11 @@ public class BtTaskDO implements Serializable {
     private BigDecimal annualReturnPct;
 
     /**
-     * 夏普比率
-     */
-    @TableField("sharpe_ratio")
-    @Schema(description = "夏普比率")
-    private BigDecimal sharpeRatio;
-
-    /**
-     * 最大回撤
-     */
-    @Schema(description = "最大回撤")
-    @TableField("max_drawdown_pct")
-    private BigDecimal maxDrawdownPct;
-
-    /**
      * 胜率
      */
-    @TableField("win_rate")
+    @TableField("win_pct")
     @Schema(description = "胜率")
-    private BigDecimal winRate;
+    private BigDecimal winPct;
 
     /**
      * 盈亏比
@@ -142,6 +128,41 @@ public class BtTaskDO implements Serializable {
     @Schema(description = "盈亏比")
     @TableField("profit_factor")
     private BigDecimal profitFactor;
+
+    /**
+     * 最大回撤（%）
+     */
+    @Schema(description = "最大回撤（%）")
+    @TableField("max_drawdown_pct")
+    private BigDecimal maxDrawdownPct;
+
+    /**
+     * 盈利天数 占比  =  盈利天数 / 总天数
+     */
+    @TableField("profit_day_pct")
+    @Schema(description = "盈利天数-占比")
+    private BigDecimal profitDayPct;
+
+    /**
+     * 夏普比率
+     */
+    @TableField("sharpe_ratio")
+    @Schema(description = "夏普比率")
+    private BigDecimal sharpeRatio;
+
+    /**
+     * 胜率-JSON详情
+     */
+    @Schema(description = "胜率-JSON详情")
+    @TableField("trade_stat_result")
+    private String tradeStatResult;
+
+    /**
+     * 最大回撤-JSON详情
+     */
+    @Schema(description = "最大回撤-JSON详情")
+    @TableField("drawdown_result")
+    private String drawdownResult;
 
     /**
      * 创建时间

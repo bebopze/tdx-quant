@@ -12,11 +12,13 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
+import com.bebopze.tdx.quant.service.ExtDataService;
 import com.bebopze.tdx.quant.service.IndexService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -63,6 +65,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Autowired
     private IndexService indexService;
 
+    @Autowired
+    private ExtDataService extDataService;
+
 
     /**
      * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
@@ -96,14 +101,19 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
 
 
-        // 行情
+        // 行情  ->  kline_his
         refreshKlineAll();
+
+
+        // 扩展（指标）  ->  ext_data_his
+        extDataService.refreshExtDataAll();
     }
 
 
     /**
-     * 板块/个股 - 行情     一键刷新
+     * 板块+个股 - 行情（kline_his）     一键刷新
      */
+    @SneakyThrows
     @Override
     public void refreshKlineAll() {
 
@@ -117,6 +127,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
             fillStockKlineAll();
         });
+
+
+        task1.get();
+        task2.get();
     }
 
 

@@ -50,6 +50,13 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
     @Override
+    public void refreshExtDataAll() {
+        calcBlockExtData();
+        calcStockExtData();
+    }
+
+
+    @Override
     public void calcStockExtData() {
 
 

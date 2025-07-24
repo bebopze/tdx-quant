@@ -35,4 +35,9 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         return baseMapper.listByTaskIdAndTradeDateRange(taskId, startTradeDate, endTradeDate);
     }
 
+    @Override
+    public List<BtTradeRecordDO> listByTaskId(Long taskId) {
+        return listByTaskIdAndTradeDateRange(taskId, null, null);
+    }
+
 }

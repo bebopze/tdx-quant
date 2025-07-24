@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -101,8 +102,11 @@ public class InitDataServiceImpl implements InitDataService {
     private void loadAllStockKline(LocalDate startDate, LocalDate endDate) {
 
 
-        startDate = startDate == null ? LocalDate.now().minusYears(3) : startDate;
-        endDate = endDate == null ? LocalDate.now() : endDate;
+        // null -> 全量行情（近10年）
+        startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
+        endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
+
+        log.info("loadAllStockKline     >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
         // -----------------------------------------------------------------------------
@@ -119,9 +123,14 @@ public class InitDataServiceImpl implements InitDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 行情起点
+        // 行情起点（往前倒推 250日 -> 1年）
         LocalDate dateLine_start = startDate.minusYears(1);
         LocalDate dateLine_end = endDate;
+
+        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
+
+
+        // -----------------
 
 
         // kline_his   ->   dateLine 截取   （ 内存爆炸 ）

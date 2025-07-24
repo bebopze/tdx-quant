@@ -28,15 +28,15 @@ public class TdxExtFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static List<KlineAggregator.PeriodDTO> toWeek(String[] date, double[] value) {
-        return KlineAggregator.toWeekly(date, value);
-        // List<MonthlyBullSignal.KlineBar> weeklyBarList = MonthlyBullSignal.aggregateToWeekly(dailyKlines);
-    }
-
-    public static List<KlineAggregator.PeriodDTO> toMonth(String[] date, double[] value) {
-        return KlineAggregator.toMonthly(date, value);
-        // List<MonthlyBullSignal.KlineBar> monthlyBarList = MonthlyBullSignal.aggregateToMonthly(dailyKlines);
-    }
+//    public static List<KlineAggregator.PeriodDTO> toWeek(String[] date, double[] value) {
+//        return KlineAggregator.toWeekly(date, value);
+//        // List<MonthlyBullSignal.KlineBar> weeklyBarList = MonthlyBullSignal.aggregateToWeekly(dailyKlines);
+//    }
+//
+//    public static List<KlineAggregator.PeriodDTO> toMonth(String[] date, double[] value) {
+//        return KlineAggregator.toMonthly(date, value);
+//        // List<MonthlyBullSignal.KlineBar> monthlyBarList = MonthlyBullSignal.aggregateToMonthly(dailyKlines);
+//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

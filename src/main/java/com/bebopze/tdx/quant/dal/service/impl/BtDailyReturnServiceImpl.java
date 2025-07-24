@@ -31,4 +31,9 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
         return baseMapper.listByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
 
+    @Override
+    public List<BtDailyReturnDO> listByTaskId(Long taskId) {
+        return listByTaskIdAndTradeDateRange(taskId, null, null);
+    }
+
 }

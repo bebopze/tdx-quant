@@ -1,9 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-
 import com.bebopze.tdx.quant.common.domain.dto.BlockDTO;
 
-import java.time.LocalDate;
 
 /**
  * @author: bebopze
@@ -15,5 +13,4 @@ public interface BlockService {
 
     Object listStock(String blockCode);
 
-    Object _100DayHigh(LocalDate date);
 }

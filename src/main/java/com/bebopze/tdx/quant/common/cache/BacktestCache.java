@@ -235,4 +235,17 @@ public class BacktestCache {
         return parentId == null ? null : block__idCodeMap.get(parentId);
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public LocalDate startDate() {
+        return dateList.get(0);
+    }
+
+    public LocalDate endDate() {
+        return dateList.get(dateList.size() - 1);
+    }
+
+
 }

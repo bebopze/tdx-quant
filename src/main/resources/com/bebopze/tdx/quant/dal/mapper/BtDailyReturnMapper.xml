@@ -33,9 +33,9 @@
             <![CDATA[     AND trade_date >= #{startTradeDate}     ]]>
         </if>
 
-
-        <![CDATA[     AND trade_date <= #{endTradeDate}
-        ]]>
+        <if test="endTradeDate != null">
+            <![CDATA[     AND trade_date <= #{endTradeDate}     ]]>
+        </if>
 
     </select>
 
