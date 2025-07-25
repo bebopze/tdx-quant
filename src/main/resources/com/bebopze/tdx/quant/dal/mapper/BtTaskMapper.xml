@@ -2,4 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BtTaskMapper">
 
+
+    <select id="listByTaskIdAndDate" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+
+        SELECT *
+
+
+        FROM bt_task
+
+
+        <where>
+            <if test="taskId != null">
+                <![CDATA[     AND id = #{taskId}     ]]>
+            </if>
+            <if test="startDate != null">
+                <![CDATA[     AND gmtCreate >= #{startDate}     ]]>
+            </if>
+            <if test="endDate != null">
+                <![CDATA[     AND gmtCreate <= #{endDate}     ]]>
+            </if>
+        </where>
+
+    </select>
+
+
 </mapper>

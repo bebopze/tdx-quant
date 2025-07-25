@@ -42,6 +42,18 @@
         FROM base_stock
     </select>
 
+    <select id="listByCursor" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT *
+
+        FROM base_stock
+
+        WHERE id > #{lastId}
+
+        ORDER BY id
+
+        LIMIT #{pageSize}
+    </select>
+
 
     <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
 

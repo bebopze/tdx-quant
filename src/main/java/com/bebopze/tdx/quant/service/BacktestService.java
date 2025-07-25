@@ -1,7 +1,10 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
+
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.List;
 
 
 /**
@@ -14,7 +17,10 @@ public interface BacktestService {
 
     void checkBacktest(Long taskId);
 
-    Map analysis(Long taskId);
+
+    List<BtTaskDO> listTask(Long taskId);
+
+    BacktestAnalysisDTO analysis(Long taskId);
 
     void holdingStockRule(String stockCode);
 

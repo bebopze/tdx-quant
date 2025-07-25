@@ -90,6 +90,10 @@ public class InitDataServiceImpl implements InitDataService {
         init = true;
 
 
+        // 异步  ->  write2Disk
+        // asyncWrite2Disk();
+
+
         return data;
     }
 
@@ -350,6 +354,35 @@ public class InitDataServiceImpl implements InitDataService {
         log.debug("loadAllBlockRelaStock - map     >>>     blockCode_stockCodeSet_Map.size : {}", JSON.toJSONString(data.blockCode_stockCodeSet_Map));
         log.debug("loadAllBlockRelaStock - map     >>>     stockCode_blockCodeSet_Map.size : {}", JSON.toJSONString(data.stockCode_blockCodeSet_Map));
     }
+
+
+//    /**
+//     * 异步  ->  write2Disk
+//     */
+//    public void asyncWrite2Disk() {
+//        // Executors.newCachedThreadPool().execute(() -> {
+//        long start = System.currentTimeMillis();
+//
+//
+//        JsonFileWriterAndReader.writeStringToFile___dataCache(data);
+//
+//
+//        log.info("asyncWrite2Disk - dataCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+//        // });
+//    }
+//
+//    /**
+//     * read From Disk
+//     *
+//     * @return
+//     */
+//    private BacktestCache readFromDisk() {
+//
+//        BacktestCache backtestCache = JsonFileWriterAndReader.readStringFromFile___dataCache();
+//        BeanUtils.copyProperties(backtestCache, data);
+//
+//        return backtestCache;
+//    }
 
 
 }

@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
@@ -14,8 +15,6 @@ import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.bebopze.tdx.quant.service.BacktestService;
 import com.bebopze.tdx.quant.service.StrategyService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -99,10 +98,12 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
     @Override
-    public Map analysis(Long taskId) {
+    public List<BtTaskDO> listTask(Long taskId) {
+        return btTaskService.listByTaskId(taskId);
+    }
 
-
-        BacktestCache data = backTestStrategy.getData();
+    @Override
+    public BacktestAnalysisDTO analysis(Long taskId) {
 
 
         // task
@@ -110,169 +111,17 @@ public class BacktestServiceImpl implements BacktestService {
         Assert.notNull(taskDO, String.format("task不存在：%s", taskId));
 
 
-        List<BtPositionRecordDO> positionRecordDOList = btPositionRecordService.listByTaskIdAndTradeDateRange(taskId, taskDO.getStartDate(), taskDO.getEndDate());
+        BacktestAnalysisDTO dto = new BacktestAnalysisDTO();
+
+        dto.setTaskId(taskId);
+        dto.setTask(taskDO);
+        dto.setDailyReturnList(btDailyReturnService.listByTaskId(taskId));
+        dto.setTradeRecordList(btTradeRecordService.listByTaskId(taskId));
+        dto.setPositionRecordList(btPositionRecordService.listByTaskId(taskId));
 
 
-        Map<LocalDate, Map<String, Set<String>>> date___block_stockSet_Map = new TreeMap<>();
-        // Map<String, Set<String>> block_stockSet_Map = new HashMap<>();
-
-
-        for (BtPositionRecordDO positionRecordDO : positionRecordDOList) {
-
-            LocalDate tradeDate = positionRecordDO.getTradeDate();
-
-
-            // 按 板块 分类
-            String stockCode = positionRecordDO.getStockCode();
-            String stockName = positionRecordDO.getStockName();
-            String stockCodeName = stockCode + "-" + stockName;
-
-
-            // String gn = data.getGn(stockCode);
-            // String yjhyLv1 = data.getYjhyLv1(stockCode);
-            String pthyLv2 = data.getPthyLv2(stockCode);
-
-
-            // 日期 - resultMap（板块 - 个股列表）
-            Map<String, Set<String>> block_stockSet_Map = date___block_stockSet_Map.computeIfAbsent(tradeDate, k -> Maps.newHashMap());
-            // 板块 - 个股列表
-            block_stockSet_Map.computeIfAbsent(pthyLv2, k -> Sets.newHashSet()).add(stockCodeName);
-        }
-
-
-        return date___block_stockSet_Map;
+        return dto;
     }
-
-
-//    private void execCheckBacktestDaily2(LocalDate preTradeDate, LocalDate tradeDate, BtTaskDO taskDO) {
-//        Long taskId = taskDO.getId();
-//
-//        // 1️⃣ 校验交易记录的 amount 与 price × quantity
-//        List<BtTradeRecordDO> tradeList = btTradeRecordService.listByTaskIdAndTradeDate(taskId, tradeDate);
-//
-//        double buyAmt = 0, sellAmt = 0;
-//        for (BtTradeRecordDO tr : tradeList) {
-//            double expect = tr.getPrice().doubleValue() * tr.getQuantity();
-//            double actual = tr.getAmount().doubleValue();
-//            if (!equals(expect, actual)) {
-//                throw new AssertionError(String.format(
-//                        "[%s] trade_id=%d amount mismatch: price*qty=%.2f but amount=%.2f",
-//                        tradeDate, tr.getId(), expect, actual
-//                ));
-//            }
-//            if (tr.getTradeType() == 1) buyAmt += actual;
-//            else sellAmt += actual;
-//        }
-//
-//        // 2️⃣ 校验持仓快照字段逻辑
-//        List<BtPositionRecordDO> positionList = btPositionRecordService.listByTaskIdAndTradeDate(taskId, tradeDate);
-//
-//        double computedMarketValue = 0;
-//        for (BtPositionRecordDO pos : positionList) {
-//            // quantity * close_price == market_value
-//            double expectMV = pos.getQuantity() * pos.getClosePrice().doubleValue();
-//            if (!equals(expectMV, pos.getMarketValue().doubleValue())) {
-//                throw new AssertionError(String.format(
-//                        "[%s] pos_id=%d market value mismatch: qty×close=%.2f but market_value=%.2f",
-//                        tradeDate, pos.getId(), expectMV, pos.getMarketValue().doubleValue()
-//                ));
-//            }
-//            // pnl calculation
-//            double expectPnl = (pos.getClosePrice().doubleValue() - pos.getAvgCostPrice().doubleValue())
-//                    * pos.getQuantity();
-//            if (!equals(expectPnl, pos.getUnrealizedPnl().doubleValue())) {
-//                throw new AssertionError(String.format(
-//                        "[%s] pos_id=%d unrealized_pnl mismatch: expect=%.2f actual=%.2f",
-//                        tradeDate, pos.getId(), expectPnl, pos.getUnrealizedPnl().doubleValue()
-//                ));
-//            }
-//            // pnl ratio
-//            double cost = pos.getAvgCostPrice().doubleValue() * pos.getQuantity();
-//            double expectRatio = cost == 0 ? 0 : expectPnl / cost;
-//            if (!equals(expectRatio, pos.getUnrealizedPnlRatio().doubleValue())) {
-//                throw new AssertionError(String.format(
-//                        "[%s] pos_id=%d pnl ratio mismatch: expect=%.4f actual=%.4f",
-//                        tradeDate, pos.getId(), expectRatio, pos.getUnrealizedPnlRatio().doubleValue()
-//                ));
-//            }
-//            computedMarketValue += pos.getMarketValue().doubleValue();
-//        }
-//
-//        // 3️⃣ 校验每日收益表
-//        BtDailyReturnDO daily = btDailyReturnService.getByTaskIdAndTradeDate(taskId, tradeDate);
-//        if (daily == null) {
-//            throw new AssertionError(tradeDate + " missing daily return record");
-//        }
-//
-//        // 校验字段一致性
-//        if (!equals(daily.getBuyCapital().doubleValue(), buyAmt)) {
-//            throw new AssertionError(String.format(
-//                    "[%s] buy_capital mismatch: record=%.2f sumTrades=%.2f",
-//                    tradeDate, daily.getBuyCapital().doubleValue(), buyAmt
-//            ));
-//        }
-//        if (!equals(daily.getSellCapital().doubleValue(), sellAmt)) {
-//            throw new AssertionError(String.format(
-//                    "[%s] sell_capital mismatch: record=%.2f sumTrades=%.2f",
-//                    tradeDate, daily.getSellCapital().doubleValue(), sellAmt
-//            ));
-//        }
-//        if (!equals(computedMarketValue, daily.getMarketValue().doubleValue())) {
-//            throw new AssertionError(String.format(
-//                    "[%s] market_value mismatch: expect=%.2f record=%.2f",
-//                    tradeDate, computedMarketValue, daily.getMarketValue().doubleValue()
-//            ));
-//        }
-//
-//        // 校验 capital = market_value + avl_capital
-//        double expectCapital = computedMarketValue + daily.getAvlCapital().doubleValue();
-//        if (!equals(expectCapital, daily.getCapital().doubleValue())) {
-//            throw new AssertionError(String.format(
-//                    "[%s] capital mismatch: expect=%.2f record=%.2f",
-//                    tradeDate, expectCapital, daily.getCapital().doubleValue()
-//            ));
-//        }
-//
-//        // 计算 profit_loss_amount = capital - prevCapital
-//        BtDailyReturnDO prevDaily = btDailyReturnService.getByTaskIdAndTradeDate(taskId, preTradeDate);
-//        double prevCapital = prevDaily != null
-//                ? prevDaily.getCapital().doubleValue()
-//                : taskDO.getInitialCapital().doubleValue();  // 第一日回测以 initial_capital 为前值
-//
-//        double expectPL = daily.getCapital().doubleValue() - prevCapital;
-//        if (!equals(expectPL, daily.getProfitLossAmount().doubleValue())) {
-//            throw new AssertionError(String.format(
-//                    "[%s] profit_loss_amount mismatch: expect=%.2f record=%.2f",
-//                    tradeDate, expectPL, daily.getProfitLossAmount().doubleValue()
-//            ));
-//        }
-//
-//        // daily_return = profit_loss_amount / prevCapital
-//        double expectReturn = prevCapital == 0 ? 0 : expectPL / prevCapital;
-//        if (!equals(expectReturn, daily.getDailyReturn().doubleValue())) {
-//            throw new AssertionError(String.format(
-//                    "[%s] daily_return mismatch: expect=%.6f record=%.6f",
-//                    tradeDate, expectReturn, daily.getDailyReturn().doubleValue()
-//            ));
-//        }
-//
-//        // nav = capital / initial_capital
-//        double expectNav = daily.getCapital().doubleValue() / taskDO.getInitialCapital().doubleValue();
-//        if (!equals(expectNav, daily.getNav().doubleValue())) {
-//            throw new AssertionError(String.format(
-//                    "[%s] nav mismatch: expect=%.6f record=%.6f",
-//                    tradeDate, expectNav, daily.getNav().doubleValue()
-//            ));
-//        }
-//
-//        log.info("[{}] check passed: buy=%.2f sell=%.2f mv=%.2f avl=%.2f cap=%.2f pnl=%.2f ret=%.4f nav=%.4f",
-//                 tradeDate,
-//                 daily.getBuyCapital(), daily.getSellCapital(),
-//                 daily.getMarketValue(), daily.getAvlCapital(),
-//                 daily.getCapital(), daily.getProfitLossAmount(),
-//                 daily.getDailyReturn(), daily.getNav()
-//        );
-//    }
 
 
     private void execCheckBacktestDaily(LocalDate preTradeDate, LocalDate tradeDate, BtTaskDO taskDO) {

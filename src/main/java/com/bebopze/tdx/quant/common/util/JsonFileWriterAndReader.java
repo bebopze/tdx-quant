@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.common.util;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONWriter;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Lists;
 import com.google.gson.stream.JsonReader;
@@ -30,6 +29,7 @@ public class JsonFileWriterAndReader {
     // -----------------------------------------------------------------------------------------------------------------
     //                                           1G以上   超大文件 读/写
     // -----------------------------------------------------------------------------------------------------------------
+
 
     /**
      * 大对象 写入
@@ -233,11 +233,12 @@ public class JsonFileWriterAndReader {
 
     public static void main(String[] args) {
 
+
         // writeStringToFile___listAllKline();
 
 
-        List<BaseStockDO> baseStockDOList = readStringFromFile___listAllKline();
-        System.out.println(JSON.toJSONString(baseStockDOList, JSONWriter.Feature.LargeObject));
+        List<BaseStockDO> baseStockDOList = readStringFromFile___stock_listAllKline();
+        System.out.println(baseStockDOList.size());
 
 
 //        String jsonContent = "{\"name\":\"张三\",\"age\":25,\"city\":\"北京\"}";
@@ -256,31 +257,46 @@ public class JsonFileWriterAndReader {
     /**
      * test 指标   用
      */
-    public static void writeStringToFile___listAllKline() {
+    public static void writeStringToFile___stock_listAllKline() {
 
         String filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
 
-        List<BaseStockDO> baseStockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
+        List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
 
 
+        writeLargeListToFile(stockDOList, filePath);
         // writeStringToFile(JSON.toJSONString(baseStockDOList, JSONWriter.Feature.LargeObject), filePath);
-        writeLargeListToFile(baseStockDOList, filePath);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                             stockDOList
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static final String stock_filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
+
+
+    /**
+     * stockDOList   ->   write
+     *
+     * @param stockDOList
+     */
+    public static void writeStringToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
+        writeLargeListToFile(stockDOList, stock_filePath);
+        log.debug("disk cache write  -  writeStringToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
     }
 
 
     /**
-     * test 指标   用
+     * stockDOList   ->   read
      */
-    public static List<BaseStockDO> readStringFromFile___listAllKline() {
+    public static List<BaseStockDO> readStringFromFile___stock_listAllKline() {
 
-        String filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
+        List<BaseStockDO> stockDOList = readLargeJsonFile(stock_filePath);
+        log.debug("disk cache read  -  readStringFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
 
-
-        // String readContent = readStringFromFile(filePath);
-        List<BaseStockDO> baseStockDOList = readLargeJsonFile(filePath);
-
-
-        return baseStockDOList;
+        return stockDOList;
     }
 
 

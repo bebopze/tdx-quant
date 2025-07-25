@@ -90,7 +90,7 @@ public class BacktestCache {
         return "BacktestCache{" +
                 "dateIndexMap=" + dateIndexMap.size() +
                 ", dateList=" + dateList.size() +
-                ", stockDOList=" + stockDOList.size() +
+                ", stockDOList=" + (stockDOList == null ? 0 : stockDOList.size()) +
                 ", codeStockMap=" + codeStockMap.size() +
                 ", stock__idCodeMap=" + stock__idCodeMap.size() +
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +

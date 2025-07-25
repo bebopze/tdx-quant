@@ -564,7 +564,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             if (stockId == null || CollectionUtils.isEmpty(blockCodeSet)) {
-                log.error("个股-板块   err     >>>     stockId : {} , blockCodeSet : {}", stockId, JSON.toJSONString(blockCodeSet));
+                log.error("个股-板块   err     >>>     stockCode : {} , stockId : {} , blockCodeSet : {}",
+                          stockCode, stockId, JSON.toJSONString(blockCodeSet));
                 return;
             }
 
@@ -575,6 +576,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 BaseBlockRelaStockDO baseBlockRelaStockDO = new BaseBlockRelaStockDO();
                 baseBlockRelaStockDO.setStockId(stockId);
                 baseBlockRelaStockDO.setBlockId(block__codeIdMap.get(blockCode));
+
+
+                if (null == baseBlockRelaStockDO.getBlockId()) {
+                    log.error("板块-个股   NPE     >>>     stockCode : {} , stockId : {} , blockCode : {} , blockId : {}",
+                              stockCode, stockId, blockCode, baseBlockRelaStockDO.getBlockId());
+                    return;
+                }
 
 
                 doList.add(baseBlockRelaStockDO);

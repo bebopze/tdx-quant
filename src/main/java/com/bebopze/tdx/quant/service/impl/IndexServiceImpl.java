@@ -8,7 +8,6 @@ import com.bebopze.tdx.quant.service.IndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,7 +31,6 @@ public class IndexServiceImpl implements IndexService {
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void importMarketMidCycle() {
 
         List<IndexReportParser.TdxFunResultDTO> dtoList = IndexReportParser.parse();

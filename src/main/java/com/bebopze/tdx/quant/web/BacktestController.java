@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.service.BacktestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 
@@ -51,9 +54,16 @@ public class BacktestController {
     }
 
 
+    @Operation(summary = "回测 - task列表", description = "回测 - task列表")
+    @GetMapping("/task/list")
+    public Result<List<BtTaskDO>> listTask(@RequestParam(required = false) Long taskId) {
+        return Result.SUC(backTestService.listTask(taskId));
+    }
+
+
     @Operation(summary = "回测 - 结果分析", description = "回测 - 结果分析")
     @GetMapping("/analysis")
-    public Result<Map> analysis(@RequestParam(defaultValue = "1") Long taskId) {
+    public Result<BacktestAnalysisDTO> analysis(@RequestParam(defaultValue = "1") Long taskId) {
         return Result.SUC(backTestService.analysis(taskId));
     }
 

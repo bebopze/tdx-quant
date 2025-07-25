@@ -50,7 +50,8 @@ public class IndexController {
      */
     @Operation(summary = "大盘量化 - info", description = "大盘量化 - info")
     @GetMapping(value = "/marketMidCycle/info")
-    public Result<QaMarketMidCycleDO> marketInfo(@RequestParam(defaultValue = "2025-07-21") LocalDate date) {
+    public Result<QaMarketMidCycleDO> marketInfo(@RequestParam(defaultValue = "2025-07-21", required = false) LocalDate date) {
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(indexService.marketInfo(date));
     }
 

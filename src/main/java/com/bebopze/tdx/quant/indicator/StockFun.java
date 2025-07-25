@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -104,6 +105,7 @@ public class StockFun {
 
 
     public StockFun(String code, BaseStockDO stockDO) {
+        Assert.notNull(stockDO, String.format("stockDO:[%s] is null  ->  请检查 dataCache 是否为null", code));
 
 
         String stockName = stockDO.getName();

@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +34,9 @@ public class BlockFun extends StockFun {
 
 
     public BlockFun(String code, BaseBlockDO blockDO) {
+        Assert.notNull(blockDO, String.format("blockDO:[%s] is null  ->  请检查 dataCache 是否为null", code));
+
+
         // super(null);
 
 

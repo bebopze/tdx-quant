@@ -21,4 +21,6 @@ public interface IBtPositionRecordService extends IService<BtPositionRecordDO> {
 
     List<BtPositionRecordDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
 
+    List<BtPositionRecordDO> listByTaskId(Long taskId);
+
 }

@@ -1,20 +1,22 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
  * @author bebopze
  * @since 2025-05-09
  */
+@Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStockDO> implements IBaseStockService {
@@ -128,8 +131,24 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
     @Override
     public List<BaseStockDO> listAllKline() {
-        return baseMapper.listAllKline();
+
+
+        // listAllFromDiskCache     >>>     totalTime : 6.9s
+        return listAllFromDiskCache();
+
+
+        // listByCursor     >>>     totalTime : 52.4s
+        // return listByCursor();
+
+
+        // listAllKline     >>>     totalTime : 52.7s
+        // return baseMapper.listAllKline();
+
+
+        // 不可用（OFFSET  =>  全表顺序读 + 丢弃）
+        // return listAllPageQuery();
     }
+
 
     @Override
     public List<BaseStockDO> listAllSimple() {
@@ -154,4 +173,98 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * disk cache   =>   本地 file读取     ->     不走DB 网路IO
+     *
+     * @return
+     */
+    private List<BaseStockDO> listAllFromDiskCache() {
+        long start = System.currentTimeMillis();
+
+
+        // read Cache
+        List<BaseStockDO> list = JsonFileWriterAndReader.readStringFromFile___stock_listAllKline();
+
+        if (CollectionUtils.isEmpty(list)) {
+            list = baseMapper.listAllKline();
+
+
+            // write Cache
+            JsonFileWriterAndReader.writeStringToFile___stock_listAllKline(list);
+        }
+
+
+        //  listAllFromDiskCache     >>>     totalTime : 6.9s
+        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        return list;
+    }
+
+
+    private List<BaseStockDO> listByCursor() {
+        long start = System.currentTimeMillis();
+
+
+        Long lastId = 0L;
+        int pageSize = 50;
+
+
+        List<BaseStockDO> list = Lists.newArrayList();
+
+
+        while (true) {
+
+            List<BaseStockDO> pageList = baseMapper.listByCursor(lastId, pageSize);
+            if (pageList.isEmpty()) {
+                break;
+            }
+
+            list.addAll(pageList);
+            lastId = pageList.get(pageList.size() - 1).getId();
+        }
+
+
+        log.info("listByCursor     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        return list;
+    }
+
+
+    /**
+     * 不可用（OFFSET  =>  全表顺序读 + 丢弃）
+     *
+     * @return
+     */
+    private List<BaseStockDO> listAllPageQuery() {
+        long start = System.currentTimeMillis();
+
+
+        int pageNum = 1;
+        int pageSize = 500;
+
+
+        List<BaseStockDO> list = Lists.newArrayList();
+
+
+        boolean hasNext = true;
+        while (hasNext) {
+
+
+            // OFFSET  =>  全表顺序读 + 丢弃
+            PageHelper.startPage(pageNum++, pageSize);
+            List<BaseStockDO> pageList = baseMapper.listAllKline();
+
+            list.addAll(pageList);
+
+
+            PageInfo<BaseStockDO> page = new PageInfo<>(pageList);
+            hasNext = page.isHasNextPage();
+        }
+
+
+        log.info("listAllPageQuery     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        return list;
+    }
 }
