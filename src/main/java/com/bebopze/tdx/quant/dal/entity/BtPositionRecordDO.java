@@ -126,8 +126,8 @@ public class BtPositionRecordDO implements Serializable {
      * 盈亏率
      */
     @Schema(description = "盈亏率")
-    @TableField("unrealized_pnl_ratio")
-    private BigDecimal unrealizedPnlRatio;
+    @TableField("unrealized_pnl_pct")
+    private BigDecimal unrealizedPnlPct;
 
     /**
      * 首次-买入日期

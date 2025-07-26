@@ -1259,8 +1259,8 @@ public class BacktestStrategy {
             positionRecordDO.setPositionPct(positionPct);
             // 盈亏额
             positionRecordDO.setUnrealizedPnl(of(pnl));
-            // 盈亏率 = 盈亏额 / 总成本
-            positionRecordDO.setUnrealizedPnlRatio(of(pnl / totalCost));
+            // 盈亏率（%） = 盈亏额 / 总成本  x 100%
+            positionRecordDO.setUnrealizedPnlPct(of(pnl * 100 / totalCost));
             positionRecordDO.setBuyDate(positionInfo.buyDate);
             positionRecordDO.setHoldingDays(positionInfo.getHoldingDays(endTradeDate, data.dateIndexMap));
 

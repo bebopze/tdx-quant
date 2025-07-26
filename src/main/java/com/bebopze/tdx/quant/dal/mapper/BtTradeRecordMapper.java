@@ -25,4 +25,7 @@ public interface BtTradeRecordMapper extends BaseMapper<BtTradeRecordDO> {
     List<BtTradeRecordDO> listByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
                                                         @Param("startTradeDate") LocalDate startTradeDate,
                                                         @Param("endTradeDate") LocalDate endTradeDate);
+
+    List<BtTradeRecordDO> listByTaskIdAndStockCode(@Param("taskId") Long taskId,
+                                                   @Param("stockCode") String stockCode);
 }

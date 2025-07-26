@@ -140,12 +140,12 @@ public class BtTradeRecordDO implements Serializable {
     // ---------------------------------------------------------
 
 
-    /**
-     * 更新时间
-     */
-    @TableField(value = "total_cost", exist = false)
-    @Schema(description = "总成本")
-    private LocalDateTime totalCost;
+//    /**
+//     * 总成本
+//     */
+//    @TableField(value = "total_cost", exist = false)
+//    @Schema(description = "总成本")
+//    private BigDecimal totalCost;
 
 
 }

@@ -113,14 +113,18 @@ public class BacktestServiceImpl implements BacktestService {
 
         BacktestAnalysisDTO dto = new BacktestAnalysisDTO();
 
-        dto.setTaskId(taskId);
         dto.setTask(taskDO);
-        dto.setDailyReturnList(btDailyReturnService.listByTaskId(taskId));
         dto.setTradeRecordList(btTradeRecordService.listByTaskId(taskId));
         dto.setPositionRecordList(btPositionRecordService.listByTaskId(taskId));
+        dto.setDailyReturnList(btDailyReturnService.listByTaskId(taskId));
 
 
         return dto;
+    }
+
+    @Override
+    public List<BtTradeRecordDO> stockTradeRecordList(Long taskId, String stockCode) {
+        return btTradeRecordService.listByTaskIdAndStockCode(taskId, stockCode);
     }
 
 
@@ -188,7 +192,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
             double unrealizedPnl = positionRecordDO.getUnrealizedPnl().doubleValue();
-            double unrealizedPnlRatio = positionRecordDO.getUnrealizedPnlRatio().doubleValue();
+            double unrealizedPnlPct = positionRecordDO.getUnrealizedPnlPct().doubleValue();
 
             LocalDate buyDate = positionRecordDO.getBuyDate();
             int holdingDays = positionRecordDO.getHoldingDays();

@@ -18,15 +18,25 @@ import java.util.List;
 @Data
 public class BacktestAnalysisDTO {
 
-    private Long taskId;
 
-
+    /**
+     * 回测task - 汇总结果
+     */
     private BtTaskDO task;
 
 
+    /**
+     * 交易记录
+     */
     private List<BtTradeRecordDO> tradeRecordList;
 
+    /**
+     * 持仓记录
+     */
     private List<BtPositionRecordDO> positionRecordList;
 
+    /**
+     * 收益记录
+     */
     private List<BtDailyReturnDO> dailyReturnList;
 }

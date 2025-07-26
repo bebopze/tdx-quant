@@ -40,6 +40,24 @@
     </select>
 
 
+    <select id="listByTaskIdAndStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
+
+        SELECT *
+
+
+        FROM bt_trade_record
+
+
+        WHERE task_id = #{taskId}
+
+
+        <if test="stockCode != null">
+            <![CDATA[     AND stock_code = #{stockCode}     ]]>
+        </if>
+
+    </select>
+
+
     <select id="listByTaskIdAndTradeDate_2" resultType="com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO">
 
         SELECT task_id,

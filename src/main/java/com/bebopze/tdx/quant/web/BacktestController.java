@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
+import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.bebopze.tdx.quant.service.BacktestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -65,6 +66,13 @@ public class BacktestController {
     @GetMapping("/analysis")
     public Result<BacktestAnalysisDTO> analysis(@RequestParam(defaultValue = "1") Long taskId) {
         return Result.SUC(backTestService.analysis(taskId));
+    }
+
+    @Operation(summary = "回测 - 结果分析", description = "回测 - 结果分析")
+    @GetMapping("/tradeRecord/stock")
+    public Result<List<BtTradeRecordDO>> stockTradeRecordList(@RequestParam(defaultValue = "1") Long taskId,
+                                                              @RequestParam(defaultValue = "300587") String stockCode) {
+        return Result.SUC(backTestService.stockTradeRecordList(taskId, stockCode));
     }
 
 
