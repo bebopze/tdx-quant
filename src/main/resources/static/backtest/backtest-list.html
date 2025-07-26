@@ -4,44 +4,73 @@
     <meta charset="UTF-8">
     <title>回测任务列表</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 设置表格容器支持横向滚动 */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* 移动端滑动更流畅 */
+        }
+
+        /* 固定每列的最小宽度 */
+        .table-bordered th,
+        .table-bordered td {
+            min-width: 120px; /* 根据实际列数调整 */
+            white-space: nowrap; /* 防止内容换行 */
+            text-align: center; /* 居中对齐，视觉更整洁 */
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
     <h2>回测任务列表</h2>
 
-    <!-- 筛表单 -->
+    <!-- 筛选表单 -->
     <form id="filterForm">
         <div class="row mb-3">
-            <div class="col-md-3">
+            <div class="col-md-3 form-group">
                 <input type="text" class="form-control" id="taskId" placeholder="任务ID">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 form-group">
                 <input type="date" class="form-control" id="startDate">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 form-group">
                 <input type="date" class="form-control" id="endDate">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 form-group">
                 <button type="button" class="btn btn-primary" onclick="loadTasks()">查询</button>
             </div>
         </div>
     </form>
 
-    <!-- 任务列表 -->
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>任务ID</th>
-            <th>策略</th>
-            <th>回测周期</th>
-            <th>初始资金</th>
-            <th>操作</th>
-        </tr>
-        </thead>
-        <tbody id="taskTableBody">
-        <!-- 动态加载 -->
-        </tbody>
-    </table>
+    <!-- 表格容器（支持横向滚动） -->
+    <div class="table-container">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>任务ID</th>
+                <th>策略</th>
+                <th>回测周期</th>
+                <th>初始资金</th>
+                <th>结束资金</th>
+                <th>初始净值</th>
+                <th>结束净值</th>
+                <th>总天数</th>
+                <th>总收益率（%）</th>
+                <th>年化收益率（%）</th>
+                <th>胜率（%）</th>
+                <th>盈亏比</th>
+                <th>最大回撤（%）</th>
+                <th>盈利天数-占比（%）</th>
+                <th>夏普比率</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="taskTableBody">
+            <!-- 动态加载 -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -64,10 +93,22 @@
                 data.data.forEach(task => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-              <td>${task.id}</td>
+              <td><a href="backtest-analysis.html?taskId=${task.id}">${task.id}</a></td>
               <td>${task.buyStrategy} / ${task.sellStrategy}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
+              <td>${task.finalCapital}</td>
+              <td>${task.initialNav}</td>
+              <td>${task.finalNav}</td>
+              <td>${task.totalDay}</td>
+              <td>${task.totalReturnPct}</td>
+              <td>${task.annualReturnPct}</td>
+              <td>${task.winPct}</td>
+              <td>${task.profitFactor}</td>
+              <td>${task.maxDrawdownPct}</td>
+              <td>${task.profitDayPct}</td>
+              <td>${task.sharpeRatio}</td>
+              <td>${task.gmtCreate}</td>
               <td><a href="backtest-analysis.html?taskId=${task.id}">查看详情</a></td>
             `;
                     tbody.appendChild(tr);

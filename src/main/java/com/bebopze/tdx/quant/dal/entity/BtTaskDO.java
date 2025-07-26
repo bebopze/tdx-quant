@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -102,24 +103,24 @@ public class BtTaskDO implements Serializable {
     private Integer totalDay;
 
     /**
-     * 总收益率
+     * 总收益率（%）
      */
-    @Schema(description = "总收益率")
+    @Schema(description = "总收益率（%）")
     @TableField("total_return_pct")
     private BigDecimal totalReturnPct;
 
     /**
-     * 年化收益率
+     * 年化收益率（%）
      */
-    @Schema(description = "年化收益率")
+    @Schema(description = "年化收益率（%）")
     @TableField("annual_return_pct")
     private BigDecimal annualReturnPct;
 
     /**
-     * 胜率
+     * 胜率（%）
      */
     @TableField("win_pct")
-    @Schema(description = "胜率")
+    @Schema(description = "胜率（%）")
     private BigDecimal winPct;
 
     /**
@@ -169,6 +170,7 @@ public class BtTaskDO implements Serializable {
      */
     @TableField("gmt_create")
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtCreate;
 
     /**
@@ -176,5 +178,6 @@ public class BtTaskDO implements Serializable {
      */
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtModify;
 }

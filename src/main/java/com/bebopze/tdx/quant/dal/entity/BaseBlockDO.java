@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -192,6 +193,7 @@ public class BaseBlockDO implements Serializable {
      */
     @TableField("gmt_create")
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtCreate;
 
     /**
@@ -199,6 +201,7 @@ public class BaseBlockDO implements Serializable {
      */
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtModify;
 
 
