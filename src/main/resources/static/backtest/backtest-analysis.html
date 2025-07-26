@@ -10,6 +10,29 @@
             margin-left: 4px;
             font-size: 12px;
         }
+
+        /* 确保图表容器有足够的宽度 */
+        #stockChartCard {
+            width: 100%;
+        }
+
+        #stockChartCard .card-body {
+            padding: 0; /* 移除默认内边距 */
+        }
+
+        #stockChart {
+            width: 100%;
+            height: 600px;
+        }
+
+        /* 确保卡片内容不被压缩 */
+        .card {
+            width: 100%;
+        }
+
+        .card-body {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -72,7 +95,7 @@
                                                                                        id="sortUnrealizedPnlPosition"></span>
                     </th>
                     <th onclick="sortTable('unrealizedPnlPct', 'position')">盈亏率(%)<span class="sort-icon"
-                                                                                        id="sortUnrealizedPnlPctPosition"></span>
+                                                                                           id="sortUnrealizedPnlPctPosition"></span>
                     </th>
                     <th onclick="sortTable('buyDate', 'position')">买入日期<span class="sort-icon"
                                                                                  id="sortBuyDatePosition"></span></th>
@@ -89,7 +112,7 @@
     </div>
 
     <!-- 交易记录 -->
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header">当日交易记录</div>
         <div class="card-body">
             <table class="table table-bordered" id="tradeTable">
@@ -124,11 +147,46 @@
             </table>
         </div>
     </div>
+
+    <!-- 个股K线图 -->
+    <div class="card mb-4 d-none" id="stockChartCard">
+        <div class="card-header">个股K线图</div>
+        <div class="card-body p-0">
+            <div id="stockChart"></div>
+        </div>
+    </div>
+
+    <!-- B/S详情 -->
+    <div class="card mb-4 d-none" id="bsDetailsCard">
+        <div class="card-header">B/S详情 - <span id="kline_bs_record"></span></div>
+        <div class="card-body">
+            <table class="table table-bordered" id="bsDetailsTable">
+                <thead>
+                <tr>
+                    <th>B/S类型</th>
+                    <th>日期</th>
+                    <th>价格</th>
+                    <th>数量</th>
+                    <th>成交金额</th>
+                    <th>仓位占比（%）</th>
+                    <th>盈亏额</th>
+                    <th>盈亏率（%）</th>
+                    <th>交易信号</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script>
     let analysis = null;
     let currentDate = '';
+    let stockAnalysis = null;
 
     const taskId = new URLSearchParams(window.location.search).get('taskId');
     const returnChartDom = document.getElementById('returnChart');
@@ -231,11 +289,11 @@
                             const index = params[0].dataIndex;
                             const item = dailyReturns[index];
                             return `
-                <div>
-                  <p><strong>日期:</strong> ${item.tradeDate}</p>
-                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
-                  <p>净值: ${item.nav.toFixed(4)}</p>
-                </div>`;
+                                <div>
+                                  <p><strong>日期:</strong> ${item.tradeDate}</p>
+                                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
+                                  <p>净值: ${item.nav.toFixed(4)}</p>
+                                </div>`;
                         }
                     },
                     xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
@@ -261,19 +319,19 @@
                             const index = params[0].dataIndex;
                             const item = dailyReturns[index];
                             return `
-                <div>
-                  <p><strong>日期:</strong> ${item.tradeDate}</p>
-                  <p>净值: ${item.nav.toFixed(4)}</p>
-                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
-                  <p>当日盈亏额: ${item.profitLossAmount}</p>
-                  <p>总资金: ${item.capital}</p>
-                  <p>持仓市值: ${item.marketValue}</p>
-                  <p>仓位占比（%）: ${item.positionPct}</p>
-                  <p>仓位上限占比（%）: ${item.positionLimitPct}</p>
-                  <p>可用资金: ${item.avlCapital}</p>
-                  <p>买入金额: ${item.buyCapital}</p>
-                  <p>卖出金额: ${item.sellCapital}</p>
-                </div>`;
+                                <div>
+                                  <p><strong>日期:</strong> ${item.tradeDate}</p>
+                                  <p>净值: ${item.nav.toFixed(4)}</p>
+                                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
+                                  <p>当日盈亏额: ${item.profitLossAmount}</p>
+                                  <p>总资金: ${item.capital}</p>
+                                  <p>持仓市值: ${item.marketValue}</p>
+                                  <p>仓位占比（%）: ${item.positionPct}</p>
+                                  <p>仓位上限占比（%）: ${item.positionLimitPct}</p>
+                                  <p>可用资金: ${item.avlCapital}</p>
+                                  <p>买入金额: ${item.buyCapital}</p>
+                                  <p>卖出金额: ${item.sellCapital}</p>
+                                </div>`;
                         }
                     },
                     xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
@@ -370,21 +428,21 @@
 
         filtered.forEach(item => {
             const tr = document.createElement('tr');
+            tr.addEventListener('click', () => loadStockInfo(item.stockCode));
             tr.innerHTML = `
-      <td>${item.stockCode}</td>
-      <td>${item.tradeDate}</td>
-      <td>${item.stockName}</td>
-      <td>${item.avgCostPrice}</td>
-      <td>${item.closePrice}</td>
-      <td>${item.quantity}</td>
-      <td>${item.avlQuantity}</td>
-      <td>${item.marketValue}</td>
-      <td>${item.positionPct}</td>
-      <td>${item.unrealizedPnl}</td>
-      <td>${item.unrealizedPnlPct}</td>
-      <td>${item.buyDate}</td>
-      <td>${item.holdingDays}</td>
-    `;
+                <td>${item.stockCode}</td>
+                <td>${item.tradeDate}</td>
+                <td>${item.stockName}</td>
+                <td>${item.avgCostPrice}</td>
+                <td>${item.closePrice}</td>
+                <td>${item.quantity}</td>
+                <td>${item.avlQuantity}</td>
+                <td>${item.marketValue}</td>
+                <td>${item.positionPct}</td>
+                <td>${item.unrealizedPnl}</td>
+                <td>${item.unrealizedPnlPct}</td>
+                <td>${item.buyDate}</td>
+                <td>${item.holdingDays}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -440,20 +498,169 @@
 
         filtered.forEach(item => {
             const tr = document.createElement('tr');
+            tr.addEventListener('click', () => loadStockInfo(item.stockCode));
             tr.innerHTML = `
-        <td>${item.tradeDate}</td>
-        <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
-        <td>${item.tradeSignal}</td>
-        <td>${item.stockCode}</td>
-        <td>${item.stockName}</td>
-        <td>${item.price}</td>
-        <td>${item.quantity}</td>
-        <td>${item.amount}</td>
-        <td>${item.positionPct}</td>
-        <td>${item.fee}</td>
-      `;
+                <td>${item.tradeDate}</td>
+                <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
+                <td>${item.tradeSignal}</td>
+                <td>${item.stockCode}</td>
+                <td>${item.stockName}</td>
+                <td>${item.price}</td>
+                <td>${item.quantity}</td>
+                <td>${item.amount}</td>
+                <td>${item.positionPct}</td>
+                <td>${item.fee}</td>`;
             tbody.appendChild(tr);
         });
+    }
+
+    // 加载个股信息并展示K线图和B/S详情
+    async function loadStockInfo(stockCode) {
+        try {
+            const response = await fetch(`/api/stock/info?stockCode=${stockCode}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                alert('加载个股信息失败: ' + data.msg);
+                return;
+            }
+
+            stockAnalysis = data.data;
+
+            displayStockChart(stockAnalysis.klineDTOList, stockAnalysis.code, stockAnalysis.name);
+            displayBSDetails(stockAnalysis.code);
+        } catch (error) {
+            console.error('接口请求失败:', error);
+            alert('加载个股信息失败，请检查网络或接口是否正常');
+        }
+    }
+
+    // 展示个股K线图
+    function displayStockChart(klines, stockCode, stockName) {
+        // 1. 显示容器
+        const card = document.getElementById('stockChartCard');
+        card.classList.remove('d-none');
+
+        // 2. 清理旧实例并初始化
+        const chartDom = document.getElementById('stockChart');
+        echarts.dispose(chartDom);
+        const myChart = echarts.init(chartDom);
+
+        // 3. 构造数据和配置
+        const dates = klines.map(item => item.date);
+        const option = {
+            title: {
+                text: `${stockName} (${stockCode}) K线图`,
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                }
+            },
+            xAxis: [{
+                type: 'category',
+                data: dates,
+                scale: true,
+                boundaryGap: false,
+                axisLine: {onZero: false},
+                splitLine: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax',
+                axisLabel: {
+                    interval: 0,
+                    rotate: 45
+                }
+            }],
+            yAxis: [{
+                type: 'value',
+                scale: true,
+                splitArea: {show: true}
+            }],
+            dataZoom: [
+                {type: 'inside', start: 0, end: 100},
+                {show: true, type: 'slider', y: '90%', start: 0, end: 100}
+            ],
+            series: [
+                {
+                    name: '股价',
+                    type: 'candlestick',
+                    data: klines.map(item => [item.open, item.close, item.low, item.high]),
+                    itemStyle: {color: '#ec0000', color0: '#00da3c'}
+                },
+                ...getBuySellPoints(stockCode).map(point => ({
+                    name: point.type,
+                    type: 'scatter',
+                    symbolSize: 10,
+                    label: {show: true, formatter: '{@[0]}'},
+                    data: [[point.date, point.price]]
+                }))
+            ]
+        };
+
+        // 4. 渲染并 resize
+        myChart.setOption(option);
+        setTimeout(() => myChart.resize(), 100);
+    }
+
+    // 获取买卖点
+    function getBuySellPoints(stockCode) {
+        const points = [];
+        const trades = analysis.tradeRecordList.filter(record => record.stockCode === stockCode);
+        trades.forEach(trade => {
+            points.push({
+                date: trade.tradeDate,
+                price: trade.price,
+                type: trade.tradeType === 1 ? '买入' : '卖出'
+            });
+        });
+        return points;
+    }
+
+    // 展示B/S详情
+    function displayBSDetails(stockCode) {
+
+        // B/S详情：stockCode-stockName
+        document.getElementById('kline_bs_record').textContent = `${stockAnalysis.name}（${stockCode}）`;
+
+
+        const tbody = document.querySelector('#bsDetailsTable tbody');
+        if (!tbody) {
+            console.error('未找到 #bsDetailsTable tbody');
+            return;
+        }
+
+        tbody.innerHTML = '';
+        if (!analysis || !analysis.tradeRecordList) {
+            tbody.innerHTML = '<tr><td colspan="8">暂无B/S记录</td></tr>';
+            return;
+        }
+
+        const filtered = analysis.tradeRecordList.filter(item => item.stockCode === stockCode);
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">该股票无B/S记录</td></tr>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
+                <td>${item.tradeDate}</td>
+                <td>${item.price}</td>
+                <td>${item.quantity}</td>
+                <td>${item.amount}</td>
+                <td>${item.positionPct}</td>
+                <td>${item.profitLossAmount}</td>
+                <td>${item.profitLossPct}</td>
+                <td>${item.tradeSignal}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('bsDetailsCard').classList.remove('d-none');
     }
 
     window.onload = loadAnalysis;
