@@ -43,7 +43,7 @@ public class QueryCreditNewPosResp implements Serializable {
 
     // 可用资金
     private BigDecimal accessmoney;
-    // 剩余额度（融资）
+    // 剩余额度（ = 融资授信 - 已融资 ）
     private BigDecimal acreditavl;
     // 可取资金
     private BigDecimal avalmoney;

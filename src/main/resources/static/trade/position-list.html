@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的持仓</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .sort-icon {
+            margin-left: 4px;
+            font-size: 12px;
+        }
+
+        .buy-button {
+            color: white;
+            background-color: #ed6a6a;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .sell-button {
+            color: white;
+            background-color: #73b5ea;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+
+    <h2>我的持仓</h2>
+
+    <!-- 资金持仓表单 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center" onclick="toggleCollapse()">
+            <span>资金持仓</span>
+            <span class="collapse-btn" onclick="toggleCollapse()">展开/折叠</span>
+        </div>
+        <div class="card-body collapse-content" id="collapseContent">
+            <form>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="totalAsset" class="form-label">总资产</label>
+                        <input type="text" class="form-control" id="totalAsset" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="totalMktVal" class="form-label">总市值</label>
+                        <input type="text" class="form-control" id="totalMktVal" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="accessMoney" class="form-label">可用资金</label>
+                        <input type="text" class="form-control" id="accessMoney" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="profit" class="form-label">持仓盈亏</label>
+                        <input type="text" class="form-control" id="profit" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="curProfit" class="form-label">当日盈亏</label>
+                        <input type="text" class="form-control" id="curProfit" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="posRatio" class="form-label">总仓位</label>
+                        <input type="text" class="form-control" id="posRatio" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="netAsset" class="form-label">净资产</label>
+                        <input type="text" class="form-control" id="netAsset" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="totalLiability" class="form-label">总负债</label>
+                        <input type="text" class="form-control" id="totalLiability" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="marginAvl" class="form-label">可用保证金</label>
+                        <input type="text" class="form-control" id="marginAvl" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="marginRates" class="form-label">维持担保比例</label>
+                        <input type="text" class="form-control" id="marginRates" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="ftotaldebts" class="form-label">融资负债</label>
+                        <input type="text" class="form-control" id="ftotaldebts" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="avalmoney" class="form-label">可取资金</label>
+                        <input type="text" class="form-control" id="avalmoney" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="realrate" class="form-label">实时担保比例</label>
+                        <input type="text" class="form-control" id="realrate" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dtotaldebts" class="form-label">融券负债</label>
+                        <input type="text" class="form-control" id="dtotaldebts" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="acreditavl" class="form-label">剩余额度</label>
+                        <input type="text" class="form-control" id="acreditavl" readonly>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="holdingStockCount" class="form-label">持仓个股</label>
+                        <input type="text" class="form-control" id="holdingStockCount" readonly>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查询按钮 -->
+    <button id="queryButton" class="btn btn-primary mb-4">查询</button>
+
+    <!-- 持仓记录 -->
+    <div class="card">
+        <div class="card-header">持仓详情</div>
+        <div class="card-body">
+            <table class="table table-bordered" id="positionTable">
+                <thead>
+                <tr>
+                    <th>序号</th>
+                    <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon" id="sortStkcode"></span></th>
+                    <th onclick="sortTable('stkname')">证券名称<span class="sort-icon" id="sortStkname"></span></th>
+                    <th onclick="sortTable('market')">市场<span class="sort-icon" id="sortMarket"></span></th>
+                    <th onclick="sortTable('costprice')">成本价<span class="sort-icon" id="sortCostprice"></span></th>
+                    <th onclick="sortTable('lastprice')">最新价<span class="sort-icon" id="sortLastprice"></span></th>
+                    <th onclick="sortTable('mktval')">市值<span class="sort-icon" id="sortMktval"></span></th>
+                    <th onclick="sortTable('profit')">持仓盈亏<span class="sort-icon" id="sortProfit"></span></th>
+                    <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-icon"
+                                                                             id="sortProfitratio"></span></th>
+                    <th onclick="sortTable('posratio')">个股仓位占比<span class="sort-icon" id="sortPosratio"></span>
+                    </th>
+                    <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon" id="sortStkbal"></span></th>
+                    <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon" id="sortStkavl"></span></th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 存储排序状态
+    let sortState = {column: 'mktval', order: 'desc'};
+    let positionsData = [];
+
+    // 更新排序图标函数
+    function updateSortIcon() {
+        const iconIdPrefix = `sort${sortState.column.charAt(0).toUpperCase() + sortState.column.slice(1)}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+
+        if (iconElement) {
+            iconElement.textContent = sortState.order === 'asc' ? '↑' : '↓';
+        }
+
+        // 清除其他列的排序图标
+        const allIcons = document.querySelectorAll('#positionTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            if (icon !== iconElement) {
+                icon.textContent = '';
+            }
+        });
+    }
+
+    // 初始化排序图标函数
+    function initializeSortIcons() {
+        if (sortState.column) {
+            updateSortIcon();
+        }
+    }
+
+    // 展开/折叠详细信息
+    function toggleCollapse() {
+        const content = document.getElementById('collapseContent');
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+        } else {
+            content.style.display = 'none';
+        }
+    }
+
+    // 排序函数：仅触发排序，不实际排序
+    function sortTable(column) {
+        if (sortState.column === column) {
+            sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortState.order = 'asc';
+            sortState.column = column;
+        }
+
+        // 更新排序图标
+        updateSortIcon();
+
+        // 触发重新渲染
+        showPositionRecords(positionsData);
+    }
+
+    // 显示持仓记录
+    function showPositionRecords(positions) {
+        const tbody = document.querySelector('#positionTable tbody');
+        if (!tbody) {
+            console.error('未找到 #positionTable tbody');
+            return;
+        }
+
+        tbody.innerHTML = '';
+        if (!positions || positions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="13">暂无持仓记录</td></tr>';
+            return;
+        }
+
+        // 持仓个股
+        const holdingStockCount = positions.length;
+        document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
+
+        // 复制并排序数据
+        let sortedPositions = [...positions];
+        if (sortState.column) {
+            sortedPositions = sortedPositions.sort((a, b) => {
+                const valA = a[sortState.column] ?? 0; // 使用 ?? 代替 null 或 undefined 的情况
+                const valB = b[sortState.column] ?? 0;
+
+                // 数字类型
+                if (!isNaN(valA) && !isNaN(valB)) {
+                    return sortState.order === 'asc' ? valA - valB : valB - valA;
+                }
+
+                // 字符串类型
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return sortState.order === 'asc'
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
+
+                return 0;
+            });
+        }
+
+        sortedPositions.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.stkcode}</td>
+      <td>${item.stkname}</td>
+      <td>${item.market}</td>
+      <td>${item.costprice.toFixed(2)}</td>
+      <td>${item.lastprice.toFixed(2)}</td>
+      <td>${item.mktval.toFixed(2)}</td>
+      <td>${item.profit.toFixed(2)}</td>
+      <td>${(item.profitratio * 100).toFixed(2)}%</td>
+      <td>${(item.posratio * 100).toFixed(2)}%</td>
+      <td>${item.stkbal}</td>
+      <td>${item.stkavl}</td>
+      <td>
+          <button class="buy-button" onclick="handleBuy('${item.stkcode}')">买</button>
+          <button class="sell-button" onclick="handleSell('${item.stkcode}')">卖</button>
+      </td>
+    `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 查询持仓数据
+    function queryPositions() {
+        fetch('/api/trade/queryCreditNewPosV2')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('加载失败: ' + data.msg);
+                    return;
+                }
+
+                const responseData = data.data;
+                positionsData = responseData.stocks;
+
+                // 填充资金持仓表单
+                document.getElementById('totalAsset').value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('totalMktVal').value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('accessMoney').value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('profit').value = responseData.profit.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('curProfit').value = responseData.curprofit !== null ? responseData.curprofit.toLocaleString('en-US', {minimumFractionDigits: 2}) : '-';
+                document.getElementById('posRatio').value = `${(responseData.posratio * 100).toFixed(2)}%`;
+                document.getElementById('netAsset').value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('totalLiability').value = responseData.totalliability.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('marginAvl').value = responseData.marginavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('marginRates').value = `${(responseData.marginrates * 100).toFixed(2)}%`;
+                document.getElementById('ftotaldebts').value = responseData.ftotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('avalmoney').value = responseData.avalmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('realrate').value = `${(responseData.realrate * 100).toFixed(2)}%`;
+                document.getElementById('dtotaldebts').value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                showPositionRecords(positionsData);
+
+                // 初始化排序图标
+                initializeSortIcons();
+            })
+            .catch(error => {
+                console.error('接口请求失败:', error);
+                alert('加载数据失败，请检查网络或接口是否正常');
+            });
+    }
+
+    // 绑定查询按钮事件
+    document.getElementById('queryButton').addEventListener('click', queryPositions);
+
+    // 页面加载完成后自动查询
+    window.onload = queryPositions;
+
+    // 示例处理函数（您可以根据需要进一步实现这些功能）
+    function handleBuy(stkcode) {
+        alert(`买入 ${stkcode}`);
+    }
+
+    function handleSell(stkcode) {
+        alert(`卖出 ${stkcode}`);
+    }
+</script>
+</body>
+</html>
