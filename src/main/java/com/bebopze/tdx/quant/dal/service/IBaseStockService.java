@@ -25,7 +25,7 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     BaseStockDO getSimpleByCode(String code);
 
 
-    Map<String, List<String>> market_stockCodePrefixList_map();
+    Map<String, List<String>> market_stockCodePrefixList_map(int N);
 
 
     List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList);
@@ -34,6 +34,8 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
 
     List<BaseStockDO> listAllKline();
+
+    List<BaseStockDO> listAllKline(boolean refresh);
 
     List<BaseStockDO> listAllSimple();
 

@@ -31,6 +31,9 @@ public class ParserController {
     private TdxDataParserService tdxDataParserService;
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
      *
@@ -40,19 +43,6 @@ public class ParserController {
     @GetMapping(value = "/importAll")
     public Result<Void> importAll() {
         tdxDataParserService.importAll();
-        return Result.SUC();
-    }
-
-
-    /**
-     * 通达信 - 行情数据（个股/板块）   一键更新
-     *
-     * @return
-     */
-    @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
-    @GetMapping(value = "/refresh/klineAll")
-    public Result<Void> refreshKlineAll() {
-        tdxDataParserService.refreshKlineAll();
         return Result.SUC();
     }
 
@@ -81,6 +71,30 @@ public class ParserController {
     @GetMapping(value = "/import/blockNewReport")
     public Result<Object> importBlockNewReport() {
         tdxDataParserService.importBlockNewReport();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "ETF导入 - 自定义板块（行业ETF）", description = "ETF导入 - 自定义板块（行业ETF）")
+    @GetMapping(value = "/import/ETF")
+    public Result<Object> importETF() {
+        tdxDataParserService.importETF();
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 通达信 - 行情数据（个股/板块）   一键更新
+     *
+     * @return
+     */
+    @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
+    @GetMapping(value = "/refresh/klineAll")
+    public Result<Void> refreshKlineAll() {
+        tdxDataParserService.refreshKlineAll();
         return Result.SUC();
     }
 
@@ -118,6 +132,9 @@ public class ParserController {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 交易所 - 股票代码 前缀
      *
@@ -125,8 +142,10 @@ public class ParserController {
      */
     @Operation(summary = "交易所 - 股票代码 前缀", description = "交易所 - 股票代码 前缀")
     @GetMapping(value = "/market-stockCodePrefixList")
-    public Result<Map<String, List<String>>> market_stockCodePrefixList() {
-        return Result.SUC(tdxDataParserService.marketRelaStockCodePrefixList());
+    public Result<Map<String, List<String>>> market_stockCodePrefixList(@Schema(description = "前N位", example = "3")
+                                                                        @RequestParam(required = false, defaultValue = "3") int N) {
+
+        return Result.SUC(tdxDataParserService.marketRelaStockCodePrefixList(N));
     }
 
 }

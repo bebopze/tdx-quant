@@ -34,20 +34,33 @@ public class BlockNewParser {
     private static final String filePath = baseFilePath + "IDEA-test.blk";
 
 
+    /**
+     * 自定义板块 - 行业ETF
+     */
+    private static final String ETF_filePath = baseFilePath + "HYETF.blk";
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static void main(String[] args) {
 
 
-        parseAll();
+        // parseAll();
 
 
-//        parse(filePath);
-//
-//
-//        System.out.println();
-//        System.out.println("---------------------------------------");
-//        System.out.println();
-//
-//
+        // parse(filePath);
+
+
+        List<BlockNewDTO> dtoList = parse_ETF();
+        dtoList.forEach(e -> System.out.println(JSON.toJSONString(e)));
+
+
+        System.out.println();
+        System.out.println("---------------------------------------");
+        System.out.println();
+
+
 //        write(Lists.newArrayList("0000001", "0000002", "0000007"));
 //
 //
@@ -77,6 +90,16 @@ public class BlockNewParser {
                                              JSON.toJSONString(dtoList)));
         }
 
+    }
+
+
+    /**
+     * 自定义板块 - 行业ETF
+     *
+     * @return
+     */
+    public static List<BlockNewDTO> parse_ETF() {
+        return parse(ETF_filePath);
     }
 
 

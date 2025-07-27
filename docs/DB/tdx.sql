@@ -101,6 +101,7 @@ CREATE TABLE `base_stock`
     `id`              bigint unsigned                                             NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `code`            varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '股票代码',
     `name`            varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci         DEFAULT NULL COMMENT '股票名称',
+    `type`            tinyint unsigned                                            NOT NULL COMMENT '股票类型：1-A股；2-ETF；',
     `tdx_market_type` tinyint unsigned                                            NOT NULL COMMENT '通达信-市场类型：0-深交所；1-上交所；2-北交所；',
     `trade_date`      date                                                                 DEFAULT NULL COMMENT '交易日期',
     `open`            decimal(10, 3)                                                       DEFAULT NULL COMMENT '开盘价',

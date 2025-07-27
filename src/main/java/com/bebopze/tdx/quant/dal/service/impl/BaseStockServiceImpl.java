@@ -65,7 +65,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public Map<String, List<String>> market_stockCodePrefixList_map() {
+    public Map<String, List<String>> market_stockCodePrefixList_map(int N) {
         Map<String, List<String>> market_stockCodePrefixList_map = Maps.newHashMap();
 
 
@@ -74,7 +74,8 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
                 new QueryWrapper<BaseStockDO>()
                         // 指定 distinct 和 要查询的列
-                        .select("DISTINCT   LEFT(code,3) AS code_prefix", "tdx_market_type")
+                        //.select("DISTINCT   LEFT(code,3) AS code_prefix", "tdx_market_type")
+                        .select(String.format("DISTINCT   LEFT(code, %s) AS code_prefix", N), "tdx_market_type")
                         .orderByAsc("tdx_market_type")
         );
 
@@ -85,16 +86,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             String code_prefix = (String) row.get("code_prefix");
 
 
-            market_stockCodePrefixList_map.computeIfAbsent(market_type, k -> Lists.newArrayList())
-                                          .add(code_prefix);
-
-
-//            List<String> stockCodePrefixList = market_stockCodePrefixList_map.get(market_type);
-//            if (CollectionUtils.isEmpty(stockCodePrefixList)) {
-//                market_stockCodePrefixList_map.put(market_type, Lists.newArrayList(code_prefix));
-//            } else {
-//                stockCodePrefixList.add(code_prefix);
-//            }
+            market_stockCodePrefixList_map.computeIfAbsent(market_type, k -> Lists.newArrayList()).add(code_prefix);
         });
 
 
@@ -129,12 +121,18 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
+
     @Override
     public List<BaseStockDO> listAllKline() {
+        return listAllKline(false);
+    }
+
+    @Override
+    public List<BaseStockDO> listAllKline(boolean refresh) {
 
 
         // listAllFromDiskCache     >>>     totalTime : 6.9s
-        return listAllFromDiskCache();
+        return listAllFromDiskCache(refresh);
 
 
         // listByCursor     >>>     totalTime : 52.4s
@@ -182,14 +180,14 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
      *
      * @return
      */
-    private List<BaseStockDO> listAllFromDiskCache() {
+    private List<BaseStockDO> listAllFromDiskCache(boolean refresh) {
         long start = System.currentTimeMillis();
 
 
         // read Cache
         List<BaseStockDO> list = JsonFileWriterAndReader.readStringFromFile___stock_listAllKline();
 
-        if (CollectionUtils.isEmpty(list)) {
+        if (CollectionUtils.isEmpty(list) || refresh) {
             list = baseMapper.listAllKline();
 
 

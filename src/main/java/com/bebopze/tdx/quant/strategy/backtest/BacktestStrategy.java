@@ -930,9 +930,9 @@ public class BacktestStrategy {
         BigDecimal finalCapital = finalReturn.getCapital();
 
 
-        // 总收益率（净值增幅） =  期末净值 - 初始净值（1）
+        // 净值增幅 =  期末净值 - 初始净值（1）
         BigDecimal totalReturn = finalNav.subtract(BigDecimal.ONE);
-        // 总收益率（%） =  总收益率 x 100%
+        // 总收益率（%） =  净值增幅 x 100%
         BigDecimal totalReturnPct = totalReturn.multiply(of(100));
         // 年化收益率（%） = （期末净值 / 初始净值）^(252 / 总天数) - 1          x 100%
         BigDecimal annualReturnPct = of(Math.pow(finalNav.doubleValue(), 252.0 / totalDays) - 1).multiply(of(100));

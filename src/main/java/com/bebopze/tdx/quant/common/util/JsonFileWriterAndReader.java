@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,6 +55,9 @@ public class JsonFileWriterAndReader {
                 writer.name("tdxMarketType").value(data.getTdxMarketType());
                 writer.name("klineHis").value(data.getKlineHis());
                 writer.name("extDataHis").value(data.getExtDataHis());
+
+                // 基金北向
+                writer.name("amount").value(data.getAmount());
 
 
                 writer.endObject();
@@ -142,6 +146,16 @@ public class JsonFileWriterAndReader {
                         } else {
                             String extDataHis = reader.nextString();
                             entity.setExtDataHis(extDataHis);
+                        }
+                        break;
+
+                    case "amount":
+                        if (reader.peek() == JsonToken.NULL) {
+                            reader.nextNull();
+                            log.warn("amount 为空     >>>     entity : {}", JSON.toJSONString(entity));
+                        } else {
+                            BigDecimal amount = new BigDecimal(reader.nextString());
+                            entity.setAmount(amount);
                         }
                         break;
 

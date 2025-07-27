@@ -8,7 +8,7 @@ import java.util.List;
 
 
 /**
- * A股 - 交易所                          仅支持  个股code  匹配，       TODO     ETF 暂未支持
+ * A股 - 交易所                          支持   A股code / ETF code   匹配
  *
  * @author: bebopze
  * @date: 2025/5/9
@@ -23,7 +23,9 @@ public enum StockMarketEnum {
     // 003	0
     // 300	0
     // 301	0
-    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("00", "30")),
+
+    // ETF - 15xxxx
+    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("00", "30", "15")),
 
 
     // 600	1
@@ -32,7 +34,9 @@ public enum StockMarketEnum {
     // 605	1
     // 688	1
     // 689	1
-    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68")),
+
+    // ETF - 5xxxxx
+    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68", "51", "56", "58")),
 
 
     // 430	2

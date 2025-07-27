@@ -13,11 +13,6 @@ public interface TdxDataParserService {
 
     void importAll();
 
-    /**
-     * 行情（kline_his）  ->   板块 + 个股
-     */
-    void refreshKlineAll();
-
 
     void importTdxBlockCfg();
 
@@ -25,6 +20,18 @@ public interface TdxDataParserService {
     void importBlockReport();
 
     void importBlockNewReport();
+
+
+    void importETF();
+
+
+    // ----------------------------------------------------------------
+
+
+    /**
+     * 行情（kline_his）  ->   板块 + 个股
+     */
+    void refreshKlineAll();
 
 
     void fillBlockKline(String blockCode);
@@ -37,5 +44,8 @@ public interface TdxDataParserService {
     void fillStockKlineAll();
 
 
-    Map<String, List<String>> marketRelaStockCodePrefixList();
+    // ----------------------------------------------------------------
+
+
+    Map<String, List<String>> marketRelaStockCodePrefixList(int N);
 }

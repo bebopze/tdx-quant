@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
@@ -92,6 +93,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         importBlockNewReport();
 
 
+        // ------------------------------------------------------------------------ 导入ETF
+
+
+        importETF();
+
+
         // ------------------------------------------------------------------------ 大盘量化
 
 
@@ -107,30 +114,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 扩展（指标）  ->  ext_data_his
         extDataService.refreshExtDataAll();
-    }
-
-
-    /**
-     * 板块+个股 - 行情（kline_his）     一键刷新
-     */
-    @SneakyThrows
-    @Override
-    public void refreshKlineAll() {
-
-        // 行情-板块
-        Future<?> task1 = Executors.newCachedThreadPool().submit(() -> {
-            fillBlockKlineAll();
-        });
-
-
-        // 行情-个股
-        Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
-            fillStockKlineAll();
-        });
-
-
-        task1.get();
-        task2.get();
     }
 
 
@@ -410,6 +393,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         BaseStockDO baseStockDO = new BaseStockDO();
         baseStockDO.setCode(stockCode);
         baseStockDO.setName(stockCode_stockName_map.get(stockCode));
+        baseStockDO.setType(StockTypeEnum.A_STOCK.type);
         baseStockDO.setTdxMarketType(marketType);
 
 
@@ -1007,6 +991,94 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  ETF
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Override
+    public void importETF() {
+
+        List<BlockNewParser.BlockNewDTO> etfList = BlockNewParser.parse_ETF();
+
+        exec___save2DB___ETF(etfList);
+    }
+
+
+    private void exec___save2DB___ETF(List<BlockNewParser.BlockNewDTO> etfList) {
+
+        etfList.forEach(dto -> {
+
+
+            String stockCode = dto.getStockCode();
+            Integer tdxMarketType = dto.getTdxMarketType();
+
+
+            // ETF
+            BaseStockDO baseStockDO = new BaseStockDO();
+            baseStockDO.setCode(stockCode);
+            baseStockDO.setName(null);
+            baseStockDO.setType(StockTypeEnum.ETF.type);
+            baseStockDO.setTdxMarketType(tdxMarketType);
+
+
+            Long stockId = iBaseStockService.getIdByCode(stockCode);
+            // Long stockId = stock__codeIdMap_DB.get(stockCode);
+            if (stockId != null) {
+                baseStockDO.setId(stockId);
+                iBaseStockService.updateById(baseStockDO);
+            } else {
+                iBaseStockService.save(baseStockDO);
+                stockId = baseStockDO.getId();
+            }
+
+
+            // stock__codeIdMap.put(stockCode, stockId);
+
+
+            if (stockId == null) {
+                log.error("base_stock ETF - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
+                          stockCode, stockId, JSON.toJSONString(baseStockDO));
+            }
+        });
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  Kline
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 板块+个股 - 行情（kline_his）     一键刷新
+     */
+    @SneakyThrows
+    @Override
+    public void refreshKlineAll() {
+
+        // 行情-板块
+        Future<?> task1 = Executors.newCachedThreadPool().submit(() -> {
+            fillBlockKlineAll();
+        });
+
+
+        // 行情-个股
+        Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
+            fillStockKlineAll();
+        });
+
+
+        task1.get();
+        task2.get();
+    }
+
+
     @Override
     public void fillBlockKline(String blockCode) {
         fillBlockKline(blockCode, null);
@@ -1263,9 +1335,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Override
-    public Map<String, List<String>> marketRelaStockCodePrefixList() {
-        Map<String, List<String>> market_stockCodeList_map = iBaseStockService.market_stockCodePrefixList_map();
+    public Map<String, List<String>> marketRelaStockCodePrefixList(int N) {
+        Map<String, List<String>> market_stockCodeList_map = iBaseStockService.market_stockCodePrefixList_map(N);
         return market_stockCodeList_map;
     }
 

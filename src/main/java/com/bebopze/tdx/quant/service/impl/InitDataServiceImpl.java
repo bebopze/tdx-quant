@@ -76,7 +76,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 加载   全量行情数据 - 个股
-        loadAllStockKline(startDate, endDate);
+        loadAllStockKline(startDate, endDate, refresh);
 
 
         // 加载   全量行情数据 - 板块
@@ -103,7 +103,7 @@ public class InitDataServiceImpl implements InitDataService {
      *
      * @return
      */
-    private void loadAllStockKline(LocalDate startDate, LocalDate endDate) {
+    private void loadAllStockKline(LocalDate startDate, LocalDate endDate, boolean refresh) {
 
 
         // null -> 全量行情（近10年）
@@ -117,7 +117,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // DB 数据加载
-        data.stockDOList = baseStockService.listAllKline();
+        data.stockDOList = baseStockService.listAllKline(refresh);
         // 空数据 过滤
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
                 // TODO   基金北向

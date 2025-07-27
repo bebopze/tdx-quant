@@ -26,7 +26,7 @@ public class NumUtil {
     }
 
 
-    public static BigDecimal double2Decimal(double v) {
+    public static BigDecimal double2Decimal(Double v) {
         return new BigDecimal(v).setScale(3, RoundingMode.HALF_UP);
     }
 

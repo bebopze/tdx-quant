@@ -124,12 +124,10 @@ public class LdayParser {
 
 
         // List<LdayDTO> stockDataList = parseByStockCode("300059");
-
-        List<LdayDTO> stockDataList = parseByStockCode("688132");
-        // List<LdayDTO> stockDataList = parseByStockCode("601988");
+        List<LdayDTO> stockDataList = parseByStockCode("588000");
         for (LdayDTO e : stockDataList) {
-            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
-//            System.out.println(JSON.toJSONString(item));
+            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+            System.out.println(JSON.toJSONString(item));
         }
 
 
@@ -193,9 +191,7 @@ public class LdayParser {
 
 
                 // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-                if (size(klineReport__ldayDTOList) > 0) {
-                    klineReport__ldayDTOList.remove(klineReport__ldayDTOList.size() - 1);
-                }
+                checkReport__lastKline(klineReport__ldayDTOList);
             }
 
 
@@ -224,6 +220,25 @@ public class LdayParser {
 
 
         return Lists.newArrayList();
+    }
+
+
+    /**
+     * 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日     价格全部为 昨日收盘价 + VOL=0          盘后导出 -> 正常）
+     *
+     * @param klineReport__ldayDTOList
+     * @return
+     */
+    private static void checkReport__lastKline(List<LdayDTO> klineReport__ldayDTOList) {
+
+        int size = size(klineReport__ldayDTOList);
+
+
+        // 盘中导出  ->  最后一日     价格 全部为 昨日收盘价     +     VOL=0
+        if (size > 0 && klineReport__ldayDTOList.get(size - 1).getVol() == 0) {
+
+            klineReport__ldayDTOList.remove(size - 1);
+        }
     }
 
 

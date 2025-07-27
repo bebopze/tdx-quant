@@ -172,7 +172,7 @@ public class KlineReportParser {
                     // 成交量
                     long vol = Long.parseLong(strArr[5]);
                     // 成交额（元）
-                    BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(strArr[6]));
+                    BigDecimal amount = new BigDecimal(strArr[6]);
 
 
                     // 只记录   2017-01-01   以后的数据
