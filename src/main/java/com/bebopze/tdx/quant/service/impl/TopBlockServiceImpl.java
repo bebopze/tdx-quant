@@ -4,11 +4,13 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
+import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.InitDataService;
@@ -27,6 +29,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
 import static com.bebopze.tdx.quant.common.util.MapUtil.reverseSortByValue;
 
 
@@ -89,6 +92,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // N日涨幅 > 25%
         calcChangePctTop(N, 25.0);
+    }
+
+
+    @Override
+    public void blockAmoTopTask() {
+
+        data = initDataService.initData();
+
+
+        calcBlockAmoTop();
     }
 
 
@@ -405,6 +418,223 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void calcBlockAmoTop() {
+
+
+        // 日期-板块类型-板块lv       -       AMO_blockCode_TreeMap
+        Map<String, TreeMap<Double, String>> date__block_type_lv_____amoBlockCode_TreeMap_____map = Maps.newConcurrentMap();
+
+
+        data.dateList.forEach(date -> {
+
+
+            // data.blockDOList.parallelStream().forEach(blockDO -> {
+
+            for (BaseBlockDO blockDO : data.blockDOList) {
+
+                if (null == blockDO) {
+                    log.debug("calcBlockAmoTop     >>>     date : {} , blockDO : {}", date, blockDO);
+                    // return;
+                    continue;
+                }
+
+
+                String blockCode = blockDO.getCode();
+
+
+                BlockFun fun = data.blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
+
+
+                // value   ->   amo_blockCode_TreeMap
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+                double amo = getByDate(fun.getAmo(), dateIndexMap, date);
+
+
+                if (Double.isNaN(amo) || amo < 1) {
+                    log.debug("calcBlockAmoTop     >>>     date : {} , blockCode : {} , amo : {}", date, blockCode, amo);
+                    // return;
+                    continue;
+                }
+
+
+                // key   ->   date|blockType|blockLevel
+                String key = String.format("%s|%s|%s", date, blockDO.getType(), blockDO.getLevel());
+
+
+                date__block_type_lv_____amoBlockCode_TreeMap_____map.computeIfAbsent(key, k -> new TreeMap<>(Comparator.reverseOrder())).put(amo, blockCode);
+            }
+            //});
+        });
+
+
+        // --------------------------------------------------- 按 板块 分类
+
+
+        Integer blockNewId = 6;
+
+
+        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+
+        // date sort
+        TreeMap<String, TreeMap<Double, String>> dateSortMap = new TreeMap<>(date__block_type_lv_____amoBlockCode_TreeMap_____map);
+
+
+        Map<LocalDate, QaBlockNewRelaStockHisDO> date_entity_map = Maps.newConcurrentMap();
+
+
+        dateSortMap.forEach((date__block_type_lv, amoBlockTreeMap) -> {
+
+
+            // key   ->   date|blockType|blockLevel
+            String[] keyArr = date__block_type_lv.split("\\|");
+
+            LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
+
+
+            QaBlockNewRelaStockHisDO entity = date_entity_map.computeIfAbsent(date, k -> new QaBlockNewRelaStockHisDO());
+
+            entity.setBlockNewId(blockNewId);
+            entity.setDate(date);
+            entity.setStockIdList(null);
+
+
+            Map.Entry<Double, String> top1 = amoBlockTreeMap.firstEntry();
+            if (top1 != null) {
+
+                double amo = top1.getKey();
+                String blockCode = top1.getValue();
+
+
+                BaseBlockDO top1_blockDO = data.codeBlockMap.get(blockCode);
+
+
+                blockAmoTop(date__block_type_lv, top1_blockDO, blockNewId, entity);
+            }
+        });
+
+
+        qaBlockNewRelaStockHisService.saveBatch(date_entity_map.values());
+    }
+
+
+    /**
+     * 板块AMO  -  TOP1
+     *
+     * @param date__block_type_lv
+     * @param top1_blockDO
+     * @param blockNewId
+     * @param entity
+     */
+    private void blockAmoTop(String date__block_type_lv, BaseBlockDO top1_blockDO, Integer blockNewId,
+                             QaBlockNewRelaStockHisDO entity) {
+
+
+        // key   ->   date|blockType|blockLevel
+        String[] keyArr = date__block_type_lv.split("\\|");
+
+        LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
+        Integer blockType = Integer.valueOf(keyArr[1]);
+        Integer blockLevel = Integer.valueOf(keyArr[2]);
+
+
+        // -------------------------------------------
+
+
+        Integer type = top1_blockDO.getType();
+        Integer level = top1_blockDO.getLevel();
+
+
+        // -------------------------------------------
+
+
+        if (type == 2) {
+            if (level == 1) {
+                entity.setPthyLv1Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            } else if (level == 2) {
+                entity.setPthyLv2Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            } else if (level == 3) {
+                entity.setPthyLv3Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            }
+        }
+
+        //
+        else if (type == 4) {
+            // gn = convert2DTO(top1_blockDO);
+            entity.setGnResult(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+        }
+
+        //
+        else if (type == 12) {
+            if (level == 1) {
+                entity.setYjhyLv1Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            } else if (level == 2) {
+                entity.setYjhyLv2Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            } else if (level == 3) {
+                entity.setYjhyLv3Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
+            }
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // TOP result  ->  DB
+
+
+        // QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
+
+//        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+//        entity.setBlockNewId(blockNewId);
+//        entity.setDate(date);
+//        entity.setStockIdList(null);
+//
+
+//        entity.setGnResult(JSON.toJSONString(Lists.newArrayList(gn)));
+//
+//        entity.setPthyLv1Result(JSON.toJSONString(Lists.newArrayList(pthy_lv1)));
+//        entity.setPthyLv2Result(JSON.toJSONString(Lists.newArrayList(pthy_lv2)));
+//        entity.setPthyLv3Result(JSON.toJSONString(Lists.newArrayList(pthy_lv3)));
+//
+//        entity.setYjhyLv1Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv1)));
+//        entity.setYjhyLv2Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv2)));
+//        entity.setYjhyLv3Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv3)));
+//
+//        entity.setResult(JSON.toJSONString(Lists.newArrayList(pthy_lv2, gn)));
+
+
+//        qaBlockNewRelaStockHisService.save(entity);
+
+
+        log.debug("blockAmoTop     >>>     date : {} , blockCode : {}", date, top1_blockDO.getCode());
+    }
+
+    private BlockTopInfoDTO convert2DTO(BaseBlockDO top1_blockDO) {
+
+
+        String blockCode = top1_blockDO.getCode();
+
+
+        // ----------------- dto
+
+
+        BlockTopInfoDTO dto = new BlockTopInfoDTO();
+        dto.setBlockId(top1_blockDO.getId());
+        dto.setBlockCode(blockCode);
+        dto.setBlockName(top1_blockDO.getName());
+
+        dto.setStockCodeSet(null);
+
+
+        return dto;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 按 板块 分类统计
      *
@@ -633,7 +863,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Data
@@ -666,6 +896,31 @@ public class TopBlockServiceImpl implements TopBlockService {
         public int getSize() {
             return stockCodeSet != null ? stockCodeSet.size() : 0;
         }
+    }
+
+
+    // ------------------------------------------
+
+
+    /**
+     * 板块AMO  -  TOP1
+     */
+    @Data
+    public static class TopBlockAmo {
+
+        private Long id;
+
+        private String code;
+        private String name;
+
+        private String codePath;
+        private String namePath;
+
+        private Long parentId;
+
+        private Integer type;
+        private Integer level;
+        private Integer endLevel;
     }
 
 

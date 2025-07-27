@@ -30,6 +30,12 @@ public interface TopBlockService {
 
 
     /**
+     * 板块AMO - TOP1
+     */
+    void blockAmoTopTask();
+
+
+    /**
      * TOP榜（主线板块） - 近N日 占比分布
      *
      * @param blockNewId 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；     - @See BlockNewIdEnum

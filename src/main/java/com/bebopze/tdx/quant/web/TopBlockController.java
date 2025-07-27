@@ -40,7 +40,9 @@ public class TopBlockController {
      */
     @Operation(summary = "百日新高", description = "百日新高 - 占比分布")
     @GetMapping(value = "/task/nDayHigh")
-    public Result<Void> nDayHighTask(@RequestParam(defaultValue = "100") int N) {
+    public Result<Void> nDayHighTask(@RequestParam(defaultValue = "100")
+                                     @Schema(description = "N日新高", example = "100")
+                                     int N) {
         topBlockService.nDayHighTask(N);
         return Result.SUC();
     }
@@ -53,8 +55,23 @@ public class TopBlockController {
      */
     @Operation(summary = "涨幅榜（N日涨幅>25% / TOP100）", description = "涨幅榜（N日涨幅>25%） - 占比分布")
     @GetMapping(value = "/task/changePctTop")
-    public Result<Void> changePctTopTask(@RequestParam(defaultValue = "10") int N) {
+    public Result<Void> changePctTopTask(@RequestParam(defaultValue = "10")
+                                         @Schema(description = "N日涨幅", example = "10")
+                                         int N) {
         topBlockService.changePctTopTask(N);
+        return Result.SUC();
+    }
+
+
+    /**
+     * 板块AMO - TOP1
+     *
+     * @return
+     */
+    @Operation(summary = "板块AMO - TOP1", description = "板块AMO - TOP1")
+    @GetMapping(value = "/task/blockAmoTop")
+    public Result<Void> blockAmoTopTask() {
+        topBlockService.blockAmoTopTask();
         return Result.SUC();
     }
 
