@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
+import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -55,6 +56,9 @@ public class TopBlockServiceImpl implements TopBlockService {
     private InitDataService initDataService;
 
     @Autowired
+    private IBaseStockService baseStockService;
+
+    @Autowired
     @Lazy
     private BacktestStrategy backtestStrategy;
 
@@ -78,28 +82,25 @@ public class TopBlockServiceImpl implements TopBlockService {
     @Override
     public void nDayHighTask(int N) {
 
-        data = initDataService.initData();
+        initCache();
 
         calcNDayHigh(N);
     }
 
-
     @Override
     public void changePctTopTask(int N) {
 
-        data = initDataService.initData();
+        initCache();
 
 
         // N日涨幅 > 25%
         calcChangePctTop(N, 25.0);
     }
 
-
     @Override
     public void blockAmoTopTask() {
 
-        data = initDataService.initData();
-
+        initCache();
 
         calcBlockAmoTop();
     }
@@ -152,6 +153,13 @@ public class TopBlockServiceImpl implements TopBlockService {
     @Override
     public List<TopBlockDTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N) {
 
+
+        initCache();
+
+
+        // -----------------------------------------
+
+
         List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByBlockNewIdDateAndLimit(blockNewId, date, N);
 
 
@@ -203,11 +211,13 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                     log.debug("topBlockRateInfo - 反序列化bug：补0     >>>     stockCode : {} , stockName : {}",
-                              stockCode, data.codeStockMap.get(stockCode).getName());
+                              stockCode, data.codeStockMap.getOrDefault(stockCode, new BaseStockDO()).getName());
                 }
 
 
-                BaseStockDO stockDO = data.codeStockMap.get(stockCode);
+                // 基金北向 - 过滤   ->   Cache 中不存在
+                BaseStockDO stockDO = data.codeStockMap.getOrDefault(stockCode, baseStockService.getByCode(stockCode));
+                // BaseStockDO stockDO = data.codeStockMap.computeIfAbsent(stockCode, k -> baseStockService.getByCode(stockCode));
 
 
                 StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
@@ -273,6 +283,14 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         return topBlockList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void initCache() {
+        data = initDataService.initData();
     }
 
 
