@@ -8,7 +8,7 @@ import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
@@ -41,7 +41,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
     @Autowired
-    private IndexService indexService;
+    private MarketService marketService;
 
     @Autowired
     private TopBlockService topBlockService;
@@ -69,7 +69,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         //                                                1、大盘 -> 仓位
         // -------------------------------------------------------------------------------------------------------------
 
-        QaMarketMidCycleDO qaMarketMidCycleDO = indexService.marketInfo(tradeDate);
+        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
         Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
 
 

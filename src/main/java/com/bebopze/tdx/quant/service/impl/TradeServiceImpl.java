@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
@@ -8,18 +9,31 @@ import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
+import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -66,6 +80,29 @@ public class TradeServiceImpl implements TradeService {
         return respList;
     }
 
+    @Override
+    public List<GetOrdersDataResp> getRevokeList() {
+
+
+        // 1、查询 全部委托单
+        List<GetOrdersDataResp> ordersData = getOrdersData();
+
+
+        // 2、全部可撤单   ->   [未成交]
+        List<GetOrdersDataResp> revokeList = ordersData.stream()
+                                                       .filter(e -> {
+                                                           // 委托状态（未报/已报/已撤/部成/已成/废单）
+                                                           String wtzt = e.getWtzt();
+
+                                                           // 已成交   ->   已撤/已成/废单
+                                                           // 未成交   ->   未报/已报/部成
+                                                           return "未报".equals(wtzt) || "已报".equals(wtzt) || "部成".equals(wtzt);
+                                                       })
+                                                       .collect(Collectors.toList());
+
+        return revokeList;
+    }
+
 
     @Override
     public List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList) {
@@ -75,6 +112,670 @@ public class TradeServiceImpl implements TradeService {
         List<RevokeOrderResultDTO> dtoList = EastMoneyTradeAPI.revokeOrders(req);
         return dtoList;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 一键清仓     =>     先撤单（如果有[未成交]-[卖单]） ->  再全部卖出
+     */
+    @Override
+    public void quickClearPosition() {
+
+        // 1、未成交   ->   一键撤单
+        quickCancelOrder();
+
+
+        // 2、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 3、一键清仓
+        quick__clearPosition(posResp);
+    }
+
+
+    @Override
+    public void quickBuyPosition() {
+
+        // From DB
+        QueryCreditNewPosResp posResp = null;   // fromDB();
+
+
+        quick__buyAgain(posResp);
+    }
+
+
+    @Override
+    public void quickCancelOrder() {
+
+
+        // 1、查询 全部委托单
+        List<GetOrdersDataResp> ordersData = getOrdersData();
+
+
+        // 2、convert   撤单paramList
+        List<TradeRevokeOrdersParam> paramList = convert2ParamList(ordersData);
+
+
+        // ------------------------------------------------------------------------------
+
+
+        // 3、批量撤单
+        int size = paramList.size();
+        for (int j = 0; j < size; ) {
+
+            // 1次 10单
+            List<TradeRevokeOrdersParam> subParamList = paramList.subList(j, Math.min(j += 10, size));
+
+            // 批量撤单
+            List<RevokeOrderResultDTO> resultDTOS = revokeOrders(subParamList);
+
+            log.info("quick__cancelOrder - revokeOrders     >>>     paramList : {} , resultDTOS : {}",
+                     JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
+        }
+
+
+        // 等待成交   ->   3s
+        SleepUtils.sleep(3000);
+    }
+
+
+    @Override
+    public void quickResetFinancing() {
+
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、预校验
+        // TODO   preCheck(posResp);
+
+
+        // TODO   3、入库   =>   异常中断 -> 可恢复
+        // save2DB(posResp);
+        log.info("quickResetFinancing     >>>     posResp : {}", JSON.toJSONString(posResp));
+
+
+        // 4、一键清仓
+        quickClearPosition();
+
+
+        // 等待成交   ->   3s
+        SleepUtils.winSleep(3000);
+
+
+        // 5、check/retry   =>   [一键清仓]-委托单 状态
+        checkAndRetry___clearPosition__OrdersStatus(3);
+
+
+        // 6、一键再买入
+        quick__buyAgain(posResp);
+    }
+
+
+    /**
+     * 预校验   =>   担保比例/仓位/负债比例     ->     严格限制 极限仓位 标准
+     *
+     * @param posResp
+     */
+    private void preCheck(QueryCreditNewPosResp posResp) {
+
+
+        // 总资产 = 净资产 + 总负债 = 总市值 + 可用资金
+        BigDecimal totalasset = posResp.getTotalasset();
+        // 净资产
+        BigDecimal netasset = posResp.getNetasset();
+        // 总负债
+        BigDecimal totalliability = posResp.getTotalliability();
+
+        // 总市值 = 总资产 - 可用资金
+        BigDecimal totalmkval = posResp.getTotalmkval();
+        // 可用资金 = 总资产 - 总市值
+        BigDecimal avalmoney = posResp.getAvalmoney();
+
+
+        // ---------------------------------------------------
+
+
+        // 维持担保比例（230.63%）  =   总资产 / 总负债
+        double realrate = posResp.getRealrate().doubleValue();
+        // 实时担保比例（230.58%）  =   总市值 / 总负债
+        BigDecimal marginrates = posResp.getMarginrates();
+
+
+        // 强制：维持担保比例>200%     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(realrate > 2, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", totalliability, netasset));
+
+
+        // ---------------------------------------------------
+
+
+        // 总仓位（176.55%）  =   总市值 / 净资产
+        double posratio = posResp.getPosratio().doubleValue();
+
+
+        // 强制：总仓位<200%     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(posratio < 2, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", totalliability, netasset));
+
+
+        // ---------------------------------------------------
+
+        // 总负债 < 净资产
+        double rate = totalliability.doubleValue() / netasset.doubleValue();
+
+        // 强制：总负债<净资产     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(rate < 1, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", totalliability, netasset));
+
+
+        // --------------------------------------------------- 交易时间段 限制
+
+
+        LocalTime now = LocalTime.now();
+
+        //  9:35 ~ 11:29
+        LocalTime start_1 = LocalTime.of(9, 35);
+        LocalTime end_1 = LocalTime.of(11, 29);
+
+        // 13:00 ~ 14:56
+        LocalTime start_2 = LocalTime.of(13, 00);
+        LocalTime end_2 = LocalTime.of(14, 56);
+
+
+        Assert.isTrue(DateTimeUtil.between(now, start_1, end_1) || DateTimeUtil.between(now, start_2, end_2),
+                      String.format("当前时间:[%s]非交易时间", now));
+    }
+
+
+    /**
+     * 一键清仓
+     *
+     * @param posResp
+     */
+    private void quick__clearPosition(QueryCreditNewPosResp posResp) {
+
+        posResp.getStocks().forEach(e -> {
+
+
+            Integer stkavl = e.getStkavl();
+            // 当日 新买入   ->   忽略
+            if (stkavl == 0) {
+                log.debug("quick__clearPosition - 当日[新买入]/当日[已挂单] -> 忽略     >>>     stock : [{}-{}]", e.getStkcode(), e.getStkname());
+                return;
+            }
+
+
+            // -------------------------------------------------- 价格精度
+
+            // 个股   ->   价格 2位小数
+            // ETF   ->   价格 3位小数
+            int scale = calcPriceScale(e.getStktype_ex());
+
+
+            // --------------------------------------------------
+
+
+            TradeBSParam param = new TradeBSParam();
+            param.setStockCode(e.getStkcode());
+            param.setStockName(e.getStkname());
+
+            // TODO   最低价（买5价） =  最新价 x 0.997
+            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.997)).setScale(scale, RoundingMode.HALF_UP);
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.05)).setScale(scale, RoundingMode.HALF_UP);
+            param.setPrice(price);
+
+            // 数量
+            param.setAmount(e.getStkavl());
+            // 卖出
+            param.setTradeType(TradeTypeEnum.SELL.getTradeType());
+
+
+            try {
+
+                // 下单 -> 委托编号
+                Integer wtbh = bs(param);
+                log.info("quick__clearPosition - [卖出]下单SUC     >>>     param : {} , wtbh : {}", JSON.toJSONString(param), wtbh);
+
+            } catch (Exception ex) {
+                // SELL 失败
+                log.error("quick__clearPosition - [卖出]下单FAIL     >>>     param : {} , errMsg : {}", JSON.toJSONString(param), ex.getMessage(), ex);
+
+
+                String errMsg = ex.getMessage();
+
+
+                // 下单异常：委托价格超过涨停价格
+                if (errMsg.contains("委托价格超过涨停价格")) {
+                    // 清仓价甩卖   ->   不会发生
+                }
+                // 下单异常：当前时间不允许做该项业务
+                else if (errMsg.contains("当前时间不允许做该项业务")) {
+                    // 盘后交易   ->   不会发生
+                } else {
+
+                }
+            }
+
+        });
+    }
+
+
+    /**
+     * 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
+     *
+     * @param stktypeEx
+     * @return
+     */
+    private int calcPriceScale(String stktypeEx) {
+
+        // ETF   ->   价格 3位小数
+        int scale = 2;
+
+
+        if (stktypeEx.equals("E")) {
+            scale = 3;
+        } else {
+            // 个股   ->   价格 2位小数
+            scale = 2;
+        }
+
+        return scale;
+    }
+
+
+    /**
+     * 一键再买入
+     *
+     * @param old__posResp
+     */
+    private void quick__buyAgain(QueryCreditNewPosResp old__posResp) {
+
+
+        // buyAgain__preCheck();
+
+
+        // 仓位占比 倒序
+        List<CcStockInfo> old__stockList = old__posResp.getStocks().stream()
+                                                       .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
+                                                       .collect(Collectors.toList());
+
+
+        // --------------------------------------------------
+
+
+        // 融资买入 -> SUC
+        Set<String> rzSucCodeList = Sets.newHashSet();
+
+        // 融资买入 -> FAIL  =>  待 担保买入
+        Set<String> rzFailCodeList = Sets.newHashSet();
+
+
+        // --------------------------------------------------------------------
+
+
+        // ------------------------------ 1、融资再买入
+
+        // 融资买
+        buy_rz(old__stockList, old__posResp, rzSucCodeList, rzFailCodeList);
+
+
+        // ------------------------------ 2、担保再买入
+
+
+        // 担保买
+        buy_zy(old__stockList, old__posResp, rzSucCodeList, rzFailCodeList);
+
+
+        // ------------------------------ 3、新空余 担保资金
+
+
+        QueryCreditNewPosResp bsAfter__posResp = queryCreditNewPosV2();
+
+        // 可用保证金
+        BigDecimal avalmoney = bsAfter__posResp.getMarginavl();
+
+
+        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__posResp : {}", avalmoney, JSON.toJSONString(bsAfter__posResp));
+    }
+
+
+    /**
+     * 融资再买入
+     *
+     * @param old__stockList
+     * @param old__posResp
+     * @param rzSucCodeList  融资买入 -> SUC
+     * @param rzFailCodeList 融资买入 -> FAIL  =>  待 担保买入
+     */
+    private void buy_rz(List<CcStockInfo> old__stockList,
+                        QueryCreditNewPosResp old__posResp,
+
+                        Set<String> rzSucCodeList,
+                        Set<String> rzFailCodeList) {
+
+
+        old__stockList.forEach(e -> {
+
+
+            String stockCode = e.getStkcode();
+
+
+            // -------------------------------------------------- 价格精度
+
+
+            // 个股   ->   价格 2位小数
+            // ETF   ->   价格 3位小数
+            int scale = calcPriceScale(e.getStktype_ex());
+
+
+            // -------------------------------------------------- 融资买入 - 参数
+
+
+            TradeBSParam param = new TradeBSParam();
+            param.setStockCode(stockCode);
+            param.setStockName(e.getStkname());
+
+            // TODO   B价格 -> 最高价（卖5价）
+            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.95)).setScale(scale, RoundingMode.HALF_UP);
+            param.setPrice(price);
+
+            // 数量
+            param.setAmount(e.getStkbal());
+            // 融资买入
+            param.setTradeType(TradeTypeEnum.RZ_BUY.getTradeType());
+
+
+            // -------------------------------------------------- 融资买入
+
+
+            try {
+
+                // 下单  ->  委托编号
+                Integer wtbh = bs(param);
+                log.info("[融资买入]-下单SUC     >>>     param : {} , wtbh : {}", JSON.toJSONString(param), wtbh);
+
+
+                // 融资买入 -> SUC
+                if (wtbh != null) {
+                    rzSucCodeList.add(stockCode);
+                } else {
+                    rzFailCodeList.add(stockCode);
+                }
+
+
+            } catch (Exception ex) {
+
+
+                // 非融资类 个股     ->     只支持 担保买入
+                rzFailCodeList.add(stockCode);
+
+
+                log.error("[融资买入]-下单FAIL     >>>     param : {} , errMsg : {}", JSON.toJSONString(param), ex.getMessage(), ex);
+            }
+        });
+    }
+
+
+    /**
+     * 担保再买入
+     *
+     * @param old__stockList
+     * @param old__posResp
+     * @param rzSucCodeList  融资买入 -> SUC
+     * @param rzFailCodeList 融资买入 -> FAIL  =>  待 担保买入
+     */
+    private void buy_zy(List<CcStockInfo> old__stockList,
+                        QueryCreditNewPosResp old__posResp,
+
+                        Set<String> rzSucCodeList,
+                        Set<String> rzFailCodeList) {
+
+
+        List<CcStockInfo> FAIL_LIST = Lists.newArrayList();
+
+
+        // --------------------------------------------------------------------------
+
+
+        old__stockList.forEach(e -> {
+
+
+            String stockCode = e.getStkcode();
+
+
+            // -------------------------------------------------- 价格精度
+
+
+            // 个股   ->   价格 2位小数
+            // ETF   ->   价格 3位小数
+            int scale = calcPriceScale(e.getStktype_ex());
+
+
+            // -------------------------------------------------- 融资买入 - 参数
+
+
+            // 已融资买入
+            if (rzSucCodeList.contains(stockCode)) {
+                log.info("担保再买入 - 忽略   =>   已[融资买入] SUC     >>>     stock : [{}-{}] , posStock : {}",
+                         stockCode, e.getStkname(), JSON.toJSONString(e));
+                return;
+            }
+
+
+            // 待 担保买入  ->  NOT
+            if (!rzFailCodeList.contains(stockCode)) {
+                log.error("担保再买入 - err     >>>     stock : [{}-{}] , posStock : {}",
+                          stockCode, e.getStkname(), JSON.toJSONString(e));
+                return;
+            }
+
+
+            // -------------------------------------------------- 担保买入 - 参数
+
+
+            log.info("担保再买入 - [担保买入]   =>   下单start     >>>     stock : [{}-{}] , posStock : {}",
+                     stockCode, e.getStkname(), JSON.toJSONString(e));
+
+
+            TradeBSParam param = new TradeBSParam();
+            param.setStockCode(e.getStkcode());
+            param.setStockName(e.getStkname());
+
+            // TODO   B价格 -> 最高价（卖5价）
+            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.9)).setScale(scale, RoundingMode.HALF_UP);
+            param.setPrice(price);
+
+            // 数量
+            param.setAmount(e.getStkbal());
+            // 担保买入
+            param.setTradeType(TradeTypeEnum.ZY_BUY.getTradeType());
+
+
+            // -------------------------------------------------- 担保买入
+
+
+            try {
+
+                // 委托编号
+                Integer wtbh = bs(param);
+
+                log.info("担保再买入 - [担保买入]   =>   下单SUC     >>>     stock : [{}-{}] , posStock : {} , param : {} , wtbh : {}",
+                         stockCode, e.getStkname(), JSON.toJSONString(e), JSON.toJSONString(param), wtbh);
+
+
+            } catch (Exception ex) {
+
+                FAIL_LIST.add(e);
+
+                log.error("担保再买入 - [担保买入]   =>   下单FAIL     >>>     stock : [{}-{}] , posStock : {} , param : {} , errMsg : {}",
+                          stockCode, e.getStkname(), JSON.toJSONString(e), JSON.toJSONString(param), ex.getMessage(), ex);
+            }
+        });
+
+
+        // TODO     FAIL_LIST -> retry
+        // handle__FAIL_LIST(FAIL_LIST);
+        log.error("担保再买入 - [担保买入]   =>   下单FAIL     >>>     FAIL_LIST : {}", JSON.toJSONString(FAIL_LIST));
+    }
+
+
+    private boolean buyAgain__preCheck() {
+
+
+        // 1、当前持仓
+        QueryCreditNewPosResp now__posResp = queryCreditNewPosV2();
+
+
+        now__posResp.getStocks().forEach(e -> {
+            // 可用数量
+            Integer stkavl = e.getStkavl();
+            if (stkavl > 0) {
+
+            }
+        });
+
+
+        // 总市值
+        double totalmkval = now__posResp.getTotalmkval().doubleValue();
+        if (totalmkval == 1000) {
+            return true;
+        }
+
+
+        // 总仓位     2.3567123   ->   235.67%
+        double posratio = now__posResp.getPosratio().doubleValue();
+        // 总仓位<5%
+        if (posratio <= 0.05) {
+            return true;
+        }
+
+
+        // 2、check   ->   全部[卖单]->[已成交]
+        List<CcStockInfo> stocks = now__posResp.getStocks();
+        if (CollectionUtils.isEmpty(stocks)) {
+            return true;
+        }
+
+
+        log.warn("quick__buyAgain  -  check SELL委托单     >>>     {}", JSON.toJSONString(stocks));
+
+
+        return true;
+    }
+
+
+    /**
+     * check/retry   =>   [一键清仓]-委托单 状态
+     *
+     * @param retry 最大重试次数
+     */
+    private void checkAndRetry___clearPosition__OrdersStatus(int retry) {
+        if (--retry < 0) {
+            return;
+        }
+
+
+        // 1、全部委托单
+        List<GetOrdersDataResp> ordersData = getOrdersData();
+
+
+        // 2、check
+        boolean flag = true;
+        for (GetOrdersDataResp e : ordersData) {
+
+            // 委托状态（未报/已报/已撤/部成/已成/废单）
+            String wtzt = e.getWtzt();
+
+
+            // 已成交   ->   已撤/已成/废单
+            // 未成交   ->   未报/已报/部成
+            if ("未报".equals(wtzt) || "已报".equals(wtzt) || "部成".equals(wtzt)) {
+                flag = false;
+                break;
+            }
+        }
+
+
+        // --------------------------------
+
+
+        // wait
+        SleepUtils.winSleep();
+
+
+        // --------------------------------
+
+
+        // 存在   [未成交]-[SELL委托单]   ->   retry
+        if (!flag) {
+
+            // 先撤单 -> 再全部卖出
+            quickClearPosition();
+
+            // 再次 check
+            checkAndRetry___clearPosition__OrdersStatus(retry);
+        }
+    }
+
+
+//    /**
+//     * 一键撤单
+//     */
+//    private void quick__cancelOrder() {
+//        quickCancelOrder();
+//    }
+
+
+    /**
+     * convert   撤单paramList
+     *
+     * @param ordersData
+     * @return
+     */
+    private List<TradeRevokeOrdersParam> convert2ParamList(List<GetOrdersDataResp> ordersData) {
+
+        // 2、convert   撤单paramList
+        List<TradeRevokeOrdersParam> paramList = Lists.newArrayList();
+        ordersData.forEach(e -> {
+
+
+            // 委托状态（未报/已报/已撤/部成/已成/废单）
+            String wtzt = e.getWtzt();
+
+
+            // 过滤  ->  已成/已撤/废单
+            if ("已成".equals(wtzt) || "已撤".equals(wtzt) || "废单".equals(wtzt)) {
+                return;
+            }
+
+
+            log.warn("quick__cancelOrder - [未成交]->[撤单]     >>>     stock : [{}-{}] , wtbh : {} , wtzt : {} , order : {}",
+                     e.getZqdm(), e.getZqmc(), e.getWtbh(), wtzt, JSON.toJSONString(e));
+
+
+            // -----------------------------------------
+
+
+            TradeRevokeOrdersParam param = new TradeRevokeOrdersParam();
+            // 日期（20250511）
+            param.setDate(e.getWtrq());
+            // 委托编号
+            param.setWtdh(e.getWtbh());
+
+
+            paramList.add(param);
+        });
+
+
+        return paramList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**

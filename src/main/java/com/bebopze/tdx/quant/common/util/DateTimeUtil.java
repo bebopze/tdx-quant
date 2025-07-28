@@ -1,10 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
 import java.text.DecimalFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 
@@ -134,6 +131,10 @@ public class DateTimeUtil {
         return date.format(yyyy_MM_dd);
     }
 
+    public static String format_yyyyMMdd(LocalDate date) {
+        return date.format(yyyyMMdd);
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -143,11 +144,18 @@ public class DateTimeUtil {
     }
 
 
-    public static boolean between(LocalDate date, LocalDate startDate, LocalDate endDate) {
-        if (startDate == null || endDate == null) {
+    public static boolean between(LocalDate date, LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
             throw new IllegalArgumentException("起始和结束日期不能为空");
         }
-        return !date.isBefore(startDate) && !date.isAfter(endDate);
+        return !date.isBefore(start) && !date.isAfter(end);
+    }
+
+    public static boolean between(LocalTime time, LocalTime start, LocalTime end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("起始和结束时间不能为空");
+        }
+        return !time.isBefore(start) && !time.isAfter(end);
     }
 
 

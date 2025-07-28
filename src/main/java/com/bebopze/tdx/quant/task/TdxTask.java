@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.task;
 
 import com.bebopze.tdx.quant.service.ExtDataService;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class TdxTask {
 
 
     @Autowired
-    private IndexService indexService;
+    private MarketService marketService;
 
     @Autowired
     private TopBlockService topBlockService;
@@ -106,7 +106,7 @@ public class TdxTask {
         topBlockService.refreshAll();
 
         // 大盘量化
-        indexService.importMarketMidCycle();
+        marketService.importMarketMidCycle();
 
 
         log.info("---------------------------- 任务 [reresKlineAll - 行情数据 更新入库]   执行 end");

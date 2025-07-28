@@ -63,13 +63,11 @@ public class TradeController {
     }
 
 
-    @Operation(summary = "全部 委托单列表   -   仅返回 可撤列表", description = "全部 委托单列表   -   仅返回 可撤列表")
-    @PostMapping(value = "/getRevokeList")
-    @Deprecated
-    public Result<Integer> getRevokeList() {
+    @Operation(summary = "全部 可撤单列表", description = "全部 可撤单列表")
+    @GetMapping(value = "/getRevokeList")
+    public Result<List<GetOrdersDataResp>> getRevokeList() {
         // https://jywg.18.cn/MarginTrade/GetRevokeList?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
-        // tradeService.getRevokeList();
-        return Result.SUC();
+        return Result.SUC(tradeService.getRevokeList());
     }
 
 
@@ -78,5 +76,40 @@ public class TradeController {
     public Result<List<RevokeOrderResultDTO>> revokeOrders(@RequestBody List<TradeRevokeOrdersParam> paramList) {
         return Result.SUC(tradeService.revokeOrders(paramList));
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "一键清仓", description = "一键清仓")
+    @GetMapping(value = "/quickOption/clearPosition")
+    public Result<Void> quickClearPosition() {
+        tradeService.quickClearPosition();
+        return Result.SUC();
+    }
+
+    @Operation(summary = "一键买入", description = "一键买入")
+    @GetMapping(value = "/quickOption/buyPosition")
+    public Result<Void> quickBuyPosition() {
+        tradeService.quickBuyPosition();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "一键撤单", description = "一键撤单")
+    @GetMapping(value = "/quickOption/cancelOrder")
+    public Result<Void> quickCancelOrder() {
+        tradeService.quickCancelOrder();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "一键再融资", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金")
+    @GetMapping(value = "/quickOption/resetFinancing")
+    public Result<Void> quickResetFinancing() {
+        tradeService.quickResetFinancing();
+        return Result.SUC();
+    }
+
 
 }

@@ -9,7 +9,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
@@ -102,7 +102,7 @@ public class BacktestStrategy {
 
 
     @Autowired
-    private IndexService indexService;
+    private MarketService marketService;
 
 
     @Autowired
@@ -630,7 +630,7 @@ public class BacktestStrategy {
      */
     private void market__position_limit(LocalDate tradeDate) {
 
-        QaMarketMidCycleDO qaMarketMidCycleDO = indexService.marketInfo(tradeDate);
+        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
         Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
 
 
@@ -1617,10 +1617,6 @@ public class BacktestStrategy {
         return idx2 - idx1;
     }
 
-
-//    private BigDecimal of(double val) {
-//        return BigDecimal.valueOf(val);
-//    }
 
     private static BigDecimal of(Number val) {
         return BigDecimal.valueOf(val.doubleValue()).setScale(4, RoundingMode.HALF_UP);

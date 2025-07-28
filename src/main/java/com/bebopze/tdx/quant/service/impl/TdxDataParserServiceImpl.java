@@ -10,11 +10,12 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
 import com.bebopze.tdx.quant.service.ExtDataService;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -64,7 +66,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Autowired
-    private IndexService indexService;
+    private MarketService marketService;
 
     @Autowired
     private ExtDataService extDataService;
@@ -102,7 +104,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 大盘量化
 
 
-        indexService.importMarketMidCycle();
+        marketService.importMarketMidCycle();
 
 
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
@@ -1331,7 +1333,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     private BigDecimal of(Double val) {
-        return val == null || Double.isNaN(val) ? null : new BigDecimal(val);
+        return NumUtil.double2Decimal(val);
     }
 
 

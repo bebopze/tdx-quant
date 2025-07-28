@@ -4,7 +4,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.dal.service.IQaMarketMidCycleService;
 import com.bebopze.tdx.quant.parser.tdxdata.IndexReportParser;
-import com.bebopze.tdx.quant.service.IndexService;
+import com.bebopze.tdx.quant.service.MarketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class IndexServiceImpl implements IndexService {
+public class MarketServiceImpl implements MarketService {
 
 
     @Autowired

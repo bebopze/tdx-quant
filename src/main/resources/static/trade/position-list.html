@@ -94,7 +94,7 @@
                         <input type="text" class="form-control" id="ftotaldebts" readonly>
                     </div>
                     <div class="col-md-4">
-                        <label for="avalmoney" class="form-label">可取资金</label>
+                        <label for="avalmoney" class="form-label">可用资金</label>
                         <input type="text" class="form-control" id="avalmoney" readonly>
                     </div>
                 </div>
@@ -142,7 +142,10 @@
                     <th onclick="sortTable('profit')">持仓盈亏<span class="sort-icon" id="sortProfit"></span></th>
                     <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-icon"
                                                                              id="sortProfitratio"></span></th>
-                    <th onclick="sortTable('posratio')">个股仓位占比<span class="sort-icon" id="sortPosratio"></span>
+                    <th onclick="sortTable('curprofit')">当日盈亏<span class="sort-icon" id="sortCurprofit"></span>
+                    <th onclick="sortTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
+                                                                                id="sortCurProfitratio"></span>
+                    <th onclick="sortTable('posratio')">仓位占比<span class="sort-icon" id="sortPosratio"></span>
                     </th>
                     <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon" id="sortStkbal"></span></th>
                     <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon" id="sortStkavl"></span></th>
@@ -203,7 +206,7 @@
         if (sortState.column === column) {
             sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
         } else {
-            sortState.order = 'asc';
+            sortState.order = 'desc';
             sortState.column = column;
         }
 
@@ -265,8 +268,10 @@
       <td>${item.costprice.toFixed(2)}</td>
       <td>${item.lastprice.toFixed(2)}</td>
       <td>${item.mktval.toFixed(2)}</td>
-      <td>${item.profit.toFixed(2)}</td>
-      <td>${(item.profitratio * 100).toFixed(2)}%</td>
+      <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit.toFixed(2)}</td>
+      <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
+      <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
+      <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
       <td>${(item.posratio * 100).toFixed(2)}%</td>
       <td>${item.stkbal}</td>
       <td>${item.stkavl}</td>
@@ -292,19 +297,28 @@
                 const responseData = data.data;
                 positionsData = responseData.stocks;
 
+                // 正负收益 -> 红/绿
+                const setColor = (elementId, value) => {
+                    const el = document.getElementById(elementId);
+                    el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                    el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
+                };
+
                 // 填充资金持仓表单
                 document.getElementById('totalAsset').value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('totalMktVal').value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('accessMoney').value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('profit').value = responseData.profit.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('curProfit').value = responseData.curprofit !== null ? responseData.curprofit.toLocaleString('en-US', {minimumFractionDigits: 2}) : '-';
+
+                setColor('profit', responseData.profit);
+                setColor('curProfit', responseData.curprofit ?? 0);
+
                 document.getElementById('posRatio').value = `${(responseData.posratio * 100).toFixed(2)}%`;
                 document.getElementById('netAsset').value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('totalLiability').value = responseData.totalliability.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('marginAvl').value = responseData.marginavl.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('marginRates').value = `${(responseData.marginrates * 100).toFixed(2)}%`;
                 document.getElementById('ftotaldebts').value = responseData.ftotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('avalmoney').value = responseData.avalmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
+                setColor('avalmoney', responseData.avalmoney);
                 document.getElementById('realrate').value = `${(responseData.realrate * 100).toFixed(2)}%`;
                 document.getElementById('dtotaldebts').value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});

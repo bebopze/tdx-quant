@@ -8,7 +8,7 @@ import java.time.LocalDate;
  * @author: bebopze
  * @date: 2025/7/21
  */
-public interface IndexService {
+public interface MarketService {
 
     void importMarketMidCycle();
 

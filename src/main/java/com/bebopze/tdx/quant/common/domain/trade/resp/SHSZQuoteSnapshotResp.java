@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -303,6 +304,7 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // ----- 自定义 字段
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime dateTime;
 
 
