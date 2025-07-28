@@ -212,7 +212,7 @@ public class KlineReportParser {
 
 
         } catch (Exception e) {
-            log.error("err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
+            log.error("parseByFilePath - err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
         }
 
 

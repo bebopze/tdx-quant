@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.util.StockTypeUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
@@ -64,21 +65,6 @@ public class LdayParser {
 
 
     public static void main(String[] args) {
-
-
-//        List<Integer> list1 = Lists.newArrayList(1, 2, 3);
-//        List<Integer> list2 = Lists.newArrayList(1, 2, 3, 4, 5);
-//        int size1 = list1.size();
-//        int size2 = list2.size();
-//        if (size1 < size2) {
-//            List<Integer> list3 = list2.subList(size1, size2);
-//            System.out.println(list3);
-//        }
-
-
-//        String filePath = "/DEL/hsjday (3)/sz/lday/" + "sz300059.day";
-//        List<LdayDTO> ldayDTOS = parseByFilePath(filePath);
-//        System.out.println();
 
 
         // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/sh/lday/sh000001.day
@@ -316,31 +302,39 @@ public class LdayParser {
             ByteBuffer byteBuffer = ByteBuffer.wrap(slice).order(ByteOrder.LITTLE_ENDIAN);
 
 
+            // ------------------------- 价格精度
+
+
+            // 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
+            int priceScale = StockTypeUtil.stockPriceScale(code);
+            // 2位精度 -> /100
+            // 3位精度 -> /1000
+            int priceDivisor = priceScale == 3 ? 1_000 : 1_00;
+
+
+            // -------------------------
+
+
             // 日期
             int date = byteBuffer.getInt();
             // 开盘价
-            float open = (float) byteBuffer.getInt() / 100;
+            // float open = (float) byteBuffer.getInt() / 100;
+            float open = (float) byteBuffer.getInt() / priceDivisor;
             // 最高价
-            float high = (float) byteBuffer.getInt() / 100;
+            float high = (float) byteBuffer.getInt() / priceDivisor;
             // 最低价
-            float low = (float) byteBuffer.getInt() / 100;
+            float low = (float) byteBuffer.getInt() / priceDivisor;
             // 收盘价
-            float close = (float) byteBuffer.getInt() / 100;
+            float close = (float) byteBuffer.getInt() / priceDivisor;
             // 成交额（元）
             BigDecimal amount = BigDecimal.valueOf(byteBuffer.getFloat());
 
             // 成交量
             long vol = byteBuffer.getInt();     // 负数bug + 复权bug
             if (vol < 0) {
-
-                // stockCode : 002364 , idx : 3612 , date : 2025-03-13 , diffFields : {"vol":{"v1":"88832504","v2":"2911100"}}
-                // stockCode : 002518 , idx : 3466 , date : 2025-03-13 , diffFields : {"vol":{"v1":"46390892","v2":"16293000"}}
-                // stockCode : 601988 , idx : 1303 , date : 2015-06-09 , diffFields : {"vol":{"v1":"4795353100","v2":"47953531"}}
-                // stockCode : 601988 , idx : 1323 , date : 2015-07-08 , diffFields : {"vol":{"v1":"5109897400","v2":"51098974"}}
-                // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
+                long signedVol = vol;
 
                 // vol &= 0xFFFFFFFFL;
-                long signedVol = vol;
                 vol = Integer.toUnsignedLong((int) vol);
                 log.warn("{}   -   {}   {} -> {}", code, date, signedVol, vol);
             }

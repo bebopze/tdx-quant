@@ -26,8 +26,8 @@ public class NumUtil {
     }
 
 
-    public static BigDecimal double2Decimal(Double v) {
-        return new BigDecimal(v).setScale(3, RoundingMode.HALF_UP);
+    public static BigDecimal double2Decimal(Double val) {
+        return val == null || Double.isNaN(val) ? null : new BigDecimal(val).setScale(3, RoundingMode.HALF_UP);
     }
 
 
