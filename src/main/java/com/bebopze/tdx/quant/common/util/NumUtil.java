@@ -18,7 +18,7 @@ public class NumUtil {
 
 
     public static double decimal2Double(BigDecimal val) {
-        return decimal2Double(val, 2);
+        return decimal2Double(val, 3);
     }
 
     public static double decimal2Double(BigDecimal val, int scale) {

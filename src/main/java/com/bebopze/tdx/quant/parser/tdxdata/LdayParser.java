@@ -421,7 +421,8 @@ public class LdayParser {
 
 
     private static BigDecimal of(Number val) {
-        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+        // 个股价格 - 2位小数          ETF价格 - 3位小数
+        return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP);
     }
 
 
@@ -503,24 +504,7 @@ public class LdayParser {
     }
 
 
-    private static List<LdayDTO> merge
-            (List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
-
-//        // 半年
-//        LocalDate dateLine = LocalDate.now().minusMonths(6);
-//
-//
-//        // 远期
-//        List<LdayDTO> far_dtoList = klineReport__ldayDTOList.stream().filter(e -> e.getTradeDate().isBefore(dateLine)).collect(Collectors.toList());
-//        // 近期
-//        List<LdayDTO> recent_dtoList = lday__ldayDTOList.stream().filter(e -> !e.getTradeDate().isBefore(dateLine)).collect(Collectors.toList());
-//
-//
-//        far_dtoList.addAll(recent_dtoList);
-//
-//
-//        return far_dtoList;
-
+    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
 
         List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
 

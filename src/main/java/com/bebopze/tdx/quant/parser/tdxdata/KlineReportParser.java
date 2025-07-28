@@ -234,7 +234,8 @@ public class KlineReportParser {
 
 
     private static BigDecimal of(Number val) {
-        return new BigDecimal(String.valueOf(val)).setScale(2, RoundingMode.HALF_UP);
+        // 个股价格 - 2位小数          ETF价格 - 3位小数
+        return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP);
     }
 
 
