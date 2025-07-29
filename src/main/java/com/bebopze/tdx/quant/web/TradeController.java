@@ -89,15 +89,15 @@ public class TradeController {
         return Result.SUC();
     }
 
-    @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）")
-    @PostMapping(value = "/quickOption/buyPosition")
-    public Result<Void> quickBuyPosition(@RequestBody List<QuickBuyPositionParam> positionList) {
-        tradeService.quickBuyPosition(positionList);
+    @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）  =>   清仓（old） ->  买入（new）")
+    @PostMapping(value = "/quickOption/buyNewPosition")
+    public Result<Void> quickBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
+        tradeService.quickBuyNewPosition(newPositionList);
         return Result.SUC();
     }
 
 
-    @Operation(summary = "一键撤单", description = "一键撤单")
+    @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单")
     @GetMapping(value = "/quickOption/cancelOrder")
     public Result<Void> quickCancelOrder() {
         tradeService.quickCancelOrder();

@@ -77,13 +77,15 @@ public interface TradeService {
      */
     void quickClearPosition();
 
-    /**
-     * 一键买入（调仓换股）
-     */
-    void quickBuyPosition(List<QuickBuyPositionParam> positionList);
 
     /**
-     * 一键撤单
+     * 一键买入（调仓换股）    =>     清仓（old） ->  买入（new）
+     */
+    void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+
+
+    /**
+     * 一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单
      */
     void quickCancelOrder();
 

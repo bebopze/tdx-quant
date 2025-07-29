@@ -139,15 +139,15 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public void quickBuyPosition(List<QuickBuyPositionParam> new_positionList) {
+    public void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
 
 
         // 1、check  持仓比例
-        check__newPositionList(new_positionList);
+        check__newPositionList(newPositionList);
 
 
         // 2、组装   param -> PosResp
-        List<CcStockInfo> new__positionList = convert__new_posResp(new_positionList);
+        List<CcStockInfo> new__positionList = convert__newPositionList(newPositionList);
 
 
         // 3、一键清仓（卖old）
@@ -377,15 +377,15 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 一键再买入
      *
-     * @param old__positionList
+     * @param positionList
      */
-    private void quick__buyAgain(List<CcStockInfo> old__positionList) {
+    private void quick__buyAgain(List<CcStockInfo> positionList) {
 
 
         // 仓位占比 倒序
-        List<CcStockInfo> sort__old__positionList = old__positionList.stream()
-                                                                     .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
-                                                                     .collect(Collectors.toList());
+        List<CcStockInfo> sort__positionList = positionList.stream()
+                                                           .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
+                                                           .collect(Collectors.toList());
 
 
         // --------------------------------------------------
@@ -404,14 +404,14 @@ public class TradeServiceImpl implements TradeService {
         // ------------------------------ 1、融资再买入
 
         // 融资买
-        buy_rz(sort__old__positionList, rzSucCodeList, rzFailCodeList);
+        buy_rz(sort__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 2、担保再买入
 
 
         // 担保买
-        buy_zy(sort__old__positionList, rzSucCodeList, rzFailCodeList);
+        buy_zy(sort__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 3、新空余 担保资金
@@ -423,24 +423,24 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal avalmoney = bsAfter__posResp.getAvalmoney();
 
 
-        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__positionList : {}", avalmoney, JSON.toJSONString(sort__old__positionList));
+        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__positionList : {}", avalmoney, JSON.toJSONString(sort__positionList));
     }
 
 
     /**
      * 融资再买入
      *
-     * @param sort__old__positionList
-     * @param rzSucCodeList           融资买入 -> SUC
-     * @param rzFailCodeList          融资买入 -> FAIL  =>  待 担保买入
+     * @param sort__positionList
+     * @param rzSucCodeList      融资买入 -> SUC
+     * @param rzFailCodeList     融资买入 -> FAIL  =>  待 担保买入
      */
-    private void buy_rz(List<CcStockInfo> sort__old__positionList,
+    private void buy_rz(List<CcStockInfo> sort__positionList,
 
                         Set<String> rzSucCodeList,
                         Set<String> rzFailCodeList) {
 
 
-        sort__old__positionList.forEach(e -> {
+        sort__positionList.forEach(e -> {
 
 
             String stockCode = e.getStkcode();
@@ -506,11 +506,11 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 担保再买入
      *
-     * @param sort__old__positionList
-     * @param rzSucCodeList           融资买入 -> SUC
-     * @param rzFailCodeList          融资买入 -> FAIL  =>  待 担保买入
+     * @param sort__positionList
+     * @param rzSucCodeList      融资买入 -> SUC
+     * @param rzFailCodeList     融资买入 -> FAIL  =>  待 担保买入
      */
-    private void buy_zy(List<CcStockInfo> sort__old__positionList,
+    private void buy_zy(List<CcStockInfo> sort__positionList,
 
                         Set<String> rzSucCodeList,
                         Set<String> rzFailCodeList) {
@@ -522,7 +522,7 @@ public class TradeServiceImpl implements TradeService {
         // --------------------------------------------------------------------------
 
 
-        sort__old__positionList.forEach(e -> {
+        sort__positionList.forEach(e -> {
 
 
             String stockCode = e.getStkcode();
@@ -843,12 +843,12 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
-     * param -> PosResp
+     * param -> CcStockInfo
      *
      * @param newPositionList
      * @return
      */
-    private List<CcStockInfo> convert__new_posResp(List<QuickBuyPositionParam> newPositionList) {
+    private List<CcStockInfo> convert__newPositionList(List<QuickBuyPositionParam> newPositionList) {
 
 
         return newPositionList.stream().map(e -> {
@@ -894,9 +894,12 @@ public class TradeServiceImpl implements TradeService {
     /**
      * check  持仓比例     是否合理     ->     否则，自动重新计算 仓位比例
      *
-     * @param new_positionList
+     * @param newPositionList
      */
-    private void check__newPositionList(List<QuickBuyPositionParam> new_positionList) {
+    private void check__newPositionList(List<QuickBuyPositionParam> newPositionList) {
+
+
+        // --------------------- 总资金（融资上限） 计算
 
 
         // 1、我的持仓
@@ -905,32 +908,28 @@ public class TradeServiceImpl implements TradeService {
 
         // 净资产
         double netasset = old_posResp.getNetasset().doubleValue();
-        // 融资上限 = 净资产 x 2.1                 理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
+        // 总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
         double maxFinancingCap = netasset * 2.1;
 
 
         // ---------------------
 
 
-        // 总市值 < 融资上限
-        // Assert.isTrue(true, String.format("当前账户：净资产=[%s] , 买入总额=[%] > 融资上限=[%s]", netasset, null, maxFinancingCap));
-
-
         // --------------------- 实际 仓位占比（如果 仓位累加 > 100%   ->   自从触发 根据仓位数值 重新计算比例）
 
 
         // 总仓位占比  <=  100%
-        double totalPositionPct = new_positionList.stream()
-                                                  .map(QuickBuyPositionParam::getPositionPct)
-                                                  .reduce(0.0, Double::sum);
+        double totalPositionPct = newPositionList.stream()
+                                                 .map(QuickBuyPositionParam::getPositionPct)
+                                                 .reduce(0.0, Double::sum);
 
 
         if (totalPositionPct > 100) {
-            log.error("check__new_orderData     >>>     总仓位=[{}] > 100%", totalPositionPct);
+            log.warn("check__new_orderData  ->  触发 仓位比例 重新计算     >>>     总仓位=[{}%] > 100%", totalPositionPct);
 
 
             // 根据仓位数值  ->  重新计算 仓位比例
-            new_positionList.forEach(e -> {
+            newPositionList.forEach(e -> {
 
                 // 实际 仓位占比  =  仓位 / 总仓位
                 double act_positionPct = e.getPositionPct() * 100 / totalPositionPct;
@@ -939,10 +938,10 @@ public class TradeServiceImpl implements TradeService {
         }
 
 
-        // ---------------------
+        // --------------------- 持仓数量 计算
 
 
-        new_positionList.forEach(e -> {
+        newPositionList.forEach(e -> {
 
             // 价格
             double price = e.getPrice();
