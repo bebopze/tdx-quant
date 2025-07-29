@@ -132,11 +132,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         // listAllFromDiskCache     >>>     totalTime : 6.9s
-        return listAllFromDiskCache(refresh);
+        // return listAllFromDiskCache(refresh);
 
 
         // listByCursor     >>>     totalTime : 52.4s
-        // return listByCursor();
+        return listByCursor();
 
 
         // listAllKline     >>>     totalTime : 52.7s

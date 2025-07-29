@@ -265,8 +265,8 @@
       <td>${item.stkcode}</td>
       <td>${item.stkname}</td>
       <td>${item.market}</td>
-      <td>${item.costprice.toFixed(2)}</td>
-      <td>${item.lastprice.toFixed(2)}</td>
+      <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+      <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
       <td>${item.mktval.toFixed(2)}</td>
       <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit.toFixed(2)}</td>
       <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>

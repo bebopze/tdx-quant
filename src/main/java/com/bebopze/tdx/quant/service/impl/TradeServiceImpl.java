@@ -15,6 +15,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
+import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -29,7 +30,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -140,7 +140,9 @@ public class TradeServiceImpl implements TradeService {
     public void quickBuyPosition() {
 
         // From DB
-        QueryCreditNewPosResp posResp = null;   // fromDB();
+        String jsonStr = "";
+
+        QueryCreditNewPosResp posResp = JSON.parseObject(jsonStr, QueryCreditNewPosResp.class);
 
 
         quick__buyAgain(posResp);
@@ -177,8 +179,8 @@ public class TradeServiceImpl implements TradeService {
         }
 
 
-        // 等待成交   ->   3s
-        SleepUtils.sleep(3000);
+        // 等待成交   ->   1s
+        SleepUtils.sleep(1000);
     }
 
 
@@ -191,7 +193,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 2、预校验
-        // TODO   preCheck(posResp);
+        preCheck(posResp);
 
 
         // TODO   3、入库   =>   异常中断 -> 可恢复
@@ -203,8 +205,8 @@ public class TradeServiceImpl implements TradeService {
         quickClearPosition();
 
 
-        // 等待成交   ->   3s
-        SleepUtils.winSleep(3000);
+        // 等待成交   ->   1.5s
+        SleepUtils.winSleep(1500);
 
 
         // 5、check/retry   =>   [一键清仓]-委托单 状态
@@ -321,12 +323,12 @@ public class TradeServiceImpl implements TradeService {
             param.setStockCode(e.getStkcode());
             param.setStockName(e.getStkname());
 
-            // TODO   最低价（买5价） =  最新价 x 0.997
-            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.997)).setScale(scale, RoundingMode.HALF_UP);
-            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.05)).setScale(scale, RoundingMode.HALF_UP);
+            // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
+            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(1.05)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
-            // 数量
+            // 数量（S -> 可用数量）
             param.setAmount(e.getStkavl());
             // 卖出
             param.setTradeType(TradeTypeEnum.SELL.getTradeType());
@@ -433,8 +435,8 @@ public class TradeServiceImpl implements TradeService {
 
         QueryCreditNewPosResp bsAfter__posResp = queryCreditNewPosV2();
 
-        // 可用保证金
-        BigDecimal avalmoney = bsAfter__posResp.getMarginavl();
+        // 可用资金
+        BigDecimal avalmoney = bsAfter__posResp.getAvalmoney();
 
 
         log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__posResp : {}", avalmoney, JSON.toJSONString(bsAfter__posResp));
@@ -477,13 +479,13 @@ public class TradeServiceImpl implements TradeService {
             param.setStockCode(stockCode);
             param.setStockName(e.getStkname());
 
-            // TODO   B价格 -> 最高价（卖5价）
-            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
-            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.95)).setScale(scale, RoundingMode.HALF_UP);
+            // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
+            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(0.95)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
-            // 数量
-            param.setAmount(e.getStkbal());
+            // 数量（B数量 = S数量 -> 可用数量）
+            param.setAmount(StockUtil.quantity(e.getStkavl()));
             // 融资买入
             param.setTradeType(TradeTypeEnum.RZ_BUY.getTradeType());
 
@@ -584,13 +586,13 @@ public class TradeServiceImpl implements TradeService {
             param.setStockCode(e.getStkcode());
             param.setStockName(e.getStkname());
 
-            // TODO   B价格 -> 最高价（卖5价）
-            // BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
-            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.9)).setScale(scale, RoundingMode.HALF_UP);
+            // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
+            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(0.9)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
-            // 数量
-            param.setAmount(e.getStkbal());
+            // 数量（B数量 = S数量 -> 可用数量）
+            param.setAmount(StockUtil.quantity(e.getStkavl()));
             // 担保买入
             param.setTradeType(TradeTypeEnum.ZY_BUY.getTradeType());
 
@@ -720,14 +722,6 @@ public class TradeServiceImpl implements TradeService {
             checkAndRetry___clearPosition__OrdersStatus(retry);
         }
     }
-
-
-//    /**
-//     * 一键撤单
-//     */
-//    private void quick__cancelOrder() {
-//        quickCancelOrder();
-//    }
 
 
     /**
