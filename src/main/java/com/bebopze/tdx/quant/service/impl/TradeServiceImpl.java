@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
@@ -14,6 +15,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.service.TradeService;
@@ -137,15 +139,23 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public void quickBuyPosition() {
-
-        // From DB
-        String jsonStr = "";
-
-        QueryCreditNewPosResp posResp = JSON.parseObject(jsonStr, QueryCreditNewPosResp.class);
+    public void quickBuyPosition(List<QuickBuyPositionParam> new_positionList) {
 
 
-        quick__buyAgain(posResp);
+        // 1、check  持仓比例
+        check__newPositionList(new_positionList);
+
+
+        // 2、组装   param -> PosResp
+        List<CcStockInfo> new__positionList = convert__new_posResp(new_positionList);
+
+
+        // 3、一键清仓（卖old）
+        quickClearPosition();
+
+
+        // 4、一键买入（买new）
+        quick__buyAgain(new__positionList);
     }
 
 
@@ -214,7 +224,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 6、一键再买入
-        quick__buyAgain(posResp);
+        quick__buyAgain(posResp.getStocks());
     }
 
 
@@ -313,7 +323,7 @@ public class TradeServiceImpl implements TradeService {
 
             // 个股   ->   价格 2位小数
             // ETF   ->   价格 3位小数
-            int scale = calcPriceScale(e.getStktype_ex());
+            int scale = priceScale(e.getStktype_ex());
 
 
             // --------------------------------------------------
@@ -365,43 +375,17 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
-     * 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
-     *
-     * @param stktypeEx
-     * @return
-     */
-    private int calcPriceScale(String stktypeEx) {
-
-        // ETF   ->   价格 3位小数
-        int scale = 2;
-
-
-        if (stktypeEx.equals("E")) {
-            scale = 3;
-        } else {
-            // 个股   ->   价格 2位小数
-            scale = 2;
-        }
-
-        return scale;
-    }
-
-
-    /**
      * 一键再买入
      *
-     * @param old__posResp
+     * @param old__positionList
      */
-    private void quick__buyAgain(QueryCreditNewPosResp old__posResp) {
-
-
-        // buyAgain__preCheck();
+    private void quick__buyAgain(List<CcStockInfo> old__positionList) {
 
 
         // 仓位占比 倒序
-        List<CcStockInfo> old__stockList = old__posResp.getStocks().stream()
-                                                       .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
-                                                       .collect(Collectors.toList());
+        List<CcStockInfo> sort__old__positionList = old__positionList.stream()
+                                                                     .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
+                                                                     .collect(Collectors.toList());
 
 
         // --------------------------------------------------
@@ -420,14 +404,14 @@ public class TradeServiceImpl implements TradeService {
         // ------------------------------ 1、融资再买入
 
         // 融资买
-        buy_rz(old__stockList, old__posResp, rzSucCodeList, rzFailCodeList);
+        buy_rz(sort__old__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 2、担保再买入
 
 
         // 担保买
-        buy_zy(old__stockList, old__posResp, rzSucCodeList, rzFailCodeList);
+        buy_zy(sort__old__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 3、新空余 担保资金
@@ -439,26 +423,24 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal avalmoney = bsAfter__posResp.getAvalmoney();
 
 
-        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__posResp : {}", avalmoney, JSON.toJSONString(bsAfter__posResp));
+        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__positionList : {}", avalmoney, JSON.toJSONString(sort__old__positionList));
     }
 
 
     /**
      * 融资再买入
      *
-     * @param old__stockList
-     * @param old__posResp
-     * @param rzSucCodeList  融资买入 -> SUC
-     * @param rzFailCodeList 融资买入 -> FAIL  =>  待 担保买入
+     * @param sort__old__positionList
+     * @param rzSucCodeList           融资买入 -> SUC
+     * @param rzFailCodeList          融资买入 -> FAIL  =>  待 担保买入
      */
-    private void buy_rz(List<CcStockInfo> old__stockList,
-                        QueryCreditNewPosResp old__posResp,
+    private void buy_rz(List<CcStockInfo> sort__old__positionList,
 
                         Set<String> rzSucCodeList,
                         Set<String> rzFailCodeList) {
 
 
-        old__stockList.forEach(e -> {
+        sort__old__positionList.forEach(e -> {
 
 
             String stockCode = e.getStkcode();
@@ -469,7 +451,7 @@ public class TradeServiceImpl implements TradeService {
 
             // 个股   ->   价格 2位小数
             // ETF   ->   价格 3位小数
-            int scale = calcPriceScale(e.getStktype_ex());
+            int scale = priceScale(e.getStktype_ex());
 
 
             // -------------------------------------------------- 融资买入 - 参数
@@ -524,13 +506,11 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 担保再买入
      *
-     * @param old__stockList
-     * @param old__posResp
-     * @param rzSucCodeList  融资买入 -> SUC
-     * @param rzFailCodeList 融资买入 -> FAIL  =>  待 担保买入
+     * @param sort__old__positionList
+     * @param rzSucCodeList           融资买入 -> SUC
+     * @param rzFailCodeList          融资买入 -> FAIL  =>  待 担保买入
      */
-    private void buy_zy(List<CcStockInfo> old__stockList,
-                        QueryCreditNewPosResp old__posResp,
+    private void buy_zy(List<CcStockInfo> sort__old__positionList,
 
                         Set<String> rzSucCodeList,
                         Set<String> rzFailCodeList) {
@@ -542,7 +522,7 @@ public class TradeServiceImpl implements TradeService {
         // --------------------------------------------------------------------------
 
 
-        old__stockList.forEach(e -> {
+        sort__old__positionList.forEach(e -> {
 
 
             String stockCode = e.getStkcode();
@@ -553,7 +533,7 @@ public class TradeServiceImpl implements TradeService {
 
             // 个股   ->   价格 2位小数
             // ETF   ->   价格 3位小数
-            int scale = calcPriceScale(e.getStktype_ex());
+            int scale = priceScale(e.getStktype_ex());
 
 
             // -------------------------------------------------- 融资买入 - 参数
@@ -773,6 +753,32 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
+     * 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
+     *
+     * @param stktypeEx
+     * @return
+     */
+    private int priceScale(String stktypeEx) {
+
+        // ETF   ->   价格 3位小数
+        int scale = 2;
+
+
+        if (stktypeEx.equals("E")) {
+            scale = 3;
+        } else {
+            // 个股   ->   价格 2位小数
+            scale = 2;
+        }
+
+        return scale;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
      * 下单 -> B/S
      *
      * @param param
@@ -830,6 +836,122 @@ public class TradeServiceImpl implements TradeService {
         req.setRevokes(String.join(",", revokeList));
 
         return req;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * param -> PosResp
+     *
+     * @param newPositionList
+     * @return
+     */
+    private List<CcStockInfo> convert__new_posResp(List<QuickBuyPositionParam> newPositionList) {
+
+
+        return newPositionList.stream().map(e -> {
+                                  CcStockInfo stockInfo = new CcStockInfo();
+
+
+                                  //   TradeBSParam param = new TradeBSParam();
+                                  //   param.setStockCode(stockCode);
+                                  //   param.setStockName(e.getStkname());
+                                  //
+                                  //   // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
+                                  //   BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
+                                  //   param.setPrice(price);
+                                  //
+                                  //   // 数量（B数量 = S数量 -> 可用数量）
+                                  //   param.setAmount(StockUtil.quantity(e.getStkavl()));
+                                  //   // 融资买入
+                                  //   param.setTradeType(TradeTypeEnum.RZ_BUY.getTradeType());
+
+
+                                  stockInfo.setStkcode(e.getStockCode());
+                                  stockInfo.setStkname(e.getStockName());
+
+                                  // 价格
+                                  stockInfo.setLastprice(NumUtil.double2Decimal(e.getPrice()));
+                                  // 数量
+                                  stockInfo.setStkavl(e.getQuantity());
+
+
+                                  // 股票/ETF   ->   计算 price 精度
+                                  stockInfo.setStktype_ex(StockUtil.stktype_ex(e.getStockCode(), e.getStockName()));
+                                  // 市值
+                                  stockInfo.setMktval(e.getMarketValue());
+
+
+                                  return stockInfo;
+                              })
+                              .collect(Collectors.toList());
+
+    }
+
+
+    /**
+     * check  持仓比例     是否合理     ->     否则，自动重新计算 仓位比例
+     *
+     * @param new_positionList
+     */
+    private void check__newPositionList(List<QuickBuyPositionParam> new_positionList) {
+
+
+        // 1、我的持仓
+        QueryCreditNewPosResp old_posResp = queryCreditNewPosV2();
+
+
+        // 净资产
+        double netasset = old_posResp.getNetasset().doubleValue();
+        // 融资上限 = 净资产 x 2.1                 理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
+        double maxFinancingCap = netasset * 2.1;
+
+
+        // ---------------------
+
+
+        // 总市值 < 融资上限
+        // Assert.isTrue(true, String.format("当前账户：净资产=[%s] , 买入总额=[%] > 融资上限=[%s]", netasset, null, maxFinancingCap));
+
+
+        // --------------------- 实际 仓位占比（如果 仓位累加 > 100%   ->   自从触发 根据仓位数值 重新计算比例）
+
+
+        // 总仓位占比  <=  100%
+        double totalPositionPct = new_positionList.stream()
+                                                  .map(QuickBuyPositionParam::getPositionPct)
+                                                  .reduce(0.0, Double::sum);
+
+
+        if (totalPositionPct > 100) {
+            log.error("check__new_orderData     >>>     总仓位=[{}] > 100%", totalPositionPct);
+
+
+            // 根据仓位数值  ->  重新计算 仓位比例
+            new_positionList.forEach(e -> {
+
+                // 实际 仓位占比  =  仓位 / 总仓位
+                double act_positionPct = e.getPositionPct() * 100 / totalPositionPct;
+                e.setPositionPct(act_positionPct);
+            });
+        }
+
+
+        // ---------------------
+
+
+        new_positionList.forEach(e -> {
+
+            // 价格
+            double price = e.getPrice();
+
+            // 数量 = 总资金 * 仓位占比 / 价格
+            int qty = (int) (maxFinancingCap * e.getPositionRate() / price);
+
+            e.setQuantity(StockUtil.quantity(qty));
+        });
     }
 
 

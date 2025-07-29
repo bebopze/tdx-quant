@@ -32,7 +32,7 @@
             </select>
 
             <label for="date">选择日期:</label>
-            <input type="date" id="date" value="2025-07-20" onchange="loadData()">
+            <input type="date" id="date" onchange="loadData()">
 
             <label for="N">近N天:</label>
             <input type="number" id="N" value="15" min="1" onchange="loadData()">
@@ -274,6 +274,10 @@
     }
 
     window.onload = () => {
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+
         chartIds.forEach(id => {
             charts[id] = echarts.init(document.getElementById(id));
         });

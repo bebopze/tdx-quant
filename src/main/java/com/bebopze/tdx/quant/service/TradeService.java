@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
@@ -77,9 +78,9 @@ public interface TradeService {
     void quickClearPosition();
 
     /**
-     * 一键买入
+     * 一键买入（调仓换股）
      */
-    void quickBuyPosition();
+    void quickBuyPosition(List<QuickBuyPositionParam> positionList);
 
     /**
      * 一键撤单

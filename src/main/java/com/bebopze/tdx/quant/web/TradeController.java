@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
@@ -88,10 +89,10 @@ public class TradeController {
         return Result.SUC();
     }
 
-    @Operation(summary = "一键买入", description = "一键买入")
-    @GetMapping(value = "/quickOption/buyPosition")
-    public Result<Void> quickBuyPosition() {
-        tradeService.quickBuyPosition();
+    @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）")
+    @PostMapping(value = "/quickOption/buyPosition")
+    public Result<Void> quickBuyPosition(@RequestBody List<QuickBuyPositionParam> positionList) {
+        tradeService.quickBuyPosition(positionList);
         return Result.SUC();
     }
 

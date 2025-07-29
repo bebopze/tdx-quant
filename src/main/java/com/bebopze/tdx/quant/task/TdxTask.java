@@ -117,7 +117,7 @@ public class TdxTask {
      * 初始化数据 更新 -> DB
      */
     @Async
-    @Scheduled(cron = "0 00 17 ? * 1", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 00 17 ? * 7", zone = "Asia/Shanghai")
     public void execTask__importAll() {
 
 
