@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,14 +68,30 @@ public class WebHandler {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
         List<Object> argList = Arrays.stream(args)
-                .filter(arg -> !(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletResponse))
-                .collect(Collectors.toList());
+                                     .filter(arg -> !(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletResponse))
+                                     .collect(Collectors.toList());
+
 
         if (CollectionUtils.isEmpty(argList)) {
             log.info(String.join(" ", Arrays.asList(request.getServletPath(), getIpAddress(request))));
         } else {
-            log.info(String.join(" ", Arrays.asList(request.getServletPath(), getIpAddress(request), JSON.toJSONString(argList.get(0)))));
+            log.info(String.join(" ", Arrays.asList(request.getServletPath(), getIpAddress(request), requestParam(request, argList))));
         }
+    }
+
+
+    private String requestParam(HttpServletRequest request, List<Object> argList) {
+
+        Enumeration<String> parameterNames = request.getParameterNames();
+        StringBuilder params = new StringBuilder();
+
+        while (parameterNames.hasMoreElements()) {
+            String paramName = parameterNames.nextElement();
+            String paramValue = request.getParameter(paramName);
+            params.append(paramName).append("=").append(paramValue).append("&");
+        }
+
+        return params.length() == 0 ? JSON.toJSONString(argList.size() > 1 ? argList : argList.get(0)) : params.substring(0, params.length() - 1);
     }
 
 
