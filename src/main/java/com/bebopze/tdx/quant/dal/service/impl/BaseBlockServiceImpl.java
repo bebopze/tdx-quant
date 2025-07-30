@@ -29,14 +29,18 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
     @Override
+    public Long getIdByCode(String code) {
+        return baseMapper.getIdByCode(code);
+    }
+
+    @Override
     public BaseBlockDO getByCode(String code) {
         return baseMapper.getByCode(code);
     }
 
-
     @Override
-    public Long getIdByCode(String code) {
-        return baseMapper.getIdByCode(code);
+    public BaseBlockDO getSimpleById(Long id) {
+        return baseMapper.getSimpleById(id);
     }
 
 

@@ -9,6 +9,8 @@ import java.util.List;
 
 
 /**
+ * 个股 - 板块
+ *
  * @author: bebopze
  * @date: 2025/5/18
  */
@@ -20,16 +22,23 @@ public class StockBlockInfoDTO implements Serializable {
     private String stockName;
 
 
-    private List<BlockTypeDTO> blockDTOList;
+    // --------------------------------------------
 
-    private List<BaseBlockNewDO> baseBlockNewDOList;
+
+    private List<BlockDTO> hyBlockDTOList;
+
+
+    private List<BlockDTO> gnBlockDTOList;
+
+
+    private List<BaseBlockNewDO> blockNewDOList;
+
+
+    // ----------------------------------------------------------------------------------------
 
 
     @Data
-    public static class BlockTypeDTO implements Serializable {
-
-
-        private List<BlockDTO> blockDTOList;
+    public static class BlockDTO implements Serializable {
 
 
         /**
@@ -39,30 +48,31 @@ public class StockBlockInfoDTO implements Serializable {
         private String blockTypeDesc;
 
 
-        public String getBlockTypeDesc() {
-            return BlockTypeEnum.getDescByType(blockType);
-        }
-    }
-
-
-    @Data
-    public static class BlockDTO implements Serializable {
-
         /**
          * 板块code   -   级联
          */
-        private String blockCode;
+        private String blockCodePath;
 
         /**
          * 板块name   -   级联
          */
-        private String blockName;
+        private String blockNamePath;
 
 
         /**
          * 行业级别：1-1级行业；2-2级行业；3-3级行业（细分行业）；
          */
         private Integer level;
+
+        private Integer endLevel;
+
+
+        // --------------------------------------------
+
+
+        public String getBlockTypeDesc() {
+            return BlockTypeEnum.getDescByType(blockType);
+        }
     }
 
 }

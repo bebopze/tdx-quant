@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -97,4 +98,9 @@ public class CcStockInfo implements Serializable {
     private String stktype;
     // 证券类型 - 代码（ 0-股票 / E-ETF / R-创业板 / W-科创板 / J-北交所 / ... ）
     private String stktype_ex;
+
+
+    // --------------------------------------------------- 个股 - 板块
+
+    StockBlockInfoDTO stockBlockInfoDTO;
 }

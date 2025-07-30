@@ -18,9 +18,12 @@ import java.util.Map;
  */
 public interface IBaseBlockService extends IService<BaseBlockDO> {
 
-    BaseBlockDO getByCode(String code);
 
     Long getIdByCode(String code);
+
+    BaseBlockDO getByCode(String code);
+
+    BaseBlockDO getSimpleById(Long id);
 
 
     Map<String, Long> codeIdMap();

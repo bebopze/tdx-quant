@@ -14,9 +14,9 @@ import lombok.Getter;
 public enum BlockTypeEnum {
 
 
-    HY_PT("hy_pt", 2, "普通（细分）行业板块"),
+    HY_PT("hy_pt", 2, "普通（细分）行业"),
 
-    HY_YJ("hy_yj", 12, "研究行业板块"),
+    HY_YJ("hy_yj", 12, "研究行业"),
 
 
     DQ("dq", 3, "地区板块"),

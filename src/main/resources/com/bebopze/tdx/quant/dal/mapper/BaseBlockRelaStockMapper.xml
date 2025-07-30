@@ -27,6 +27,8 @@
         SELECT DISTINCT b.id,
                         b.code,
                         b.name,
+                        b.code_path,
+                        b.name_path,
                         b.type,
                         b.parent_id,
                         b.level,

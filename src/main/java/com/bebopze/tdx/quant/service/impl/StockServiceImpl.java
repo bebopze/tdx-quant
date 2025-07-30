@@ -11,7 +11,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,9 +32,6 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private IBaseStockService baseStockService;
-
-    @Autowired
-    private IBaseBlockService baseBlockService;
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
@@ -71,6 +68,7 @@ public class StockServiceImpl implements StockService {
     @Override
     public StockBlockInfoDTO blockInfo(String stockCode) {
 
+
         StockBlockInfoDTO dto = new StockBlockInfoDTO();
         dto.setStockCode(stockCode);
         dto.setStockName(Optional.ofNullable(baseStockService.getSimpleByCode(stockCode)).map(BaseStockDO::getName).orElse(""));
@@ -82,67 +80,57 @@ public class StockServiceImpl implements StockService {
         List<BaseBlockDO> baseBlockDOList = baseBlockRelaStockService.listBlockByStockCode(stockCode);
 
 
-        Map<Integer, StockBlockInfoDTO.BlockTypeDTO> type_dto_map = Maps.newHashMap();
+        List<StockBlockInfoDTO.BlockDTO> hyBlockDTOList = Lists.newArrayList();
+        List<StockBlockInfoDTO.BlockDTO> gnBlockDTOList = Lists.newArrayList();
+
+
         baseBlockDOList.forEach(e -> {
 
 
             // ---------------------------------- block type
+
+
             Integer type = e.getType();
 
-            StockBlockInfoDTO.BlockTypeDTO blockTypeDTO = new StockBlockInfoDTO.BlockTypeDTO();
-            blockTypeDTO.setBlockType(type);
 
+            // ---------------------------------- block  ->  codePath / namePath
 
-            // ---------------------------------- block
-            Integer level = e.getLevel();
-
-            String blockCode = e.getCode();
-            String blockName = e.getName();
-
-
-            if (level == 1) {
-
-            } else if (level == 2) {
-
-                BaseBlockDO level_1 = baseBlockService.getById(e.getParentId());
-                blockCode = level_1.getCode() + "-" + e.getCode();
-                blockName = level_1.getName() + "-" + e.getName();
-
-            } else if (level == 3) {
-
-                BaseBlockDO level_2 = baseBlockService.getById(e.getParentId());
-                BaseBlockDO level_1 = baseBlockService.getById(level_2.getParentId());
-
-                blockCode = level_1.getCode() + "-" + level_2.getCode() + "-" + e.getCode();
-                blockName = level_1.getName() + "-" + level_2.getName() + "-" + e.getName();
-            }
 
             StockBlockInfoDTO.BlockDTO blockDTO = new StockBlockInfoDTO.BlockDTO();
-            blockDTO.setLevel(level);
-            blockDTO.setBlockCode(blockCode);
-            blockDTO.setBlockName(blockName);
+            blockDTO.setBlockType(type);
+            blockDTO.setLevel(e.getLevel());
+            blockDTO.setEndLevel(e.getEndLevel());
+            blockDTO.setBlockCodePath(StringUtils.defaultString(e.getCodePath(), e.getCode()));
+            blockDTO.setBlockNamePath(StringUtils.defaultString(e.getNamePath(), e.getName()));
 
 
-            // ---------------------------------- map
-
-            if (type_dto_map.containsKey(type)) {
-                type_dto_map.get(type).getBlockDTOList().add(blockDTO);
+            // 个股-概念     1->多
+            if (type.equals(4)) {
+                gnBlockDTOList.add(blockDTO);
             } else {
-                blockTypeDTO.setBlockDTOList(Lists.newArrayList(blockDTO));
-                type_dto_map.put(type, blockTypeDTO);
+                // 个股-行业     1->1
+                hyBlockDTOList.add(blockDTO);
             }
+
         });
 
-        dto.setBlockDTOList(Lists.newArrayList(type_dto_map.values()));
+
+        // 个股-行业     1->1
+        dto.setHyBlockDTOList(hyBlockDTOList);
+
+        // 个股-概念     1->多
+        dto.setGnBlockDTOList(gnBlockDTOList);
 
 
         // ------------------------------------------------------------------- 自定义板块
 
 
         List<BaseBlockNewDO> baseBlockNewDOList = baseBlockNewRelaStockService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
-        dto.setBaseBlockNewDOList(baseBlockNewDOList);
+        dto.setBlockNewDOList(baseBlockNewDOList);
+
 
         return dto;
     }
+
 
 }
