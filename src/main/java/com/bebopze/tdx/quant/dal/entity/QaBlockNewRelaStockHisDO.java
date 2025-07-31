@@ -38,10 +38,10 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private Long id;
 
     /**
-     * 自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+     * 自定义板块ID：1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1；
      */
     @TableField("block_new_id")
-    @Schema(description = "自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；")
+    @Schema(description = "自定义板块ID：1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1；")
     private Integer blockNewId;
 
     /**

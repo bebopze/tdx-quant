@@ -1,5 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
@@ -25,7 +27,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/topBlock")
-@Tag(name = "主线板块", description = "1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；")
+@Tag(name = "主线板块", description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；")
 public class TopBlockController {
 
 
@@ -34,7 +36,20 @@ public class TopBlockController {
 
 
     /**
-     * 百日新高 - 占比分布
+     * refreshAll
+     *
+     * @return
+     */
+    @Operation(summary = "refreshAll", description = "refreshAll")
+    @GetMapping(value = "/task/refreshAll")
+    public Result<Void> refreshAllTask() {
+        topBlockService.refreshAll();
+        return Result.SUC();
+    }
+
+
+    /**
+     * 1-百日新高 - 占比分布
      *
      * @return
      */
@@ -43,28 +58,80 @@ public class TopBlockController {
     public Result<Void> nDayHighTask(@RequestParam(defaultValue = "100")
                                      @Schema(description = "N日新高", example = "100")
                                      int N) {
+
         topBlockService.nDayHighTask(N);
         return Result.SUC();
     }
 
 
     /**
-     * 涨幅榜 - 占比分布
+     * 2-涨幅榜 - 占比分布
      *
      * @return
      */
-    @Operation(summary = "涨幅榜（N日涨幅>25% / TOP100）", description = "涨幅榜（N日涨幅>25%） - 占比分布")
+    @Operation(summary = "涨幅榜（N日涨幅>25% / TOP100）", description = "涨幅榜（N日涨幅>25%）- 占比分布")
     @GetMapping(value = "/task/changePctTop")
     public Result<Void> changePctTopTask(@RequestParam(defaultValue = "10")
                                          @Schema(description = "N日涨幅", example = "10")
                                          int N) {
+
         topBlockService.changePctTopTask(N);
         return Result.SUC();
     }
 
+    /**
+     * 3-RPS红（一线95/双线90/三线85） -  占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "RPS红", description = "RPS红（一线95/双线90/三线85）- 占比分布")
+    @GetMapping(value = "/task/rpsRed")
+    public Result<Void> changePctTopTask(@RequestParam(defaultValue = "85")
+                                         @Schema(description = "RPS三线红", example = "85")
+                                         double RPS) {
+
+        topBlockService.rpsRedTask(RPS);
+        return Result.SUC();
+    }
 
     /**
-     * 板块AMO - TOP1
+     * 4-二阶段 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "二阶段", description = "Stage 2 – Advancing Phase（上升阶段）- 占比分布")
+    @GetMapping(value = "/task/stage2")
+    public Result<Void> stage2Task() {
+        topBlockService.stage2Task();
+        return Result.SUC();
+    }
+
+    /**
+     * 5-大均线多头 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "大均线多头", description = "大均线多头 - 占比分布")
+    @GetMapping(value = "/task/longTermMABullStack")
+    public Result<Void> longTermMABullStack() {
+        topBlockService.longTermMABullStackTask();
+        return Result.SUC();
+    }
+
+    /**
+     * 6-均线大多头 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "均线大多头", description = "均线大多头 - 占比分布")
+    @GetMapping(value = "/task/bullMAStackTask")
+    public Result<Void> bullMAStackTask() {
+        topBlockService.bullMAStackTask();
+        return Result.SUC();
+    }
+
+    /**
+     * 11-板块AMO - TOP1
      *
      * @return
      */
@@ -76,6 +143,9 @@ public class TopBlockController {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * TOP榜（主线板块） - 近N日 占比分布
      *
@@ -83,7 +153,7 @@ public class TopBlockController {
      */
     @Operation(summary = "TOP榜（主线板块） - 近N日 占比分布", description = "TOP榜（主线板块） - 近N日 占比分布")
     @GetMapping(value = "/rate")
-    public Result<Map<String, Integer>> topBlockRate(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；", example = "1")
+    public Result<Map<String, Integer>> topBlockRate(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
                                                      @RequestParam(defaultValue = "1") int blockNewId,
 
                                                      @RequestParam(defaultValue = "2025-07-16") LocalDate date,
@@ -91,11 +161,34 @@ public class TopBlockController {
                                                      @Schema(description = "result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）", example = "2")
                                                      @RequestParam(defaultValue = "2") int resultType,
 
+                                                     @Schema(description = "行业level：1-一级行业；2-二级行业；3-三级行业；", example = "2")
+                                                     @RequestParam(required = false) Integer hyLevel,
+
                                                      @RequestParam(defaultValue = "10") int N) {
 
 
-        return Result.SUC(topBlockService.topBlockRate(blockNewId, date, resultType, N));
+        return Result.SUC(topBlockService.topBlockRate(blockNewId, date, resultType, hyLevel, N));
     }
+
+
+    /**
+     * TOP榜（主线板块） - 近N日 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "TOP榜（主线板块） - 近N日 占比分布", description = "TOP榜（主线板块） - 近N日 占比分布")
+    @GetMapping(value = "/rateAll")
+    public Result<List<TopBlockServiceImpl.ResultTypeLevelRateDTO>> topBlockRateAll(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
+                                                                                    @RequestParam(defaultValue = "1") int blockNewId,
+
+                                                                                    @RequestParam(defaultValue = "2025-07-16") LocalDate date,
+
+                                                                                    @RequestParam(defaultValue = "10") int N) {
+
+
+        return Result.SUC(topBlockService.topBlockRateAll(blockNewId, date, N));
+    }
+
 
     /**
      * TOP榜（主线板块） - 近N日 占比分布
@@ -104,7 +197,7 @@ public class TopBlockController {
      */
     @Operation(summary = "TOP榜（主线板块） - 近N日 占比分布", description = "TOP榜（主线板块） - 近N日 占比分布")
     @GetMapping(value = "/info")
-    public Result<List<TopBlockServiceImpl.TopBlockDTO>> topBlockRateInfo(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；", example = "1")
+    public Result<List<TopBlockServiceImpl.TopBlockDTO>> topBlockRateInfo(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
                                                                           @RequestParam(defaultValue = "1") int blockNewId,
 
                                                                           @RequestParam(defaultValue = "2025-07-16") LocalDate date,
@@ -117,5 +210,6 @@ public class TopBlockController {
 
         return Result.SUC(topBlockService.topBlockRateInfo(blockNewId, date, resultType, N));
     }
+
 
 }

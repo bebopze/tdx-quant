@@ -934,7 +934,12 @@ public class TdxExtFun {
      * @param RPS3   RPS三线红
      * @return
      */
-    public static boolean[] RPS红(double[] rps50, double[] rps120, double[] rps250, int RPS1, int RPS2, int RPS3) {
+    public static boolean[] RPS红(double[] rps50,
+                                  double[] rps120,
+                                  double[] rps250,
+                                  double RPS1,
+                                  double RPS2,
+                                  double RPS3) {
         // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
 
 
@@ -961,7 +966,7 @@ public class TdxExtFun {
     }
 
 
-    public static boolean[] RPS一线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+    public static boolean[] RPS一线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
         int n = rps50.length;
 
         boolean[] result = new boolean[n];
@@ -975,7 +980,7 @@ public class TdxExtFun {
         return result;
     }
 
-    public static boolean[] RPS双线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+    public static boolean[] RPS双线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
         int n = rps50.length;
 
         boolean[] result = new boolean[n];
@@ -1001,7 +1006,7 @@ public class TdxExtFun {
      * @param RPS
      * @return
      */
-    public static boolean[] RPS三线红(double[] rps50, double[] rps120, double[] rps250, int RPS) {
+    public static boolean[] RPS三线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
         int n = rps50.length;
 
         boolean[] result = new boolean[n];

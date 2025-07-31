@@ -240,7 +240,7 @@ DROP TABLE IF EXISTS `qa_block_new_rela_stock_his`;
 CREATE TABLE `qa_block_new_rela_stock_his`
 (
     `id`              bigint unsigned  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `block_new_id`    tinyint unsigned NOT NULL COMMENT '自定义板块ID：1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；',
+    `block_new_id`    tinyint unsigned NOT NULL COMMENT '自定义板块ID：1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1；',
     `date`            date             NOT NULL COMMENT '日期',
     `stock_id_list`   text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '关联ID列表：股票ID/板块ID/指数ID（逗号分隔）',
     `result`          longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '汇总-分析结果JSON（二级普通行业 + 概念板块）',

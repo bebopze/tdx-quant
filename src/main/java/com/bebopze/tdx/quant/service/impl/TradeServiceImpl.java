@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -18,12 +19,15 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
+import com.bebopze.tdx.quant.service.StockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -49,9 +53,23 @@ import java.util.stream.Collectors;
 public class TradeServiceImpl implements TradeService {
 
 
+    @Autowired
+    private StockService stockService;
+
+
     @Override
     public QueryCreditNewPosResp queryCreditNewPosV2() {
+
         QueryCreditNewPosResp resp = EastMoneyTradeAPI.queryCreditNewPosV2();
+
+
+        // block info
+        resp.getStocks().parallelStream().forEach(stock -> {
+            StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
+            stock.setStockBlockInfoDTO(dto);
+        });
+
+
         return resp;
     }
 
@@ -158,6 +176,20 @@ public class TradeServiceImpl implements TradeService {
         quick__buyAgain(new__positionList);
     }
 
+    @Override
+    public void quickAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
+        Assert.notEmpty(newPositionList, "newPositionList不能为空");
+
+
+        // 等比
+        int avgPositionPct = 100 / newPositionList.size();
+        newPositionList.forEach(e -> e.setPositionPct(avgPositionPct));
+
+
+        // 一键买入
+        quickBuyNewPosition(newPositionList);
+    }
+
 
     @Override
     public void quickCancelOrder() {
@@ -203,7 +235,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 2、预校验
-        preCheck(posResp);
+        preCheck__resetFinancing(posResp);
 
 
         // TODO   3、入库   =>   异常中断 -> 可恢复
@@ -228,12 +260,47 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
+    @Override
+    public void quickLowerFinancing(double transferAmount) {
+        // 缺省值 300%   ->   隔日 可取款
+
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、预校验  ->  重新 计算分配  new_总市值  ->  计算 new_个股市值（new_数量）
+        QueryCreditNewPosResp new_posResp = preCheck__lowerFinancing(posResp, transferAmount);
+
+
+        // TODO   3、入库   =>   异常中断 -> 可恢复
+        // save2DB(posResp);
+        log.info("quickLowerFinancing     >>>     posResp : {}", JSON.toJSONString(posResp));
+
+
+        // 4、一键清仓
+        quickClearPosition();
+
+
+        // 等待成交   ->   1.5s
+        SleepUtils.winSleep(1500);
+
+
+        // 5、check/retry   =>   [一键清仓]-委托单 状态
+        checkAndRetry___clearPosition__OrdersStatus(3);
+
+
+        // 6、一键再买入
+        quick__buyAgain(new_posResp.getStocks());
+    }
+
+
     /**
      * 预校验   =>   担保比例/仓位/负债比例     ->     严格限制 极限仓位 标准
      *
      * @param posResp
      */
-    private void preCheck(QueryCreditNewPosResp posResp) {
+    private void preCheck__resetFinancing(QueryCreditNewPosResp posResp) {
 
 
         // 总资产 = 净资产 + 总负债 = 总市值 + 可用资金
@@ -244,9 +311,9 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal totalliability = posResp.getTotalliability();
 
         // 总市值 = 总资产 - 可用资金
-        BigDecimal totalmkval = posResp.getTotalmkval();
+        double totalmkval = posResp.getTotalmkval().doubleValue();
         // 可用资金 = 总资产 - 总市值
-        BigDecimal avalmoney = posResp.getAvalmoney();
+        double avalmoney = posResp.getAvalmoney().doubleValue();
 
 
         // ---------------------------------------------------
@@ -259,7 +326,294 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 强制：维持担保比例>200%     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(realrate > 2, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", ofStr(totalliability), ofStr(netasset)));
+
+
+        // ---------------------------------------------------
+
+
+        // 总仓位（176.55%）  =   总市值 / 净资产
+        double posratio = posResp.getPosratio().doubleValue();
+
+
+        // 强制：总仓位<200%     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(posratio < 2, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", ofStr(totalliability), ofStr(netasset)));
+
+
+        // ---------------------------------------------------
+
+
+        // 总 可用市值（当日 可SELL）  >   总市值 * 95%
+        double total__avlMarketValue = posResp.getStocks().stream()
+                                              // 可用市值  =  价格 x 可用数量
+                                              .map(e -> e.getLastprice().doubleValue() * e.getStkavl())
+                                              .reduce(0.0, Double::sum);
+
+
+        Assert.isTrue(total__avlMarketValue > totalmkval * 0.95,
+                      String.format("禁止[极限加仓]     >>>     总可用市值=[%s]  <  总市值=[%s] x 95%%", ofStr(total__avlMarketValue), ofStr(totalmkval)));
+
+
+        // ---------------------------------------------------
+
+        // 总负债 < 净资产
+        double rate = totalliability.doubleValue() / netasset.doubleValue();
+
+        // 强制：总负债<净资产     =>     否则，一律不准 [极限加仓]
+        Assert.isTrue(rate < 1, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", ofStr(totalliability), ofStr(netasset)));
+
+
+        // --------------------------------------------------- 交易时间段 限制
+
+
+        preCheck__tradeTime();
+    }
+
+
+    private QueryCreditNewPosResp preCheck__lowerFinancing(QueryCreditNewPosResp posResp,
+                                                           double transferAmount) {
+
+        Assert.isTrue(transferAmount >= 50000, String.format("取款金额=[%s]<50000，不够交易费的😶", ofStr(transferAmount)));
+
+
+        preCheck__tradeTime();
+
+
+        // --------------------------------------------------- 总资产
+
+
+        // 总资产  =  净资产 + 总负债  =  总市值 + 可用资金
+        // double totalasset = posResp.getTotalasset().doubleValue();
+
+
+        // ------------ 总资产  =  净资产 + 总负债
+
+
+        // 净资产
+        double netasset = posResp.getNetasset().doubleValue();
+        // 总负债
+        // double totalliability = posResp.getTotalliability().doubleValue();
+
+
+        // ------------ 总资产  =  总市值 + 可用资金
+
+
+        // 总市值  =  总资产 - 可用资金  =  净资产 + 总负债 - 可用资金
+        // double totalmkval = posResp.getTotalmkval().doubleValue();
+        // 可用资金  =  总资产 - 总市值
+        // double avalmoney = posResp.getAvalmoney().doubleValue();
+
+
+        // --------------------------------------------------- 可取资金
+
+
+        // 可取资金  =  总资产 - 总负债 x 300% = （总资产 - 总负债） -  总负债 x 200%
+        // 可取资金  =  净资产 - 总负债 x 200%
+        // double accessmoney = posResp.getAccessmoney().doubleValue();
+
+
+        // ---------------------------------------------------
+
+        // new_总负债  =  （净资产 - 可取资金）/ 200%
+
+        // double new__totalliability = (netasset - transferAmount) / 2;
+
+
+        // ---------------------------------------------------
+
+
+        // 维持担保比例（230.63%）  =   总资产 / 总负债
+        // double realrate = posResp.getRealrate().doubleValue();
+        // 实时担保比例（230.58%）  =   总市值 / 总负债
+        // double marginrates = posResp.getMarginrates().doubleValue();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------------------------- transferAmount
+
+
+        // 强制限制 最大可取额度   ->   净资产 x 10%
+        double maxTransferAmount = netasset / 10;
+
+        Assert.isTrue(transferAmount < maxTransferAmount,
+                      String.format("[取款金额：%s] > [最大取款金额（净资产x10%%）：%s]", ofStr(transferAmount), ofStr(maxTransferAmount)));
+
+
+        // --------------------------------------------------- new_融资额度  ->  new_总市值
+
+
+        // new_净资产  =  净资产 - 可取资金
+        double new__netasset = netasset - transferAmount;
+
+
+        // new_融资额度（new_总负债）  =  （净资产 - 可取资金）/ 200%
+        // new_融资额度（new_总负债）  =   new_净资产 / 200%
+        double new__totalliability = new__netasset / 2;
+
+
+        // new_总市值  =  new_净资产  +  new_总负债
+        double new__totalmkval = new__netasset + new__totalliability;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------------------------- new_posResp
+
+
+        QueryCreditNewPosResp new_posResp = new QueryCreditNewPosResp();
+        BeanUtils.copyProperties(posResp, new_posResp);
+
+        // new_总负债
+        new_posResp.setTotalliability(of(new__totalliability));
+        // new_总市值
+        new_posResp.setTotalmkval(of(new__totalmkval));
+        // new_总资产 = new_总市值
+        new_posResp.setTotalasset(of(new__totalmkval));
+
+
+        new_posResp.getStocks().forEach(e -> {
+
+
+            // 个股仓位（0.0106592   ->   1.07%）  =   个股市值 / 净资产
+            double posratio = e.getPosratio().doubleValue();
+
+
+            // ----------------------------------
+
+
+            // new_个股市值  =  new_净资产  x  个股仓位
+            double new__mktval = new__netasset * posratio;
+            e.setMktval(of(new__mktval));
+
+
+            // new_个股数量  =  new_个股市值  /  个股价格
+            int qty = (int) (new__mktval / e.getLastprice().doubleValue());
+            e.setStkavl(StockUtil.quantity(qty));
+        });
+
+
+        return new_posResp;
+    }
+
+
+    /**
+     * 交易时间段 限制         9:35 - 11:29  /  13:00 - 14:56
+     */
+    private static void preCheck__tradeTime() {
+
+        LocalTime now = LocalTime.now();
+
+
+        //  9:35 - 11:29
+        LocalTime start_1 = LocalTime.of(9, 35);
+        LocalTime end_1 = LocalTime.of(11, 29);
+
+        // 13:00 - 14:56
+        LocalTime start_2 = LocalTime.of(13, 00);
+        LocalTime end_2 = LocalTime.of(14, 56);
+
+
+        Assert.isTrue(DateTimeUtil.between(now, start_1, end_1) || DateTimeUtil.between(now, start_2, end_2),
+                      String.format("当前时间:[%s]非交易时间", now));
+    }
+
+
+    private void ___preCheck__lowerFinancing(QueryCreditNewPosResp posResp,
+                                             double transferAmount,
+                                             double new_marginRate) {
+
+
+        Assert.isTrue(transferAmount > 50000, String.format("取款金额=[%s]<50000，不够交易费的😶", transferAmount));
+
+
+        // --------------------------------------------------- 总资产
+
+
+        // 总资产  =  净资产 + 总负债  =  总市值 + 可用资金
+        double totalasset = posResp.getTotalasset().doubleValue();
+
+
+        // ------------ 总资产  =  净资产 + 总负债
+
+
+        // 净资产
+        double netasset = posResp.getNetasset().doubleValue();
+        // 总负债
+        double totalliability = posResp.getTotalliability().doubleValue();
+
+
+        // ------------ 总资产  =  总市值 + 可用资金
+
+
+        // 总市值  =  总资产 - 可用资金  =  净资产 + 总负债 - 可用资金
+        double totalmkval = posResp.getTotalmkval().doubleValue();
+        // 可用资金  =  总资产 - 总市值
+        double avalmoney = posResp.getAvalmoney().doubleValue();
+
+
+        // --------------------------------------------------- 可取资金
+
+
+        // 可取资金  =  总资产 - 总负债 x 300% = （总资产 - 总负债） -  总负债 x 200%
+        // 可取资金  =  净资产 - 总负债 x 200%
+        double accessmoney = posResp.getAccessmoney().doubleValue();
+
+
+        // ---------------------------------------------------
+
+        // 总负债  =  （净资产 - 可取资金）/ 200%
+
+        double new__totalliability = (netasset - transferAmount) / 2;
+
+
+        // ---------------------------------------------------
+
+
+        // 维持担保比例（230.63%）  =   总资产 / 总负债
+        double realrate = posResp.getRealrate().doubleValue();
+        // 实时担保比例（230.58%）  =   总市值 / 总负债
+        double marginrates = posResp.getMarginrates().doubleValue();
+
+
+        // 强制：维持担保比例>200%     =>     否则，一律不准 [极限加仓]
         Assert.isTrue(realrate > 2, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", totalliability, netasset));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 强制限制 最大可取额度   ->   净资产 x 10%
+        double maxTransferAmount = netasset / 10;
+        Assert.isTrue(transferAmount > maxTransferAmount,
+                      String.format("[取款金额：%s] > [最大取款金额：%s]  ->  [净资产：%s] / 10", transferAmount, maxTransferAmount, netasset));
+
+
+        // --------------------------------------------------- new_marginRate
+
+
+        // --------------------------------------------------- 降低 实时担保比例     =>     new_实时担保比例 ↓   ->   计算 new_总负债 ↓
+
+
+        // 总负债  =  总市值 / 实时担保比例 = （净资产 + 可用 + 总负债）  / 实时担保比例
+        // 总负债  =  (净资产 + 可用) ÷ (实时担保比例 – 1)
+        totalliability = (netasset + avalmoney) / (new_marginRate - 1);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------------------------- transferAmount
+
+
+        // ---------------------------------------------------
+
+
+        // 总负债  =  总市值 / 实时担保比例 = （净资产 + 总负债）  / 实时担保比例
+        // 总负债  =  (净资产 - 取款金额) ÷ (实时担保比例 – 1)
+        totalliability = (netasset - transferAmount) / (new_marginRate - 1);
 
 
         // ---------------------------------------------------
@@ -276,7 +630,7 @@ public class TradeServiceImpl implements TradeService {
         // ---------------------------------------------------
 
         // 总负债 < 净资产
-        double rate = totalliability.doubleValue() / netasset.doubleValue();
+        double rate = totalliability / netasset;
 
         // 强制：总负债<净资产     =>     否则，一律不准 [极限加仓]
         Assert.isTrue(rate < 1, String.format("禁止[极限加仓]     >>>     总负债=[%s] , 净资产=[%s]", totalliability, netasset));
@@ -873,7 +1227,7 @@ public class TradeServiceImpl implements TradeService {
                                   stockInfo.setStkname(e.getStockName());
 
                                   // 价格
-                                  stockInfo.setLastprice(NumUtil.double2Decimal(e.getPrice()));
+                                  stockInfo.setLastprice(of(e.getPrice()));
                                   // 数量
                                   stockInfo.setStkavl(e.getQuantity());
 
@@ -897,6 +1251,10 @@ public class TradeServiceImpl implements TradeService {
      * @param newPositionList
      */
     private void check__newPositionList(List<QuickBuyPositionParam> newPositionList) {
+
+
+        // check     =>     防止 [误操作] -> [清仓]
+        Assert.notEmpty(newPositionList, "[调仓换股]个股不能为空，【清仓】请用 -> [一键清仓]");
 
 
         // --------------------- 总资金（融资上限） 计算
@@ -951,6 +1309,18 @@ public class TradeServiceImpl implements TradeService {
 
             e.setQuantity(StockUtil.quantity(qty));
         });
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static BigDecimal of(double value) {
+        return NumUtil.double2Decimal(value);
+    }
+
+    public static String ofStr(Number value) {
+        return NumUtil.str(value);
     }
 
 

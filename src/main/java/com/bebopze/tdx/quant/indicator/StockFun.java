@@ -430,6 +430,11 @@ public class StockFun {
         return TdxExtFun.大均线多头(close);
     }
 
+    public boolean[] 均线大多头() {
+        // return TdxExtFun.均线大多头(close);
+        return null;
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  复杂指标
@@ -450,14 +455,14 @@ public class StockFun {
     }
 
 
-    public boolean[] RPS三线红(int RPS) {
+    public boolean[] RPS三线红(double RPS) {
         return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
     }
 
 
-    public boolean[] RPS红(int RPS) {
+    public boolean[] RPS红(double RPS) {
         // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
-        return TdxExtFun.RPS红(rps50, rps120, rps250, Math.max(RPS + 10, 100), Math.max(RPS + 5, 100), RPS);
+        return TdxExtFun.RPS红(rps50, rps120, rps250, Math.min(RPS + 10, 100), Math.min(RPS + 5, 100), RPS);
     }
 
 
@@ -568,6 +573,11 @@ public class StockFun {
         return con_merge(con_1, con_2, con_3);
     }
 
+
+    public boolean[] 二阶段() {
+
+        return null;
+    }
 
     // -----------------------------------------------------------------------------------------------------------------
 

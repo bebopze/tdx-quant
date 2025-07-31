@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>交易面板</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 1000;
+        }
+
+        .tab-content {
+            margin-top: 20px;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+        }
+
+        .buy-button {
+            color: white;
+            background-color: #ed6a6a;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .sell-button {
+            color: white;
+            background-color: #73b5ea;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .sort-arrow {
+            margin-left: 4px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 账户资金详情（顶部固定展示） -->
+<div class="sticky-header p-3 shadow-sm border rounded" id="accountSummary">
+    <h5>账户资金详情</h5>
+    <div class="row" id="summaryRow"></div>
+</div>
+
+<!-- Tab导航 -->
+<ul class="nav nav-tabs mt-3" id="tabNav" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#positionTab" type="button">我的持仓
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ordersTab" type="button">当日委托单</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tradesTab" type="button">当日成交单</button>
+    </li>
+</ul>
+
+<!-- Tab内容区域 -->
+<div class="tab-content">
+    <!-- 我的持仓 -->
+    <div class="tab-pane fade show active" id="positionTab">
+        <table class="table table-bordered table-hover text-center align-middle">
+            <!-- 添加在表头定义中：可点击排序 -->
+            <thead class="table-light">
+            <tr>
+                <th>序号</th>
+                <th onclick="sortTable('stkcode')">证券代码 <span class="sort-arrow" data-field="stkcode"></span></th>
+                <th onclick="sortTable('stkname')">证券名称<span class="sort-arrow" data-field="stkname"></span></th>
+                <th onclick="sortTable('market')">市场<span class="sort-arrow" data-field="market"></span></th>
+                <th onclick="sortTable('costprice')">成本价<span class="sort-arrow" data-field="costprice"></span></th>
+                <th onclick="sortTable('lastprice')">最新价<span class="sort-arrow" data-field="lastprice"></span></th>
+                <th onclick="sortTable('mktval')">市值<span class="sort-arrow" data-field="mktval"></span></th>
+                <th onclick="sortTable('profit')">持仓盈亏<span class="sort-arrow" data-field="profit"></span></th>
+                <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-arrow"
+                                                                         data-field="profitratio"></span>
+                </th>
+                <th onclick="sortTable('curprofit')">当日盈亏<span class="sort-arrow" data-field="curprofit"></span>
+                </th>
+                <th onclick="sortTable('curProfitratio')">当日盈亏比例<span class="sort-arrow"
+                                                                            data-field="curProfitratio"></span></th>
+                <th onclick="sortTable('posratio')">仓位占比<span class="sort-arrow" data-field="posratio"></span></th>
+                <th onclick="sortTable('stkbal')">持仓数量<span class="sort-arrow" data-field="stkbal"></span></th>
+                <th onclick="sortTable('stkavl')">可用数量<span class="sort-arrow" data-field="stkavl"></span></th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="positionTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 当日委托单 -->
+    <div class="tab-pane fade" id="ordersTab">
+        <div class="d-flex mt-3 mb-2 gap-2">
+            <select id="filterStatus" class="form-select w-auto">
+                <option value="">全部状态</option>
+                <option value="未报">未报</option>
+                <option value="已报">已报</option>
+                <option value="已撤">已撤</option>
+                <option value="部成">部成</option>
+                <option value="已成">已成</option>
+                <option value="废单">废单</option>
+            </select>
+            <select id="filterDirection" class="form-select w-auto">
+                <option value="">全部方向</option>
+                <option value="证券买入">证券买入</option>
+                <option value="证券卖出">证券卖出</option>
+            </select>
+            <button class="btn btn-primary" onclick="applyFilter()">筛选</button>
+            <button class="btn btn-secondary" onclick="resetFilter()">重置</button>
+            <button class="btn btn-danger ms-auto" onclick="quickCancelOrder()">一键撤单</button>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th><input type="checkbox" onclick="toggleAll(this)"></th>
+                <th>时间</th>
+                <th>证券代码</th>
+                <th>证券名称</th>
+                <th>方向</th>
+                <th>数量</th>
+                <th>价格</th>
+                <th>状态</th>
+                <th>撤单</th>
+            </tr>
+            </thead>
+            <tbody id="orderTableBody"></tbody>
+        </table>
+        <button class="btn btn-warning" onclick="batchRevokeOrders()">批量撤单</button>
+    </div>
+
+    <!-- 当日成交单 -->
+    <div class="tab-pane fade" id="tradesTab">
+        <p class="mt-3">TODO: 成交单展示（暂无接口细节）</p>
+    </div>
+</div>
+
+<!-- 快捷操作按钮 -->
+<div class="mt-4">
+    <button class="btn btn-danger" onclick="quickClearPosition()">一键清仓</button>
+    <button class="btn btn-success" onclick="quickResetFinancing()">一键再融资</button>
+    <button class="btn btn-success" onclick="quickBuyNewPosition()">调仓换股</button>
+</div>
+
+
+<!-- 新增：一键取款按钮 -->
+<button class="btn btn-outline-warning" onclick="openWithdrawModal()" id="withdrawBtn">一键取款</button>
+
+<!-- 弹框模态框 -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawModalLabel">一键取款</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <div id="withdrawSummary" class="mb-3"></div>
+                <label for="withdrawAmount" class="form-label">请输入取款金额：</label>
+                <input type="number" id="withdrawAmount" class="form-control" min="100" step="100">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="confirmWithdraw()" id="withdrawConfirmBtn">确认
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    let sortField = 'mktval';
+    let sortDesc = false;
+
+    function sortTable(field) {
+        if (sortField === field) {
+            sortDesc = !sortDesc;
+        } else {
+            sortField = field;
+            sortDesc = true;
+        }
+
+        const sorted = [...window.currentStocks].sort((a, b) => {
+            let v1 = a[field];
+            let v2 = b[field];
+            if (typeof v1 === 'string') v1 = v1.toLowerCase();
+            if (typeof v2 === 'string') v2 = v2.toLowerCase();
+            return sortDesc ? (v2 > v1 ? 1 : -1) : (v1 > v2 ? 1 : -1);
+        });
+
+        updateSortArrows();
+        renderPositionTable(sorted);
+    }
+
+    function updateSortArrows() {
+        document.querySelectorAll('.sort-arrow').forEach(el => {
+            const field = el.getAttribute('data-field');
+            if (field === sortField) {
+                el.textContent = sortDesc ? '↓' : '↑';
+            } else {
+                el.textContent = '';
+            }
+        });
+    }
+
+
+    // ----------------------------------- 一键取款
+
+    let latestNetAsset = 0;
+    let maxWithdrawAmount = 0;
+
+    async function openWithdrawModal() {
+        const summary = await fetchWithCheck('/api/trade/queryCreditNewPosV2');
+        latestNetAsset = parseFloat(summary.netasset);
+        maxWithdrawAmount = Math.floor(latestNetAsset);
+        const defaultAmt = Math.floor((latestNetAsset * 0.1) / 100) * 100;
+
+        document.getElementById('withdrawAmount').value = defaultAmt;
+        document.getElementById('withdrawAmount').max = maxWithdrawAmount;
+
+        document.getElementById('withdrawSummary').innerHTML = `
+      <p>当前净资产：<strong>${latestNetAsset.toFixed(2)}</strong></p>
+      <p>建议取款金额（净资产10%）：<strong>${defaultAmt}</strong></p>
+      <p>最大可取金额：<strong>${maxWithdrawAmount}</strong></p>
+    `;
+
+        const modal = new bootstrap.Modal(document.getElementById('withdrawModal'));
+        modal.show();
+    }
+
+
+    // ----------------------------------- 页面初始化
+
+    let isInitialized = false;
+
+    async function fetchWithCheck(url, options = {}) {
+        const res = await fetch(url, options);
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.msg || '接口请求失败');
+            throw new Error(data.msg);
+        }
+        return data.data;
+    }
+
+    async function initializePage() {
+        if (isInitialized) return;
+        isInitialized = true;
+
+        const summary = await fetchWithCheck('/api/trade/queryCreditNewPosV2');
+
+        renderAccountSummary(summary);
+        renderPositionTable(summary.stocks);
+        window.currentStocks = summary.stocks;
+        sortTable('mktval');
+
+        const orders = await fetchWithCheck('/api/trade/getOrdersData');
+        window.allOrders = orders;
+        renderOrderTable(orders);
+    }
+
+    function renderAccountSummary(summary) {
+        const row = document.getElementById('summaryRow');
+
+        function colorWrap(value) {
+            if (value == null || value === '-') return '-';
+            const num = parseFloat(value);
+            const colorClass = num > 0 ? 'text-danger' : (num < 0 ? 'text-primary' : '');
+            return `<strong class="${colorClass}">${value}</strong>`;
+        }
+
+        row.innerHTML = `
+            <div class='col'>总资产：<strong>${summary.totalasset}</strong></div>
+            <div class='col'>净资产：<strong>${summary.netasset}</strong></div>
+            <div class='col'>持仓盈亏：${colorWrap(summary.profit)}</div>
+            <div class='col'>当日盈亏：${colorWrap(summary.curprofit ?? '-')}</div>
+            <div class='col'>可用资金：${colorWrap(summary.avalmoney)}</div>
+            <div class='col'>融资负债：<strong>${summary.ftotaldebts}</strong></div>
+        `;
+    }
+
+
+    function renderPositionTable(stocks) {
+        window.currentStocks = stocks;
+        const tbody = document.getElementById('positionTableBody');
+        tbody.innerHTML = stocks.map((s, i) => `
+        <tr>
+             <td>${i + 1}</td>
+             <td>${s.stkcode}</td>
+             <td>${s.stkname}</td>
+             <td>${s.market}</td>
+             <td>${Number(s.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+             <td>${Number(s.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+             <td>${s.mktval.toFixed(2)}</td>
+             <td style="color: ${s.profit > 0 ? 'red' : s.profit < 0 ? 'teal' : 'black'}">${s.profit.toFixed(2)}</td>
+             <td style="color: ${s.profitratio > 0 ? 'red' : s.profitratio < 0 ? 'teal' : 'black'}">${(s.profitratio * 100).toFixed(2)}%</td>
+             <td style="color: ${s.curprofit > 0 ? 'red' : s.curprofit < 0 ? 'teal' : 'black'}">${s.curprofit?.toFixed(2) ?? '-'}</td>
+             <td style="color: ${s.curProfitratio > 0 ? 'red' : s.curProfitratio < 0 ? 'teal' : 'black'}">${s.curProfitratio == null ? '-' : (s.curProfitratio * 100).toFixed(2) + '%'}</td>
+             <td>${(s.posratio * 100).toFixed(2)}%</td>
+             <td>${s.stkbal}</td>
+             <td>${s.stkavl}</td>
+             <td>
+                 <button class="buy-button" onclick="handleBuy('${s.stkcode}')">买</button>
+                 <button class="sell-button" onclick="handleSell('${s.stkcode}')">卖</button>
+             </td>
+        </tr>`).join('');
+    }
+
+
+    // 统一异常校验
+    async function fetchWithCheck(url, options = {}) {
+        const res = await fetch(url, options);
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.msg || '接口请求失败');
+            throw new Error(data.msg);
+        }
+        return data.data;
+    }
+
+
+    async function fetchAccountSummary() {
+        const summary = await fetchWithCheck('/api/trade/queryCreditNewPosV2');
+        const row = document.getElementById('summaryRow');
+
+        function colorWrap(value) {
+            if (value == null || value === '-') return '-';
+            const num = parseFloat(value);
+            const colorClass = num > 0 ? 'text-danger' : (num < 0 ? 'text-primary' : '');
+            return `<strong class="${colorClass}">${value}</strong>`;
+        }
+
+        row.innerHTML = `
+            <div class='col'>总资产：<strong>${summary.totalasset}</strong></div>
+            <div class='col'>净资产：<strong>${summary.netasset}</strong></div>
+            <div class='col'>持仓盈亏：${colorWrap(summary.profit)}</div>
+            <div class='col'>当日盈亏：${colorWrap(summary.curprofit ?? '-')}</div>
+            <div class='col'>可用资金：${colorWrap(summary.avalmoney)}</div>
+            <div class='col'>融资负债：<strong>${summary.ftotaldebts}</strong></div>
+        `;
+
+        window.currentStocks = summary.stocks;
+        sortTable('mktval');
+
+
+    }
+
+
+    async function fetchOrders() {
+        const data = await fetchWithCheck('/api/trade/queryCreditNewPosV2');
+        window.allOrders = data;
+        renderOrderTable(data);
+    }
+
+
+    function renderOrderTable(orders) {
+        const tbody = document.getElementById('orderTableBody');
+        tbody.innerHTML = orders.map(o => {
+            const disabled = ["已撤", "已成", "废单"].includes(o.wtzt);
+            return `<tr>
+            <td><input type="checkbox" value="${o.wtrq}_${o.wtbh}" ${disabled ? 'disabled' : ''}></td>
+            <td>${formatTime(o.wtsj)}</td>
+            <td>${o.zqdm}</td>
+            <td>${o.zqmc}</td>
+            <td>${o.mmsm}</td>
+            <td>${o.wtsl}</td>
+            <td>${o.wtjg}</td>
+            <td>${o.wtzt}</td>
+            <td><button class="btn btn-sm ${disabled ? 'btn-secondary' : 'btn-outline-danger'}" ${disabled ? 'disabled' : `onclick="revokeSingle('${o.wtrq}', '${o.wtbh}')"`}>撤单</button></td>
+        </tr>`;
+        }).join('');
+    }
+
+    function applyFilter() {
+        const status = document.getElementById('filterStatus').value;
+        const direction = document.getElementById('filterDirection').value;
+        const filtered = window.allOrders.filter(o => {
+            return (!status || o.wtzt === status) && (!direction || o.mmsm === direction);
+        });
+        renderOrderTable(filtered);
+    }
+
+    function resetFilter() {
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterDirection').value = '';
+        renderOrderTable(window.allOrders);
+    }
+
+    function toggleAll(source) {
+        document.querySelectorAll('#orderTableBody input[type=checkbox]').forEach(cb => cb.checked = source.checked);
+    }
+
+    async function revokeSingle(date, wtdh) {
+        await fetchWithCheck('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify([{date, wtdh}])
+        });
+        const orders = await fetchWithCheck('/api/trade/getOrdersData');
+        window.allOrders = orders;
+        renderOrderTable(orders);
+    }
+
+    async function batchRevokeOrders() {
+        const selected = Array.from(document.querySelectorAll('#orderTableBody input:checked'));
+        const body = selected.map(cb => {
+            const [date, wtdh] = cb.value.split('_');
+            return {date, wtdh};
+        });
+        if (body.length === 0) return alert('请选择要撤单的委托');
+        await fetchWithCheck('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const orders = await fetchWithCheck('/api/trade/getOrdersData');
+        window.allOrders = orders;
+        renderOrderTable(orders);
+    }
+
+
+    async function quickClearPosition() {
+        const data = await fetchWithCheck('/api/trade/quickOption/clearPosition');
+        alert("suc");
+    }
+
+    async function quickCancelOrder() {
+        const data = await fetchWithCheck('/api/trade/quickOption/cancelOrder');
+        alert("suc");
+    }
+
+    async function quickResetFinancing() {
+        const data = await fetchWithCheck('/api/trade/quickOption/resetFinancing');
+        alert("suc");
+    }
+
+    async function quickBuyNewPosition() {
+        const body = []; // 请根据实际需要构建请求体
+        const data = await fetchWithCheck('/api/trade/quickOption/buyNewPosition', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        alert("suc");
+    }
+
+
+    async function confirmWithdraw() {
+        const amount = parseFloat(document.getElementById('withdrawAmount').value);
+        if (!amount || amount <= 0 || amount > maxWithdrawAmount) return alert("请输入有效的取款金额（不超过最大可取）");
+
+        const confirmMsg = `请确认是否取款：\n净资产：${latestNetAsset.toFixed(2)}\n取款金额：${amount.toFixed(2)}`;
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            await fetchWithCheck(`/api/trade/quickOption/lowerFinancing?transferAmount=${amount}`);
+            alert('一键取款成功！');
+            bootstrap.Modal.getInstance(document.getElementById('withdrawModal')).hide();
+            location.reload(); // ✅ 成功后刷新页面
+        } catch (e) {
+            alert('一键取款失败：' + (e.message || '未知错误'));
+        }
+    }
+
+
+    // 初始化页面数据加载
+    document.addEventListener('DOMContentLoaded', initializePage);
+
+    // fetchAccountSummary();
+    // fetchOrders();
+
+
+    function formatTime(str) {
+        if (!/^[0-9]{6}$/.test(str)) return str;
+        const hh = str.slice(0, 2);
+        const mm = str.slice(2, 4);
+        const ss = str.slice(4, 6);
+        return `${hh}:${mm}:${ss}`;
+    }
+
+
+    // 示例处理函数（您可以根据需要进一步实现这些功能）
+    function handleBuy(stkcode) {
+        alert(`买入 ${stkcode}`);
+    }
+
+    function handleSell(stkcode) {
+        alert(`卖出 ${stkcode}`);
+    }
+
+</script>
+
+</body>
+</html>

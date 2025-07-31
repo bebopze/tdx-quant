@@ -83,6 +83,12 @@ public interface TradeService {
      */
     void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
 
+    /**
+     *
+     * @param newPositionList
+     */
+    void quickAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+
 
     /**
      * 一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单
@@ -94,4 +100,11 @@ public interface TradeService {
      * 一键再融资（   一键清仓 -> 重置融资     =>     一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金   ）
      */
     void quickResetFinancing();
+
+    /**
+     * 一键取款
+     *
+     * @param new_marginRate 取款金额（T+1 隔日7点可取）
+     */
+    void quickLowerFinancing(double new_marginRate);
 }

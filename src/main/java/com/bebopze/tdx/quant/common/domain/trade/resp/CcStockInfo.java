@@ -77,7 +77,7 @@ public class CcStockInfo implements Serializable {
     // 0/1
     private String rzDebt;
     // 股东账号（ 0808088888 ）
-    private String secuid;
+    private transient String secuid;
     // 持仓数量-融资（0 / --）
     private String stkRzBal;
 

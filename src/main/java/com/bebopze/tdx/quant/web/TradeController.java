@@ -96,6 +96,13 @@ public class TradeController {
         return Result.SUC();
     }
 
+    @Operation(summary = "一键 等比买入（调仓换股）", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
+    @PostMapping(value = "/quickOption/avgBuyNewPosition")
+    public Result<Void> avgBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
+        tradeService.quickAvgBuyNewPosition(newPositionList);
+        return Result.SUC();
+    }
+
 
     @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单")
     @GetMapping(value = "/quickOption/cancelOrder")
@@ -109,6 +116,16 @@ public class TradeController {
     @GetMapping(value = "/quickOption/resetFinancing")
     public Result<Void> quickResetFinancing() {
         tradeService.quickResetFinancing();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "一键取款", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
+    @GetMapping(value = "/quickOption/lowerFinancing")
+    public Result<Void> quickLowerFinancing(@Schema(description = "取款金额（T+1 隔日7点可取）", example = "50000")
+                                            @RequestParam double transferAmount) {
+
+        tradeService.quickLowerFinancing(transferAmount);
         return Result.SUC();
     }
 

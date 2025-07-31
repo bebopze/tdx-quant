@@ -31,6 +31,11 @@ public class NumUtil {
     }
 
 
+    public static BigDecimal num2Decimal(Number val) {
+        return double2Decimal(of(val));
+    }
+
+
     /**
      * 判断 value 是否在 [min, max] 区间内（包含边界）
      *
@@ -62,5 +67,15 @@ public class NumUtil {
     public static double NaN_0(double v) {
         return Double.isNaN(v) ? 0 : v;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static String str(Number val) {
+        BigDecimal decimal = num2Decimal(val);
+        return decimal == null ? null : decimal.stripTrailingZeros().toPlainString();
+    }
+
 
 }

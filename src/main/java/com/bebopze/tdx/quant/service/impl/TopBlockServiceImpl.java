@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
+import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -71,11 +72,27 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void refreshAll() {
-        int N = 10;
 
+        // 1- N日新高
+        nDayHighTask(100);
 
-        nDayHighTask(N);
-        changePctTopTask(N);
+        // 2- N日涨幅 - TOP榜
+        changePctTopTask(10);
+
+        // 3-RPS红
+        rpsRedTask(85);
+
+        // 4-二阶段
+        stage2Task();
+
+        // 5-大均线多头
+        longTermMABullStackTask();
+
+        // 6-均线大多头
+        bullMAStackTask();
+
+        // 11- 板块AMO-Top1
+        blockAmoTopTask();
     }
 
 
@@ -98,6 +115,50 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
     @Override
+    public void rpsRedTask(double RPS) {
+
+        initCache();
+
+
+        // RPS红
+        calcRpsRed(RPS);
+    }
+
+    @Override
+    public void stage2Task() {
+
+        initCache();
+
+
+        // 二阶段
+        calcStage2();
+    }
+
+
+    @Override
+    public void longTermMABullStackTask() {
+
+        initCache();
+
+
+        // 大均线多头
+        //calcBullMAStack();
+        calcLongTermMABullStack();
+    }
+
+
+    @Override
+    public void bullMAStackTask() {
+
+        initCache();
+
+
+        // 均线大多头
+        calcBullMAStack();
+    }
+
+
+    @Override
     public void blockAmoTopTask() {
 
         initCache();
@@ -106,8 +167,80 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Override
     public Map<String, Integer> topBlockRate(int blockNewId, LocalDate date, int resultType, int N) {
+
+
+        // ------------------------------------- hyLevel -> 缺省值：    LV1-研究行业   LV2-普通行业   LV3-概念板块
+        int hyLevel = 0;
+
+        if (resultType == 2) {
+            hyLevel = 2;                //  2级  普通行业  ->  56个
+        } else if (resultType == 4) {
+            hyLevel = 3;                // (3级) 概念板块  ->  380个
+        } else if (resultType == 12) {
+            hyLevel = 1;                //  1级  研究行业  ->  30个
+        } else if (resultType == 0) {
+            hyLevel = 0;                //  2级  普通行业   +   (3级) 概念板块
+        }
+
+
+        return topBlockRate(blockNewId, date, resultType, hyLevel, N);
+
+
+//        List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByBlockNewIdDateAndLimit(blockNewId, date, N);
+//
+//
+//        Map<String, Integer> rateMap = Maps.newHashMap();
+//        entityList.forEach(e -> {
+//
+//
+//            // String result = e.getResult();
+//            // String result = e.getYjhyLv1Result();      // 1级 研究行业  ->  30个
+//            // String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
+//
+//
+//            String result = null;
+//            if (resultType == 2) {
+//                result = e.getPthyLv2Result();      //  2级  普通行业  ->  56个
+//            } else if (resultType == 4) {
+//                result = e.getGnResult();           // (3级) 概念板块  ->  380个
+//            } else if (resultType == 12) {
+//                result = e.getYjhyLv1Result();      //  1级  研究行业  ->  30个
+//            } else if (resultType == 0) {
+//                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
+//            }
+//
+//
+//            List<BlockTopInfoDTO> infoList = JSON.parseArray(result, BlockTopInfoDTO.class);
+//
+//
+//            BlockTopInfoDTO blockTopInfoDTO = infoList.get(0);
+//            String blockCode = blockTopInfoDTO.getBlockCode();
+//            String blockName = blockTopInfoDTO.getBlockName();
+//
+//
+//            rateMap.merge(blockCode + "-" + blockName, 1, Integer::sum);
+//        });
+//
+//
+//        // 按 value 倒序排序
+//        return reverseSortByValue(rateMap);
+    }
+
+    @Override
+    public Map<String, Integer> topBlockRate(int blockNewId, LocalDate date, int resultType, Integer hyLevel, int N) {
+
+        if (hyLevel == null) {
+            return topBlockRate(blockNewId, date, resultType, N);
+        }
+
+
+        // ------------------------------------------------------------------------------
+
 
         List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByBlockNewIdDateAndLimit(blockNewId, date, N);
 
@@ -121,16 +254,19 @@ public class TopBlockServiceImpl implements TopBlockService {
             // String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
 
 
-            String result = null;
-            if (resultType == 2) {
-                result = e.getPthyLv2Result();      //  2级  普通行业  ->  56个
-            } else if (resultType == 4) {
-                result = e.getGnResult();           // (3级) 概念板块  ->  380个
-            } else if (resultType == 12) {
-                result = e.getYjhyLv1Result();      //  1级  研究行业  ->  30个
-            } else if (resultType == 0) {
-                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
-            }
+//            String result = null;
+//            if (resultType == 2) {
+//                result = e.getPthyLv2Result();      //  2级  普通行业  ->   56个
+//            } else if (resultType == 4) {
+//                result = e.getGnResult();           // (3级) 概念板块  ->  270个
+//            } else if (resultType == 12) {
+//                result = e.getYjhyLv1Result();      //  1级  研究行业  ->   30个
+//            } else if (resultType == 0) {
+//                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
+//            }
+
+
+            String result = getResultByTypeAndLevel(e, resultType, hyLevel);
 
 
             List<BlockTopInfoDTO> infoList = JSON.parseArray(result, BlockTopInfoDTO.class);
@@ -147,6 +283,150 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 按 value 倒序排序
         return reverseSortByValue(rateMap);
+    }
+
+    @Override
+    public List<ResultTypeLevelRateDTO> topBlockRateAll(int blockNewId, LocalDate date, int N) {
+
+
+        List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByBlockNewIdDateAndLimit(blockNewId, date, N);
+
+
+        // key - totalDay
+        Map<String, Integer> rateMap = Maps.newHashMap();
+        entityList.forEach(e -> {
+
+
+            // 概念板块
+            List<BlockTopInfoDTO> gn_list = JSON.parseArray(e.getGnResult(), BlockTopInfoDTO.class);
+
+            // 普通行业
+            List<BlockTopInfoDTO> pthy_lv1_List = JSON.parseArray(e.getPthyLv1Result(), BlockTopInfoDTO.class);
+            List<BlockTopInfoDTO> pthy_lv2_List = JSON.parseArray(e.getPthyLv2Result(), BlockTopInfoDTO.class);
+            List<BlockTopInfoDTO> pthy_lv3_List = JSON.parseArray(e.getPthyLv3Result(), BlockTopInfoDTO.class);
+
+            // 研究行业
+            List<BlockTopInfoDTO> yjhy_lv1_List = JSON.parseArray(e.getYjhyLv1Result(), BlockTopInfoDTO.class);
+            List<BlockTopInfoDTO> yjhy_lv2_List = JSON.parseArray(e.getYjhyLv2Result(), BlockTopInfoDTO.class);
+            List<BlockTopInfoDTO> yjhy_lv3_List = JSON.parseArray(e.getYjhyLv3Result(), BlockTopInfoDTO.class);
+
+
+            // ------------------------------------------------------------
+
+
+            // 取 Top1   ->   resultType + hyLevel + blockCode + blockName
+
+
+            // 4-概念
+            convertKey___mergeSum(rateMap, 4, 1, gn_list);
+            // convertKey___mergeSum(rateMap, 4, 2, gn_list);  // DEL
+            // convertKey___mergeSum(rateMap, 4, 3, gn_list);  // DEL
+
+            // 2-普通行业
+            convertKey___mergeSum(rateMap, 2, 1, pthy_lv1_List);
+            convertKey___mergeSum(rateMap, 2, 2, pthy_lv2_List);
+            convertKey___mergeSum(rateMap, 2, 3, pthy_lv3_List);
+
+            // 12-研究行业
+            convertKey___mergeSum(rateMap, 12, 1, yjhy_lv1_List);
+            convertKey___mergeSum(rateMap, 12, 2, yjhy_lv2_List);
+            convertKey___mergeSum(rateMap, 12, 3, yjhy_lv3_List);
+        });
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 按 value 倒序排序
+        Map<String, Integer> sort__rateMap = reverseSortByValue(rateMap);
+
+
+        // --------------------------------------------------------------------------------
+
+
+        Map<String, ResultTypeLevelRateDTO> typeRateMap = Maps.newHashMap();
+
+
+        sort__rateMap.forEach((key, totalDay) -> {
+
+            String[] keyArr = key.split("-");
+
+            int resultType = Integer.parseInt(keyArr[0]);
+            int hyLevel = Integer.parseInt(keyArr[1]);
+
+            String blockCode = keyArr[2];
+            String blockName = keyArr[3];
+
+
+            RateMapDTO rateMapDTO = new RateMapDTO(/*resultType, hyLevel,*/ blockCode, blockName, totalDay);
+
+
+            // -------------------------------------------–
+
+
+            ResultTypeLevelRateDTO dto = new ResultTypeLevelRateDTO();
+            dto.setResultType(resultType);
+            dto.setHyLevel(hyLevel);
+
+
+            typeRateMap.computeIfAbsent(resultType + "-" + hyLevel, k -> dto).getDtoList().add(rateMapDTO);
+        });
+
+
+        return Lists.newArrayList(typeRateMap.values()).stream().sorted(Comparator.comparing(ResultTypeLevelRateDTO::getResultType)).collect(Collectors.toList());
+    }
+
+
+    @Data
+    public static class ResultTypeLevelRateDTO {
+
+        private int resultType;
+
+        private int hyLevel;
+
+
+        List<RateMapDTO> dtoList = Lists.newArrayList();
+
+
+        // ----------------------
+
+
+        public String getResultTypeDesc() {
+            return BlockTypeEnum.getDescByType(resultType);
+        }
+    }
+
+
+    @Data
+    @AllArgsConstructor
+    public static class RateMapDTO {
+
+        // private int resultType;
+        // private int hyLevel;
+
+        private String blockCode;
+        private String blockName;
+
+        private int totalDay;
+    }
+
+
+    private String convertKey___mergeSum(Map<String, Integer> rateMap,
+
+                                         int resultType, int hyLevel, List<BlockTopInfoDTO> resultInfoList) {
+
+        // 取 Top1
+        BlockTopInfoDTO blockTop = resultInfoList.get(0);
+
+        // resultType + hyLevel + blockCode + blockName
+        String key = resultType + "-" + hyLevel + "-" + blockTop.getBlockCode() + "-" + blockTop.getBlockName();
+
+
+        // Top1 天数累计
+        rateMap.merge(key, 1, Integer::sum);
+
+
+        return key;
     }
 
 
@@ -297,6 +577,61 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * resultType + level   ->   result
+     *
+     * @param e
+     * @param resultType
+     * @param hyLevel
+     * @return
+     */
+    private String getResultByTypeAndLevel(QaBlockNewRelaStockHisDO e, int resultType, int hyLevel) {
+        String result = null;
+
+
+        // 2-普通行业
+        if (resultType == 2) {
+
+            if (hyLevel == 1) {
+                result = e.getPthyLv1Result();      //  1级  普通行业  ->   13个
+            } else if (hyLevel == 2) {
+                result = e.getPthyLv2Result();      //  2级  普通行业  ->   56个
+            } else if (hyLevel == 3) {
+                result = e.getPthyLv3Result();      //  3级  普通行业  ->  110个（细分行业）
+            }
+
+        }
+
+        // 4-概念板块
+        else if (resultType == 4) {
+
+            result = e.getGnResult();               // (3级) 概念板块  ->  270个
+
+        }
+
+        // 12-研究行业
+        else if (resultType == 12) {
+
+            if (hyLevel == 1) {
+                result = e.getYjhyLv1Result();      //  1级  研究行业  ->   30个
+            } else if (hyLevel == 2) {
+                result = e.getYjhyLv2Result();      //  2级  研究行业  ->  127个
+            } else if (hyLevel == 3) {
+                result = e.getYjhyLv3Result();      //  3级  研究行业  ->  344个
+            }
+
+        } else if (resultType == 0) {
+            result = e.getResult();                 //  2级  普通行业   +   (3级) 概念板块  ->  380个
+        }
+
+
+        return result;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Data
     @AllArgsConstructor
     public static class TopBlockDTO {
@@ -378,10 +713,13 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     private void calcChangePctTop(int N, double limitChangePct) {
 
 
-        // --------------------------------------------------- 日期 - N日涨幅 TOP100（个股code 列表）
+        // --------------------------------------------------- 日期 - N日涨幅榜（个股code 列表）
 
 
         // 日期 - 涨幅榜（个股code 列表）
@@ -426,6 +764,239 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.涨幅榜.getBlockNewId();
+
+
+        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+
+
+        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void calcRpsRed(double RPS) {
+
+
+        // --------------------------------------------------- 日期 - RPS红（个股code 列表）
+
+
+        // 日期 - RPS红（个股code 列表）
+        Map<LocalDate, Set<String>> date_stockCodeSet__topMap = Maps.newConcurrentMap();
+
+
+        // 遍历计算   =>   每日 - RPS红（个股code 列表）
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+
+            try {
+                String stockCode = stockDO.getCode();
+
+
+                StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+                // RPS红（ RPS一线红(95) || RPS双线红(90) || RPS三线红(85) ）
+                boolean[] RPS红_arr = fun.RPS红(RPS);
+
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+                // 日期 - RPS红（code列表）
+                dateIndexMap.forEach((date, idx) -> {
+
+                    if (RPS红_arr[idx]) {
+                        date_stockCodeSet__topMap.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                    }
+                });
+
+
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
+
+
+        // --------------------------------------------------- 按 板块 分类
+
+
+        Integer blockNewId = BlockNewIdEnum.RPS红.getBlockNewId();
+
+
+        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+
+
+        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void calcStage2() {
+
+
+        // --------------------------------------------------- 日期 - 二阶段（个股code 列表）
+
+
+        // 日期 - 二阶段（个股code 列表）
+        Map<LocalDate, Set<String>> date_stockCodeSet__topMap = Maps.newConcurrentMap();
+
+
+        // 遍历计算   =>   每日 - 二阶段（个股code 列表）
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+
+            try {
+                String stockCode = stockDO.getCode();
+
+
+                StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+                // 二阶段
+                boolean[] RPS红_arr = fun.二阶段();
+
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+                // 日期 - 二阶段（code列表）
+                dateIndexMap.forEach((date, idx) -> {
+
+                    if (RPS红_arr[idx]) {
+                        date_stockCodeSet__topMap.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                    }
+                });
+
+
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
+
+
+        // --------------------------------------------------- 按 板块 分类
+
+
+        Integer blockNewId = BlockNewIdEnum.二阶段.getBlockNewId();
+
+
+        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+
+
+        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void calcLongTermMABullStack() {
+
+
+        // --------------------------------------------------- 日期 - 大均线多头（个股code 列表）
+
+
+        // 日期 - 大均线多头（个股code 列表）
+        Map<LocalDate, Set<String>> date_stockCodeSet__topMap = Maps.newConcurrentMap();
+
+
+        // 遍历计算   =>   每日 - 大均线多头（个股code 列表）
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+
+            try {
+                String stockCode = stockDO.getCode();
+
+
+                StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+                // 大均线多头
+                boolean[] 大均线多头_arr = fun.大均线多头();
+
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+                // 日期 - 大均线多头（code列表）
+                dateIndexMap.forEach((date, idx) -> {
+
+                    if (大均线多头_arr[idx]) {
+                        date_stockCodeSet__topMap.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                    }
+                });
+
+
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
+
+
+        // --------------------------------------------------- 按 板块 分类
+
+
+        Integer blockNewId = BlockNewIdEnum.大均线多头.getBlockNewId();
+
+
+        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+
+
+        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private void calcBullMAStack() {
+
+
+        // --------------------------------------------------- 日期 - 均线大多头（个股code 列表）
+
+
+        // 日期 - 均线大多头（个股code 列表）
+        Map<LocalDate, Set<String>> date_stockCodeSet__topMap = Maps.newConcurrentMap();
+
+
+        // 遍历计算   =>   每日 - 均线大多头（个股code 列表）
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+
+            try {
+                String stockCode = stockDO.getCode();
+
+
+                StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+
+
+                // 均线大多头
+                boolean[] 均线大多头_arr = fun.均线大多头();
+
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+                // 日期 - 均线大多头（code列表）
+                dateIndexMap.forEach((date, idx) -> {
+
+                    if (均线大多头_arr[idx]) {
+                        date_stockCodeSet__topMap.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                    }
+                });
+
+
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
+
+
+        // --------------------------------------------------- 按 板块 分类
+
+
+        Integer blockNewId = BlockNewIdEnum.均线大多头.getBlockNewId();
 
 
         qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
@@ -491,7 +1062,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // --------------------------------------------------- 按 板块 分类
 
 
-        Integer blockNewId = 6;
+        Integer blockNewId = BlockNewIdEnum.板块AMO_TOP1.getBlockNewId();
 
 
         qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
@@ -604,7 +1175,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
 
-//        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+//        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；
 //        entity.setBlockNewId(blockNewId);
 //        entity.setDate(date);
 //        entity.setStockIdList(null);
@@ -658,7 +1229,7 @@ public class TopBlockServiceImpl implements TopBlockService {
      *
      * @param date
      * @param filter_stockCodeSet
-     * @param blockNewId          1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+     * @param blockNewId          1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；
      */
     private void blockSum(LocalDate date, Set<String> filter_stockCodeSet, Integer blockNewId) {
 
@@ -817,7 +1388,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
 
-        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-均线大多头；
+        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；
         entity.setBlockNewId(blockNewId);
         entity.setDate(date);
         entity.setStockIdList(String.join(",", filter_stockCodeSet));

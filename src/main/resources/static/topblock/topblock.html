@@ -27,8 +27,8 @@
                 <option value="2">涨幅榜</option>
                 <option value="3">RPS三线红</option>
                 <option value="4">二阶段</option>
-                <option value="5">均线大多头</option>
-                <option value="6">板块AMO-TOP1</option>
+                <option value="5">大均线多头</option>
+                <option value="11">板块AMO-TOP1</option>
             </select>
 
             <label for="date">选择日期:</label>
@@ -118,9 +118,9 @@
         </div>
     </div>
 
-    <!-- 均线大多头 -->
+    <!-- 大均线多头 -->
     <div class="card mb-4">
-        <div class="card-header">均线大多头 - 天数分布</div>
+        <div class="card-header">大均线多头 - 天数分布</div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
@@ -142,13 +142,13 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
-                    <div id="chart6_2" style="width: 100%; height: 400px;"></div>
+                    <div id="chart11_2" style="width: 100%; height: 400px;"></div>
                 </div>
                 <div class="col-md-4">
-                    <div id="chart6_4" style="width: 100%; height: 400px;"></div>
+                    <div id="chart11_4" style="width: 100%; height: 400px;"></div>
                 </div>
                 <div class="col-md-4">
-                    <div id="chart6_12" style="width: 100%; height: 400px;"></div>
+                    <div id="chart11_12" style="width: 100%; height: 400px;"></div>
                 </div>
             </div>
         </div>
@@ -163,7 +163,7 @@
         'chart3_2', 'chart3_4', 'chart3_12',
         'chart4_2', 'chart4_4', 'chart4_12',
         'chart5_2', 'chart5_4', 'chart5_12',
-        'chart6_2', 'chart6_4', 'chart6_12'
+        'chart11_2', 'chart11_4', 'chart11_12'
     ];
     const blockNewIds = [
         1, 1, 1,
@@ -171,7 +171,7 @@
         3, 3, 3,
         4, 4, 4,
         5, 5, 5,
-        6, 6, 6
+        11, 11, 11
     ];
     const resultTypes = [
         2, 4, 12,
@@ -252,8 +252,8 @@
             case 4:
                 return '二阶段';
             case 5:
-                return '均线大多头';
-            case 6:
+                return '大均线多头';
+            case 11:
                 return '板块AMO-TOP1';
             default:
                 return '未知';
