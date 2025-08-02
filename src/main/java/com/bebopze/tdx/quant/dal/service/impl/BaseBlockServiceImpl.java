@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,11 +97,13 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     }
 
     @Override
+    @Cacheable("block_listAllKline")
     public List<BaseBlockDO> listAllKline() {
         return baseMapper.listAllKline();
     }
 
     @Override
+    @Cacheable("block_listAllRpsKline")
     public List<BaseBlockDO> listAllRpsKline() {
         return baseMapper.listAllRpsKline();
     }

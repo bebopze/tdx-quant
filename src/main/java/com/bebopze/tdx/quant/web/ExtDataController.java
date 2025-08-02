@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -28,16 +29,16 @@ public class ExtDataController {
 
     @Operation(summary = "个股 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/stock/calc")
-    public Result<Void> calcStockExtData() {
-        extDataService.calcStockExtData();
+    public Result<Void> calcStockExtData(@RequestParam(required = false) Integer N) {
+        extDataService.calcStockExtData(N);
         return Result.SUC();
     }
 
 
     @Operation(summary = "板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/block/calc")
-    public Result<Void> calcBlockExtData() {
-        extDataService.calcBlockExtData();
+    public Result<Void> calcBlockExtData(@RequestParam(required = false) Integer N) {
+        extDataService.calcBlockExtData(N);
         return Result.SUC();
     }
 

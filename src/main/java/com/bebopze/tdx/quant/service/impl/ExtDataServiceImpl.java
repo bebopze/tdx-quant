@@ -3,11 +3,14 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
@@ -50,14 +53,17 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
     @Override
-    public void refreshExtDataAll() {
-        calcBlockExtData();
-        calcStockExtData();
+    public void refreshExtDataAll(Integer N) {
+        calcBlockExtData(null);
+        calcStockExtData(N);
     }
 
 
     @Override
-    public void calcStockExtData() {
+    public void calcStockExtData(Integer N) {
+
+
+        N = StockUtil.N(N);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -67,7 +73,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 预加载 -> 解析数据
-        DataDTO data = loadAllStockKline();
+        DataDTO data = loadAllStockKline(N);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -77,12 +83,12 @@ public class ExtDataServiceImpl implements ExtDataService {
         stockTask__RPS(data);
 
         // 扩展数据
-        stockTask__extData(data);
+        stockTask__extData(data, N);
     }
 
 
     @Override
-    public void calcBlockExtData() {
+    public void calcBlockExtData(Integer N) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -113,12 +119,52 @@ public class ExtDataServiceImpl implements ExtDataService {
      *
      * @return stock - close_arr
      */
-    private DataDTO loadAllStockKline() {
+    private DataDTO loadAllStockKline(Integer N) {
         DataDTO data = new DataDTO();
 
 
         data.stockDOList = baseStockService.listAllKline();
-        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 增量更新     =>     kline_his / ext_data_his   ->   截取 最后N条
+        if (StockUtil.incrUpdate(N)) {
+
+
+            data.stockDOList.parallelStream().forEach(e -> {
+
+
+                // klineHis   ->   最后N条
+                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N);
+
+                e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+
+
+                // -----------------------------------------------------------------------------
+
+
+                // extDataHis -> 必须同步 截取（数据对齐）
+
+
+                // extDataHis   ->   最后N条
+                List<ExtDataDTO> extDataDTOList = ListUtil.lastN(e.getExtDataDTOList(), N);
+
+                e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
+            });
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 空行情 过滤（时间段内 -> 未上市）
+        // data.stockDOList = data.stockDOList.parallelStream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
+
+
+        // -----------------------------------------------------------------------------
 
 
         data.stockDOList.parallelStream().forEach(e -> {
@@ -259,20 +305,33 @@ public class ExtDataServiceImpl implements ExtDataService {
      * 个股 - 扩展数据 计算
      *
      * @param data
+     * @param N
      */
-    private void stockTask__extData(DataDTO data) {
+    private void stockTask__extData(DataDTO data, Integer N) {
         AtomicInteger count = new AtomicInteger(0);
         long start = System.currentTimeMillis();
+
+
+        // -----------------------------------------------------------------------------------------------
+
+
+        List<BaseStockDO> entityList = Lists.newArrayList();
 
 
         data.stockDOList.parallelStream().forEach(stockDO -> {
 
             String code = stockDO.getCode();
-            List<ExtDataDTO> dtoList = data.extDataMap.get(code);
+            List<ExtDataDTO> new_extDataDTOList = data.extDataMap.get(code);     // 暂时 只计算了 RPS
 
 
-            // fill -> RPS
-            stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
+            // --------------------------------------------------------
+
+
+            // old
+            List<ExtDataDTO> old_extDataDTOList = stockDO.getExtDataDTOList();
+
+            // fill -> new_RPS（后续计算 RPS相关指标）
+            stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
 
 
             // --------------------------------------------------------
@@ -307,6 +366,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             boolean[] 月多 = fun.月多();
+            boolean[] RPS红 = fun.RPS红(85);
             boolean[] RPS三线红 = fun.RPS三线红(80);
 
 
@@ -321,8 +381,8 @@ public class ExtDataServiceImpl implements ExtDataService {
             // --------------------------------------------------------
 
 
-            for (int i = 0; i < dtoList.size(); i++) {
-                ExtDataDTO dto = dtoList.get(i);
+            for (int i = 0; i < new_extDataDTOList.size(); i++) {
+                ExtDataDTO dto = new_extDataDTOList.get(i);
 
 
                 dto.setSSF(of(SSF[i], 3));
@@ -349,19 +409,86 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
                 dto.set月多(月多[i]);
+                dto.setRPS红(RPS红[i]);
                 dto.setRPS三线红(RPS三线红[i]);
             }
 
 
-            List<String> extDataList = ConvertStockExtData.dtoList2StrList(dtoList);
+            // ------------------------------------------------------------------------ 更新 -> DB
+
+
+            // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
+            compare__old_new__extData(fun.getDateIndexMap(), N, old_extDataDTOList, new_extDataDTOList);
+
+
+            // -------------------------
 
 
             BaseStockDO entity = new BaseStockDO();
             entity.setId(data.codeIdMap.get(code));
-            entity.setExtDataHis(JSON.toJSONString(extDataList));
 
-            baseStockService.updateById(entity);
+            // entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList))); // 覆盖更新
+            entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
+
+
+            entityList.add(entity);
         });
+
+
+        baseStockService.updateBatchById(entityList);
+    }
+
+
+    /**
+     * 增量更新     =>     比较新旧   ->   当日 已存在->覆盖     不存在->add
+     *
+     * @param old_dateIndexMap
+     * @param N
+     * @param old_extDataList
+     * @param new_extDataList
+     */
+    private void compare__old_new__extData(Map<LocalDate, Integer> old_dateIndexMap,
+                                           Integer N,
+                                           List<ExtDataDTO> old_extDataList,
+                                           List<ExtDataDTO> new_extDataList) {
+
+
+        // 增量更新
+        if (StockUtil.incrUpdate(N, old_extDataList.size())) {
+
+
+            // （从 250日 开始） 遍历 new_extDataList   ->   逐日判断 是否已存在
+
+            for (int i = 250; i < new_extDataList.size(); i++) {
+                ExtDataDTO new_dto = new_extDataList.get(i);
+
+
+                // 当前extData  ->  交易日                1个交易日   ->   1条记录（ExtDataDTO）
+                LocalDate date = new_dto.getDate();
+
+
+                // ------------------------------- 当日 扩展数据     =>     在 old 中  ->  是否已存在
+
+
+                Integer idx = old_dateIndexMap.get(date);
+
+                // 已存在 -> 覆盖
+                if (idx != null) {
+                    old_extDataList.set(idx, new_dto);
+                }
+                // 不存在 -> 新插入
+                else {
+                    old_extDataList.add(new_dto);
+                }
+            }
+
+
+        } else {
+
+            // 全量更新
+            old_extDataList.clear();
+            old_extDataList.addAll(new_extDataList);
+        }
     }
 
 

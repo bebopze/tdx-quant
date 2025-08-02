@@ -16,6 +16,43 @@ public class StockUtil {
 
 
     /**
+     * 行情数据个数 >= 250（MA250  ->  最少最近 250日 的行情数据）
+     *
+     * @param N
+     * @return
+     */
+    public static Integer N(Integer N) {
+        return N == null ? Integer.MAX_VALUE : Math.min(N, 300);
+    }
+
+
+    /**
+     * 增量更新：    是 -> 增量更新   /   否 -> 全量更新
+     *
+     * @param N
+     * @return
+     */
+    public static boolean incrUpdate(Integer N) {
+        return N < Integer.MAX_VALUE;
+    }
+
+    /**
+     * 截取 行情数据个数 N  <  行情总数       =>       增量更新
+     *
+     * @param N        截取last 行情个数  N
+     * @param totalNum 行情总数
+     * @return
+     */
+    public static boolean incrUpdate(Integer N, int totalNum) {
+        // 截取 行情数据个数 N  <  行情总数     =>       增量更新
+        return incrUpdate(N) && N < totalNum;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
      * A股  ->  买入数量 限制       =>       最小单位：1手 = 100股     ->     N x 100股
      *
      * @param val

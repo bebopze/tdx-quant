@@ -14,20 +14,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class StockTask {
 
 
-    /**
-     * 扩展数据计算
-     */
-    @Async
-    @Scheduled(cron = "0 00 17 ? * 1", zone = "Asia/Shanghai")
-    public void execTask__tdxExtData() {
+//    /**
+//     * 扩展数据计算
+//     */
+//    @Async
+//    @Scheduled(cron = "0 00 17 ? * 1", zone = "Asia/Shanghai")
+//    public void execTask__tdxExtData() {
+//
+//
+//        log.info("---------------------------- 任务 [tdxExtData - 扩展数据 更新入库]   执行 start");
+//        TdxExtDataFun.calcRps();
+//        log.info("---------------------------- 任务 [tdxExtData - 扩展数据 更新入库]   执行 end");
+//
+//
+//    }
 
-
-        log.info("---------------------------- 任务 [tdxExtData - 扩展数据 更新入库]   执行 start");
-        TdxExtDataFun.calcRps();
-        log.info("---------------------------- 任务 [tdxExtData - 扩展数据 更新入库]   执行 end");
-
-
-    }
 }
-
-

@@ -55,6 +55,7 @@ public class ExtDataDTO implements Serializable {
 
 
     private Boolean 月多;
+    private Boolean RPS红;
     private Boolean RPS三线红;
 
 

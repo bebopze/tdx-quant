@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -144,7 +145,7 @@ public class ConvertStockExtData {
 
         int size = extDataList.size();
         if (size > limit) {
-            List<String> subList = extDataList.subList(size - limit, size);
+            List<String> subList = ListUtil.lastN(extDataList, limit);
             return strList2DTOList(subList);
         }
 

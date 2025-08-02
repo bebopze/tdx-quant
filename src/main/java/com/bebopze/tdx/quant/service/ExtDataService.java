@@ -11,17 +11,17 @@ public interface ExtDataService {
     /**
      * 扩展数据（自定义 指标）  ->   板块 + 个股
      */
-    void refreshExtDataAll();
+    void refreshExtDataAll(Integer N);
 
 
     /**
      * 扩展数据（自定义 指标） - 个股
      */
-    void calcStockExtData();
+    void calcStockExtData(Integer N);
 
 
     /**
      * 扩展数据（自定义 指标） - 板块
      */
-    void calcBlockExtData();
+    void calcBlockExtData(Integer N);
 }

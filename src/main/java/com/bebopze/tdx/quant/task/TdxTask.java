@@ -87,19 +87,19 @@ public class TdxTask {
 
 
     /**
-     * 行情数据 更新 -> DB
+     * 行情数据   盘后-全量更新   ->   DB
      */
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__reresKlineAll() {
-        log.info("---------------------------- 任务 [reresKlineAll - 行情数据 更新入库]   执行 start");
+        log.info("---------------------------- 任务 [reresKlineAll - 盘后-全量更新 入库]   执行 start");
 
 
         // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll();
 
         // 扩展（指标）  ->  ext_data_his
-        extDataService.refreshExtDataAll();
+        extDataService.refreshExtDataAll(null);
 
 
         // 主线板块
@@ -109,7 +109,37 @@ public class TdxTask {
         marketService.importMarketMidCycle();
 
 
-        log.info("---------------------------- 任务 [reresKlineAll - 行情数据 更新入库]   执行 end");
+        log.info("---------------------------- 任务 [reresKlineAll - 盘后-全量更新 入库]   执行 end");
+    }
+
+
+    /**
+     * 行情数据   盘中-增量更新   ->   DB
+     */
+    @Async
+    // @Scheduled(cron = "0 */10 13-15 ? * 1-5", zone = "Asia/Shanghai")
+    public void execTask__reresKlineAll__lataDay() {
+        log.info("---------------------------- 任务 [reresKlineAll - 盘中-增量更新 入库]   执行 start");
+
+
+        // ------------------ 增量更新   ->   只需控制源头 kline  ->  [起始日期]
+
+
+        // 行情  ->  kline_his
+        tdxDataParserService.refreshKlineAll();
+
+        // 扩展（指标）  ->  ext_data_his
+        extDataService.refreshExtDataAll(10);
+
+
+        // 主线板块
+        topBlockService.refreshAll();
+
+        // 大盘量化
+        marketService.importMarketMidCycle();
+
+
+        log.info("---------------------------- 任务 [reresKlineAll - 盘中-增量更新 入库]   执行 end");
     }
 
 

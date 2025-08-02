@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.convert;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
@@ -137,7 +138,7 @@ public class ConvertStockKline {
 
         int size = klines.size();
         if (size > limit) {
-            List<String> subKlines = klines.subList(size - limit, size);
+            List<String> subKlines = ListUtil.lastN(klines, limit);
             return klines2DTOList(subKlines);
         }
 

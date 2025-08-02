@@ -30,172 +30,142 @@ import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.fillNaN;
 public class TdxExtDataFun {
 
 
-    public static void test1() {
-
-        double[] arr = {3.0, 2.0, 1.0};
-
-
-        double[] doubles1 = fillNaN(arr, 0);
-        double[] doubles2 = fillNaN(arr, 1);
-        double[] doubles3 = fillNaN(arr, 2);
-        double[] doubles4 = fillNaN(arr, 3);
-        double[] doubles5 = fillNaN(arr, 10);
-        // double[] doubles6 = fillNaN(arr, -1);
-
-
-        System.out.println(JSON.toJSONString(doubles1));
-        System.out.println(JSON.toJSONString(doubles2));
-        System.out.println(JSON.toJSONString(doubles3));
-        System.out.println(JSON.toJSONString(doubles4));
-        System.out.println(JSON.toJSONString(doubles5));
-
-
-        double[] fillNaN_arr = doubles5;
-        if (Double.isNaN(fillNaN_arr[0])) {
-            double v = fillNaN_arr[0];
-
-            System.out.println("fillNaN     >>>     v : " + v);
-
-            System.out.println(Objects.equals(v, Double.NaN));
-        }
-    }
-
-    public static void main(String[] args) {
-        FastJson2Config fastJson2Config = new FastJson2Config();
-
-
-        test1();
-
-
-        // 从本地DB   加载5000支个股的收盘价序列
-        AllStockKlineDTO dto = loadAllStockKline();
-        Map<String, LocalDate[]> stockDateArrMap = dto.stockDateArrMap;
-        Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
-        Map<String, Long> codeIdMap = dto.codeIdMap;
-
-
-        Map<String, double[]> RPS_N = computeRPS(stockDateArrMap, stockCloseArrMap, 50);
-        System.out.println(JSON.toJSONString(RPS_N));
-
-
-        // 打印某只股票的最近几日 RPS
-        String stockCode = "300059";
-
-        double[] rps_val = RPS_N.get(stockCode);
-        System.out.println("rps_val : " + JSON.toJSONString(rps_val));
-
-
-        System.out.println("最近10日 " + stockCode + " RPS: " +
-                                   Arrays.toString(Arrays.copyOfRange(RPS_N.get(stockCode), RPS_N.get(stockCode).length - 10, RPS_N.get(stockCode).length))
-        );
-    }
-
-
-    /**
-     * 计算 RPS   ->   save2DB
-     */
-    public static void calcRps() {
-
-        // 从本地DB   加载5000支个股的收盘价序列
-        AllStockKlineDTO dto = loadAllStockKline();
-        Map<String, LocalDate[]> stockDateArrMap = dto.stockDateArrMap;
-        Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
-        // Map<String, Long> codeIdMap = dto.codeIdMap;
-
-        Map<String, double[]> RPS50 = computeRPS(stockDateArrMap, stockCloseArrMap, 50);
-        Map<String, double[]> RPS120 = computeRPS(stockDateArrMap, stockCloseArrMap, 120); // 120 -> 100
-        Map<String, double[]> RPS250 = computeRPS(stockDateArrMap, stockCloseArrMap, 250); // 250 -> 200
-
-
-        // save -> DB
-        IBaseStockService baseStockService = MybatisPlusUtil.getBaseStockService();
-        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
-
-
-        List<BaseStockDO> baseStockDOList = Lists.newArrayList();
-        RPS50.forEach((stockCode, v) -> {
-
-            BaseStockDO baseStockDO = new BaseStockDO();
-            baseStockDO.setId(codeIdMap.get(stockCode));
-            // baseStockDO.setRps();
-
-            baseStockDOList.add(baseStockDO);
-        });
-        baseStockService.updateBatchById(baseStockDOList, 500);
-
-
-        // TODO   refresh cache
-    }
-
-
-    @Data
-    @AllArgsConstructor
-    public static class AllStockKlineDTO {
-        // code - date_arr
-        Map<String, LocalDate[]> stockDateArrMap;
-        // code - close_arr
-        Map<String, double[]> stockCloseArrMap;
-        // code - id
-        Map<String, Long> codeIdMap;
-    }
-
-    /**
-     * 从本地DB   加载全部（5000+支）个股的 收盘价序列
-     *
-     * @return stock - close_arr
-     */
-    public static AllStockKlineDTO loadAllStockKline() {
-        // code - date_arr
-        Map<String, LocalDate[]> stockDateArrMap = Maps.newHashMap();
-        // code - close_arr
-        Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
-        // code - id
-        Map<String, Long> codeIdMap = Maps.newHashMap();
-
-
-        // 加载  最近500日   行情数据
-        int DAY_LIMIT = 500;
-
-
-        BaseStockMapper mapper = MybatisPlusUtil.getMapper(BaseStockMapper.class);
-
-
-        List<BaseStockDO> baseStockDOList = mapper.listAllKline();
-        baseStockDOList.forEach(e -> {
-
-            String stockCode = e.getCode();
-            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
-            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
-
-
-            // 上市1年
-            if (close_arr.length > 200) {
-                stockCloseArrMap.put(stockCode, fillNaN(close_arr, DAY_LIMIT));
-
-
-                double[] fillNaN_arr = stockCloseArrMap.get(stockCode);
-                if (Double.isNaN(fillNaN_arr[0])) {
-                    log.debug("fillNaN     >>>     stockCode : {}", stockCode);
-                }
-            }
-        });
-
-
-        return new AllStockKlineDTO(stockDateArrMap, stockCloseArrMap, codeIdMap);
-    }
-
-
-    private List<double[]> closr_arr__list;
-
-
-    public void initData() {
-
-        List<LdayParser.LdayDTO> ldayDTOS = LdayParser.parseByStockCode("");
-
-
-        // From DB     ->     klines
-        this.closr_arr__list = null;
-    }
+//    public static void test1() {
+//
+//        double[] arr = {3.0, 2.0, 1.0};
+//
+//
+//        double[] doubles1 = fillNaN(arr, 0);
+//        double[] doubles2 = fillNaN(arr, 1);
+//        double[] doubles3 = fillNaN(arr, 2);
+//        double[] doubles4 = fillNaN(arr, 3);
+//        double[] doubles5 = fillNaN(arr, 10);
+//        // double[] doubles6 = fillNaN(arr, -1);
+//
+//
+//        System.out.println(JSON.toJSONString(doubles1));
+//        System.out.println(JSON.toJSONString(doubles2));
+//        System.out.println(JSON.toJSONString(doubles3));
+//        System.out.println(JSON.toJSONString(doubles4));
+//        System.out.println(JSON.toJSONString(doubles5));
+//
+//
+//        double[] fillNaN_arr = doubles5;
+//        if (Double.isNaN(fillNaN_arr[0])) {
+//            double v = fillNaN_arr[0];
+//
+//            System.out.println("fillNaN     >>>     v : " + v);
+//
+//            System.out.println(Objects.equals(v, Double.NaN));
+//        }
+//    }
+//
+//
+//    /**
+//     * 计算 RPS   ->   save2DB
+//     */
+//    public static void calcRps() {
+//
+//        // 从本地DB   加载5000支个股的收盘价序列
+//        AllStockKlineDTO dto = loadAllStockKline();
+//        Map<String, LocalDate[]> stockDateArrMap = dto.stockDateArrMap;
+//        Map<String, double[]> stockCloseArrMap = dto.stockCloseArrMap;
+//        // Map<String, Long> codeIdMap = dto.codeIdMap;
+//
+//        Map<String, double[]> RPS50 = computeRPS(stockDateArrMap, stockCloseArrMap, 50);
+//        Map<String, double[]> RPS120 = computeRPS(stockDateArrMap, stockCloseArrMap, 120); // 120 -> 100
+//        Map<String, double[]> RPS250 = computeRPS(stockDateArrMap, stockCloseArrMap, 250); // 250 -> 200
+//
+//
+//        // save -> DB
+//        IBaseStockService baseStockService = MybatisPlusUtil.getBaseStockService();
+//        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
+//
+//
+//        List<BaseStockDO> baseStockDOList = Lists.newArrayList();
+//        RPS50.forEach((stockCode, v) -> {
+//
+//            BaseStockDO baseStockDO = new BaseStockDO();
+//            baseStockDO.setId(codeIdMap.get(stockCode));
+//            // baseStockDO.setRps();
+//
+//            baseStockDOList.add(baseStockDO);
+//        });
+//        baseStockService.updateBatchById(baseStockDOList, 500);
+//
+//
+//        // TODO   refresh cache
+//    }
+//
+//
+//    @Data
+//    @AllArgsConstructor
+//    public static class AllStockKlineDTO {
+//        // code - date_arr
+//        Map<String, LocalDate[]> stockDateArrMap;
+//        // code - close_arr
+//        Map<String, double[]> stockCloseArrMap;
+//        // code - id
+//        Map<String, Long> codeIdMap;
+//    }
+//
+//    /**
+//     * 从本地DB   加载全部（5000+支）个股的 收盘价序列
+//     *
+//     * @return stock - close_arr
+//     */
+//    public static AllStockKlineDTO loadAllStockKline() {
+//        // code - date_arr
+//        Map<String, LocalDate[]> stockDateArrMap = Maps.newHashMap();
+//        // code - close_arr
+//        Map<String, double[]> stockCloseArrMap = Maps.newHashMap();
+//        // code - id
+//        Map<String, Long> codeIdMap = Maps.newHashMap();
+//
+//
+//        // 加载  最近500日   行情数据
+//        int DAY_LIMIT = 500;
+//
+//
+//        BaseStockMapper mapper = MybatisPlusUtil.getMapper(BaseStockMapper.class);
+//
+//
+//        List<BaseStockDO> baseStockDOList = mapper.listAllKline(1000);
+//        baseStockDOList.forEach(e -> {
+//
+//            String stockCode = e.getCode();
+//            String[] date_arr = ConvertStockKline.strFieldValArr(e.getKlineDTOList(), "date");
+//            double[] close_arr = ConvertStockKline.fieldValArr(e.getKlineDTOList(), "close");
+//
+//
+//            // 上市1年
+//            if (close_arr.length > 200) {
+//                stockCloseArrMap.put(stockCode, fillNaN(close_arr, DAY_LIMIT));
+//
+//
+//                double[] fillNaN_arr = stockCloseArrMap.get(stockCode);
+//                if (Double.isNaN(fillNaN_arr[0])) {
+//                    log.debug("fillNaN     >>>     stockCode : {}", stockCode);
+//                }
+//            }
+//        });
+//
+//
+//        return new AllStockKlineDTO(stockDateArrMap, stockCloseArrMap, codeIdMap);
+//    }
+//
+//
+//    private List<double[]> closr_arr__list;
+//
+//
+//    public void initData() {
+//
+//        List<LdayParser.LdayDTO> ldayDTOS = LdayParser.parseByStockCode("");
+//
+//
+//        // From DB     ->     klines
+//        this.closr_arr__list = null;
+//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

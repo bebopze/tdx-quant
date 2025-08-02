@@ -115,7 +115,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 扩展（指标）  ->  ext_data_his
-        extDataService.refreshExtDataAll();
+        extDataService.refreshExtDataAll(null);
     }
 
 
