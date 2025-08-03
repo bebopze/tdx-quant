@@ -1,10 +1,12 @@
 package com.bebopze.tdx.quant.common.domain.kline;
 
-
+import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -53,10 +55,59 @@ public class StockKlineHisResp implements Serializable {
     private String version;
 
 
-    // 2025-05-06,20.70,20.99,21.08,20.61,3281601,6867607336.00,2.28,2.04,0.42,2.46
+    // 2025-08-01,23.20,23.17,23.47,23.06,2666164,6196831583.57,1.76,-0.26,-0.06,1.99
 
-    // 2025-05-13,21.06,21.45,21.97,20.89,8455131,18181107751.03,5.18,2.98,0.62,6.33
-    // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+    // 日期,O,C,H,L,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
     private List<String> klines;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 东方财富 klines（O,C,H,L）      ->       base_stock - kline_his（O,H,L,C）
+     *
+     * @return
+     */
+    public List<String> getKlines() {
+
+        return klines.stream().map(k -> {
+
+                         String[] arr = k.split("\\,");
+
+
+                         // O,C,H,L
+                         String O = arr[1];
+                         String C = arr[2];
+                         String H = arr[3];
+                         String L = arr[4];
+
+
+                         // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
+                         // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+
+
+                         // O,H,L,C
+                         arr[1] = O;
+                         arr[2] = H;
+                         arr[3] = L;
+                         arr[4] = C;
+
+                         return String.join(",", arr);
+                     })
+                     .collect(Collectors.toList());
+    }
+
+
+    /**
+     * klines   ->   dtoList
+     *
+     * @return
+     */
+    public List<KlineDTO> klineDTOList() {
+        List<String> klines = getKlines();
+        return ConvertStockKline.klines2DTOList(klines);
+    }
+
 
 }

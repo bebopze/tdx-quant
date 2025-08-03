@@ -195,8 +195,8 @@ public class KlineReportParser {
                     preClose = close;
 
 
-                    // 振幅       H/L   x100-100
-                    double rangePct = low == 0 ? 0 : high / low * 100 - 100;
+                    // 振幅       (H/L - 1) x 100%
+                    double rangePct = low == 0 ? 0 : (high / low - 1) * 100;
 
 
                     // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};

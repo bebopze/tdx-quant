@@ -1,10 +1,11 @@
 package com.bebopze.tdx.quant.common.util;
 
-
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
+ * sleep
+ *
  * @author: bebopze
  * @date: 2025/5/4
  */
@@ -37,5 +38,12 @@ public class SleepUtils {
         log.info("sleep : {}s", millis / 1000);
         sleep(millis);
     }
+
+
+    public static void randomSleep(long millis) {
+        long random = (long) (Math.random() * millis);
+        sleep(random);
+    }
+
 
 }

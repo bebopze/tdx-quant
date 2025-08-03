@@ -384,7 +384,7 @@ public class LdayParser {
             preClose = close;
 
 
-            // 振幅       H/L   x100-100
+            // 振幅       (H/L - 1) x 100%
             float rangePct = (high / low - 1) * 100;
 
 

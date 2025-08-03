@@ -149,7 +149,7 @@ public class BaseStockDO implements Serializable {
      * 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @JsonIgnore
-    @TableField(value = "kline_his", select = false)
+    @TableField(value = "kline_his")
     @Schema(description = "历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
 
@@ -157,7 +157,7 @@ public class BaseStockDO implements Serializable {
      * 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
      */
     @JsonIgnore
-    @TableField(value = "ext_data_his", select = false)
+    @TableField(value = "ext_data_his")
     @Schema(description = "扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
     private String extDataHis;
 

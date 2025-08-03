@@ -18,6 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 public class XueqiuKlineAPI {
 
 
+    // 搜狐财经   - https://q.stock.sohu.com/cn/300059
+    // 巨潮资讯网 - https://webapi.cninfo.com.cn/#/company?companyid=300059
+
+
     public static void main(String[] args) {
 
         String stockCode = "300059";

@@ -181,6 +181,9 @@ public class TradeServiceImpl implements TradeService {
         Assert.notEmpty(newPositionList, "newPositionList不能为空");
 
 
+        //  QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
         // 等比
         int avgPositionPct = 100 / newPositionList.size();
         newPositionList.forEach(e -> e.setPositionPct(avgPositionPct));

@@ -66,7 +66,14 @@ public class HttpUtil {
         };
 
 
-        String result = CLIENT.execute(httpGet, handler);
+        String result = "";
+        try {
+            result = CLIENT.execute(httpGet, handler);
+        } catch (Exception ex) {
+            log.error("doGet - err     >>>     url : {} , result : {} , errMsg : {}", url, JSON.toJSONString(result), ex.getMessage(), ex);
+            throw ex;
+        }
+
 
         log.info("status : {}", status[0]);
 

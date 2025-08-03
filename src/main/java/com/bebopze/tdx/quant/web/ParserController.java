@@ -93,8 +93,10 @@ public class ParserController {
      */
     @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
     @GetMapping(value = "/refresh/klineAll")
-    public Result<Void> refreshKlineAll() {
-        tdxDataParserService.refreshKlineAll();
+    public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
+                                        @RequestParam(required = false, defaultValue = "1") int updateType) {
+
+        tdxDataParserService.refreshKlineAll(updateType);
         return Result.SUC();
     }
 
@@ -117,17 +119,23 @@ public class ParserController {
     @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKline")
     public Result<Void> fillStockKline(@RequestParam(defaultValue = "300059") String stockCode,
-                                       @Schema(description = "API类型：1-通达信；2-东方财富；3-同花顺；4-雪球；5-腾讯；", example = "1")
-                                       @RequestParam(required = false, defaultValue = "1") Integer apiType) {
 
-        tdxDataParserService.fillStockKline(stockCode, apiType);
+                                       @Schema(description = "API类型：1-通达信；2-东方财富；3-同花顺；4-雪球；5-腾讯；", example = "1")
+                                       @RequestParam(required = false, defaultValue = "1") Integer apiType,
+
+                                       @Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
+                                       @RequestParam(required = false, defaultValue = "1") int updateType) {
+
+        tdxDataParserService.fillStockKline(stockCode, apiType, updateType);
         return Result.SUC();
     }
 
     @Operation(summary = "个股行情（全部） - 拉取解析入库 ", description = "个股行情（全部） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKlineAll")
-    public Result<Void> fillStockKlineAll() {
-        tdxDataParserService.fillStockKlineAll();
+    public Result<Void> fillStockKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
+                                          @RequestParam(required = false, defaultValue = "1") int updateType) {
+
+        tdxDataParserService.fillStockKlineAll(updateType);
         return Result.SUC();
     }
 

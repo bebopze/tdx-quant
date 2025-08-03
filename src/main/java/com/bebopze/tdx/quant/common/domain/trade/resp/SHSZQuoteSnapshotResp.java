@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -317,6 +318,12 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // ---------------------------------------- convert
+
+
+        public Integer getVolume() {
+            return volume * 100;
+        }
+
         public BigDecimal getZdf() {
             // -1.84%   ->   -1.84
             return new BigDecimal(zdf.split("%")[0]);
@@ -327,6 +334,22 @@ public class SHSZQuoteSnapshotResp implements Serializable {
             return new BigDecimal(turnover.split("%")[0]);
         }
 
+
+        /**
+         * 振幅     =     H/L   x100-100
+         *
+         * @return
+         */
+        public BigDecimal getRangePct() {
+            // 振幅       (H/L - 1) x 100%
+            double rangePct = low.doubleValue() == 0 ? 0 : (high.doubleValue() / low.doubleValue() - 1) * 100;
+            return NumUtil.double2Decimal(rangePct);
+        }
+
+
+        public LocalDate getDate() {
+            return getDateTime().toLocalDate();
+        }
 
         public LocalDateTime getDateTime() {
 

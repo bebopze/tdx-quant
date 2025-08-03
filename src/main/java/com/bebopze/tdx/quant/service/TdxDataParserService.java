@@ -30,8 +30,10 @@ public interface TdxDataParserService {
 
     /**
      * 行情（kline_his）  ->   板块 + 个股
+     *
+     * @param updateType 1-全量更新；2-增量更新；
      */
-    void refreshKlineAll();
+    void refreshKlineAll(int updateType);
 
 
     void fillBlockKline(String blockCode);
@@ -39,9 +41,9 @@ public interface TdxDataParserService {
     void fillBlockKlineAll();
 
 
-    void fillStockKline(String stockCode, Integer apiType);
+    void fillStockKline(String stockCode, Integer apiType, int updateType);
 
-    void fillStockKlineAll();
+    void fillStockKlineAll(int updateType);
 
 
     // ----------------------------------------------------------------

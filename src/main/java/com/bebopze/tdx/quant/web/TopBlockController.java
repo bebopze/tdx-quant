@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/topBlock")
-@Tag(name = "主线板块", description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；")
+@Tag(name = "主线板块", description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1")
 public class TopBlockController {
 
 
