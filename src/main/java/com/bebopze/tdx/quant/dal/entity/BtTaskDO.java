@@ -187,7 +187,7 @@ public class BtTaskDO implements Serializable {
     // -----------------------------------------------------------
 
 
-    public JSONObject getDrawdownResult() {
+    public JSONObject getDrawdownResultDesc() {
         if (drawdownResult == null) {
             return new JSONObject();
         }
@@ -195,7 +195,7 @@ public class BtTaskDO implements Serializable {
         return JSON.parseObject(drawdownResult);
     }
 
-    public JSONObject getTradeStatResult() {
+    public JSONObject getTradeStatResultDesc() {
         if (tradeStatResult == null) {
             return new JSONObject();
         }

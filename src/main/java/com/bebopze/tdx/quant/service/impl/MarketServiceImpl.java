@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,6 +35,8 @@ public class MarketServiceImpl implements MarketService {
     public void importMarketMidCycle() {
 
         List<IndexReportParser.TdxFunResultDTO> dtoList = IndexReportParser.parse();
+        Assert.notEmpty(dtoList, "大盘量化 - 导入数据位为空");
+
 
         // DTO -> DO
         List<QaMarketMidCycleDO> entityList = dtoList.stream().map(this::convert2DO).collect(Collectors.toList());

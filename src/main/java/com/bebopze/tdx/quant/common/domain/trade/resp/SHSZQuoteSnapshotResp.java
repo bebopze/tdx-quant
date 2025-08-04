@@ -287,7 +287,7 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // 成交量（2203757）
-        private Integer volume;
+        private Long volume;
         // 成交额（4607385600 - 46亿）
         private BigDecimal amount;
 
@@ -320,7 +320,7 @@ public class SHSZQuoteSnapshotResp implements Serializable {
         // ---------------------------------------- convert
 
 
-        public Integer getVolume() {
+        public Long getVolume() {
             return volume * 100;
         }
 

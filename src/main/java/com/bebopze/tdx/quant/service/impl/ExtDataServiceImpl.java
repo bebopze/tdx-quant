@@ -117,6 +117,7 @@ public class ExtDataServiceImpl implements ExtDataService {
     /**
      * 从本地DB   加载全部（5000+支）个股的 收盘价序列
      *
+     * @param N
      * @return stock - close_arr
      */
     private DataDTO loadAllStockKline(Integer N) {
@@ -130,7 +131,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 增量更新     =>     kline_his / ext_data_his   ->   截取 最后N条
+        // 增量更新     =>     kline_his（计算参数 -> 需截取） / ext_data_his（被计算 -> 无需截取）    =>     截取 最后N条
         if (StockUtil.incrUpdate(N)) {
 
 
@@ -146,13 +147,13 @@ public class ExtDataServiceImpl implements ExtDataService {
                 // -----------------------------------------------------------------------------
 
 
-                // extDataHis -> 必须同步 截取（数据对齐）
-
-
-                // extDataHis   ->   最后N条
-                List<ExtDataDTO> extDataDTOList = ListUtil.lastN(e.getExtDataDTOList(), N);
-
-                e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
+//                // extDataHis -> 无需同步 截取（数据对齐）            ==>       此处 仅需用 kline_his  ->  计算 rps + ext_data
+//
+//
+//                // extDataHis   ->   最后N条
+//                List<ExtDataDTO> extDataDTOList = ListUtil.lastN(e.getExtDataDTOList(), N); // TODO   如需截取 也应该用 date 过滤
+//
+//                e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
             });
         }
 
@@ -315,9 +316,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         // -----------------------------------------------------------------------------------------------
 
 
-        List<BaseStockDO> entityList = Lists.newArrayList();
-
-
         data.stockDOList.parallelStream().forEach(stockDO -> {
 
             String code = stockDO.getCode();
@@ -329,6 +327,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
             // old
             List<ExtDataDTO> old_extDataDTOList = stockDO.getExtDataDTOList();
+
 
             // fill -> new_RPS（后续计算 RPS相关指标）
             stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
@@ -418,7 +417,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
-            compare__old_new__extData(fun.getDateIndexMap(), N, old_extDataDTOList, new_extDataDTOList);
+            compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
 
 
             // -------------------------
@@ -431,30 +430,34 @@ public class ExtDataServiceImpl implements ExtDataService {
             entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
 
 
-            entityList.add(entity);
+            baseStockService.updateById(entity);
         });
-
-
-        baseStockService.updateBatchById(entityList);
     }
 
 
     /**
      * 增量更新     =>     比较新旧   ->   当日 已存在->覆盖     不存在->add
      *
-     * @param old_dateIndexMap
-     * @param N
      * @param old_extDataList
      * @param new_extDataList
+     * @param N
      */
-    private void compare__old_new__extData(Map<LocalDate, Integer> old_dateIndexMap,
-                                           Integer N,
-                                           List<ExtDataDTO> old_extDataList,
-                                           List<ExtDataDTO> new_extDataList) {
+    private void compare__old_new__extData(List<ExtDataDTO> old_extDataList,
+                                           List<ExtDataDTO> new_extDataList,
+                                           Integer N) {
 
 
         // 增量更新
         if (StockUtil.incrUpdate(N, old_extDataList.size())) {
+
+
+            // ------------------- old       date - idx
+
+
+            Map<LocalDate, Integer> old_dateIndexMap = old_dateIndexMap(old_extDataList);
+
+
+            // -------------------------------------------------------
 
 
             // （从 250日 开始） 遍历 new_extDataList   ->   逐日判断 是否已存在
@@ -489,6 +492,20 @@ public class ExtDataServiceImpl implements ExtDataService {
             old_extDataList.clear();
             old_extDataList.addAll(new_extDataList);
         }
+    }
+
+    private Map<LocalDate, Integer> old_dateIndexMap(List<ExtDataDTO> old__extDataDTOList) {
+        Map<LocalDate, Integer> old_dateIndexMap = Maps.newHashMap();
+
+
+        for (int i = 0; i < old__extDataDTOList.size(); i++) {
+            ExtDataDTO dto = old__extDataDTOList.get(i);
+
+            old_dateIndexMap.put(dto.getDate(), i);
+        }
+
+
+        return old_dateIndexMap;
     }
 
 
@@ -735,6 +752,26 @@ public class ExtDataServiceImpl implements ExtDataService {
         // code - id
         Map<String, Long> codeIdMap = Maps.newConcurrentMap();
         Map<String, BaseBlockDO> codeEntityMap = Maps.newConcurrentMap();
+
+
+        // -----------------------------------------------------------------
+
+
+        @Override
+        public String toString() {
+            // toString  ->  OOM
+            return "DataDTO{" +
+                    "extDataMap=" + extDataMap.size() +
+                    ", stockDOList=" + stockDOList.size() +
+                    ", blockDOList=" + blockDOList.size() +
+                    ", codePriceMap=" + codePriceMap.size() +
+                    ", codeDateMap=" + codeDateMap.size() +
+                    ", codeCloseMap=" + codeCloseMap.size() +
+                    ", codeIdMap=" + codeIdMap.size() +
+                    ", codeEntityMap=" + codeEntityMap.size() +
+                    '}';
+        }
     }
+
 
 }

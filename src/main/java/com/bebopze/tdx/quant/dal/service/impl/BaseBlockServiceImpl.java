@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
  * @since 2025-05-09
  */
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlockDO> implements IBaseBlockService {
 
 
@@ -97,13 +95,13 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     }
 
     @Override
-    @Cacheable("block_listAllKline")
+    // @Cacheable("block_listAllKline")
     public List<BaseBlockDO> listAllKline() {
         return baseMapper.listAllKline();
     }
 
     @Override
-    @Cacheable("block_listAllRpsKline")
+    // @Cacheable("block_listAllRpsKline")
     public List<BaseBlockDO> listAllRpsKline() {
         return baseMapper.listAllRpsKline();
     }

@@ -153,7 +153,7 @@ public class EastMoneyKlineAPI {
             // ------------------------------------------------------
 
 
-            if (jsonArray.size() < pageSize || dtoList.size() > 6000 || pageNum > 60) {
+            if (jsonArray.size() < pageSize || dtoList.size() > 7000 || pageNum > 70) {
                 break;
             }
 
@@ -164,6 +164,17 @@ public class EastMoneyKlineAPI {
 
 
         return dtoList;
+    }
+
+
+    /**
+     * A股   最近一个 交易日
+     *
+     * @return
+     */
+    private static LocalDate lastTradeDate() {
+        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot("300059");
+        return resp.getRealtimequote().getDate();
     }
 
 
@@ -221,19 +232,168 @@ public class EastMoneyKlineAPI {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
-     * A股   最近一个 交易日
+     * 个股/板块 - 全量 历史行情
      *
+     * @param stockCode
+     * @param klineTypeEnum
      * @return
      */
-    private static LocalDate lastTradeDate() {
-        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot("300059");
-        return resp.getRealtimequote().getDate();
+    public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum) {
+        return stockKlineHis(stockCode, klineTypeEnum, null);
     }
 
 
     /**
-     * 批量查询 全A行情
+     * 个股/板块 - 全量 历史行情
+     * -
+     * - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&beg=0&end=20500101&rtntype=6&secid=0.300059&klt=101&fqt=1
+     * -
+     * -
+     * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
+     * -
+     * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     * -
+     * -
+     *
+     * @param stockCode
+     * @param klineTypeEnum
+     * @param limit         行情数据天数
+     * @return
+     */
+    public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum, Integer limit) {
+
+
+        String url = stockKlineHisUrl(stockCode, klineTypeEnum.getEastMoneyType(), limit);
+
+
+        String result = HttpUtil.doGet(url, null);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("rc") == 0) {
+            log.info("/api/qt/stock/kline/get   suc     >>>     klineType : {} , stockCode : {} , result : {}",
+                     klineTypeEnum.getDesc(), stockCode, result);
+        }
+
+
+        StockKlineHisResp resp = resultJson.getJSONObject("data").toJavaObject(StockKlineHisResp.class);
+
+
+        // ----------------------------- 历史行情
+        List<String> klines = resp.getKlines();
+
+
+        return resp;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 最后一日  实时行情数据
+     *
+     * @param stockCode
+     * @return
+     */
+    public static List<String> stockKlineLastN(String stockCode) {
+
+        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+
+        SHSZQuoteSnapshotResp.RealtimequoteDTO e = resp.getRealtimequote();
+
+
+        // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
+        // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+
+        // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+
+
+        List<Object> kline = Lists.newArrayList(String.valueOf(e.getDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getCurrentPrice(), e.getVolume(), e.getAmount(),
+                                                e.getRangePct(), e.getZdf(), e.getZd(), e.getTurnover());
+
+
+        String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+        return Lists.newArrayList(klineStr);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 个股/板块 - 分时
+     * -
+     * - https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17&fields2=f51,f52,f53,f54,f55,f56,f57,f58&mpi=1000&ut=fa5fd1943c7b386f172d6893dbfba10b&secid=0.300059&ndays=1&iscr=0&iscca=0&wbp2u=1849325530509956|0|1|0|web
+     * -
+     * -
+     * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
+     * -
+     * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
+     * -
+     * -
+     *
+     * @param stockCode
+     * @param ndays     分时 - 天数
+     * @return
+     */
+    public static StockKlineTrendResp stockKlineTrends(String stockCode, int ndays) {
+
+
+        // 0.300059
+        String secid = String.format("0.%s", stockCode);
+
+        ndays = Math.max(ndays, 1);
+
+
+        String url = "https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?" +
+                "fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17" +
+                "&fields2=f51,f52,f53,f54,f55,f56,f57,f58" +
+                "&mpi=1000" +
+                // "&ut=fa5fd1943c7b386f172d6893dbfba10b" +
+                "&secid=" + secid +
+                "&ndays=" + ndays +
+                "&iscr=0" +
+                "&iscca=0"
+                // "&wbp2u=1849325530509956|0|1|0|we"
+                ;
+
+
+        String result = EventStreamUtil.fetchOnce(url);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("rc") == 0) {
+            log.info(
+                    "/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
+                    "分时", ndays, stockCode, result);
+        }
+
+
+        StockKlineTrendResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineTrendResp.class);
+
+
+        // ----------------------------- 分时行情
+        List<String> trends = resp.getTrends();
+
+
+        return resp;
+    }
+
+    public static StockKlineTrendResp stockKlineTrends(String stockCode) {
+        return stockKlineTrends(stockCode, 1);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 东方财富  ->  批量拉取 全A 实时行情
      *
      *
      *
@@ -329,157 +489,6 @@ public class EastMoneyKlineAPI {
 
 
         return url;
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * 个股/板块 - 全量 历史行情
-     *
-     * @param stockCode
-     * @param klineTypeEnum
-     * @return
-     */
-    public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum) {
-        return stockKlineHis(stockCode, klineTypeEnum, null);
-    }
-
-
-    /**
-     * 个股/板块 - 全量 历史行情
-     * -
-     * - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&beg=0&end=20500101&rtntype=6&secid=0.300059&klt=101&fqt=1
-     * -
-     * -
-     * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
-     * -
-     * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
-     * -
-     * -
-     *
-     * @param stockCode
-     * @param klineTypeEnum
-     * @param limit         行情数据天数
-     * @return
-     */
-    public static StockKlineHisResp stockKlineHis(String stockCode, KlineTypeEnum klineTypeEnum, Integer limit) {
-
-
-        String url = stockKlineHisUrl(stockCode, klineTypeEnum.getEastMoneyType(), limit);
-
-
-        String result = HttpUtil.doGet(url, null);
-
-
-        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("rc") == 0) {
-            log.info("/api/qt/stock/kline/get   suc     >>>     klineType : {} , stockCode : {} , result : {}",
-                     klineTypeEnum.getDesc(), stockCode, result);
-        }
-
-
-        StockKlineHisResp resp = resultJson.getJSONObject("data").toJavaObject(StockKlineHisResp.class);
-
-
-        // ----------------------------- 历史行情
-        List<String> klines = resp.getKlines();
-
-
-        return resp;
-    }
-
-
-    /**
-     * 最后一日  实时行情数据
-     *
-     * @param stockCode
-     * @return
-     */
-    public static List<String> stockKlineLastN(String stockCode) {
-
-        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-
-        SHSZQuoteSnapshotResp.RealtimequoteDTO e = resp.getRealtimequote();
-
-
-        // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
-        // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
-
-        // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
-
-
-        List<Object> kline = Lists.newArrayList(String.valueOf(e.getDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getCurrentPrice(), e.getVolume(), e.getAmount(),
-                                                e.getRangePct(), e.getZdf(), e.getZd(), e.getTurnover());
-
-
-        String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-        return Lists.newArrayList(klineStr);
-    }
-
-
-    /**
-     * 个股/板块 - 分时
-     * -
-     * - https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17&fields2=f51,f52,f53,f54,f55,f56,f57,f58&mpi=1000&ut=fa5fd1943c7b386f172d6893dbfba10b&secid=0.300059&ndays=1&iscr=0&iscca=0&wbp2u=1849325530509956|0|1|0|web
-     * -
-     * -
-     * - 页面（行情中心 - 新版）     https://quote.eastmoney.com/concept/sz300059.html
-     * -
-     * - 页面（行情中心 - 旧版）     https://quote.eastmoney.com/sz300059.html#fullScreenChart
-     * -
-     * -
-     *
-     * @param stockCode
-     * @param ndays     分时 - 天数
-     * @return
-     */
-    public static StockKlineTrendResp stockKlineTrends(String stockCode, int ndays) {
-
-
-        // 0.300059
-        String secid = String.format("0.%s", stockCode);
-
-        ndays = Math.max(ndays, 1);
-
-
-        String url = "https://31.push2.eastmoney.com/api/qt/stock/trends2/sse?" +
-                "fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f17" +
-                "&fields2=f51,f52,f53,f54,f55,f56,f57,f58" +
-                "&mpi=1000" +
-                // "&ut=fa5fd1943c7b386f172d6893dbfba10b" +
-                "&secid=" + secid +
-                "&ndays=" + ndays +
-                "&iscr=0" +
-                "&iscca=0"
-                // "&wbp2u=1849325530509956|0|1|0|we"
-                ;
-
-
-        String result = EventStreamUtil.fetchOnce(url);
-
-
-        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("rc") == 0) {
-            log.info(
-                    "/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
-                    "分时", ndays, stockCode, result);
-        }
-
-
-        StockKlineTrendResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineTrendResp.class);
-
-
-        // ----------------------------- 分时行情
-        List<String> trends = resp.getTrends();
-
-
-        return resp;
-    }
-
-    public static StockKlineTrendResp stockKlineTrends(String stockCode) {
-        return stockKlineTrends(stockCode, 1);
     }
 
 

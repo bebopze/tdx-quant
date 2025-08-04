@@ -10,9 +10,18 @@
             font-size: 12px;
         }
 
-        .buy-button {
+        .margin-buy-button {
             color: white;
             background-color: #ed6a6a;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .buy-button {
+            color: white;
+            background-color: #c68989;
             border: none;
             padding: 5px 10px;
             cursor: pointer;
@@ -94,7 +103,7 @@
                         <input type="text" class="form-control" id="totalLiability" readonly>
                     </div>
                     <div class="col-md-4">
-                        <label for="marginAvl" class="form-label">可用保证金</label>
+                        <label for="marginAvl" class="form-label">可用保证金（可融）</label>
                         <input type="text" class="form-control" id="marginAvl" readonly>
                     </div>
                 </div>
@@ -108,7 +117,7 @@
                         <input type="text" class="form-control" id="ftotaldebts" readonly>
                     </div>
                     <div class="col-md-4">
-                        <label for="avalmoney" class="form-label">可用资金</label>
+                        <label for="avalmoney" class="form-label">可用资金（担）</label>
                         <input type="text" class="form-control" id="avalmoney" readonly>
                     </div>
                 </div>
@@ -176,6 +185,8 @@
 </div>
 
 <script>
+
+
     // 存储排序状态
     let sortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
@@ -231,6 +242,13 @@
         showPositionRecords(positionsData);
     }
 
+
+    // 市场
+    function market2Xueqiu(market) {
+        return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
+    }
+
+
     // 显示持仓记录
     function showPositionRecords(positions) {
         const tbody = document.querySelector('#positionTable tbody');
@@ -273,27 +291,44 @@
         }
 
         sortedPositions.forEach((item, index) => {
+            const marketPrefix = market2Xueqiu(item.market);
+            const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${item.stkcode}</td>
-      <td>${item.stkname}</td>
-      <td>${item.market}</td>
-      <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-      <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-      <td>${item.mktval.toFixed(2)}</td>
-      <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit.toFixed(2)}</td>
-      <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
-      <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
-      <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
-      <td>${(item.posratio * 100).toFixed(2)}%</td>
-      <td>${item.stkbal}</td>
-      <td>${item.stkavl}</td>
-      <td>
-          <button class="buy-button" onclick="handleBuy('${item.stkcode}')">买</button>
-          <button class="sell-button" onclick="handleSell('${item.stkcode}')">卖</button>
-      </td>
-    `;
+              <td>${index + 1}</td>
+              <td><a href="${stockLink}" target="_blank">${item.stkcode}</a></td>
+              <td>${item.stkname}</td>
+              <td>${item.market}</td>
+              <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${item.mktval.toFixed(2)}</td>
+              <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit.toFixed(2)}</td>
+              <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
+              <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
+              <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
+              <td>${(item.posratio * 100).toFixed(2)}%</td>
+              <td>${item.stkbal}</td>
+              <td>${item.stkavl}</td>
+
+              <!--
+              <td>
+                  <button class="buy-button" onclick="handleBuy('${item.stkcode}')">买</button>
+                  <button class="sell-button" onclick="handleSell('${item.stkcode}')">卖</button>
+              </td>
+              -->
+
+              <td>
+                <a class="margin-buy-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/MarginBuy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >融</a>
+                <a class="buy-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/Buy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >担</a>
+                <a class="sell-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/Sale?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >卖</a>
+              </td>
+            `;
             tbody.appendChild(tr);
         });
     }
@@ -311,6 +346,7 @@
                 const responseData = data.data;
                 positionsData = responseData.stocks;
 
+
                 // 正负收益 -> 红/绿
                 const setColor = (elementId, value) => {
                     const el = document.getElementById(elementId);
@@ -318,21 +354,40 @@
                     el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
                 };
 
+                // 负债（融资）
+                const setColor_rz = (elementId, value) => {
+                    const el2 = document.getElementById(elementId);
+                    el2.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                    el2.style.color = 'teal';
+                };
+
+
                 // 填充资金持仓表单
                 document.getElementById('totalAsset').value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('totalMktVal').value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('accessMoney').value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
 
+                // 持仓盈亏
                 setColor('profit', responseData.profit);
+                // 当日盈亏
                 setColor('curProfit', responseData.curprofit ?? 0);
 
                 document.getElementById('posRatio').value = `${(responseData.posratio * 100).toFixed(2)}%`;
                 document.getElementById('netAsset').value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('totalLiability').value = responseData.totalliability.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('marginAvl').value = responseData.marginavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                // 总负债
+                setColor_rz('totalLiability', responseData.totalliability);
+                // 可融
+                setColor_rz('marginAvl', responseData.marginavl);
+
                 document.getElementById('marginRates').value = `${(responseData.marginrates * 100).toFixed(2)}%`;
-                document.getElementById('ftotaldebts').value = responseData.ftotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                // 融资负债
+                setColor_rz('ftotaldebts', responseData.ftotaldebts);
+
+                // 可用资金（担）
                 setColor('avalmoney', responseData.avalmoney);
+
                 document.getElementById('realrate').value = `${(responseData.realrate * 100).toFixed(2)}%`;
                 document.getElementById('dtotaldebts').value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
                 document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
@@ -348,8 +403,10 @@
             });
     }
 
+
     // 绑定查询按钮事件
     document.getElementById('queryButton').addEventListener('click', queryPositions);
+
 
     // 页面加载完成后自动查询
     window.onload = queryPositions;

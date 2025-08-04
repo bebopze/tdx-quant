@@ -7,7 +7,6 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,7 +20,6 @@ import java.util.List;
  * @since 2025-05-09
  */
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStockMapper, BaseBlockRelaStockDO> implements IBaseBlockRelaStockService {
 
 

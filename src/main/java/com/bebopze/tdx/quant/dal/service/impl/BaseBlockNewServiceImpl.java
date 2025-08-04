@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockNewService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
  * @since 2025-05-11
  */
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseBlockNewServiceImpl extends ServiceImpl<BaseBlockNewMapper, BaseBlockNewDO> implements IBaseBlockNewService {
 
 
@@ -43,12 +41,12 @@ public class BaseBlockNewServiceImpl extends ServiceImpl<BaseBlockNewMapper, Bas
         List<BaseBlockNewDO> entityList = baseMapper.listAllSimple();
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseBlockNewDO::getCode,
-                        BaseBlockNewDO::getId,
+                                                  .collect(Collectors.toMap(
+                                                          BaseBlockNewDO::getCode,
+                                                          BaseBlockNewDO::getId,
 
-                        (existingKey, newKey) -> existingKey
-                ));
+                                                          (existingKey, newKey) -> existingKey
+                                                  ));
 
         return code_id_map;
     }
@@ -60,19 +58,21 @@ public class BaseBlockNewServiceImpl extends ServiceImpl<BaseBlockNewMapper, Bas
         List<BaseBlockNewDO> entityList = listSimpleByCodeList(blockCodeList);
 
         Map<String, Long> code_id_map = entityList.stream()
-                .collect(Collectors.toMap(
-                        BaseBlockNewDO::getCode,
-                        BaseBlockNewDO::getId,
+                                                  .collect(Collectors.toMap(
+                                                          BaseBlockNewDO::getCode,
+                                                          BaseBlockNewDO::getId,
 
-                        (existingKey, newKey) -> existingKey
-                ));
+                                                          (existingKey, newKey) -> existingKey
+                                                  ));
 
         return code_id_map;
     }
+
 
     @Override
     public List<BaseBlockNewDO> listSimpleByCodeList(Collection<String> blockCodeList) {
         return baseMapper.listSimpleByCodeList(blockCodeList);
     }
+
 
 }

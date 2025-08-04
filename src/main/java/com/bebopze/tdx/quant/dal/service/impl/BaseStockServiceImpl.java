@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStockDO> implements IBaseStockService {
 
 
@@ -124,13 +122,13 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    @Cacheable("stock_listAllKline")
+    // @Cacheable("stock_listAllKline")
     public List<BaseStockDO> listAllKline() {
         return listAllKline(false);
     }
 
     @Override
-    @Cacheable(value = "stock_listAllKline", unless = "#refresh == true")
+    // @Cacheable(value = "stock_listAllKline", unless = "#refresh == true")
     public List<BaseStockDO> listAllKline(boolean refresh) {
 
 
@@ -268,4 +266,6 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         log.info("listAllPageQuery     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
         return list;
     }
+
+
 }

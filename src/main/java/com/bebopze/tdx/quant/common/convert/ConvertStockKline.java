@@ -316,13 +316,13 @@ public class ConvertStockKline {
     public static List<String> dtoList2StrList(List<KlineDTO> dtoList) {
         List<Object[]> arrList = dtoList2ArrList(dtoList);
 
-        List<String> extDatas = Lists.newArrayList();
+        List<String> klines = Lists.newArrayList();
         for (Object[] arr : arrList) {
-            String extDataStr = Arrays.stream(arr).map(ConvertStockKline::typeConvert).collect(Collectors.joining(","));
-            extDatas.add(extDataStr);
+            String kline = Arrays.stream(arr).map(ConvertStockKline::typeConvert).collect(Collectors.joining(","));
+            klines.add(kline);
         }
 
-        return extDatas;
+        return klines;
     }
 
 

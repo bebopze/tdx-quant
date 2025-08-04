@@ -1276,12 +1276,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 东方财富  ->  批量拉取 全A 实时行情
         List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.allStockSnapshotKline();
+        log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        List<BaseStockDO> entityList = Lists.newArrayList();
         stockSnapshotList.parallelStream().forEach(e -> {
 
 
@@ -1300,7 +1300,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // --------------------- kline_his
 
 
-            List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(e));
+            KlineDTO klineDTO = new KlineDTO();
+            BeanUtils.copyProperties(e, klineDTO);
+
+
+            List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(klineDTO));
             klines = klineHis__updateType(stockId, klines, updateType);
 
 
@@ -1316,11 +1320,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             // --------------------- DB
 
-            entityList.add(entity);
+            iBaseStockService.updateById(entity);
         });
-
-
-        iBaseStockService.updateBatchById(entityList);
     }
 
 
@@ -1443,7 +1444,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     private int apiType(Integer apiType, int updateType) {
 
-        if (apiType != null || apiType == 1) {
+        if (apiType != null && apiType == 1) {
             return apiType;
         }
 

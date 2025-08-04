@@ -22,7 +22,7 @@ public class StockUtil {
      * @return
      */
     public static Integer N(Integer N) {
-        return N == null ? Integer.MAX_VALUE : Math.min(N, 300);
+        return N == null ? Integer.MAX_VALUE : Math.max(N, 300);
     }
 
 

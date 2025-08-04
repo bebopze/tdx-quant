@@ -40,7 +40,7 @@ public class TdxTask {
      * 通达信 盘后数据更新 -> 扩展数据计算 -> 自动选股
      */
     @Async
-    @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__933_902_921() {
 
 
@@ -69,7 +69,7 @@ public class TdxTask {
      * 通达信 盘后数据更新
      */
     @Async
-    @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshTdxLdayTask_refreshTdxCwTask() {
 
 
@@ -91,7 +91,7 @@ public class TdxTask {
      */
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
-    public void execTask__reresKlineAll() {
+    public void execTask__refreshKlineAll() {
         log.info("---------------------------- 任务 [refreshKlineAll - 盘后-全量更新 入库]   执行 start");
 
 
@@ -117,8 +117,9 @@ public class TdxTask {
      * 行情数据   盘中-增量更新   ->   DB
      */
     @Async
-    @Scheduled(cron = "0 */10 13-15 ? * 1-5", zone = "Asia/Shanghai")
-    public void execTask__reresKlineAll__lataDay() {
+    @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 15/15 13-14 * * 1-5", zone = "Asia/Shanghai")
+    public void execTask__refreshKlineAll__lataDay() {
         log.info("---------------------------- 任务 [refreshKlineAll - 盘中-增量更新 入库]   执行 start");
 
 
@@ -133,7 +134,7 @@ public class TdxTask {
 
 
         // 主线板块
-        topBlockService.refreshAll();
+        // topBlockService.refreshAll();
 
         // 大盘量化
         marketService.importMarketMidCycle();

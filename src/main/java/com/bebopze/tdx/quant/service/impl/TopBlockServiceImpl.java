@@ -59,8 +59,8 @@ public class TopBlockServiceImpl implements TopBlockService {
     @Autowired
     private IBaseStockService baseStockService;
 
-    @Autowired
     @Lazy
+    @Autowired
     private BacktestStrategy backtestStrategy;
 
     @Autowired
@@ -189,46 +189,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         return topBlockRate(blockNewId, date, resultType, hyLevel, N);
-
-
-//        List<QaBlockNewRelaStockHisDO> entityList = qaBlockNewRelaStockHisService.listByBlockNewIdDateAndLimit(blockNewId, date, N);
-//
-//
-//        Map<String, Integer> rateMap = Maps.newHashMap();
-//        entityList.forEach(e -> {
-//
-//
-//            // String result = e.getResult();
-//            // String result = e.getYjhyLv1Result();      // 1级 研究行业  ->  30个
-//            // String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
-//
-//
-//            String result = null;
-//            if (resultType == 2) {
-//                result = e.getPthyLv2Result();      //  2级  普通行业  ->  56个
-//            } else if (resultType == 4) {
-//                result = e.getGnResult();           // (3级) 概念板块  ->  380个
-//            } else if (resultType == 12) {
-//                result = e.getYjhyLv1Result();      //  1级  研究行业  ->  30个
-//            } else if (resultType == 0) {
-//                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
-//            }
-//
-//
-//            List<BlockTopInfoDTO> infoList = JSON.parseArray(result, BlockTopInfoDTO.class);
-//
-//
-//            BlockTopInfoDTO blockTopInfoDTO = infoList.get(0);
-//            String blockCode = blockTopInfoDTO.getBlockCode();
-//            String blockName = blockTopInfoDTO.getBlockName();
-//
-//
-//            rateMap.merge(blockCode + "-" + blockName, 1, Integer::sum);
-//        });
-//
-//
-//        // 按 value 倒序排序
-//        return reverseSortByValue(rateMap);
     }
 
     @Override
@@ -247,23 +207,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         Map<String, Integer> rateMap = Maps.newHashMap();
         entityList.forEach(e -> {
-
-
-            // String result = e.getResult();
-            // String result = e.getYjhyLv1Result();      // 1级 研究行业  ->  30个
-            // String result = e.getPthyLv2Result();      // 2级 普通行业  ->  56个
-
-
-//            String result = null;
-//            if (resultType == 2) {
-//                result = e.getPthyLv2Result();      //  2级  普通行业  ->   56个
-//            } else if (resultType == 4) {
-//                result = e.getGnResult();           // (3级) 概念板块  ->  270个
-//            } else if (resultType == 12) {
-//                result = e.getYjhyLv1Result();      //  1级  研究行业  ->   30个
-//            } else if (resultType == 0) {
-//                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
-//            }
 
 
             String result = getResultByTypeAndLevel(e, resultType, hyLevel);

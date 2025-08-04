@@ -115,9 +115,14 @@ public class TdxFunCheck {
     private static void check(List<TdxFunResultDTO> tdx__rowList, List<TdxFunResultDTO> java__rowList) {
 
         // 起始日期
-        LocalDate dateLine = tdx__rowList.get(0).getDate();
+        LocalDate dateLine_tdx = tdx__rowList.get(0).getDate();
+        LocalDate dateLine_java = java__rowList.get(0).getDate();
+
+        LocalDate dateLine = DateTimeUtil.max(dateLine_tdx, dateLine_java);
+
+
         // LocalDate dateLine = LocalDate.of(2015, 1, 1);
-        // tdx__rowList = tdx__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
+        tdx__rowList = tdx__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
         java__rowList = java__rowList.stream().filter(e -> !e.getDate().isBefore(dateLine)).collect(Collectors.toList());
 
 
