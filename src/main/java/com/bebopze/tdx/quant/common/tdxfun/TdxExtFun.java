@@ -256,6 +256,21 @@ public class TdxExtFun {
         return result;
     }
 
+    public static double[] C_MA_偏离率(double[] close, int N) {
+        int n = close.length;
+
+
+        double[] MA = MA(close, N);
+
+
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = NumUtil.of((close[i] / MA[i] - 1) * 100);
+        }
+
+        return result;
+    }
+
 
     /**
      * 结果合并   -   AND

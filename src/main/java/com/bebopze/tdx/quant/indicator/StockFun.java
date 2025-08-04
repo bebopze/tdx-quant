@@ -399,6 +399,10 @@ public class StockFun {
         return TdxExtFun.C_SSF_偏离率(close, ssf);
     }
 
+    public double[] C_MA_偏离率(int N) {
+        return TdxExtFun.C_MA_偏离率(close, N);
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  高级指标
