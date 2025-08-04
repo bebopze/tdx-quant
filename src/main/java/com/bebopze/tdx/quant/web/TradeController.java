@@ -19,14 +19,14 @@ import java.util.List;
 
 
 /**
- * 交易 - BS / 撤单 / 持仓 / ...
+ * 交易（融资账户） -  BS / 撤单 / 持仓 / ...
  *
  * @author: bebopze
  * @date: 2025/5/6
  */
 @RestController
 @RequestMapping("/api/trade")
-@Tag(name = "交易", description = "交易 - BS/撤单/持仓/...")
+@Tag(name = "交易（融资账户）", description = "交易（仅限：融资账户） -  BS/撤单/持仓/...")
 public class TradeController {
 
 
@@ -80,6 +80,8 @@ public class TradeController {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+    //                        tips：以下均为  融资账户（特别是 BUY！！！）            暂不考虑 普通账户 BS逻辑
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Operation(summary = "一键清仓", description = "一键清仓")
@@ -97,9 +99,29 @@ public class TradeController {
     }
 
     @Operation(summary = "一键 等比买入（调仓换股）", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
-    @PostMapping(value = "/quickOption/avgBuyNewPosition")
+    @PostMapping(value = "/quickOption/equalRatio/buyNewPosition")
     public Result<Void> avgBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
         tradeService.quickAvgBuyNewPosition(newPositionList);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "账户总仓位（以此刻 融+担=净x2 为100%基准）  ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）")
+    @GetMapping(value = "/quickOption/totalAccount/equalRatio/sellPosition")
+    public Result<Void> totalAccount__equalRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+                                                             @RequestParam(defaultValue = "1") double newPositionRate) {
+
+        tradeService.totalAccount__equalRatioSellPosition(newPositionRate);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "当前持仓   ->   一键 等比减仓（等比卖出）", description = "将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位")
+    @GetMapping(value = "/quickOption/currPosition/equalRatio/sellPosition")
+    public Result<Void> currPosition__equalRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+                                                             @RequestParam(defaultValue = "1") double newPositionRate) {
+
+        tradeService.currPosition__equalRatioSellPosition(newPositionRate);
         return Result.SUC();
     }
 
@@ -120,7 +142,11 @@ public class TradeController {
     }
 
 
-    @Operation(summary = "一键取款", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
+    @Operation(summary = "一键取款（担保比例 >= 300%     ->     隔日 可取款）    // 已替换成 一键【等比减仓】（减免 先清仓 -> 2次再融资 -> 交易费）",
+            description = "计算 新仓位   ->   一键 等比减仓   =>   手动【现金还款】  ->   担保比例 >= 300%" + "   \r\n   " +
+                    "等比减仓（只涉及到 SELL   ->   无2次重复买入     =>     减免2次BS的 交易费）")
+    // @Operation(summary = "已替换成 一键 等比减仓（减免 再融资 -> 手续费）  // 一键取款（担保比例 >= 300%     ->     隔日 可取款）",
+    //        description = "控制担保比例 -> 计算 最大融资额   =>   一键清仓  ->  limit_融资 再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
     @GetMapping(value = "/quickOption/lowerFinancing")
     public Result<Void> quickLowerFinancing(@Schema(description = "取款金额（T+1 隔日7点可取）", example = "50000")
                                             @RequestParam double transferAmount) {

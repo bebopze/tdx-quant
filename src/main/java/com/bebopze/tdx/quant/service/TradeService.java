@@ -84,10 +84,24 @@ public interface TradeService {
     void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
 
     /**
-     *
      * @param newPositionList
      */
     void quickAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+
+
+    /**
+     * 总账户（以此刻   融+担 = 净x2   ->   为100%基准）   =>   一键 等比减仓（等比卖出）
+     *
+     * @param newPositionRate 新仓位
+     */
+    void totalAccount__equalRatioSellPosition(double newPositionRate);
+
+    /**
+     * 当前持仓（以 此刻持仓市值 为100%基准）   =>   一键 等比减仓（等比卖出）
+     *
+     * @param newPositionRate 新仓位
+     */
+    void currPosition__equalRatioSellPosition(double newPositionRate);
 
 
     /**
@@ -102,7 +116,7 @@ public interface TradeService {
     void quickResetFinancing();
 
     /**
-     * 一键取款
+     * 一键取款（   担保比例 >= 300%     ->     隔日 可取款   ）
      *
      * @param new_marginRate 取款金额（T+1 隔日7点可取）
      */

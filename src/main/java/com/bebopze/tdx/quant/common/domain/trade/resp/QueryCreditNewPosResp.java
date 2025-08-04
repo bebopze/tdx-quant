@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -67,7 +68,7 @@ public class QueryCreditNewPosResp implements Serializable {
     private String money_type;
     // 净资产
     private BigDecimal netasset;
-    // 总仓位     2.3567123   ->   235.67%
+    // 总仓位（担保[净资产]）     2.3567123   ->   235.67%
     private BigDecimal posratio;
     // 持仓盈亏
     private BigDecimal profit;
@@ -89,4 +90,47 @@ public class QueryCreditNewPosResp implements Serializable {
     private BigDecimal totalliability;
     // 总市值
     private BigDecimal totalmkval;
+
+
+    // ---------------------------------------------- 融资账户（总资金标准 = 净资产 x 2   ->   为100%基准）
+
+
+    // 实际 总资金（融+担）
+    private double totalAccount__actTotalMoney;
+
+
+    // 实际 总仓位（融+担）     0.9567123   ->   95.67%
+    private double totalAccount__actTotalPosRatio;
+
+
+    /**
+     * 实际 总资金（融+担） =  净资产 x 2
+     *
+     * @return
+     */
+    public double getTotalAccount__actTotalMoney() {
+        // 融+担 = 净资产 x 2
+        double actTotalMoney = netasset.doubleValue() * 2;
+
+        return NumUtil.of(actTotalMoney, 5);
+    }
+
+
+    /**
+     * 实际 总仓位（融+担）     0.9567123   ->   95.67%
+     *
+     * @return
+     */
+    public double getTotalAccount__actTotalPosRatio() {
+
+        // 融+担 = 净资产 x 2
+
+
+        // 总仓位（融+担）  =   总市值 / （净资产 x 2）
+        double actTotalPosRatio = totalmkval.doubleValue() / getTotalAccount__actTotalMoney();
+
+        return NumUtil.of(actTotalPosRatio, 5);
+    }
+
+
 }

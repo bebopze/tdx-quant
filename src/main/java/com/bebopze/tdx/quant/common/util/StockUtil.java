@@ -53,9 +53,9 @@ public class StockUtil {
 
 
     /**
-     * A股  ->  买入数量 限制       =>       最小单位：1手 = 100股     ->     N x 100股
+     * A股  ->  买入数量 限制       =>       最小单位：1手 = 100股     ->     N x 100股   // TODO   科创板688   最小2手   ->   N x 200股
      *
-     * @param val
+     * @param val 理论数量（未取 整百 -> 手）
      * @return
      */
     public static int quantity(int val) {
@@ -63,6 +63,18 @@ public class StockUtil {
         int qty = val - (val % 100);
         // 最小100股
         return Math.max(qty, 100);
+    }
+
+
+    /**
+     * 实际 可用数量   <=   可用数量
+     *
+     * @param qty    理论数量（未取 整百 -> 手）
+     * @param avlQty 可用数量
+     * @return
+     */
+    public static int quantity(int qty, int avlQty) {
+        return Math.min(quantity(qty), avlQty);
     }
 
 

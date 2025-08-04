@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -19,6 +18,7 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
+import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.bebopze.tdx.quant.service.StockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
@@ -63,11 +63,11 @@ public class TradeServiceImpl implements TradeService {
         QueryCreditNewPosResp resp = EastMoneyTradeAPI.queryCreditNewPosV2();
 
 
-        // block info
-        resp.getStocks().parallelStream().forEach(stock -> {
-            StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
-            stock.setStockBlockInfoDTO(dto);
-        });
+//        // block info
+//        resp.getStocks().parallelStream().forEach(stock -> {
+//            StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
+//            stock.setStockBlockInfoDTO(dto);
+//        });
 
 
         return resp;
@@ -195,6 +195,142 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
+    public void totalAccount__equalRatioSellPosition(double newPositionRate) {
+        Assert.isTrue(newPositionRate < 1, String.format("newPositionRate=[%s]必须<1", newPositionRate));
+
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、check     ->     两融账户 等比减仓
+        check___totalAccount__equalRatioSellPosition(posResp, newPositionRate);
+
+
+        // 3、当前持仓 等比减仓比例   =   1  -  new总仓位 / 实际总仓位
+        double sellRate = 1 - newPositionRate / posResp.getTotalAccount__actTotalPosRatio();
+
+
+        // 4、持仓列表  ->  等比减仓
+        equalRatio_sellPosition(posResp.getStocks(), sellRate);
+    }
+
+
+    @Override
+    public void currPosition__equalRatioSellPosition(double newPositionRate) {
+        Assert.isTrue(newPositionRate < 1, String.format("positionRate=[%s]必须<1", newPositionRate));
+
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、check     ->     当前持仓 等比减仓
+        // check___currPosition__equalRatioSellPosition(posResp, newPositionRate);
+
+
+        // 3、当前持仓 等比减仓比例   =   1 - new仓位
+        double sellRate = 1 - newPositionRate;
+
+
+        // 4、持仓列表  ->  等比减仓
+        equalRatio_sellPosition(posResp.getStocks(), sellRate);
+    }
+
+
+    /**
+     * 持仓列表  ->  等比减仓
+     *
+     * @param positionList 持仓列表
+     * @param sellRate     卖出比例
+     */
+    private void equalRatio_sellPosition(List<CcStockInfo> positionList, double sellRate) {
+
+        positionList.forEach(e -> {
+
+
+            // --------------------------------------------------
+
+
+            // 可用数量
+            int stkavl = e.getStkavl();
+            if (stkavl == 0) {
+                log.debug("equalRatio_sellPosition - 忽略     >>>     [{}-{}]可用数量为：{}", e.getStkcode(), e.getStkname(), stkavl);
+                return;
+            }
+
+
+            // -------------------------------------------------- 价格精度
+
+
+            // 个股   ->   价格 2位小数
+            // ETF   ->   价格 3位小数
+            int scale = priceScale(e.getStktype_ex());
+
+
+            // --------------------------------------------------
+
+
+            TradeBSParam param = new TradeBSParam();
+            param.setStockCode(e.getStkcode());
+            param.setStockName(e.getStkname());
+
+
+            // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
+            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
+            param.setPrice(price);
+
+
+            // ---------- 减仓数量
+
+            // 减仓金额  =  当前市值 x sellRate
+            double sell_marketValue = e.getMktval().doubleValue() * sellRate;
+
+            // 减仓数量  =  减仓金额 / 价格
+            int qty = (int) (sell_marketValue / price.doubleValue());
+
+            qty = StockUtil.quantity(qty, stkavl);
+            param.setAmount(qty);
+
+
+            // 卖出
+            param.setTradeType(TradeTypeEnum.SELL.getTradeType());
+
+
+            try {
+
+                // 下单 -> 委托编号
+                Integer wtbh = bs(param);
+                log.info("equalRatio_sellPosition - [卖出]下单SUC     >>>     param : {} , wtbh : {}", JSON.toJSONString(param), wtbh);
+
+            } catch (Exception ex) {
+                // SELL 失败
+                log.error("equalRatio_sellPosition - [卖出]下单FAIL     >>>     param : {} , errMsg : {}", JSON.toJSONString(param), ex.getMessage(), ex);
+            }
+        });
+    }
+
+
+    /**
+     * check     ->     两融账户 等比减仓
+     *
+     * @param posResp
+     * @param newPositionRate
+     */
+    private void check___totalAccount__equalRatioSellPosition(QueryCreditNewPosResp posResp, double newPositionRate) {
+
+        // 实际总仓位（融+担）     0.9567123   ->   95.67%
+        double actTotalPosRatio = posResp.getTotalAccount__actTotalPosRatio();
+        Assert.isTrue(actTotalPosRatio < newPositionRate, String.format("当前两融账户（融+担=净x2）： 实际总仓位=[%s] < new总仓位=[%s] ， 无需减仓！", actTotalPosRatio, newPositionRate));
+
+
+        // 减仓差值  >=  5%（一次减仓   最少5%）
+        double rate_diff = actTotalPosRatio - newPositionRate;
+        Assert.isTrue(rate_diff > 0.05, String.format("当前两融账户（融+担=净x2）： 实际总仓位=[%s]，new总仓位=[%s]，减仓比例=[%s]过小，需大于5%%", actTotalPosRatio, newPositionRate, rate_diff));
+    }
+
+
+    @Override
     public void quickCancelOrder() {
 
 
@@ -265,7 +401,7 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     public void quickLowerFinancing(double transferAmount) {
-        // 缺省值 300%   ->   隔日 可取款
+        // 担保比例 >= 300%     ->     隔日 可取款
 
 
         // 1、我的持仓
@@ -273,28 +409,51 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 2、预校验  ->  重新 计算分配  new_总市值  ->  计算 new_个股市值（new_数量）
-        QueryCreditNewPosResp new_posResp = preCheck__lowerFinancing(posResp, transferAmount);
+        // preCheck__lowerFinancing(posResp, transferAmount);
 
 
-        // TODO   3、入库   =>   异常中断 -> 可恢复
-        // save2DB(posResp);
-        log.info("quickLowerFinancing     >>>     posResp : {}", JSON.toJSONString(posResp));
+        // 3、新仓位比例
+        double currPos_newPositionRate = calcNewPositionRate__quickLowerFinancing(posResp, transferAmount);
 
 
-        // 4、一键清仓
-        quickClearPosition();
+        // 4、等比减仓（只涉及到 SELL   ->   无2次重复买入     =>     减免2次BS的 交易费）
+        // totalAccount__equalRatioSellPosition(new_actTotalPosRatio);
+        currPosition__equalRatioSellPosition(currPos_newPositionRate);
 
 
-        // 等待成交   ->   1.5s
-        SleepUtils.winSleep(1500);
+        // 5、手动   ->   【现金还款】
 
 
-        // 5、check/retry   =>   [一键清仓]-委托单 状态
-        checkAndRetry___clearPosition__OrdersStatus(3);
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        // 6、一键再买入
-        quick__buyAgain(new_posResp.getStocks());
+//        // 1、我的持仓
+//        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+//
+//
+//        // 2、预校验  ->  重新 计算分配  new_总市值  ->  计算 new_个股市值（new_数量）
+//        QueryCreditNewPosResp new_posResp = preCheck__lowerFinancing(posResp, transferAmount);
+//
+//
+//        // TODO   3、入库   =>   异常中断 -> 可恢复
+//        // save2DB(posResp);
+//        log.info("quickLowerFinancing     >>>     posResp : {}", JSON.toJSONString(posResp));
+//
+//
+//        // 4、一键清仓
+//        quickClearPosition();
+//
+//
+//        // 等待成交   ->   1.5s
+//        SleepUtils.winSleep(1500);
+//
+//
+//        // 5、check/retry   =>   [一键清仓]-委托单 状态
+//        checkAndRetry___clearPosition__OrdersStatus(3);
+//
+//
+//        // 6、一键再买入
+//        quick__buyAgain(new_posResp.getStocks());
     }
 
 
@@ -499,6 +658,85 @@ public class TradeServiceImpl implements TradeService {
 
 
         return new_posResp;
+    }
+
+
+    /**
+     * 计算 新仓位比例
+     *
+     * @param posResp
+     * @param transferAmount
+     * @return
+     */
+    private double calcNewPositionRate__quickLowerFinancing(QueryCreditNewPosResp posResp, double transferAmount) {
+
+
+        // --------------------------------------- old
+
+
+        // old_净资产
+        double old_netasset = posResp.getNetasset().doubleValue();
+        // old_总市值
+        double old_totalmkval = posResp.getTotalmkval().doubleValue();
+
+        // old_融资负债
+        double old_ftotaldebts = posResp.getFtotaldebts().doubleValue();
+
+
+        // --------------------------------------- new
+
+
+        // new_净资产  =  old_净资产 - 取款金额
+        double new_netasset = old_netasset - transferAmount;
+
+
+        // new_总市值  =  new_净资产 * 1.5
+        double new_totalMarketValue = new_netasset * 1.5;
+
+        // new_负债  =  new_净资产 / 2
+        double new_ftotaldebts = new_netasset / 2;
+
+
+        // min_现金还款  =  old_负债 - new_负债
+        double min_repayment = old_ftotaldebts - new_ftotaldebts;
+
+
+        // ------------------------------------------------------------------------------ 当前持仓
+
+
+        // new_仓位   =   new_总市值 / old_总市值
+        double currPos_newPositionRate = new_totalMarketValue / old_totalmkval;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        Assert.isTrue(currPos_newPositionRate < 1,
+                      String.format("当前[取款=%s] -> [无需减仓] ： 当前[净资产=%s，总市值=%s] ，取款后【净资产=%s，最大总市值=%s】 ， 将当前[负债=%s -降低至-> %s] -> [现金还款=%s]即可取款",
+                                    transferAmount, old_netasset, old_totalmkval, new_netasset, new_totalMarketValue, old_ftotaldebts, new_ftotaldebts, of(min_repayment)));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------------- 总仓位（融+单 = 净x2）
+
+
+        double totalAccount__oldPositionRate = posResp.getTotalAccount__actTotalPosRatio();
+        double totalAccount__newPositionRate = new_totalMarketValue / posResp.getTotalAccount__actTotalMoney();
+
+        double currPos_newPositionRate_2 = totalAccount__newPositionRate / totalAccount__oldPositionRate;
+
+
+        // Assert.isTrue(TdxFunCheck.equals(currPos_newPositionRate, currPos_newPositionRate_2),
+        //               String.format("newPositionRate=%s, newPositionRate_2=%s", currPos_newPositionRate, currPos_newPositionRate_2));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // return totalAccount__newPositionRate;     ->     totalAccount__equalRatioSellPosition(newPositionRate);
+        return currPos_newPositionRate;           // ->     currPosition__equalRatioSellPosition(newPositionRate);
     }
 
 
