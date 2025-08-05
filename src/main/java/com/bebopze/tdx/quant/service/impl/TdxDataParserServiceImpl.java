@@ -1069,13 +1069,21 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 行情-板块
         Future<?> task1 = Executors.newCachedThreadPool().submit(() -> {
+            // refresh  ->  block kline
             fillBlockKlineAll();
+
+            // refresh  ->  Cache
+            iBaseBlockService.listAllKline(true);
         });
 
 
         // 行情-个股
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
+            // refresh  ->  stock kline
             fillStockKlineAll(updateType);
+
+            // refresh  ->  Cache
+            iBaseStockService.listAllKline(true);
         });
 
 

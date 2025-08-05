@@ -20,6 +20,8 @@ public class DateTimeUtil {
 
     private static final DateTimeFormatter yyyy_MM_dd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private static final DateTimeFormatter yyyy_MM_dd_HHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     public static void main(String[] args) {
         // 示例毫秒值
@@ -96,6 +98,11 @@ public class DateTimeUtil {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  LocalDateTime
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 时间戳 -> LocalDateTime
      *
@@ -112,6 +119,20 @@ public class DateTimeUtil {
 
         return localDateTime;
     }
+
+
+    public static LocalDateTime parseTime_yyyy_MM_dd(String dateStr) {
+        return LocalDateTime.parse(dateStr, yyyy_MM_dd_HHmmss);
+    }
+
+    public static String formatTime_yyyy_MM_dd(LocalDateTime dateTime) {
+        return dateTime.format(yyyy_MM_dd_HHmmss);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  LocalDate
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static LocalDate parseDate_yyyyMMdd__slash(String dateStr) {

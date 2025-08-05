@@ -132,12 +132,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     public List<BaseStockDO> listAllKline(boolean refresh) {
 
 
-        // listAllFromDiskCache     >>>     totalTime : 6.9s
-        // return listAllFromDiskCache(refresh);
+        // listAllFromDiskCache >>> totalTime :6.9 s
+        return listAllFromDiskCache(refresh);
 
 
         // listByCursor     >>>     totalTime : 52.4s
-        return listByCursor();
+        // return listByCursor();
 
 
         // listAllKline     >>>     totalTime : 52.7s
@@ -189,7 +189,8 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         List<BaseStockDO> list = JsonFileWriterAndReader.readStringFromFile___stock_listAllKline();
 
         if (CollectionUtils.isEmpty(list) || refresh) {
-            list = baseMapper.listAllKline();
+            // list = baseMapper.listAllKline();
+            list = listByCursor();
 
 
             // write Cache

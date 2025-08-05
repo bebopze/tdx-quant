@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.common.util;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Lists;
 import com.google.gson.stream.JsonReader;
@@ -10,10 +12,13 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -32,33 +37,26 @@ public class JsonFileWriterAndReader {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // ---------------------------------------------------- write
+
+
     /**
      * 大对象 写入
      *
-     * @param dataList
+     * @param entityList
      * @param filePath
      */
-    public static void writeLargeListToFile(List<BaseStockDO> dataList, String filePath) {
+    public static void stock__writeLargeListToFile(List<BaseStockDO> entityList, String filePath) {
 
         try (JsonWriter writer = new JsonWriter(new FileWriter(filePath))) {
             writer.beginArray();
 
 
-            for (BaseStockDO data : dataList) {
+            for (BaseStockDO entity : entityList) {
                 writer.beginObject();
 
-
                 // 通用 -> 反射
-                writer.name("id").value(data.getId());
-                writer.name("code").value(data.getCode());
-                writer.name("name").value(data.getName());
-                writer.name("tdxMarketType").value(data.getTdxMarketType());
-                writer.name("klineHis").value(data.getKlineHis());
-                writer.name("extDataHis").value(data.getExtDataHis());
-
-                // 基金北向
-                writer.name("amount").value(data.getAmount());
-
+                writeSetField(writer, entity);
 
                 writer.endObject();
             }
@@ -67,20 +65,47 @@ public class JsonFileWriterAndReader {
             writer.endArray();
 
 
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("写入文件失败: {}", e.getMessage(), e);
+        }
+    }
+
+    public static void block__writeLargeListToFile(List<BaseBlockDO> entityList, String filePath) {
+
+        try (JsonWriter writer = new JsonWriter(new FileWriter(filePath))) {
+            writer.beginArray();
+
+
+            for (BaseBlockDO entity : entityList) {
+                writer.beginObject();
+
+                // 通用 -> 反射
+                writeSetField(writer, entity);
+
+                writer.endObject();
+            }
+
+
+            writer.endArray();
+
+
+        } catch (Exception e) {
             log.error("写入文件失败: {}", e.getMessage(), e);
         }
     }
 
 
-    public static List<BaseStockDO> readLargeJsonFile(String filePath) {
+    // ---------------------------------------------------- read
+
+
+    public static List<BaseStockDO> stock__readLargeJsonFile(String filePath) {
         List<BaseStockDO> entityList = Lists.newArrayList();
 
 
         try (JsonReader reader = new JsonReader(new FileReader(filePath))) {
             reader.beginArray();
             while (reader.hasNext()) {
-                entityList.add(readKLine(reader));
+                entityList.add(readStockKLine(reader));
             }
             reader.endArray();
         } catch (Exception e) {
@@ -91,10 +116,29 @@ public class JsonFileWriterAndReader {
         return entityList;
     }
 
-    @SneakyThrows
-    private static BaseStockDO readKLine(JsonReader reader) {
-        BaseStockDO entity = new BaseStockDO();
 
+    public static List<BaseBlockDO> block__readLargeJsonFile(String filePath) {
+        List<BaseBlockDO> entityList = Lists.newArrayList();
+
+
+        try (JsonReader reader = new JsonReader(new FileReader(filePath))) {
+            reader.beginArray();
+            while (reader.hasNext()) {
+                entityList.add(readBlockKLine(reader));
+            }
+            reader.endArray();
+        } catch (Exception e) {
+            log.error("读取文件失败: {}", e.getMessage(), e);
+        }
+
+
+        return entityList;
+    }
+
+
+    @SneakyThrows
+    private static BaseStockDO readStockKLine(JsonReader reader) {
+        BaseStockDO entity = new BaseStockDO();
 
         try {
             reader.beginObject();
@@ -102,73 +146,12 @@ public class JsonFileWriterAndReader {
 
             while (reader.hasNext()) {
                 String filedName = reader.nextName();
-                switch (filedName) {
-
-                    case "id":
-                        Long id = reader.nextLong();
-                        entity.setId(id);
-                        break;
-
-                    case "code":
-                        String code = reader.nextString();
-                        entity.setCode(code);
-                        break;
-
-                    case "name":
-                        if (reader.peek() == JsonToken.NULL) {
-                            reader.nextNull();
-                            log.warn("stockName 为空     >>>     entity : {}", JSON.toJSONString(entity));
-                        } else {
-                            String name = reader.nextString();
-                            entity.setName(name);
-                        }
-                        break;
-
-                    case "tdxMarketType":
-                        Integer tdxMarketType = reader.nextInt();
-                        entity.setTdxMarketType(tdxMarketType);
-                        break;
-
-                    case "klineHis":
-                        if (reader.peek() == JsonToken.NULL) {
-                            reader.nextNull();
-                            log.warn("klineHis 为空     >>>     entity : {}", JSON.toJSONString(entity));
-                        } else {
-                            String klineHis = reader.nextString();
-                            entity.setKlineHis(klineHis);
-                        }
-                        break;
-
-                    case "extDataHis":
-                        if (reader.peek() == JsonToken.NULL) {
-                            reader.nextNull();
-                            log.warn("extDataHis 为空     >>>     entity : {}", JSON.toJSONString(entity));
-                        } else {
-                            String extDataHis = reader.nextString();
-                            entity.setExtDataHis(extDataHis);
-                        }
-                        break;
-
-                    case "amount":
-                        if (reader.peek() == JsonToken.NULL) {
-                            reader.nextNull();
-                            log.warn("amount 为空     >>>     entity : {}", JSON.toJSONString(entity));
-                        } else {
-                            BigDecimal amount = new BigDecimal(reader.nextString());
-                            entity.setAmount(amount);
-                        }
-                        break;
-
-                    default:
-                        // 跳过未知字段
-                        reader.skipValue();
-                        break;
-                }
+                // 通用 -> 反射
+                readSetField(reader, entity, filedName);
             }
 
 
             reader.endObject();
-
 
         } catch (Exception e) {
             log.error("entity : {} , reader : {}, exMsg : {}", JSON.toJSONString(entity), JSON.toJSONString(reader), e.getMessage(), e);
@@ -176,6 +159,126 @@ public class JsonFileWriterAndReader {
         }
 
         return entity;
+    }
+
+
+    @SneakyThrows
+    private static BaseBlockDO readBlockKLine(JsonReader reader) {
+        BaseBlockDO entity = new BaseBlockDO();
+
+        try {
+            reader.beginObject();
+
+
+            while (reader.hasNext()) {
+                String fieldName = reader.nextName();
+                // 通用 -> 反射
+                readSetField(reader, entity, fieldName);
+            }
+
+
+            reader.endObject();
+
+        } catch (Exception e) {
+            log.error("entity : {} , reader : {}, exMsg : {}", JSON.toJSONString(entity), JSON.toJSONString(reader), e.getMessage(), e);
+            reader.endObject();
+        }
+
+        return entity;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * write     =>     通用 -> 反射
+     *
+     * @param writer
+     * @param entity
+     * @throws Exception
+     */
+    private static void writeSetField(JsonWriter writer, Object entity) throws Exception {
+
+        // writer.name("id").value(data.getId());
+
+
+        Field[] fields = entity.getClass().getDeclaredFields();
+
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+
+            String key = field.getName();
+            if (key.equals("serialVersionUID")) {
+                continue;
+            }
+
+
+            Object val = field.get(entity);
+            String valStr = val == null ? null : val.toString();
+
+
+            Class<?> type = field.getType();
+            if (null != val) {
+                if (type.equals(LocalDate.class)) {
+                    valStr = DateTimeUtil.format_yyyy_MM_dd((LocalDate) val);
+                } else if (type.equals(LocalDateTime.class)) {
+                    valStr = DateTimeUtil.formatTime_yyyy_MM_dd((LocalDateTime) val);
+                }
+            }
+
+
+            writer.name(key).value(valStr);
+        }
+    }
+
+    /**
+     * read     =>     通用 -> 反射
+     *
+     * @param reader
+     * @param entity
+     * @param fieldName
+     * @param <T>
+     * @throws Exception
+     */
+    private static <T> void readSetField(JsonReader reader, Object entity, String fieldName) throws Exception {
+
+
+        Field field = entity.getClass().getDeclaredField(fieldName);
+
+        // 设置字段可访问（如果字段是 private）
+        field.setAccessible(true);
+
+
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            log.warn("{} 为空     >>>     entity : {}", fieldName, JSON.toJSONString(entity));
+        } else {
+
+            String valStr = reader.nextString();
+            Object value = null;
+
+
+            Class<?> type = field.getType();
+            if (type.equals(String.class)) {
+                value = valStr;
+            } else if (type.equals(Long.class)) {
+                value = Long.parseLong(valStr);
+            } else if (type.equals(Integer.class)) {
+                value = Integer.parseInt(valStr);
+            } else if (type.equals(BigDecimal.class)) {
+                value = BigDecimal.valueOf(Double.parseDouble(valStr));
+            } else if (type.equals(LocalDate.class)) {
+                value = DateTimeUtil.parseDate_yyyy_MM_dd(valStr);
+            } else if (type.equals(LocalDateTime.class)) {
+                value = DateTimeUtil.parseTime_yyyy_MM_dd(valStr);
+            }
+
+
+            field.set(entity, value);
+        }
     }
 
 
@@ -242,13 +345,13 @@ public class JsonFileWriterAndReader {
     }
 
 
-    // ------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static void main(String[] args) {
 
 
-        // writeStringToFile___listAllKline();
+        writeStringToFile___stock_listAllKline();
 
 
         List<BaseStockDO> baseStockDOList = readStringFromFile___stock_listAllKline();
@@ -275,10 +378,17 @@ public class JsonFileWriterAndReader {
 
         String filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
 
-        List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
+
+        // List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
+
+        List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().getBaseMapper()
+                                                       .selectList(
+                                                               new QueryWrapper<BaseStockDO>()
+                                                                       .last("LIMIT 10")
+                                                       );
 
 
-        writeLargeListToFile(stockDOList, filePath);
+        stock__writeLargeListToFile(stockDOList, filePath);
         // writeStringToFile(JSON.toJSONString(baseStockDOList, JSONWriter.Feature.LargeObject), filePath);
     }
 
@@ -297,7 +407,7 @@ public class JsonFileWriterAndReader {
      * @param stockDOList
      */
     public static void writeStringToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
-        writeLargeListToFile(stockDOList, stock_filePath);
+        stock__writeLargeListToFile(stockDOList, stock_filePath);
         log.debug("disk cache write  -  writeStringToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
     }
 
@@ -307,10 +417,41 @@ public class JsonFileWriterAndReader {
      */
     public static List<BaseStockDO> readStringFromFile___stock_listAllKline() {
 
-        List<BaseStockDO> stockDOList = readLargeJsonFile(stock_filePath);
+        List<BaseStockDO> stockDOList = stock__readLargeJsonFile(stock_filePath);
         log.debug("disk cache read  -  readStringFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
 
         return stockDOList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                             blockDOList
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static final String block_filePath = System.getProperty("user.dir") + "/wiki/DB/all_block_kline.json";
+
+
+    /**
+     * blockDOList   ->   write
+     *
+     * @param blockDOList
+     */
+    public static void writeStringToFile___block_listAllKline(List<BaseBlockDO> blockDOList) {
+        block__writeLargeListToFile(blockDOList, block_filePath);
+        log.debug("disk cache write  -  writeStringToFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+    }
+
+
+    /**
+     * blockDOList   ->   read
+     */
+    public static List<BaseBlockDO> readStringFromFile___block_listAllKline() {
+
+        List<BaseBlockDO> blockDOList = block__readLargeJsonFile(block_filePath);
+        log.debug("disk cache read  -  readStringFromFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+
+        return blockDOList;
     }
 
 

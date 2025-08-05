@@ -1,11 +1,13 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
  * @author bebopze
  * @since 2025-05-09
  */
+@Slf4j
 @Service
 public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlockDO> implements IBaseBlockService {
 
@@ -95,16 +98,50 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     }
 
     @Override
-    // @Cacheable("block_listAllKline")
     public List<BaseBlockDO> listAllKline() {
-        return baseMapper.listAllKline();
+        return listAllKline(false);
     }
 
     @Override
-    // @Cacheable("block_listAllRpsKline")
+    public List<BaseBlockDO> listAllKline(boolean refresh) {
+
+
+        // listAllFromDiskCache >>> totalTime :6.9 s
+        return listAllFromDiskCache(refresh);
+
+
+        // return baseMapper.listAllKline();
+    }
+
+
+    @Override
     public List<BaseBlockDO> listAllRpsKline() {
         return baseMapper.listAllRpsKline();
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private List<BaseBlockDO> listAllFromDiskCache(boolean refresh) {
+        long start = System.currentTimeMillis();
+
+
+        // read Cache
+        List<BaseBlockDO> list = JsonFileWriterAndReader.readStringFromFile___block_listAllKline();
+
+        if (CollectionUtils.isEmpty(list) || refresh) {
+            list = baseMapper.listAllKline();
+
+
+            // write Cache
+            JsonFileWriterAndReader.writeStringToFile___block_listAllKline(list);
+        }
+
+
+        //  listAllFromDiskCache     >>>     totalTime : 6.9s
+        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        return list;
+    }
 
 }

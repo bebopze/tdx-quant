@@ -43,5 +43,7 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     List<BaseBlockDO> listAllKline();
 
+    List<BaseBlockDO> listAllKline(boolean refresh);
+
     List<BaseBlockDO> listAllSimple();
 }
