@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +20,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -210,7 +210,7 @@ public class BaseBlockDO implements Serializable {
 
     public List<KlineDTO> getKlineDTOList() {
         if (klineHis == null) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return ConvertStockKline.str2DTOList(klineHis);
     }
@@ -218,7 +218,7 @@ public class BaseBlockDO implements Serializable {
 
     public List<ExtDataDTO> getExtDataDTOList() {
         if (extDataHis == null) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return ConvertStockExtData.extDataHis2DTOList(extDataHis);
     }

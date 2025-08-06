@@ -260,7 +260,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250); // 250 -> 200
 
 
-        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -317,121 +317,128 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         data.stockDOList.parallelStream().forEach(stockDO -> {
+            try {
 
-            String code = stockDO.getCode();
-            List<ExtDataDTO> new_extDataDTOList = data.extDataMap.get(code);     // 暂时 只计算了 RPS
+                execCalcStockExtData(data, N, stockDO, count, start);
 
-
-            // --------------------------------------------------------
-
-
-            // old
-            List<ExtDataDTO> old_extDataDTOList = stockDO.getExtDataDTOList();
-
-
-            // fill -> new_RPS（后续计算 RPS相关指标）
-            stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
-
-
-            // --------------------------------------------------------
-
-
-            long stock_start = System.currentTimeMillis();
-
-
-            // --------------------------------------------------------
-
-
-            // 计算 -> 指标
-            StockFun fun = new StockFun(code, stockDO);
-
-
-            double[] SSF = fun.SSF();
-
-            double[] 中期涨幅 = fun.中期涨幅N(20);
-            boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
-
-
-            boolean[] MA20多 = fun.MA多(20);
-            boolean[] MA20空 = fun.MA空(20);
-            boolean[] SSF多 = fun.SSF多();
-            boolean[] SSF空 = fun.SSF空();
-
-
-            boolean[] N日新高 = fun.N日新高(60);
-            boolean[] 均线预萌出 = fun.均线预萌出();
-            boolean[] 均线萌出 = fun.均线萌出();
-            boolean[] 大均线多头 = fun.大均线多头();
-
-
-            boolean[] 月多 = fun.月多();
-            boolean[] RPS红 = fun.RPS红(85);
-            boolean[] RPS三线红 = fun.RPS三线红(80);
-
-
-            // --------------------------------------------------------
-
-
-            long end = System.currentTimeMillis();
-            log.info("stockFun 指标计算 - 个股     >>>     code : {} , count : {} , stockTime : {} , totalTime : {} ",
-                     code, count.incrementAndGet(), DateTimeUtil.format2Hms(end - stock_start), DateTimeUtil.format2Hms(end - start));
-
-
-            // --------------------------------------------------------
-
-
-            for (int i = 0; i < new_extDataDTOList.size(); i++) {
-                ExtDataDTO dto = new_extDataDTOList.get(i);
-
-
-                dto.setSSF(of(SSF[i], 3));
-
-
-                try {
-                    dto.set中期涨幅(of(中期涨幅[i], 3));
-                } catch (Exception e) {
-                    log.error("code : {} , stockDO : {} , exMsg : {}", code, JSON.toJSONString(stockDO), e.getMessage(), e);
-                }
-                dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
-
-
-                dto.setMA20多(MA20多[i]);
-                dto.setMA20空(MA20空[i]);
-                dto.setSSF多(SSF多[i]);
-                dto.setSSF空(SSF空[i]);
-
-
-                dto.setN日新高(N日新高[i]);
-                dto.set均线预萌出(均线预萌出[i]);
-                dto.set均线萌出(均线萌出[i]);
-                dto.set大均线多头(大均线多头[i]);
-
-
-                dto.set月多(月多[i]);
-                dto.setRPS红(RPS红[i]);
-                dto.setRPS三线红(RPS三线红[i]);
+            } catch (Exception ex) {
+                log.error("execCalcStockExtData - err     >>>     stockCode : {} , stockDO : {} , errMsg : {}",
+                          stockDO.getCode(), JSON.toJSONString(stockDO), ex.getMessage(), ex);
             }
-
-
-            // ------------------------------------------------------------------------ 更新 -> DB
-
-
-            // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
-            compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
-
-
-            // -------------------------
-
-
-            BaseStockDO entity = new BaseStockDO();
-            entity.setId(data.codeIdMap.get(code));
-
-            // entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList))); // 覆盖更新
-            entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
-
-
-            baseStockService.updateById(entity);
         });
+    }
+
+    private void execCalcStockExtData(DataDTO data, Integer N, BaseStockDO stockDO, AtomicInteger count, long start) {
+
+
+        String code = stockDO.getCode();
+        List<ExtDataDTO> new_extDataDTOList = data.extDataMap.get(code);     // 暂时 只计算了 RPS
+
+
+        // --------------------------------------------------------
+
+
+        // old
+        List<ExtDataDTO> old_extDataDTOList = stockDO.getExtDataDTOList();
+
+
+        // fill -> new_RPS（后续计算 RPS相关指标）
+        stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
+
+
+        // --------------------------------------------------------
+
+
+        long stock_start = System.currentTimeMillis();
+
+
+        // --------------------------------------------------------
+
+
+        // 计算 -> 指标
+        StockFun fun = new StockFun(code, stockDO);
+
+
+        double[] SSF = fun.SSF();
+
+        double[] 中期涨幅 = fun.中期涨幅N(20);
+        boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
+
+
+        boolean[] MA20多 = fun.MA多(20);
+        boolean[] MA20空 = fun.MA空(20);
+        boolean[] SSF多 = fun.SSF多();
+        boolean[] SSF空 = fun.SSF空();
+
+
+        boolean[] N日新高 = fun.N日新高(60);
+        boolean[] 均线预萌出 = fun.均线预萌出();
+        boolean[] 均线萌出 = fun.均线萌出();
+        boolean[] 大均线多头 = fun.大均线多头();
+
+
+        boolean[] 月多 = fun.月多();
+        boolean[] RPS红 = fun.RPS红(85);
+        boolean[] RPS三线红 = fun.RPS三线红(80);
+
+
+        // --------------------------------------------------------
+
+
+        log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {} ",
+                 code, count.incrementAndGet(), DateTimeUtil.formatNow2Hms(stock_start), DateTimeUtil.formatNow2Hms(start));
+
+
+        // --------------------------------------------------------
+
+
+        for (int i = 0; i < new_extDataDTOList.size(); i++) {
+            ExtDataDTO dto = new_extDataDTOList.get(i);
+
+
+            dto.setSSF(of(SSF[i], 3));
+
+
+            dto.set中期涨幅(of(中期涨幅[i], 3));
+            dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
+
+
+            dto.setMA20多(MA20多[i]);
+            dto.setMA20空(MA20空[i]);
+            dto.setSSF多(SSF多[i]);
+            dto.setSSF空(SSF空[i]);
+
+
+            dto.setN日新高(N日新高[i]);
+            dto.set均线预萌出(均线预萌出[i]);
+            dto.set均线萌出(均线萌出[i]);
+            dto.set大均线多头(大均线多头[i]);
+
+
+            dto.set月多(月多[i]);
+            dto.setRPS红(RPS红[i]);
+            dto.setRPS三线红(RPS三线红[i]);
+        }
+
+
+        // ------------------------------------------------------------------------ 更新 -> DB
+
+
+        // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
+        compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
+
+
+        // -------------------------
+
+
+        BaseStockDO entity = new BaseStockDO();
+        entity.setId(data.codeIdMap.get(code));
+
+        // entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList))); // 覆盖更新
+        entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
+
+
+        baseStockService.updateById(entity);
     }
 
 
@@ -489,8 +496,19 @@ public class ExtDataServiceImpl implements ExtDataService {
         } else {
 
             // 全量更新
-            old_extDataList.clear();
-            old_extDataList.addAll(new_extDataList);
+            try {
+
+                old_extDataList.clear();
+                old_extDataList.addAll(new_extDataList);
+
+            } catch (Exception ex) {
+
+                log.error("old_extDataList.addAll(new_extDataList) - err     >>>     old_extDataList : {} , new_extDataList : {} , errMsg : {}",
+                          JSON.toJSONString(old_extDataList), JSON.toJSONString(new_extDataList), ex.getMessage(), ex);
+
+                throw ex;
+            }
+
         }
     }
 

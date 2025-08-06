@@ -11,6 +11,7 @@ import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -183,7 +184,7 @@ public class BaseStockDO implements Serializable {
 
     public List<KlineDTO> getKlineDTOList() {
         if (klineHis == null) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return ConvertStockKline.str2DTOList(klineHis);
     }
@@ -191,7 +192,7 @@ public class BaseStockDO implements Serializable {
 
     public List<ExtDataDTO> getExtDataDTOList() {
         if (extDataHis == null) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return ConvertStockExtData.extDataHis2DTOList(extDataHis);
     }
