@@ -17,8 +17,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
-import static com.bebopze.tdx.quant.common.tdxfun.Tools.*;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
 
@@ -90,21 +88,6 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
             // --------------------------------------------------------------------------------------
 
-            double[] rps50_arr = extDataArrDTO.rps50;
-            double[] rps120_arr = extDataArrDTO.rps120;
-            double[] rps250_arr = extDataArrDTO.rps250;
-
-
-            double rps50 = getByDate(rps50_arr, dateIndexMap, tradeDate);
-            double rps120 = getByDate(rps120_arr, dateIndexMap, tradeDate);
-            double rps250 = getByDate(rps250_arr, dateIndexMap, tradeDate);
-
-
-            // RPS
-            boolean RPS一线红 = RPS一线红(rps50, rps120, rps250, 90);
-            boolean RPS双线红 = RPS双线红(rps50, rps120, rps250, 85);
-            boolean RPS三线红 = RPS三线红(rps50, rps120, rps250, 80);
-
 
             // --------------------------------------------------------------------------------------
 
@@ -117,6 +100,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             boolean[] 月多_arr = extDataArrDTO.月多;
+            boolean[] RPS红_arr = extDataArrDTO.RPS红;
             boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
 
 
@@ -128,20 +112,30 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             // -------------------------------------------
 
 
-            double 中期涨幅 = getByDate(中期涨幅_arr, dateIndexMap, tradeDate);
+            Integer idx = dateIndexMap.get(tradeDate);
+            if (idx == null) {
+                return;
+            }
 
 
-            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
-            boolean MA20多 = getByDate(MA20多_arr, dateIndexMap, tradeDate);
+            // -------------------------------------------
 
 
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            // boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+            double 中期涨幅 = 中期涨幅_arr[idx];
 
 
-            boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
-            boolean 均线预萌出 = getByDate(均线预萌出_arr, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+            boolean SSF多 = SSF多_arr[idx];
+            boolean MA20多 = MA20多_arr[idx];
+
+
+            boolean 月多 = 月多_arr[idx];
+            boolean RPS红 = RPS红_arr[idx];
+            boolean RPS三线红 = RPS三线红_arr[idx];
+
+
+            boolean _60日新高 = N日新高_arr[idx];
+            boolean 均线预萌出 = 均线预萌出_arr[idx];
+            boolean 大均线多头 = 大均线多头_arr[idx];
 
 
             // -------------------------------------------
@@ -151,7 +145,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
             boolean con_1 = _60日新高;
 
-            boolean con_2 = RPS一线红 || RPS双线红 || RPS三线红;
+            boolean con_2 = RPS红;
 
 
             // 低位（中期涨幅<50）
@@ -215,24 +209,6 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
             // --------------------------------------------------------------------------------------
 
-            double[] rps50_arr = extDataArrDTO.rps50;
-            double[] rps120_arr = extDataArrDTO.rps120;
-            double[] rps250_arr = extDataArrDTO.rps250;
-
-
-            double rps50 = getByDate(rps50_arr, dateIndexMap, tradeDate);
-            double rps120 = getByDate(rps120_arr, dateIndexMap, tradeDate);
-            double rps250 = getByDate(rps250_arr, dateIndexMap, tradeDate);
-
-
-            // RPS
-            boolean RPS一线红 = RPS一线红(rps50, rps120, rps250, 95);
-            boolean RPS双线红 = RPS双线红(rps50, rps120, rps250, 90);
-            boolean RPS三线红 = RPS三线红(rps50, rps120, rps250, 85);
-
-
-            // --------------------------------------------------------------------------------------
-
 
             double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
 
@@ -242,7 +218,8 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             boolean[] 月多_arr = extDataArrDTO.月多;
-            // boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+            boolean[] RPS红_arr = extDataArrDTO.RPS红;
+            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
 
 
             boolean[] N日新高_arr = extDataArrDTO.N日新高;
@@ -254,21 +231,22 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             // -------------------------------------------
 
 
-            double 中期涨幅 = getByDate(中期涨幅_arr, dateIndexMap, tradeDate);
+            double 中期涨幅 = 中期涨幅_arr[idx];
 
 
-            boolean SSF多 = getByDate(SSF多_arr, dateIndexMap, tradeDate);
-            boolean MA20多 = getByDate(MA20多_arr, dateIndexMap, tradeDate);
+            boolean SSF多 = SSF多_arr[idx];
+            boolean MA20多 = MA20多_arr[idx];
 
 
-            boolean 月多 = getByDate(月多_arr, dateIndexMap, tradeDate);
-            // boolean RPS三线红 = getByDate(RPS三线红_arr, dateIndexMap, tradeDate);
+            boolean 月多 = 月多_arr[idx];
+            boolean RPS红 = RPS红_arr[idx];
+            boolean RPS三线红 = RPS三线红_arr[idx];
 
 
-            boolean _60日新高 = getByDate(N日新高_arr, dateIndexMap, tradeDate);
-            boolean 均线预萌出 = getByDate(均线预萌出_arr, dateIndexMap, tradeDate);
-            // boolean 均线萌出 = getByDate(均线萌出_arr, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(大均线多头_arr, dateIndexMap, tradeDate);
+            boolean _60日新高 = N日新高_arr[idx];
+            boolean 均线预萌出 = 均线预萌出_arr[idx];
+            // boolean 均线萌出 = 均线萌出_arr[idx];
+            boolean 大均线多头 = 大均线多头_arr[idx];
 
 
             // -------------------------------------------
@@ -296,7 +274,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             // RPS一线红95/RPS双线红90/RPS三线红85
-            boolean con_2 = RPS一线红 || RPS双线红 || RPS三线红;
+            boolean con_2 = RPS红;
 
 
             // 低位（中期涨幅<50）
@@ -337,8 +315,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
                 info.add(getYjhyLv1 + "     ");
 
 
-                if (RPS一线红) info.add("RPS一线红");
-                if (RPS双线红) info.add("RPS双线红");
+                if (RPS红) info.add("RPS红");
                 if (RPS三线红) info.add("RPS三线红");
 
                 if (con_2) info.add("低位");
@@ -353,7 +330,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
                 if (RPS三线红) info.add("RPS三线红");
                 if (_60日新高) info.add("60日新高");
                 // if (口袋支点) info.add("口袋支点");
-                info.add("idx-" + dateIndexMap.get(tradeDate));
+                info.add("idx-" + idx);
 
 
                 buy_infoMap.put(stockCode, String.join(",", info));
@@ -476,11 +453,11 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             boolean[] N日新高_arr = extDataArrDTO.N日新高;
 
 
-            double rps10 = getByDate(rps10_arr, dateIndexMap, tradeDate);
-            double rps20 = getByDate(rps20_arr, dateIndexMap, tradeDate);
-            double rps50 = getByDate(rps50_arr, dateIndexMap, tradeDate);
-            double rps120 = getByDate(rps120_arr, dateIndexMap, tradeDate);
-            double rps250 = getByDate(rps250_arr, dateIndexMap, tradeDate);
+            double rps10 = rps10_arr[idx];
+            double rps20 = rps20_arr[idx];
+            double rps50 = rps50_arr[idx];
+            double rps120 = rps120_arr[idx];
+            double rps250 = rps250_arr[idx];
 
 
             // RPS和
@@ -491,17 +468,17 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             // AMO
-            double amount = getByDate(amoArr, dateIndexMap, tradeDate);
+            double amount = amoArr[idx];
 
 
             // 中期涨幅
-            double 中期涨幅 = getByDate(中期涨幅_arr, dateIndexMap, tradeDate);
+            double 中期涨幅 = 中期涨幅_arr[idx];
 
 
             // 大均线多头
-            int 大均线多头 = bool2Int(getByDate(大均线多头_arr, dateIndexMap, tradeDate));
+            int 大均线多头 = bool2Int(大均线多头_arr[idx]);
             // 60日新高
-            int N日新高 = bool2Int(getByDate(N日新高_arr, dateIndexMap, tradeDate));
+            int N日新高 = bool2Int(N日新高_arr[idx]);
 
 
             // -------------------------------------------------------------------------------------------

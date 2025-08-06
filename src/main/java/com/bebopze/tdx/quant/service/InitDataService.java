@@ -15,4 +15,5 @@ public interface InitDataService {
 
     BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh);
 
+    void refreshCache();
 }

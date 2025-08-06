@@ -19,6 +19,7 @@ import com.bebopze.tdx.quant.parser.tdxdata.*;
 import com.bebopze.tdx.quant.service.ExtDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
+import com.bebopze.tdx.quant.task.TdxTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -75,6 +76,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private ExtDataService extDataService;
 
 
+    @Autowired
+    private TdxTask tdxTask;
+
+
     /**
      * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
      */
@@ -107,18 +112,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 大盘量化
 
 
-        marketService.importMarketMidCycle();
+        // marketService.importMarketMidCycle();
 
 
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
 
 
-        // 行情  ->  kline_his
-        refreshKlineAll(1);
-
-
-        // 扩展（指标）  ->  ext_data_his
-        extDataService.refreshExtDataAll(null);
+        tdxTask.execTask__refreshKlineAll();
     }
 
 
@@ -1071,9 +1071,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Future<?> task1 = Executors.newCachedThreadPool().submit(() -> {
             // refresh  ->  block kline
             fillBlockKlineAll();
-
-            // refresh  ->  Cache
-            iBaseBlockService.listAllKline(true);
         });
 
 
@@ -1081,9 +1078,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
             // refresh  ->  stock kline
             fillStockKlineAll(updateType);
-
-            // refresh  ->  Cache
-            iBaseStockService.listAllKline(true);
         });
 
 

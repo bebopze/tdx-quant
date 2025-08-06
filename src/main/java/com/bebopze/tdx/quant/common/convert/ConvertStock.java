@@ -1,12 +1,23 @@
 package com.bebopze.tdx.quant.common.convert;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -39,6 +50,88 @@ public class ConvertStock {
 
             arrDTO.dateCloseMap.put(dto.getDate(), dto.getClose());
         }
+
+
+        // ---------------------- check
+
+
+        // KlineArrDTO arrDTO_2 = _dtoList2Arr(dtoList);
+
+        // Assert.isTrue(Objects.equals(JSON.toJSONString(arrDTO), JSON.toJSONString(arrDTO_2)), "arrDTO != arrDTO_2");
+
+
+        // ----------------------
+
+
+        return arrDTO;
+    }
+
+
+    /**
+     * 反射（通过 fieldName   ->   关联）
+     *
+     * @param dtoList
+     * @return
+     */
+    @SneakyThrows
+    public static KlineArrDTO _dtoList2Arr(List<KlineDTO> dtoList) {
+        int size = dtoList.size();
+
+
+        Map<String, Field> kline___fieldMap = Arrays.stream(KlineDTO.class.getDeclaredFields())
+                                                    .peek(field -> field.setAccessible(true))
+                                                    .collect(Collectors.toMap(
+                                                            Field::getName,
+                                                            Function.identity()
+                                                    ));
+
+
+        // List -> arr
+
+        Map<String, List<Object>> fieldName_valList_map = Maps.newHashMap();
+
+        for (int i = 0; i < size; i++) {
+            KlineDTO dto = dtoList.get(i);
+
+
+            kline___fieldMap.forEach((fieldName, field) -> {
+
+                Object val = null;
+                try {
+                    val = field.get(dto);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+
+                fieldName_valList_map.computeIfAbsent(fieldName, k -> Lists.newArrayList()).add(val);
+            });
+        }
+
+
+        // -------
+
+
+        KlineArrDTO arrDTO = new KlineArrDTO(size);
+        Field[] arr_fields = arrDTO.getClass().getDeclaredFields();
+
+
+        for (Field arrField : arr_fields) {
+            arrField.setAccessible(true);
+            String fieldName = arrField.getName();
+
+
+            // 通过 fieldName   ->   关联
+            Field field = kline___fieldMap.get(fieldName);
+            List<Object> valList = fieldName_valList_map.get(fieldName);
+
+
+            Object typeValArr = TypeConverter.convertList(valList, arrField.getType().getComponentType());
+            arrField.set(arrDTO, typeValArr);
+        }
+
+
+        // 触发 -> fill Map
+        arrDTO.getDateCloseMap();
 
 
         return arrDTO;
@@ -83,6 +176,7 @@ public class ConvertStock {
             arrDTO.大均线多头[i] = of(dto.get大均线多头());
 
             arrDTO.月多[i] = of(dto.get月多());
+            arrDTO.RPS红[i] = of(dto.getRPS红());
             arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
         }
 

@@ -351,7 +351,7 @@ public class JsonFileWriterAndReader {
     public static void main(String[] args) {
 
 
-        writeStringToFile___stock_listAllKline();
+        // writeStringToFile___stock_listAllKline();
 
 
         List<BaseStockDO> baseStockDOList = readStringFromFile___stock_listAllKline();

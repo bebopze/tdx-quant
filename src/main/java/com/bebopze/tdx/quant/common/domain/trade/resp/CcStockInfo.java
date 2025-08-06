@@ -102,5 +102,5 @@ public class CcStockInfo implements Serializable {
 
     // --------------------------------------------------- 个股 - 板块
 
-    StockBlockInfoDTO stockBlockInfoDTO;
+    StockBlockInfoDTO blockInfoDTO;
 }

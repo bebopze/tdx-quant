@@ -59,6 +59,11 @@ public class DateTimeUtil {
     }
 
 
+    public static String formatNow2Hms(long start) {
+        return format2Hms(System.currentTimeMillis() - start);
+    }
+
+
     /**
      * 将 ms 自动格式化为 可读性强的时间字符串（如：1h 30m, 45s, 123ms）
      *

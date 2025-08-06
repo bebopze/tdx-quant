@@ -37,7 +37,7 @@ public class TradeController {
     @Operation(summary = "我的持仓", description = "我的持仓")
     @GetMapping(value = "/queryCreditNewPosV2")
     public Result<QueryCreditNewPosResp> queryCreditNewPosV2() {
-        return Result.SUC(tradeService.queryCreditNewPosV2());
+        return Result.SUC(tradeService.queryCreditNewPosV2(true));
     }
 
 

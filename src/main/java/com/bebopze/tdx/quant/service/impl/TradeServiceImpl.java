@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * BS
+ * BS（融资账户）
  *
  * @author: bebopze
  * @date: 2025/5/4
@@ -58,19 +59,25 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public QueryCreditNewPosResp queryCreditNewPosV2() {
+    public QueryCreditNewPosResp queryCreditNewPosV2(boolean blockInfo) {
 
         QueryCreditNewPosResp resp = EastMoneyTradeAPI.queryCreditNewPosV2();
 
 
-//        // block info
-//        resp.getStocks().parallelStream().forEach(stock -> {
-//            StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
-//            stock.setStockBlockInfoDTO(dto);
-//        });
+        // block info
+        if (blockInfo) {
+            resp.getStocks().parallelStream().forEach(stock -> {
+                StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
+                stock.setBlockInfoDTO(dto);
+            });
+        }
 
 
         return resp;
+    }
+
+    private QueryCreditNewPosResp queryCreditNewPosV2() {
+        return queryCreditNewPosV2(false);
     }
 
 
@@ -408,8 +415,8 @@ public class TradeServiceImpl implements TradeService {
         QueryCreditNewPosResp posResp = queryCreditNewPosV2();
 
 
-        // 2、预校验  ->  重新 计算分配  new_总市值  ->  计算 new_个股市值（new_数量）
-        // preCheck__lowerFinancing(posResp, transferAmount);
+        // 2、预校验
+        preCheck__lowerFinancing(posResp, transferAmount);
 
 
         // 3、新仓位比例
@@ -532,9 +539,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    private QueryCreditNewPosResp preCheck__lowerFinancing(QueryCreditNewPosResp posResp,
-                                                           double transferAmount) {
-
+    private void preCheck__lowerFinancing(QueryCreditNewPosResp posResp, double transferAmount) {
         Assert.isTrue(transferAmount >= 50000, String.format("取款金额=[%s]<50000，不够交易费的😶", ofStr(transferAmount)));
 
 
@@ -606,58 +611,58 @@ public class TradeServiceImpl implements TradeService {
         // --------------------------------------------------- new_融资额度  ->  new_总市值
 
 
-        // new_净资产  =  净资产 - 可取资金
-        double new__netasset = netasset - transferAmount;
-
-
-        // new_融资额度（new_总负债）  =  （净资产 - 可取资金）/ 200%
-        // new_融资额度（new_总负债）  =   new_净资产 / 200%
-        double new__totalliability = new__netasset / 2;
-
-
-        // new_总市值  =  new_净资产  +  new_总负债
-        double new__totalmkval = new__netasset + new__totalliability;
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // --------------------------------------------------- new_posResp
-
-
-        QueryCreditNewPosResp new_posResp = new QueryCreditNewPosResp();
-        BeanUtils.copyProperties(posResp, new_posResp);
-
-        // new_总负债
-        new_posResp.setTotalliability(of(new__totalliability));
-        // new_总市值
-        new_posResp.setTotalmkval(of(new__totalmkval));
-        // new_总资产 = new_总市值
-        new_posResp.setTotalasset(of(new__totalmkval));
-
-
-        new_posResp.getStocks().forEach(e -> {
-
-
-            // 个股仓位（0.0106592   ->   1.07%）  =   个股市值 / 净资产
-            double posratio = e.getPosratio().doubleValue();
-
-
-            // ----------------------------------
-
-
-            // new_个股市值  =  new_净资产  x  个股仓位
-            double new__mktval = new__netasset * posratio;
-            e.setMktval(of(new__mktval));
-
-
-            // new_个股数量  =  new_个股市值  /  个股价格
-            int qty = (int) (new__mktval / e.getLastprice().doubleValue());
-            e.setStkavl(StockUtil.quantity(qty));
-        });
-
-
-        return new_posResp;
+//        // new_净资产  =  净资产 - 可取资金
+//        double new__netasset = netasset - transferAmount;
+//
+//
+//        // new_融资额度（new_总负债）  =  （净资产 - 可取资金）/ 200%
+//        // new_融资额度（new_总负债）  =   new_净资产 / 200%
+//        double new__totalliability = new__netasset / 2;
+//
+//
+//        // new_总市值  =  new_净资产  +  new_总负债
+//        double new__totalmkval = new__netasset + new__totalliability;
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // --------------------------------------------------- new_posResp
+//
+//
+//        QueryCreditNewPosResp new_posResp = new QueryCreditNewPosResp();
+//        BeanUtils.copyProperties(posResp, new_posResp);
+//
+//        // new_总负债
+//        new_posResp.setTotalliability(of(new__totalliability));
+//        // new_总市值
+//        new_posResp.setTotalmkval(of(new__totalmkval));
+//        // new_总资产 = new_总市值
+//        new_posResp.setTotalasset(of(new__totalmkval));
+//
+//
+//        new_posResp.getStocks().forEach(e -> {
+//
+//
+//            // 个股仓位（0.0106592   ->   1.07%）  =   个股市值 / 净资产
+//            double posratio = e.getPosratio().doubleValue();
+//
+//
+//            // ----------------------------------
+//
+//
+//            // new_个股市值  =  new_净资产  x  个股仓位
+//            double new__mktval = new__netasset * posratio;
+//            e.setMktval(of(new__mktval));
+//
+//
+//            // new_个股数量  =  new_个股市值  /  个股价格
+//            int qty = (int) (new__mktval / e.getLastprice().doubleValue());
+//            e.setStkavl(StockUtil.quantity(qty));
+//        });
+//
+//
+//        return new_posResp;
     }
 
 

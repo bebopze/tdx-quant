@@ -496,19 +496,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         } else {
 
             // 全量更新
-            try {
-
-                old_extDataList.clear();
-                old_extDataList.addAll(new_extDataList);
-
-            } catch (Exception ex) {
-
-                log.error("old_extDataList.addAll(new_extDataList) - err     >>>     old_extDataList : {} , new_extDataList : {} , errMsg : {}",
-                          JSON.toJSONString(old_extDataList), JSON.toJSONString(new_extDataList), ex.getMessage(), ex);
-
-                throw ex;
-            }
-
+            old_extDataList.clear();
+            old_extDataList.addAll(new_extDataList);
         }
     }
 

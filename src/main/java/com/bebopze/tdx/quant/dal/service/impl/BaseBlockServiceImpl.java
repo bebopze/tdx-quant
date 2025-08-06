@@ -104,6 +104,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
     @Override
     public List<BaseBlockDO> listAllKline(boolean refresh) {
+        log.info("listAllKline     >>>     refresh : {}", refresh);
 
 
         // listAllFromDiskCache >>> totalTime :6.9 s
@@ -140,7 +141,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
         //  listAllFromDiskCache     >>>     totalTime : 6.9s
-        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
         return list;
     }
 

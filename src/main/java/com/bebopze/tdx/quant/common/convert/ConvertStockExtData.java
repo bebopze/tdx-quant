@@ -7,15 +7,10 @@ import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -62,52 +57,23 @@ public class ConvertStockExtData {
 
         // 2025-05-23, 10, 20, 50, 120, 250
         // 日期,rps10,rps20,rps50,rps120,rps250
-        String[] row_arr = extData.split(",", -1);
-        int row_len = row_arr.length;
+        String[] extDataArr = extData.split(",", -1);
 
 
         ExtDataDTO dto = new ExtDataDTO();
+        Field[] fields = dto.getClass().getDeclaredFields();
 
 
-        // 获取目标类的 Class 对象
-        Class<?> dtoClass = dto.getClass();
+        for (int i = 0; i < extDataArr.length; i++) {
+            String valStr = extDataArr[i];
 
-
-        // 按类（ExtDataDTO） 字段顺序     读取 -> set
-        Field[] fields = dtoClass.getDeclaredFields();
-        int len = fields.length;
-
-
-        for (int i = 0; i < len; i++) {
 
             Field field = fields[i];
-            // log.debug("Index: {} | Name: {} | Type: {}", i, field.getName(), field.getType().getSimpleName());
-
-
-            // 设置字段可访问（如果字段是 private）
             field.setAccessible(true);
 
-            // 通过字段名称生成 set 方法名（如 setName）
-            String setMethodName = "set" + StringUtils.capitalize(field.getName());
 
-            // 获取 set 方法
-            Method setMethod = dtoClass.getMethod(setMethodName, field.getType());
-
-
-            // 自动类型转换
-            Object convertVal = null;
-            if (i <= row_len - 1) {
-                try {
-                    convertVal = TypeConverter.convert(row_arr[i], field.getType());
-                } catch (Exception e) {
-                    log.error("convert err     >>>     idx : {} , row : {} , fieldType : {} , convertVal : {} , exMsg : {}",
-                              i, row_arr[i], field.getType(), convertVal, e.getMessage(), e);
-                }
-            }
-
-
-            // 调用 set方法  并传入值
-            setMethod.invoke(dto, convertVal);
+            Object typeVal = TypeConverter.convert(valStr, field.getType());
+            field.set(dto, typeVal);
         }
 
 
@@ -119,7 +85,7 @@ public class ConvertStockExtData {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                              kline -> DTO
+    //                                         extData（String） -> DTO
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -256,7 +222,7 @@ public class ConvertStockExtData {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                              DTO -> kline
+    //                                         DTO -> extData（String）
     // -----------------------------------------------------------------------------------------------------------------
 
 

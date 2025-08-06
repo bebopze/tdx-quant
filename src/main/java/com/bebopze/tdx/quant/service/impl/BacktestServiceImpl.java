@@ -16,6 +16,7 @@ import com.bebopze.tdx.quant.service.BacktestService;
 import com.bebopze.tdx.quant.service.StrategyService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -64,15 +65,19 @@ public class BacktestServiceImpl implements BacktestService {
     @Override
     public void checkBacktest(Long taskId) {
 
-
-        BacktestCache data = backTestStrategy.getData();
-
-
         // task
         BtTaskDO taskDO = btTaskService.getById(taskId);
         Assert.notNull(taskDO, String.format("task不存在：%s", taskId));
 
 
+        // cache
+        BacktestCache data_ = backTestStrategy.getInitDataService().initData(taskDO.getStartDate(), taskDO.getEndDate(), false);
+
+        BacktestCache data = backTestStrategy.getData();
+        BeanUtils.copyProperties(data_, data);
+
+
+        // date
         LocalDate tradeDate = taskDO.getStartDate().minusDays(1);
         LocalDate endDate = DateTimeUtil.min(taskDO.getEndDate(), data.endDate());
 

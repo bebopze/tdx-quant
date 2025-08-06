@@ -25,7 +25,7 @@ public interface TradeService {
      *
      * @return
      */
-    QueryCreditNewPosResp queryCreditNewPosV2();
+    QueryCreditNewPosResp queryCreditNewPosV2(boolean blockInfo);
 
 
     /**
@@ -118,7 +118,7 @@ public interface TradeService {
     /**
      * 一键取款（   担保比例 >= 300%     ->     隔日 可取款   ）
      *
-     * @param new_marginRate 取款金额（T+1 隔日7点可取）
+     * @param transferAmount 取款金额（T+1 隔日7点可取）
      */
-    void quickLowerFinancing(double new_marginRate);
+    void quickLowerFinancing(double transferAmount);
 }

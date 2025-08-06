@@ -315,33 +315,54 @@
                     title: {text: '净值'},
                     tooltip: {
                         trigger: 'axis',
+                        backgroundColor: '#fff',
+                        borderColor: '#ccc',
+                        borderWidth: 1,
+                        textStyle: {
+                            fontSize: 11, // 缩小字体
+                            color: '#333'
+                        },
                         formatter: (params) => {
                             const index = params[0].dataIndex;
                             const item = dailyReturns[index];
                             return `
-                                <div>
-                                  <p><strong>日期:</strong> ${item.tradeDate}</p>
-                                  <p>净值: ${item.nav.toFixed(4)}</p>
-                                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
-                                  <p>当日盈亏额: ${item.profitLossAmount}</p>
-                                  <p>总资金: ${item.capital}</p>
-                                  <p>持仓市值: ${item.marketValue}</p>
-                                  <p>仓位占比（%）: ${item.positionPct}</p>
-                                  <p>仓位上限占比（%）: ${item.positionLimitPct}</p>
-                                  <p>可用资金: ${item.avlCapital}</p>
-                                  <p>买入金额: ${item.buyCapital}</p>
-                                  <p>卖出金额: ${item.sellCapital}</p>
+                                <div style="line-height: 1.4;">
+                                  <div><strong style="font-weight: bold;">${item.tradeDate}</strong></div>
+                                  <div>净值: <span style="color: #FF6F61; font-weight: bold">${item.nav.toFixed(4)}</span></div>
+                                  <div>日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</div>
+                                  <div>盈亏额: ${item.profitLossAmount}</div>
+                                  <div>总资金: ${item.capital}</div>
+                                  <div>市值: ${item.marketValue}</div>
+                                  <div>仓位: ${item.positionPct}%</div>
+                                  <div>上限: ${item.positionLimitPct}%</div>
+                                  <div>可用: ${item.avlCapital}</div>
+                                  <div>买入: ${item.buyCapital} / 卖出: ${item.sellCapital}</div>
                                 </div>`;
                         }
                     },
-                    xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            interval: 0,
+                            rotate: 45
+                        }
+                    },
                     yAxis: {
                         type: 'value',
-                        min: minYAxis, // 动态设置 Y 轴最小值
-                        name: '净值', // 添加 Y 轴名称
+                        min: minYAxis,
+                        name: '净值'
                     },
-                    series: [{name: '净值', type: 'line', data: navs, itemStyle: {color: '#FF6F61'}}],
-                    dataZoom: [{type: 'inside', start: 0, end: 100}, {type: 'slider', start: 0, end: 100}],
+                    series: [{
+                        name: '净值',
+                        type: 'line',
+                        data: navs,
+                        itemStyle: {color: '#FF6F61'}
+                    }],
+                    dataZoom: [
+                        {type: 'inside', start: 0, end: 100},
+                        {type: 'slider', start: 0, end: 100}
+                    ],
                     grid: {right: 10}
                 };
                 navChart.setOption(navOption);

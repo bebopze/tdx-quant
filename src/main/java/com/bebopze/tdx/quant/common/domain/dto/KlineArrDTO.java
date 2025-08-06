@@ -46,7 +46,13 @@ public class KlineArrDTO implements Serializable {
 
 
     public TreeMap<LocalDate, Double> getDateCloseMap() {
-        if (dateCloseMap.size() == date.length) return dateCloseMap;
+        if (null == dateCloseMap) {
+            dateCloseMap = new TreeMap<>();
+        }
+
+        if (dateCloseMap.size() == date.length) {
+            return dateCloseMap;
+        }
 
 
         for (int i = 0; i < date.length; i++) {

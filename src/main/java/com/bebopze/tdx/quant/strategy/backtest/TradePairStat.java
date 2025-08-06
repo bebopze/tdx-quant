@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.strategy.backtest;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
 import com.google.common.collect.Lists;
@@ -145,7 +146,7 @@ public class TradePairStat {
 
 
         // 汇总统计
-        double totalRate = totalPairs > 0 ? (totalWinCount * 100.0 / totalPairs) : 0.0;
+        double totalRate = totalPairs > 0 ? NumUtil.of(totalWinCount * 100.0 / totalPairs) : 0.0;
 
         log.debug("{}", String.format("合计\t\t%d\t%d\t%.2f%%", totalPairs, totalWinCount, totalRate));
 

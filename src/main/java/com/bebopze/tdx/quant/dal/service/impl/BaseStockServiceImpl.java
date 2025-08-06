@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -13,7 +14,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -130,6 +130,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Override
     // @Cacheable(value = "stock_listAllKline", unless = "#refresh == true")
     public List<BaseStockDO> listAllKline(boolean refresh) {
+        log.info("listAllKline     >>>     refresh : {}", refresh);
 
 
         // listAllFromDiskCache >>> totalTime :6.9 s
@@ -189,7 +190,6 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         List<BaseStockDO> list = JsonFileWriterAndReader.readStringFromFile___stock_listAllKline();
 
         if (CollectionUtils.isEmpty(list) || refresh) {
-            // list = baseMapper.listAllKline();
             list = listByCursor();
 
 
@@ -199,8 +199,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         //  listAllFromDiskCache     >>>     totalTime : 6.9s
-        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
-        return list;
+        log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
+
+
+        // 过滤ETF（TODO   DEL）
+        return list.stream().filter(e -> e.getType().equals(StockTypeEnum.A_STOCK.type)).collect(Collectors.toList());
     }
 
 
@@ -227,7 +230,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         }
 
 
-        log.info("listByCursor     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        log.info("listByCursor     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
         return list;
     }
 
@@ -264,7 +267,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         }
 
 
-        log.info("listAllPageQuery     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
+        log.info("listAllPageQuery     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
         return list;
     }
 

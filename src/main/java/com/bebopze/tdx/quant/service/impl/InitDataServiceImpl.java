@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
+import static com.bebopze.tdx.quant.common.util.DateTimeUtil.formatNow2Hms;
 
 
 /**
@@ -41,6 +42,10 @@ public class InitDataServiceImpl implements InitDataService {
 
     boolean init = false;
 
+
+    /**
+     * 全局共用   全量行情Cache（全A + 全板块）      ->       回测/主线板块/RPS计算/ExtData计算/...
+     */
     public static final BacktestCache data = new BacktestCache();
 
 
@@ -68,6 +73,7 @@ public class InitDataServiceImpl implements InitDataService {
     @Synchronized
     @Override
     public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh) {
+        long start = System.currentTimeMillis();
 
 
         if (init && !refresh) {
@@ -90,11 +96,19 @@ public class InitDataServiceImpl implements InitDataService {
         init = true;
 
 
-        // 异步  ->  write2Disk
-        // asyncWrite2Disk();
-
+        log.info("initData     >>>     totalTime : {}", formatNow2Hms(start));
 
         return data;
+    }
+
+    @Override
+    public void refreshCache() {
+
+        // refresh  ->  blockCache
+        baseBlockService.listAllKline(true);
+
+        // refresh  ->  stockCache
+        baseStockService.listAllKline(true);
     }
 
 
@@ -354,35 +368,5 @@ public class InitDataServiceImpl implements InitDataService {
         log.debug("loadAllBlockRelaStock - map     >>>     blockCode_stockCodeSet_Map.size : {}", JSON.toJSONString(data.blockCode_stockCodeSet_Map));
         log.debug("loadAllBlockRelaStock - map     >>>     stockCode_blockCodeSet_Map.size : {}", JSON.toJSONString(data.stockCode_blockCodeSet_Map));
     }
-
-
-//    /**
-//     * 异步  ->  write2Disk
-//     */
-//    public void asyncWrite2Disk() {
-//        // Executors.newCachedThreadPool().execute(() -> {
-//        long start = System.currentTimeMillis();
-//
-//
-//        JsonFileWriterAndReader.writeStringToFile___dataCache(data);
-//
-//
-//        log.info("asyncWrite2Disk - dataCache     >>>     totalTime : {}", DateTimeUtil.format2Hms(System.currentTimeMillis() - start));
-//        // });
-//    }
-//
-//    /**
-//     * read From Disk
-//     *
-//     * @return
-//     */
-//    private BacktestCache readFromDisk() {
-//
-//        BacktestCache backtestCache = JsonFileWriterAndReader.readStringFromFile___dataCache();
-//        BeanUtils.copyProperties(backtestCache, data);
-//
-//        return backtestCache;
-//    }
-
 
 }

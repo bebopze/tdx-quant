@@ -11,6 +11,7 @@ import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.InitDataService;
+import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 public class BacktestStrategy {
 
 
-    BacktestCache data = new BacktestCache();
+    BacktestCache data = InitDataServiceImpl.data;
 
     // 统计
     static Stat x = new Stat();
@@ -1306,6 +1307,12 @@ public class BacktestStrategy {
         tradeRecordList__cache = Lists.newArrayList();
 
 
+        // 全量行情
+        data = initDataService.initData(startDate, endDate, false);
+    }
+
+
+    public synchronized void initBacktestData(LocalDate startDate, LocalDate endDate) {
         // 全量行情
         data = initDataService.initData(startDate, endDate, false);
     }

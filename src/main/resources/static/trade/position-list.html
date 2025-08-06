@@ -173,6 +173,7 @@
                     </th>
                     <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon" id="sortStkbal"></span></th>
                     <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon" id="sortStkavl"></span></th>
+                    <th onclick="sortTable('industry')">行业<span class="sort-icon" id="sortIndustry"></span></th>
                     <th>操作</th>
                 </tr>
                 </thead>
@@ -310,6 +311,25 @@
               <td>${(item.posratio * 100).toFixed(2)}%</td>
               <td>${item.stkbal}</td>
               <td>${item.stkavl}</td>
+
+
+              <td>
+                ${(() => {
+                const hyBlock = item.blockInfoDTO?.hyBlockDTOList || [];
+
+                const normalIndustry = hyBlock.find(b => b.blockType === 2);
+                const researchIndustry = hyBlock.find(b => b.blockType === 12);
+
+                const normalName = normalIndustry ? normalIndustry.blockNamePath.split('-')[1] : '';
+                const researchName = researchIndustry ? researchIndustry.blockNamePath.split('-')[0] : '';
+
+                const industryStr = [normalName, researchName].filter(Boolean).join(' / ');
+                item.industry = industryStr; // 用于排序
+                return industryStr;
+            })()}
+              </td>
+
+
 
               <!--
               <td>

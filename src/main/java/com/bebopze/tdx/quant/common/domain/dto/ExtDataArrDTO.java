@@ -53,6 +53,7 @@ public class ExtDataArrDTO implements Serializable {
 
 
     public boolean[] 月多;
+    public boolean[] RPS红;
     public boolean[] RPS三线红;
 
 
@@ -88,6 +89,7 @@ public class ExtDataArrDTO implements Serializable {
         this.大均线多头 = new boolean[size];
 
         this.月多 = new boolean[size];
+        this.RPS红 = new boolean[size];
         this.RPS三线红 = new boolean[size];
     }
 

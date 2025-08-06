@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
@@ -72,6 +73,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void refreshAll() {
+        log.info("-------------------------------- TopBlock - refreshAll     >>>     start");
+
 
         // 1- N日新高
         nDayHighTask(100);
@@ -93,11 +96,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 11- 板块AMO-Top1
         blockAmoTopTask();
+
+
+        log.info("-------------------------------- TopBlock - refreshAll     >>>     end");
     }
 
 
     @Override
     public void nDayHighTask(int N) {
+        log.info("-------------------------------- nDayHighTask     >>>     start");
+
 
         initCache();
 
@@ -106,6 +114,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void changePctTopTask(int N) {
+        log.info("-------------------------------- changePctTopTask     >>>     start");
+
 
         initCache();
 
@@ -116,6 +126,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void rpsRedTask(double RPS) {
+        log.info("-------------------------------- rpsRedTask     >>>     start");
+
 
         initCache();
 
@@ -126,17 +138,21 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void stage2Task() {
+        log.info("-------------------------------- stage2Task     >>>     start");
+
 
         initCache();
 
 
-        // 二阶段
+        // TODO   二阶段
         calcStage2();
     }
 
 
     @Override
     public void longTermMABullStackTask() {
+        log.info("-------------------------------- longTermMABullStackTask     >>>     start");
+
 
         initCache();
 
@@ -149,17 +165,21 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @Override
     public void bullMAStackTask() {
+        log.info("-------------------------------- bullMAStackTask     >>>     start");
+
 
         initCache();
 
 
-        // 均线大多头
+        // TODO   均线大多头
         calcBullMAStack();
     }
 
 
     @Override
     public void blockAmoTopTask() {
+        log.info("-------------------------------- blockAmoTopTask     >>>     start");
+
 
         initCache();
 
@@ -954,22 +974,25 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     private void calcBlockAmoTop() {
+        AtomicInteger x = new AtomicInteger(0);
 
 
         // 日期-板块类型-板块lv       -       AMO_blockCode_TreeMap
-        Map<String, TreeMap<Double, String>> date__block_type_lv_____amoBlockCode_TreeMap_____map = Maps.newConcurrentMap();
+        // <groupKey: date|type|level, <AMO DESC, blockCode>>
+        Map<String, TreeMap<Double, String>> date__block_type_lv_____amo_blockCode_TreeMap_____map = Maps.newHashMap();
 
 
         data.dateList.forEach(date -> {
 
 
-            // data.blockDOList.parallelStream().forEach(blockDO -> {
-
             for (BaseBlockDO blockDO : data.blockDOList) {
+
+
+                log.warn("循环次数 x = " + x.incrementAndGet());
+
 
                 if (null == blockDO) {
                     log.debug("calcBlockAmoTop     >>>     date : {} , blockDO : {}", date, blockDO);
-                    // return;
                     continue;
                 }
 
@@ -987,19 +1010,22 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 if (Double.isNaN(amo) || amo < 1) {
                     log.debug("calcBlockAmoTop     >>>     date : {} , blockCode : {} , amo : {}", date, blockCode, amo);
-                    // return;
                     continue;
                 }
 
 
                 // key   ->   date|blockType|blockLevel
-                String key = String.format("%s|%s|%s", date, blockDO.getType(), blockDO.getLevel());
+                String key = date + "|" + blockDO.getType() + "|" + blockDO.getLevel();
 
 
-                date__block_type_lv_____amoBlockCode_TreeMap_____map.computeIfAbsent(key, k -> new TreeMap<>(Comparator.reverseOrder())).put(amo, blockCode);
+                date__block_type_lv_____amo_blockCode_TreeMap_____map
+                        .computeIfAbsent(key, k -> new TreeMap<>(Comparator.reverseOrder()))
+                        .put(amo, blockCode);
             }
-            //});
         });
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // --------------------------------------------------- 按 板块 分类
@@ -1010,45 +1036,48 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
 
-        // date sort
-        TreeMap<String, TreeMap<Double, String>> dateSortMap = new TreeMap<>(date__block_type_lv_____amoBlockCode_TreeMap_____map);
-
 
         Map<LocalDate, QaBlockNewRelaStockHisDO> date_entity_map = Maps.newConcurrentMap();
 
 
-        dateSortMap.forEach((date__block_type_lv, amoBlockTreeMap) -> {
+        date__block_type_lv_____amo_blockCode_TreeMap_____map
+                .keySet()
+                .parallelStream().forEach((date__block_type_lv) -> {
+
+                    // k -> v
+                    TreeMap<Double, String> amo_blockCode_TreeMap = date__block_type_lv_____amo_blockCode_TreeMap_____map.get(date__block_type_lv);
 
 
-            // key   ->   date|blockType|blockLevel
-            String[] keyArr = date__block_type_lv.split("\\|");
+                    // key   ->   date|blockType|blockLevel
+                    String[] keyArr = date__block_type_lv.split("\\|");
 
-            LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
-
-
-            QaBlockNewRelaStockHisDO entity = date_entity_map.computeIfAbsent(date, k -> new QaBlockNewRelaStockHisDO());
-
-            entity.setBlockNewId(blockNewId);
-            entity.setDate(date);
-            entity.setStockIdList(null);
+                    LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
 
 
-            Map.Entry<Double, String> top1 = amoBlockTreeMap.firstEntry();
-            if (top1 != null) {
+                    QaBlockNewRelaStockHisDO entity = date_entity_map.computeIfAbsent(date, k -> new QaBlockNewRelaStockHisDO());
 
-                double amo = top1.getKey();
-                String blockCode = top1.getValue();
-
-
-                BaseBlockDO top1_blockDO = data.codeBlockMap.get(blockCode);
+                    entity.setBlockNewId(blockNewId);
+                    entity.setDate(date);
+                    entity.setStockIdList(null);
 
 
-                blockAmoTop(date__block_type_lv, top1_blockDO, blockNewId, entity);
-            }
-        });
+                    Map.Entry<Double, String> top1 = amo_blockCode_TreeMap.firstEntry();
+                    if (top1 != null) {
+
+                        double amo = top1.getKey();
+                        String blockCode = top1.getValue();
 
 
-        qaBlockNewRelaStockHisService.saveBatch(date_entity_map.values());
+                        BaseBlockDO top1_blockDO = data.codeBlockMap.get(blockCode);
+
+
+                        blockAmoTop(date__block_type_lv, top1_blockDO, blockNewId, entity);
+                    }
+                });
+
+
+        // dateSort  ->  save
+        qaBlockNewRelaStockHisService.saveBatch(new TreeMap<>(date_entity_map).values());
     }
 
 
@@ -1068,8 +1097,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         String[] keyArr = date__block_type_lv.split("\\|");
 
         LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
-        Integer blockType = Integer.valueOf(keyArr[1]);
-        Integer blockLevel = Integer.valueOf(keyArr[2]);
+        // Integer blockType = Integer.valueOf(keyArr[1]);
+        // Integer blockLevel = Integer.valueOf(keyArr[2]);
 
 
         // -------------------------------------------
@@ -1094,7 +1123,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         //
         else if (type == 4) {
-            // gn = convert2DTO(top1_blockDO);
             entity.setGnResult(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
         }
 
@@ -1108,36 +1136,6 @@ public class TopBlockServiceImpl implements TopBlockService {
                 entity.setYjhyLv3Result(JSON.toJSONString(Lists.newArrayList(convert2DTO(top1_blockDO))));
             }
         }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // TOP result  ->  DB
-
-
-        // QaBlockNewRelaStockHisDO entity = new QaBlockNewRelaStockHisDO();
-
-//        // 1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；
-//        entity.setBlockNewId(blockNewId);
-//        entity.setDate(date);
-//        entity.setStockIdList(null);
-//
-
-//        entity.setGnResult(JSON.toJSONString(Lists.newArrayList(gn)));
-//
-//        entity.setPthyLv1Result(JSON.toJSONString(Lists.newArrayList(pthy_lv1)));
-//        entity.setPthyLv2Result(JSON.toJSONString(Lists.newArrayList(pthy_lv2)));
-//        entity.setPthyLv3Result(JSON.toJSONString(Lists.newArrayList(pthy_lv3)));
-//
-//        entity.setYjhyLv1Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv1)));
-//        entity.setYjhyLv2Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv2)));
-//        entity.setYjhyLv3Result(JSON.toJSONString(Lists.newArrayList(yjhy_lv3)));
-//
-//        entity.setResult(JSON.toJSONString(Lists.newArrayList(pthy_lv2, gn)));
-
-
-//        qaBlockNewRelaStockHisService.save(entity);
 
 
         log.debug("blockAmoTop     >>>     date : {} , blockCode : {}", date, top1_blockDO.getCode());

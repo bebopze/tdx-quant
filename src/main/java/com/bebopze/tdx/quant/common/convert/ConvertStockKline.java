@@ -6,8 +6,10 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
  * @author: bebopze
  * @date: 2025/5/15
  */
+@Slf4j
 public class ConvertStockKline {
 
 
@@ -52,6 +55,7 @@ public class ConvertStockKline {
     }
 
 
+    @SneakyThrows
     public static KlineDTO kline2DTO(String kline) {
 
 
@@ -62,22 +66,50 @@ public class ConvertStockKline {
 
 
         KlineDTO dto = new KlineDTO();
-
-        dto.setDate(ofDate(klineArr[0]));
-
-        dto.setOpen(of(klineArr[1]));
-        dto.setHigh(of(klineArr[2]));
-        dto.setLow(of(klineArr[3]));
-        dto.setClose(of(klineArr[4]));
+        Field[] fields = dto.getClass().getDeclaredFields();
 
 
-        dto.setVol(Long.valueOf(klineArr[5]));
-        dto.setAmo(of(klineArr[6]));
+        for (int i = 0; i < klineArr.length; i++) {
+            String valStr = klineArr[i];
 
-        dto.setRange_pct(of(klineArr[7]));
-        dto.setChange_pct(of(klineArr[8]));
-        dto.setChange_price(of(klineArr[9]));
-        dto.setTurnover_pct(of(klineArr[10]));
+
+            Field field = fields[i];
+            field.setAccessible(true);
+
+
+            Object typeVal = TypeConverter.convert(valStr, field.getType());
+            field.set(dto, typeVal);
+        }
+
+
+//        // ---------------------------------------- check
+//
+//
+//        KlineDTO dto2 = new KlineDTO();
+//
+//        dto2.setDate(ofDate(klineArr[0]));
+//
+//        dto2.setOpen(of(klineArr[1]));
+//        dto2.setHigh(of(klineArr[2]));
+//        dto2.setLow(of(klineArr[3]));
+//        dto2.setClose(of(klineArr[4]));
+//
+//
+//        dto2.setVol(Long.valueOf(klineArr[5]));
+//        dto2.setAmo(of(klineArr[6]));
+//
+//        dto2.setRange_pct(of(klineArr[7]));
+//        dto2.setChange_pct(of(klineArr[8]));
+//        dto2.setChange_price(of(klineArr[9]));
+//        dto2.setTurnover_pct(of(klineArr[10]));
+//
+//
+//        Assert.isTrue(Objects.equals(JSON.toJSONString(dto), JSON.toJSONString(dto2)),
+//                      String.format("dot : %s , dot2 : %s ", JSON.toJSONString(dto), JSON.toJSONString(dto2)));
+//
+//
+//        // ----------------------------------------
+
 
         return dto;
     }
@@ -105,7 +137,7 @@ public class ConvertStockKline {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                              kline -> DTO
+    //                                         kline（String） -> DTO
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -147,7 +179,7 @@ public class ConvertStockKline {
 
     public static List<KlineDTO> klines2DTOList(List<String> klines) {
         if (CollectionUtils.isEmpty(klines)) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return klines.stream().map(ConvertStockKline::kline2DTO).collect(Collectors.toList());
     }
@@ -301,7 +333,7 @@ public class ConvertStockKline {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                              DTO -> kline
+    //                                         DTO -> kline（String）
     // -----------------------------------------------------------------------------------------------------------------
 
 

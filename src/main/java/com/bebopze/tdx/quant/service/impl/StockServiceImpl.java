@@ -125,8 +125,8 @@ public class StockServiceImpl implements StockService {
         // ------------------------------------------------------------------- 自定义板块
 
 
-        List<BaseBlockNewDO> baseBlockNewDOList = baseBlockNewRelaStockService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
-        dto.setBlockNewDOList(baseBlockNewDOList);
+        // List<BaseBlockNewDO> baseBlockNewDOList = baseBlockNewRelaStockService.listByStockCode(stockCode, BlockNewTypeEnum.STOCK.getType());
+        // dto.setBlockNewDOList(baseBlockNewDOList);
 
 
         return dto;

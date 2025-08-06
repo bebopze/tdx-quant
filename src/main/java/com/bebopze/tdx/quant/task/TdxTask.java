@@ -1,11 +1,9 @@
 package com.bebopze.tdx.quant.task;
 
-import com.bebopze.tdx.quant.service.ExtDataService;
-import com.bebopze.tdx.quant.service.MarketService;
-import com.bebopze.tdx.quant.service.TdxDataParserService;
-import com.bebopze.tdx.quant.service.TopBlockService;
+import com.bebopze.tdx.quant.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,11 +20,15 @@ import org.springframework.stereotype.Component;
 public class TdxTask {
 
 
+    @Lazy
     @Autowired
     private TdxDataParserService tdxDataParserService;
 
     @Autowired
     private ExtDataService extDataService;
+
+    @Autowired
+    InitDataService initDataService;
 
 
     @Autowired
@@ -34,6 +36,10 @@ public class TdxTask {
 
     @Autowired
     private TopBlockService topBlockService;
+
+
+    @Autowired
+    private TradeService tradeService;
 
 
     /**
@@ -90,16 +96,21 @@ public class TdxTask {
      * 行情数据   盘后-全量更新   ->   DB
      */
     @Async
-    @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshKlineAll() {
         log.info("---------------------------- 任务 [refreshKlineAll - 盘后-全量更新 入库]   执行 start");
 
 
         // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll(1);
+        // refresh Cache
+        initDataService.refreshCache();
+
 
         // 扩展（指标）  ->  ext_data_his
         extDataService.refreshExtDataAll(null);
+        // refresh Cache
+        initDataService.refreshCache();
 
 
         // 主线板块
@@ -117,8 +128,8 @@ public class TdxTask {
      * 行情数据   盘中-增量更新   ->   DB
      */
     @Async
-    @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
-    @Scheduled(cron = "0 15/15 13-14 * * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 0/15 13-14 * * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshKlineAll__lataDay() {
         log.info("---------------------------- 任务 [refreshKlineAll - 盘中-增量更新 入库]   执行 start");
 
@@ -128,13 +139,24 @@ public class TdxTask {
 
         // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll(2);
+        // refresh Cache
+        initDataService.refreshCache();
+
 
         // 扩展（指标）  ->  ext_data_his
         extDataService.refreshExtDataAll(10);
+        // refresh Cache
+        initDataService.refreshCache();
 
 
-        // 主线板块
-        // topBlockService.refreshAll();
+        // TODO 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
+        // INDEX_BLOCK-880515   当日有数据（AMO>500亿）
+        if (false) {
+            topBlockService.refreshAll();
+        } else {
+            log.warn("topBlock - refreshAll     >>>     当日[板块数据] - 未更新！");
+        }
+
 
         // 大盘量化
         marketService.importMarketMidCycle();
@@ -148,13 +170,26 @@ public class TdxTask {
      * 初始化数据 更新 -> DB
      */
     @Async
-    @Scheduled(cron = "0 00 17 ? * 7", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 00 17 ? * 7", zone = "Asia/Shanghai")
     public void execTask__importAll() {
 
 
         log.info("---------------------------- 任务 [importAll - 初始化数据 更新入库]   执行 start");
         tdxDataParserService.importAll();
         log.info("---------------------------- 任务 [importAll - 初始化数据 更新入库]   执行 end");
+
+
+    }
+
+
+    @Async
+    // @Scheduled(cron = "0 0/10 * ? * *", zone = "Asia/Shanghai")
+    public void queryCreditNewPosV2() {
+
+
+        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
+        tradeService.queryCreditNewPosV2(false);
+        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
 
 
     }

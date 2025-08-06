@@ -359,7 +359,8 @@ public class LdayParser {
             try {
                 tradeDate = LocalDate.of(year, month, day);
             } catch (Exception ex) {
-                log.error("code : {} , date : {}", code, date);
+                log.error("parseByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
+                          code, date, year, month, day);
                 continue;
             }
 
@@ -463,8 +464,8 @@ public class LdayParser {
                 JSONObject json2 = JSON.parseObject(dto2_str);
 
                 JSONObject diffFields = getDiffFields(json1, json2);
-                log.error("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
-                          stockCode, i, dto1.tradeDate, diffFields.toJSONString());
+                log.warn("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                         stockCode, i, dto1.tradeDate, diffFields.toJSONString());
 
                 if (diffFields.containsKey("vol")) {
                     log.error("");
