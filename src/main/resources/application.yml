@@ -12,8 +12,6 @@ spring.web.resources.add-mappings: false
 
 
 
-
-
 # MyBatis-Plus 配置
 mybatis-plus:
   # Mapper XML 文件位置
@@ -24,7 +22,11 @@ mybatis-plus:
     # 下划线转驼峰
     map-underscore-to-camel-case: true
     # SQL日志
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 通过 Log4j2 输出日志
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+    # 绕过日志框架，直接打印到 控制台（System.out），无法控制（即使你设 logging.level=ERROR，它依然打印）
+    # 快速调试（临时用）
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
   # 全局配置
   global-config:
@@ -40,8 +42,6 @@ mybatis-plus:
 
 
 
-logging.level.org.apache.ibatis: DEBUG
-
 # log4j2
 logging.config: "classpath:log4j2.xml"
 
@@ -50,8 +50,6 @@ logging.config: "classpath:log4j2.xml"
 # springdoc
 springdoc.api-docs.path: "/v3/api-docs"
 springdoc.swagger-ui.path: "/swagger-ui.html"
-
-
 
 
 

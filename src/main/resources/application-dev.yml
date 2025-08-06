@@ -52,9 +52,3 @@ spring:
         url-pattern: /*
         exclusions: "*.js,*.css,/druid/*"
 
-
-
-logging:
-  level:
-    root: INFO
-
