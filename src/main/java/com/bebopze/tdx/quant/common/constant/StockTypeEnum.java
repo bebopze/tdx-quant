@@ -19,7 +19,7 @@ public enum StockTypeEnum {
 
     A_STOCK(1, "A股", Lists.newArrayList()),
 
-    ETF(2, "ETF", Lists.newArrayList("15", "51", "58")),
+    ETF(2, "ETF", Lists.newArrayList("15", "51","56", "58")),
 
 
     TDX_BLOCK(3, "板块", Lists.newArrayList("88")),

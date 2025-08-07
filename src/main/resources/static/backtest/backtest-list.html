@@ -5,75 +5,91 @@
     <title>回测任务列表</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 设置表格容器支持横向滚动 */
         .table-container {
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* 移动端滑动更流畅 */
+            overflow-y: auto;
+            max-height: 85vh;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* 固定每列的最小宽度 */
+        .table {
+            font-size: 13px;
+        }
+
         .table-bordered th,
         .table-bordered td {
-            min-width: 120px; /* 根据实际列数调整 */
-            white-space: nowrap; /* 防止内容换行 */
-            text-align: center; /* 居中对齐，视觉更整洁 */
+            min-width: 80px;
+            white-space: nowrap;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-bordered th {
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sort-icon {
+            margin-left: 4px;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
-<div class="container mt-4">
-    <h2>回测任务列表</h2>
+<div class="container-fluid mt-4">
+    <h4>回测任务列表</h4>
 
-    <!-- 筛选表单 -->
     <form id="filterForm">
         <div class="row mb-3">
             <div class="col-md-3 form-group">
-                <input type="text" class="form-control" id="taskId" placeholder="任务ID">
+                <input type="text" class="form-control form-control-sm" id="taskId" placeholder="任务ID">
             </div>
             <div class="col-md-3 form-group">
-                <input type="date" class="form-control" id="startDate">
+                <input type="date" class="form-control form-control-sm" id="startDate">
             </div>
             <div class="col-md-3 form-group">
-                <input type="date" class="form-control" id="endDate">
+                <input type="date" class="form-control form-control-sm" id="endDate">
             </div>
             <div class="col-md-3 form-group">
-                <button type="button" class="btn btn-primary" onclick="loadTasks()">查询</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="loadTasks()">查询</button>
             </div>
         </div>
     </form>
 
-    <!-- 表格容器（支持横向滚动） -->
     <div class="table-container">
         <table class="table table-bordered">
             <thead>
-            <tr>
-                <th>任务ID</th>
-                <th>策略</th>
-                <th>回测周期</th>
-                <th>初始资金</th>
-                <th>结束资金</th>
-                <th>初始净值</th>
-                <th>结束净值</th>
-                <th>总天数</th>
-                <th>总收益率（%）</th>
-                <th>年化收益率（%）</th>
-                <th>胜率（%）</th>
-                <th>盈亏比</th>
-                <th>最大回撤（%）</th>
-                <th>盈利天数-占比（%）</th>
-                <th>夏普比率</th>
-                <th>创建时间</th>
+            <tr id="tableHeader">
+                <th data-key="id">任务ID <span class="sort-icon"></span></th>
+                <th data-key="buyStrategy">策略 <span class="sort-icon"></span></th>
+                <th data-key="startDate">回测周期 <span class="sort-icon"></span></th>
+                <th data-key="initialCapital">初始资金 <span class="sort-icon"></span></th>
+                <th data-key="finalCapital">结束资金 <span class="sort-icon"></span></th>
+                <th data-key="initialNav">初始净值 <span class="sort-icon"></span></th>
+                <th data-key="finalNav">结束净值 <span class="sort-icon"></span></th>
+                <th data-key="totalDay">总天数 <span class="sort-icon"></span></th>
+                <th data-key="totalReturnPct">总收益率% <span class="sort-icon"></span></th>
+                <th data-key="annualReturnPct">年化收益率% <span class="sort-icon"></span></th>
+                <th data-key="winPct">胜率% <span class="sort-icon"></span></th>
+                <th data-key="profitFactor">盈亏比 <span class="sort-icon"></span></th>
+                <th data-key="maxDrawdownPct">最大回撤% <span class="sort-icon"></span></th>
+                <th data-key="profitDayPct">盈利天数% <span class="sort-icon"></span></th>
+                <th data-key="sharpeRatio">夏普比率 <span class="sort-icon"></span></th>
+                <th data-key="gmtCreate">创建时间 <span class="sort-icon"></span></th>
                 <th>操作</th>
             </tr>
             </thead>
             <tbody id="taskTableBody">
-            <!-- 动态加载 -->
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
+    let originalData = [];
+    let currentSort = { key: null, direction: null };
+
     function loadTasks() {
         const taskId = document.getElementById('taskId').value;
         const startDate = document.getElementById('startDate').value;
@@ -86,13 +102,17 @@
                     alert('加载失败: ' + data.msg);
                     return;
                 }
+                originalData = data.data;
+                renderTable(originalData);
+            });
+    }
 
-                const tbody = document.getElementById('taskTableBody');
-                tbody.innerHTML = '';
-
-                data.data.forEach(task => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+    function renderTable(data) {
+        const tbody = document.getElementById('taskTableBody');
+        tbody.innerHTML = '';
+        data.forEach(task => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
               <td><a href="backtest-analysis.html?taskId=${task.id}">${task.id}</a></td>
               <td>${task.buyStrategy} / ${task.sellStrategy}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
@@ -109,15 +129,57 @@
               <td>${task.profitDayPct}</td>
               <td>${task.sharpeRatio}</td>
               <td>${task.gmtCreate}</td>
-              <td><a href="backtest-analysis.html?taskId=${task.id}">查看详情</a></td>
+              <td><a href="backtest-analysis.html?taskId=${task.id}">查看</a></td>
             `;
-                    tbody.appendChild(tr);
-                });
-            });
+            tbody.appendChild(tr);
+        });
     }
 
-    // 页面加载时默认查询
-    window.onload = loadTasks;
+    function sortDataByKey(key) {
+        if (currentSort.key === key) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.key = key;
+            currentSort.direction = 'asc';
+        }
+
+        const sorted = [...originalData].sort((a, b) => {
+            const valA = a[key] || '';
+            const valB = b[key] || '';
+            if (!isNaN(valA) && !isNaN(valB)) {
+                return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+            }
+            return currentSort.direction === 'asc'
+                ? String(valA).localeCompare(valB)
+                : String(valB).localeCompare(valA);
+        });
+
+        updateSortIcons();
+        renderTable(sorted);
+    }
+
+    function updateSortIcons() {
+        document.querySelectorAll('#tableHeader th').forEach(th => {
+            const key = th.dataset.key;
+            const icon = th.querySelector('.sort-icon');
+            if (!icon) return;
+            if (currentSort.key === key) {
+                icon.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
+                icon.style.color = 'black';
+            } else {
+                icon.textContent = '';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('#tableHeader th[data-key]').forEach(th => {
+            th.addEventListener('click', () => {
+                sortDataByKey(th.dataset.key);
+            });
+        });
+        loadTasks();
+    });
 </script>
 </body>
 </html>

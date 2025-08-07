@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
@@ -54,19 +55,19 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Autowired
-    private IBaseStockService iBaseStockService;
+    private IBaseStockService baseStockService;
 
     @Autowired
-    private IBaseBlockService iBaseBlockService;
+    private IBaseBlockService baseBlockService;
 
     @Autowired
-    private IBaseBlockRelaStockService iBaseBlockRelaStockService;
+    private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
-    private IBaseBlockNewService iBaseBlockNewService;
+    private IBaseBlockNewService baseBlockNewService;
 
     @Autowired
-    private IBaseBlockNewRelaStockService iBaseBlockNewRelaStockService;
+    private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
     @Autowired
@@ -360,7 +361,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                  Map<String, Long> stock__codeIdMap) {
 
 
-        Map<String, Long> stock__codeIdMap_DB = iBaseStockService.codeIdMap();
+        Map<String, Long> stock__codeIdMap_DB = baseStockService.codeIdMap();
 
 
         if (MapUtils.isEmpty(stock__codeIdMap_DB)) {
@@ -406,9 +407,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Long stockId = stock__codeIdMap_DB.get(stockCode);
         if (stockId != null) {
             baseStockDO.setId(stockId);
-            iBaseStockService.updateById(baseStockDO);
+            baseStockService.updateById(baseStockDO);
         } else {
-            iBaseStockService.save(baseStockDO);
+            baseStockService.save(baseStockDO);
             stockId = baseStockDO.getId();
         }
 
@@ -467,12 +468,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             baseBlockDO.setParentId(null);
 
 
-            Long blockId = iBaseBlockService.getIdByCode(blockCode);
+            Long blockId = baseBlockService.getIdByCode(blockCode);
             if (blockId != null) {
                 baseBlockDO.setId(blockId);
-                iBaseBlockService.updateById(baseBlockDO);
+                baseBlockService.updateById(baseBlockDO);
             } else {
-                iBaseBlockService.save(baseBlockDO);
+                baseBlockService.save(baseBlockDO);
                 blockId = baseBlockDO.getId();
             }
 
@@ -533,7 +534,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // ------------------------------------------------------------------------
 
 
-            iBaseBlockService.updateById(baseBlockDO);
+            baseBlockService.updateById(baseBlockDO);
         });
     }
 
@@ -579,9 +580,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // del All
-            iBaseBlockRelaStockService.deleteByStockId(stockId);
+            baseBlockRelaStockService.deleteByStockId(stockId);
             // batch insert
-            iBaseBlockRelaStockService.saveBatch(doList, 500);
+            baseBlockRelaStockService.saveBatch(doList, 500);
         });
 
     }
@@ -617,11 +618,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // DB读取     ->     板块code - 板块ID
-        Map<String, Long> block__codeIdMap = iBaseBlockService.codeIdMap();
+        Map<String, Long> block__codeIdMap = baseBlockService.codeIdMap();
 
 
         // DB读取     ->     code_id_map   code_name_map
-        List<BaseStockDO> allBaseStockDOList = iBaseStockService.listAllSimple();
+        List<BaseStockDO> allBaseStockDOList = baseStockService.listAllSimple();
 
         Map<String, Long> stock__codeIdMap = allBaseStockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, BaseStockDO::getId));
         Map<String, String> stock__codeNameMap = allBaseStockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, stock -> stock.getName() != null ? stock.getName() : ""));
@@ -699,7 +700,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 blockEntity.setCode(blockCode);
                 blockEntity.setName(blockName);
 
-                iBaseBlockService.save(blockEntity);
+                baseBlockService.save(blockEntity);
 
 
                 blockId = blockEntity.getId();
@@ -743,7 +744,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                     baseStockDO.setId(stockId);
                     baseStockDO.setName(stockName);
 
-                    iBaseStockService.updateById(baseStockDO);
+                    baseStockService.updateById(baseStockDO);
 
 
                     // 实在 找不到 stockName     =>     上市失败的   ->   688688 - [蚂蚁集团]
@@ -779,7 +780,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // sort
         baseStockDOList.sort(Comparator.comparing(BaseStockDO::getCode));
         // batch insert
-        iBaseStockService.saveBatch(baseStockDOList, 500);
+        baseStockService.saveBatch(baseStockDOList, 500);
 
         baseStockDOList.forEach(e -> {
             stock__codeIdMap.put(e.getCode(), e.getId());
@@ -818,9 +819,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // del All
-            iBaseBlockRelaStockService.deleteByBlockId(blockId);
+            baseBlockRelaStockService.deleteByBlockId(blockId);
             // batch insert
-            iBaseBlockRelaStockService.saveBatch(relaEntityList, 500);
+            baseBlockRelaStockService.saveBatch(relaEntityList, 500);
         });
     }
 
@@ -839,7 +840,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 自定义板块   code-ID   （DB库）
-        Map<String, Long> blockNew__codeIdMap = iBaseBlockNewService.codeIdMap();
+        Map<String, Long> blockNew__codeIdMap = baseBlockNewService.codeIdMap();
 
 
         // 自定义板块 - 个股（板块/指数）列表
@@ -866,9 +867,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 个股   code-Id
-        Map<String, Long> sotock__codeIdMap = iBaseStockService.codeIdMap(allStockCodeSet);
+        Map<String, Long> sotock__codeIdMap = baseStockService.codeIdMap(allStockCodeSet);
         // 板块   code-Id
-        Map<String, Long> block__codeIdMap = iBaseBlockService.codeIdMap(allStockCodeSet);
+        Map<String, Long> block__codeIdMap = baseBlockService.codeIdMap(allStockCodeSet);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -913,7 +914,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 baseBlockNewDO.setCode(blockNewCode);
                 baseBlockNewDO.setName(blockNewName);
 
-                iBaseBlockNewService.save(baseBlockNewDO);
+                baseBlockNewService.save(baseBlockNewDO);
 
 
                 blockNewId = baseBlockNewDO.getId();
@@ -990,8 +991,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             });
 
 
-            iBaseBlockNewRelaStockService.delByBlockNewId(blockNewId);
-            iBaseBlockNewRelaStockService.saveBatch(relaDOList);
+            baseBlockNewRelaStockService.delByBlockNewId(blockNewId);
+            baseBlockNewRelaStockService.saveBatch(relaDOList);
         });
     }
 
@@ -1022,18 +1023,18 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // ETF
             BaseStockDO baseStockDO = new BaseStockDO();
             baseStockDO.setCode(stockCode);
-            baseStockDO.setName(null);
+            baseStockDO.setName(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getName());
             baseStockDO.setType(StockTypeEnum.ETF.type);
             baseStockDO.setTdxMarketType(tdxMarketType);
 
 
-            Long stockId = iBaseStockService.getIdByCode(stockCode);
+            Long stockId = baseStockService.getIdByCode(stockCode);
             // Long stockId = stock__codeIdMap_DB.get(stockCode);
             if (stockId != null) {
                 baseStockDO.setId(stockId);
-                iBaseStockService.updateById(baseStockDO);
+                baseStockService.updateById(baseStockDO);
             } else {
-                iBaseStockService.save(baseStockDO);
+                baseStockService.save(baseStockDO);
                 stockId = baseStockDO.getId();
             }
 
@@ -1145,12 +1146,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         if (blockId != null) {
             baseBlockDO.setId(blockId);
-            iBaseBlockService.updateById(baseBlockDO);
+            baseBlockService.updateById(baseBlockDO);
         } else {
-            blockId = iBaseBlockService.getIdByCode(blockCode);
+            blockId = baseBlockService.getIdByCode(blockCode);
             baseBlockDO.setId(blockId);
 
-            iBaseBlockService.saveOrUpdate(baseBlockDO);
+            baseBlockService.saveOrUpdate(baseBlockDO);
         }
 
 
@@ -1164,7 +1165,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         AtomicInteger count = new AtomicInteger(0);
 
 
-        Map<String, Long> codeIdMap = iBaseBlockService.codeIdMap();
+        Map<String, Long> codeIdMap = baseBlockService.codeIdMap();
 
 
         codeIdMap.keySet().parallelStream().forEach((blockCode) -> {
@@ -1203,7 +1204,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public void fillStockKlineAll(int updateType) {
 
 
-        Map<String, Long> codeIdMap = iBaseStockService.codeIdMap();
+        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
 
 
         // 1-全量更新
@@ -1322,7 +1323,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             // --------------------- DB
 
-            iBaseStockService.updateById(entity);
+            baseStockService.updateById(entity);
         });
     }
 
@@ -1374,7 +1375,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- ID
 
 
-        stockId = stockId == null ? iBaseStockService.getIdByCode(stockCode) : stockId;
+        stockId = stockId == null ? baseStockService.getIdByCode(stockCode) : stockId;
         Assert.notNull(stockId, "个股信息不存在：" + stockCode);
 
 
@@ -1440,7 +1441,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- DB
 
 
-        iBaseStockService.updateById(entity);
+        baseStockService.updateById(entity);
     }
 
 
@@ -1486,7 +1487,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 2-增量更新     =>     1、获取 old__klineHis
 
-        BaseStockDO stockDO = iBaseStockService.getById(stockId);
+        BaseStockDO stockDO = baseStockService.getById(stockId);
         List<KlineDTO> old_klineDTOList = stockDO.getKlineDTOList();
 
 
@@ -1574,7 +1575,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Override
     public Map<String, List<String>> marketRelaStockCodePrefixList(int N) {
-        Map<String, List<String>> market_stockCodeList_map = iBaseStockService.market_stockCodePrefixList_map(N);
+        Map<String, List<String>> market_stockCodeList_map = baseStockService.market_stockCodePrefixList_map(N);
         return market_stockCodeList_map;
     }
 

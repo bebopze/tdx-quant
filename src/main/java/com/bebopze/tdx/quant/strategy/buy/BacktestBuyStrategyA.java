@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -14,17 +15,16 @@ import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.cache.BacktestCache.getByDate;
 import static com.bebopze.tdx.quant.common.tdxfun.Tools.*;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
@@ -69,12 +69,12 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         //                                                1、大盘 -> 仓位
         // -------------------------------------------------------------------------------------------------------------
 
-        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
-        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+        // QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
+        // Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
 
 
         // 总仓位-上限
-        BigDecimal positionPct = qaMarketMidCycleDO.getPositionPct();
+        // BigDecimal positionPct = qaMarketMidCycleDO.getPositionPct();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -126,9 +126,9 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             double[] rps250_arr = extDataArrDTO.rps250;
 
 
-            double rps50 = getByDate(rps50_arr, dateIndexMap, tradeDate);
-            double rps120 = getByDate(rps120_arr, dateIndexMap, tradeDate);
-            double rps250 = getByDate(rps250_arr, dateIndexMap, tradeDate);
+            double rps50 = rps50_arr[idx];
+            double rps120 = rps120_arr[idx];
+            double rps250 = rps250_arr[idx];
 
 
             // RPS
@@ -140,23 +140,23 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             // --------------------------------------------------------------------------------------
 
 
-            // double 中期涨幅 = getByDate(extDataArrDTO.中期涨幅, dateIndexMap, tradeDate);
+            // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
 
 
-            boolean SSF多 = getByDate(extDataArrDTO.SSF多, dateIndexMap, tradeDate);
-            boolean MA20多 = getByDate(extDataArrDTO.MA20多, dateIndexMap, tradeDate);
+            boolean SSF多 = extDataArrDTO.SSF多[idx];
+            boolean MA20多 = extDataArrDTO.MA20多[idx];
 
 
-            boolean 月多 = getByDate(extDataArrDTO.月多, dateIndexMap, tradeDate);
-            // boolean RPS三线红 = getByDate(extDataArrDTO.RPS三线红, dateIndexMap, tradeDate);
+            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean RPS红 = extDataArrDTO.RPS红[idx];
 
 
-            boolean _60日新高 = getByDate(extDataArrDTO.N日新高, dateIndexMap, tradeDate);
-            boolean 均线预萌出 = getByDate(extDataArrDTO.均线预萌出, dateIndexMap, tradeDate);
-            boolean 大均线多头 = getByDate(extDataArrDTO.大均线多头, dateIndexMap, tradeDate);
+            boolean _60日新高 = extDataArrDTO.N日新高[idx];
+            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+            boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
 
 
-            boolean 高位爆量上影大阴 = getByDate(extDataArrDTO.高位爆量上影大阴, dateIndexMap, tradeDate);
+            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
             // -------------------------------------------
@@ -181,6 +181,16 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
             // RPS一线红95/RPS双线红90/RPS三线红85
             boolean con_1 = RPS一线红 || RPS双线红 || RPS三线红;
+
+
+            // TODO DEL     check
+            if (con_1 != RPS红) {
+                String debugMsg = String.format("con_1 != RPS红     >>>     RPS一线红 : {} , RPS双线红 : {} , RPS三线红 : {} , RPS红 : {}", RPS一线红, RPS双线红, RPS三线红, RPS红);
+                log.debug(debugMsg);
+            }
+//            Assert.isTrue(con_1 == RPS红,
+//                          String.format("con_1 != RPS红     >>>     RPS一线红 : {} , RPS双线红 : {} , RPS三线红 : {} , RPS红 : {}",
+//                                        RPS一线红, RPS双线红, RPS三线红, RPS红));
 
 
             // 低位（中期涨幅<50）
@@ -285,12 +295,78 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
+
+        buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // TODO     按照 规则打分 -> sort
         List<String> filterSort__stockCodeList = scoreSort(filter__stockCodeList2, data, tradeDate, 20);
         // List<String> filterSort__stockCodeList = filter__stockCodeList2.stream().limit(20).collect(Collectors.toList());
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
         return filterSort__stockCodeList;
+    }
+
+
+    /**
+     * 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
+     *
+     * @param filter__stockCodeList2
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     */
+    private void buyStrategy_ETF(List<String> filter__stockCodeList2,
+                                 BacktestCache data,
+                                 LocalDate tradeDate,
+                                 Map<String, String> buy_infoMap) {
+
+        if (!CollectionUtils.isEmpty(filter__stockCodeList2)) {
+            return;
+        }
+
+
+        // 大盘量化
+        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
+        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+
+
+        // 大盘-牛熊：1-牛市；2-熊市；
+        Integer marketBullBearStatus = qaMarketMidCycleDO.getMarketBullBearStatus();
+        // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
+        Integer marketMidStatus = qaMarketMidCycleDO.getMarketMidStatus();
+
+
+        // 大盘底
+        if (marketMidStatus == 1) {
+
+
+            // ETF
+            data.ETF_stockDOList.forEach(e -> {
+
+                // ETF   ->   最小交易日（上市日期）
+                List<KlineDTO> klineDTOList = e.getKlineDTOList();
+                LocalDate date = klineDTOList.get(0).getDate();
+
+                // 当前日期   ->   已上市
+                if (date.isBefore(tradeDate)) {
+                    String stockCode = e.getCode();
+
+                    filter__stockCodeList2.add(stockCode);
+                    buy_infoMap.put(stockCode, "大盘极限底->ETF策略");
+                }
+            });
+
+
+            System.out.println(filter__stockCodeList2);
+        }
     }
 
 
@@ -369,11 +445,11 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             boolean[] N日新高_arr = extDataArrDTO.N日新高;
 
 
-            double rps10 = getByDate(rps10_arr, dateIndexMap, tradeDate);
-            double rps20 = getByDate(rps20_arr, dateIndexMap, tradeDate);
-            double rps50 = getByDate(rps50_arr, dateIndexMap, tradeDate);
-            double rps120 = getByDate(rps120_arr, dateIndexMap, tradeDate);
-            double rps250 = getByDate(rps250_arr, dateIndexMap, tradeDate);
+            double rps10 = rps10_arr[idx];
+            double rps20 = rps20_arr[idx];
+            double rps50 = rps50_arr[idx];
+            double rps120 = rps120_arr[idx];
+            double rps250 = rps250_arr[idx];
 
 
             // RPS和
@@ -384,20 +460,20 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
             // AMO
-            double amount = getByDate(amoArr, dateIndexMap, tradeDate);
+            double amount = amoArr[idx];
 
 
             // 中期涨幅
-            double 中期涨幅 = getByDate(中期涨幅_arr, dateIndexMap, tradeDate);
+            double 中期涨幅 = 中期涨幅_arr[idx];
 
             // 新高天数
-            // int 新高天数 = getByDate(新高天数_arr, dateIndexMap, tradeDate);
+            // int 新高天数 = 新高天数_arr[idx];
 
 
             // 大均线多头
-            int 大均线多头 = bool2Int(getByDate(大均线多头_arr, dateIndexMap, tradeDate));
+            int 大均线多头 = bool2Int(大均线多头_arr[idx]);
             // 60日新高
-            int N日新高 = bool2Int(getByDate(N日新高_arr, dateIndexMap, tradeDate));
+            int N日新高 = bool2Int(N日新高_arr[idx]);
 
 
             // -------------------------------------------------------------------------------------------

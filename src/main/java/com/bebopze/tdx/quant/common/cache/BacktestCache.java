@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.Data;
 import org.springframework.util.Assert;
 
@@ -34,6 +35,7 @@ public class BacktestCache {
      * 个股
      */
     public List<BaseStockDO> stockDOList;
+    public List<BaseStockDO> ETF_stockDOList;
     public Map<String, BaseStockDO> codeStockMap = Maps.newHashMap();
     public Map<Long, String> stock__idCodeMap = Maps.newHashMap();
     public Map<String, Long> stock__codeIdMap = Maps.newHashMap();
@@ -91,6 +93,7 @@ public class BacktestCache {
                 "dateIndexMap=" + dateIndexMap.size() +
                 ", dateList=" + dateList.size() +
                 ", stockDOList=" + (stockDOList == null ? 0 : stockDOList.size()) +
+                ", ETF_stockDOList=" + (ETF_stockDOList == null ? 0 : ETF_stockDOList.size()) +
                 ", codeStockMap=" + codeStockMap.size() +
                 ", stock__idCodeMap=" + stock__idCodeMap.size() +
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +
@@ -162,7 +165,7 @@ public class BacktestCache {
 
     public BaseBlockDO getBlock(String stockCode, int type, int pLevel) {
 
-        Set<String> blockCodeSet = stockCode_blockCodeSet_Map.get(stockCode);
+        Set<String> blockCodeSet = stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
 
         return blockCodeSet.stream().map(blockCode -> {
                                BaseBlockDO pBlock = getPBlock(blockCode, pLevel);

@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
@@ -136,6 +137,15 @@ public class InitDataServiceImpl implements InitDataService {
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
                 // TODO   基金北向
                 && e.getAmount().doubleValue() > 1 * 1_0000_0000).collect(Collectors.toList());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // ETF
+        data.ETF_stockDOList = data.stockDOList.stream()
+                                               .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
+                                               .collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------

@@ -3,9 +3,14 @@ package com.bebopze.tdx.quant.strategy.sell;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
+import com.bebopze.tdx.quant.service.MarketService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -21,6 +26,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class BacktestSellStrategy implements SellStrategy {
+
+
+    @Autowired
+    private MarketService marketService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -118,7 +127,100 @@ public class BacktestSellStrategy implements SellStrategy {
         }).collect(Collectors.toList());
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 大盘底/大盘底部     ->     ETF策略（持有  ->  暂无视一切 B/S策略）
+        sellStrategy_ETF(sell__stockCodeList, data, tradeDate, sell_infoMap);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         return sell__stockCodeList;
+    }
+
+
+    /**
+     * 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
+     *
+     * @param sell__stockCodeList
+     * @param data
+     * @param tradeDate
+     * @param sellInfoMap
+     */
+    private void sellStrategy_ETF(List<String> sell__stockCodeList,
+                                  BacktestCache data,
+                                  LocalDate tradeDate,
+                                  Map<String, String> sellInfoMap) {
+
+        if (CollectionUtils.isEmpty(sell__stockCodeList)) {
+            return;
+        }
+
+
+        // 大盘量化
+        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
+        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+
+
+        // 大盘-牛熊：1-牛市；2-熊市；
+        Integer marketBullBearStatus = qaMarketMidCycleDO.getMarketBullBearStatus();
+        // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
+        Integer marketMidStatus = qaMarketMidCycleDO.getMarketMidStatus();
+        // MA50占比（%）
+        double ma50Pct = qaMarketMidCycleDO.getMa50Pct().doubleValue();
+        // 底_DAY
+        Integer marketLowDay = qaMarketMidCycleDO.getMarketLowDay();
+        // 个股月多-占比（%）
+        double stockMonthBullPct = qaMarketMidCycleDO.getStockMonthBullPct().doubleValue();
+        // 板块月多-占比（%）
+        double blockMonthBullPct = qaMarketMidCycleDO.getBlockMonthBullPct().doubleValue();
+        // 差值（新高-新低）
+        int highLowDiff = qaMarketMidCycleDO.getHighLowDiff();
+        // 右侧S-占比（%）
+        double rightSellPct = qaMarketMidCycleDO.getRightSellPct().doubleValue();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 大盘底
+        boolean con_1 = marketMidStatus == 1;
+
+
+        // -----------------------------------------------
+        boolean con_2_1 = false;
+        boolean con_2_2 = false;
+
+
+        // 1-牛市
+        if (marketBullBearStatus == 1) {
+            con_2_1 = highLowDiff < 0 || stockMonthBullPct < 10 || blockMonthBullPct < 3 || rightSellPct > 85;
+        }
+        // 2-熊市
+        else if (marketBullBearStatus == 2) {
+            con_2_2 = highLowDiff < -500 || stockMonthBullPct < 5 || blockMonthBullPct < 2 || rightSellPct > 90;
+        }
+
+
+        // 大盘底部
+        boolean con_2 = marketMidStatus == 2 && (marketLowDay < 10 || ma50Pct < 25) && (con_2_1 || con_2_2);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 大盘底/大盘底部
+        if (con_1 || con_2) {
+
+            // ETF
+            data.ETF_stockDOList.forEach(e -> {
+
+                // 大盘底   ->   ETF   不卖出
+                sell__stockCodeList.remove(e.getCode());
+            });
+        }
     }
 
 

@@ -124,9 +124,9 @@ public class QaMarketMidCycleDO implements Serializable {
     private Integer allStockNum;
 
     /**
-     * 差值
+     * 差值（新高-新低）
      */
-    @Schema(description = "差值")
+    @Schema(description = "差值（新高-新低）")
     @TableField("high_low_diff")
     private Integer highLowDiff;
 

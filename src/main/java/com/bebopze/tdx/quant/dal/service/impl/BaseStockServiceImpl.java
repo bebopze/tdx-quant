@@ -202,8 +202,9 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
 
 
-        // 过滤ETF（TODO   DEL）
-        return list.stream().filter(e -> e.getType().equals(StockTypeEnum.A_STOCK.type)).collect(Collectors.toList());
+        // 过滤ETF
+        // return list.stream().filter(e -> e.getType().equals(StockTypeEnum.A_STOCK.type)).collect(Collectors.toList());
+        return list;
     }
 
 
