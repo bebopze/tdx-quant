@@ -1,5 +1,8 @@
 package com.bebopze.tdx.quant.task;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +10,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
 
 /**
@@ -46,6 +51,7 @@ public class TdxTask {
      * 通达信 盘后数据更新 -> 扩展数据计算 -> 自动选股
      */
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__933_902_921() {
 
@@ -75,6 +81,7 @@ public class TdxTask {
      * 通达信 盘后数据更新
      */
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshTdxLdayTask_refreshTdxCwTask() {
 
@@ -96,6 +103,7 @@ public class TdxTask {
      * 行情数据   盘后-全量更新   ->   DB
      */
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshKlineAll() {
         log.info("---------------------------- 任务 [refreshKlineAll - 盘后-全量更新 入库]   执行 start");
@@ -128,6 +136,7 @@ public class TdxTask {
      * 行情数据   盘中-增量更新   ->   DB
      */
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
     @Scheduled(cron = "0 0/15 13-14 * * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshKlineAll__lataDay() {
@@ -149,9 +158,8 @@ public class TdxTask {
         initDataService.refreshCache();
 
 
-        // TODO 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
-        // INDEX_BLOCK-880515   当日有数据（AMO>500亿）
-        if (false) {
+        // 主线板块       =>       INDEX_BLOCK-880515   当日有数据（AMO>500亿）
+        if (checkBlockLastDay()) {
             topBlockService.refreshAll();
         } else {
             log.warn("topBlock - refreshAll     >>>     当日[板块数据] - 未更新！");
@@ -170,6 +178,7 @@ public class TdxTask {
      * 初始化数据 更新 -> DB
      */
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 00 17 ? * 7", zone = "Asia/Shanghai")
     public void execTask__importAll() {
 
@@ -183,6 +192,7 @@ public class TdxTask {
 
 
     @Async
+    @TotalTime
     // @Scheduled(cron = "0 0/10 * ? * *", zone = "Asia/Shanghai")
     public void queryCreditNewPosV2() {
 
@@ -192,6 +202,20 @@ public class TdxTask {
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
 
 
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * INDEX_BLOCK-880515   当日有数据（AMO>500亿）             // 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
+     *
+     * @return
+     */
+    private boolean checkBlockLastDay() {
+        LdayParser.LdayDTO lastDTO = ListUtil.last(LdayParser.parseByStockCode(INDEX_BLOCK));
+        return lastDTO != null && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
     }
 
 
