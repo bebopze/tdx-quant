@@ -78,6 +78,9 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 仅适用 回测（每日 -> 复用1次）   ->     其他 一次性计算 一律禁用🚫（Java 内存管理 非常垃圾   =>   只要涉及大对象  ->  一律卡死）
+     */
     public static final Map<String, StockFun> stockFunMap = Maps.newConcurrentMap();
 
     public static final Map<String, BlockFun> blockFunMap = Maps.newConcurrentMap();
@@ -99,7 +102,7 @@ public class BacktestCache {
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +
                 ", stock__codeNameMap=" + stock__codeNameMap.size() +
                 ", stock__dateCloseMap=" + stock__dateCloseMap.size() +
-                ", blockDOList=" + blockDOList.size() +
+                ", blockDOList=" + (blockDOList == null ? 0 : blockDOList.size()) +
                 ", codeBlockMap=" + codeBlockMap.size() +
                 ", block__idCodeMap=" + block__idCodeMap.size() +
                 ", block__codeIdMap=" + block__codeIdMap.size() +
@@ -139,6 +142,7 @@ public class BacktestCache {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
 
     /**
      * 1级 - 研究行业
@@ -248,6 +252,18 @@ public class BacktestCache {
 
     public LocalDate endDate() {
         return dateList.get(dateList.size() - 1);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 每次 必须强制 清空     =>     Java大对象   ->   直接卡死
+     */
+    public static void clear() {
+        stockFunMap.clear();
+        blockFunMap.clear();
     }
 
 
