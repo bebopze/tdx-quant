@@ -237,6 +237,18 @@ public class BacktestCache {
     }
 
 
+    public static int getByDate(int[] arr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
+        Integer idx = dateIndexMap.get(tradeDate);
+
+        if (null == idx) {
+            // 当前 交易日  ->  未上市/停牌
+            return 0;
+        }
+
+        return arr[idx];
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -279,7 +291,7 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public  BaseBlockDO getPBlock(String blockCode, int pLevel) {
+    public BaseBlockDO getPBlock(String blockCode, int pLevel) {
         Assert.isTrue(1 <= pLevel && pLevel <= 3, String.format("[pLevel:%s]有误", pLevel));
 
 
@@ -317,7 +329,7 @@ public class BacktestCache {
         return null;
     }
 
-    public  BaseBlockDO getPBlock(String blockCode) {
+    public BaseBlockDO getPBlock(String blockCode) {
         BaseBlockDO blockDO = codeBlockMap.get(blockCode);
         Assert.notNull(blockDO, String.format("blockCode:[%s]有误", blockCode));
 
@@ -330,7 +342,7 @@ public class BacktestCache {
         return null;
     }
 
-    public  String getPBlockCode(String blockCode) {
+    public String getPBlockCode(String blockCode) {
         BaseBlockDO blockDO = codeBlockMap.get(blockCode);
         Assert.notNull(blockDO, String.format("blockCode:[%s]有误", blockCode));
 

@@ -105,8 +105,8 @@ public class TdxTask {
     @Async
     @TotalTime
     // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
-    public void execTask__refreshKlineAll() {
-        log.info("---------------------------- 任务 [refreshKlineAll - 盘后-全量更新 入库]   执行 start");
+    public void execTask__refreshAll() {
+        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
         // 行情  ->  kline_his
@@ -124,11 +124,12 @@ public class TdxTask {
         // 主线板块
         topBlockService.refreshAll();
 
+
         // 大盘量化
         marketService.importMarketMidCycle();
 
 
-        log.info("---------------------------- 任务 [refreshKlineAll - 盘后-全量更新 入库]   执行 end");
+        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
     }
 
 
@@ -139,8 +140,8 @@ public class TdxTask {
     @TotalTime
     // @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
     @Scheduled(cron = "0 0/15 13-14 * * 1-5", zone = "Asia/Shanghai")
-    public void execTask__refreshKlineAll__lataDay() {
-        log.info("---------------------------- 任务 [refreshKlineAll - 盘中-增量更新 入库]   执行 start");
+    public void execTask__refreshAll__lataDay() {
+        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
 
 
         // ------------------ 增量更新   ->   只需控制源头 kline  ->  [起始日期]
@@ -170,7 +171,7 @@ public class TdxTask {
         marketService.importMarketMidCycle();
 
 
-        log.info("---------------------------- 任务 [refreshKlineAll - 盘中-增量更新 入库]   执行 end");
+        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
     }
 
 

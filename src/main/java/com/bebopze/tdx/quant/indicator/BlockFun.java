@@ -63,8 +63,8 @@ public class BlockFun extends StockFun {
         // -----------------------------------------------
 
 
-        klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
-        extDataArrDTO = ConvertStock.dtoList2Arr2(extDataDTOList);
+        klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
+        extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
 
 
         // -----------------------------------------------

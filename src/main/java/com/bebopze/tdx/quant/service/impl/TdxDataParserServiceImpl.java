@@ -119,7 +119,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
 
 
-        tdxTask.execTask__refreshKlineAll();
+        tdxTask.execTask__refreshAll();
     }
 
 

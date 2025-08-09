@@ -24,27 +24,27 @@ public class TaskController {
 
 
     /**
-     * refreshKlineAll   -   盘中 -> 增量更新
+     * refreshAll   -   盘中 -> 增量更新
      *
      * @return
      */
-    @Operation(summary = "refreshKlineAll - 增量更新", description = "refreshKlineAll - 盘中 -> 增量更新")
-    @GetMapping(value = "/refreshKlineAll__lataDay")
-    public Result<Void> refreshKlineAll__lataDay() {
-        tdxTask.execTask__refreshKlineAll__lataDay();
+    @Operation(summary = "refreshAll - 增量更新", description = "refreshAll - 盘中 -> 增量更新")
+    @GetMapping(value = "/refreshAll__lataDay")
+    public Result<Void> refreshAll__lataDay() {
+        tdxTask.execTask__refreshAll__lataDay();
         return Result.SUC();
     }
 
 
     /**
-     * refreshKlineAll   -   盘后 -> 全量更新
+     * refreshAll   -   盘后 -> 全量更新
      *
      * @return
      */
-    @Operation(summary = "refreshKlineAll - 全量更新", description = "refreshKlineAll - 盘后 -> 全量更新")
-    @GetMapping(value = "/refreshKlineAll")
-    public Result<Void> refreshKlineAll() {
-        tdxTask.execTask__refreshKlineAll();
+    @Operation(summary = "refreshAll - 全量更新", description = "refreshAll - 盘后 -> 全量更新")
+    @GetMapping(value = "/refreshAll")
+    public Result<Void> refreshAll() {
+        tdxTask.execTask__refreshAll();
         return Result.SUC();
     }
 

@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.convert;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
@@ -9,19 +8,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
 /**
- * -
+ * List<Kline / ExtData>（列表）    ->     KlineArr / ExtDataArr（序列）
  *
  * @author: bebopze
  * @date: 2025/6/10
@@ -30,7 +27,18 @@ import java.util.stream.Collectors;
 public class ConvertStock {
 
 
-    public static KlineArrDTO dtoList2Arr(List<KlineDTO> dtoList) {
+    // -----------------------------------------------------------------------------------------------------------------
+    //                               List<Kline>（列表）    ->     KlineArr（序列）
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * List<Kline>（列表）    ->     KlineArr（序列）
+     *
+     * @param dtoList
+     * @return
+     */
+    public static KlineArrDTO kline__dtoList2Arr(List<KlineDTO> dtoList) {
         int size = dtoList.size();
 
         KlineArrDTO arrDTO = new KlineArrDTO(size);
@@ -68,7 +76,7 @@ public class ConvertStock {
 
 
     /**
-     * 反射（通过 fieldName   ->   关联）
+     * List<Kline>（列表）    ->     KlineArr（序列）                           // 反射 实现（通过 fieldName   ->   关联）
      *
      * @param dtoList
      * @return
@@ -138,7 +146,24 @@ public class ConvertStock {
     }
 
 
-    public static ExtDataArrDTO dtoList2Arr2(List<ExtDataDTO> dtoList) {
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                               List<ExtData>（列表）    ->     ExtDataArr（序列）
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * List<ExtData>（列表）    ->     ExtDataArr（序列）
+     *
+     * @param dtoList
+     * @return
+     */
+    public static ExtDataArrDTO extData__dtoList2Arr(List<ExtDataDTO> dtoList) {
         int size = dtoList.size();
 
         ExtDataArrDTO arrDTO = new ExtDataArrDTO(size);
@@ -162,6 +187,9 @@ public class ConvertStock {
 
 
             arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
+            arrDTO.趋势支撑线[i] = of(dto.get趋势支撑线());
+
+
             arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
 
 
@@ -170,12 +198,18 @@ public class ConvertStock {
             arrDTO.SSF多[i] = of(dto.getSSF多());
             arrDTO.SSF空[i] = of(dto.getSSF空());
 
-            arrDTO.N日新高[i] = of(dto.getN日新高());
+
+            arrDTO.N60日新高[i] = of(dto.getN60日新高());
+            arrDTO.N100日新高[i] = of(dto.getN100日新高());
+            arrDTO.历史新高[i] = of(dto.get历史新高());
+
+
+            arrDTO.月多[i] = of(dto.get月多());
             arrDTO.均线预萌出[i] = of(dto.get均线预萌出());
             arrDTO.均线萌出[i] = of(dto.get均线萌出());
             arrDTO.大均线多头[i] = of(dto.get大均线多头());
 
-            arrDTO.月多[i] = of(dto.get月多());
+
             arrDTO.RPS红[i] = of(dto.getRPS红());
             arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
         }
@@ -184,6 +218,13 @@ public class ConvertStock {
         return arrDTO;
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static int of(Integer value) {
+        return null == value ? 0 : value;
+    }
 
     private static double of(Double value) {
         return null == value ? Double.NaN : value;

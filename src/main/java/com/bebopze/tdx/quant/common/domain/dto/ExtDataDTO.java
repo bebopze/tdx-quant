@@ -35,7 +35,11 @@ public class ExtDataDTO implements Serializable {
 
     private Double SSF;
 
+
     private Double 中期涨幅;
+    private Integer 趋势支撑线 = 20;   // 默认支撑线：MA20
+
+
     public Boolean 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
@@ -48,13 +52,17 @@ public class ExtDataDTO implements Serializable {
     private Boolean SSF空;
 
 
-    private Boolean N日新高;
+    private Boolean N60日新高;
+    private Boolean N100日新高;
+    private Boolean 历史新高;
+
+
+    private Boolean 月多;
     private Boolean 均线预萌出;
     private Boolean 均线萌出;
     private Boolean 大均线多头;
 
 
-    private Boolean 月多;
     private Boolean RPS红;
     private Boolean RPS三线红;
 

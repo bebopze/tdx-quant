@@ -29,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -324,7 +323,7 @@ public class TdxFunCheck {
 
 
             // N日新高     ->     SUC
-            if (!equals(dto1.get_60日新高(), dto2.get_60日新高())) {
+            if (!equals(dto1.getN60日新高(), dto2.getN60日新高())) {
                 failCountMap.compute("N日新高", (k, v) -> (v == null ? 1 : v + 1));
             }
 
@@ -642,10 +641,16 @@ public class TdxFunCheck {
         double[] MACD = macd[2];
 
 
+        // --------------------------------------------------
+
+
         double[] SAR = TdxFun.TDX_SAR(high, low);
 
 
         double[] 中期涨幅 = fun.中期涨幅N(20);
+        int[] 趋势支撑线 = fun.趋势支撑线();
+
+
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
 
 
@@ -655,13 +660,18 @@ public class TdxFunCheck {
         boolean[] MA20空 = fun.MA空(20);
 
 
-        boolean[] _60日新高 = fun.N日新高(60);
+        boolean[] N60日新高 = fun.N日新高(60);
+        boolean[] N100日新高 = fun.N日新高(100);
+        boolean[] 历史新高 = fun.历史新高();
+
+
+        boolean[] 月多 = fun.月多();
         boolean[] 均线预萌出 = fun.均线预萌出();
         boolean[] 均线萌出 = fun.均线萌出();
         boolean[] 大均线多头 = fun.大均线多头();
 
 
-        boolean[] 月多 = fun.月多();
+        boolean[] RPS红 = fun.RPS红(85);
         boolean[] RPS三线红 = fun.RPS三线红(80);
 
 
@@ -772,33 +782,41 @@ public class TdxFunCheck {
             // -------------------------------- 简单指标
 
 
+            dto.setSSF(of(ssf[i]));
+
+
             dto.setMA20多(bool2Int(MA20多[i]));
             dto.setMA20空(bool2Int(MA20空[i]));
 
-            dto.setSSF(of(ssf[i]));
             dto.setSSF多(bool2Int(SSF多[i]));
             dto.setSSF空(bool2Int(SSF空[i]));
 
 
             dto.set中期涨幅(of(中期涨幅[i]));
+            dto.set趋势支撑线(趋势支撑线[i]);
+
+
             dto.set高位爆量上影大阴(bool2Int(高位爆量上影大阴[i]));
 
 
             // -------------------------------- 高级指标
 
 
-            dto.set_60日新高(bool2Int(_60日新高[i]));
+            dto.setN60日新高(bool2Int(N60日新高[i]));
+            dto.setN100日新高(bool2Int(N100日新高[i]));
+            dto.set历史新高(bool2Int(历史新高[i]));
+
+
+            dto.set月多(bool2Int(月多[i]));
             dto.set均线预萌出(bool2Int(均线预萌出[i]));
             dto.set均线萌出(bool2Int(均线萌出[i]));
-
-
             dto.set大均线多头(bool2Int(大均线多头[i]));
 
 
             // -------------------------------- 复杂指标
 
 
-            dto.set月多(bool2Int(月多[i]));
+            dto.setRPS红(bool2Int(RPS红[i]));
             dto.setRPS三线红(bool2Int(RPS三线红[i]));
 
 
@@ -996,22 +1014,31 @@ public class TdxFunCheck {
 
         // ------- 中期涨幅
         dto.set中期涨幅(row.getDouble("中期涨幅"));
+        dto.set趋势支撑线(row.getInteger("趋势支撑线"));
         dto.set高位爆量上影大阴(row.getInteger("高位上影大阴"));
 
 
-        // ------------------------------------------------ 高级指标
+        // ------------------------------------------------ 新高指标
 
 
-        dto.set_60日新高(row.getInteger("_60日新高"));
+        dto.setN60日新高(row.getInteger("N60日新高"));
+        dto.setN100日新高(row.getInteger("N100日新高"));
+        dto.set历史新高(row.getInteger("历史新高"));
+
+
+        // ------------------------------------------------ 均线指标
+
+
+        dto.set月多(row.getInteger("月多"));
         dto.set均线预萌出(row.getInteger("均线预萌出"));
         dto.set均线萌出(row.getInteger("均线萌出"));
         dto.set大均线多头(row.getInteger("大均线多头"));
 
 
-        // ------------------------------------------------ 复杂指标
+        // ------------------------------------------------ RPS指标
 
 
-        dto.set月多(row.getInteger("月多"));
+        dto.setRPS红(row.getInteger("RPS红"));
         dto.setRPS三线红(row.getInteger("RPS三线红"));
 
 
@@ -1151,49 +1178,62 @@ public class TdxFunCheck {
         // -------------------------------- 简单指标
 
 
+        // SSF
+        private Double SSF;
+
+
         // MA20 - 多/空
         private Integer MA20多;
         private Integer MA20空;
 
-
-        // SSF
-        private Double SSF;
+        // SSF - 多/空
         private Integer SSF多;
         private Integer SSF空;
 
 
+        // -------------------------------- 趋势指标
+
+
         // 中期涨幅
         private Double 中期涨幅;
+        // 趋势支撑线
+        private Integer 趋势支撑线;
+
+
+        // -------------------------------- 顶部指标
+
+
         // 高位-爆量/上影/大阴
         private Integer 高位爆量上影大阴;
 
 
-        // -------------------------------- 高级指标
+        // -------------------------------- 新高指标
 
 
         // N日新高
-        private Integer _60日新高;
+        private Integer N60日新高;
+        private Integer N100日新高;
+        private Integer 历史新高;
 
 
-        // 均线预萌出
-        private Integer 均线预萌出;
-
-
-        // 均线萌出
-        private Integer 均线萌出;
-
-
-        // 大均线多头
-        private Integer 大均线多头;
-
-
-        // -------------------------------- 复杂指标
+        // -------------------------------- 均线指标
 
 
         // 月多
         private Integer 月多;
+        // 均线预萌出
+        private Integer 均线预萌出;
+        // 均线萌出
+        private Integer 均线萌出;
+        // 大均线多头
+        private Integer 大均线多头;
 
 
+        // -------------------------------- RPS指标
+
+
+        // RPS红
+        private Integer RPS红;
         // RPS三线红
         private Integer RPS三线红;
     }

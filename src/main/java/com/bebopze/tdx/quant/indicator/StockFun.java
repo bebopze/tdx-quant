@@ -128,8 +128,8 @@ public class StockFun {
         // -----------------------------------------------
 
 
-        klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
-        extDataArrDTO = ConvertStock.dtoList2Arr2(extDataDTOList);
+        klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
+        extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
 
 
         // -----------------------------------------------
@@ -409,6 +409,10 @@ public class StockFun {
 
         // H新高 || C新高
         return con_or(N日新高_H_arr, N日新高_C_arr);
+    }
+
+    public boolean[] 历史新高() {
+        return N日新高(close.length);
     }
 
 

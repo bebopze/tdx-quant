@@ -175,7 +175,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            KlineArrDTO klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
+            KlineArrDTO klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
 
 
             LocalDate[] date_arr = klineArrDTO.date;
@@ -219,7 +219,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            KlineArrDTO klineArrDTO = ConvertStock.dtoList2Arr(klineDTOList);
+            KlineArrDTO klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
 
 
             LocalDate[] date_arr = klineArrDTO.date;
@@ -346,79 +346,17 @@ public class ExtDataServiceImpl implements ExtDataService {
         stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
 
 
-        // --------------------------------------------------------
-
-
+        // -------------------------------------------------------------------------------------------------------------
         long stock_start = System.currentTimeMillis();
 
 
-        // --------------------------------------------------------
+        // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
+        calcExtData(new StockFun(code, stockDO), new_extDataDTOList);
 
 
-        // 计算 -> 指标
-        StockFun fun = new StockFun(code, stockDO);
-
-
-        double[] SSF = fun.SSF();
-
-        double[] 中期涨幅 = fun.中期涨幅N(20);
-        boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
-
-
-        boolean[] MA20多 = fun.MA多(20);
-        boolean[] MA20空 = fun.MA空(20);
-        boolean[] SSF多 = fun.SSF多();
-        boolean[] SSF空 = fun.SSF空();
-
-
-        boolean[] N日新高 = fun.N日新高(60);
-        boolean[] 均线预萌出 = fun.均线预萌出();
-        boolean[] 均线萌出 = fun.均线萌出();
-        boolean[] 大均线多头 = fun.大均线多头();
-
-
-        boolean[] 月多 = fun.月多();
-        boolean[] RPS红 = fun.RPS红(85);
-        boolean[] RPS三线红 = fun.RPS三线红(80);
-
-
-        // --------------------------------------------------------
-
-
-        log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {} ",
+        log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {}",
                  code, count.incrementAndGet(), DateTimeUtil.formatNow2Hms(stock_start), DateTimeUtil.formatNow2Hms(start));
-
-
-        // --------------------------------------------------------
-
-
-        for (int i = 0; i < new_extDataDTOList.size(); i++) {
-            ExtDataDTO dto = new_extDataDTOList.get(i);
-
-
-            dto.setSSF(of(SSF[i], 3));
-
-
-            dto.set中期涨幅(of(中期涨幅[i], 3));
-            dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
-
-
-            dto.setMA20多(MA20多[i]);
-            dto.setMA20空(MA20空[i]);
-            dto.setSSF多(SSF多[i]);
-            dto.setSSF空(SSF空[i]);
-
-
-            dto.setN日新高(N日新高[i]);
-            dto.set均线预萌出(均线预萌出[i]);
-            dto.set均线萌出(均线萌出[i]);
-            dto.set大均线多头(大均线多头[i]);
-
-
-            dto.set月多(月多[i]);
-            dto.setRPS红(RPS红[i]);
-            dto.setRPS三线红(RPS三线红[i]);
-        }
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // ------------------------------------------------------------------------ 更新 -> DB
@@ -439,6 +377,92 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         baseStockService.updateById(entity);
+    }
+
+    /**
+     * 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
+     *
+     * @param fun
+     * @param extDataDTOList
+     */
+    private void calcExtData(StockFun fun, List<ExtDataDTO> extDataDTOList) {
+
+
+        // ---------------------------- 1、计算ExtData（序列值）
+
+
+        // 计算 -> 指标
+        // StockFun fun = new StockFun(stockDO.getCode(), stockDO);
+
+
+        double[] SSF = fun.SSF();
+
+
+        double[] 中期涨幅 = fun.中期涨幅N(20);
+        int[] 趋势支撑线 = fun.趋势支撑线();
+
+
+        boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
+
+
+        boolean[] MA20多 = fun.MA多(20);
+        boolean[] MA20空 = fun.MA空(20);
+        boolean[] SSF多 = fun.SSF多();
+        boolean[] SSF空 = fun.SSF空();
+
+
+        boolean[] N60日新高 = fun.N日新高(60);
+        boolean[] N100日新高 = fun.N日新高(100);
+        boolean[] 历史新高 = fun.历史新高();
+
+
+        boolean[] 月多 = fun.月多();
+        boolean[] 均线预萌出 = fun.均线预萌出();
+        boolean[] 均线萌出 = fun.均线萌出();
+        boolean[] 大均线多头 = fun.大均线多头();
+
+
+        boolean[] RPS红 = fun.RPS红(85);
+        boolean[] RPS三线红 = fun.RPS三线红(80);
+
+
+        // ---------------------------- 2、convert（序列   ->   列表）
+
+
+        for (int i = 0; i < extDataDTOList.size(); i++) {
+            ExtDataDTO dto = extDataDTOList.get(i);
+
+
+            dto.setSSF(of(SSF[i], 3));
+
+
+            dto.set中期涨幅(of(中期涨幅[i], 3));
+            dto.set趋势支撑线(趋势支撑线[i]);
+
+
+            dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
+
+
+            dto.setMA20多(MA20多[i]);
+            dto.setMA20空(MA20空[i]);
+            dto.setSSF多(SSF多[i]);
+            dto.setSSF空(SSF空[i]);
+
+
+            dto.setN60日新高(N60日新高[i]);
+            dto.setN100日新高(N100日新高[i]);
+            dto.set历史新高(历史新高[i]);
+
+
+            dto.set月多(月多[i]);
+            dto.set均线预萌出(均线预萌出[i]);
+            dto.set均线萌出(均线萌出[i]);
+            dto.set大均线多头(大均线多头[i]);
+
+
+            dto.setRPS红(RPS红[i]);
+            dto.setRPS三线红(RPS三线红[i]);
+        }
     }
 
 
@@ -588,77 +612,17 @@ public class ExtDataServiceImpl implements ExtDataService {
             blockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
 
 
-            // --------------------------------------------------------
-
-
+            // ---------------------------------------------------------------------------------------------------------
             long block_start = System.currentTimeMillis();
 
 
-            // --------------------------------------------------------
+            // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
+            calcExtData(new BlockFun(code, blockDO), dtoList);
 
 
-            // 计算 -> 指标
-            BlockFun fun = new BlockFun(code, blockDO);
-
-
-            double[] SSF = fun.SSF();
-
-            double[] 中期涨幅 = fun.中期涨幅N(20);
-            boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
-
-
-            boolean[] MA20多 = fun.MA多(20);
-            boolean[] MA20空 = fun.MA空(20);
-            boolean[] SSF多 = fun.SSF多();
-            boolean[] SSF空 = fun.SSF空();
-
-
-            boolean[] N日新高 = fun.N日新高(60);
-            boolean[] 均线预萌出 = fun.均线预萌出();
-            boolean[] 均线萌出 = fun.均线萌出();
-            boolean[] 大均线多头 = fun.大均线多头();
-
-
-            boolean[] 月多 = fun.月多();
-            boolean[] RPS三线红 = fun.RPS三线红(80);
-
-
-            // --------------------------------------------------------
-
-
-            long end = System.currentTimeMillis();
-            log.info("blockFun 指标计算 - 板块     >>>     code : {} , count : {} , blockTime : {} , totalTime : {} ",
-                     code, count.incrementAndGet(), DateTimeUtil.format2Hms(end - block_start), DateTimeUtil.format2Hms(end - start));
-
-
-            // --------------------------------------------------------
-
-
-            for (int i = 0; i < dtoList.size(); i++) {
-                ExtDataDTO dto = dtoList.get(i);
-
-
-                dto.setSSF(of(SSF[i], 3));
-
-                dto.set中期涨幅(of(中期涨幅[i]));
-                dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
-
-
-                dto.setMA20多(MA20多[i]);
-                dto.setMA20空(MA20空[i]);
-                dto.setSSF多(SSF多[i]);
-                dto.setSSF空(SSF空[i]);
-
-
-                dto.setN日新高(N日新高[i]);
-                dto.set均线预萌出(均线预萌出[i]);
-                dto.set均线萌出(均线萌出[i]);
-                dto.set大均线多头(大均线多头[i]);
-
-
-                dto.set月多(月多[i]);
-                dto.setRPS三线红(RPS三线红[i]);
-            }
+            log.info("blockFun 指标计算 - 板块 suc     >>>     code : {} , count : {} , blockTime : {} , totalTime : {}",
+                     code, count.incrementAndGet(), DateTimeUtil.formatNow2Hms(block_start), DateTimeUtil.formatNow2Hms(start));
+            // ---------------------------------------------------------------------------------------------------------
 
 
             List<String> extDataList = ConvertStockExtData.dtoList2StrList(dtoList);

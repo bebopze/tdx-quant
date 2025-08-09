@@ -48,7 +48,7 @@ public class BacktestStrategy {
     BacktestCache data = InitDataServiceImpl.data;
 
     // 统计
-    static Stat x = new Stat();
+    Stat x = new Stat();
     // private static ThreadLocal<Stat> x = new ThreadLocal<>();
 
 
@@ -113,7 +113,6 @@ public class BacktestStrategy {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    // @Transactional(rollbackFor = Exception.class)
     public synchronized Long backtest(LocalDate startDate, LocalDate endDate) {
         log.info("backtest start     >>>     startDate : {} , endDate : {}", startDate, endDate);
 
@@ -1323,7 +1322,7 @@ public class BacktestStrategy {
 
     @Data
     @AllArgsConstructor
-    public static class CalcStat {
+    public class CalcStat {
 
 
         // ----------------------------------------- 不变

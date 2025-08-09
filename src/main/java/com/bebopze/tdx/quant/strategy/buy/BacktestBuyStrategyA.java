@@ -154,7 +154,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 boolean RPS红 = extDataArrDTO.RPS红[idx];
 
 
-                boolean _60日新高 = extDataArrDTO.N日新高[idx];
+                boolean N60日新高 = extDataArrDTO.N60日新高[idx];
                 boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
                 boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
 
@@ -207,7 +207,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 boolean con_4 = 月多 || 均线预萌出 || 大均线多头;
 
                 // RPS三线红/口袋支点/60日新高
-                boolean con_5 = /*RPS三线红 ||*/ _60日新高 /*|| 口袋支点*/;
+                boolean con_5 = /*RPS三线红 ||*/ N60日新高 /*|| 口袋支点*/;
 
 
                 // 偏离率 < 10%
@@ -257,7 +257,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                     if (大均线多头) info.add("大均线多头");
 
                     if (RPS三线红) info.add("RPS三线红");
-                    if (_60日新高) info.add("60日新高");
+                    if (N60日新高) info.add("60日新高");
                     // if (口袋支点) info.add("口袋支点");
                     info.add("idx-" + dateIndexMap.get(tradeDate));
 
@@ -453,7 +453,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
             boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
-            boolean[] N日新高_arr = extDataArrDTO.N日新高;
+            boolean[] N60日新高_arr = extDataArrDTO.N60日新高;
 
 
             double rps10 = rps10_arr[idx];
@@ -484,7 +484,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             // 大均线多头
             int 大均线多头 = bool2Int(大均线多头_arr[idx]);
             // 60日新高
-            int N日新高 = bool2Int(N日新高_arr[idx]);
+            int N日新高 = bool2Int(N60日新高_arr[idx]);
 
 
             // -------------------------------------------------------------------------------------------
