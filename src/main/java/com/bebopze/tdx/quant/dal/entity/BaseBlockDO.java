@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
@@ -206,6 +207,11 @@ public class BaseBlockDO implements Serializable {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    public String getTypeDesc() {
+        return BlockTypeEnum.getDescByType(type);
+    }
 
 
     public List<KlineDTO> getKlineDTOList() {

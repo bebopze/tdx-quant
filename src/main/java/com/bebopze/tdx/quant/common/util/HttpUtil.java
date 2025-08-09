@@ -134,7 +134,10 @@ public class HttpUtil {
             String result = entity != null ? EntityUtils.toString(entity, "UTF-8") : "";
 
 
-            if (result.contains("<h2>Object moved to <a href=\"/LogIn/ExitLogin?returl=")) {
+            // {"Status":-2,"Message":"该登录已超时！","Count":0,"Errcode":0}
+            // {"Status":-1,"Message":"custCode 字段不能为空","Errcode":0}
+            // <h2>Object moved to <a href="/LogIn/ExitLogin?returl=/MarginSearch/queryCreditNewPosV2?validatekey=as32dsf45-233f2-4ccd-dsds-3213">here</a>.
+            if (result.contains("该登录已超时") || result.contains("字段不能为空") || result.contains("<h2>Object moved to <a href=\"/LogIn/ExitLogin?returl=")) {
                 log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(result));
                 throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
             } else {

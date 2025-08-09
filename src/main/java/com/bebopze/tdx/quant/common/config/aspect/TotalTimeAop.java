@@ -41,14 +41,14 @@ public class TotalTimeAop {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        log.info("-------------------------------- {} - {}     >>>     start", serviceName, methodName);
+        log.info("———————————————————————————————— {} - {}     >>>     start", serviceName, methodName);
         long start = System.currentTimeMillis();
 
 
         Object result = point.proceed();
 
 
-        log.info("-------------------------------- {} - {}     >>>     end   -   totalTime : {}",
+        log.info("———————————————————————————————— {} - {}     >>>     end   -   totalTime : {}",
                  serviceName, methodName, DateTimeUtil.formatNow2Hms(start));
         // -------------------------------------------------------------------------------------------------------------
 

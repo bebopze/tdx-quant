@@ -1,5 +1,6 @@
-package com.bebopze.tdx.quant.common.config;
+package com.bebopze.tdx.quant.common.config.aspect;
 
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

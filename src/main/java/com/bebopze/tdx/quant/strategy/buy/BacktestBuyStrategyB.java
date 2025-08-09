@@ -79,7 +79,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             // 5、xxx
 
 
-            BlockFun fun = data.blockFunMap.computeIfAbsent(blockCode, k -> new BlockFun(k, blockDO));
+            BlockFun fun = data.blockFunCache.get(blockCode, k -> new BlockFun(k, blockDO));
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -184,7 +184,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             String stockCode = stockDO.getCode();
 
 
-            StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+            StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
@@ -424,8 +424,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             // BUY策略   ->   已完成init
-            // StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
-            StockFun fun = data.stockFunMap.get(code);
+            StockFun fun = data.stockFunCache.getIfPresent(code);
 
 
             KlineArrDTO klineArrDTO = fun.getKlineArrDTO();

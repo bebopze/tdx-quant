@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.util;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -36,10 +37,10 @@ public class ParallelCalcUtil {
      */
     private static final ThreadPoolExecutor SHARED_POOL = new ThreadPoolExecutor(
             DEFAULT_PARALLELISM,
-            DEFAULT_PARALLELISM,
+            DEFAULT_PARALLELISM * 2,
             60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1000),
-            r -> new Thread(r, "ParallelCalcPool-" + Thread.currentThread().getId()),
+            new ThreadFactoryBuilder().setNameFormat("ParallelCalcPool-%d").build(),
             new ThreadPoolExecutor.CallerRunsPolicy() // 防止拒绝
     );
 
@@ -140,16 +141,24 @@ public class ParallelCalcUtil {
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
+
+        long start = System.currentTimeMillis();
+
+
         for (int i = 0; i < total; i += chunkSize) {
             int end = Math.min(i + chunkSize, total);
             List<T> chunk = dataList.subList(i, end);
 
+
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
+                    // 👇 加一行：打印当前线程
+                    // log.info("✅ 开始处理 chunk，大小：{}", chunk.size());
+
                     processor.accept(chunk);
                     int completed = completedChunks.incrementAndGet();
                     if (callback != null) {
-                        callback.onProgress(completed, numChunks, "Completed " + completed + "/" + numChunks + " chunks");
+                        callback.onProgress(completed, numChunks, "Completed " + completed + "/" + numChunks + " chunks     耗时：" + DateTimeUtil.formatNow2Hms(start));
                     }
                 } catch (Exception e) {
                     log.error("ParallelCalcUtil.chunkForEachWithProgress error: {}", e.getMessage(), e);
@@ -161,6 +170,22 @@ public class ParallelCalcUtil {
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    public static <T> void chunkForEachWithProgress(
+            List<T> dataList,
+            int chunkSize,
+            ThrowingConsumer<List<T>> processor) {
+
+
+        chunkForEachWithProgress(dataList, chunkSize, processor,
+
+                                 // 进度条
+                                 (current, total, msg) -> {
+
+                                     // 可用于推送前端、更新UI、写日志等
+                                     log.info("📊 进度: {}/{} {}% | {}", current, total, NumUtil.of(current * 100.0 / total), msg);
+                                 });
     }
 
 

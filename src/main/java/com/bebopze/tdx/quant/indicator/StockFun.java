@@ -174,30 +174,6 @@ public class StockFun {
         this.shszQuoteSnapshotResp = null;
 
 
-//        this.C = C;
-
-
-//        this.dateIndexMap = dateIndexMap;
-//
-//
-//        this.date_arr = date_arr;
-//        this.open_arr = open_arr;
-//        this.high_arr = high_arr;
-//        this.low_arr = low_arr;
-//        this.close_arr = close_arr;
-//        this.vol_arr = vol_arr;
-//        this.amo_arr = amo_arr;
-
-
-//        this.rps10_arr = rps10_arr;
-//        this.rps20_arr = rps20_arr;
-//        this.rps50_arr = rps50_arr;
-//        this.rps120_arr = rps120_arr;
-//        this.rps250_arr = rps250_arr;
-
-
-//         this.ssf_arr = SSF(close_arr);
-
         ssf = extDataArrDTO.SSF;
     }
 
@@ -387,7 +363,13 @@ public class StockFun {
     }
 
 
-    // -------------------------------------------- C/SSF 偏离率
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  趋势指标
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -------------------------------------------- C/MA  偏离率（趋势）
+    // -------------------------------------------- C/SSF 偏离率（趋势）
 
 
     public double C_SSF_偏离率(int idx) {
@@ -401,6 +383,16 @@ public class StockFun {
 
     public double[] C_MA_偏离率(int N) {
         return TdxExtFun.C_MA_偏离率(close, N);
+    }
+
+
+    public int[] 趋势支撑线() {
+        return TdxExtFun.趋势支撑线(close, ssf);
+    }
+
+
+    public void 趋势股() {
+        // TODO   趋势股
     }
 
 
@@ -668,6 +660,4 @@ public class StockFun {
 
         System.out.println(JSON.toJSONString(date_ssf_map));
     }
-
-
 }

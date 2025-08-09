@@ -161,28 +161,46 @@ public class LdayParser {
 
 
         // 往期数据  ->  报表
-        List<LdayDTO> klineReport__ldayDTOList = null;
+        List<LdayDTO> klineReport__ldayDTOList = Lists.newArrayList();
         // 短期数据  ->  xx.day
-        List<LdayDTO> lday__ldayDTOList = null;
+        List<LdayDTO> lday__ldayDTOList = Lists.newArrayList();
 
 
         try {
 
+
             // 往期数据  ->  报表
-            klineReport__ldayDTOList = Lists.newArrayList();
-            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
+            // klineReport__ldayDTOList = Lists.newArrayList();
 
-                // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
-                klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+            // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
+            klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
 
 
-                // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-                checkReport__lastKline(klineReport__ldayDTOList);
-            }
+            // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
+            checkReport__lastKline(klineReport__ldayDTOList);
+
+
+            // -----------------------
+
+
+//            // 往期数据  ->  报表
+//            // klineReport__ldayDTOList = Lists.newArrayList();
+//            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
+//
+//                // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
+//                klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+//
+//
+//                // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
+//                checkReport__lastKline(klineReport__ldayDTOList);
+//            }
 
 
             // 短期数据  ->  xx.day
             lday__ldayDTOList = parseByFilePath(filePath);
+
+
+            // ---------------------------------------------------------------------
 
 
             check(klineReport__ldayDTOList, lday__ldayDTOList);
@@ -504,8 +522,8 @@ public class LdayParser {
         List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
 
 
-        int size1 = klineReport__ldayDTOList.size();
-        int size2 = lday__ldayDTOList.size();
+        int size1 = size(klineReport__ldayDTOList);
+        int size2 = size(lday__ldayDTOList);
         if (size1 < size2) {
             List<LdayDTO> subList = lday__ldayDTOList.subList(size1, size2);
             dtoList.addAll(subList);

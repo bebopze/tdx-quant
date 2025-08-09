@@ -36,4 +36,16 @@ public class ListUtil {
         return list.subList(size - n, size);
     }
 
+
+    /**
+     * 截取  最后1条
+     *
+     * @param list
+     * @return
+     */
+    public static <E> E last(List<E> list) {
+        return CollectionUtils.isEmpty(list) ? null : list.get(list.size() - 1);
+    }
+
+
 }

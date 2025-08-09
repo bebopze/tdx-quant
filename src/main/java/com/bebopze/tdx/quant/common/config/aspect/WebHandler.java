@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.config;
+package com.bebopze.tdx.quant.common.config.aspect;
 
 import com.alibaba.fastjson2.JSON;
 import lombok.extern.slf4j.Slf4j;

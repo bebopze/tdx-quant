@@ -100,166 +100,176 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         data.stockDOList.parallelStream().forEach(stockDO -> {
 
 
-            String stockCode = stockDO.getCode();
+            try {
 
 
-            StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
-
-            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+                String stockCode = stockDO.getCode();
 
 
-            // -------------------------------------------
+                StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+
+                ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
-            // 当日 - 停牌（003005  ->  2022-10-27）
-            Integer idx = dateIndexMap.get(tradeDate);
-            if (idx == null) {
-                return;
-            }
+                // -------------------------------------------
 
 
-            // --------------------------------------------------------------------------------------
-
-            double[] rps50_arr = extDataArrDTO.rps50;
-            double[] rps120_arr = extDataArrDTO.rps120;
-            double[] rps250_arr = extDataArrDTO.rps250;
-
-
-            double rps50 = rps50_arr[idx];
-            double rps120 = rps120_arr[idx];
-            double rps250 = rps250_arr[idx];
+                // 当日 - 停牌（003005  ->  2022-10-27）
+                Integer idx = dateIndexMap.get(tradeDate);
+                if (idx == null) {
+                    return;
+                }
 
 
-            // RPS
-            boolean RPS一线红 = RPS一线红(rps50, rps120, rps250, 95);
-            boolean RPS双线红 = RPS双线红(rps50, rps120, rps250, 90);
-            boolean RPS三线红 = RPS三线红(rps50, rps120, rps250, 85);
+                // --------------------------------------------------------------------------------------
+
+                double[] rps50_arr = extDataArrDTO.rps50;
+                double[] rps120_arr = extDataArrDTO.rps120;
+                double[] rps250_arr = extDataArrDTO.rps250;
 
 
-            // --------------------------------------------------------------------------------------
+                double rps50 = rps50_arr[idx];
+                double rps120 = rps120_arr[idx];
+                double rps250 = rps250_arr[idx];
 
 
-            // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
+                // RPS
+                boolean RPS一线红 = RPS一线红(rps50, rps120, rps250, 95);
+                boolean RPS双线红 = RPS双线红(rps50, rps120, rps250, 90);
+                boolean RPS三线红 = RPS三线红(rps50, rps120, rps250, 85);
 
 
-            boolean SSF多 = extDataArrDTO.SSF多[idx];
-            boolean MA20多 = extDataArrDTO.MA20多[idx];
+                // --------------------------------------------------------------------------------------
 
 
-            boolean 月多 = extDataArrDTO.月多[idx];
-            boolean RPS红 = extDataArrDTO.RPS红[idx];
+                // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
 
 
-            boolean _60日新高 = extDataArrDTO.N日新高[idx];
-            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
-            boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
+                boolean SSF多 = extDataArrDTO.SSF多[idx];
+                boolean MA20多 = extDataArrDTO.MA20多[idx];
 
 
-            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
+                boolean 月多 = extDataArrDTO.月多[idx];
+                boolean RPS红 = extDataArrDTO.RPS红[idx];
 
 
-            // -------------------------------------------
-
-            // B -> 持 -> S
-
-
-            // B  =>  RPS一线红95/RPS双线红90/RPS三线红85   +   低位（中期涨幅<50）   +   SSF多 + MA20多   +   均线预萌出/大均线多头   +   RPS三线红/口袋支点/60日新高
+                boolean _60日新高 = extDataArrDTO.N日新高[idx];
+                boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+                boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
 
 
-            // 持  =>  RPS一线红95   +   MA20多/SSF多
+                boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
-            // S  =>  高位 -> 月空/高位爆量上影大阴   /   MA空200   /   MA20空/SSF空   /   RPS三线和<210
+                // -------------------------------------------
+
+                // B -> 持 -> S
 
 
-            // -------------------------------------------
+                // B  =>  RPS一线红95/RPS双线红90/RPS三线红85   +   低位（中期涨幅<50）   +   SSF多 + MA20多   +   均线预萌出/大均线多头   +   RPS三线红/口袋支点/60日新高
 
 
-            // B  =>  RPS一线红95/RPS双线红90/RPS三线红85   +   低位（中期涨幅<50）   +   SSF多 + MA20多   +   月多/均线预萌出/大均线多头   +   RPS三线红/口袋支点/60日新高
+                // 持  =>  RPS一线红95   +   MA20多/SSF多
 
 
-            // RPS一线红95/RPS双线红90/RPS三线红85
-            boolean con_1 = RPS一线红 || RPS双线红 || RPS三线红;
+                // S  =>  高位 -> 月空/高位爆量上影大阴   /   MA空200   /   MA20空/SSF空   /   RPS三线和<210
 
 
-            // TODO DEL     check
-            if (con_1 != RPS红) {
-                String debugMsg = String.format("con_1 != RPS红     >>>     RPS一线红 : {} , RPS双线红 : {} , RPS三线红 : {} , RPS红 : {}", RPS一线红, RPS双线红, RPS三线红, RPS红);
-                log.debug(debugMsg);
-            }
+                // -------------------------------------------
+
+
+                // B  =>  RPS一线红95/RPS双线红90/RPS三线红85   +   低位（中期涨幅<50）   +   SSF多 + MA20多   +   月多/均线预萌出/大均线多头   +   RPS三线红/口袋支点/60日新高
+
+
+                // RPS一线红95/RPS双线红90/RPS三线红85
+                boolean con_1 = RPS一线红 || RPS双线红 || RPS三线红;
+
+
+                // TODO DEL     check
+                if (con_1 != RPS红) {
+                    String debugMsg = String.format("con_1 != RPS红     >>>     RPS一线红 : {} , RPS双线红 : {} , RPS三线红 : {} , RPS红 : {}", RPS一线红, RPS双线红, RPS三线红, RPS红);
+                    log.debug(debugMsg);
+                }
 //            Assert.isTrue(con_1 == RPS红,
 //                          String.format("con_1 != RPS红     >>>     RPS一线红 : {} , RPS双线红 : {} , RPS三线红 : {} , RPS红 : {}",
 //                                        RPS一线红, RPS双线红, RPS三线红, RPS红));
 
 
-            // 低位（中期涨幅<50）
-            boolean con_2 = true; // fun.is20CM() ? 中期涨幅 < 70 : 中期涨幅 < 50;
+                // 低位（中期涨幅<50）
+                boolean con_2 = true; // fun.is20CM() ? 中期涨幅 < 70 : 中期涨幅 < 50;
 
-            // SSF多 + MA20多
-            boolean con_3 = SSF多 && MA20多;
-
-
-            // 月多/均线预萌出/大均线多头
-            boolean con_4 = 月多 || 均线预萌出 || 大均线多头;
-
-            // RPS三线红/口袋支点/60日新高
-            boolean con_5 = /*RPS三线红 ||*/ _60日新高 /*|| 口袋支点*/;
+                // SSF多 + MA20多
+                boolean con_3 = SSF多 && MA20多;
 
 
-            // 偏离率 < 10%
-            double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
-            boolean con_6 = C_SSF_偏离率 < 10;
+                // 月多/均线预萌出/大均线多头
+                boolean con_4 = 月多 || 均线预萌出 || 大均线多头;
+
+                // RPS三线红/口袋支点/60日新高
+                boolean con_5 = /*RPS三线红 ||*/ _60日新高 /*|| 口袋支点*/;
 
 
-            // 非卖点
-            boolean con_7 = !高位爆量上影大阴;
+                // 偏离率 < 10%
+                double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
+                boolean con_6 = C_SSF_偏离率 < 10;
 
 
-            // -------------------------------------------
+                // 非卖点
+                boolean con_7 = !高位爆量上影大阴;
 
 
-            // 是否买入
-            boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5 && con_6 && con_7;
-            if (signal_B) {
-
-                filter__stockCodeList.add(stockCode);
+                // -------------------------------------------
 
 
-                // ----------------------------------------------------- info
+                // 是否买入
+                boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5 && con_6 && con_7;
+                if (signal_B) {
+
+                    filter__stockCodeList.add(stockCode);
 
 
-                // 动态收集所有为 true 的信号名称，按固定顺序拼接
-                List<String> info = Lists.newArrayList();
+                    // ----------------------------------------------------- info
 
 
-                // 行业板块
-                String pthyLv2 = data.getPthyLv2(stockCode);
-                String getYjhyLv1 = data.getYjhyLv1(stockCode);
-                info.add(pthyLv2);
-                info.add(getYjhyLv1 + "     ");
+                    // 动态收集所有为 true 的信号名称，按固定顺序拼接
+                    List<String> info = Lists.newArrayList();
 
 
-                if (RPS一线红) info.add("RPS一线红");
-                if (RPS双线红) info.add("RPS双线红");
-                if (RPS三线红) info.add("RPS三线红");
-
-                // if (con_2) info.add("低位");
-
-                if (SSF多) info.add("SSF多");
-                if (MA20多) info.add("MA20多");
-
-                if (月多) info.add("月多");
-                if (均线预萌出) info.add("均线预萌出");
-                if (大均线多头) info.add("大均线多头");
-
-                if (RPS三线红) info.add("RPS三线红");
-                if (_60日新高) info.add("60日新高");
-                // if (口袋支点) info.add("口袋支点");
-                info.add("idx-" + dateIndexMap.get(tradeDate));
+                    // 行业板块
+                    String pthyLv2 = data.getPthyLv2(stockCode);
+                    String getYjhyLv1 = data.getYjhyLv1(stockCode);
+                    info.add(pthyLv2);
+                    info.add(getYjhyLv1 + "     ");
 
 
-                buy_infoMap.put(stockCode, String.join(",", info));
+                    if (RPS一线红) info.add("RPS一线红");
+                    if (RPS双线红) info.add("RPS双线红");
+                    if (RPS三线红) info.add("RPS三线红");
+
+                    // if (con_2) info.add("低位");
+
+                    if (SSF多) info.add("SSF多");
+                    if (MA20多) info.add("MA20多");
+
+                    if (月多) info.add("月多");
+                    if (均线预萌出) info.add("均线预萌出");
+                    if (大均线多头) info.add("大均线多头");
+
+                    if (RPS三线红) info.add("RPS三线红");
+                    if (_60日新高) info.add("60日新高");
+                    // if (口袋支点) info.add("口袋支点");
+                    info.add("idx-" + dateIndexMap.get(tradeDate));
+
+
+                    buy_infoMap.put(stockCode, String.join(",", info));
+                }
+
+
+            } catch (Exception e) {
+
+                log.error("filter强势个股 - err     >>>     stockCode : {} , stockDO : {} , errMsg : {}",
+                          stockDO.getCode(), JSON.toJSONString(stockDO), e.getMessage(), e);
             }
         });
 
@@ -312,6 +322,8 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         return filterSort__stockCodeList;
+
+
     }
 
 
@@ -416,8 +428,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
             // BUY策略   ->   已完成init
-            // StockFun fun = stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
-            StockFun fun = data.stockFunMap.get(code);
+            StockFun fun = data.stockFunCache.getIfPresent(code);
 
 
             KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
