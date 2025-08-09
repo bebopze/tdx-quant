@@ -274,6 +274,14 @@
         <!-- pinyin4j -->
 
 
+        <!-- caffeine -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- caffeine -->
+
+
     </dependencies>
 
 

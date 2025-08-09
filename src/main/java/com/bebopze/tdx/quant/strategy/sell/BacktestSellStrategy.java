@@ -58,7 +58,7 @@ public class BacktestSellStrategy implements SellStrategy {
             BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 
-            StockFun fun = data.stockFunMap.computeIfAbsent(stockCode, k -> new StockFun(k, stockDO));
+            StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
