@@ -11,8 +11,8 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
-import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.InitDataService;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
@@ -53,8 +53,10 @@ public class BacktestStrategy {
     private volatile BacktestCache data = InitDataServiceImpl.data;
 
 
-    // 统计
-    // Stat x = new Stat();
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // 统计数据
     private final ThreadLocal<Stat> x = ThreadLocal.withInitial(Stat::new);
 
 
@@ -64,9 +66,6 @@ public class BacktestStrategy {
     /**
      * bt_trade_record   -   Cache
      */
-    // private  Set<Long> tradeRecord___idSet__cache = Sets.newHashSet();
-    // private List<BtTradeRecordDO> tradeRecordList__cache = Lists.newArrayList();
-
     private final ThreadLocal<Set<Long>> tradeRecord___idSet__cache = ThreadLocal.withInitial(HashSet::new);
     private final ThreadLocal<List<BtTradeRecordDO>> tradeRecordList__cache = ThreadLocal.withInitial(ArrayList::new);
 
@@ -339,7 +338,14 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // -------------------------------------------------------------------------------------------------------------
+        Map<String, String> buy_infoMap = Maps.newConcurrentMap();
+
+
+        // 买入策略
+        // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap);
+        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(buyConList, data, tradeDate, buy_infoMap);
+        log.info("B策略     >>>     [{} {}] , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
+                 taskId, tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -350,14 +356,8 @@ public class BacktestStrategy {
         // TODO       ==>       S半仓   /   S（清仓） -> 不B
 
 
-        Map<String, String> buy_infoMap = Maps.newConcurrentMap();
-
-
-        // 买入策略
-        // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap);
-        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(buyConList, data, tradeDate, buy_infoMap);
-        log.info("B策略     >>>     [{} {}] , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
-                 taskId, tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
+        // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
+        buy_sell__signalConflict(data, tradeDate, buy__stockCodeList);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -558,6 +558,23 @@ public class BacktestStrategy {
 
 
     // ------------------------------------------------------- B -------------------------------------------------------
+
+
+    /**
+     * B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
+     *
+     * @param data
+     * @param tradeDate
+     * @param buy__stockCodeList
+     */
+    private void buy_sell__signalConflict(BacktestCache data, LocalDate tradeDate, List<String> buy__stockCodeList) {
+
+        // 当前 buyList   ->   是否 与 S策略 相互冲突       =>       过滤出 冲突个股（sellList）
+        List<String> sell__stockCodeList = sellStrategyFactory.get("A").rule(data, tradeDate, buy__stockCodeList, Maps.newHashMap());
+
+        // buyList   ->   remove  冲突个股（sellList）
+        buy__stockCodeList.removeAll(sell__stockCodeList);
+    }
 
 
     /**
