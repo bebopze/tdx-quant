@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -14,12 +15,12 @@ import java.util.List;
  */
 public interface BacktestService {
 
-    Long backtest(LocalDate startDate, LocalDate endDate);
+    Long backtest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
 
     void checkBacktest(Long taskId);
 
 
-    List<BtTaskDO> listTask(Long taskId);
+    List<BtTaskDO> listTask(Long taskId, LocalDateTime startCreateTime, LocalDateTime endCreateTime);
 
     BacktestAnalysisDTO analysis(Long taskId);
 

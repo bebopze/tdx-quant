@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -41,9 +42,16 @@ public class BacktestController {
                                  @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
                                  @Schema(description = "回测-结束时间", example = "2025-07-01")
-                                 @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
+                                 @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
-        return Result.SUC(backTestService.backtest(startDate, endDate));
+                                 @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：不支持，每次重头开始 ）", example = "false")
+                                 @RequestParam(defaultValue = "false") boolean resume,
+
+                                 @Schema(description = "任务批次号（resume=true 生效）", example = "1")
+                                 @RequestParam(required = false) Integer batchNo) {
+
+
+        return Result.SUC(backTestService.backtest(startDate, endDate, resume, batchNo));
     }
 
 
@@ -57,8 +65,16 @@ public class BacktestController {
 
     @Operation(summary = "回测 - task列表", description = "回测 - task列表")
     @GetMapping("/task/list")
-    public Result<List<BtTaskDO>> listTask(@RequestParam(required = false) Long taskId) {
-        return Result.SUC(backTestService.listTask(taskId));
+    public Result<List<BtTaskDO>> listTask(@RequestParam(required = false) Long taskId,
+                                           @RequestParam(required = false) LocalDateTime startCreateTime,
+                                           @RequestParam(required = false) LocalDateTime endCreateTime) {
+
+
+        List<BtTaskDO> list = backTestService.listTask(taskId, startCreateTime, endCreateTime);
+
+        return Result.SUC(list.stream()
+                              .filter(e -> e.getFinalCapital() != null)
+                              .collect(Collectors.toList()));
     }
 
 

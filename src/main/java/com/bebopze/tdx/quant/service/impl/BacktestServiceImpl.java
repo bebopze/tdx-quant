@@ -1,8 +1,12 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
@@ -15,6 +19,8 @@ import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.bebopze.tdx.quant.service.BacktestService;
 import com.bebopze.tdx.quant.service.StrategyService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
+import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 
 /**
@@ -57,8 +66,147 @@ public class BacktestServiceImpl implements BacktestService {
 
 
     @Override
-    public Long backtest(LocalDate startDate, LocalDate endDate) {
-        return backTestStrategy.backtest(startDate, endDate);
+    public Long backtest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo) {
+
+
+        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
+        // List<List<String>> sell_conCombinerList = SellStrategy__ConCombiner.generateCombinations();
+
+
+        // Sell策略 ： 暂时固定
+        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 中断 -> 恢复执行
+        BtTaskDO batchNoEntity = filterFinishTaskList(startDate, endDate, resume, batchNo, buy_conCombinerList);
+
+        // 同一批次  ->  日期一致性
+        LocalDate finalStartDate = batchNoEntity.getStartDate();
+        LocalDate finalEndDate = batchNoEntity.getEndDate();
+
+        Integer finalBatchNo = batchNoEntity.getBatchNo();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // -----------------------------------------------------------------------------
+
+
+        AtomicInteger current = new AtomicInteger();
+        int total = buy_conCombinerList.size();
+
+
+        ParallelCalcUtil.forEach(buy_conCombinerList,
+
+                                 buyConList -> {
+                                     long start = System.currentTimeMillis();
+
+
+                                     backTestStrategy.backtest(finalBatchNo, buyConList, sellConList, finalStartDate, finalEndDate);
+
+
+                                     progressLog(finalBatchNo, current.incrementAndGet(), total, start);
+                                 },
+
+                                 ThreadPoolType.IO_INTENSIVE);
+
+
+//        ParallelCalcUtil.chunkForEachWithProgress(buy_conCombinerList, 10, chuckList -> {
+//
+//            chuckList.forEach(chuck -> {
+//
+//                backTestStrategy.backtest(chuck, sellConList, startDate, endDate);
+//            });
+//
+//        }, ThreadPoolType.IO_INTENSIVE);
+
+
+        return 1L;
+    }
+
+
+    /**
+     * 中断 -> 恢复执行          =>          过滤 已[finish]   ->   继续执行 未完成/未进行 buyConList
+     *
+     * @param startDate
+     * @param endDate
+     * @param resume
+     * @param batchNo
+     * @param buyConCombinerList
+     * @return 更新后的 batchNo
+     */
+    private BtTaskDO filterFinishTaskList(LocalDate startDate,
+                                          LocalDate endDate,
+                                          boolean resume,
+                                          Integer batchNo,
+                                          List<List<String>> buyConCombinerList) {
+
+
+        // 任务批次号 - last
+        BtTaskDO lastBatchNoEntity = btTaskService.getLastBatchNoEntity();
+
+        Integer lastBatchNo = lastBatchNoEntity.getBatchNo();
+        batchNo = batchNo == null ? lastBatchNo : batchNo;
+
+
+        Assert.isTrue(batchNo <= lastBatchNo, String.format(" [任务批次号=%s]非法，当前[最大任务批次号=%s]", batchNo, lastBatchNo));
+
+
+        BtTaskDO batchNoEntity = btTaskService.getBatchNoEntityByBatchNo(batchNo);
+        Assert.notNull(batchNoEntity, String.format(" [任务批次号=%s]不存在，当前[最大任务批次号=%s]", batchNo, lastBatchNo));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 中断恢复
+        if (!resume) {
+
+            // 重新开一局
+            BtTaskDO new_batchNoEntity = new BtTaskDO();
+
+            new_batchNoEntity.setBatchNo(lastBatchNo + 1);
+            new_batchNoEntity.setStartDate(startDate);
+            new_batchNoEntity.setEndDate(endDate);
+
+            return new_batchNoEntity;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // finish list
+        List<BtTaskDO> finishTaskList = btTaskService.listByBatchNo(batchNo, true);
+        List<List<String>> finishBuyConList = finishTaskList.stream()
+                                                            .map(e -> Arrays.asList(e.getBuyStrategy().split(",")))
+                                                            .collect(Collectors.toList());
+
+
+        // remove  ->  finish
+        buyConCombinerList.removeAll(finishBuyConList);
+
+
+        // list  ->  str拼接
+        // List<String> strList = finishBuyConList.stream().map(e -> String.join(",", e)).collect(Collectors.toList());
+        log.info("finishBuyConList : {} , todo resumeBuyConList: {}", JSON.toJSONString(finishBuyConList), JSON.toJSONString(buyConCombinerList));
+
+
+        // del
+        int count = btTaskService.delErrTaskByBatchNo(batchNo);
+
+
+        return batchNoEntity;
+    }
+
+
+    private void progressLog(Integer batchNo, int current, int total, long start) {
+        String msg = "Completed " + current + "/" + total + " chunks     耗时：" + DateTimeUtil.formatNow2Hms(start);
+        log.info("📊 [批次号={}] 进度: {}/{} {}% | {}", batchNo, current, total, NumUtil.of(current * 100.0 / total), msg);
     }
 
 
@@ -103,8 +251,8 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
     @Override
-    public List<BtTaskDO> listTask(Long taskId) {
-        return btTaskService.listByTaskId(taskId);
+    public List<BtTaskDO> listTask(Long taskId, LocalDateTime startCreateTime, LocalDateTime endCreateTime) {
+        return btTaskService.listByTaskId(taskId, startCreateTime, endCreateTime);
     }
 
     @Override

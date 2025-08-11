@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,6 +30,10 @@ import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 @Slf4j
 @Component
 public class BacktestBuyStrategyB implements BuyStrategy {
+
+
+    @Autowired
+    private BacktestBuyStrategyA backtestBuyStrategyA;
 
 
     @Override
@@ -89,53 +94,40 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             // --------------------------------------------------------------------------------------
 
 
-            // --------------------------------------------------------------------------------------
-
-
-            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
-
-
-            boolean[] SSF多_arr = extDataArrDTO.SSF多;
-            boolean[] MA20多_arr = extDataArrDTO.MA20多;
-
-
-            boolean[] 月多_arr = extDataArrDTO.月多;
-            boolean[] RPS红_arr = extDataArrDTO.RPS红;
-            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
-
-
-            boolean[] N60日新高_arr = extDataArrDTO.N60日新高;
-            boolean[] 均线预萌出_arr = extDataArrDTO.均线预萌出;
-            boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
-
-
-            // -------------------------------------------
-
-
             Integer idx = dateIndexMap.get(tradeDate);
             if (idx == null) {
                 return;
             }
 
 
-            // -------------------------------------------
+            // --------------------------------------------------------------------------------------
 
 
-            double 中期涨幅 = 中期涨幅_arr[idx];
+            double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
 
 
-            boolean SSF多 = SSF多_arr[idx];
-            boolean MA20多 = MA20多_arr[idx];
+            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
-            boolean 月多 = 月多_arr[idx];
-            boolean RPS红 = RPS红_arr[idx];
-            boolean RPS三线红 = RPS三线红_arr[idx];
+            boolean SSF多 = extDataArrDTO.SSF多[idx];
+            boolean MA20多 = extDataArrDTO.MA20多[idx];
 
 
-            boolean N60日新高 = N60日新高_arr[idx];
-            boolean 均线预萌出 = 均线预萌出_arr[idx];
-            boolean 大均线多头 = 大均线多头_arr[idx];
+            boolean N60日新高 = extDataArrDTO.N60日新高[idx];
+            boolean N100日新高 = extDataArrDTO.N100日新高[idx];
+            boolean 历史新高 = extDataArrDTO.历史新高[idx];
+
+
+            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+            boolean 均线萌出 = extDataArrDTO.均线萌出[idx];
+            boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
+
+
+            boolean RPS红 = extDataArrDTO.RPS红[idx];
+            boolean RPS一线红 = extDataArrDTO.RPS一线红[idx];
+            boolean RPS双线红 = extDataArrDTO.RPS双线红[idx];
+            boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
 
 
             // -------------------------------------------
@@ -210,42 +202,31 @@ public class BacktestBuyStrategyB implements BuyStrategy {
             // --------------------------------------------------------------------------------------
 
 
-            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
+            double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
 
 
-            boolean[] SSF多_arr = extDataArrDTO.SSF多;
-            boolean[] MA20多_arr = extDataArrDTO.MA20多;
+            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
-            boolean[] 月多_arr = extDataArrDTO.月多;
-            boolean[] RPS红_arr = extDataArrDTO.RPS红;
-            boolean[] RPS三线红_arr = extDataArrDTO.RPS三线红;
+            boolean SSF多 = extDataArrDTO.SSF多[idx];
+            boolean MA20多 = extDataArrDTO.MA20多[idx];
 
 
-            boolean[] N60日新高_arr = extDataArrDTO.N60日新高;
-            boolean[] 均线预萌出_arr = extDataArrDTO.均线预萌出;
-            boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;
+            boolean N60日新高 = extDataArrDTO.N60日新高[idx];
+            boolean N100日新高 = extDataArrDTO.N100日新高[idx];
+            boolean 历史新高 = extDataArrDTO.历史新高[idx];
 
 
-            // -------------------------------------------
+            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+            boolean 均线萌出 = extDataArrDTO.均线萌出[idx];
+            boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
 
 
-            double 中期涨幅 = 中期涨幅_arr[idx];
-
-
-            boolean SSF多 = SSF多_arr[idx];
-            boolean MA20多 = MA20多_arr[idx];
-
-
-            boolean 月多 = 月多_arr[idx];
-            boolean RPS红 = RPS红_arr[idx];
-            boolean RPS三线红 = RPS三线红_arr[idx];
-
-
-            boolean N60日新高 = N60日新高_arr[idx];
-            boolean 均线预萌出 = 均线预萌出_arr[idx];
-            // boolean 均线萌出 = 均线萌出_arr[idx];
-            boolean 大均线多头 = 大均线多头_arr[idx];
+            boolean RPS红 = extDataArrDTO.RPS红[idx];
+            boolean RPS一线红 = extDataArrDTO.RPS一线红[idx];
+            boolean RPS双线红 = extDataArrDTO.RPS双线红[idx];
+            boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
 
 
             // -------------------------------------------
@@ -368,9 +349,16 @@ public class BacktestBuyStrategyB implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
+
+        backtestBuyStrategyA.buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // TODO     按照 规则打分 -> sort
         List<String> filterSort__stockCodeList = scoreSort(filter__stockCodeList2, data, tradeDate, 20);
-        // List<String> filterSort__stockCodeList = filter__stockCodeList2.stream().limit(20).collect(Collectors.toList());
 
 
         return filterSort__stockCodeList;
@@ -526,29 +514,5 @@ public class BacktestBuyStrategyB implements BuyStrategy {
         return topNStocks.stream().map(QuickOption.StockScore::getStockCode).collect(Collectors.toList());
     }
 
-
-/**
- * 个股   指定日期 -> 收盘价
- *
- * @param blockCode
- * @param tradeDate
- * @return
- */
-//    private double getBlockClosePrice(String blockCode, LocalDate tradeDate) {
-//        Double closePrice = data.stock__dateCloseMap.get(blockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-//        return closePrice == null ? 0.0 : closePrice;
-//    }
-
-/**
- * 个股   指定日期 -> 收盘价
- *
- * @param stockCode
- * @param tradeDate
- * @return
- */
-//    private double getStockClosePrice(String stockCode, LocalDate tradeDate) {
-//        Double closePrice = data.stock__dateCloseMap.get(stockCode).get(DateTimeUtil.format_yyyy_MM_dd(tradeDate));
-//        return closePrice == null ? 0.0 : closePrice;
-//    }
 
 }
