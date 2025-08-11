@@ -47,17 +47,18 @@ public class StockServiceImpl implements StockService {
 
         BaseStockDTO dto = new BaseStockDTO();
         if (entity != null) {
+
             dto.setKlineHis(entity.getKlineHis());
             BeanUtils.copyProperties(entity, dto);
 
 
-            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(entity.getKlineHis(), 100);
-
-            Map<String, Object> klineMap = new HashMap<>();
-            klineMap.put("date", ConvertStockKline.dateFieldValArr(klineDTOList, "date"));
-            klineMap.put("close", ConvertStockKline.fieldValArr(klineDTOList, "close"));
-
-            dto.setKlineMap(klineMap);
+//            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(entity.getKlineHis(), 100);
+//
+//            Map<String, Object> klineMap = new HashMap<>();
+//            klineMap.put("date", ConvertStockKline.dateFieldValArr(klineDTOList, "date"));
+//            klineMap.put("close", ConvertStockKline.fieldValArr(klineDTOList, "close"));
+//
+//            dto.setKlineMap(klineMap);
         }
 
 

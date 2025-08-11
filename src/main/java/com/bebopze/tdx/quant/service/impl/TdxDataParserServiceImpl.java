@@ -1441,6 +1441,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // --------------------- DB
 
 
+//        List<KlineDTO> klineDTOList = entity.getKlineDTOList();
+//        for (int i = 0; i < klineDTOList.size(); i++) {
+//
+//            KlineDTO klineDTO = klineDTOList.get(i);
+//            String kline = klines.get(i);
+//
+//
+//            if (klineDTO.getDate().equals(LocalDate.of(2025, 3, 28))) {
+//                log.info("klineDTO :" + klineDTO);
+//                log.info("kline :" + kline);
+//            }
+//        }
+
+
         baseStockService.updateById(entity);
     }
 

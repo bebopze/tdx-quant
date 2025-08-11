@@ -104,6 +104,11 @@ public class StockFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public StockFun(BaseStockDO stockDO) {
+        this(stockDO == null ? null : stockDO.getCode(), stockDO);
+    }
+
+
     public StockFun(String code, BaseStockDO stockDO) {
         Assert.notNull(stockDO, String.format("stockDO:[%s] is null  ->  请检查 dataCache 是否为null", code));
 
@@ -412,7 +417,13 @@ public class StockFun {
     }
 
     public boolean[] 历史新高() {
-        return N日新高(close.length);
+
+        boolean[] 历史新高_H_arr = TdxExtFun.历史新高(high);
+        boolean[] 历史新高_C_arr = TdxExtFun.历史新高(close);
+
+
+        // H新高 || C新高
+        return con_or(历史新高_H_arr, 历史新高_C_arr);
     }
 
 
@@ -455,8 +466,21 @@ public class StockFun {
     }
 
 
+    public boolean[] RPS一线红(double RPS) {
+        return TdxExtFun.RPS一线红(rps50, rps120, rps250, RPS);
+    }
+
+    public boolean[] RPS双线红(double RPS) {
+        return TdxExtFun.RPS双线红(rps50, rps120, rps250, RPS);
+    }
+
     public boolean[] RPS三线红(double RPS) {
         return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
+    }
+
+
+    public boolean[] RPS99() {
+        return TdxExtFun.RPS一线红(rps50, rps120, rps250, 99);
     }
 
 

@@ -211,6 +211,8 @@ public class ConvertStock {
 
 
             arrDTO.RPS红[i] = of(dto.getRPS红());
+            arrDTO.RPS一线红[i] = of(dto.getRPS一线红());
+            arrDTO.RPS双线红[i] = of(dto.getRPS双线红());
             arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
         }
 

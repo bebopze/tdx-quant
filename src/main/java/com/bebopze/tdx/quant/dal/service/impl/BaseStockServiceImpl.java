@@ -122,13 +122,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    // @Cacheable("stock_listAllKline")
     public List<BaseStockDO> listAllKline() {
         return listAllKline(false);
     }
 
     @Override
-    // @Cacheable(value = "stock_listAllKline", unless = "#refresh == true")
     public List<BaseStockDO> listAllKline(boolean refresh) {
         log.info("listAllKline     >>>     refresh : {}", refresh);
 

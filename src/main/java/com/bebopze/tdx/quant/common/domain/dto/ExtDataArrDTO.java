@@ -61,6 +61,8 @@ public class ExtDataArrDTO implements Serializable {
 
 
     public boolean[] RPS红;
+    public boolean[] RPS一线红;
+    public boolean[] RPS双线红;
     public boolean[] RPS三线红;
 
 
@@ -109,8 +111,9 @@ public class ExtDataArrDTO implements Serializable {
 
 
         this.RPS红 = new boolean[size];
+        this.RPS一线红 = new boolean[size];
+        this.RPS双线红 = new boolean[size];
         this.RPS三线红 = new boolean[size];
     }
-
 
 }

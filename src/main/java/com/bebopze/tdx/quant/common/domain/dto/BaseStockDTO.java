@@ -9,6 +9,8 @@ import java.util.Map;
 
 
 /**
+ * StockDTO
+ *
  * @author: bebopze
  * @date: 2025/5/31
  */
@@ -16,5 +18,5 @@ import java.util.Map;
 public class BaseStockDTO extends BaseStockDO implements Serializable {
 
 
-    private Map<String, Object> klineMap = new HashMap<>();
+    // private Map<String, Object> klineMap = new HashMap<>();
 }

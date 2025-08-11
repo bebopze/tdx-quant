@@ -124,42 +124,32 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
                 // --------------------------------------------------------------------------------------
 
-                double[] rps50_arr = extDataArrDTO.rps50;
-                double[] rps120_arr = extDataArrDTO.rps120;
-                double[] rps250_arr = extDataArrDTO.rps250;
-
-
-                double rps50 = rps50_arr[idx];
-                double rps120 = rps120_arr[idx];
-                double rps250 = rps250_arr[idx];
-
-
-                // RPS
-                boolean RPS一线红 = RPS一线红(rps50, rps120, rps250, 95);
-                boolean RPS双线红 = RPS双线红(rps50, rps120, rps250, 90);
-                boolean RPS三线红 = RPS三线红(rps50, rps120, rps250, 85);
-
-
-                // --------------------------------------------------------------------------------------
-
 
                 // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
+
+
+                boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
                 boolean SSF多 = extDataArrDTO.SSF多[idx];
                 boolean MA20多 = extDataArrDTO.MA20多[idx];
 
 
-                boolean 月多 = extDataArrDTO.月多[idx];
-                boolean RPS红 = extDataArrDTO.RPS红[idx];
-
-
                 boolean N60日新高 = extDataArrDTO.N60日新高[idx];
+                boolean N100日新高 = extDataArrDTO.N100日新高[idx];
+                boolean 历史新高 = extDataArrDTO.历史新高[idx];
+
+
+                boolean 月多 = extDataArrDTO.月多[idx];
                 boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+                boolean 均线萌出 = extDataArrDTO.均线萌出[idx];
                 boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
 
 
-                boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
+                boolean RPS红 = extDataArrDTO.RPS红[idx];
+                boolean RPS一线红 = extDataArrDTO.RPS一线红[idx];
+                boolean RPS双线红 = extDataArrDTO.RPS双线红[idx];
+                boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
 
 
                 // -------------------------------------------
@@ -335,10 +325,10 @@ public class BacktestBuyStrategyA implements BuyStrategy {
      * @param tradeDate
      * @param buy_infoMap
      */
-    private void buyStrategy_ETF(List<String> filter__stockCodeList2,
-                                 BacktestCache data,
-                                 LocalDate tradeDate,
-                                 Map<String, String> buy_infoMap) {
+    public void buyStrategy_ETF(List<String> filter__stockCodeList2,
+                                BacktestCache data,
+                                LocalDate tradeDate,
+                                Map<String, String> buy_infoMap) {
 
         if (!CollectionUtils.isEmpty(filter__stockCodeList2)) {
             return;

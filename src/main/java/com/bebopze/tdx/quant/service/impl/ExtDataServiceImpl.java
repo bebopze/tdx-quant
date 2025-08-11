@@ -423,7 +423,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         boolean[] RPS红 = fun.RPS红(85);
-        boolean[] RPS三线红 = fun.RPS三线红(80);
+        boolean[] RPS一线红 = fun.RPS一线红(95);
+        boolean[] RPS双线红 = fun.RPS双线红(90);
+        boolean[] RPS三线红 = fun.RPS三线红(85);
 
 
         // ---------------------------- 2、convert（序列   ->   列表）
@@ -461,6 +463,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             dto.setRPS红(RPS红[i]);
+            dto.setRPS一线红(RPS一线红[i]);
+            dto.setRPS双线红(RPS双线红[i]);
             dto.setRPS三线红(RPS三线红[i]);
         }
     }
