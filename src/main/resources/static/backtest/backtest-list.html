@@ -34,6 +34,14 @@
             margin-left: 4px;
             font-size: 12px;
         }
+
+        .sorted-asc .sort-icon {
+            color: lightseagreen;
+        }
+
+        .sorted-desc .sort-icon {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -46,10 +54,10 @@
                 <input type="text" class="form-control form-control-sm" id="taskId" placeholder="任务ID">
             </div>
             <div class="col-md-3 form-group">
-                <input type="date" class="form-control form-control-sm" id="startDate">
+                <input type="datetime-local" class="form-control form-control-sm" id="startCreateTime">
             </div>
             <div class="col-md-3 form-group">
-                <input type="date" class="form-control form-control-sm" id="endDate">
+                <input type="datetime-local" class="form-control form-control-sm" id="endCreateTime">
             </div>
             <div class="col-md-3 form-group">
                 <button type="button" class="btn btn-sm btn-primary" onclick="loadTasks()">查询</button>
@@ -62,7 +70,8 @@
             <thead>
             <tr id="tableHeader">
                 <th data-key="id">任务ID <span class="sort-icon"></span></th>
-                <th data-key="buyStrategy">策略 <span class="sort-icon"></span></th>
+                <th data-key="buyStrategy">B策略 <span class="sort-icon"></span></th>
+                <th data-key="sellStrategy">S策略 <span class="sort-icon"></span></th>
                 <th data-key="startDate">回测周期 <span class="sort-icon"></span></th>
                 <th data-key="initialCapital">初始资金 <span class="sort-icon"></span></th>
                 <th data-key="finalCapital">结束资金 <span class="sort-icon"></span></th>
@@ -88,14 +97,23 @@
 
 <script>
     let originalData = [];
-    let currentSort = { key: null, direction: null };
+    let currentSort = {key: null, direction: null};
+
+    function formatDateTimeLocal(value) {
+        if (!value) return '';
+        // value is in format: YYYY-MM-DDTHH:MM
+        return value.replace('T', ' ') + ':00';
+    }
 
     function loadTasks() {
         const taskId = document.getElementById('taskId').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+        const startCreateTimeRaw = document.getElementById('startCreateTime').value;
+        const endCreateTimeRaw = document.getElementById('endCreateTime').value;
 
-        fetch(`/api/backtest/task/list?taskId=${taskId}&startDate=${startDate}&endDate=${endDate}`)
+        const startCreateTime = formatDateTimeLocal(startCreateTimeRaw);
+        const endCreateTime = formatDateTimeLocal(endCreateTimeRaw);
+
+        fetch(`/api/backtest/task/list?taskId=${taskId}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -114,7 +132,8 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td><a href="backtest-analysis.html?taskId=${task.id}">${task.id}</a></td>
-              <td>${task.buyStrategy} / ${task.sellStrategy}</td>
+              <td>${task.buyStrategy}</td>
+              <td>${task.sellStrategy}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
               <td>${task.finalCapital}</td>
@@ -163,9 +182,10 @@
             const key = th.dataset.key;
             const icon = th.querySelector('.sort-icon');
             if (!icon) return;
+            th.classList.remove('sorted-asc', 'sorted-desc');
             if (currentSort.key === key) {
                 icon.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
-                icon.style.color = 'black';
+                th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
             } else {
                 icon.textContent = '';
             }
