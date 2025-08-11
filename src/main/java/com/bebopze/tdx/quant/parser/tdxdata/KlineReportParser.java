@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -13,7 +14,9 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
@@ -216,7 +219,64 @@ public class KlineReportParser {
         }
 
 
+        // tdx 日K（导出/xx.day）    ->     竟然出现重复   🐶💩
+        TDX_SHIT_BUG___REPEAT_KLINE(dtoList);
+
+
         return dtoList;
+    }
+
+
+    /**
+     * 通达信 日K数据（导出/xx.day）      ->       1、同一交易日 出现多条记录的问题（前复权 与 不复权 重复）      🐶💩
+     * -                                       2、日期断层   ->   日期 顺序错乱
+     *
+     *
+     * -       保留 前复权 数据
+     *
+     * @param dtoList
+     */
+    public static void TDX_SHIT_BUG___REPEAT_KLINE(List<LdayParser.LdayDTO> dtoList) {
+
+
+        Map<LocalDate, LdayParser.LdayDTO> date_dto_map = Maps.newHashMapWithExpectedSize(dtoList.size());
+        List<LocalDate> repeatList = Lists.newArrayList();
+
+
+        // ------- 000063（中兴通讯）
+
+        // 2025/03/28,33.98,34.30,33.68,34.06,64806292,2242244864.00          - 6477 行       前复权
+        // 2025/03/28,34.60,34.92,34.30,34.68,64806292,2242244864.00          - 6551 行       不复权（异常重复数据  ->  丢弃）
+
+
+        // tips：  前复权 price   <=   不复权 price   （前复权价格 考虑了 分红和送股 对股价的 稀释，而 不复权价格 则没有）
+
+
+        // 暂时 懒得比较了             根据观察🔎 导出文件     直接取 第一条  ->  前复权
+
+
+        dtoList.forEach(e -> {
+            LdayParser.LdayDTO ldayDTO = date_dto_map.putIfAbsent(e.getTradeDate(), e);
+
+            if (ldayDTO != null) {
+                repeatList.add(e.getTradeDate());
+            }
+        });
+
+
+        if (!repeatList.isEmpty()) {
+            log.warn("TDX_SHIT_BUG___REPEAT_KLINE     >>>     去重前 : {} , 去重后 : {} , 去重 : {} , repeatList : {}",
+                     dtoList.size(), date_dto_map.size(), repeatList.size(), JSON.toJSONString(repeatList));
+        }
+
+
+        // 高效sort
+        List<LdayParser.LdayDTO> distinctList = Lists.newArrayList(date_dto_map.values());
+        distinctList.sort(Comparator.comparing(LdayParser.LdayDTO::getTradeDate));
+
+
+        dtoList.clear();
+        dtoList.addAll(distinctList);
     }
 
 

@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.StockTypeUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
+import static com.bebopze.tdx.quant.parser.tdxdata.KlineReportParser.TDX_SHIT_BUG___REPEAT_KLINE;
 
 
 /**
@@ -56,6 +59,12 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  */
 @Slf4j
 public class LdayParser {
+
+
+    /**
+     * A股 起始时间
+     */
+    public static final LocalDate MARKET_START_DATE = LocalDate.of(1990, 1, 1);
 
 
     /**
@@ -376,6 +385,10 @@ public class LdayParser {
             LocalDate tradeDate;
             try {
                 tradeDate = LocalDate.of(year, month, day);
+
+                // 1990-1-1  ~  now()
+                Assert.isTrue(DateTimeUtil.between(tradeDate, MARKET_START_DATE, LocalDate.now()), String.format("tradeDate=[%s]超出有效范围", tradeDate));
+
             } catch (Exception ex) {
                 log.error("parseByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
                           code, date, year, month, day);
@@ -416,6 +429,10 @@ public class LdayParser {
 
             dtoList.add(dto);
         }
+
+
+        // tdx 日K（导出/xx.day）    ->     竟然出现重复   🐶💩
+        TDX_SHIT_BUG___REPEAT_KLINE(dtoList);
 
 
         return dtoList;
