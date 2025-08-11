@@ -605,6 +605,26 @@ public class TdxExtFun {
         return signal;
     }
 
+    /**
+     * 历史新高
+     *
+     * @param high 原始序列（如 最高价序列）
+     * @return 布尔数组，第 i 位为 true 时表示 high[i] 刚好等于过去 全期 的最高值
+     */
+    public static boolean[] 历史新高(double[] high) {
+        double[] hhv = HHV2(high, high.length);
+
+        int len = high.length;
+        boolean[] signal = new boolean[len];
+
+        for (int i = 0; i < len; i++) {
+            // 当期值等于 N 期内最高值，且不是 NaN 时视为新高
+            signal[i] = /*!Double.isNaN(hhv[i]) &&*/ high[i] == hhv[i];
+        }
+
+        return signal;
+    }
+
 
     /**
      * 均线预萌出信号                         MAPreBreakout
@@ -955,6 +975,7 @@ public class TdxExtFun {
                                   double RPS1,
                                   double RPS2,
                                   double RPS3) {
+
         // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
 
 
@@ -1233,30 +1254,49 @@ public class TdxExtFun {
 
             // 10CM
 
+
+            // --------------------------------------------------
+
+
+            // 默认值：MA20
+            MA[i] = 20;
+
+
             // -------------------------------------------------- 当日
+
+
+            if (MA10_偏离率 > 20) {
+                MA[i] = 5;
+                continue;
+            }
+
+            if (MA20_偏离率 > 25) {
+                MA[i] = 10;
+                continue;
+            }
 
             if (MA50_偏离率 > 30) {
                 MA[i] = 20;
-            }
-            if (MA20_偏离率 > 25) {
-                MA[i] = 10;
-            }
-            if (MA10_偏离率 > 20) {
-                MA[i] = 5;
+                continue;
             }
 
 
             // -------------------------------------------------- 近日
 
 
-            if (MA50_偏离率_H > 35) {
-                MA[i] = 20;
-            }
-            if (MA20_偏离率_H > 30) {
-                MA[i] = 10;
-            }
             if (MA10_偏离率_H > 25) {
                 MA[i] = 5;
+                continue;
+            }
+
+            if (MA20_偏离率_H > 30) {
+                MA[i] = 10;
+                continue;
+            }
+
+            if (MA50_偏离率_H > 35) {
+                MA[i] = 20;
+                continue;
             }
         }
 

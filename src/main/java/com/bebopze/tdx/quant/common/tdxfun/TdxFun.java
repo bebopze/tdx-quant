@@ -115,6 +115,25 @@ public class TdxFun {
         return r;
     }
 
+    /**
+     * 仅为计算 历史新高
+     *
+     * @param S
+     * @param N
+     * @return
+     */
+    public static double[] HHV2(double[] S, int N) {
+        double[] r = new double[S.length];
+        for (int i = 0; i < S.length; i++) {
+            int start = Math.max(0, i + 1 - N);
+            double max = Double.NEGATIVE_INFINITY;
+            for (int j = start; j <= i; j++) max = Math.max(max, S[j]);
+            r[i] = max;
+        }
+        return r;
+    }
+
+
     public static double[] LLV(double[] S, int N) {
         double[] r = new double[S.length];
         for (int i = 0; i < S.length; i++) {
