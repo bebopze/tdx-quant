@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +41,13 @@ public class BtTaskDO implements Serializable {
     @Schema(description = "主键ID")
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    /**
+     * 任务批次号（用于 中断恢复）
+     */
+    @TableField(value = "batch_no")
+    @Schema(description = "任务批次号（用于 中断恢复）")
+    private Integer batchNo;
 
     /**
      * B策略
@@ -158,13 +166,15 @@ public class BtTaskDO implements Serializable {
      */
     @Schema(description = "胜率-JSON详情")
     @TableField("trade_stat_result")
-    private String tradeStatResult;
+    @JsonIgnore
+    private transient String tradeStatResult;
 
     /**
      * 最大回撤-JSON详情
      */
     @Schema(description = "最大回撤-JSON详情")
     @TableField("drawdown_result")
+    @JsonIgnore
     private String drawdownResult;
 
     /**
@@ -187,21 +197,21 @@ public class BtTaskDO implements Serializable {
     // -----------------------------------------------------------
 
 
-    public JSONObject getDrawdownResultDesc() {
-        if (drawdownResult == null) {
-            return new JSONObject();
-        }
-
-        return JSON.parseObject(drawdownResult);
-    }
-
-    public JSONObject getTradeStatResultDesc() {
-        if (tradeStatResult == null) {
-            return new JSONObject();
-        }
-
-        return JSON.parseObject(tradeStatResult);
-    }
+//    public JSONObject getDrawdownResultDesc() {
+//        if (drawdownResult == null) {
+//            return new JSONObject();
+//        }
+//
+//        return JSON.parseObject(drawdownResult);
+//    }
+//
+//    public JSONObject getTradeStatResultDesc() {
+//        if (tradeStatResult == null) {
+//            return new JSONObject();
+//        }
+//
+//        return JSON.parseObject(tradeStatResult);
+//    }
 
 
 }

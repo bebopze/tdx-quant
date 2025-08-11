@@ -36,4 +36,9 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
         return listByTaskIdAndTradeDateRange(taskId, null, null);
     }
 
+    @Override
+    public int deleteByTaskIds(List<Long> taskIdList) {
+        return baseMapper.deleteByTaskIds(taskIdList);
+    }
+
 }

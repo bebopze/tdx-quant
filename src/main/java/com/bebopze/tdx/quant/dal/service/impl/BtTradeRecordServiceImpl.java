@@ -46,4 +46,9 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         return baseMapper.listByTaskIdAndStockCode(taskId, stockCode);
     }
 
+    @Override
+    public int deleteByTaskIds(List<Long> taskIdList) {
+        return baseMapper.deleteByTaskIds(taskIdList);
+    }
+
 }

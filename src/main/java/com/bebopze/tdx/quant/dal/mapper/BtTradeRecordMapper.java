@@ -28,4 +28,8 @@ public interface BtTradeRecordMapper extends BaseMapper<BtTradeRecordDO> {
 
     List<BtTradeRecordDO> listByTaskIdAndStockCode(@Param("taskId") Long taskId,
                                                    @Param("stockCode") String stockCode);
+
+
+    int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
+
 }

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import org.apache.ibatis.annotations.Param;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -18,6 +18,20 @@ import java.util.List;
 public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
 
     List<BtTaskDO> listByTaskIdAndDate(@Param("taskId") Long taskId,
-                                       @Param("startDate") LocalDate startDate,
-                                       @Param("endDate") LocalDate endDate);
+                                       @Param("startTime") LocalDateTime startTime,
+                                       @Param("endTime") LocalDateTime endTime);
+
+
+    List<BtTaskDO> listByBatchNo(@Param("batchNo") Integer batchNo,
+                                 @Param("finish") Boolean finish);
+
+    List<Long> listIdByBatchNo(@Param("batchNo") Integer batchNo,
+                               @Param("finish") Boolean finish);
+
+
+    Integer lastBatchNo();
+
+    BtTaskDO getLastBatchNoEntity();
+
+    BtTaskDO getBatchNoEntityByBatchNo(@Param("batchNo") Integer batchNo);
 }

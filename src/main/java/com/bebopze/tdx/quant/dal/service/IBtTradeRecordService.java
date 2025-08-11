@@ -23,4 +23,6 @@ public interface IBtTradeRecordService extends IService<BtTradeRecordDO> {
     List<BtTradeRecordDO> listByTaskId(Long taskId);
 
     List<BtTradeRecordDO> listByTaskIdAndStockCode(Long taskId, String stockCode);
+
+    int deleteByTaskIds(List<Long> taskIdList);
 }

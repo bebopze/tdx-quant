@@ -15,13 +15,101 @@
             <if test="taskId != null">
                 <![CDATA[     AND id = #{taskId}     ]]>
             </if>
-            <if test="startDate != null">
-                <![CDATA[     AND gmtCreate >= #{startDate}     ]]>
+            <if test="startTime != null">
+                <![CDATA[     AND gmt_create >= #{startTime}     ]]>
             </if>
-            <if test="endDate != null">
-                <![CDATA[     AND gmtCreate <= #{endDate}     ]]>
+            <if test="endTime != null">
+                <![CDATA[     AND gmt_create <= #{endTime}     ]]>
             </if>
         </where>
+
+    </select>
+
+
+    <select id="listByBatchNo" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+
+        SELECT *
+
+
+        FROM bt_task
+
+
+        <where>
+            <if test="batchNo != null">
+                AND batch_no = #{batchNo}
+            </if>
+            <if test="finish != null and finish == true">
+                AND final_capital IS NOT NULL
+            </if>
+            <if test="finish != null and finish == false">
+                AND final_capital IS NULL
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="listIdByBatchNo" resultType="long">
+
+        SELECT id
+
+
+        FROM bt_task
+
+
+        <where>
+            <if test="batchNo != null">
+                AND batch_no = #{batchNo}
+            </if>
+            <if test="finish != null and finish == true">
+                AND final_capital IS NOT NULL
+            </if>
+            <if test="finish != null and finish == false">
+                AND final_capital IS NULL
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="lastBatchNo" resultType="int">
+
+        SELECT batch_no
+
+        FROM bt_task
+
+
+        ORDER BY id DESC
+
+        LIMIT 1
+
+    </select>
+
+
+    <select id="getLastBatchNoEntity" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+
+        SELECT *
+
+        FROM bt_task
+
+        WHERE batch_no = (SELECT batch_no FROM bt_task ORDER BY id DESC LIMIT 1)
+
+        ORDER BY id ASC
+        LIMIT 1
+
+    </select>
+
+
+    <select id="getBatchNoEntityByBatchNo" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+
+        SELECT *
+
+        FROM bt_task
+
+        WHERE batch_no = #{batchNo}
+
+        ORDER BY id ASC
+        LIMIT 1
 
     </select>
 

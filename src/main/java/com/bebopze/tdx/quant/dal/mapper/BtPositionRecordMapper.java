@@ -26,4 +26,7 @@ public interface BtPositionRecordMapper extends BaseMapper<BtPositionRecordDO> {
                                                            @Param("startTradeDate") LocalDate startTradeDate,
                                                            @Param("endTradeDate") LocalDate endTradeDate);
 
+
+    int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
+
 }

@@ -40,4 +40,17 @@
     </select>
 
 
+    <delete id="deleteByTaskIds">
+        DELETE
+        FROM bt_daily_return
+
+        WHERE task_id IN
+
+
+        <foreach collection="taskIdList" item="taskId" open="(" close=")" separator=",">
+            #{taskId}
+        </foreach>
+    </delete>
+
+
 </mapper>

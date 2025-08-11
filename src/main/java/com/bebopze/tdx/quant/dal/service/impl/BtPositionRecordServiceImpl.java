@@ -36,4 +36,9 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
         return listByTaskIdAndTradeDateRange(taskId, null, null);
     }
 
+    @Override
+    public int deleteByTaskIds(List<Long> taskIdList) {
+        return baseMapper.deleteByTaskIds(taskIdList);
+    }
+
 }
