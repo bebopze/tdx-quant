@@ -23,7 +23,7 @@ import java.util.List;
 
 
 /**
- * json文件 - 读/写
+ * json文件 - 读/写（1G以上 超大文件）
  *
  * @author: bebopze
  * @date: 2025/5/24
@@ -41,13 +41,19 @@ public class JsonFileWriterAndReader {
 
 
     /**
-     * 大对象 写入
+     * 超大对象 写入       -       stock
      *
      * @param entityList
      * @param filePath
      */
     public static void stock__writeLargeListToFile(List<BaseStockDO> entityList, String filePath) {
 
+
+        // del oldFile
+        del__writeLargeListToFile(filePath);
+
+
+        // write newFile
         try (JsonWriter writer = new JsonWriter(new FileWriter(filePath))) {
             writer.beginArray();
 
@@ -70,8 +76,21 @@ public class JsonFileWriterAndReader {
         }
     }
 
+
+    /**
+     * 超大对象 写入       -       block
+     *
+     * @param entityList
+     * @param filePath
+     */
     public static void block__writeLargeListToFile(List<BaseBlockDO> entityList, String filePath) {
 
+
+        // del oldFile
+        del__writeLargeListToFile(filePath);
+
+
+        // write newFile
         try (JsonWriter writer = new JsonWriter(new FileWriter(filePath))) {
             writer.beginArray();
 
@@ -98,6 +117,12 @@ public class JsonFileWriterAndReader {
     // ---------------------------------------------------- read
 
 
+    /**
+     * 超大对象 读取       -       stock
+     *
+     * @param filePath
+     * @return
+     */
     public static List<BaseStockDO> stock__readLargeJsonFile(String filePath) {
         List<BaseStockDO> entityList = Lists.newArrayList();
 
@@ -117,6 +142,12 @@ public class JsonFileWriterAndReader {
     }
 
 
+    /**
+     * 超大对象 读取       -       block
+     *
+     * @param filePath
+     * @return
+     */
     public static List<BaseBlockDO> block__readLargeJsonFile(String filePath) {
         List<BaseBlockDO> entityList = Lists.newArrayList();
 
@@ -136,6 +167,12 @@ public class JsonFileWriterAndReader {
     }
 
 
+    /**
+     * 行数据 - read
+     *
+     * @param reader
+     * @return
+     */
     @SneakyThrows
     private static BaseStockDO readStockKLine(JsonReader reader) {
         BaseStockDO entity = new BaseStockDO();
@@ -162,6 +199,12 @@ public class JsonFileWriterAndReader {
     }
 
 
+    /**
+     * 行数据 - read
+     *
+     * @param reader
+     * @return
+     */
     @SneakyThrows
     private static BaseBlockDO readBlockKLine(JsonReader reader) {
         BaseBlockDO entity = new BaseBlockDO();
@@ -348,6 +391,78 @@ public class JsonFileWriterAndReader {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                             stockDOList
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static final String stock_filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
+
+
+    private static void del__writeLargeListToFile(String filePath) {
+        new File(filePath).delete();
+        log.info("disk cache DELETE  -  del__writeLargeListToFile     >>>     filePath : {}", filePath);
+    }
+
+
+    /**
+     * stockDOList   ->   write
+     *
+     * @param stockDOList
+     */
+    public static void writeStringToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
+        // write
+        stock__writeLargeListToFile(stockDOList, stock_filePath);
+        log.info("disk cache WRITE  -  writeStringToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
+    }
+
+
+    /**
+     * stockDOList   ->   read
+     */
+    public static List<BaseStockDO> readStringFromFile___stock_listAllKline() {
+
+        List<BaseStockDO> stockDOList = stock__readLargeJsonFile(stock_filePath);
+        log.info("disk cache READ  -  readStringFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
+
+        return stockDOList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                             blockDOList
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static final String block_filePath = System.getProperty("user.dir") + "/wiki/DB/all_block_kline.json";
+
+
+    /**
+     * blockDOList   ->   write
+     *
+     * @param blockDOList
+     */
+    public static void writeStringToFile___block_listAllKline(List<BaseBlockDO> blockDOList) {
+        block__writeLargeListToFile(blockDOList, block_filePath);
+        log.info("disk cache WRITE  -  writeStringToFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+    }
+
+
+    /**
+     * blockDOList   ->   read
+     */
+    public static List<BaseBlockDO> readStringFromFile___block_listAllKline() {
+
+        List<BaseBlockDO> blockDOList = block__readLargeJsonFile(block_filePath);
+        log.info("disk cache READ  -  readStringFromFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+
+        return blockDOList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static void main(String[] args) {
 
 
@@ -376,82 +491,14 @@ public class JsonFileWriterAndReader {
      */
     public static void writeStringToFile___stock_listAllKline() {
 
-        String filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
-
 
         // List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
 
         List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().getBaseMapper()
-                                                       .selectList(
-                                                               new QueryWrapper<BaseStockDO>()
-                                                                       .last("LIMIT 10")
-                                                       );
+                                                       .selectList(new QueryWrapper<BaseStockDO>().last("LIMIT 10"));
 
 
-        stock__writeLargeListToFile(stockDOList, filePath);
-        // writeStringToFile(JSON.toJSONString(baseStockDOList, JSONWriter.Feature.LargeObject), filePath);
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-    //                                             stockDOList
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    private static final String stock_filePath = System.getProperty("user.dir") + "/wiki/DB/all_stock_kline.json";
-
-
-    /**
-     * stockDOList   ->   write
-     *
-     * @param stockDOList
-     */
-    public static void writeStringToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
         stock__writeLargeListToFile(stockDOList, stock_filePath);
-        log.debug("disk cache write  -  writeStringToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
-    }
-
-
-    /**
-     * stockDOList   ->   read
-     */
-    public static List<BaseStockDO> readStringFromFile___stock_listAllKline() {
-
-        List<BaseStockDO> stockDOList = stock__readLargeJsonFile(stock_filePath);
-        log.debug("disk cache read  -  readStringFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
-
-        return stockDOList;
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-    //                                             blockDOList
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    private static final String block_filePath = System.getProperty("user.dir") + "/wiki/DB/all_block_kline.json";
-
-
-    /**
-     * blockDOList   ->   write
-     *
-     * @param blockDOList
-     */
-    public static void writeStringToFile___block_listAllKline(List<BaseBlockDO> blockDOList) {
-        block__writeLargeListToFile(blockDOList, block_filePath);
-        log.debug("disk cache write  -  writeStringToFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
-    }
-
-
-    /**
-     * blockDOList   ->   read
-     */
-    public static List<BaseBlockDO> readStringFromFile___block_listAllKline() {
-
-        List<BaseBlockDO> blockDOList = block__readLargeJsonFile(block_filePath);
-        log.debug("disk cache read  -  readStringFromFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
-
-        return blockDOList;
     }
 
 
