@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.bebopze.tdx.quant.common.config.ThreadPoolRegistry;
+import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
 
 /**
  * 并行计算工具类（工业级）
- * <p>
+ *
  * 特性：
  * - 自定义线程池（避免 ForkJoinPool 竞争）
  * - 支持分片批处理（chunk）
@@ -26,23 +27,23 @@ import java.util.stream.Collectors;
 public class ParallelCalcUtil {
 
 
-    // CPU 核心数
-    private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
-    private static final int DEFAULT_PARALLELISM = Math.max(2, AVAILABLE_PROCESSORS);
-
-
-    /**
-     * 自定义线程池：避免占用 ForkJoinPool.commonPool()
-     * 适用于 CPU 密集型任务（如量化计算、技术指标）
-     */
-    private static final ThreadPoolExecutor SHARED_POOL = new ThreadPoolExecutor(
-            DEFAULT_PARALLELISM,
-            DEFAULT_PARALLELISM * 2,
-            60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1000),
-            new ThreadFactoryBuilder().setNameFormat("ParallelCalcPool-%d").build(),
-            new ThreadPoolExecutor.CallerRunsPolicy() // 防止拒绝
-    );
+//    // CPU 核心数
+//    private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+//    private static final int DEFAULT_PARALLELISM = Math.max(2, AVAILABLE_PROCESSORS);
+//
+//
+//    /**
+//     * 自定义线程池：避免占用 ForkJoinPool.commonPool()
+//     * 适用于 CPU 密集型任务（如量化计算、技术指标）
+//     */
+//    private static final ThreadPoolExecutor SHARED_POOL = new ThreadPoolExecutor(
+//            DEFAULT_PARALLELISM,
+//            DEFAULT_PARALLELISM * 2,
+//            60L, TimeUnit.SECONDS,
+//            new LinkedBlockingQueue<>(1000),
+//            new ThreadFactoryBuilder().setNameFormat("ParallelCalcPool-%d").build(),
+//            new ThreadPoolExecutor.CallerRunsPolicy() // 防止拒绝
+//    );
 
 
     // ======================= 基础并行 =======================
@@ -51,7 +52,7 @@ public class ParallelCalcUtil {
     /**
      * 并行处理集合（无返回值）
      */
-    public static <T> void forEach(List<T> dataList, ThrowingConsumer<T> processor) {
+    public static <T> void forEach(List<T> dataList, ThrowingConsumer<T> processor, ThreadPoolType poolType) {
         if (dataList == null || dataList.isEmpty()) return;
 
         List<CompletableFuture<Void>> futures = new ArrayList<>(dataList.size());
@@ -63,7 +64,7 @@ public class ParallelCalcUtil {
                     log.error("ParallelCalcUtil.forEach error: {}", e.getMessage(), e);
                     throw new CompletionException(e);
                 }
-            }, SHARED_POOL);
+            }, ThreadPoolRegistry.getPool(poolType));
             futures.add(future);
         }
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -73,7 +74,7 @@ public class ParallelCalcUtil {
     /**
      * 并行映射（有返回值，顺序一致）
      */
-    public static <T, R> List<R> map(List<T> dataList, ThrowingFunction<T, R> mapper) {
+    public static <T, R> List<R> map(List<T> dataList, ThrowingFunction<T, R> mapper, ThreadPoolType poolType) {
         if (dataList == null || dataList.isEmpty()) return Collections.emptyList();
 
         @SuppressWarnings("unchecked")
@@ -87,7 +88,7 @@ public class ParallelCalcUtil {
                     log.error("ParallelCalcUtil.map error index={}: {}", index, e.getMessage(), e);
                     throw new CompletionException(e);
                 }
-            }, SHARED_POOL);
+            }, ThreadPoolRegistry.getPool(poolType));
         }
         return Arrays.stream(futures).map(CompletableFuture::join).collect(Collectors.toList());
     }
@@ -99,7 +100,11 @@ public class ParallelCalcUtil {
     /**
      * 分片并行处理（无返回值）
      */
-    public static <T> void chunkForEach(List<T> dataList, int chunkSize, ThrowingConsumer<List<T>> processor) {
+    public static <T> void chunkForEach(List<T> dataList,
+                                        int chunkSize,
+                                        ThrowingConsumer<List<T>> processor,
+                                        ThreadPoolType poolType) {
+
         if (dataList == null || dataList.isEmpty()) return;
 
         int total = dataList.size();
@@ -116,7 +121,7 @@ public class ParallelCalcUtil {
                     log.error("ParallelCalcUtil.chunkForEach error: {}", e.getMessage(), e);
                     throw new CompletionException(e);
                 }
-            }, SHARED_POOL);
+            }, ThreadPoolRegistry.getPool(poolType));
             futures.add(future);
         }
 
@@ -127,11 +132,11 @@ public class ParallelCalcUtil {
     /**
      * 分片并行处理 + 进度回调
      */
-    public static <T> void chunkForEachWithProgress(
-            List<T> dataList,
-            int chunkSize,
-            ThrowingConsumer<List<T>> processor,
-            ProgressCallback callback) {
+    public static <T> void chunkForEachWithProgress(List<T> dataList,
+                                                    int chunkSize,
+                                                    ThrowingConsumer<List<T>> processor,
+                                                    ProgressCallback callback,
+                                                    ThreadPoolType poolType) {
 
         if (dataList == null || dataList.isEmpty()) return;
 
@@ -164,7 +169,7 @@ public class ParallelCalcUtil {
                     log.error("ParallelCalcUtil.chunkForEachWithProgress error: {}", e.getMessage(), e);
                     throw new CompletionException(e);
                 }
-            }, SHARED_POOL);
+            }, ThreadPoolRegistry.getPool(poolType));
 
             futures.add(future);
         }
@@ -172,10 +177,20 @@ public class ParallelCalcUtil {
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
-    public static <T> void chunkForEachWithProgress(
-            List<T> dataList,
-            int chunkSize,
-            ThrowingConsumer<List<T>> processor) {
+    /**
+     * 默认使用 CPU_INTENSIVE 池（兼容旧代码）
+     */
+    public static <T> void chunkForEachWithProgress(List<T> dataList,
+                                                    int chunkSize,
+                                                    ThrowingConsumer<List<T>> processor) {
+
+        chunkForEachWithProgress(dataList, chunkSize, processor, ThreadPoolType.CPU_INTENSIVE);
+    }
+
+    public static <T> void chunkForEachWithProgress(List<T> dataList,
+                                                    int chunkSize,
+                                                    ThrowingConsumer<List<T>> processor,
+                                                    ThreadPoolType poolType) {
 
 
         chunkForEachWithProgress(dataList, chunkSize, processor,
@@ -185,19 +200,22 @@ public class ParallelCalcUtil {
 
                                      // 可用于推送前端、更新UI、写日志等
                                      log.info("📊 进度: {}/{} {}% | {}", current, total, NumUtil.of(current * 100.0 / total), msg);
-                                 });
+                                 },
+
+                                 poolType);
     }
 
 
     /**
      * 分片并行处理 + 超时控制
      */
-    public static <T> void chunkForEachWithTimeout(
-            List<T> dataList,
-            int chunkSize,
-            ThrowingConsumer<List<T>> processor,
-            long timeout,
-            TimeUnit unit) throws TimeoutException {
+    public static <T> void chunkForEachWithTimeout(List<T> dataList,
+                                                   int chunkSize,
+                                                   ThrowingConsumer<List<T>> processor,
+                                                   long timeout,
+                                                   TimeUnit unit,
+                                                   ThreadPoolType poolType) throws TimeoutException {
+
 
         if (dataList == null || dataList.isEmpty()) return;
 
@@ -215,7 +233,7 @@ public class ParallelCalcUtil {
                     log.error("ParallelCalcUtil.chunkForEachWithTimeout error: {}", e.getMessage(), e);
                     throw new CompletionException(e);
                 }
-            }, SHARED_POOL);
+            }, ThreadPoolRegistry.getPool(poolType));
 
             futures.add(future);
         }
@@ -236,30 +254,30 @@ public class ParallelCalcUtil {
     }
 
 
-    // ======================= 工具方法 =======================
-
-
-    /**
-     * 获取底层线程池（用于监控或关闭）
-     */
-    public static ExecutorService getPool() {
-        return SHARED_POOL;
-    }
-
-    /**
-     * 关闭线程池（应用退出时调用）
-     */
-    public static void shutdown() {
-        SHARED_POOL.shutdown();
-        try {
-            if (!SHARED_POOL.awaitTermination(5, TimeUnit.SECONDS)) {
-                SHARED_POOL.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            SHARED_POOL.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-    }
+//    // ======================= 工具方法 =======================
+//
+//
+//    /**
+//     * 获取底层线程池（用于监控或关闭）
+//     */
+//    public static ExecutorService getPool() {
+//        return SHARED_POOL;
+//    }
+//
+//    /**
+//     * 关闭线程池（应用退出时调用）
+//     */
+//    public static void shutdown() {
+//        SHARED_POOL.shutdown();
+//        try {
+//            if (!SHARED_POOL.awaitTermination(5, TimeUnit.SECONDS)) {
+//                SHARED_POOL.shutdownNow();
+//            }
+//        } catch (InterruptedException e) {
+//            SHARED_POOL.shutdownNow();
+//            Thread.currentThread().interrupt();
+//        }
+//    }
 
 
     // ======================= 函数式接口 =======================
