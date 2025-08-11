@@ -101,7 +101,7 @@ public class BacktestCache {
 
     public final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
                                                                  .maximumSize(5_000)                               // 内存容量控制（可根据对象大小调整）
-                                                                 .expireAfterWrite(10, TimeUnit.MINUTES)   // 写入后 10分钟过期（TTL）
+                                                                 .expireAfterWrite(30, TimeUnit.MINUTES)   // 写入后 30分钟过期（TTL）
                                                                  .expireAfterAccess(5, TimeUnit.MINUTES)   // 最近访问后 5分钟过期（TTI）
                                                                  .recordStats()                                    // 开启统计（命中率等）
                                                                  .removalListener(createRemovalListener())         // 可选：清理时回调
@@ -111,7 +111,7 @@ public class BacktestCache {
 
     public final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
                                                                  .maximumSize(1_000)
-                                                                 .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                 .expireAfterWrite(30, TimeUnit.MINUTES)
                                                                  .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                  .recordStats()
                                                                  .removalListener(createRemovalListener())
@@ -180,6 +180,22 @@ public class BacktestCache {
 //            log.info("Cache entry {} was removed due to {}", notification.getKey(), notification.getCause());
 //        };
 //    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 主线板块 Cache
+     */
+    public final Cache<LocalDate, Set<String>> topBlockCache = Caffeine.newBuilder()
+                                                                       .maximumSize(5_000)
+                                                                       .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                                       .expireAfterAccess(1, TimeUnit.MINUTES)
+                                                                       .recordStats()
+                                                                       // .removalListener(createRemovalListener())
+                                                                       // .scheduler(Scheduler.systemScheduler())
+                                                                       .build();
 
 
     // -----------------------------------------------------------------------------------------------------------------
