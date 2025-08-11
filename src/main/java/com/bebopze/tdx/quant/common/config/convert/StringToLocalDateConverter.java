@@ -1,9 +1,11 @@
 package com.bebopze.tdx.quant.common.config.convert;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.converter.Converter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
 
 /**
  * web层 - 日期参数   转换器
@@ -24,7 +26,7 @@ public class StringToLocalDateConverter implements Converter<String, LocalDate> 
 
     @Override
     public LocalDate convert(String source) {
-        return LocalDate.parse(source, formatter);
+        return StringUtils.isBlank(source) ? null : LocalDate.parse(source, formatter);
     }
 
 
