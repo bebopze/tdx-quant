@@ -118,7 +118,9 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
             // 当日 - 停牌（003005  ->  2022-10-27）
             Integer idx = dateIndexMap.get(tradeDate);
-            if (idx == null) {
+
+            // 过滤 停牌/新股
+            if (idx == null || idx < 50) {
                 return;
             }
 

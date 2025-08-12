@@ -95,7 +95,9 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             Integer idx = dateIndexMap.get(tradeDate);
-            if (idx == null) {
+
+            // 过滤 停牌/新股
+            if (idx == null || idx < 50) {
                 return;
             }
 
