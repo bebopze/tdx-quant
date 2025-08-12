@@ -54,6 +54,9 @@
                 <input type="text" class="form-control form-control-sm" id="taskId" placeholder="任务ID">
             </div>
             <div class="col-md-3 form-group">
+                <input type="text" class="form-control form-control-sm" id="batchNoList" placeholder="批次号（1,2,3）">
+            </div>
+            <div class="col-md-3 form-group">
                 <input type="datetime-local" class="form-control form-control-sm" id="startCreateTime">
             </div>
             <div class="col-md-3 form-group">
@@ -62,6 +65,9 @@
             <div class="col-md-3 form-group">
                 <button type="button" class="btn btn-sm btn-primary" onclick="loadTasks()">查询</button>
             </div>
+            <div class="col-md-3 form-group">
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedTasks()">批量删除</button>
+            </div>
         </div>
     </form>
 
@@ -69,6 +75,7 @@
         <table class="table table-bordered">
             <thead>
             <tr id="tableHeader">
+                <th><input type="checkbox" id="selectAll"></th>
                 <th data-key="id">任务ID <span class="sort-icon"></span></th>
                 <th data-key="buyStrategy">B策略 <span class="sort-icon"></span></th>
                 <th data-key="sellStrategy">S策略 <span class="sort-icon"></span></th>
@@ -86,6 +93,8 @@
                 <th data-key="profitDayPct">盈利天数% <span class="sort-icon"></span></th>
                 <th data-key="sharpeRatio">夏普比率 <span class="sort-icon"></span></th>
                 <th data-key="gmtCreate">创建时间 <span class="sort-icon"></span></th>
+                <th data-key="gmtModify">结束时间<span class="sort-icon"></span></th>
+                <th data-key="totalTime">耗时<span class="sort-icon"></span></th>
                 <th>操作</th>
             </tr>
             </thead>
@@ -105,15 +114,45 @@
         return value.replace('T', ' ') + ':00';
     }
 
+    function calculateTimeDifference(startTimeStr, endTimeStr) {
+        // 将时间字符串转换为 Date 对象
+        const startTime = new Date(startTimeStr);
+        const endTime = new Date(endTimeStr);
+
+        // 计算时间差（以毫秒为单位）
+        const timeDifference = endTime - startTime;
+
+        // 将时间差转换为秒
+        const totalSeconds = Math.floor(timeDifference / 1000);
+
+        // 计算天、小时、分钟和秒
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        // 根据时长自动格式化输出
+        if (days > 0) {
+            return `${days}天${hours}小时${minutes}分${seconds}秒`;
+        } else if (hours > 0) {
+            return `${hours}小时${minutes}分${seconds}秒`;
+        } else if (minutes > 0) {
+            return `${minutes}分${seconds}秒`;
+        } else {
+            return `${seconds}秒`;
+        }
+    }
+
     function loadTasks() {
         const taskId = document.getElementById('taskId').value;
+        const batchNoList = document.getElementById('batchNoList').value;
         const startCreateTimeRaw = document.getElementById('startCreateTime').value;
         const endCreateTimeRaw = document.getElementById('endCreateTime').value;
 
         const startCreateTime = formatDateTimeLocal(startCreateTimeRaw);
         const endCreateTime = formatDateTimeLocal(endCreateTimeRaw);
 
-        fetch(`/api/backtest/task/list?taskId=${taskId}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
+        fetch(`/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -129,8 +168,13 @@
         const tbody = document.getElementById('taskTableBody');
         tbody.innerHTML = '';
         data.forEach(task => {
+
+            // 计算时间差
+            const timeDiff = calculateTimeDifference(task.gmtCreate, task.gmtModify);
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
+              <td><input type="checkbox" class="select-task" data-task-id="${task.id}"></td>
               <td><a href="backtest-analysis.html?taskId=${task.id}">${task.id}</a></td>
               <td>${task.buyStrategy}</td>
               <td>${task.sellStrategy}</td>
@@ -148,10 +192,15 @@
               <td>${task.profitDayPct}</td>
               <td>${task.sharpeRatio}</td>
               <td>${task.gmtCreate}</td>
+              <td>${task.gmtModify}</td>
+              <td>${timeDiff}</td>
               <td><a href="backtest-analysis.html?taskId=${task.id}">查看</a></td>
             `;
             tbody.appendChild(tr);
         });
+
+        // 更新全选状态
+        document.getElementById('selectAll').checked = false;
     }
 
     function sortDataByKey(key) {
@@ -192,7 +241,37 @@
         });
     }
 
+    function deleteSelectedTasks() {
+        const selectedTasks = Array.from(document.querySelectorAll('.select-task:checked'))
+            .map(checkbox => checkbox.getAttribute('data-task-id'));
+
+        if (selectedTasks.length === 0) {
+            alert('请选择要删除的任务');
+            return;
+        }
+
+        if (!confirm('确定要删除这些任务吗？')) {
+            return;
+        }
+
+        fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.join(',')}`, {method: 'GET'})
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('删除失败: ' + data.msg);
+                    return;
+                }
+                alert('删除成功');
+                loadTasks(); // 刷新任务列表
+            });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('selectAll').addEventListener('change', event => {
+            const isChecked = event.target.checked;
+            document.querySelectorAll('.select-task').forEach(checkbox => checkbox.checked = isChecked);
+        });
+
         document.querySelectorAll('#tableHeader th[data-key]').forEach(th => {
             th.addEventListener('click', () => {
                 sortDataByKey(th.dataset.key);
