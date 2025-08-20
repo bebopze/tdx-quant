@@ -1,9 +1,10 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
-import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.MaxDrawdownPctDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
@@ -22,7 +23,7 @@ import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -74,14 +75,30 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // Sell策略 ： 暂时固定
-        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+        // List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
+        // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
+
+
+        // 主线策略
+        // TopBlockStrategyEnum topBlockStrategyEnum = TopBlockStrategyEnum.LV2;
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
+        Set<String> finishSet = Sets.newHashSet();
+
+
         // 中断 -> 恢复执行
-        BtTaskDO batchNoEntity = filterFinishTaskList(startDate, endDate, resume, batchNo, buy_conCombinerList);
+        BtTaskDO batchNoEntity = filterFinishTaskList(startDate, endDate, resume, batchNo, finishSet);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
 
         // 同一批次  ->  日期一致性
         LocalDate finalStartDate = batchNoEntity.getStartDate();
@@ -102,11 +119,16 @@ public class BacktestServiceImpl implements BacktestService {
 
         ParallelCalcUtil.forEach(buy_conCombinerList,
 
+
                                  buyConList -> {
                                      long start = System.currentTimeMillis();
 
 
-                                     backTestStrategy.backtest(finalBatchNo, buyConList, sellConList, finalStartDate, finalEndDate);
+                                     Arrays.stream(TopBlockStrategyEnum.values())
+                                           // 暂无 LV1 主线策略
+                                           .filter(e -> !e.equals(TopBlockStrategyEnum.LV1))
+                                           .filter(e -> !finishSet.contains(getKey(finalBatchNo, e.getDesc(), buyConList, sellConList)))
+                                           .forEach(topBlockStrategyEnum -> backTestStrategy.backtest(finalBatchNo, topBlockStrategyEnum, buyConList, sellConList, finalStartDate, finalEndDate));
 
 
                                      progressLog(finalBatchNo, current.incrementAndGet(), total, start);
@@ -128,22 +150,30 @@ public class BacktestServiceImpl implements BacktestService {
         return 1L;
     }
 
+    private String getKey(Integer finalBatchNo,
+                          String topBlockStrategyEnumDesc,
+                          List<String> buyConList,
+                          List<String> sellConList) {
+
+        return finalBatchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+    }
+
 
     /**
-     * 中断 -> 恢复执行          =>          过滤 已[finish]   ->   继续执行 未完成/未进行 buyConList
+     * 中断 -> 恢复执行          =>          过滤 已[finish]   ->   继续执行 未完成（del -> 未进行）/未进行 buyConList
      *
      * @param startDate
      * @param endDate
      * @param resume
      * @param batchNo
-     * @param buyConCombinerList
-     * @return 更新后的 batchNo
+     * @param finishSet
+     * @return
      */
     private BtTaskDO filterFinishTaskList(LocalDate startDate,
                                           LocalDate endDate,
                                           boolean resume,
                                           Integer batchNo,
-                                          List<List<String>> buyConCombinerList) {
+                                          Set<String> finishSet) {
 
 
         // 任务批次号 - last
@@ -187,16 +217,58 @@ public class BacktestServiceImpl implements BacktestService {
                                                             .collect(Collectors.toList());
 
 
+        finishTaskList.forEach(e -> {
+            String key = getKey(e.getBatchNo(), e.getTopBlockStrategy(), Arrays.asList(e.getBuyStrategy().split(",")), Arrays.asList(e.getSellStrategy().split(",")));
+            finishSet.add(key);
+        });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // -------------------------- 3-待更新至 最新交易日；
+
+
+        // finishTask     =>     endDate  <  last_tradeDate       ->     接着更新至 最新一个 交易日
+        LocalDate last_tradeDate = LocalDate.now();// 直接用 now   ->   最后一个 交易日  即可（后续会 自动校正 至真实 last_tradeDate）
+
+
+        finishTaskList.forEach(e -> {
+
+            if (e.getEndDate().isBefore(last_tradeDate)) {
+
+                // end_date + 1   ~   last_tradeDate
+                e.setStartDate2(e.getEndDate().plusDays(1));
+                e.setEndDate2(last_tradeDate);
+
+                // 3-待更新至 最新交易日；
+                e.setStatus(3);
+            }
+        });
+
+
+        // TODO   支持 刷新  指定时间段内的 回测数据
+
+        // 1、del   ->   指定时间段   回测数据
+        // 2、重置   ->   date2   +   status=3
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // -------------------------- 1-进行中（新开任务）
+
+
         // remove  ->  finish
-        buyConCombinerList.removeAll(finishBuyConList);
+        // buyConCombinerList.removeAll(finishBuyConList);
+
+//
+//        log.info("finishBuyConList size : [{}] , todo resumeBuyConList size : [{}]   ,   finishBuyConList : {}   ,   todo resumeBuyConList : [{}]",
+//                 finishBuyConList.size(), buyConCombinerList.size(),
+//                 JSON.toJSONString(finishBuyConList), JSON.toJSONString(buyConCombinerList));
 
 
-        // list  ->  str拼接
-        // List<String> strList = finishBuyConList.stream().map(e -> String.join(",", e)).collect(Collectors.toList());
-        log.info("finishBuyConList : {} , todo resumeBuyConList: {}", JSON.toJSONString(finishBuyConList), JSON.toJSONString(buyConCombinerList));
-
-
-        // del
+        // del errTask
         int count = btTaskService.delErrTaskByBatchNo(batchNo);
 
 
@@ -219,10 +291,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // cache
-        BacktestCache data_ = backTestStrategy.getInitDataService().initData(taskDO.getStartDate(), taskDO.getEndDate(), false);
-
-        BacktestCache data = backTestStrategy.getData();
-        BeanUtils.copyProperties(data_, data);
+        BacktestCache data = backTestStrategy.getInitDataService().initData(taskDO.getStartDate(), taskDO.getEndDate(), false);
 
 
         // date
@@ -251,8 +320,12 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
     @Override
-    public List<BtTaskDO> listTask(Long taskId, LocalDateTime startCreateTime, LocalDateTime endCreateTime) {
-        return btTaskService.listByTaskId(taskId, startCreateTime, endCreateTime);
+    public List<BtTaskDO> listTask(Long taskId,
+                                   List<Integer> batchNoList,
+                                   LocalDateTime startCreateTime,
+                                   LocalDateTime endCreateTime) {
+
+        return btTaskService.listByTaskId(taskId, batchNoList, startCreateTime, endCreateTime);
     }
 
     @Override
@@ -272,7 +345,16 @@ public class BacktestServiceImpl implements BacktestService {
         dto.setDailyReturnList(btDailyReturnService.listByTaskId(taskId));
 
 
+        dto.setDailyDrawdownPctList(dailyDrawdownPctList(dto.getDailyReturnList()));
+
+
         return dto;
+    }
+
+
+    @Override
+    public int deleteByTaskIds(List<Long> taskIdList) {
+        return btTaskService.delErrTaskByTaskIds(taskIdList);
     }
 
     @Override
@@ -448,6 +530,7 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
 
+    @Deprecated
     @Override
     public void holdingStockRule(String stockCode) {
 
@@ -463,6 +546,75 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         strategyService.holdingStockRule(stockCode);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private List<MaxDrawdownPctDTO> dailyDrawdownPctList(List<BtDailyReturnDO> dailyReturnList) {
+
+
+        double maxNav = 0;
+        LocalDate maxDate = null;
+
+        double maxDrawdownPct = 0;
+        LocalDate minDate = null;
+        double minNav = 0;
+
+
+        List<MaxDrawdownPctDTO> dtoList = Lists.newArrayList();
+
+
+        for (BtDailyReturnDO e : dailyReturnList) {
+
+
+            LocalDate tradeDate = e.getTradeDate();
+            double nav = e.getNav().doubleValue();
+
+
+            // 最大净值
+            if (maxNav < nav) {
+                maxNav = nav;
+                maxDate = tradeDate;
+            }
+
+
+            // 当日回撤（负数）
+            double drawdownPct = (nav / maxNav - 1) * 100;
+
+
+            // 最大回撤
+            if (maxDrawdownPct > drawdownPct) {
+                maxDrawdownPct = drawdownPct;
+                minDate = tradeDate;
+                minNav = nav;
+            }
+
+
+            // -----------------------------------------------------------------
+
+
+            MaxDrawdownPctDTO dto = new MaxDrawdownPctDTO();
+
+            dto.setTradeDate(tradeDate);
+            dto.setDrawdownPct(NumUtil.double2Decimal(drawdownPct));
+
+
+            dto.setMaxNav(NumUtil.double2Decimal(maxNav, 4));
+            dto.setMaxNavDate(maxDate);
+
+
+            dto.setMaxDrawdownPct(NumUtil.double2Decimal(maxDrawdownPct));
+            dto.setMaxDrawdownDate(minDate);
+            dto.setMaxDrawdownNav(NumUtil.double2Decimal(minNav, 4));
+
+
+            dtoList.add(dto);
+        }
+
+
+        return dtoList;
     }
 
 

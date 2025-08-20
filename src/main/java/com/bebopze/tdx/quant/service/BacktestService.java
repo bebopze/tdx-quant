@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 
@@ -20,9 +21,22 @@ public interface BacktestService {
     void checkBacktest(Long taskId);
 
 
-    List<BtTaskDO> listTask(Long taskId, LocalDateTime startCreateTime, LocalDateTime endCreateTime);
+    List<BtTaskDO> listTask(Long taskId,
+                            List<Integer> batchNo,
+                            LocalDateTime startCreateTime,
+                            LocalDateTime endCreateTime);
 
     BacktestAnalysisDTO analysis(Long taskId);
+
+
+    /**
+     * 回测 - task删除
+     *
+     * @param taskIdList taskId列表
+     * @return
+     */
+    int deleteByTaskIds(List<Long> taskIdList);
+
 
     /**
      * 个股 - 交易记录列表
@@ -33,6 +47,7 @@ public interface BacktestService {
      */
     List<BtTradeRecordDO> stockTradeRecordList(Long taskId, String stockCode);
 
-    void holdingStockRule(String stockCode);
 
+    @Deprecated
+    void holdingStockRule(String stockCode);
 }
