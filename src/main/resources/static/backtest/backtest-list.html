@@ -28,19 +28,75 @@
             font-weight: 600;
             cursor: pointer;
             user-select: none;
+            position: relative;
+            padding-right: 30px;
+        }
+
+        .sort-controls {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .sort-icon {
-            margin-left: 4px;
-            font-size: 12px;
+            font-size: 10px;
+            line-height: 1;
+            margin: 1px 0;
+            opacity: 0.5;
         }
 
-        .sorted-asc .sort-icon {
+        .sort-icon.active {
+            opacity: 1;
+        }
+
+        .sort-asc.active {
             color: lightseagreen;
         }
 
-        .sorted-desc .sort-icon {
+        .sort-desc.active {
             color: red;
+        }
+
+        .sort-order {
+            font-size: 10px;
+            color: #007bff;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .sort-info-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+
+        .sort-tag {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .sort-tag .remove-sort {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .clear-all-btn {
+            font-size: 12px;
+            padding: 2px 8px;
         }
     </style>
 </head>
@@ -50,51 +106,229 @@
 
     <form id="filterForm">
         <div class="row mb-3">
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <input type="text" class="form-control form-control-sm" id="taskId" placeholder="任务ID">
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <input type="text" class="form-control form-control-sm" id="batchNoList" placeholder="批次号（1,2,3）">
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <input type="datetime-local" class="form-control form-control-sm" id="startCreateTime">
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <input type="datetime-local" class="form-control form-control-sm" id="endCreateTime">
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <button type="button" class="btn btn-sm btn-primary" onclick="loadTasks()">查询</button>
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedTasks()">批量删除</button>
             </div>
         </div>
     </form>
+
+    <!-- 排序信息面板 -->
+    <div class="sort-info-panel" id="sortInfoPanel" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>当前排序：</strong>
+                <span id="sortTagsContainer"></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary clear-all-btn" onclick="clearAllSorts()">
+                ✕ 清除所有排序
+            </button>
+        </div>
+    </div>
 
     <div class="table-container">
         <table class="table table-bordered">
             <thead>
             <tr id="tableHeader">
                 <th><input type="checkbox" id="selectAll"></th>
-                <th data-key="id">任务ID <span class="sort-icon"></span></th>
-                <th data-key="buyStrategy">B策略 <span class="sort-icon"></span></th>
-                <th data-key="sellStrategy">S策略 <span class="sort-icon"></span></th>
-                <th data-key="startDate">回测周期 <span class="sort-icon"></span></th>
-                <th data-key="initialCapital">初始资金 <span class="sort-icon"></span></th>
-                <th data-key="finalCapital">结束资金 <span class="sort-icon"></span></th>
-                <th data-key="initialNav">初始净值 <span class="sort-icon"></span></th>
-                <th data-key="finalNav">结束净值 <span class="sort-icon"></span></th>
-                <th data-key="totalDay">总天数 <span class="sort-icon"></span></th>
-                <th data-key="totalReturnPct">总收益率% <span class="sort-icon"></span></th>
-                <th data-key="annualReturnPct">年化收益率% <span class="sort-icon"></span></th>
-                <th data-key="winPct">胜率% <span class="sort-icon"></span></th>
-                <th data-key="profitFactor">盈亏比 <span class="sort-icon"></span></th>
-                <th data-key="maxDrawdownPct">最大回撤% <span class="sort-icon"></span></th>
-                <th data-key="profitDayPct">盈利天数% <span class="sort-icon"></span></th>
-                <th data-key="sharpeRatio">夏普比率 <span class="sort-icon"></span></th>
-                <th data-key="gmtCreate">创建时间 <span class="sort-icon"></span></th>
-                <th data-key="gmtModify">结束时间<span class="sort-icon"></span></th>
-                <th data-key="totalTime">耗时<span class="sort-icon"></span></th>
+                <th data-key="id">
+                    任务ID
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-id"></span>
+                    </div>
+                </th>
+                <th data-key="batchNo">
+                    批次号
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-batchNo"></span>
+                    </div>
+                </th>
+                <th data-key="buyStrategy">
+                    B策略
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-buyStrategy"></span>
+                    </div>
+                </th>
+                <th data-key="sellStrategy">
+                    S策略
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-sellStrategy"></span>
+                    </div>
+                </th>
+                <th data-key="topBlockStrategy">
+                    主线策略
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-topBlockStrategy"></span>
+                    </div>
+                </th>
+                <th data-key="startDate">
+                    回测周期
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-startDate"></span>
+                    </div>
+                </th>
+                <th data-key="initialCapital">
+                    初始资金
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-initialCapital"></span>
+                    </div>
+                </th>
+                <th data-key="finalCapital">
+                    结束资金
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-finalCapital"></span>
+                    </div>
+                </th>
+                <th data-key="initialNav">
+                    初始净值
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-initialNav"></span>
+                    </div>
+                </th>
+                <th data-key="finalNav">
+                    结束净值
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-finalNav"></span>
+                    </div>
+                </th>
+                <th data-key="totalDay">
+                    总天数
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-totalDay"></span>
+                    </div>
+                </th>
+                <th data-key="totalTrade">
+                    交易总笔数
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-totalTrade"></span>
+                    </div>
+                </th>
+                <th data-key="totalTradeAmount">
+                    交易总金额
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-totalTradeAmount"></span>
+                    </div>
+                </th>
+                <th data-key="totalReturnPct">
+                    总收益率%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-totalReturnPct"></span>
+                    </div>
+                </th>
+                <th data-key="annualReturnPct">
+                    年化%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-annualReturnPct"></span>
+                    </div>
+                </th>
+                <th data-key="winPct">
+                    胜率%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-winPct"></span>
+                    </div>
+                </th>
+                <th data-key="profitFactor">
+                    盈亏比
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-profitFactor"></span>
+                    </div>
+                </th>
+                <th data-key="maxDrawdownPct">
+                    最大回撤%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-maxDrawdownPct"></span>
+                    </div>
+                </th>
+                <th data-key="profitDayPct">
+                    盈利天数%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-profitDayPct"></span>
+                    </div>
+                </th>
+                <th data-key="sharpeRatio">
+                    夏普比率
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-sharpeRatio"></span>
+                    </div>
+                </th>
+                <th data-key="gmtCreate">
+                    创建时间
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-gmtCreate"></span>
+                    </div>
+                </th>
+                <th data-key="gmtModify">
+                    结束时间
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-gmtModify"></span>
+                    </div>
+                </th>
+                <th data-key="totalTime">
+                    耗时
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-totalTime"></span>
+                    </div>
+                </th>
                 <th>操作</th>
             </tr>
             </thead>
@@ -106,41 +340,74 @@
 
 <script>
     let originalData = [];
-    let currentSort = {key: null, direction: null};
+    let sortFields = []; // [{key: 'id', dir: 'asc'}, ...]
+
+    // 定义字段类型
+    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy'];
+    const numberFields = ['finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
 
     function formatDateTimeLocal(value) {
         if (!value) return '';
-        // value is in format: YYYY-MM-DDTHH:MM
         return value.replace('T', ' ') + ':00';
     }
 
     function calculateTimeDifference(startTimeStr, endTimeStr) {
-        // 将时间字符串转换为 Date 对象
         const startTime = new Date(startTimeStr);
         const endTime = new Date(endTimeStr);
-
-        // 计算时间差（以毫秒为单位）
         const timeDifference = endTime - startTime;
-
-        // 将时间差转换为秒
         const totalSeconds = Math.floor(timeDifference / 1000);
 
-        // 计算天、小时、分钟和秒
         const days = Math.floor(totalSeconds / (3600 * 24));
         const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
 
-        // 根据时长自动格式化输出
-        if (days > 0) {
-            return `${days}天${hours}小时${minutes}分${seconds}秒`;
-        } else if (hours > 0) {
-            return `${hours}小时${minutes}分${seconds}秒`;
-        } else if (minutes > 0) {
-            return `${minutes}分${seconds}秒`;
+        if (days > 0) return `${days}天${hours}小时${minutes}分${seconds}秒`;
+        if (hours > 0) return `${hours}小时${minutes}分${seconds}秒`;
+        if (minutes > 0) return `${minutes}分${seconds}秒`;
+        return `${seconds}秒`;
+    }
+
+    // 新增：分组排序函数
+    function sortByGroupThenValue(data, groupKey, valueKey, valueDir = 'desc') {
+        // 第一步：按 groupKey 分组
+        const groups = {};
+        data.forEach(item => {
+            const key = item[groupKey];
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        });
+
+        // 第二步：计算每组的"代表值"（最大值或最小值，取决于排序方向）
+        const groupScores = Object.keys(groups).map(groupName => {
+            let representativeVal;
+            if (valueDir === 'desc') {
+                representativeVal = Math.max(...groups[groupName].map(item => parseFloat(item[valueKey]) || 0));
+            } else {
+                representativeVal = Math.min(...groups[groupName].map(item => parseFloat(item[valueKey]) || Infinity));
+            }
+            return {groupName, representativeVal, items: groups[groupName]};
+        });
+
+        // 第三步：按代表值排序组（根据方向）
+        if (valueDir === 'desc') {
+            groupScores.sort((a, b) => b.representativeVal - a.representativeVal);
         } else {
-            return `${seconds}秒`;
+            groupScores.sort((a, b) => a.representativeVal - b.representativeVal);
         }
+
+        // 第四步：展开所有组，组内按 valueKey 排序（根据方向）
+        const result = [];
+        groupScores.forEach(group => {
+            group.items.sort((a, b) => {
+                const valA = parseFloat(a[valueKey]) || 0;
+                const valB = parseFloat(b[valueKey]) || 0;
+                return valueDir === 'desc' ? valB - valA : valA - valB;
+            });
+            result.push(...group.items);
+        });
+
+        return result;
     }
 
     function loadTasks() {
@@ -160,30 +427,75 @@
                     return;
                 }
                 originalData = data.data;
-                renderTable(originalData);
+                applySortingAndRender();
             });
+    }
+
+    function applySortingAndRender() {
+        let sortedData = [...originalData];
+
+        if (sortFields.length === 0) {
+            renderTable(sortedData);
+            updateSortIcons();
+            updateSortInfoPanel();
+            return;
+        }
+
+        // 检查是否是字符串字段 + 数值字段的组合排序
+        const stringField = sortFields.find(f => stringFields.includes(f.key));
+        const numericField = sortFields.find(f => numberFields.includes(f.key));
+
+        if (stringField && numericField) {
+            // 使用分组排序，传入数值字段的排序方向
+            sortedData = sortByGroupThenValue(sortedData, stringField.key, numericField.key, numericField.dir);
+        } else {
+            // 普通多字段排序
+            sortedData.sort((a, b) => {
+                for (let sort of sortFields) {
+                    const key = sort.key;
+                    const dir = sort.dir;
+                    let valA = a[key] || '';
+                    let valB = b[key] || '';
+
+                    // 数字比较
+                    if (!isNaN(valA) && !isNaN(valB)) {
+                        valA = Number(valA);
+                        valB = Number(valB);
+                    }
+
+                    if (valA < valB) return dir === 'asc' ? -1 : 1;
+                    if (valA > valB) return dir === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        renderTable(sortedData);
+        updateSortIcons();
+        updateSortInfoPanel();
     }
 
     function renderTable(data) {
         const tbody = document.getElementById('taskTableBody');
         tbody.innerHTML = '';
         data.forEach(task => {
-
-            // 计算时间差
             const timeDiff = calculateTimeDifference(task.gmtCreate, task.gmtModify);
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td><input type="checkbox" class="select-task" data-task-id="${task.id}"></td>
-              <td><a href="backtest-analysis.html?taskId=${task.id}">${task.id}</a></td>
+              <td><a href="backtest-analysis.html?taskId=${task.id}" target="_blank">${task.id}</a></td>
+              <td>${task.batchNo}</td>
               <td>${task.buyStrategy}</td>
               <td>${task.sellStrategy}</td>
+              <td>${task.topBlockStrategy}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
               <td>${task.finalCapital}</td>
               <td>${task.initialNav}</td>
               <td>${task.finalNav}</td>
               <td>${task.totalDay}</td>
+              <td>${task.totalTrade}</td>
+              <td>${task.totalTradeAmount}</td>
               <td>${task.totalReturnPct}</td>
               <td>${task.annualReturnPct}</td>
               <td>${task.winPct}</td>
@@ -194,51 +506,190 @@
               <td>${task.gmtCreate}</td>
               <td>${task.gmtModify}</td>
               <td>${timeDiff}</td>
-              <td><a href="backtest-analysis.html?taskId=${task.id}">查看</a></td>
+              <td><a href="backtest-analysis.html?taskId=${task.id}" target="_blank">查看</a></td>
             `;
             tbody.appendChild(tr);
         });
 
-        // 更新全选状态
         document.getElementById('selectAll').checked = false;
     }
 
-    function sortDataByKey(key) {
-        if (currentSort.key === key) {
-            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            currentSort.key = key;
-            currentSort.direction = 'asc';
+    function toggleSort(key) {
+        // 如果是字符串字段（B策略、S策略等）
+        if (stringFields.includes(key)) {
+            // 判断是否已有数值字段排序（用于组合排序）
+            const hasNumericSort = sortFields.some(f => numberFields.includes(f.key));
+
+            if (hasNumericSort) {
+                // 存在数值字段，触发组合排序
+                const numericSortField = sortFields.find(f => numberFields.includes(f.key));
+                const numericField = numericSortField.key;
+                const numericDir = numericSortField.dir; // 保留原有排序方向
+
+                sortFields = [
+                    {key, dir: 'asc'},
+                    {key: numericField, dir: numericDir}
+                ];
+                applySortingAndRender();
+                return;
+            } else {
+                // 没有数值字段，按普通字段排序处理（默认倒序）
+                const index = sortFields.findIndex(f => f.key === key);
+                if (index === -1) {
+                    if (sortFields.length >= 3) {
+                        alert('最多支持3个字段排序');
+                        return;
+                    }
+                    sortFields.push({key, dir: 'desc'}); // 默认倒序
+                } else {
+                    const field = sortFields[index];
+                    if (field.dir === 'desc') {
+                        field.dir = 'asc';
+                    } else {
+                        sortFields.splice(index, 1);
+                    }
+                }
+                applySortingAndRender();
+                return;
+            }
         }
 
-        const sorted = [...originalData].sort((a, b) => {
-            const valA = a[key] || '';
-            const valB = b[key] || '';
-            if (!isNaN(valA) && !isNaN(valB)) {
-                return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        // 如果是数值字段，只按其本身排序（默认倒序）
+        if (numberFields.includes(key)) {
+            const index = sortFields.findIndex(f => f.key === key);
+            if (index === -1) {
+                if (sortFields.length >= 3) {
+                    alert('最多支持3个字段排序');
+                    return;
+                }
+                sortFields.push({key, dir: 'desc'}); // 默认倒序
+            } else {
+                const field = sortFields[index];
+                if (field.dir === 'desc') {
+                    field.dir = 'asc';
+                } else {
+                    sortFields.splice(index, 1);
+                }
             }
-            return currentSort.direction === 'asc'
-                ? String(valA).localeCompare(valB)
-                : String(valB).localeCompare(valA);
-        });
+            applySortingAndRender();
+            return;
+        }
 
-        updateSortIcons();
-        renderTable(sorted);
+        // 其他字段保持原逻辑（默认倒序）
+        const index = sortFields.findIndex(f => f.key === key);
+        if (index === -1) {
+            if (sortFields.length >= 3) {
+                alert('最多支持3个字段排序');
+                return;
+            }
+            sortFields.push({key, dir: 'desc'}); // 默认倒序
+        } else {
+            const field = sortFields[index];
+            if (field.dir === 'desc') {
+                field.dir = 'asc';
+            } else {
+                sortFields.splice(index, 1);
+            }
+        }
+
+        applySortingAndRender();
+    }
+
+    function removeSortField(key) {
+        const index = sortFields.findIndex(f => f.key === key);
+        if (index !== -1) {
+            sortFields.splice(index, 1);
+            applySortingAndRender();
+        }
+    }
+
+    function clearAllSorts() {
+        sortFields = [];
+        applySortingAndRender();
     }
 
     function updateSortIcons() {
-        document.querySelectorAll('#tableHeader th').forEach(th => {
-            const key = th.dataset.key;
-            const icon = th.querySelector('.sort-icon');
-            if (!icon) return;
-            th.classList.remove('sorted-asc', 'sorted-desc');
-            if (currentSort.key === key) {
-                icon.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
-                th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
-            } else {
-                icon.textContent = '';
+        // 重置所有图标
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.classList.remove('active');
+        });
+
+        document.querySelectorAll('.sort-order').forEach(span => {
+            span.textContent = '';
+        });
+
+        // 更新当前排序字段的图标和顺序
+        sortFields.forEach((field, index) => {
+            const th = document.querySelector(`th[data-key="${field.key}"]`);
+            if (th) {
+                const ascIcon = th.querySelector('.sort-asc');
+                const descIcon = th.querySelector('.sort-desc');
+                const orderSpan = th.querySelector('.sort-order');
+
+                if (field.dir === 'asc') {
+                    ascIcon.classList.add('active');
+                } else {
+                    descIcon.classList.add('active');
+                }
+
+                orderSpan.textContent = index + 1;
             }
         });
+    }
+
+    function updateSortInfoPanel() {
+        const panel = document.getElementById('sortInfoPanel');
+        const container = document.getElementById('sortTagsContainer');
+
+        if (sortFields.length === 0) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        panel.style.display = 'block';
+        container.innerHTML = '';
+
+        sortFields.forEach((field, index) => {
+            const tag = document.createElement('span');
+            tag.className = 'sort-tag';
+            tag.innerHTML = `
+                ${getFieldName(field.key)}
+                <span style="color: ${field.dir === 'asc' ? 'lightseagreen' : 'red'}">
+                    ${field.dir === 'asc' ? '↑' : '↓'}
+                </span>
+                <span class="remove-sort" onclick="removeSortField('${field.key}')">×</span>
+            `;
+            container.appendChild(tag);
+        });
+    }
+
+    function getFieldName(key) {
+        const fieldMap = {
+            'id': '任务ID',
+            'batchNo': '批次号',
+            'buyStrategy': 'B策略',
+            'sellStrategy': 'S策略',
+            'topBlockStrategy': '主线策略',
+            'startDate': '回测周期',
+            'initialCapital': '初始资金',
+            'finalCapital': '结束资金',
+            'initialNav': '初始净值',
+            'finalNav': '结束净值',
+            'totalDay': '总天数',
+            'totalTrade': '交易总笔数',
+            'totalTradeAmount': '交易总金额',
+            'totalReturnPct': '总收益率%',
+            'annualReturnPct': '年化收益率%',
+            'winPct': '胜率%',
+            'profitFactor': '盈亏比',
+            'maxDrawdownPct': '最大回撤%',
+            'profitDayPct': '盈利天数%',
+            'sharpeRatio': '夏普比率',
+            'gmtCreate': '创建时间',
+            'gmtModify': '结束时间',
+            'totalTime': '耗时'
+        };
+        return fieldMap[key] || key;
     }
 
     function deleteSelectedTasks() {
@@ -250,9 +701,7 @@
             return;
         }
 
-        if (!confirm('确定要删除这些任务吗？')) {
-            return;
-        }
+        if (!confirm('确定要删除这些任务吗？')) return;
 
         fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.join(',')}`, {method: 'GET'})
             .then(res => res.json())
@@ -262,8 +711,16 @@
                     return;
                 }
                 alert('删除成功');
-                loadTasks(); // 刷新任务列表
+                loadTasks();
             });
+    }
+
+    // 新增：添加Enter键支持
+    function handleEnterKey(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 防止表单默认提交
+            loadTasks();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -274,9 +731,19 @@
 
         document.querySelectorAll('#tableHeader th[data-key]').forEach(th => {
             th.addEventListener('click', () => {
-                sortDataByKey(th.dataset.key);
+                toggleSort(th.dataset.key);
             });
         });
+
+        // 为所有输入框添加Enter键监听
+        const inputFields = ['taskId', 'batchNoList', 'startCreateTime', 'endCreateTime'];
+        inputFields.forEach(fieldId => {
+            const element = document.getElementById(fieldId);
+            if (element) {
+                element.addEventListener('keypress', handleEnterKey);
+            }
+        });
+
         loadTasks();
     });
 </script>
