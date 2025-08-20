@@ -16,7 +16,10 @@ import java.util.List;
  */
 public interface IBtTaskService extends IService<BtTaskDO> {
 
-    List<BtTaskDO> listByTaskId(Long taskId, LocalDateTime startCreateTime, LocalDateTime endCreateTime);
+    List<BtTaskDO> listByTaskId(Long taskId,
+                                List<Integer> batchNo,
+                                LocalDateTime startCreateTime,
+                                LocalDateTime endCreateTime);
 
     List<BtTaskDO> listByBatchNo(Integer batchNo, Boolean finish);
 
@@ -27,4 +30,6 @@ public interface IBtTaskService extends IService<BtTaskDO> {
     BtTaskDO getBatchNoEntityByBatchNo(Integer batchNo);
 
     int delErrTaskByBatchNo(Integer batchNo);
+
+    int delErrTaskByTaskIds(List<Long> taskIdList);
 }

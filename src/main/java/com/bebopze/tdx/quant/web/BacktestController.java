@@ -87,6 +87,15 @@ public class BacktestController {
     }
 
 
+    @Operation(summary = "回测 - 异常task删除（by任务批次号）", description = "回测 - 异常task删除（by任务批次号）")
+    @GetMapping("/task/delErrTaskByBatchNo")
+    public Result<Integer> delErrTaskByBatchNo(@Schema(description = "任务批次号", example = "12")
+                                               @RequestParam Integer batchNo) {
+
+        return Result.SUC(backTestService.delErrTaskByBatchNo(batchNo));
+    }
+
+
     @Operation(summary = "回测 - 批量删除", description = "回测 - 批量删除 异常task")
     @GetMapping("/task/delete")
     public Result<Integer> deleteByTaskIds(@Schema(description = "taskId列表（逗号分隔）", example = "1,2,3")

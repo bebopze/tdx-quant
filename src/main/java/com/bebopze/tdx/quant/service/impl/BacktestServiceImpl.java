@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
@@ -351,6 +352,10 @@ public class BacktestServiceImpl implements BacktestService {
         return dto;
     }
 
+    @Override
+    public int delErrTaskByBatchNo(Integer batchNo) {
+        return btTaskService.delErrTaskByBatchNo(batchNo);
+    }
 
     @Override
     public int deleteByTaskIds(List<Long> taskIdList) {

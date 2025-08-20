@@ -30,6 +30,14 @@ public interface BacktestService {
 
 
     /**
+     * 回测 - 异常task删除（by任务批次号）
+     *
+     * @param batchNo 任务批次号
+     * @return
+     */
+    int delErrTaskByBatchNo(Integer batchNo);
+
+    /**
      * 回测 - task删除
      *
      * @param taskIdList taskId列表
