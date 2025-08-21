@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
@@ -31,7 +30,9 @@ import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -157,6 +158,55 @@ public class BacktestServiceImpl implements BacktestService {
                           List<String> sellConList) {
 
         return finalBatchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+    }
+
+    @Override
+    public Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
+                          List<String> buyConList,
+                          LocalDate startDate,
+                          LocalDate endDate,
+                          boolean resume,
+                          Integer batchNo) {
+
+
+        // Sell策略 ： 暂时固定
+        // List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
+        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        return backTestStrategy.backtest(0, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
+    }
+
+
+    @Override
+    public Long backtestTrade(TopBlockStrategyEnum topBlockStrategyEnum,
+                              LocalDate startDate,
+                              LocalDate endDate,
+                              boolean resume,
+                              Integer batchNo) {
+
+
+        // List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
+        // List<List<String>> sell_conCombinerList = SellStrategy__ConCombiner.generateCombinations();
+
+
+        // Sell策略 ： 暂时固定
+        List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
+        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        resume = false;
+        batchNo = 0;
+
+        // -----------------------------------------------------------------------------
+
+
+        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
     }
 
 

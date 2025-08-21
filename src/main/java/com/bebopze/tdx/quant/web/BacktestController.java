@@ -11,7 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,6 +55,51 @@ public class BacktestController {
 
 
         return Result.SUC(backTestService.backtest(startDate, endDate, resume, batchNo));
+    }
+
+
+    @Operation(summary = "回测", description = "回测task")
+    @GetMapping("/exec2")
+    public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
+                                  @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
+
+                                  @Schema(description = "回测-B策略", example = "N100日新高,月多,RPS一线红")
+                                  @RequestParam(defaultValue = "N100日新高,月多,RPS一线红") String buyConList,
+
+                                  @Schema(description = "回测-开始时间", example = "2025-01-01")
+                                  @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,
+
+                                  @Schema(description = "回测-结束时间", example = "2025-08-12")
+                                  @RequestParam(defaultValue = "2025-08-12") LocalDate endDate,
+
+                                  @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：不支持，每次重头开始 ）", example = "true")
+                                  @RequestParam(defaultValue = "true") boolean resume,
+
+                                  @Schema(description = "任务批次号（resume=true 生效）", example = "0")
+                                  @RequestParam(required = false) Integer batchNo) {
+
+
+        List<String> _buyConList = Arrays.stream(buyConList.split(","))
+                                         .map(String::trim)
+                                         .collect(Collectors.toList());
+
+        return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate, resume, batchNo));
+    }
+
+
+    @Operation(summary = "回测 - 实战交易", description = "回测task - 实战交易")
+    @GetMapping("/exec/trade")
+    public Result<Long> backtestTrade(@Schema(description = "主线策略", example = "LV3")
+                                      @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
+
+                                      @Schema(description = "回测-开始时间", example = "2022-01-01")
+                                      @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
+
+                                      @Schema(description = "回测-结束时间", example = "2025-07-01")
+                                      @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
+
+
+        return Result.SUC(backTestService.backtestTrade(topBlockStrategyEnum, startDate, endDate, false, 0));
     }
 
 
