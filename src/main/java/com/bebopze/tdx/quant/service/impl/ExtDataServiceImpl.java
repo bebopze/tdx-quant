@@ -1,12 +1,13 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -18,6 +19,7 @@ import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.ExtDataService;
+import com.bebopze.tdx.quant.service.InitDataService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Data;
@@ -51,7 +53,11 @@ public class ExtDataServiceImpl implements ExtDataService {
     @Autowired
     private IBaseBlockService baseBlockService;
 
+    @Autowired
+    private InitDataService initDataService;
 
+
+    @TotalTime
     @Override
     public void refreshExtDataAll(Integer N) {
         calcBlockExtData(null);
@@ -59,6 +65,7 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
 
+    @TotalTime
     @Override
     public void calcStockExtData(Integer N) {
 
@@ -84,9 +91,17 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // 扩展数据
         stockTask__extData(data, N);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // del Cache
+        initDataService.deleteCache();
     }
 
 
+    @TotalTime
     @Override
     public void calcBlockExtData(Integer N) {
 
@@ -108,6 +123,13 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // 扩展数据
         blockTask__extData(data);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // del Cache
+        initDataService.deleteCache();
     }
 
 
@@ -351,7 +373,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-        calcExtData(new StockFun(code, stockDO), new_extDataDTOList);
+        calcExtData(new StockFun(code, stockDO), new_extDataDTOList, 85);
 
 
         log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {}",
@@ -384,8 +406,9 @@ public class ExtDataServiceImpl implements ExtDataService {
      *
      * @param fun
      * @param extDataDTOList
+     * @param RPS            个股-85/90/95          板块-87/92/97
      */
-    private void calcExtData(StockFun fun, List<ExtDataDTO> extDataDTOList) {
+    private void calcExtData(StockFun fun, List<ExtDataDTO> extDataDTOList, int RPS) {
 
 
         // ---------------------------- 1、计算ExtData（序列值）
@@ -400,6 +423,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         double[] 中期涨幅 = fun.中期涨幅N(20);
         int[] 趋势支撑线 = fun.趋势支撑线();
+        double[] C_SSF_偏离率 = fun.C_SSF_偏离率();
 
 
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
@@ -422,10 +446,17 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 大均线多头 = fun.大均线多头();
 
 
-        boolean[] RPS红 = fun.RPS红(85);
-        boolean[] RPS一线红 = fun.RPS一线红(95);
-        boolean[] RPS双线红 = fun.RPS双线红(90);
-        boolean[] RPS三线红 = fun.RPS三线红(85);
+//        boolean[] RPS红 = fun.RPS红(85);
+//        boolean[] RPS一线红 = fun.RPS一线红(95);
+//        boolean[] RPS双线红 = fun.RPS双线红(90);
+//        boolean[] RPS三线红 = fun.RPS三线红(85);
+
+
+        // 个股-85/90/95          板块-87/92/97
+        boolean[] RPS红 = fun.RPS红(RPS);
+        boolean[] RPS一线红 = fun.RPS一线红(RPS + 10);
+        boolean[] RPS双线红 = fun.RPS双线红(RPS + 5);
+        boolean[] RPS三线红 = fun.RPS三线红(RPS);
 
 
         // ---------------------------- 2、convert（序列   ->   列表）
@@ -440,6 +471,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
             dto.set中期涨幅(of(中期涨幅[i], 3));
             dto.set趋势支撑线(趋势支撑线[i]);
+            dto.setC_SSF_偏离率(C_SSF_偏离率[i]);
 
 
             dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
@@ -621,7 +653,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-            calcExtData(new BlockFun(code, blockDO), dtoList);
+            calcExtData(new BlockFun(code, blockDO), dtoList, 87);
 
 
             log.info("blockFun 指标计算 - 板块 suc     >>>     code : {} , count : {} , blockTime : {} , totalTime : {}",
