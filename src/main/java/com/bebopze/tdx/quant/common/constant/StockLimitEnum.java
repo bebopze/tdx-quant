@@ -72,7 +72,7 @@ public enum StockLimitEnum {
     private List<String> stockCodePrefixList;
 
 
-    // ----------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -87,7 +87,18 @@ public enum StockLimitEnum {
     private static final Integer ST_LIMIT = 5;
 
 
-    // ----------------------------------------------------------------------
+    /**
+     * 创业板 / 科创板
+     */
+    private static final Integer LIMIT_20 = 20;
+
+    /**
+     * 北交所
+     */
+    private static final Integer LIMIT_30 = 30;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static StockLimitEnum getByStockCode(String stockCode) {
@@ -102,15 +113,18 @@ public enum StockLimitEnum {
         return null;
     }
 
+
     public static Integer getChangePctLimit(String stockCode, String stockName) {
         if (is5CM(stockName)) return ST_LIMIT;
+        if (is20CM_ETF(stockCode, stockName)) return LIMIT_20;
+
 
         StockLimitEnum stockLimitEnum = getByStockCode(stockCode);
         return stockLimitEnum == null ? DEFAULT_LIMIT : stockLimitEnum.getChangePctLimit();
     }
 
 
-    // ----------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -157,6 +171,35 @@ public enum StockLimitEnum {
      */
     public static boolean is5CM(String stockName) {
         return stockName != null && stockName.contains("ST");
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 是否 20CM  ETF
+     *
+     * @param stockCode
+     * @param stockName
+     * @return
+     */
+    private static boolean is20CM_ETF(String stockCode, String stockName) {
+
+        // 588000 - 科创50ETF
+        // ...
+
+        // 159915 - 创业板ETF
+        // ...
+
+
+        if (stockCode.equals("588000") || stockCode.contains("159915")) {
+            return true;
+        }
+
+
+        return null != stockName && stockName.contains("ETF")
+                && (stockName.contains("科创") || stockName.contains("创业板"));
     }
 
 
