@@ -3,12 +3,11 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
@@ -32,14 +31,21 @@ import java.util.Objects;
 public class EastMoneyTradeAPI {
 
 
-    private static final String SID = PropsUtil.getSid();
+    private static /*final*/ String SID = PropsUtil.getSid();
 
-    private static final String COOKIE = PropsUtil.getCookie();
+    private static /*final*/ String COOKIE = PropsUtil.getCookie();
 
 
     private static final Map<String, String> headers = Maps.newHashMap();
 
     static {
+        headers.put("Cookie", COOKIE);
+    }
+
+
+    public static void refreshEastmoneySession() {
+        SID = PropsUtil.getSid();
+        COOKIE = PropsUtil.getCookie();
         headers.put("Cookie", COOKIE);
     }
 
@@ -174,11 +180,11 @@ public class EastMoneyTradeAPI {
 
 
         // ----------------------------- 资金持仓 汇总
-        QueryCreditNewPosResp resp = JSON.toJavaObject(data, QueryCreditNewPosResp.class);
+        QueryCreditNewPosResp resp = data.toJavaObject(QueryCreditNewPosResp.class);
 
 
         // ----------------------------- 持股详情 列表
-        List<CcStockInfo> stockDTOList = resp.getStocks();
+        // List<CcStockInfo> stockDTOList = resp.getStocks();
 
 
         return resp;

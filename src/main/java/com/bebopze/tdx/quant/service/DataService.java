@@ -12,4 +12,6 @@ public interface DataService {
 
     DataInfoDTO dataInfo();
 
+
+    void eastmoneyRefreshSession(String validatekey, String cookie);
 }

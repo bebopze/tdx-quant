@@ -1,9 +1,11 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
@@ -67,6 +69,13 @@ public class DataServiceImpl implements DataService {
 
 
         return info;
+    }
+
+
+    @Override
+    public void eastmoneyRefreshSession(String validatekey, String cookie) {
+        PropsUtil.refreshEastmoneySession(validatekey, cookie);
+        EastMoneyTradeAPI.refreshEastmoneySession();
     }
 
 

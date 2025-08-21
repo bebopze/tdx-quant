@@ -7,7 +7,10 @@ import com.bebopze.tdx.quant.task.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 
 /**
@@ -54,10 +57,18 @@ public class TaskController {
     }
 
 
-    @Operation(summary = "最新数据（更新信息）", description = "最新数据（更新信息）")
+    @Operation(summary = "最新数据", description = "最新数据")
     @GetMapping(value = "/dataInfo")
     public Result<DataInfoDTO> dataInfo() {
         return Result.SUC(dataService.dataInfo());
+    }
+
+    @Operation(summary = "东方财富 - 刷新登录信息", description = "东方财富 - 刷新登录信息")
+    @GetMapping(value = "/eastmoney/refreshSession")
+    public Result<Void> eastmoneyRefreshSession(@RequestParam String validatekey,
+                                                @RequestParam String cookie) {
+        dataService.eastmoneyRefreshSession(validatekey, cookie);
+        return Result.SUC();
     }
 
 
