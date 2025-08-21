@@ -70,6 +70,10 @@ public class TradePairStat {
         int totalWinCount = 0;
 
 
+        // 交易总金额
+        double totalAmount = 0;
+
+
         // ---------------------------------------------------------------------------------
 
 
@@ -126,6 +130,8 @@ public class TradePairStat {
 
                         // 交易总笔数
                         totalPairs++;
+                        // 交易总金额
+                        totalAmount += tr.getAmount().doubleValue();
                         // 盈利总笔数
                         if (win) {
                             totalWinCount++;
@@ -148,7 +154,7 @@ public class TradePairStat {
         // 汇总统计
         double totalRate = totalPairs > 0 ? NumUtil.of(totalWinCount * 100.0 / totalPairs) : 0.0;
 
-        log.debug("{}", String.format("合计\t\t%d\t%d\t%.2f%%", totalPairs, totalWinCount, totalRate));
+        log.debug("{}", String.format("合计\t\t%d\t%d\t%.2f%%\t%s", totalPairs, totalWinCount, totalRate, totalAmount));
 
 
         // --------------------------------------------------------- result
@@ -159,6 +165,7 @@ public class TradePairStat {
         result.setTotalWinCount(totalWinCount);
         result.setTotalPairs(totalPairs);
         result.setWinPct(totalRate);
+        result.setTotalAmount(NumUtil.of(totalAmount));
         // 个股维度
         result.setStockStatList(Lists.newArrayList(stats.values()));
 
@@ -178,6 +185,7 @@ public class TradePairStat {
 
         String code = tr.getStockCode();
         String name = tr.getStockName();
+        double amount = tr.getAmount().doubleValue();
 
 
         // 个股统计
@@ -186,6 +194,10 @@ public class TradePairStat {
 
         // 交易总笔数
         stockStat.totalPairs++;
+
+        // 交易总金额
+        stockStat.totalAmount += amount;
+
 
         // 盈利
         if (win) {
@@ -214,16 +226,24 @@ public class TradePairStat {
 
     // 辅助类：股票统计数据
     @Data
-    class StockStat {
-        String stockCode, stockName;
+    static class StockStat {
+
+        String stockCode;
+        String stockName;
+
 
         // 交易总笔数（BS对  ->  1买 + 1卖）
         int totalPairs = 0;
         // 盈利总笔数
         int winCount = 0;
 
+
         // 交易胜率（%）
         double winPct;
+
+
+        // 交易总金额
+        double totalAmount = 0;
 
 
         StockStat(String stockCode, String stockName) {
@@ -235,7 +255,7 @@ public class TradePairStat {
 
     // 辅助类：交易统计数据
     @Data
-    class TradeStatResult {
+    static class TradeStatResult {
 
 
         // ---------------- 汇总统计（task维度  ->  全量 交易记录）
@@ -249,6 +269,10 @@ public class TradePairStat {
 
         // 交易胜率  =  盈利总笔数 / 交易总笔数
         double winPct = 0;
+
+
+        // 交易总金额
+        double totalAmount = 0;
 
 
         // ---------------- 个股统计（stockCode维度  ->  单一个股 交易记录）
