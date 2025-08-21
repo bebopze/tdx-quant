@@ -1,22 +1,16 @@
 package com.bebopze.tdx.quant.strategy;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.indicator.StockFunLast;
-import com.bebopze.tdx.quant.parser.writer.TdxBlockNewWriter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +18,6 @@ import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.BuyStrategyStockPoolEnum.CL_DBMR;
 
@@ -122,7 +115,7 @@ public class QuickOption {
 
 
         // write   ->   TDX（策略-等比买入）
-        TdxBlockNewWriter.write(CL_DBMR.getBlockNewCode(), sort__stockCodeList);
+        TdxBlockNewReaderWriter.write(CL_DBMR.getBlockNewCode(), sort__stockCodeList);
 
 
         // 最小等份   ->   30

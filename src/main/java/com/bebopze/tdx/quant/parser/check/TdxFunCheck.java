@@ -868,7 +868,7 @@ public class TdxFunCheck {
 
 
                 // 处理每一行
-                if (StringUtils.isNoneBlank(line)) {
+                if (StringUtils.isNotBlank(line)) {
 
 
                     String[] strArr = line.trim().split("\t");

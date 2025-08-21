@@ -40,7 +40,7 @@ import static com.bebopze.tdx.quant.common.util.MapUtil.reverseSortByValue;
 
 
 /**
- * 大盘量化
+ * 主线板块
  *
  * @author: bebopze
  * @date: 2025/7/13
@@ -99,7 +99,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // GC
-        data.clear();
+        // data.clear();
 
 
         // 11- 板块AMO-Top1
@@ -118,17 +118,22 @@ public class TopBlockServiceImpl implements TopBlockService {
     @Override
     public void nDayHighTask(int N) {
         log.info("-------------------------------- nDayHighTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
 
         calcNDayHigh(N);
+
+
+        log.info("-------------------------------- nDayHighTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void changePctTopTask(int N) {
         log.info("-------------------------------- changePctTopTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -136,12 +141,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // N日涨幅 > 25%
         calcChangePctTop(N, 25.0);
+
+
+        log.info("-------------------------------- changePctTopTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void rpsRedTask(double RPS) {
         log.info("-------------------------------- rpsRedTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -149,12 +158,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // RPS红
         calcRpsRed(RPS);
+
+
+        log.info("-------------------------------- rpsRedTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void stage2Task() {
         log.info("-------------------------------- stage2Task     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -162,12 +175,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // TODO   二阶段
         calcStage2();
+
+
+        log.info("-------------------------------- stage2Task     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void longTermMABullStackTask() {
         log.info("-------------------------------- longTermMABullStackTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -176,12 +193,16 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 大均线多头
         //calcBullMAStack();
         calcLongTermMABullStack();
+
+
+        log.info("-------------------------------- longTermMABullStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void bullMAStackTask() {
         log.info("-------------------------------- bullMAStackTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -189,12 +210,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // TODO   均线大多头
         calcBullMAStack();
+
+
+        log.info("-------------------------------- bullMAStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
     @TotalTime
     @Override
     public void blockAmoTopTask() {
         log.info("-------------------------------- blockAmoTopTask     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache();
@@ -204,6 +229,9 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // totalTime : 21.7s
         // calcBlockAmoTop2();
+
+
+        log.info("-------------------------------- blockAmoTopTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
 
