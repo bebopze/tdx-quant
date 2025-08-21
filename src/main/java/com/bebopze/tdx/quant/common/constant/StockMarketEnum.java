@@ -36,7 +36,8 @@ public enum StockMarketEnum {
     // 689	1
 
     // ETF - 5xxxxx
-    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68", "51", "56", "58")),
+    // 板块 - 88xxxx
+    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68", "51", "56", "58","88")),
 
 
     // 430	2
