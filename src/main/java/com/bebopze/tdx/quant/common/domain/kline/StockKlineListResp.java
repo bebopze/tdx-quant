@@ -18,7 +18,7 @@ public class StockKlineListResp {
     //       "f2": 1228,
     //       "f3": 41,
     //       "f4": 5,
-    //       "f5": 1012187,
+    //       "f5": 1012187,         101218700
     //       "f6": 1240239179.62,
     //       "f7": 147,
     //       "f8": 52,
@@ -36,15 +36,53 @@ public class StockKlineListResp {
     //  }
 
 
-    // 2（无意义   ->   所有个股 全为2）
-    private String f1;
+    // {
+    //     "f1": 3,
+    //     "f2": 1470,         1.470
+    //     "f3": 426,          4.26%
+    //     "f4": 60,           0.060
+    //     "f5": 68600006,     68600006
+    //     "f6": 9887139213.0,
+    //     "f12": "513120",
+    //     "f13": 1,
+    //     "f14": "港股创新药ETF",
+    //     "f15": 1471,         1.471
+    //     "f16": 1414,
+    //     "f17": 1414,
+    //     "f18": 1410,         1.410
+    //     "f152": 2
+    // }
+
+
+    // ------------------------------------------------------------
+
+
+    // 价格精度  ->  小数位（个股：2 / ETF：3）
+    // 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
+    private int f1;
+
+
+    // 涨跌幅精度  ->  小数位（个股：2 / ETF：2）
+    private String f152;
+
+
+    // 2位精度 -> /100
+    // 3位精度 -> /1000
+    int priceDivisor;
+
+    public int getPriceDivisor() {
+        return f1 == 3 ? 1_000 : 1_00;
+    }
+
+
+    // ------------------------------------------------------------
 
 
     // 最新价（1228   ->   12.28）
     private double f2;
 
     public double getF2() {
-        return f2 / 100.0;
+        return f2 / getPriceDivisor();
     }
 
 
@@ -60,15 +98,17 @@ public class StockKlineListResp {
     private double f4;
 
     public double getF4() {
-        return f4 / 100.0;
+        return f4 / getPriceDivisor();
     }
 
 
-    // 成交量（1012187(手)   ->   1012187 x 100）
+    // 个股 -> 成交量（1012187(手)   ->   1012187 x 100）
+    // ETF -> 成交量（68600006(股)  ->   68600006）
     private long f5;
 
     public long getF5() {
-        return f5 * 100;
+        // 3-ETF
+        return f1 == 3 ? f5 : f5 * 100;
     }
 
 
@@ -111,7 +151,7 @@ public class StockKlineListResp {
     private String f12;
 
 
-    // 2（无意义   ->   所有个股 全为2）
+    // 交易所：0-深证；1-上证；（暂无 2-北交所；）
     private String f13;
 
 
@@ -123,7 +163,7 @@ public class StockKlineListResp {
     private double f15;
 
     public double getF15() {
-        return f15 / 100.0;
+        return f15 / getPriceDivisor();
     }
 
 
@@ -131,7 +171,7 @@ public class StockKlineListResp {
     private double f16;
 
     public double getF16() {
-        return f16 / 100.0;
+        return f16 / getPriceDivisor();
     }
 
 
@@ -139,7 +179,7 @@ public class StockKlineListResp {
     private double f17;
 
     public double getF17() {
-        return f17 / 100.0;
+        return f17 / getPriceDivisor();
     }
 
 
@@ -147,7 +187,7 @@ public class StockKlineListResp {
     private double f18;
 
     public double getF18() {
-        return f18 / 100.0;
+        return f18 / getPriceDivisor();
     }
 
 
@@ -159,8 +199,8 @@ public class StockKlineListResp {
     }
 
 
-    // 2（无意义   ->   所有个股 全为2）
-    private String f152;
+//    // 2（无意义   ->   所有个股 全为2）
+//    private String f152;
 
 
     // -----------------------------------------------------------------------------------------------------------------
