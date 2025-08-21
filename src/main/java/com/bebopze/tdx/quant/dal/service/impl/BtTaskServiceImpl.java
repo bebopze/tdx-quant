@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.bebopze.tdx.quant.dal.service.IBtTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,26 +75,11 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
     }
 
 
+    @Synchronized
     @TotalTime
     @Override
     // @Transactional(rollbackFor = Exception.class)
     public int delErrTaskByBatchNo(Integer batchNo) {
-
-
-        // BtTaskDO taskDO = baseMapper.getBatchNoEntityByBatchNo(batchNo);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        Integer maxTotalDay = baseMapper.getMaxTotalDayByBatchNo(batchNo);
-
-
-        // 交易日 总天数（bug：收个交易日 全部暂无数据     ->     暂时 -1）
-        // int totalDays = BacktestStrategy.between(taskDO.getStartDate(), taskDO.getEndDate(), InitDataServiceImpl.data.dateIndexMap) + 1 - 1;
-
-
-        // log.debug("DB maxTotalDay : {}   ,   act totalDays : {}", maxTotalDay, totalDays);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -101,18 +87,16 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
         // 未完成
         List<Long> errTaskIdList = baseMapper.listIdByBatchNo(batchNo, false);
-        log.info("未完成 size : {} , errTaskIdList : {}", errTaskIdList.size(), errTaskIdList);
+        log.info("未完成     >>>     size : {} , errTaskIdList : {}", errTaskIdList.size(), errTaskIdList);
 
-
-        // 异常     ->     单日下跌 -10%以上（bug：某日 持仓数据 中途丢失）
-        // List<Long> taskIdList2 = dailyReturnService.listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(batchNo, maxTotalDay, -0.10);
 
         // 异常     ->     持仓数据 中途丢失
+        Integer maxTotalDay = baseMapper.getMaxTotalDayByBatchNo(batchNo);
         List<Long> errTaskIdList2 = baseMapper.listErrTaskIdByBatchNoAndTotalDay(batchNo, maxTotalDay);
+        log.info("已完成 -> 异常（持仓数据 中途丢失）    >>>     maxTotalDay : {} , size : {} , errTaskIdList2 : {}", maxTotalDay, errTaskIdList2.size(), errTaskIdList2);
+
+
         errTaskIdList.addAll(errTaskIdList2);
-
-
-        log.info("已完成 -> 异常（持仓数据 中途丢失） size : {} , errTaskIdList2 : {}", errTaskIdList2.size(), errTaskIdList2);
 
 
         if (CollectionUtils.isEmpty(errTaskIdList)) {
@@ -128,6 +112,7 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
         // 分批处理   ->   1次 N个
         int N = 1;
+        int size = errTaskIdList.size();
 
 
         // 获取当前类SpringBean，用于正确触发事务
@@ -135,17 +120,17 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
 
         // del
-        for (int i = 0; i < errTaskIdList.size(); ) {
+        for (int i = 0; i < size; ) {
 
-
-            List<Long> subList = errTaskIdList.subList(i, Math.min(i += N, errTaskIdList.size()));
+            List<Long> subList = errTaskIdList.subList(i, Math.min(i += N, size));
 
 
             try {
                 delTotal += taskService.delErrTaskByTaskIds(subList);
-                log.info("delErrTaskByTaskIds suc     >>>     i : {} , taskIdList : {}", i, subList);
+                log.info("delErrTaskByTaskIds suc     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {}", size, i, delTotal, subList);
+
             } catch (Exception e) {
-                log.error("delErrTaskByTaskIds fail     >>>     i : {} , taskIdList : {} , errMsg : {}", i, subList, e.getMessage(), e);
+                log.error("delErrTaskByTaskIds fail     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, i, delTotal, subList, e.getMessage(), e);
             }
         }
 
