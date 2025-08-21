@@ -6,6 +6,8 @@ import java.util.List;
 
 
 /**
+ * Number
+ *
  * @author: bebopze
  * @date: 2025/5/23
  */
@@ -27,12 +29,20 @@ public class NumUtil {
 
 
     public static BigDecimal double2Decimal(Double val) {
-        return val == null || Double.isNaN(val) ? null : new BigDecimal(val).setScale(3, RoundingMode.HALF_UP);
+        return double2Decimal(val, 3);
+    }
+
+    public static BigDecimal double2Decimal(Double val, int scale) {
+        return val == null || Double.isNaN(val) ? null : new BigDecimal(val).setScale(scale, RoundingMode.HALF_UP);
     }
 
 
     public static BigDecimal num2Decimal(Number val) {
-        return double2Decimal(of(val));
+        return num2Decimal(val, 3);
+    }
+
+    public static BigDecimal num2Decimal(Number val, int scale) {
+        return double2Decimal(of(val), scale);
     }
 
 

@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.util;
 
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +46,11 @@ public class ListUtil {
      */
     public static <E> E last(List<E> list) {
         return CollectionUtils.isEmpty(list) ? null : list.get(list.size() - 1);
+    }
+
+
+    public static int size(Collection list) {
+        return list == null ? 0 : list.size();
     }
 
 
