@@ -94,7 +94,8 @@ public class KlineReportParser {
             market = "sh";
 
             // String filePath_bk = TDX_PATH + "/T0002/export/板块/SH#880302.txt";
-            filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
+            // filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
+            filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
 
 
         } else {
@@ -107,7 +108,8 @@ public class KlineReportParser {
         // 指数：上证 / 深证
         if (!new File(filePath).exists()) {
             market = "sz";
-            filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
+            // filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
+            filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
         }
 
 
@@ -206,7 +208,7 @@ public class KlineReportParser {
                     // System.out.println(JSON.toJSONString(item));
 
 
-                    LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), amount, vol, of(changePct), of(changePrice), of(rangePct), null);
+                    LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
 
 
                     dtoList.add(dto);
