@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.bebopze.tdx.quant.common.constant.AccountConst.*;
+
 
 /**
  * 我的持仓 - 资金持仓 汇总
@@ -46,7 +48,7 @@ public class QueryCreditNewPosResp implements Serializable {
     private BigDecimal accessmoney;
     // 剩余额度（ = 融资授信 - 已融资 ）
     private BigDecimal acreditavl;
-    // 可用资金
+    // 可用资金（担）
     private BigDecimal avalmoney;
     private BigDecimal clearCount;
     // 当日盈亏
@@ -60,7 +62,7 @@ public class QueryCreditNewPosResp implements Serializable {
     private List<Object> hitIPOs;
 
 
-    // 可用保证金
+    // 可用保证金（可融）
     private BigDecimal marginavl;
     // 维持担保比例
     private BigDecimal marginrates;
@@ -92,35 +94,82 @@ public class QueryCreditNewPosResp implements Serializable {
     private BigDecimal totalmkval;
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     // ---------------------------------------------- 融资账户（总资金标准 = 净资产 x 2   ->   为100%基准）
 
 
-    // 实际 总资金（融+担）
+    /**
+     * 融资/普通  账户     ->     总开关
+     */
+    private boolean rzAccount = RZ_ACCOUNT;
+
+
+    /**
+     * 剩余 可买仓位（%）  =   最大总仓位限制（%）  -   当前 总仓位（%）
+     */
+    private double max_buyPosPct; // = ACCOUNT__POS_PCT_LIMIT -  posratio.doubleValue() * 100;
+
+
+    public double getMax_buyPosPct() {
+        return ACCOUNT__POS_PCT_LIMIT - posratio.doubleValue() * 100;
+    }
+
+
+    /**
+     * （当前 不清仓）可用总资金  =  可用保证金（可融）  +   可用资金（担）
+     */
+    private double max_buyCap;//  = marginavl.doubleValue() + avalmoney.doubleValue();
+
+    public double getMax_buyCap() {
+        return getMarginavl().doubleValue() + getAvalmoney().doubleValue();
+    }
+
+
+    /**
+     * （清仓）总资金
+     */
+    private double max_TotalCap;
+
+    public double getMax_TotalCap() {
+        // （清仓）总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
+        return netasset.doubleValue() * MAX_RZ_RATE;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // TODO   DEL
+
+    // 账户   实际总资金（融+担）
     private double totalAccount__actTotalMoney;
 
 
-    // 实际 总仓位（融+担）     0.9567123   ->   95.67%
+    // 账户   实际总仓位（融+担）     0.9567123   ->   95.67%
     private double totalAccount__actTotalPosRatio;
 
 
     /**
-     * 实际 总资金（融+担） =  净资产 x 2
+     * 账户   实际总资金（融+担） =  净资产 x 2
      *
      * @return
      */
+    @Deprecated
     public double getTotalAccount__actTotalMoney() {
         // 融+担 = 净资产 x 2
-        double actTotalMoney = netasset.doubleValue() * 2;
+        double actTotalMoney = rzAccount ? netasset.doubleValue() : netasset.doubleValue() * MAX_RZ_RATE;
 
         return NumUtil.of(actTotalMoney, 5);
     }
 
 
     /**
-     * 实际 总仓位（融+担）     0.9567123   ->   95.67%
+     * 账户   实际总仓位（融+担）     0.9567123   ->   95.67%
      *
      * @return
      */
+    @Deprecated
     public double getTotalAccount__actTotalPosRatio() {
 
         // 融+担 = 净资产 x 2
