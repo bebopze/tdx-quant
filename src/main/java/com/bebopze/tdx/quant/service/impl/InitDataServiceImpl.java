@@ -2,12 +2,14 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -27,11 +29,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
-import static com.bebopze.tdx.quant.common.util.DateTimeUtil.formatNow2Hms;
 
 
 /**
- * 全量行情       DB -> cache
+ * 个股/板块  -  全量行情 Cache（ DB  ->  Cache ）
  *
  * @author: bebopze
  * @date: 2025/7/11
@@ -48,6 +49,8 @@ public class InitDataServiceImpl implements InitDataService {
      * 全局共用   全量行情Cache（全A + 全板块）      ->       回测/主线板块/RPS计算/ExtData计算/...
      */
     public static final BacktestCache data = new BacktestCache();
+
+    // public static final AtomicReference<BacktestCache> data = new AtomicReference<>();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -66,19 +69,44 @@ public class InitDataServiceImpl implements InitDataService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @TotalTime
     @Override
     public BacktestCache initData() {
         return initData(null, null, false);
     }
 
+    @TotalTime
     @Synchronized
     @Override
     public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh) {
-        long start = System.currentTimeMillis();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 内存够用！暂时不截取了！！     ->     此参数 先忽略！！！
+        startDate = null;
+        endDate = null;
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         if (init && !refresh) {
-            return data;
+
+
+            boolean inCacheDateRange = inCacheDateRange(startDate, endDate);
+            if (inCacheDateRange) {
+                return data;
+            }
+
+
+            // 超出 Cache日期区间   ->   Cache不可用     =>     扩展 Cache日期边界   ->   refreshCache
+            startDate = DateTimeUtil.min(startDate, data.startDate);
+            endDate = DateTimeUtil.max(endDate, data.endDate);
+
+
+            // TODO   ->   暂时 忽略 缓存更新   ->   数据同步问题（仅回测Test -> 不影响）
         }
 
 
@@ -94,14 +122,42 @@ public class InitDataServiceImpl implements InitDataService {
         loadAllBlockRelaStock();
 
 
+        data.setStartDate(startDate);
+        data.setEndDate(endDate);
         init = true;
 
-
-        log.info("initData     >>>     totalTime : {}", formatNow2Hms(start));
 
         return data;
     }
 
+
+    private boolean inCacheDateRange(LocalDate startDate, LocalDate endDate) {
+
+
+//        if (startDate.isEqual(data.startDate) && endDate.isEqual(data.endDate)) {
+//            return true;
+//        }
+
+
+        // 全行行情     ->     startDate = null,   endDate = null
+        if (Objects.equals(startDate, data.startDate) && Objects.equals(endDate, data.endDate)) {
+            return true;
+        }
+
+
+        // IN Cache日期区间   ->   Cache可用
+        if (DateTimeUtil.between(startDate, data.startDate, data.endDate)
+                && DateTimeUtil.between(endDate, data.startDate, data.endDate)) {
+
+            return true;
+        }
+
+
+        return false;
+    }
+
+
+    @TotalTime
     @Override
     public void refreshCache() {
 
@@ -110,6 +166,9 @@ public class InitDataServiceImpl implements InitDataService {
 
         // refresh  ->  stockCache
         baseStockService.listAllKline(true);
+
+
+        init = false;
     }
 
 
@@ -152,13 +211,16 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 行情起点（往前倒推 250日 -> 1年）
-        LocalDate dateLine_start = startDate.minusYears(1);
+        LocalDate dateLine_start = startDate.minusMonths(15);
         LocalDate dateLine_end = endDate;
 
         log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
-        // -----------------
+        // ----------------- TODO   待优化
+
+
+        long start = System.currentTimeMillis();
 
 
         // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
@@ -198,6 +260,10 @@ public class InitDataServiceImpl implements InitDataService {
 
             e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
         });
+
+
+        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {} , totalTime : {}",
+                 startDate, endDate, DateTimeUtil.formatNow2Hms(start));
 
 
         // -------------------------------------------------------------------------------------------------------------
