@@ -27,6 +27,15 @@ public interface BtDailyReturnMapper extends BaseMapper<BtDailyReturnDO> {
                                                         @Param("endTradeDate") LocalDate endTradeDate);
 
 
-    int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
+    @Deprecated
+    List<LocalDate> listTradeDateByTaskId(@Param("taskId") Long taskId);
 
+
+    @Deprecated
+    List<Long> listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(@Param("batchNo") Integer batchNo,
+                                                               @Param("totalDays") int totalDays,
+                                                               @Param("dailyReturn") Double dailyReturn);
+
+
+    int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
 }

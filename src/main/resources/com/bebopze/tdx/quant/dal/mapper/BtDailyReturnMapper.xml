@@ -40,6 +40,48 @@
     </select>
 
 
+    <select id="listTradeDateByTaskId" resultType="java.time.LocalDate">
+
+        SELECT trade_date
+
+
+        FROM bt_daily_return
+
+
+        WHERE task_id = #{taskId}
+
+    </select>
+
+
+    <select id="listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn" resultType="long">
+
+        SELECT DISTINCT t.id
+
+
+        FROM bt_daily_return dr
+        LEFT JOIN bt_task t ON dr.task_id = t.id
+
+
+        WHERE t.batch_no = #{batchNo}
+
+        AND dr.trade_date != '2020-02-03'
+
+
+        <![CDATA[     AND t.max_drawdown_pct < -20
+        ]]>
+
+
+        <![CDATA[     AND t.total_day < #{totalDays}
+        ]]>
+
+        <if test="dailyReturn != null">
+            <![CDATA[     AND dr.daily_return <= #{dailyReturn}     ]]>
+        </if>
+
+
+    </select>
+
+
     <delete id="deleteByTaskIds">
         DELETE
         FROM bt_daily_return

@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.strategy.buy;
 
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.Map;
  * @date: 2025/8/9
  */
 @Slf4j
-@Component
 public class BuyStrategy__ConCombiner {
 
 

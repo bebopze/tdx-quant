@@ -52,7 +52,7 @@
 
 
         <if test="stockCode != null">
-            <![CDATA[     AND stock_code = #{stockCode}     ]]>
+            AND stock_code = #{stockCode}
         </if>
 
     </select>

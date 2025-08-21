@@ -4,10 +4,14 @@ import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.mapper.BtDailyReturnMapper;
 import com.bebopze.tdx.quant.dal.service.IBtDailyReturnService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.bebopze.tdx.quant.dal.service.IBtTaskService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+
 
 /**
  * <p>
@@ -19,6 +23,11 @@ import java.util.List;
  */
 @Service
 public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, BtDailyReturnDO> implements IBtDailyReturnService {
+
+
+    @Lazy
+    @Autowired
+    private IBtTaskService taskService;
 
 
     @Override
@@ -36,9 +45,20 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
         return listByTaskIdAndTradeDateRange(taskId, null, null);
     }
 
+
+    @Deprecated
+    @Override
+    public List<Long> listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(Integer batchNo,
+                                                                      int totalDays,
+                                                                      Double dailyReturn) {
+
+        return baseMapper.listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(batchNo, totalDays, dailyReturn);
+    }
+
     @Override
     public int deleteByTaskIds(List<Long> taskIdList) {
         return baseMapper.deleteByTaskIds(taskIdList);
     }
+
 
 }
