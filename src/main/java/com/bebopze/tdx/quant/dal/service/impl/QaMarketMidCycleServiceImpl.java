@@ -28,4 +28,9 @@ public class QaMarketMidCycleServiceImpl extends ServiceImpl<QaMarketMidCycleMap
     public QaMarketMidCycleDO getByDate(LocalDate date) {
         return baseMapper.getByDate(date);
     }
+
+    @Override
+    public QaMarketMidCycleDO last() {
+        return baseMapper.last();
+    }
 }

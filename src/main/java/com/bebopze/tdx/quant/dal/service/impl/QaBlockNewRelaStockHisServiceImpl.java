@@ -31,5 +31,10 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
         return baseMapper.listByBlockNewIdDateAndLimit(blockNewId, date, limit);
     }
 
+    @Override
+    public QaBlockNewRelaStockHisDO last() {
+        return listByBlockNewIdDateAndLimit(1, LocalDate.of(9999, 1, 1), 1).get(0);
+    }
+
 
 }

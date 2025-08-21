@@ -20,4 +20,16 @@
     </select>
 
 
+    <select id="last" resultType="com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO">
+        SELECT *
+
+        FROM qa_market_mid_cycle
+
+
+        ORDER BY id DESC
+
+        LIMIT 1
+    </select>
+
+
 </mapper>

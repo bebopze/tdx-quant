@@ -19,4 +19,6 @@ public interface QaMarketMidCycleMapper extends BaseMapper<QaMarketMidCycleDO> {
     int deleteAll();
 
     QaMarketMidCycleDO getByDate(@Param("date") LocalDate date);
+
+    QaMarketMidCycleDO last();
 }
