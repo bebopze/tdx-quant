@@ -22,6 +22,7 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -119,7 +120,7 @@ public class LdayParser {
 
 
         // List<LdayDTO> stockDataList = parseByStockCode("300059");
-        List<LdayDTO> stockDataList = parseByStockCode("588000");
+        List<LdayDTO> stockDataList = parseByStockCode("513120");
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));
@@ -141,7 +142,11 @@ public class LdayParser {
 
 
     /**
-     * tdx 盘后数据（xx.day）   -   解析器
+     * tdx 盘后数据（xx.day）  -   解析器
+     *
+     *
+     * - 往期数据  ->  报表
+     * - 短期数据  ->  xx.day
      *
      * @param stockCode 证券代码
      * @return
@@ -424,7 +429,7 @@ public class LdayParser {
             // System.out.println(JSON.toJSONString(item));
 
 
-            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), amount, vol, of(changePct), of(changePrice), of(rangePct), null);
+            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
 
 
             dtoList.add(dto);
@@ -473,9 +478,9 @@ public class LdayParser {
         if (size1 >= size2) {
             if (size1 - size2 <= 1) {
                 // 839680（*ST广道）
-                log.warn("check err - 退市股     >>>     klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", size1, size2);
+                log.warn("check err - 退市股     >>>     [{}] , klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", stockCode, size1, size2);
             } else {
-                log.error("check err     >>>     klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", size1, size2);
+                log.error("check err     >>>     [{}] , klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", stockCode, size1, size2);
             }
         }
 
@@ -534,13 +539,42 @@ public class LdayParser {
     }
 
 
-    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
-
-        List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
+    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList,
+                                       List<LdayDTO> lday__ldayDTOList) {
 
 
         int size1 = size(klineReport__ldayDTOList);
         int size2 = size(lday__ldayDTOList);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalTime now = LocalTime.now();
+
+
+        // 盘中   ->   导出过  行情数据
+        // 盘后   ->   已下载  [盘后数据]     ->     以 xx.day 为准
+
+
+        // 盘中   ->   导出过  行情数据
+        if (size1 == size2
+                // 盘后（>=16点）   ->   已下载  [盘后数据]
+                && now.isAfter(LocalTime.of(16, 00))) {
+
+
+            // 盘后   ->   已下载 [盘后数据]     ->     以 xx.day 为准（舍弃 盘中导出 行情数据）
+            klineReport__ldayDTOList.remove(klineReport__ldayDTOList.size() - 1);
+            size1--;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
+
+
         if (size1 < size2) {
             List<LdayDTO> subList = lday__ldayDTOList.subList(size1, size2);
             dtoList.addAll(subList);
