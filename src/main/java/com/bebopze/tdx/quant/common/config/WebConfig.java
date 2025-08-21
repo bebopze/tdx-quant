@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.config;
 
 import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateConverter;
+import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateTimeConverter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -41,6 +42,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addFormatters(FormatterRegistry registry) {
         // web参数   日期格式
         registry.addConverter(new StringToLocalDateConverter("yyyy-MM-dd"));
+        // web参数   时间格式
+        registry.addConverter(new StringToLocalDateTimeConverter("yyyy-MM-dd HH:mm:ss"));
     }
 
 
