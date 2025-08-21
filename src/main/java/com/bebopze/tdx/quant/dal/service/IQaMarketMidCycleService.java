@@ -18,4 +18,6 @@ public interface IQaMarketMidCycleService extends IService<QaMarketMidCycleDO> {
     int deleteAll();
 
     QaMarketMidCycleDO getByDate(LocalDate date);
+
+    QaMarketMidCycleDO last();
 }

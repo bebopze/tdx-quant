@@ -19,4 +19,6 @@ public interface IQaBlockNewRelaStockHisService extends IService<QaBlockNewRelaS
     int deleteAll(Integer blockNewId, LocalDate date);
 
     List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit);
+
+    QaBlockNewRelaStockHisDO last();
 }
