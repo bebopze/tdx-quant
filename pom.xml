@@ -99,6 +99,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.4</version>
+        </dependency>
         <!-- log4j2 -->
 
 
@@ -155,6 +160,15 @@
             <version>2.3.34</version>
         </dependency>
         <!-- mybatis-plus -->
+
+
+        <!-- sharding-jdbc -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+        <!-- sharding-jdbc -->
 
 
         <!-- feign -->

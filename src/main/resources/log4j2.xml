@@ -10,19 +10,30 @@
 
     <Appenders>
 
+        <!-- 控制台输出 -->
         <Console name="Console" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
 
-        <RollingFile name="App-File-Appender" fileName="${LOG_PATH}/tdx-quant.log" filePattern="${LOG_PATH}/tdx-quant-%d{yyyy-MM-dd}.log">
-            <PatternLayout>
-                <Pattern>${LOG_PATTERN}</Pattern>
-            </PatternLayout>
+        <!-- 滚动文件输出：按天和按大小切分 -->
+        <RollingFile name="App-File-Appender"
+                     fileName="${LOG_PATH}/tdx-quant.log"
+                     filePattern="${LOG_PATH}/tdx-quant-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
 
+            <!-- 触发策略：每天 00:00 切分 或 单文件超过 100MB 切分 -->
             <Policies>
                 <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
                 <SizeBasedTriggeringPolicy size="100 MB"/>
             </Policies>
+
+            <!-- 滚动策略：支持按大小生成 -1, -2, -3...，最多保留 10 个文件/每天 -->
+            <DefaultRolloverStrategy max="10">
+                <!-- 自动清理 7 天前的日志 -->
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <IfLastModified age="7d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
         </RollingFile>
 
     </Appenders>
@@ -30,24 +41,31 @@
 
     <Loggers>
 
-        <logger name="com.bebopze.tdx.quant" level="INFO">
+        <!-- 指定业务包日志输出到文件 -->
+        <AsyncLogger name="com.bebopze.tdx.quant" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
             <AppenderRef ref="App-File-Appender"/>
-        </logger>
+        </AsyncLogger>
 
-        <Logger name="org.apache.http" level="INFO">
+        <!-- HTTP 客户端日志输出到控制台 -->
+        <Logger name="org.apache.http" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
 
-        <Logger name="com.baomidou.mybatisplus.core" level="INFO">
-            <AppenderRef ref="Console"/>
-        </Logger>
-        <Logger name="org.apache.ibatis" level="INFO">
+        <!-- MyBatis-Plus 日志 -->
+        <Logger name="com.baomidou.mybatisplus.core" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
 
-        <Root level="INFO">
+        <!-- MyBatis 日志 -->
+        <Logger name="org.apache.ibatis" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
-        </Root>
+        </Logger>
+
+        <!-- 根日志器：默认输出到控制台 -->
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+        </AsyncRoot>
 
     </Loggers>
 
