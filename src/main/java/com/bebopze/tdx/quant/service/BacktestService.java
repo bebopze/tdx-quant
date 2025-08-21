@@ -18,6 +18,12 @@ public interface BacktestService {
 
     Long backtest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
 
+    Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
+                   List<String> buyConList, LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
+
+    Long backtestTrade(TopBlockStrategyEnum topBlockStrategyEnum,
+                       LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
+
     void checkBacktest(Long taskId);
 
 

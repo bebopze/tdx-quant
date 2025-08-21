@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
+import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -24,11 +25,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -50,14 +51,14 @@ public class BacktestStrategy {
 
 
     // 共享数据
-    private volatile BacktestCache data = InitDataServiceImpl.data;
+    private static volatile BacktestCache data = InitDataServiceImpl.data;
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
     // 统计数据
-    private final ThreadLocal<Stat> x = ThreadLocal.withInitial(Stat::new);
+    private static final ThreadLocal<Stat> x = ThreadLocal.withInitial(Stat::new);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -66,24 +67,11 @@ public class BacktestStrategy {
     /**
      * bt_trade_record   -   Cache
      */
-    private final ThreadLocal<Set<Long>> tradeRecord___idSet__cache = ThreadLocal.withInitial(HashSet::new);
-    private final ThreadLocal<List<BtTradeRecordDO>> tradeRecordList__cache = ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<Set<Long>> tradeRecord___idSet__cache = ThreadLocal.withInitial(HashSet::new);
+    private static final ThreadLocal<List<BtTradeRecordDO>> tradeRecordList__cache = ThreadLocal.withInitial(ArrayList::new);
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-    @Autowired
-    private IBaseStockService baseStockService;
-
-    @Autowired
-    private IBaseBlockService baseBlockService;
-
-    @Autowired
-    private IBaseBlockRelaStockService baseBlockRelaStockService;
-
-    @Autowired
-    private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
 
 
     @Autowired
@@ -126,22 +114,25 @@ public class BacktestStrategy {
 
     @TotalTime
     public Long backtest(Integer batchNo,
-                         List<String> buyConList, List<String> sellConList,
+                         TopBlockStrategyEnum topBlockStrategyEnum, List<String> buyConList, List<String> sellConList,
                          LocalDate startDate, LocalDate endDate) {
 
         try {
-            return execBacktest(batchNo, buyConList, sellConList, startDate, endDate);
+            return execBacktest(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
         } finally {
             clearThreadLocal();
         }
     }
 
     private Long execBacktest(Integer batchNo,
-                              List<String> buyConList, List<String> sellConList,
-                              LocalDate startDate, LocalDate endDate) {
+                              TopBlockStrategyEnum topBlockStrategyEnum,
+                              List<String> buyConList,
+                              List<String> sellConList,
+                              LocalDate startDate,
+                              LocalDate endDate) {
 
-        log.info("execBacktest start     >>>     batchNo : {} buyConList : {} , sellConList : {} , startDate : {} , endDate : {}",
-                 batchNo, buyConList, sellConList, startDate, endDate);
+        log.info("execBacktest start     >>>     batchNo : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , startDate : {} , endDate : {}",
+                 batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
 
 
         endDate = DateTimeUtil.min(endDate, LocalDate.now());
@@ -164,7 +155,7 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        BtTaskDO taskDO = createBacktestTask(batchNo, buyConList, sellConList, startDate, endDate);
+        BtTaskDO taskDO = createBacktestTask(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -189,7 +180,7 @@ public class BacktestStrategy {
 
             try {
                 // 每日 - 回测（B/S）
-                execBacktestDaily(buyConList, sellConList, tradeDate, taskDO);
+                execBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO);
             } catch (Exception e) {
                 log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
             }
@@ -204,7 +195,7 @@ public class BacktestStrategy {
         sumTotalReturn(taskDO);
 
 
-        log.info("backtest end     >>>     taskId : {} , startDate : {} , endDate : {}", taskDO.getId(), startDate, endDate);
+        log.info("execBacktest end     >>>     taskId : {} , startDate : {} , endDate : {}", taskDO.getId(), startDate, endDate);
 
 
         return taskDO.getId();
@@ -212,8 +203,11 @@ public class BacktestStrategy {
 
 
     private BtTaskDO createBacktestTask(Integer batchNo,
-                                        List<String> buyConList, List<String> sellConList,
-                                        LocalDate startDate, LocalDate endDate) {
+                                        TopBlockStrategyEnum topBlockStrategyEnum,
+                                        List<String> buyConList,
+                                        List<String> sellConList,
+                                        LocalDate startDate,
+                                        LocalDate endDate) {
 
         BtTaskDO taskDO = new BtTaskDO();
 
@@ -221,8 +215,10 @@ public class BacktestStrategy {
         taskDO.setBatchNo(batchNo);
 
         // B/S策略
+        taskDO.setTopBlockStrategy(topBlockStrategyEnum.getDesc());
         taskDO.setBuyStrategy(String.join(",", buyConList));
         taskDO.setSellStrategy(String.join(",", sellConList));
+
 
         // 回测 - 时间段
         taskDO.setStartDate(startDate);
@@ -241,7 +237,8 @@ public class BacktestStrategy {
     }
 
 
-    private void execBacktestDaily(List<String> buyConList,
+    private void execBacktestDaily(TopBlockStrategyEnum topBlockStrategyEnum,
+                                   List<String> buyConList,
                                    List<String> sellConList,
                                    LocalDate tradeDate,
                                    BtTaskDO taskDO) {
@@ -289,10 +286,10 @@ public class BacktestStrategy {
 
 
         // 卖出策略
-        List<String> sell__stockCodeList = sellStrategyFactory.get("A").rule(data, tradeDate, x.get().positionStockCodeList, sell_infoMap);
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, x.get().positionStockCodeList, sell_infoMap);
 
-        log.info("S策略     >>>     [{} {}] , size : {} , sell__stockCodeList : {} , sell_infoMap : {}",
-                 taskId, tradeDate, sell__stockCodeList.size(), JSON.toJSONString(sell__stockCodeList), JSON.toJSONString(sell_infoMap));
+        log.info("S策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
+                 taskId, tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
 
 
         // 持仓个股   ->   匹配 淘汰
@@ -309,7 +306,7 @@ public class BacktestStrategy {
 
 
         // S策略   ->   SELL TradeRecord
-        createAndSave__SELL_TradeRecord(taskId, tradeDate, sell__stockCodeList, x.get().stockCode_positionDO_Map, sell_infoMap);
+        createAndSave__SELL_TradeRecord(taskId, tradeDate, sell__stockCodeSet, x.get().stockCode_positionDO_Map, sell_infoMap);
 
 
         // S后  ->  账户统计数据
@@ -339,13 +336,16 @@ public class BacktestStrategy {
 
 
         Map<String, String> buy_infoMap = Maps.newConcurrentMap();
+        // 当前仓位
+        double posRate = x.get().getMarketValue() / x.get().getCapital();
 
 
         // 买入策略
-        // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap);
-        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(buyConList, data, tradeDate, buy_infoMap);
-        log.info("B策略     >>>     [{} {}] , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
-                 taskId, tradeDate, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
+        // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap, posRate);
+        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate);
+
+        log.info("B策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
+                 taskId, tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ public class BacktestStrategy {
 
 
         // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
-        buy_sell__signalConflict(data, tradeDate, buy__stockCodeList);
+        buy_sell__signalConflict(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        log.debug("B策略 -> 交易 record - start     >>>     [{} {}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {}",
+        log.debug("B策略 -> 交易 record - start     >>>     [{}] [{}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {}",
                   taskId, tradeDate, x.get().prevAvlCapital, x.get().sellCapital, x.get().avlCapital, x.get().prevCapital);
 
 
@@ -410,14 +410,14 @@ public class BacktestStrategy {
      *
      * @param taskId
      * @param tradeDate
-     * @param sell__stockCodeList
+     * @param sell__stockCodeSet
      * @param sell_before__stockCode_positionDO_Map
      * @param sell_infoMap
      * @return
      */
     private void createAndSave__SELL_TradeRecord(Long taskId,
                                                  LocalDate tradeDate,
-                                                 List<String> sell__stockCodeList,
+                                                 Set<String> sell__stockCodeSet,
                                                  Map<String, BtPositionRecordDO> sell_before__stockCode_positionDO_Map,
                                                  Map<String, String> sell_infoMap) {
 
@@ -425,7 +425,7 @@ public class BacktestStrategy {
         List<BtTradeRecordDO> sell__tradeRecordDO__List = Lists.newArrayList();
 
 
-        for (String stockCode : sell__stockCodeList) {
+        for (String stockCode : sell__stockCodeSet) {
 
             BtTradeRecordDO sell_tradeRecordDO = new BtTradeRecordDO();
             sell_tradeRecordDO.setTaskId(taskId);
@@ -489,7 +489,7 @@ public class BacktestStrategy {
         // 减仓总金额 市值占比 < 5%       直接略过
         if (total_reduction_amount / x.get().marketValue < 0.05) {
             // 金额太小  ->  略过
-            log.debug("[{} {}]     >>>     持仓_大于_持仓限制___等比减仓  -  减仓总金额[{}] 市值占比[{}%]太小 -> 略过     >>>     marketValue : {} , positionLimitAmount : {}",
+            log.debug("[{}] [{}]     >>>     持仓_大于_持仓限制___等比减仓  -  减仓总金额[{}] 市值占比[{}%]太小 -> 略过     >>>     marketValue : {} , positionLimitAmount : {}",
                       taskId, tradeDate,
                       total_reduction_amount, of(total_reduction_amount / x.get().marketValue * 100),
                       x.get().marketValue, x.get().positionLimitAmount);
@@ -563,17 +563,33 @@ public class BacktestStrategy {
     /**
      * B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
      *
+     * @param topBlockStrategyEnum
      * @param data
      * @param tradeDate
      * @param buy__stockCodeList
      */
-    private void buy_sell__signalConflict(BacktestCache data, LocalDate tradeDate, List<String> buy__stockCodeList) {
+    @TotalTime
+    public void buy_sell__signalConflict(TopBlockStrategyEnum topBlockStrategyEnum,
+                                         BacktestCache data, LocalDate tradeDate,
+                                         List<String> buy__stockCodeList) {
+
+
+        Map<String, String> sell_infoMap = Maps.newHashMap();
+
 
         // 当前 buyList   ->   是否 与 S策略 相互冲突       =>       过滤出 冲突个股（sellList）
-        List<String> sell__stockCodeList = sellStrategyFactory.get("A").rule(data, tradeDate, buy__stockCodeList, Maps.newHashMap());
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, sell_infoMap);
+
 
         // buyList   ->   remove  冲突个股（sellList）
-        buy__stockCodeList.removeAll(sell__stockCodeList);
+        buy__stockCodeList.removeAll(sell__stockCodeSet);
+
+
+        if (CollectionUtils.isNotEmpty(buy__stockCodeList)) {
+
+            log.warn("buy_sell__signalConflict     >>>     remove BS冲突个股 - sell__stockCodeSet : {} , sell_infoMap : {} , new__buy__stockCodeList : {}",
+                     JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap), JSON.toJSONString(buy__stockCodeList));
+        }
     }
 
 
@@ -597,7 +613,7 @@ public class BacktestStrategy {
         }
 
 
-        log.debug("B策略 -> 交易 record - end     >>>     [{} {}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {} , buyCapital : {}",
+        log.debug("B策略 -> 交易 record - end     >>>     [{}] [{}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {} , buyCapital : {}",
                   taskId, tradeDate, x.get().prevAvlCapital, x.get().sellCapital, x.get().avlCapital, x.get().prevCapital, x.get().buyCapital);
 
 
@@ -744,7 +760,7 @@ public class BacktestStrategy {
 
         // S前 总资金   =   S前 总市值  +  S前 可用资金
         x.get().capital = x.get().marketValue + x.get().avlCapital;
-        log.debug("init capital   -   [{} {}]     >>>     capital : {} , marketValue : {} , avlCapital : {}",
+        log.debug("init capital   -   [{}] [{}]     >>>     capital : {} , marketValue : {} , avlCapital : {}",
                   x.get().taskId, x.get().tradeDate, x.get().capital, x.get().marketValue, x.get().avlCapital);
 
 
@@ -876,7 +892,7 @@ public class BacktestStrategy {
                                                      .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (!TdxFunCheck.equals(marketValue, x.get().marketValue)) {
-            log.error("calcDailyReturn - err     >>>     [{} {}] , marketValue : {} , x.marketValue : {}",
+            log.warn("calcDailyReturn - err     >>>     [{}] [{}] , marketValue : {} , x.marketValue : {}",
                       taskId, tradeDate, marketValue, x.get().marketValue);
         }
 
@@ -885,13 +901,13 @@ public class BacktestStrategy {
         BigDecimal capital = marketValue.add(of(avlCapital));
 
         if (!TdxFunCheck.equals(capital, x.get().capital)) {
-            log.error("calcDailyReturn - err     >>>     [{} {}] , capital : {} , x.capital : {}",
+            log.warn("calcDailyReturn - err     >>>     [{}] [{}] , capital : {} , x.capital : {}",
                       taskId, tradeDate, capital, x.get().capital);
         }
 
 
         if (!TdxFunCheck.equals(avlCapital, x.get().avlCapital)) {
-            log.error("calcDailyReturn - err     >>>     [{} {}] , avlCapital : {} , x.avlCapital : {}",
+            log.warn("calcDailyReturn - err     >>>     [{}] [{}] , avlCapital : {} , x.avlCapital : {}",
                       taskId, tradeDate, avlCapital, x.get().avlCapital);
         }
 
@@ -911,7 +927,7 @@ public class BacktestStrategy {
 
         // 当日收益率 = 当日盈亏额 / 昨日总资金
         BigDecimal dailyReturn = profitLossAmount.divide(of(prevCapital), 6, RoundingMode.HALF_UP);
-        log.debug("calcDailyReturn     >>>     [{} {}] , marketValue : {} , avlCapital : {} , capital : {} , prevCapital : {} , profitLossAmount : {} , dailyReturn : {} , nav : {}",
+        log.debug("calcDailyReturn     >>>     [{}] [{}] , marketValue : {} , avlCapital : {} , capital : {} , prevCapital : {} , profitLossAmount : {} , dailyReturn : {} , nav : {}",
                   taskId, tradeDate, marketValue, avlCapital, capital, prevCapital, profitLossAmount, dailyReturn, nav);
 
 
@@ -1022,6 +1038,11 @@ public class BacktestStrategy {
 
 
         // ------------------------------------------------ 更新 bt_task
+
+
+        taskDO.setTotalTrade(tradeStatResult.totalPairs);
+        taskDO.setTotalTradeAmount(NumUtil.double2Decimal(tradeStatResult.totalAmount));
+        taskDO.setStatus(2);
 
 
         taskDO.setFinalCapital(finalCapital);
@@ -1297,7 +1318,7 @@ public class BacktestStrategy {
 
             // 每次B/S   ->   成本/收益/收益率   ->   独立事件（边界）     ==>     否则，上次B/S 亏损  ->  合并计入  本次B/S   =>   亏损 -> 负数bug（总成本 负数 -> 平均成本 负数）     =>     市值 爆减bug
             if (avgCost < 0) {
-                log.error("getDailyPositions - avgCost err     >>>     [{} {}] , totalCost : {} , qty : {} , avgCost : {}",
+                log.error("getDailyPositions - avgCost err     >>>     [{}] [{}] , totalCost : {} , qty : {} , avgCost : {}",
                           taskId, endTradeDate, totalCost, qty, avgCost);
             }
 
@@ -1386,6 +1407,7 @@ public class BacktestStrategy {
 
         // 全量行情
         data = initDataService.initData(startDate, endDate, false);
+        // initDataService.initData(startDate, endDate, false);   // 等价 data = 全局Cache;       data -本身就已全局指向-> 全局Cache
 
 
         log.info("--------------------------- data.stockDOList - after      >>>     size : {} , 线程 : {}",
@@ -1405,7 +1427,7 @@ public class BacktestStrategy {
 
     @Data
     @AllArgsConstructor
-    public class CalcStat {
+    public static class CalcStat {
 
 
         // ----------------------------------------- 不变
@@ -1506,15 +1528,15 @@ public class BacktestStrategy {
             // 总资金  =  总市值 + 可用资金
             double capital_2 = marketValue + avlCapital;
             if (!TdxFunCheck.equals(capital, capital_2)) {
-                log.error("check err     >>>     [{} {}] , capital : {} , capital_2 : {}",
-                          x.get().taskId, x.get().tradeDate, capital, capital_2);
+                log.warn("check err     >>>     [{}] [{}] , capital : {} , capital_2 : {}",
+                         x.get().taskId, x.get().tradeDate, capital, capital_2);
             }
 
             // 可用资金  =  prev_可用资金 + 卖出 - 买入
             double avlCapital_2 = x.get().prevAvlCapital + sellCapital - buyCapital;
-            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital, avlCapital_2, 1000, 0.01)) {
-                log.error("check err     >>>     [{} {}] , avlCapital : {} , avlCapital_2 : {}",
-                          x.get().taskId, x.get().tradeDate, avlCapital, avlCapital_2);
+            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital, avlCapital_2, x.get().capital * 0.001 /*1000*/, 0.01)) {
+                log.warn("check err     >>>     [{}] [{}] , avlCapital : {} , avlCapital_2 : {}",
+                         x.get().taskId, x.get().tradeDate, avlCapital, avlCapital_2);
             }
         }
 
@@ -1554,7 +1576,7 @@ public class BacktestStrategy {
 
             // 前置init阶段 -> 不校验 （capital -> 还未计算）
             if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital_1, avlCapital_2, 1000, 0.01)) {
-                log.debug("getAvlCapital err     >>>     [{} {}] , {} , {}", x.get().taskId, x.get().tradeDate, avlCapital_1, avlCapital_2);
+                log.warn("getAvlCapital err     >>>     [{}] [{}] , {} , {}", x.get().taskId, x.get().tradeDate, avlCapital_1, avlCapital_2);
             }
 
             return avlCapital_1;
@@ -1727,7 +1749,7 @@ public class BacktestStrategy {
     }
 
 
-    public class DrawdownResult {
+    public static class DrawdownResult {
 
         // 波峰
         public LocalDate peakDate;

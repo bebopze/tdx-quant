@@ -50,6 +50,13 @@ public class BtTaskDO implements Serializable {
     private Integer batchNo;
 
     /**
+     * 任务状态（用于每日 更新至最新交易日）：1-进行中（新开任务）；2-已完成（已更新至 最新交易日）；3-待更新至 最新交易日（之前已完成过）；
+     */
+    @TableField(value = "status")
+    @Schema(description = "任务状态（用于每日 更新至最新交易日）：1-进行中（新开任务）；2-已完成（已更新至 最新交易日）；3-待更新至 最新交易日（之前已完成过）；")
+    private Integer status;
+
+    /**
      * B策略
      */
     @TableField("buy_strategy")
@@ -62,6 +69,13 @@ public class BtTaskDO implements Serializable {
     @Schema(description = "S策略")
     @TableField("sell_strategy")
     private String sellStrategy;
+
+    /**
+     * 主线策略
+     */
+    @Schema(description = "主线策略")
+    @TableField("top_block_strategy")
+    private String topBlockStrategy;
 
     /**
      * 回测-起始日期
@@ -90,6 +104,20 @@ public class BtTaskDO implements Serializable {
     @TableField("final_capital")
     @Schema(description = "结束资金")
     private BigDecimal finalCapital;
+
+    /**
+     * 交易总笔数
+     */
+    @TableField("total_trade")
+    @Schema(description = "交易总笔数")
+    private Integer totalTrade;
+
+    /**
+     * 交易总金额
+     */
+    @TableField("total_trade_amount")
+    @Schema(description = "交易总金额")
+    private BigDecimal totalTradeAmount;
 
     /**
      * 初始净值
@@ -194,7 +222,7 @@ public class BtTaskDO implements Serializable {
     private LocalDateTime gmtModify;
 
 
-    // -----------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
 //    public JSONObject getDrawdownResultDesc() {
@@ -212,6 +240,16 @@ public class BtTaskDO implements Serializable {
 //
 //        return JSON.parseObject(tradeStatResult);
 //    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @TableField(exist = false)
+    private LocalDate startDate2;
+
+    @TableField(exist = false)
+    private LocalDate endDate2;
 
 
 }

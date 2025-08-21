@@ -3,9 +3,9 @@ package com.bebopze.tdx.quant.strategy.buy;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.tdxfun.Tools.*;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 
 
@@ -59,10 +58,11 @@ public class BacktestBuyStrategyA implements BuyStrategy {
      * @param data
      * @param tradeDate
      * @param buy_infoMap
+     * @param posRate
      * @return
      */
     @Override
-    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap) {
+    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap, double posRate) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -130,6 +130,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
 
 
+                double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
                 boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
 
 
@@ -203,7 +204,6 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
                 // 偏离率 < 10%
-                double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
                 boolean con_6 = C_SSF_偏离率 < 10;
 
 
@@ -299,7 +299,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
-        buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap);
+        buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap, posRate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -322,17 +322,25 @@ public class BacktestBuyStrategyA implements BuyStrategy {
     /**
      * 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
      *
-     * @param filter__stockCodeList2
+     * @param inTopBlock__stockCodeList
      * @param data
      * @param tradeDate
      * @param buy_infoMap
+     * @param posRate
      */
-    public void buyStrategy_ETF(List<String> filter__stockCodeList2,
+    public void buyStrategy_ETF(List<String> inTopBlock__stockCodeList,
                                 BacktestCache data,
                                 LocalDate tradeDate,
-                                Map<String, String> buy_infoMap) {
+                                Map<String, String> buy_infoMap,
+                                double posRate) {
 
-        if (!CollectionUtils.isEmpty(filter__stockCodeList2)) {
+
+        // 无股可买（inTopBlock__stockCodeList 为空     ||     总仓位 < 50%）
+
+
+        // 有股可买   ->   取反（无股可买）
+        // if (CollectionUtils.isNotEmpty(inTopBlock__stockCodeList) && posRate > 0.5) {
+        if (!(CollectionUtils.isEmpty(inTopBlock__stockCodeList) || posRate < 0.5)) {
             return;
         }
 
@@ -363,13 +371,13 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 if (date.isBefore(tradeDate)) {
                     String stockCode = e.getCode();
 
-                    filter__stockCodeList2.add(stockCode);
+                    inTopBlock__stockCodeList.add(stockCode);
                     buy_infoMap.put(stockCode, "大盘极限底->ETF策略");
                 }
             });
 
 
-            System.out.println(filter__stockCodeList2);
+            System.out.println(inTopBlock__stockCodeList);
         }
     }
 

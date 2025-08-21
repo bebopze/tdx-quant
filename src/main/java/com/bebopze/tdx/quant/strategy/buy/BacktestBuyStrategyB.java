@@ -2,8 +2,8 @@ package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.QuickOption;
@@ -48,10 +48,11 @@ public class BacktestBuyStrategyB implements BuyStrategy {
      * @param data
      * @param tradeDate
      * @param buy_infoMap
+     * @param posRate
      * @return
      */
     @Override
-    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap) {
+    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap, double posRate) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -353,7 +354,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
-        backtestBuyStrategyA.buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap);
+        backtestBuyStrategyA.buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap, posRate);
 
 
         // -------------------------------------------------------------------------------------------------------------
