@@ -4,7 +4,7 @@ import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;

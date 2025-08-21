@@ -1,8 +1,8 @@
 package com.bebopze.tdx.quant.parser.check;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.indicator.StockFun;

@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.kline;
 
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import lombok.Data;
 
 import java.io.Serializable;

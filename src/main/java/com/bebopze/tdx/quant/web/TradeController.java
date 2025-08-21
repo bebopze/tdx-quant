@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -94,14 +94,14 @@ public class TradeController {
     @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）  =>   清仓（old） ->  买入（new）")
     @PostMapping(value = "/quickOption/buyNewPosition")
     public Result<Void> quickBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
-        tradeService.quickBuyNewPosition(newPositionList);
+        tradeService.quickClearAndBuyNewPosition(newPositionList);
         return Result.SUC();
     }
 
     @Operation(summary = "一键 等比买入（调仓换股）", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
     @PostMapping(value = "/quickOption/equalRatio/buyNewPosition")
     public Result<Void> avgBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
-        tradeService.quickAvgBuyNewPosition(newPositionList);
+        tradeService.quickClearAndAvgBuyNewPosition(newPositionList);
         return Result.SUC();
     }
 

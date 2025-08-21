@@ -8,10 +8,10 @@ import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
@@ -649,10 +649,13 @@ public class StockFun {
         FastJson2Config fastJson2Config = new FastJson2Config();
 
 
-        String stockCode = "300059";
+        String stockCode = "688615";
 
 
         StockFun fun = new StockFun(stockCode);
+
+
+        boolean[] 历史新高 = fun.历史新高();
 
 
         // 1、下MA50

@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
@@ -9,7 +9,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;

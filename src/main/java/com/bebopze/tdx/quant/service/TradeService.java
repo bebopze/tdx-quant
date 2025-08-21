@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -23,9 +24,12 @@ public interface TradeService {
     /**
      * 我的持仓
      *
+     * @param blockInfo 是否返回 板块info：true/false
      * @return
      */
     QueryCreditNewPosResp queryCreditNewPosV2(boolean blockInfo);
+
+    QueryCreditNewPosResp queryCreditNewPosV2();
 
 
     /**
@@ -78,15 +82,39 @@ public interface TradeService {
     void quickClearPosition();
 
 
-    /**
-     * 一键买入（调仓换股）    =>     清仓（old） ->  买入（new）
-     */
-    void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+    // --------------------------------------------
 
     /**
+     * 一键卖出     =>     指定 个股列表
+     *
+     * @param sellStockCodeSet 指定卖出 个股列表
+     */
+    void quickSellPosition(Set<String> sellStockCodeSet);
+
+
+    /**
+     * 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
+     *
+     * @param newPositionList 指定买入 个股列表
+     */
+    void quickBuyPosition(List<QuickBuyPositionParam> newPositionList);
+
+
+    // --------------------------------------------
+
+    /**
+     * 一键买入（调仓换股）    =>     清仓（old） ->  买入（new）
+     *
      * @param newPositionList
      */
-    void quickAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+    void quickClearAndBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+
+    /**
+     * 一键 等比买入（调仓换股）    =>     清仓（old） ->  买入（new）
+     *
+     * @param newPositionList
+     */
+    void quickClearAndAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
 
 
     /**

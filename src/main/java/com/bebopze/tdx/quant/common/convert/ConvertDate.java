@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;

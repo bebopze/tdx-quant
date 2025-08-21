@@ -1,8 +1,8 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.BaseStockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

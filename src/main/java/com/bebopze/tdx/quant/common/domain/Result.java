@@ -45,9 +45,9 @@ public class Result<T> implements Serializable {
     private Integer totalPage;
 
 
-    public static <T> Result of(T data,
-                                boolean success,
-                                BaseExEnum baseExEnum) {
+    public static <T> Result<T> of(T data,
+                                   boolean success,
+                                   BaseExEnum baseExEnum) {
         if (null != baseExEnum) {
             return of(data, success, baseExEnum.getCode(), baseExEnum.getMsg());
         } else {
@@ -55,11 +55,11 @@ public class Result<T> implements Serializable {
         }
     }
 
-    public static <T> Result of(T data,
-                                boolean success,
-                                Integer code,
-                                String msg) {
-        Result result = new Result<>();
+    public static <T> Result<T> of(T data,
+                                   boolean success,
+                                   Integer code,
+                                   String msg) {
+        Result<T> result = new Result<>();
         result.setData(data);
         result.setSuccess(success);
         result.setCode(code);
@@ -86,7 +86,7 @@ public class Result<T> implements Serializable {
                                    Integer pageIndex,
                                    Integer pageSize,
                                    String msg) {
-        Result result = new Result();
+        Result<T> result = new Result<>();
         result.setData(data);
         result.setSuccess(success);
         if (null != baseExEnum) {
@@ -138,8 +138,8 @@ public class Result<T> implements Serializable {
         return of(data, true, BaseExEnum.SUC.getCode(), msg);
     }
 
-    public static Result ERR(BaseExEnum baseExEnum) {
-        Result result = new Result();
+    public static <T> Result<T> ERR(BaseExEnum baseExEnum) {
+        Result<T> result = new Result<>();
         result.setSuccess(false);
         if (null != baseExEnum) {
             result.setCode(baseExEnum.getCode());
@@ -149,13 +149,14 @@ public class Result<T> implements Serializable {
         return result;
     }
 
-    public static Result ERR(String msg) {
-        Result result = new Result();
+    public static <T> Result<T> ERR(String msg) {
+        Result<T> result = new Result<>();
         result.setSuccess(false);
         result.setCode(BaseExEnum.ERR.getCode());
         result.setMsg(msg);
         result.setData(null);
         return result;
     }
-}
 
+
+}

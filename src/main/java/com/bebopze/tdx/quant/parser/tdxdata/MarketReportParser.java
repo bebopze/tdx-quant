@@ -39,7 +39,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  * @date: 2025/5/7
  */
 @Slf4j
-public class IndexReportParser {
+public class MarketReportParser {
 
 
     /**

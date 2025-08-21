@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.config.aspect;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,15 +24,15 @@ import java.sql.SQLException;
  */
 @Slf4j
 @ControllerAdvice
-public class GlobalExHandler {
+public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public Result handleMethodArgumentNotValidException(Exception e) {
+    public Result handleAllExceptions(Exception e) {
 
-        log.error("GlobalExHandler     >>>     {}", e.getMessage(), e);
+        log.error("handleAllExceptions     >>>     {}", e.getMessage(), e);
 
 
         if (e instanceof BizException) {
@@ -46,10 +47,14 @@ public class GlobalExHandler {
             return Result.ERR("必入参数未填写");
         } else if (e instanceof MethodArgumentNotValidException) {
             return Result.ERR("必入参数未填写");
+        } else if (e instanceof ClientAbortException) {
+            return Result.ERR("客户端中断连接");
         } else if (e instanceof IllegalArgumentException) {
             return Result.ERR(e.getMessage());
         } else if (e instanceof NullPointerException) {
             return Result.ERR(e.getMessage());
+        } else if (e instanceof IndexOutOfBoundsException) {
+            return Result.ERR(e.getMessage() + "     >>>     检查是否【stock/block DB缓存】又忘记了删除！！！");
         } else if (e instanceof BadSqlGrammarException) {
             return Result.ERR("服务器异常,请联系管理员!");
         } else if (e instanceof SQLException) {

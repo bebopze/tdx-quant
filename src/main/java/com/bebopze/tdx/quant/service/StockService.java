@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.BaseStockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 
 
 /**

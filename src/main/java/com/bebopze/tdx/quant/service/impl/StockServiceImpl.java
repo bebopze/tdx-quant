@@ -1,12 +1,8 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.BaseStockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
@@ -16,9 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 

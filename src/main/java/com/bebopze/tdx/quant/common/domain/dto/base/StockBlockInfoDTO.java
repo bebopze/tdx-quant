@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.base;
 
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;

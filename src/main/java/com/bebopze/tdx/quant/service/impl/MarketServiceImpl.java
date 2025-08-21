@@ -1,9 +1,10 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.dal.service.IQaMarketMidCycleService;
-import com.bebopze.tdx.quant.parser.tdxdata.IndexReportParser;
+import com.bebopze.tdx.quant.parser.tdxdata.MarketReportParser;
 import com.bebopze.tdx.quant.service.MarketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +32,11 @@ public class MarketServiceImpl implements MarketService {
     private IQaMarketMidCycleService qaMarketMidCycleService;
 
 
+    @TotalTime
     @Override
     public void importMarketMidCycle() {
 
-        List<IndexReportParser.TdxFunResultDTO> dtoList = IndexReportParser.parse();
+        List<MarketReportParser.TdxFunResultDTO> dtoList = MarketReportParser.parse();
         Assert.notEmpty(dtoList, "大盘量化 - 导入数据位为空");
 
 
@@ -64,7 +66,7 @@ public class MarketServiceImpl implements MarketService {
      * @param dto
      * @return
      */
-    private QaMarketMidCycleDO convert2DO(IndexReportParser.TdxFunResultDTO dto) {
+    private QaMarketMidCycleDO convert2DO(MarketReportParser.TdxFunResultDTO dto) {
 
         QaMarketMidCycleDO entity = new QaMarketMidCycleDO();
         entity.setDate(dto.getDate());

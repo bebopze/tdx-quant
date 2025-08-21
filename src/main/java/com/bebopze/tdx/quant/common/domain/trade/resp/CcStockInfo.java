@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import lombok.Data;
 
 import java.io.Serializable;

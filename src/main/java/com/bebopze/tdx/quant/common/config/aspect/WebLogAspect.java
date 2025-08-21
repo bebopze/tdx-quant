@@ -18,7 +18,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.util.DateTimeUtil.format2Hms;
+import static com.bebopze.tdx.quant.common.util.DateTimeUtil.formatNow2Hms;
 
 
 /**
@@ -30,7 +30,7 @@ import static com.bebopze.tdx.quant.common.util.DateTimeUtil.format2Hms;
 @Slf4j
 @Aspect
 @Component
-public class WebHandler {
+public class WebLogAspect {
 
 
     /**
@@ -50,8 +50,7 @@ public class WebHandler {
 
 
         // 统计时间
-        long totalTime = System.currentTimeMillis() - startTime;
-        log.info("{}   -   totalTime : {}", requestPath(), format2Hms(totalTime));
+        log.info("{}   -   totalTime : {}", requestPath(), formatNow2Hms(startTime));
 
 
         return result;
