@@ -4,7 +4,10 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 
 import java.time.LocalDate;
 
+
 /**
+ * 个股/板块  -  全量行情 Cache
+ *
  * @author: bebopze
  * @date: 2025/7/11
  */
@@ -15,5 +18,9 @@ public interface InitDataService {
 
     BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh);
 
+
+    void deleteCache();
+
     void refreshCache();
+
 }

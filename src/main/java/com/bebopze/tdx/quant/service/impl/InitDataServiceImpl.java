@@ -159,6 +159,21 @@ public class InitDataServiceImpl implements InitDataService {
 
     @TotalTime
     @Override
+    public void deleteCache() {
+
+        // del  ->  blockCache
+        JsonFileWriterAndReader.delBlockCache();
+
+        // del  ->  stockCache
+        JsonFileWriterAndReader.delStockCache();
+
+
+        init = false;
+    }
+
+
+    @TotalTime
+    @Override
     public void refreshCache() {
 
         // refresh  ->  blockCache

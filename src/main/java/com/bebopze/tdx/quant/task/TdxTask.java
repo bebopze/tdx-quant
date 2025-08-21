@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
 
@@ -111,14 +113,10 @@ public class TdxTask {
 
         // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll(1);
-        // refresh Cache
-        initDataService.refreshCache();
 
 
         // 扩展（指标）  ->  ext_data_his
         extDataService.refreshExtDataAll(null);
-        // refresh Cache
-        initDataService.refreshCache();
 
 
         // 主线板块
@@ -127,6 +125,9 @@ public class TdxTask {
 
         // 大盘量化
         marketService.importMarketMidCycle();
+
+
+        initDataService.refreshCache();
 
 
         log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
@@ -138,8 +139,7 @@ public class TdxTask {
      */
     @Async
     @TotalTime
-    // @Scheduled(cron = "0 30 11 * * 1-5", zone = "Asia/Shanghai")
-    @Scheduled(cron = "0 0/15 13-14 * * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 0/30 13-14 * * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshAll__lataDay() {
         log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
 
@@ -149,14 +149,10 @@ public class TdxTask {
 
         // 行情  ->  kline_his
         tdxDataParserService.refreshKlineAll(2);
-        // refresh Cache
-        initDataService.refreshCache();
 
 
         // 扩展（指标）  ->  ext_data_his
         extDataService.refreshExtDataAll(10);
-        // refresh Cache
-        initDataService.refreshCache();
 
 
         // 主线板块       =>       INDEX_BLOCK-880515   当日有数据（AMO>500亿）
@@ -167,8 +163,8 @@ public class TdxTask {
         }
 
 
-        // 大盘量化
-        marketService.importMarketMidCycle();
+//        // 大盘量化
+//        marketService.importMarketMidCycle();
 
 
         log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
@@ -215,8 +211,14 @@ public class TdxTask {
      * @return
      */
     private boolean checkBlockLastDay() {
+
         LdayParser.LdayDTO lastDTO = ListUtil.last(LdayParser.parseByStockCode(INDEX_BLOCK));
-        return lastDTO != null && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
+
+        return lastDTO != null
+                // 当日
+                && lastDTO.getTradeDate().equals(LocalDate.now())
+                // 有数据（AMO>500亿）
+                && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
     }
 
 

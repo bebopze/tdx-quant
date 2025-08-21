@@ -3,13 +3,14 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -18,6 +19,7 @@ import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
 import com.bebopze.tdx.quant.service.ExtDataService;
+import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import com.bebopze.tdx.quant.task.TdxTask;
@@ -76,6 +78,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Autowired
     private ExtDataService extDataService;
 
+    @Autowired
+    private InitDataService initDataService;
+
 
     @Autowired
     private TdxTask tdxTask;
@@ -84,6 +89,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     /**
      * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
      */
+    @TotalTime
     @Override
     public void importAll() {
 
@@ -128,6 +134,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @TotalTime
     @Override
     public void importTdxBlockCfg() {
 
@@ -1064,6 +1071,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     /**
      * 板块+个股 - 行情（kline_his）     一键刷新
      */
+    @TotalTime
     @SneakyThrows
     @Override
     public void refreshKlineAll(int updateType) {
@@ -1087,6 +1095,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
+    @TotalTime
     @Override
     public void fillBlockKline(String blockCode) {
         fillBlockKline(blockCode, null);
@@ -1159,6 +1168,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
+    @TotalTime
     @Override
     public void fillBlockKlineAll() {
         long[] start = {System.currentTimeMillis()};
@@ -1191,15 +1201,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             log.info("fillBlockKlineAll suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                      blockCode, blockId, countVal, r1, r2, r3);
         });
+
+
+        initDataService.deleteCache();
     }
 
 
+    @TotalTime
     @Override
     public void fillStockKline(String stockCode, Integer apiType, int updateType) {
         fillStockKline(stockCode, null, apiType, updateType);
         log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
     }
 
+    @TotalTime
     @Override
     public void fillStockKlineAll(int updateType) {
 
@@ -1216,6 +1231,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         else if (updateType == 2) {
             incrUpdate__fillStockKlineAll(codeIdMap, updateType);
         }
+
+
+        initDataService.deleteCache();
     }
 
 
@@ -1277,8 +1295,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, int updateType) {
 
 
-        // 东方财富  ->  批量拉取 全A 实时行情
-        List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.allStockSnapshotKline();
+        // 东方财富   ->   批量拉取  全A（ETF） 实时行情
+        List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.allStockETFSnapshotKline();
         log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
 
 

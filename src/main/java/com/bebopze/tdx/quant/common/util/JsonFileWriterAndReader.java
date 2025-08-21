@@ -297,7 +297,7 @@ public class JsonFileWriterAndReader {
 
         if (reader.peek() == JsonToken.NULL) {
             reader.nextNull();
-            log.warn("{} 为空     >>>     entity : {}", fieldName, JSON.toJSONString(entity));
+            log.debug("{} 为空     >>>     entity : {}", fieldName, JSON.toJSONString(entity));
         } else {
 
             String valStr = reader.nextString();
@@ -405,25 +405,30 @@ public class JsonFileWriterAndReader {
     }
 
 
+    public static void delStockCache() {
+        del__writeLargeListToFile(stock_filePath);
+    }
+
+
     /**
      * stockDOList   ->   write
      *
      * @param stockDOList
      */
-    public static void writeStringToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
+    public static void writeLargeListToFile___stock_listAllKline(List<BaseStockDO> stockDOList) {
         // write
         stock__writeLargeListToFile(stockDOList, stock_filePath);
-        log.info("disk cache WRITE  -  writeStringToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
+        log.info("disk cache WRITE  -  writeLargeListToFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
     }
 
 
     /**
      * stockDOList   ->   read
      */
-    public static List<BaseStockDO> readStringFromFile___stock_listAllKline() {
+    public static List<BaseStockDO> readLargeListFromFile___stock_listAllKline() {
 
         List<BaseStockDO> stockDOList = stock__readLargeJsonFile(stock_filePath);
-        log.info("disk cache READ  -  readStringFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
+        log.info("disk cache READ  -  readLargeListFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
 
         return stockDOList;
     }
@@ -437,24 +442,29 @@ public class JsonFileWriterAndReader {
     private static final String block_filePath = System.getProperty("user.dir") + "/wiki/DB/all_block_kline.json";
 
 
+    public static void delBlockCache() {
+        del__writeLargeListToFile(block_filePath);
+    }
+
+
     /**
      * blockDOList   ->   write
      *
      * @param blockDOList
      */
-    public static void writeStringToFile___block_listAllKline(List<BaseBlockDO> blockDOList) {
+    public static void writeLargeListToFile___block_listAllKline(List<BaseBlockDO> blockDOList) {
         block__writeLargeListToFile(blockDOList, block_filePath);
-        log.info("disk cache WRITE  -  writeStringToFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+        log.info("disk cache WRITE  -  writeLargeListToFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
     }
 
 
     /**
      * blockDOList   ->   read
      */
-    public static List<BaseBlockDO> readStringFromFile___block_listAllKline() {
+    public static List<BaseBlockDO> readLargeListFromFile___block_listAllKline() {
 
         List<BaseBlockDO> blockDOList = block__readLargeJsonFile(block_filePath);
-        log.info("disk cache READ  -  readStringFromFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
+        log.info("disk cache READ  -  readLargeListFromFile___block_listAllKline     >>>     block size : {}", blockDOList.size());
 
         return blockDOList;
     }
@@ -469,7 +479,7 @@ public class JsonFileWriterAndReader {
         // writeStringToFile___stock_listAllKline();
 
 
-        List<BaseStockDO> baseStockDOList = readStringFromFile___stock_listAllKline();
+        List<BaseStockDO> baseStockDOList = readLargeListFromFile___stock_listAllKline();
         System.out.println(baseStockDOList.size());
 
 
@@ -489,7 +499,7 @@ public class JsonFileWriterAndReader {
     /**
      * test 指标   用
      */
-    public static void writeStringToFile___stock_listAllKline() {
+    public static void writeLargeListToFile___stock_listAllKline() {
 
 
         // List<BaseStockDO> stockDOList = MybatisPlusUtil.getBaseStockService().listAllKline();
