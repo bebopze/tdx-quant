@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <title>主线板块展示</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
     <style>
         .card-header {
             font-weight: bold;
+            cursor: pointer;
+        }
+
+        .card-header:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            font-size: 0.7em;
         }
 
         .chart-container {
@@ -35,7 +45,7 @@
             <input type="date" id="date" onchange="loadData()">
 
             <label for="N">近N天:</label>
-            <input type="number" id="N" value="15" min="1" onchange="loadData()">
+            <input type="number" id="N" value="10" min="1" onchange="loadData()">
 
             <label for="resultType">结果类型:</label>
             <select id="resultType" onchange="loadData()">
@@ -48,17 +58,23 @@
 
     <!-- 百日新高 -->
     <div class="card mb-4">
-        <div class="card-header">百日新高 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart1_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart1_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart1_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse1" role="button">
+            百日新高 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse1" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart1_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart1_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart1_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,17 +82,23 @@
 
     <!-- 涨幅榜 -->
     <div class="card mb-4">
-        <div class="card-header">涨幅榜 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart2_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart2_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart2_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse2" role="button">
+            涨幅榜 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse2" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart2_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart2_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart2_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,17 +106,23 @@
 
     <!-- RPS三线红 -->
     <div class="card mb-4">
-        <div class="card-header">RPS三线红 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart3_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart3_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart3_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse3" role="button">
+            RPS三线红 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse3" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart3_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart3_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart3_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,17 +130,23 @@
 
     <!-- 二阶段 -->
     <div class="card mb-4">
-        <div class="card-header">二阶段 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart4_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart4_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart4_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse4" role="button">
+            二阶段 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse4" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart4_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart4_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart4_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,17 +154,23 @@
 
     <!-- 大均线多头 -->
     <div class="card mb-4">
-        <div class="card-header">大均线多头 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart5_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart5_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart5_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse5" role="button">
+            大均线多头 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse5" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart5_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart5_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart5_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,17 +178,23 @@
 
     <!-- 板块AMO-TOP1 -->
     <div class="card mb-4">
-        <div class="card-header">板块AMO-TOP1 - 天数分布</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div id="chart11_2" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart11_4" style="width: 100%; height: 400px;"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="chart11_12" style="width: 100%; height: 400px;"></div>
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse11" role="button">
+            板块AMO-TOP1 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse11" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart11_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart11_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart11_12" style="width: 100%; height: 400px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -207,7 +253,7 @@
                         title: {
                             text: `${getResultTypeName(resultType)}`,
                             left: 'center',
-                            bottom: '5%' // 将标题位置移到底部
+                            bottom: '5%'
                         },
                         tooltip: {
                             trigger: 'item'
@@ -274,7 +320,6 @@
     }
 
     window.onload = () => {
-
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
 
