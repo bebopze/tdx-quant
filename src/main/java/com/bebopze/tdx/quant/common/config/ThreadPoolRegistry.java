@@ -54,8 +54,8 @@ public class ThreadPoolRegistry {
         registerPool(ThreadPoolType.IO_INTENSIVE,
                      ThreadPoolConfig.builder()
                                      .name("IO-Intensive-Pool")
-                                     .corePoolSize(processors * 2)
-                                     .maxPoolSize(processors * 4)
+                                     .corePoolSize(processors * 30)
+                                     .maxPoolSize(processors * 35)
                                      .queueCapacity(1000)
                                      .build());
 
