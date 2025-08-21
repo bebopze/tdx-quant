@@ -4,8 +4,8 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.dto.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -19,7 +19,7 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
-import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
+import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.bebopze.tdx.quant.service.StockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
@@ -27,7 +27,6 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,11 +35,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.common.constant.AccountConst.*;
 
 
 /**
@@ -76,7 +78,8 @@ public class TradeServiceImpl implements TradeService {
         return resp;
     }
 
-    private QueryCreditNewPosResp queryCreditNewPosV2() {
+    @Override
+    public QueryCreditNewPosResp queryCreditNewPosV2() {
         return queryCreditNewPosV2(false);
     }
 
@@ -159,16 +162,72 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 3、一键清仓
-        quick__clearPosition(posResp);
+        quick__clearPosition(posResp.getStocks());
+    }
+
+
+    /**
+     * 一键卖出     =>     指定 个股列表
+     *
+     * @param sellStockCodeSet 指定卖出 个股列表
+     */
+    @Override
+    public void quickSellPosition(Set<String> sellStockCodeSet) {
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、从持仓个股中   过滤出   ->   卖出 个股列表
+        List<CcStockInfo> sell__stockInfoList = posResp.getStocks().stream().filter(e -> sellStockCodeSet.contains(e.getStkcode())).collect(Collectors.toList());
+
+
+        // 3、一键清仓
+        quick__clearPosition(sell__stockInfoList);
+    }
+
+
+    /**
+     * 一键买入     =>     指定 个股列表
+     *
+     * @param newPositionList 指定买入 个股列表
+     */
+    @Override
+    public void quickBuyPosition(List<QuickBuyPositionParam> newPositionList) {
+
+
+        // 1、check  持仓比例
+        check__newPositionList(newPositionList, false);
+
+
+        // 2、组装   param -> PosResp
+        List<CcStockInfo> new__positionList = convert__newPositionList(newPositionList);
+
+
+        // 3、一键清仓（卖old）
+        // quickClearPosition();
+
+
+        // 4、一键买入（买new）
+        quick__buyAgain(new__positionList);
+
+
+        // 5、有多余金额   ->   补充下单
+        quick__buyAgain2(new__positionList);
+    }
+
+    private void quick__buyAgain2(List<CcStockInfo> new__positionList) {
+
+
     }
 
 
     @Override
-    public void quickBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
+    public void quickClearAndBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
 
 
         // 1、check  持仓比例
-        check__newPositionList(newPositionList);
+        check__newPositionList(newPositionList, true);
 
 
         // 2、组装   param -> PosResp
@@ -184,11 +243,8 @@ public class TradeServiceImpl implements TradeService {
     }
 
     @Override
-    public void quickAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
+    public void quickClearAndAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList) {
         Assert.notEmpty(newPositionList, "newPositionList不能为空");
-
-
-        //  QueryCreditNewPosResp posResp = queryCreditNewPosV2();
 
 
         // 等比
@@ -197,7 +253,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 一键买入
-        quickBuyNewPosition(newPositionList);
+        quickClearAndBuyNewPosition(newPositionList);
     }
 
 
@@ -904,11 +960,11 @@ public class TradeServiceImpl implements TradeService {
     /**
      * 一键清仓
      *
-     * @param posResp
+     * @param sellStockInfoList 清仓 个股列表
      */
-    private void quick__clearPosition(QueryCreditNewPosResp posResp) {
+    private void quick__clearPosition(List<CcStockInfo> sellStockInfoList) {
 
-        posResp.getStocks().forEach(e -> {
+        sellStockInfoList.forEach(e -> {
 
 
             Integer stkavl = e.getStkavl();
@@ -1067,7 +1123,7 @@ public class TradeServiceImpl implements TradeService {
             param.setPrice(price);
 
             // 数量（B数量 = S数量 -> 可用数量）
-            param.setAmount(StockUtil.quantity(e.getStkavl()));
+            param.setAmount(StockUtil.quantity(e.getStkavl(), stockCode));
             // 融资买入
             param.setTradeType(TradeTypeEnum.RZ_BUY.getTradeType());
 
@@ -1147,12 +1203,12 @@ public class TradeServiceImpl implements TradeService {
             }
 
 
-            // 待 担保买入  ->  NOT
-            if (!rzFailCodeList.contains(stockCode)) {
-                log.error("担保再买入 - err     >>>     stock : [{}-{}] , posStock : {}",
-                          stockCode, e.getStkname(), JSON.toJSONString(e));
-                return;
-            }
+//            // 待 担保买入  ->  NOT
+//            if (!rzFailCodeList.contains(stockCode)) {
+//                log.error("担保再买入 - err     >>>     stock : [{}-{}] , posStock : {}",
+//                          stockCode, e.getStkname(), JSON.toJSONString(e));
+//                return;
+//            }
 
 
             // -------------------------------------------------- 担保买入 - 参数
@@ -1172,7 +1228,7 @@ public class TradeServiceImpl implements TradeService {
             param.setPrice(price);
 
             // 数量（B数量 = S数量 -> 可用数量）
-            param.setAmount(StockUtil.quantity(e.getStkavl()));
+            param.setAmount(StockUtil.quantity(e.getStkavl(), stockCode));
             // 担保买入
             param.setTradeType(TradeTypeEnum.ZY_BUY.getTradeType());
 
@@ -1200,8 +1256,15 @@ public class TradeServiceImpl implements TradeService {
 
 
         // TODO     FAIL_LIST -> retry
-        // handle__FAIL_LIST(FAIL_LIST);
-        log.error("担保再买入 - [担保买入]   =>   下单FAIL     >>>     FAIL_LIST : {}", JSON.toJSONString(FAIL_LIST));
+        if (CollectionUtils.isNotEmpty(FAIL_LIST)) {
+
+            log.error("担保再买入 - [担保买入]   =>   下单FAIL     >>>     FAIL_LIST : {}", JSON.toJSONString(FAIL_LIST));
+
+
+            // handle__FAIL_LIST(FAIL_LIST);
+            // DBB-FAIL（担保B-FAIL）
+            TdxBlockNewReaderWriter.write("DBB-FAIL", FAIL_LIST.stream().map(CcStockInfo::getStkcode).collect(Collectors.toList()));
+        }
     }
 
 
@@ -1423,7 +1486,7 @@ public class TradeServiceImpl implements TradeService {
         for (TradeRevokeOrdersParam param : paramList) {
 
             // 委托日期
-            String date = StringUtils.isEmpty(param.getDate()) ? LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) : param.getDate();
+            String date = StringUtils.isEmpty(param.getDate()) ? DateTimeUtil.format_yyyyMMdd(LocalDate.now()) : param.getDate();
 
             // 委托日期_委托编号
             String revoke = date + "_" + param.getWtdh();
@@ -1494,67 +1557,297 @@ public class TradeServiceImpl implements TradeService {
     /**
      * check  持仓比例     是否合理     ->     否则，自动重新计算 仓位比例
      *
-     * @param newPositionList
+     * @param newPositionList 待买入 新持仓列表
+     * @param clearPosition   是否 清仓旧持仓
      */
-    private void check__newPositionList(List<QuickBuyPositionParam> newPositionList) {
+    private void check__newPositionList(List<QuickBuyPositionParam> newPositionList, boolean clearPosition) {
 
 
         // check     =>     防止 [误操作] -> [清仓]
         Assert.notEmpty(newPositionList, "[调仓换股]个股不能为空，【清仓】请用 -> [一键清仓]");
 
 
-        // --------------------- 总资金（融资上限） 计算
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 1、我的持仓
         QueryCreditNewPosResp old_posResp = queryCreditNewPosV2();
 
 
-        // 净资产
-        double netasset = old_posResp.getNetasset().doubleValue();
-        // 总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
-        double maxFinancingCap = netasset * 2.1;
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        // ---------------------
+        // 剩余 可买仓位
+        double max_buyPosPct = max_buyPosPct(old_posResp, clearPosition);
 
 
-        // --------------------- 实际 仓位占比（如果 仓位累加 > 100%   ->   自从触发 根据仓位数值 重新计算比例）
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        // 总仓位占比  <=  100%
-        double totalPositionPct = newPositionList.stream()
-                                                 .map(QuickBuyPositionParam::getPositionPct)
-                                                 .reduce(0.0, Double::sum);
+        // 待买入 总仓位
+        double preBuy_totalPosPct = preBuy_totalPosPct(newPositionList);
 
 
-        if (totalPositionPct > 100) {
-            log.warn("check__new_orderData  ->  触发 仓位比例 重新计算     >>>     总仓位=[{}%] > 100%", totalPositionPct);
+        // -------------------------------------------------------------------------------------------------------------
 
 
-            // 根据仓位数值  ->  重新计算 仓位比例
-            newPositionList.forEach(e -> {
+        // 1、check -> 1、个股仓位限制（<=5%）
+        //            2、待买入 总仓位   <=   可买仓位
+        //
+        // 2、重新计算分配 个股待买入仓位
+        checkAndFixNewPosPct(old_posResp, newPositionList, max_buyPosPct, preBuy_totalPosPct);
 
-                // 实际 仓位占比  =  仓位 / 总仓位
-                double act_positionPct = e.getPositionPct() * 100 / totalPositionPct;
-                e.setPositionPct(act_positionPct);
-            });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 可用总资金（融资上限） 计算
+        double maxBuyCap = maxBuyCap(old_posResp, clearPosition);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 持仓数量 计算
+        newPosQuantity(newPositionList, maxBuyCap);
+    }
+
+
+    /**
+     * 剩余 可买仓位
+     *
+     * @param old_posResp   （old）已买入 持仓详情
+     * @param clearPosition 是否清仓
+     * @return
+     */
+    private double max_buyPosPct(QueryCreditNewPosResp old_posResp, boolean clearPosition) {
+
+        // 剩余 可买仓位
+        double max_buyPosPct;
+
+
+        // 一键清仓
+        if (clearPosition) {
+
+            // 剩余 可买仓位   =   最大总仓位限制  -  当前 总仓位
+            max_buyPosPct = ACCOUNT__POS_PCT_LIMIT - 0;
+
+        } else {
+
+            // 剩余 可买仓位   =   最大总仓位限制  -  当前 总仓位
+            // max_buyPosPct = ACCOUNT_POS_PCT_LIMIT - old_posResp.getPosratio().doubleValue();
+            max_buyPosPct = old_posResp.getMax_buyPosPct();
         }
 
 
-        // --------------------- 持仓数量 计算
+        return max_buyPosPct;
+    }
+
+    /**
+     * 待买入 总仓位
+     *
+     * @param newPositionList
+     * @return
+     */
+    private double preBuy_totalPosPct(List<QuickBuyPositionParam> newPositionList) {
 
 
-        newPositionList.forEach(e -> {
+        // --------------------- 单只个股 仓位   ->   最大5%
+        newPositionList.forEach(e -> e.setPositionPct(Math.min(e.getPositionPct(), STOCK__POS_PCT_LIMIT)));
 
+
+        // ---------------------  待买入 总仓位   =   new 仓位累加
+        double preBuy_totalPosPct = newPositionList.stream()
+                                                   .map(QuickBuyPositionParam::getPositionPct)
+                                                   .reduce(0.0, Double::sum);
+
+
+        return preBuy_totalPosPct;
+    }
+
+
+    /**
+     * - 1、check   ->   1、个股仓位限制（<=5%）
+     * -                2、待买入 总仓位   <=   可买仓位
+     * -
+     * - 2、重新计算分配 个股待买入仓位
+     *
+     * @param old_posResp        old（已持有） 持仓详情
+     * @param newPositionList    new（预买入） 持仓详情
+     * @param max_buyPosPct      最大   可买仓位
+     * @param preBuy_totalPosPct 待买入 总仓位
+     */
+    private void checkAndFixNewPosPct(QueryCreditNewPosResp old_posResp,
+                                      List<QuickBuyPositionParam> newPositionList,
+                                      double max_buyPosPct,
+                                      double preBuy_totalPosPct) {
+
+
+        // ---------------------------- 实际 仓位占比（如果 仓位累加 > 可买仓位   ->   自动触发 根据仓位数值 重新计算比例）
+
+
+        // 待买入总仓位  >  可买仓位     =>     根据仓位数值  ->  重新计算 仓位比例
+        if (preBuy_totalPosPct > max_buyPosPct) {
+
+            log.warn("check__newPositionList  ->  触发 仓位比例 重新计算     >>>     待买入总仓位=[{}%] > 可买仓位=[{}%]",
+                     of(preBuy_totalPosPct), of(max_buyPosPct));
+        }
+
+
+        // ---------------------------- old
+
+        // old     ->     stockCode - posInfo
+        Map<String, CcStockInfo> oldPosMap = old_posResp.getStocks().stream()
+                                                        .collect(Collectors.toMap(CcStockInfo::getStkcode, Function.identity()));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        double new_preBuy_totalPosPct = 0;
+
+
+        // 根据仓位数值  ->  重新计算 仓位比例
+        for (QuickBuyPositionParam e : newPositionList) {
+
+
+            // ------------------------------------ 当前个股 -> 已持有仓位
+
+            // 当前个股 -> 新买入仓位
+            double old_posPct = 0;
+
+            CcStockInfo stockInfo = oldPosMap.get(e.getStockCode());
+            if (stockInfo != null) {
+                old_posPct = stockInfo.getPosratio().doubleValue() * 100;
+            }
+
+
+            // ------------------------------------ 当前个股 -> 新买入仓位
+
+
+            // 当前个股 -> 新买入仓位
+            double new_posPct = e.getPositionPct();
+
+
+            // 待买入总仓位  >  可买仓位     =>     根据仓位数值  ->  重新计算 仓位比例
+            if (preBuy_totalPosPct > max_buyPosPct) {
+
+                // 个股 实际可买仓位   =  （个股待买入 / 总待买入） x  可买仓位
+                new_posPct = e.getPositionPct() / preBuy_totalPosPct * max_buyPosPct;
+            }
+
+
+            // ------------------------------------ 个股 总仓位限制 <= 5%
+
+
+            // 个股 总仓位限制 <= 5%
+            new_posPct = Math.max(Math.min(new_posPct, STOCK__POS_PCT_LIMIT - old_posPct), 0);
+
+
+            e.setPositionPct(new_posPct);
+
+
+            // ------------------------------------
+
+
+            new_preBuy_totalPosPct += new_posPct;
+        }
+
+
+        log.info("check__newPositionList - 重新校验计算后     >>>     待买入总仓位=[{}%] , 可买仓位=[{}%] , newPositionList : {}",
+                 of(new_preBuy_totalPosPct), of(max_buyPosPct), JSON.toJSONString(newPositionList));
+    }
+
+
+    /**
+     * 可用总资金
+     *
+     * @param old_posResp   （old）已买入 持仓详情
+     * @param clearPosition 是否清仓
+     * @return
+     */
+    private double maxBuyCap(QueryCreditNewPosResp old_posResp, boolean clearPosition) {
+
+        // 可用总资金
+        double maxBuyCap;
+
+
+        if (clearPosition) {
+
+            // （清仓）总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
+            // maxBuyCap = old_posResp.getNetasset().doubleValue() * MAX_RZ_RATE;
+            maxBuyCap = old_posResp.getMax_TotalCap();
+
+        } else {
+
+            // （当前）总资金  =  可用保证金（可融）  +   可用资金（担）
+            // maxBuyCap = old_posResp.getMarginavl().doubleValue() + old_posResp.getAvalmoney().doubleValue();
+            maxBuyCap = old_posResp.getMax_buyCap();
+        }
+
+
+        return maxBuyCap;
+    }
+
+
+    /**
+     * 持仓数量 计算
+     *
+     * @param newPositionList
+     * @param maxBuyCap
+     */
+    private void newPosQuantity(List<QuickBuyPositionParam> newPositionList, double maxBuyCap) {
+
+
+        // qty = 0
+        List<QuickBuyPositionParam> qty0_newPositionList = Lists.newArrayList();
+
+
+        // ------------------------------------------------ 持仓数量 计算
+
+
+        for (QuickBuyPositionParam e : newPositionList) {
             // 价格
             double price = e.getPrice();
 
-            // 数量 = 总资金 * 仓位占比 / 价格
-            int qty = (int) (maxFinancingCap * e.getPositionRate() / price);
+            // 数量 = 可用总资金 * 仓位占比 / 价格
+            int qty = (int) (maxBuyCap * e.getPositionRate() / price);
 
-            e.setQuantity(StockUtil.quantity(qty));
-        });
+
+            // qty 规则计算
+            qty = StockUtil.quantity(qty, e.getStockCode());
+            e.setQuantity(qty);
+
+
+            // 资金不足
+            if (qty == 0) {
+                qty0_newPositionList.add(e);
+            }
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // removeAll   ->   qty = 0
+        newPositionList.removeAll(qty0_newPositionList);
+
+
+        if (CollectionUtils.isNotEmpty(qty0_newPositionList)) {
+
+            log.info("newPosQuantity - 资金不足 -> removeAll qty=0     >>>     size : {} , qty_0 : {}",
+                     qty0_newPositionList.size(), JSON.toJSONString(qty0_newPositionList));
+
+
+            // ---------------------------------------------------------
+
+
+            // B策略 -> 买入失败（qty=0）      ->       写回TDX（B策略-qty0）
+            TdxBlockNewReaderWriter.write("BCL-QTY0", qty0_newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
+
+            // B策略 -> 买入成功（qty>0）      ->       写回TDX（B策略-SUC）
+            TdxBlockNewReaderWriter.write("BCL-SUC", newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
+        }
     }
 
 
