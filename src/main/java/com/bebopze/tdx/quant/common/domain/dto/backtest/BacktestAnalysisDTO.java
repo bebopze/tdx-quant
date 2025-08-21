@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.backtest;
 
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
@@ -39,4 +39,20 @@ public class BacktestAnalysisDTO {
      * 收益记录
      */
     private List<BtDailyReturnDO> dailyReturnList;
+
+
+    // ------------------------------------------------------------------- 回撤记录
+
+
+    private List<MaxDrawdownPctDTO> dailyDrawdownPctList;
+
+
+
+    // ------------------------------------------------------------------- 持仓主线记录
+
+
+    private List<PositionTopBlockDTO> positionTopBlockList;
+
+
+
 }
