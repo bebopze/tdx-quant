@@ -1,11 +1,9 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.base;
 
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**

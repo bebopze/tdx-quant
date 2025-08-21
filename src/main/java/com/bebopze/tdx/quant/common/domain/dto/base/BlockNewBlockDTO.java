@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.base;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

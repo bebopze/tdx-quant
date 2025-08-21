@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewStockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 /**
+ * 通达信 - 自定义板块
+ *
  * @author: bebopze
  * @date: 2025/5/22
  */
@@ -39,11 +42,11 @@ public class BlockNewServiceImpl implements BlockNewService {
 
 
         List<BlockNewStockDTO> dtoList = baseStockDOList.stream().map(e -> {
-                    BlockNewStockDTO dto = new BlockNewStockDTO();
-                    BeanUtils.copyProperties(e, dto);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+                                                            BlockNewStockDTO dto = new BlockNewStockDTO();
+                                                            BeanUtils.copyProperties(e, dto);
+                                                            return dto;
+                                                        })
+                                                        .collect(Collectors.toList());
 
         return dtoList;
     }
@@ -58,11 +61,11 @@ public class BlockNewServiceImpl implements BlockNewService {
 
 
         List<BlockNewBlockDTO> dtoList = baseBlockDOList.stream().map(e -> {
-                    BlockNewBlockDTO dto = new BlockNewBlockDTO();
-                    BeanUtils.copyProperties(e, dto);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+                                                            BlockNewBlockDTO dto = new BlockNewBlockDTO();
+                                                            BeanUtils.copyProperties(e, dto);
+                                                            return dto;
+                                                        })
+                                                        .collect(Collectors.toList());
 
         return dtoList;
     }

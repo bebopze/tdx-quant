@@ -1,8 +1,8 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewStockDTO;
 import com.bebopze.tdx.quant.service.BlockNewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

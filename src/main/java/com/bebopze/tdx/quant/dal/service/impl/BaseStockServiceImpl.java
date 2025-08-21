@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -185,14 +184,14 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         // read Cache
-        List<BaseStockDO> list = JsonFileWriterAndReader.readStringFromFile___stock_listAllKline();
+        List<BaseStockDO> list = JsonFileWriterAndReader.readLargeListFromFile___stock_listAllKline();
 
         if (CollectionUtils.isEmpty(list) || refresh) {
             list = listByCursor();
 
 
             // write Cache
-            JsonFileWriterAndReader.writeStringToFile___stock_listAllKline(list);
+            JsonFileWriterAndReader.writeLargeListToFile___stock_listAllKline(list);
         }
 
 

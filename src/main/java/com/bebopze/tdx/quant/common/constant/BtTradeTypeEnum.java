@@ -10,7 +10,7 @@ import lombok.Getter;
  * @author: bebopze
  * @date: 2025/5/4
  */
-
+@Getter
 @AllArgsConstructor
 public enum BtTradeTypeEnum {
 
@@ -23,13 +23,12 @@ public enum BtTradeTypeEnum {
     /**
      * 交易类型
      */
-    @Getter
-    Integer tradeType;
+    final Integer tradeType;
 
     /**
      * 描述
      */
-    @Getter
-    String desc;
+    final String desc;
+
 
 }

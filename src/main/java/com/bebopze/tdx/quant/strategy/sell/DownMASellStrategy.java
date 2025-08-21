@@ -29,6 +29,7 @@ import static com.bebopze.tdx.quant.common.constant.StockPoolEnum.*;
  * @author: bebopze
  * @date: 2025/5/13
  */
+@Deprecated
 @Slf4j
 @Component
 public class DownMASellStrategy {
@@ -120,6 +121,7 @@ public class DownMASellStrategy {
      *
      * @param stockCode
      */
+    @Deprecated
     public boolean holdingStockRule(String stockCode) {
 
 

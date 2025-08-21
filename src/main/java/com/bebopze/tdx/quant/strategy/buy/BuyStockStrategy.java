@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
 import com.bebopze.tdx.quant.common.constant.BlockPoolEnum;
 import com.bebopze.tdx.quant.common.constant.StockPoolEnum;
-import com.bebopze.tdx.quant.common.domain.dto.BuyStockStrategyResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BuyStockStrategyResultDTO;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;

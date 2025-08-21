@@ -10,6 +10,7 @@ import lombok.Getter;
  * @author: bebopze
  * @date: 2025/5/9
  */
+@Getter
 @AllArgsConstructor
 public enum BlockNewTypeEnum {
 
@@ -19,17 +20,15 @@ public enum BlockNewTypeEnum {
     BLOCK(2, "板块"),
 
 
-    ZHISHU(3, "指数"),
+    MARKET(3, "指数"),
 
 
     ;
 
 
-    @Getter
-    private Integer type;
+    private final Integer type;
 
-    @Getter
-    private String desc;
+    private final String desc;
 
 
     public static String getDescByType(Integer type) {
@@ -40,5 +39,6 @@ public enum BlockNewTypeEnum {
         }
         return null;
     }
+
 
 }

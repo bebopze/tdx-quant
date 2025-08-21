@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.service;
 
 
 /**
+ * 扩展数据（个股/板块 -> 指标计算）
+ *
  * @author: bebopze
  * @date: 2025/5/24
  */

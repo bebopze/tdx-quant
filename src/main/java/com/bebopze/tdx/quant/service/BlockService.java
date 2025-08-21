@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.BlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockDTO;
 
 
 /**

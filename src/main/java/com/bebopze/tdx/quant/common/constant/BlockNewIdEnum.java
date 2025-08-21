@@ -29,7 +29,7 @@ public enum BlockNewIdEnum {
     均线大多头(6, "均线大多头"),
 
 
-    板块AMO_TOP1(11, "板块AMO-TOP1；"),
+    板块AMO_TOP1(11, "板块AMO-TOP1"),
 
 
     ;

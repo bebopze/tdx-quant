@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.BlockNewStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewStockDTO;
 
 import java.util.List;
 
