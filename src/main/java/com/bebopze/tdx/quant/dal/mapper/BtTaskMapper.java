@@ -18,6 +18,7 @@ import java.util.List;
 public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
 
     List<BtTaskDO> listByTaskIdAndDate(@Param("taskId") Long taskId,
+                                       @Param("batchNoList") List<Integer> batchNoList,
                                        @Param("startTime") LocalDateTime startTime,
                                        @Param("endTime") LocalDateTime endTime);
 
@@ -34,4 +35,19 @@ public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
     BtTaskDO getLastBatchNoEntity();
 
     BtTaskDO getBatchNoEntityByBatchNo(@Param("batchNo") Integer batchNo);
+
+
+    Integer getMaxTotalDayByBatchNo(@Param("batchNo") Integer batchNo);
+
+    /**
+     * 异常     ->     持仓数据 中途丢失
+     *
+     * @param batchNo  任务批次号
+     * @param totalDay 实际总天数（正常task = totalDay     /     异常task < totalDay）
+     * @return
+     */
+    List<Long> listErrTaskIdByBatchNoAndTotalDay(@Param("batchNo") Integer batchNo,
+                                                 @Param("totalDay") Integer totalDay);
+
+    BtTaskDO getMaxFinalNavTaskByBatchNo(@Param("batchNo") Integer batchNo);
 }

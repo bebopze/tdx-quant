@@ -13,7 +13,13 @@
 
         <where>
             <if test="taskId != null">
-                <![CDATA[     AND id = #{taskId}     ]]>
+                AND id = #{taskId}
+            </if>
+            <if test="batchNoList != null   and   batchNoList.size() > 0">
+                AND batch_no IN
+                <foreach collection="batchNoList" item="batchNo" open="(" close=")" separator=",">
+                    #{batchNo}
+                </foreach>
             </if>
             <if test="startTime != null">
                 <![CDATA[     AND gmt_create >= #{startTime}     ]]>
@@ -74,14 +80,9 @@
 
     <select id="lastBatchNo" resultType="int">
 
-        SELECT batch_no
+        SELECT MAX(batch_no)
 
         FROM bt_task
-
-
-        ORDER BY id DESC
-
-        LIMIT 1
 
     </select>
 
@@ -92,7 +93,7 @@
 
         FROM bt_task
 
-        WHERE batch_no = (SELECT batch_no FROM bt_task ORDER BY id DESC LIMIT 1)
+        WHERE batch_no = (SELECT MAX(batch_no) FROM bt_task)
 
         ORDER BY id ASC
         LIMIT 1
@@ -109,6 +110,51 @@
         WHERE batch_no = #{batchNo}
 
         ORDER BY id ASC
+        LIMIT 1
+
+    </select>
+
+
+    <select id="getMaxTotalDayByBatchNo" resultType="int">
+
+        SELECT MAX(total_day)
+
+        FROM bt_task
+
+        WHERE batch_no = #{batchNo}
+
+    </select>
+
+
+    <select id="listErrTaskIdByBatchNoAndTotalDay" resultType="long">
+
+        SELECT id
+
+
+        FROM bt_task
+
+
+        WHERE batch_no = #{batchNo}
+
+
+        <!--     <![CDATA[     AND max_drawdown_pct < -20     ]]>     -->
+
+
+        <![CDATA[     AND total_day < #{totalDay}
+        ]]>
+
+    </select>
+
+
+    <select id="getMaxFinalNavTaskByBatchNo" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+
+        SELECT *
+
+        FROM bt_task
+
+        WHERE batch_no = #{batchNo}
+
+        ORDER BY final_nav DESC
         LIMIT 1
 
     </select>
