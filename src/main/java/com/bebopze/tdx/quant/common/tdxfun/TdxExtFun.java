@@ -617,9 +617,10 @@ public class TdxExtFun {
         int len = high.length;
         boolean[] signal = new boolean[len];
 
-        for (int i = 0; i < len; i++) {
+        // 上市100日（过滤 新股）
+        for (int i = 100; i < len; i++) {
             // 当期值等于 N 期内最高值，且不是 NaN 时视为新高
-            signal[i] = /*!Double.isNaN(hhv[i]) &&*/ high[i] == hhv[i];
+            signal[i] = high[i] == hhv[i];
         }
 
         return signal;
