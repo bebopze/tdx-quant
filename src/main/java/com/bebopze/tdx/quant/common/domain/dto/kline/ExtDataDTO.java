@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.kline;
 
 import lombok.Data;
 
@@ -38,6 +38,7 @@ public class ExtDataDTO implements Serializable {
 
     private Double 中期涨幅;
     private Integer 趋势支撑线 = 20;   // 默认支撑线：MA20
+    private Double C_SSF_偏离率;
 
 
     public Boolean 高位爆量上影大阴;   // 高位-爆量/上影/大阴

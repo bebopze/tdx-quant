@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto;
+package com.bebopze.tdx.quant.common.domain.dto.kline;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -34,6 +34,7 @@ public class ExtDataArrDTO implements Serializable {
 
     public double[] 中期涨幅;
     public int[] 趋势支撑线;
+    public double[] C_SSF_偏离率;
 
 
     public boolean[] 高位爆量上影大阴;   // 高位-爆量/上影/大阴
@@ -69,6 +70,11 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    public boolean 月空(int idx) {
+        return !月多[idx];
+    }
+
+
     // ---------------------------------------------------
 
 
@@ -88,6 +94,7 @@ public class ExtDataArrDTO implements Serializable {
 
         this.中期涨幅 = new double[size];
         this.趋势支撑线 = new int[size];
+        this.C_SSF_偏离率 = new double[size];
 
 
         this.高位爆量上影大阴 = new boolean[size];

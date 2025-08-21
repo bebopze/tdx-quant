@@ -1,9 +1,9 @@
 package com.bebopze.tdx.quant.common.convert;
 
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
@@ -188,6 +188,7 @@ public class ConvertStock {
 
             arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
             arrDTO.趋势支撑线[i] = of(dto.get趋势支撑线());
+            arrDTO.C_SSF_偏离率[i] = of(dto.getC_SSF_偏离率());
 
 
             arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
