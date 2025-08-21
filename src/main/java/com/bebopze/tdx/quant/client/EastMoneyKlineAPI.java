@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.common.domain.dto.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineListResp;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineTrendResp;
@@ -40,6 +40,18 @@ public class EastMoneyKlineAPI {
         String stockCode = "300059";
 
 
+        long start = System.currentTimeMillis();
+
+
+        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allETFSnapshotKline();
+
+        System.out.println(stockSnapshotKlineDTOS.size());
+
+        // 19s
+        System.out.println(DateTimeUtil.formatNow2Hms(start));
+
+
         // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockSnapshotKline();
         // System.out.println(stockSnapshotKlineDTOS);
 
@@ -55,40 +67,27 @@ public class EastMoneyKlineAPI {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    /**
+     * 东方财富   ->   批量拉取  全A（ETF） 实时行情
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> allStockETFSnapshotKline() {
 
-    // https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=1&invt=2&cb=jQuery37104509600548884083_1754172795547&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80%2Cm%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23%2Cm%3A0%2Bt%3A81%2Bs%3A2048&fields=f12%2Cf13%2Cf14%2Cf1%2Cf2%2Cf4%2Cf3%2Cf152%2Cf5%2Cf6%2Cf7%2Cf15%2Cf18%2Cf16%2Cf17%2Cf10%2Cf8%2Cf9%2Cf23&fid=f6&pn=1&pz=20&po=1&dect=1&ut=fa5fd1943c7b386f172d6893dbfba10b&wbp2u=%7C0%7C0%7C0%7Cweb&_=1754172795561
-
-
-    // https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=1&invt=2&cb=jQuery37104509600548884083_1754172795547&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f15,f18,f16,f17,f10,f8,f9,f23&fid=f6&pn=1&pz=20&po=1&dect=1&ut=fa5fd1943c7b386f172d6893dbfba10b&wbp2u=|0|0|0|web&_=1754172795561
-
-
-    // https://push2.eastmoney.com/api/qt/clist/get?
-
-    // np=1             ->  不变
-    // fltt=1           ->  不变
-    // invt=2           ->  不变
-
-
-    // fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048                                 ->  不变
-    // fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f15,f18,f16,f17,f10,f8,f9,f23           ->  不变
+        // 全A
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockSnapshotKline();
+        // 全部ETF
+        List<StockSnapshotKlineDTO> ETFSnapshotKlineDTOS = allETFSnapshotKline();
 
 
-    // fid=f12     ->     排序字段（不变）                  f12 - 股票code
-    // po=0        ->     0-正序；1-倒序；（不变）
+        stockSnapshotKlineDTOS.addAll(ETFSnapshotKlineDTOS);
 
 
-    // pn=1      ->   页数
-    // pz=100    ->   最大100（不变）
+        return stockSnapshotKlineDTOS;
+    }
 
 
-    // dect=1               ->  不变
-    // wbp2u=|0|0|0|web     ->  不变
-
-    // _=1754172795561     ->     ms时间戳（ now() ）
-
-
-    // cb=jQuery37104509600548884083_1754172795547     - DEL
-    // ut=fa5fd1943c7b386f172d6893dbfba10b             - DEL
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -150,16 +149,106 @@ public class EastMoneyKlineAPI {
             dtoList.addAll(pageDTOList);
 
 
-            // ------------------------------------------------------
+            // ------------------------------------------------------ total: 5738     ->     58页
 
 
-            if (jsonArray.size() < pageSize || dtoList.size() > 7000 || pageNum > 70) {
+            if (jsonArray.size() < pageSize || dtoList.size() > 7500 || pageNum > 75) {
                 break;
             }
 
 
-            // 间隔0.5s
-            SleepUtils.winSleep(500);
+            // 间隔0.15s
+            SleepUtils.winSleep(150);
+        }
+
+
+        return dtoList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // 东方财富 - 自选股（行情中心）
+
+    // https://quote.eastmoney.com/zixuan/?from=quotecenter
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 东方财富  ->  批量拉取 全部ETF 实时行情
+     *
+     *
+     * - 东方财富网 > 行情中心 > 基金市场 > ETF基金行情 > 全部ETF       https://quote.eastmoney.com/center/gridlist.html#fund_etf
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> allETFSnapshotKline() {
+
+
+        int pageNum = 1;
+        int pageSize = 100;
+
+
+        LocalDate date = lastTradeDate();
+
+
+        List<StockSnapshotKlineDTO> dtoList = Lists.newArrayList();
+
+
+        // ------------------------------------------------------------------
+
+
+        while (true) {
+
+            String url = allETFKlineUrl(pageNum++, pageSize);
+
+            String result = HttpUtil.doGet(url, null);
+
+
+            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+            if (resultJson.getInteger("rc") == 0) {
+                log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
+            }
+
+
+            JSONArray jsonArray = resultJson.getJSONObject("data").getJSONArray("diff");
+
+            List<StockKlineListResp> dataList = jsonArray.stream()
+                                                         .map(e -> {
+
+                                                             JSONObject json = (JSONObject) e;
+
+                                                             // 包含大量 退市/停牌 个股（ETF）（东方财富 A股 -> 5735）
+                                                             if (isErrStock(json)) {
+                                                                 return null;
+                                                             }
+
+                                                             return json.toJavaObject(StockKlineListResp.class);
+
+                                                         }).filter(Objects::nonNull).collect(Collectors.toList());
+
+
+            // ------------------------------------------------------
+
+
+            // dataList  ->  dtoList
+            List<StockSnapshotKlineDTO> pageDTOList = convert2StockSnapshotDTOList(dataList, date);
+            dtoList.addAll(pageDTOList);
+
+
+            // ------------------------------------------------------ total: 1213     ->     13页
+
+
+            if (jsonArray.size() < pageSize || dtoList.size() > 2000 || pageNum > 20) {
+                break;
+            }
+
+
+            // 间隔0.15s
+            SleepUtils.winSleep(150);
         }
 
 
@@ -179,7 +268,7 @@ public class EastMoneyKlineAPI {
 
 
     /**
-     * 过滤   ->   退市/停牌 个股
+     * 过滤   ->   退市/停牌 个股（ETF）
      *
      * @param json
      * @return
@@ -207,6 +296,11 @@ public class EastMoneyKlineAPI {
 
             dto.setStockCode(e.getF12());
             dto.setStockName(e.getF14());
+
+            dto.setPreClose(e.getF18());
+
+
+            // -------------------------------
 
 
             dto.setDate(date);
@@ -284,7 +378,7 @@ public class EastMoneyKlineAPI {
 
 
         // ----------------------------- 历史行情
-        List<String> klines = resp.getKlines();
+        // List<String> klines = resp.getKlines();
 
 
         return resp;
@@ -433,6 +527,12 @@ public class EastMoneyKlineAPI {
     private static String allStockKlineUrl(int pageNum, int pageSize) {
 
 
+        // https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=1&invt=2&cb=jQuery37104509600548884083_1754172795547&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80%2Cm%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23%2Cm%3A0%2Bt%3A81%2Bs%3A2048&fields=f12%2Cf13%2Cf14%2Cf1%2Cf2%2Cf4%2Cf3%2Cf152%2Cf5%2Cf6%2Cf7%2Cf15%2Cf18%2Cf16%2Cf17%2Cf10%2Cf8%2Cf9%2Cf23&fid=f6&pn=1&pz=20&po=1&dect=1&ut=fa5fd1943c7b386f172d6893dbfba10b&wbp2u=%7C0%7C0%7C0%7Cweb&_=1754172795561
+
+
+        // https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=1&invt=2&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f15,f18,f16,f17,f10,f8,f9,f23&fid=f6&pn=1&pz=20&po=1&dect=1&ut=fa5fd1943c7b386f172d6893dbfba10b&wbp2u=|0|0|0|web&_=1754172795561
+
+
         // https://push2.eastmoney.com/api/qt/clist/get?
 
         // np=1             ->  不变
@@ -463,7 +563,9 @@ public class EastMoneyKlineAPI {
 
 
         String url = "https://push2.eastmoney.com/api/qt/clist/get?" +
+
                 "fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f15,f18,f16,f17,f10,f8,f9,f23" +
+
                 // "&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048" +
                 "&fs=" + URLEncoder.encode("m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048", "UTF-8") +
 
@@ -483,6 +585,79 @@ public class EastMoneyKlineAPI {
                 // 分页
                 "&pn=" + pageNum +
                 "&pz=" + pageSize +       // pageSize  ->  最大值100
+
+                // 时间戳（ms）
+                "&_=" + System.currentTimeMillis();
+
+
+        return url;
+    }
+
+
+    /**
+     * 东方财富网 > 行情中心 > 基金市场 > ETF基金行情 > 全部ETF
+     *
+     * -                                        https://quote.eastmoney.com/center/gridlist.html#fund_etf
+     *
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    @SneakyThrows
+    private static String allETFKlineUrl(int pageNum, int pageSize) {
+
+
+        // https://push2.eastmoney.com/api/qt/clist/get?np=1&fltt=1&invt=2&fs=b:MK0021,b:MK0022,b:MK0023,b:MK0024,b:MK0827&fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f8,f17,f18,f15,f16&fid=f3&pn=1&pz=100&po=1&dect=1
+
+        // https://push2.eastmoney.com/api/qt/clist/get?
+
+        // np=1              ->  不变
+        // &fltt=1           ->  不变
+        // &invt=2           ->  不变
+
+        // &fs=b:MK0021,b:MK0022,b:MK0023,b:MK0024,b:MK0827           ->  不变
+
+
+        // &fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f17,f18,f15,f16           ->  不变
+
+        // fid=f12     ->     排序字段（不变）                  f12 - 股票code
+        // po=0        ->     0-正序；1-倒序；（不变）
+
+
+        // &pn=1           ->  页数
+        // &pz=100         ->  最大100（不变）
+
+        // &dect=1         ->  不变
+
+
+        // &cb=jQuery37105440788444922466_1754999359408               ->  DEL
+        // &ut=fa5fd1943c7b386f172d6893dbfba10b     - DEL
+        // &wbp2u=1706144587896740|0|1|0|web        - DEL
+        // &_=1754999359429                         - DEL/不变
+
+
+        String url = "https://push2.eastmoney.com/api/qt/clist/get?" +
+
+                "np=1" +
+                "&fltt=1" +
+                "&invt=2" +
+                "&dect=1" +
+
+                "&fs=b:MK0021,b:MK0022,b:MK0023,b:MK0024,b:MK0827" +
+                // "&fs=" + URLEncoder.encode("b:MK0021,b:MK0022,b:MK0023,b:MK0024,b:MK0827", "UTF-8") +
+
+
+                "&fields=f12,f13,f14,f1,f2,f4,f3,f152,f5,f6,f7,f8,f17,f18,f15,f16" +
+
+                // 排序
+                "&fid=f12" +         // f12 - 股票code
+                "&po=0" +            // 0-正序（小->大）
+
+
+                // 分页
+                "&pn=" + pageNum +
+                "&pz=" + pageSize +        // pageSize  ->  最大值100
+
 
                 // 时间戳（ms）
                 "&_=" + System.currentTimeMillis();
@@ -541,5 +716,6 @@ public class EastMoneyKlineAPI {
 
         return url;
     }
+
 
 }
