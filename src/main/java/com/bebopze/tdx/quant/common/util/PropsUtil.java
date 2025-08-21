@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
@@ -30,7 +31,7 @@ public class PropsUtil {
 
 
         // 加载 运行环境-配置
-        if (activeProfile != null && !activeProfile.isEmpty()) {
+        if (StringUtils.isNotBlank(activeProfile)) {
             loadYamlIntoProps("application-" + activeProfile + ".yml");
         }
     }
@@ -90,6 +91,12 @@ public class PropsUtil {
 
     public static String getCookie() {
         return getProperty("eastmoney.cookie");
+    }
+
+
+    public static void refreshEastmoneySession(String validatekey, String cookie) {
+        props.setProperty("eastmoney.validatekey", validatekey);
+        props.setProperty("eastmoney.cookie", cookie);
     }
 
 

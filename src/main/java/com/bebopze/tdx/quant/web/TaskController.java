@@ -1,6 +1,8 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
+import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.task.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,12 +17,15 @@ import org.springframework.web.bind.annotation.*;
  * @date: 2025/5/6
  */
 @RestController
-@RequestMapping("/api/v1/task")
+@RequestMapping("/api/task")
 public class TaskController {
 
 
     @Autowired
     private TdxTask tdxTask;
+
+    @Autowired
+    private DataService dataService;
 
 
     /**
@@ -46,6 +51,13 @@ public class TaskController {
     public Result<Void> refreshAll() {
         tdxTask.execTask__refreshAll();
         return Result.SUC();
+    }
+
+
+    @Operation(summary = "最新数据（更新信息）", description = "最新数据（更新信息）")
+    @GetMapping(value = "/dataInfo")
+    public Result<DataInfoDTO> dataInfo() {
+        return Result.SUC(dataService.dataInfo());
     }
 
 
