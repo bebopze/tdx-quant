@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * <p>
@@ -140,15 +142,25 @@ public class BtTradeRecordDO implements Serializable {
     private LocalDateTime gmtModify;
 
 
-    // ---------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-//    /**
-//     * 总成本
-//     */
-//    @TableField(value = "total_cost", exist = false)
-//    @Schema(description = "总成本")
-//    private BigDecimal totalCost;
+//    @TableField(exist = false)
+//    private String blockCodePath;
+//
+//    @TableField(exist = false)
+//    private String blockNamePath;
+
+
+    public String getBlockCodePath() {
+        return Optional.ofNullable(InitDataServiceImpl.data.getBlock(stockCode, 2, 2)).map(BaseBlockDO::getCodePath)
+                       .orElse(null);
+    }
+
+    public String getBlockNamePath() {
+        return Optional.ofNullable(InitDataServiceImpl.data.getBlock(stockCode, 2, 2)).map(BaseBlockDO::getNamePath)
+                       .orElse(null);
+    }
 
 
 }
