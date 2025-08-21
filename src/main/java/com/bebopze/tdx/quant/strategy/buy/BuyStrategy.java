@@ -33,8 +33,9 @@ public interface BuyStrategy {
      * @param data
      * @param tradeDate
      * @param buy_infoMap
+     * @param posRate     当前 持仓占比
      * @return
      */
-    List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap);
+    List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap, double posRate);
 
 }
