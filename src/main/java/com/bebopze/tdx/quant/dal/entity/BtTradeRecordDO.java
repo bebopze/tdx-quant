@@ -55,12 +55,26 @@ public class BtTradeRecordDO implements Serializable {
     @Schema(description = "交易类型：1-买入；2-卖出；")
     private Integer tradeType;
 
+//    /**
+//     * 交易信号
+//     */
+//    @TableField("trade_signal")
+//    @Schema(description = "交易信号")
+//    private String tradeSignal;
+
     /**
-     * 交易信号
+     * 交易信号-类型
      */
-    @TableField("trade_signal")
-    @Schema(description = "交易信号")
-    private String tradeSignal;
+    @TableField("trade_signal_type")
+    @Schema(description = "交易信号-类型")
+    private Integer tradeSignalType;
+
+    /**
+     * 交易信号-描述
+     */
+    @TableField("trade_signal_desc")
+    @Schema(description = "交易信号-描述")
+    private String tradeSignalDesc;
 
     /**
      * 股票ID

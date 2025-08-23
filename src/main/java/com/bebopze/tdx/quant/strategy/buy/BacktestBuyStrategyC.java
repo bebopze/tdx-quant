@@ -259,7 +259,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             String stockCode = stockDO.getCode();
 
 
-            StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(stockDO));
+            StockFun fun = data.getOrCreateStockFun(stockDO);
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
@@ -740,7 +740,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         String pthyLv2 = data.getPthyLv2(stockCode);
         String getYjhyLv1 = data.getYjhyLv1(stockCode);
         singleInfoList.add(pthyLv2);
-        singleInfoList.add(getYjhyLv1 + "     ");
+        singleInfoList.add(getYjhyLv1 + "|");
 
 
         // ---------------------------------------------------------------------------
@@ -759,7 +759,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // ---------------------------------------------------------------------------
 
 
-        singleInfoList.add("idx-" + idx);
+        singleInfoList.add("|idx-" + idx);
 
 
         // ---------------------------------------------------------------------------

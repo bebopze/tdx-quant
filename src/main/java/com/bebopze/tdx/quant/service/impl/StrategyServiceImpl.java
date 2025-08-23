@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
@@ -107,7 +108,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // ------------------------- S策略
-        Map<String, String> sell_infoMap = Maps.newHashMap();
+        Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
 
 
         // 卖出策略
@@ -133,7 +134,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         // ---------------
         dto.setSell__stockCodeSet(code_name(sell__stockCodeSet));
-        dto.setSell_infoMap(code_name(sell_infoMap));
+        dto.setSell_infoMap(code_name2(sell_infoMap));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -304,6 +305,22 @@ public class StrategyServiceImpl implements StrategyService {
                                   // code - name
                                   entry -> entry.getKey() + "-" + data.stock__codeNameMap.get(entry.getKey()),
                                   Map.Entry::getValue
+                          ));
+    }
+
+    /**
+     * code-name     Map
+     *
+     * @param buy_infoMap
+     * @return
+     */
+    private Map<String, String> code_name2(Map<String, SellStrategyEnum> buy_infoMap) {
+
+        return buy_infoMap.entrySet().stream()
+                          .collect(Collectors.toMap(
+                                  // code - name
+                                  entry -> entry.getKey() + "-" + data.stock__codeNameMap.get(entry.getKey()),
+                                  entry -> entry.getValue().getDesc()
                           ));
     }
 

@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.strategy.sell;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
@@ -57,7 +58,7 @@ public class BacktestSellStrategy implements SellStrategy {
                             BacktestCache data,
                             LocalDate tradeDate,
                             List<String> positionStockCodeList,
-                            Map<String, String> sell_infoMap) {
+                            Map<String, SellStrategyEnum> sell_infoMap) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -109,7 +110,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // 大盘底/大盘底部     ->     ETF策略（持有  ->  暂无视一切 B/S策略）
-        sellStrategy_ETF(sell__stockCodeSet, data, tradeDate, sell_infoMap);
+        sellStrategy_ETF(sell__stockCodeSet, data, tradeDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -122,13 +123,14 @@ public class BacktestSellStrategy implements SellStrategy {
     private Set<String> sell__stockCodeSet(List<String> positionStockCodeList,
                                            BacktestCache data,
                                            LocalDate tradeDate,
-                                           Map<String, String> sell_infoMap) {
+                                           Map<String, SellStrategyEnum> sell_infoMap) {
 
 
         Set<String> sell__stockCodeSet = positionStockCodeList.stream().filter(stockCode -> {
-            BaseStockDO stockDO = data.codeStockMap.getOrDefault(stockCode,
-                                                                 // ETF
-                                                                 data.ETF_stockDOList.stream().filter(e -> e.getCode().equals(stockCode)).findFirst().orElse(null));
+            BaseStockDO stockDO = data.codeStockMap.getOrDefault(
+                    stockCode,
+                    // ETF
+                    data.ETF_stockDOList.stream().filter(e -> e.getCode().equals(stockCode)).findFirst().orElse(null));
 
 
             if (stockDO == null) {
@@ -136,7 +138,7 @@ public class BacktestSellStrategy implements SellStrategy {
             }
 
 
-            StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+            StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -165,7 +167,8 @@ public class BacktestSellStrategy implements SellStrategy {
 
             if (S_topBlock) {
                 // log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , S_topBlock : {}", tradeDate, stockCode, S_topBlock);
-                sell_infoMap.put(stockCode, "板块S" + ",idx-" + idx);
+                // sell_infoMap.put(stockCode, "板块S" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.S12);
                 return true;
             }
 
@@ -183,46 +186,50 @@ public class BacktestSellStrategy implements SellStrategy {
             // -------------------------------------------
 
 
-            try {
-                // 月空
-                boolean 月多 = extDataArrDTO.月多[idx];
-                boolean MA20空 = extDataArrDTO.MA20空[idx];
-                if (!月多 && MA20空) {
-                    sell_infoMap.put(stockCode, "月空" + ",idx-" + idx);
-                    sell_infoMap.put(stockCode, "MA20空" + ",idx-" + idx);
-                    return true;
-                }
-
-
-                // SSF空
-                boolean SSF空 = extDataArrDTO.SSF空[idx];
-                if (SSF空) {
-                    sell_infoMap.put(stockCode, "SSF空" + ",idx-" + idx);
-                    return true;
-                }
-
-
-                // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
-                boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
-                if (高位爆量上影大阴) {
-                    sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + idx);
-                    return true;
-                }
-
-
-                // 偏离率 > 25%
-                // double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
-                double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
-                int limit = fun.is20CM() ? 30 : 25;
-                if (C_SSF_偏离率 > limit) {
-                    sell_infoMap.put(stockCode, "C_SSF_偏离率>" + limit + "%" + ",idx-" + idx);
-                    return true;
-                }
-
-
-            } catch (Exception e) {
-
+//      try {
+            // 月空
+            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean MA20空 = extDataArrDTO.MA20空[idx];
+            if (!月多 && MA20空) {
+                // sell_infoMap.put(stockCode, "月空" + ",idx-" + idx);
+                // sell_infoMap.put(stockCode, "MA20空" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.月空_MA20空);
+                return true;
             }
+
+
+            // SSF空
+            boolean SSF空 = extDataArrDTO.SSF空[idx];
+            if (SSF空) {
+                // sell_infoMap.put(stockCode, "SSF空" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.SSF空);
+                return true;
+            }
+
+
+            // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
+            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
+            if (高位爆量上影大阴) {
+                // sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
+                return true;
+            }
+
+
+            // 偏离率 > 25%
+            // double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
+            double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
+            int limit = fun.is20CM() ? 30 : 25;
+            if (C_SSF_偏离率 > limit) {
+                // sell_infoMap.put(stockCode, "C_SSF_偏离率>" + limit + "%" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.C_SSF_偏离率);
+                return true;
+            }
+
+
+//      } catch (Exception e) {
+//          log.error(e.getMessage(), e);
+//      }
 
 
             // TODO     最大 亏损线  ->  -7% 止损
@@ -276,7 +283,7 @@ public class BacktestSellStrategy implements SellStrategy {
      */
     private void merge___sell__stockCodeSet(Set<String> sell__stockCodeSet,
                                             Set<String> notInTopBlock__stockCodeSet,
-                                            Map<String, String> sell_infoMap) {
+                                            Map<String, SellStrategyEnum> sell_infoMap) {
 
 
         for (String stockCode : notInTopBlock__stockCodeSet) {
@@ -284,7 +291,7 @@ public class BacktestSellStrategy implements SellStrategy {
             // 排除ETF（无板块关联）
             if (!Objects.equals(StockTypeEnum.getByStockCode(stockCode), StockTypeEnum.ETF)) {
                 sell__stockCodeSet.add(stockCode);
-                sell_infoMap.put(stockCode, "【主线板块】走弱");
+                sell_infoMap.put(stockCode, SellStrategyEnum.S11);
             }
         }
     }
@@ -370,12 +377,10 @@ public class BacktestSellStrategy implements SellStrategy {
      * @param sell__stockCodeSet
      * @param data
      * @param tradeDate
-     * @param sellInfoMap
      */
     private void sellStrategy_ETF(Set<String> sell__stockCodeSet,
                                   BacktestCache data,
-                                  LocalDate tradeDate,
-                                  Map<String, String> sellInfoMap) {
+                                  LocalDate tradeDate) {
 
         if (CollectionUtils.isEmpty(sell__stockCodeSet)) {
             return;

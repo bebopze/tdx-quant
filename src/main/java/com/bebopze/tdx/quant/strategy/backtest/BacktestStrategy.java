@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
+import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -283,7 +284,7 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, String> sell_infoMap = Maps.newHashMap();
+        Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
 
 
         // 卖出策略
@@ -421,7 +422,7 @@ public class BacktestStrategy {
                                                  LocalDate tradeDate,
                                                  Set<String> sell__stockCodeSet,
                                                  Map<String, BtPositionRecordDO> sell_before__stockCode_positionDO_Map,
-                                                 Map<String, String> sell_infoMap) {
+                                                 Map<String, SellStrategyEnum> sell_infoMap) {
 
 
         List<BtTradeRecordDO> sell__tradeRecordDO__List = Lists.newArrayList();
@@ -438,10 +439,11 @@ public class BacktestStrategy {
             sell_tradeRecordDO.setTradeDate(tradeDate);
 
 
-            // TODO   交易信号 -> type分类（  ->  分类统计  【SELL指标】  胜率）
-            sell_tradeRecordDO.setTradeSignal(sell_infoMap.get(stockCode));
-            sell_tradeRecordDO.setTradeSignalType(1);
-            sell_tradeRecordDO.setTradeSignalDesc(sell_infoMap.get(stockCode));
+            // 交易信号 -> type分类（  ->  分类统计  【SELL指标】  胜率）
+            // sell_tradeRecordDO.setTradeSignal(sell_infoMap.get(stockCode));
+            SellStrategyEnum sellStrategyEnum = sell_infoMap.get(stockCode);
+            sell_tradeRecordDO.setTradeSignalType(sellStrategyEnum.getType());
+            sell_tradeRecordDO.setTradeSignalDesc(sellStrategyEnum.getDesc());
 
 
             sell_tradeRecordDO.setPrice(NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate)));
@@ -536,7 +538,9 @@ public class BacktestStrategy {
 
             sell_tradeRecordDO.setTradeDate(tradeDate);
             // sell_tradeRecordDO.setTradeSignal(sell_infoMap.get(stockCode));
-            sell_tradeRecordDO.setTradeSignal("大盘仓位限制->等比减仓");
+            // sell_tradeRecordDO.setTradeSignal("大盘仓位限制->等比减仓");
+            sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S21.getType());
+            sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S21.getDesc());
 
 
             double closePrice = getClosePrice(stockCode, tradeDate);
@@ -583,7 +587,7 @@ public class BacktestStrategy {
                                          List<String> buy__stockCodeList) {
 
 
-        Map<String, String> sell_infoMap = Maps.newHashMap();
+        Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
 
 
         // 当前 buyList   ->   是否 与 S策略 相互冲突       =>       过滤出 冲突个股（sellList）
@@ -672,7 +676,9 @@ public class BacktestStrategy {
             tradeRecordDO.setStockCode(stockCode);
             tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
             tradeRecordDO.setTradeDate(tradeDate);
-            tradeRecordDO.setTradeSignal(buy_infoMap.get(stockCode));
+            // tradeRecordDO.setTradeSignal(buy_infoMap.get(stockCode));
+            tradeRecordDO.setTradeSignalType(1);
+            tradeRecordDO.setTradeSignalDesc(buy_infoMap.get(stockCode));
 
             // 收盘价
             BigDecimal close = NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate));

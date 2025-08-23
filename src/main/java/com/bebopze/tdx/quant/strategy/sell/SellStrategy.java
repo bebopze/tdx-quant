@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.strategy.sell;
 
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 
 import java.time.LocalDate;
@@ -44,7 +45,6 @@ public interface SellStrategy {
                      LocalDate tradeDate,
                      List<String> positionStockCodeList,
 
-                     Map<String, String> sell_infoMap);
-
+                     Map<String, SellStrategyEnum> sell_infoMap);
 
 }
