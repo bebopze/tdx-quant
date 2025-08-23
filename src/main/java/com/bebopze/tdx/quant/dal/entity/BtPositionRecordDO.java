@@ -56,6 +56,13 @@ public class BtPositionRecordDO implements Serializable {
     private LocalDate tradeDate;
 
     /**
+     * 持仓类型：1-持仓中；2-已清仓；
+     */
+    @TableField("position_type")
+    @Schema(description = "持仓类型：1-持仓中；2-已清仓；")
+    private Integer positionType;
+
+    /**
      * 股票ID
      */
     @TableField("stock_id")
@@ -119,16 +126,30 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal positionPct;
 
     /**
-     * 浮动盈亏
+     * 当日浮动盈亏
      */
-    @Schema(description = "浮动盈亏")
+    @Schema(description = "当日浮动盈亏")
+    @TableField("today_unrealized_pnl")
+    private BigDecimal todayUnrealizedPnl;
+
+    /**
+     * 当日盈亏率
+     */
+    @Schema(description = "当日盈亏率")
+    @TableField("today_unrealized_pnl_pct")
+    private BigDecimal todayUnrealizedPnlPct;
+
+    /**
+     * 累计浮动盈亏
+     */
+    @Schema(description = "累计浮动盈亏")
     @TableField("unrealized_pnl")
     private BigDecimal unrealizedPnl;
 
     /**
-     * 盈亏率
+     * 累计盈亏率
      */
-    @Schema(description = "盈亏率")
+    @Schema(description = "累计盈亏率")
     @TableField("unrealized_pnl_pct")
     private BigDecimal unrealizedPnlPct;
 
