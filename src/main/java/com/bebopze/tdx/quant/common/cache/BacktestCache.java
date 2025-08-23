@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.cache;
 
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
@@ -441,6 +442,62 @@ public class BacktestCache {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                               获取 指定日期  ->  昨日 / 今日（指定日期）/ 明日   Kline
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 今日（指定日期）  Kline
+     *
+     * @param stockCode
+     * @param tradeDate 指定日期
+     * @return
+     */
+    public KlineDTO getStockKlineDTO(String stockCode, LocalDate tradeDate) {
+        StockFun fun = getOrCreateStockFun(stockCode);
+
+        Integer idx = fun.getDateIndexMap().get(tradeDate);
+        return fun.getKlineDTOList().get(idx);
+    }
+
+
+    /**
+     * 昨日（指定日期-prev）  Kline
+     *
+     * @param stockCode
+     * @param tradeDate 指定日期
+     * @return
+     */
+    public KlineDTO getPrevStockKlineDTO(String stockCode, LocalDate tradeDate) {
+        StockFun fun = getOrCreateStockFun(stockCode);
+
+        Integer idx = fun.getDateIndexMap().get(tradeDate);
+        Assert.isTrue(idx != null && idx - 1 >= 0, "[idx=" + idx + "]异常");
+
+        return fun.getKlineDTOList().get(idx - 1);
+    }
+
+    /**
+     * 明日（指定日期-next）  Kline
+     *
+     * @param stockCode
+     * @param tradeDate 指定日期
+     * @return
+     */
+    public KlineDTO getNextStockKlineDTO(String stockCode, LocalDate tradeDate) {
+        StockFun fun = getOrCreateStockFun(stockCode);
+
+        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+        Integer idx = dateIndexMap.get(tradeDate);
+        Assert.isTrue(idx != null && idx + 1 <= dateIndexMap.size() - 1, "[idx=" + idx + "]异常");
+
+        return fun.getKlineDTOList().get(idx + 1);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                    大盘交易日 基准（非 Cache  ->  ❌startDate ~ endDate❌）
     // -----------------------------------------------------------------------------------------------------------------
 
 
