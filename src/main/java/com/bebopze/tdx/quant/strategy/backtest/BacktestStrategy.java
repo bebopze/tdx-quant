@@ -7,7 +7,6 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
-import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -215,6 +214,8 @@ public class BacktestStrategy {
 
         // 任务批次号
         taskDO.setBatchNo(batchNo);
+        // 任务状态
+        taskDO.setStatus(1);
 
         // B/S策略
         taskDO.setTopBlockStrategy(topBlockStrategyEnum.getDesc());
@@ -824,14 +825,13 @@ public class BacktestStrategy {
 
 
         // 1、清空
-        // x = new Stat();
-        // x.set(new Stat());
-        x.remove(); // x.get();
+        x.remove();
 
 
         // 2、today -> pre
         x.get().prevCapital = x_copy.capital;
         x.get().prevAvlCapital = x_copy.avlCapital;
+        x.get().prev__stockCode_positionDO_Map = x_copy.stockCode_positionDO_Map;
 
 
         x.get().taskId = x_copy.taskId;
@@ -1209,11 +1209,14 @@ public class BacktestStrategy {
 
 
         // 3. 汇总买卖
-        Map<String, Integer> quantityMap = Maps.newHashMap();     // 个股持仓 -   总数量
-        Map<String, Integer> avlQuantityMap = Maps.newHashMap();  // 个股持仓 - 可用数量（T+1）
-        Map<String, Double> amountMap = Maps.newHashMap();        // 个股持仓 -   总成本（买入价格 x 买入数量   ->   累加）
+        Map<String, Integer> quantityMap = Maps.newHashMap();       // 个股持仓 -   总数量
+        Map<String, Integer> avlQuantityMap = Maps.newHashMap();    // 个股持仓 - 可用数量（T+1）
+        Map<String, Double> amountMap = Maps.newHashMap();          // 个股持仓 -   总成本（买入价格 x 买入数量   ->   累加）
 
         Map<String, PositionInfo> codeInfoMap = Maps.newHashMap();  // 个股持仓 - 首次买入Info
+
+
+        // --------------------------------------------
 
 
         // 成本计算
@@ -1223,16 +1226,16 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 4. 构造 当日持仓/清仓 对象列表
-        List<BtPositionRecordDO> positionRecordDOList = todayPositionRecordList(taskId, endTradeDate, quantityMap, avlQuantityMap, amountMap, codeInfoMap, todayClearMap);
+        // 4. 构造 当日持仓 对象列表
+        List<BtPositionRecordDO> positionRecordDOList = todayPositionRecordList(taskId, endTradeDate, quantityMap, avlQuantityMap, amountMap, codeInfoMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 5. 构造 当日清仓 对象列表
-        // List<BtPositionRecordDO> todayClearPositionRecordDOList = todayClearPositionRecordList(taskId, endTradeDate, amountMap, codeInfoMap, todayClearedCodes);
-        // x.get().clearPositionRecordDOList = todayClearPositionRecordDOList;
+        List<BtPositionRecordDO> todayClearPositionRecordDOList = todayClearPositionRecordList(taskId, endTradeDate, todayClearMap);
+        x.get().clearPositionRecordDOList = todayClearPositionRecordDOList;
         // btPositionRecordService.saveBatch(todayClearPositionRecordDOList);
 
 
@@ -1392,7 +1395,7 @@ public class BacktestStrategy {
     }
 
     /**
-     * 构造 当日-持仓/清仓 对象列表
+     * 构造 当日持仓 对象列表
      *
      * @param taskId         当前任务ID
      * @param endTradeDate   当前交易日
@@ -1400,7 +1403,6 @@ public class BacktestStrategy {
      * @param avlQuantityMap 个股持仓 - 可用数量（T+1）
      * @param amountMap      个股持仓 -   总成本（买入价格 x 买入数量   ->   累加）
      * @param codeInfoMap    个股持仓 - 首次买入Info
-     * @param todayClearMap  当日清仓列表             ->   清仓stockCode - 清仓（卖出记录）
      * @return
      */
     private List<BtPositionRecordDO> todayPositionRecordList(Long taskId,
@@ -1408,12 +1410,10 @@ public class BacktestStrategy {
                                                              Map<String, Integer> quantityMap,
                                                              Map<String, Integer> avlQuantityMap,
                                                              Map<String, Double> amountMap,
-                                                             Map<String, PositionInfo> codeInfoMap,
-                                                             Map<String, BtTradeRecordDO> todayClearMap) {
+                                                             Map<String, PositionInfo> codeInfoMap) {
 
 
         List<BtPositionRecordDO> positionRecordDOList = Lists.newArrayList();
-        List<BtPositionRecordDO> todayClearPositionRecordDOList = Lists.newArrayList();
 
 
         quantityMap.forEach((stockCode, qty) -> {
@@ -1434,11 +1434,17 @@ public class BacktestStrategy {
             double avgCost = totalCost / qty;
 
 
+            // ---------------------------------------------------------------------------------------------------------
+
+
             // 每次B/S   ->   成本/收益/收益率   ->   独立事件（边界）     ==>     否则，上次B/S 亏损  ->  合并计入  本次B/S   =>   亏损 -> 负数bug（总成本 负数 -> 平均成本 负数）     =>     市值 爆减bug
             if (avgCost < 0) {
                 log.error("getDailyPositions - avgCost err     >>>     [{}] [{}] , totalCost : {} , qty : {} , avgCost : {}",
                           taskId, endTradeDate, totalCost, qty, avgCost);
             }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 当日收盘价
@@ -1448,91 +1454,99 @@ public class BacktestStrategy {
             // 累计浮动盈亏 = （当日收盘价 - 平均成本）x 持仓数量
             double pnl = (closePrice - avgCost) * qty;
 
+            // 累计浮动盈亏率（%）
+            double pnlPct = pnl * 100 / totalCost;
+
 
             // ---------------------------------------------------------------------------------------------------------
             //                                              计算当日浮动盈亏
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // 方案1
+            double nav = 1;
+            double maxNav = 1;
 
-            // 当日盈亏率  =  当日涨跌幅（卖出当日 -> 不可能买入     =>     B/S策略 相互冲突 -> 以S为准）
-            KlineDTO klineDTO = data.getStockKlineDTO(stockCode, endTradeDate);
-            Assert.isTrue(klineDTO.getDate().isEqual(endTradeDate), "idx异常：tradeDate=" + endTradeDate + "，klineDTO.date=" + klineDTO.getDate());
-            double todayPnlPct = klineDTO.getChange_pct();
+            double todayPnl = 0;
+            double todayPnlPct = 0;
 
-
-            // 当日盈亏额  =  今日市值 - 昨日市值
-            BtTradeRecordDO clearTr = todayClearMap.get(stockCode);
-            double marketValue = clearTr.getAmount().doubleValue();
-            double preMarketValue = marketValue / (1 + todayPnlPct * 0.01);
-            double todayPnl = marketValue - preMarketValue;
+            double maxPnlPct = 0;
+            double maxDrawdownPct = 0;
 
 
-            // ---------------------------------------------------------------------------------------------------------
+            // 昨日持仓数量、成本
+            BtPositionRecordDO prevPos = x.get().prev__stockCode_positionDO_Map.get(stockCode);
+            if (prevPos != null) {
 
-            // 方案2
-
-
-            double prevClose = data.getPrevStockKlineDTO(stockCode, endTradeDate).getClose();
-            double close = clearTr.getPrice().doubleValue();
-            int clear_qty = clearTr.getQuantity();
-            double clear_marketValue = close * clear_qty;
-            double clear_preMarketValue = prevClose * clear_qty;
-            double clear_todayPnl = (close - prevClose) * clear_qty;
-
-            double clear_todayPnlPct = clear_todayPnl / clear_preMarketValue * 100 - 100;
+                double prevAvgCostPrice = prevPos.getAvgCostPrice().doubleValue();
+                double prevClosePrice = prevPos.getClosePrice().doubleValue();
+                double prevQty = prevPos.getQuantity();
+                double prevTotalCost = prevAvgCostPrice * prevQty;
 
 
-            Assert.isTrue(TdxFunCheck.equals(marketValue, clear_marketValue), "marketValue=" + marketValue + "，clear_marketValue=" + clear_marketValue);
-            Assert.isTrue(TdxFunCheck.equals(preMarketValue, clear_preMarketValue), "preMarketValue=" + preMarketValue + "，clear_preMarketValue=" + clear_preMarketValue);
-            Assert.isTrue(TdxFunCheck.equals(todayPnl, clear_todayPnl), "todayPnl=" + todayPnl + "，clear_todayPnl=" + clear_todayPnl);
-            Assert.isTrue(TdxFunCheck.equals(todayPnlPct, clear_todayPnlPct), "todayPnlPct=" + todayPnlPct + "，clear_todayPnlPct=" + clear_todayPnlPct);
+                // 今日卖出 -> 不用特殊处理，因为系统约定“卖出 = 全部清仓”，因此 qty 已经代表当日最终持仓
 
 
-            // ---------------------------------------------------------------------------------------------------------
-            // 计算当日浮动盈亏（核心逻辑）
-            // ---------------------------------------------------------------------------------------------------------
+                // 昨日持仓部分的 累计浮动盈亏 = (今日收盘价 - 昨日成本价) * 昨日持仓数量
+                // double totalPnlFromYesterday = (closePrice - prevAvgCostPrice) * prevQty;
+
+                // 昨日持仓部分的 当日浮动盈亏 = (今日收盘价 - 昨日收盘价) * 昨日持仓数量
+                double pnlFromYesterday = (closePrice - prevClosePrice) * prevQty;
 
 
-//            // 昨日持仓数量、成本
-//            int yesterdayQty = positionInfo.getYesterdayQty();
-//            double yesterdayTotalCost = positionInfo.getYesterdayTotalCost();
-//            double yesterdayAvgCost = yesterdayQty > 0 ? yesterdayTotalCost / yesterdayQty : 0;
-//
-//
-//            // 今日新增买入
-//            int todayBuyQty = 0;
-//            double todayBuyAmount = 0;
-//            for (BtTradeRecordDO tr : todayHoldingList) {
-//                if (tr.getStockCode().equals(stockCode)
-//                        && tr.getTradeType().equals(BtTradeTypeEnum.BUY.getTradeType())
-//                        && tr.getTradeDate().isEqual(endTradeDate)) {
-//                    todayBuyQty += tr.getQuantity();
-//                    todayBuyAmount += tr.getAmount().doubleValue();
-//                }
-//            }
-//
-//
-//            // 今日卖出 -> 不用特殊处理，因为系统约定“卖出 = 全部清仓”，因此 qty 已经代表当日最终持仓
-//
-//
-//            // 昨日持仓部分的当日浮动盈亏 = (今日收盘价 - 昨日成本价) * 昨日持仓数量
-//            double pnlFromYesterday = (closePrice - yesterdayAvgCost) * yesterdayQty;
-//
-//
-//            // 今日新增买入部分的当日浮动盈亏 = (今日收盘价 - 今日买入价) * 今日买入数量
-//            // 由于所有交易都发生在收盘价，因此今日买入价 = 今日收盘价，当日浮盈=0
-//            double pnlFromTodayBuy = 0;
-//
-//
-//            // 当日浮动盈亏总额
-//            double todayPnl = pnlFromYesterday + pnlFromTodayBuy;
-//
-//
-//            // 当日浮动盈亏率 = 当日盈亏额 / 昨日持仓成本
-//            // ⚠️ 注意：分母必须是昨日的成本，而不是今日总成本，否则会稀释掉当日盈亏
-//            double todayPnlPct = (yesterdayTotalCost > 0) ? (todayPnl * 100 / yesterdayTotalCost) : 0;
+                // 今日新增买入部分的当日浮动盈亏 = (今日收盘价 - 今日买入价) * 今日买入数量
+                // 由于所有交易都发生在收盘价，因此今日买入价 = 今日收盘价，当日浮盈=0
+                double pnlFromTodayBuy = 0;
+
+
+                // 当日浮动盈亏总额
+                todayPnl = pnlFromYesterday + pnlFromTodayBuy;
+
+
+                // 当日浮动盈亏率 = 当日盈亏额 / 昨日持仓成本
+                // ⚠️ 注意：分母必须是昨日的成本，而不是今日总成本，否则会稀释掉当日盈亏
+                // todayPnlPct = (prevTotalCost > 0) ? (todayPnl * 100 / prevTotalCost) : 0;
+
+
+                // 当日浮动盈亏率 = 当日盈亏额 / 总成本
+                // ⚠️ 注意：分母必须是今日的总成本，今日新买入  ->  会等比例 稀释掉当日盈亏
+                todayPnlPct = (totalCost > 0) ? (todayPnl * 100 / totalCost) : 0;
+
+
+                // -----------------------------------------------------------------------------------------------------
+
+
+                // 昨日净值
+                double prevNav = prevPos.getNav().doubleValue();
+                // 今日净值
+                nav = prevNav * (1 + pnlPct * 0.01);
+                // 最大净值
+                maxNav = prevPos.getMaxNav().doubleValue();
+
+
+                // 最大净值
+                if (maxNav < nav) {
+                    maxNav = nav;
+                    // maxDate = tradeDate;
+                }
+                maxPnlPct = maxNav * 100 - 100;
+
+
+                // 当日回撤（负数）
+                double drawdownPct = (nav / maxNav - 1) * 100;
+
+
+                // 最大回撤
+                if (maxDrawdownPct > drawdownPct) {
+                    maxDrawdownPct = drawdownPct;
+                    // minDate = tradeDate;
+                    // minNav = nav;
+                }
+
+
+                if (maxDrawdownPct > 999.99 || maxDrawdownPct < -999.99) {
+                    log.error("maxDrawdownPct : {}", maxDrawdownPct);
+                }
+            }
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1565,20 +1579,241 @@ public class BacktestStrategy {
             // 累计盈亏额
             positionRecordDO.setUnrealizedPnl(of(pnl));
             // 累计盈亏率（%） = 盈亏额 / 总成本  x 100%
-            positionRecordDO.setUnrealizedPnlPct(of(pnl * 100 / totalCost));
+            positionRecordDO.setUnrealizedPnlPct(of(pnlPct));
+
+
+            // 每日净值
+            positionRecordDO.setNav(of(nav));
+            positionRecordDO.setMaxNav(of(maxNav));
+            // 最大盈利（%）
+            positionRecordDO.setMaxPnlPct(of(maxPnlPct));
+            // 最大回撤（%）
+            positionRecordDO.setMaxDrawdownPct(of(maxDrawdownPct));
+
 
             positionRecordDO.setBuyDate(positionInfo.buyDate);
             positionRecordDO.setHoldingDays(positionInfo.getHoldingDays(endTradeDate, data.dateIndexMap));
 
 
             // 持仓状态：1-持仓中；2-已清仓；
-            if (todayClearMap.containsKey(stockCode)) {
-                positionRecordDO.setPositionType(2);
-                todayClearPositionRecordDOList.add(positionRecordDO);
-            } else {
-                positionRecordDO.setPositionType(1);
-                positionRecordDOList.add(positionRecordDO);
+            positionRecordDO.setPositionType(1);
+            positionRecordDOList.add(positionRecordDO);
+        });
+
+
+        return positionRecordDOList;
+    }
+
+
+    /**
+     * 构造 当日清仓 对象列表
+     *
+     * @param taskId        当前任务ID
+     * @param endTradeDate  当前交易日
+     * @param todayClearMap 当日清仓列表             ->   清仓stockCode - 清仓（卖出记录）
+     * @return
+     */
+    private List<BtPositionRecordDO> todayClearPositionRecordList(Long taskId,
+                                                                  LocalDate endTradeDate,
+                                                                  Map<String, BtTradeRecordDO> todayClearMap) {
+
+
+        List<BtPositionRecordDO> todayClearPositionRecordDOList = Lists.newArrayList();
+
+
+        todayClearMap.forEach((stockCode, tr) -> {
+
+
+            // 当日清仓数量  =  prev持仓数量
+            int qty = tr.getQuantity();
+            // 可用 = 0
+            // int avlQuantity = 0;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 当日收盘价
+            double closePrice = getClosePrice(stockCode, endTradeDate);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                              计算当日浮动盈亏
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            double nav = 1;
+
+
+            double todayPnl = 0;
+            double todayPnlPct = 0;
+
+            double maxPnlPct = 0;
+            double maxDrawdownPct = 0;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 昨日持仓  ->  数量、成本
+            BtPositionRecordDO prevPos = x.get().prev__stockCode_positionDO_Map.get(stockCode);
+            if (prevPos == null) {
+                return;
             }
+
+
+            // double prevMarketValue = prevPositionRecordDO.getMarketValue().doubleValue();
+            double prevAvgCostPrice = prevPos.getAvgCostPrice().doubleValue();
+            double prevClosePrice = prevPos.getClosePrice().doubleValue();
+            double prevQty = prevPos.getQuantity();
+            double prevTotalCost = prevAvgCostPrice * prevQty;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 总成本 = prev总成本
+            double totalCost = prevTotalCost;
+            // 平均成本 = prev平均成本
+            double avgCost = prevAvgCostPrice;
+
+
+            // 累计浮动盈亏 = （当日收盘价 - 平均成本）x 持仓数量
+            double pnl = (closePrice - avgCost) * qty;
+
+            // 累计浮动盈亏率（%）
+            double pnlPct = pnl * 100 / totalCost;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 今日卖出 -> 不用特殊处理，因为系统约定“卖出 = 全部清仓”，因此 qty 已经代表当日最终持仓
+
+
+            // 昨日持仓部分的 累计浮动盈亏 = (今日收盘价 - 昨日成本价) * 昨日持仓数量
+            // double totalPnlFromYesterday = (closePrice - prevAvgCostPrice) * prevQty;
+
+
+            // 昨日持仓部分的 当日浮动盈亏 = (今日收盘价 - 昨日收盘价) * 昨日持仓数量
+            double pnlFromYesterday = (closePrice - prevClosePrice) * prevQty;
+
+
+            // 今日新增买入部分的当日浮动盈亏 = (今日收盘价 - 今日买入价) * 今日买入数量
+            // 由于所有交易都发生在收盘价，因此今日买入价 = 今日收盘价，当日浮盈=0
+            double pnlFromTodayBuy = 0;
+
+
+            // 当日浮动盈亏总额
+            todayPnl = pnlFromYesterday + pnlFromTodayBuy;
+
+
+            // 当日浮动盈亏率 = 当日盈亏额 / 昨日持仓成本
+            // ⚠️ 注意：分母必须是昨日的成本，而不是今日总成本，否则会稀释掉当日盈亏
+            // todayPnlPct = (prevTotalCost > 0) ? (todayPnl * 100 / prevTotalCost) : 0;
+
+
+            // 当日浮动盈亏率 = 当日盈亏额 / 总成本
+            // ⚠️ 注意：分母必须是今日的总成本，今日新买入  ->  会等比例 稀释掉当日盈亏
+            todayPnlPct = (totalCost > 0) ? (todayPnl * 100 / totalCost) : 0;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 昨日净值
+            double prevNav = prevPos.getNav().doubleValue();
+            // 今日净值
+            nav = prevNav * (1 + pnlPct * 0.01);
+            // 最大净值
+            double maxNav = prevPos.getMaxNav().doubleValue();
+
+
+            // 最大净值
+            if (maxNav < nav) {
+                maxNav = nav;
+                // maxDate = tradeDate;
+            }
+            maxPnlPct = maxNav * 100 - 100;
+
+
+            // 当日回撤（负数）
+            double drawdownPct = (nav / maxNav - 1) * 100;
+
+
+            // 最大回撤
+            if (maxDrawdownPct > drawdownPct) {
+                maxDrawdownPct = drawdownPct;
+                // minDate = tradeDate;
+                // minNav = nav;
+            }
+
+
+            if (maxDrawdownPct > 999.99 || maxDrawdownPct < -999.99 || maxPnlPct > 999.99 || maxPnlPct < -999.99) {
+                log.error("maxDrawdownPct : {} , maxPnlPct : {}", maxDrawdownPct, maxPnlPct);
+
+                maxDrawdownPct = Math.min(maxDrawdownPct, 999.99);
+                maxPnlPct = Math.min(maxPnlPct, 999.99);
+
+                maxDrawdownPct = Math.max(maxDrawdownPct, -999.99);
+                maxPnlPct = Math.max(maxPnlPct, -999.99);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            BtPositionRecordDO positionRecordDO = new BtPositionRecordDO();
+
+            positionRecordDO.setTaskId(taskId);
+            positionRecordDO.setTradeDate(endTradeDate);
+            positionRecordDO.setStockId(prevPos.getStockId());
+            positionRecordDO.setStockCode(stockCode);
+            positionRecordDO.setStockName(prevPos.getStockName());
+            positionRecordDO.setAvgCostPrice(of(avgCost));
+            positionRecordDO.setClosePrice(of(closePrice));
+            positionRecordDO.setQuantity(0);
+            positionRecordDO.setAvlQuantity(0);
+
+            // 当前市值 = 持仓数量 x 当前收盘价
+            positionRecordDO.setMarketValue(of(qty * closePrice));
+
+            // 仓位占比 = 持仓市值 / 总资金
+            BigDecimal positionPct = positionRecordDO.getMarketValue().divide(of(x.get().capital), 8, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+            positionRecordDO.setPositionPct(positionPct);
+
+            // 当日盈亏额
+            positionRecordDO.setTodayUnrealizedPnl(of(todayPnl));
+            // 当日盈亏率（%）
+            positionRecordDO.setTodayUnrealizedPnlPct(of(todayPnlPct));
+
+            // 累计盈亏额
+            positionRecordDO.setUnrealizedPnl(of(pnl));
+            // 累计盈亏率（%） = 盈亏额 / 总成本  x 100%
+            positionRecordDO.setUnrealizedPnlPct(of(pnlPct));
+
+
+            // 每日净值
+            positionRecordDO.setNav(of(nav));
+            // 最大净值
+            positionRecordDO.setMaxNav(of(maxNav));
+            // 最大盈利（%）
+            positionRecordDO.setMaxPnlPct(of(maxPnlPct));
+            // 最大回撤（%）
+            positionRecordDO.setMaxDrawdownPct(of(maxDrawdownPct));
+
+
+            // 持仓天数
+            positionRecordDO.setBuyDate(prevPos.getBuyDate());
+            positionRecordDO.setHoldingDays(prevPos.getHoldingDays() + 1);
+
+
+            // 持仓状态：1-持仓中；2-已清仓；
+            positionRecordDO.setPositionType(2);
+            todayClearPositionRecordDOList.add(positionRecordDO);
         });
 
 
@@ -1586,13 +1821,13 @@ public class BacktestStrategy {
 
 
         // 当日 清仓列表
-        x.get().clearPositionRecordDOList = todayClearPositionRecordDOList;
+        // x.get().clearPositionRecordDOList = todayClearPositionRecordDOList;
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        return positionRecordDOList;
+        return todayClearPositionRecordDOList;
     }
 
 
@@ -1716,8 +1951,6 @@ public class BacktestStrategy {
         x.set(new Stat());
 
 
-        // tradeRecord___idSet__cache = Sets.newHashSet();
-        // tradeRecordList__cache = Lists.newArrayList();
         tradeRecord___idSet__cache.set(Sets.newHashSet());
         tradeRecordList__cache.set(Lists.newArrayList());
 
@@ -1951,6 +2184,10 @@ public class BacktestStrategy {
         double prevCapital;
         // 可用资金
         double prevAvlCapital;
+
+        // 持仓列表
+        List<BtPositionRecordDO> prevPositionRecordDOList;
+        Map<String, BtPositionRecordDO> prev__stockCode_positionDO_Map = Maps.newHashMap();
 
 
         // ----------------------------------------------------------------------------------
