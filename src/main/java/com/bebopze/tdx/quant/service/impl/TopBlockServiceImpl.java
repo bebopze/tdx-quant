@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -278,17 +279,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             String result = getResultByTypeAndLevel(e, resultType, hyLevel);
-
-
             List<BlockTopInfoDTO> infoList = JSON.parseArray(result, BlockTopInfoDTO.class);
 
 
-            BlockTopInfoDTO blockTopInfoDTO = infoList.get(0);
-            String blockCode = blockTopInfoDTO.getBlockCode();
-            String blockName = blockTopInfoDTO.getBlockName();
+            if (CollectionUtils.isNotEmpty(infoList)) {
+
+                BlockTopInfoDTO blockTopInfoDTO = infoList.get(0);
+                String blockCode = blockTopInfoDTO.getBlockCode();
+                String blockName = blockTopInfoDTO.getBlockName();
 
 
-            rateMap.merge(blockCode + "-" + blockName, 1, Integer::sum);
+                rateMap.merge(blockCode + "-" + blockName, 1, Integer::sum);
+            }
         });
 
 
