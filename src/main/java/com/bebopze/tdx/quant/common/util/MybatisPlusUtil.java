@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.util;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -33,13 +34,19 @@ public class MybatisPlusUtil {
     static {
 
         // 1. 数据源
-        HikariConfig hk = new HikariConfig();
-        hk.setJdbcUrl(PropsUtil.getProperty("spring.datasource.url"));
-        hk.setUsername(PropsUtil.getProperty("spring.datasource.username"));
-        hk.setPassword(PropsUtil.getProperty("spring.datasource.password"));
-        hk.setDriverClassName(PropsUtil.getProperty("spring.datasource.driver-class-name"));
+        // HikariConfig hk = new HikariConfig();
+        // hk.setJdbcUrl(PropsUtil.getProperty("spring.datasource.url"));
+        // hk.setUsername(PropsUtil.getProperty("spring.datasource.username"));
+        // hk.setPassword(PropsUtil.getProperty("spring.datasource.password"));
+        // hk.setDriverClassName(PropsUtil.getProperty("spring.datasource.driver-class-name"));
+        //
+        // DataSource ds1 = new HikariDataSource(hk);
 
-        DataSource ds = new HikariDataSource(hk);
+        DruidDataSource ds = new DruidDataSource();
+        ds.setUrl(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.url"));
+        ds.setUsername(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.username"));
+        ds.setPassword(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.password"));
+        ds.setDriverClassName(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.driver-class-name"));
 
 
         // 2. 事务工厂（可换成 SpringManagedTransactionFactory）

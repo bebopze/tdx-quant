@@ -38,7 +38,8 @@ public class BtPositionRecordDO implements Serializable {
      * 主键ID
      */
     @Schema(description = "主键ID")
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.NONE)  // 使用 NONE，让 ShardingSphere 生成
+    // @TableId(value = "id", type = IdType.ASSIGN_ID)  // 使用雪花算法
     private Long id;
 
     /**
@@ -133,9 +134,9 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal todayUnrealizedPnl;
 
     /**
-     * 当日盈亏率
+     * 当日盈亏率（%）
      */
-    @Schema(description = "当日盈亏率")
+    @Schema(description = "当日盈亏率（%）")
     @TableField("today_unrealized_pnl_pct")
     private BigDecimal todayUnrealizedPnlPct;
 
@@ -147,11 +148,39 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal unrealizedPnl;
 
     /**
-     * 累计盈亏率
+     * 累计盈亏率（%）
      */
-    @Schema(description = "累计盈亏率")
+    @Schema(description = "累计盈亏率（%）")
     @TableField("unrealized_pnl_pct")
     private BigDecimal unrealizedPnlPct;
+
+    /**
+     * 净值
+     */
+    @Schema(description = "净值")
+    @TableField("nav")
+    private BigDecimal nav;
+
+    /**
+     * 最大盈利（%）
+     */
+    @Schema(description = "最大盈利（%）")
+    @TableField("max_pnl_pct")
+    private BigDecimal maxPnlPct;
+
+//    /**
+//     * 最小盈亏率（%）
+//     */
+//    @Schema(description = "最小盈亏率（%）")
+//    @TableField("min_pnl_pct")
+//    private BigDecimal minPnlPct;
+
+    /**
+     * 最大回撤（%）
+     */
+    @Schema(description = "最大回撤（%）")
+    @TableField("max_drawdown_pct")
+    private BigDecimal maxDrawdownPct;
 
     /**
      * 首次-买入日期
@@ -185,6 +214,10 @@ public class BtPositionRecordDO implements Serializable {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    @TableField(exist = false)
+    private BigDecimal maxNav;
 
 
 //    @TableField(exist = false)

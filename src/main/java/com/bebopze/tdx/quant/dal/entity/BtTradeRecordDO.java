@@ -38,7 +38,8 @@ public class BtTradeRecordDO implements Serializable {
      * 主键ID
      */
     @Schema(description = "主键ID")
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.NONE)  // 使用 NONE，让 ShardingSphere 生成
+    // @TableId(value = "id", type = IdType.ASSIGN_ID)  // 使用雪花算法
     private Long id;
 
     /**

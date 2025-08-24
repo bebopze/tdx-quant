@@ -12,43 +12,132 @@ tdx-path: "C:/soft/new_tdx"
 
 # Mysql
 spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&socketTimeout=150000&connectTimeout=30000
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    type: com.alibaba.druid.pool.DruidDataSource  # 指定连接池类型
+  #  datasource:
+  #    url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&socketTimeout=150000&connectTimeout=30000
+  #    username: root
+  #    password: 123456
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    type: com.alibaba.druid.pool.DruidDataSource  # 指定连接池类型
+  #
+  #    druid:
+  #      # 基础连接池参数
+  #      initial-size: 10
+  #      min-idle: 10
+  #      max-active: 300
+  #      max-wait: 60000  # 获取连接超时时间（毫秒）
+  #
+  #      # 连接存活检测
+  #      time-between-eviction-runs-millis: 60000  # 检测间隔
+  #      min-evictable-idle-time-millis: 300000  # 最小空闲时间
+  #      test-while-idle: true  # 空闲时检测连接有效性
+  #      validation-query: SELECT 1  # 检测SQL
+  #
+  #      # 监控与防火墙
+  #      filters: stat,wall,slf4j  # 启用统计、SQL防火墙、日志
+  #      filter:
+  #        stat:
+  #          slow-sql-millis: 2000  # 慢SQL阈值（2秒）
+  #          log-slow-sql: true
+  #        wall:
+  #          enabled: true  # 启用SQL注入防御
+  #
+  #      # 监控页面配置
+  #      stat-view-servlet:
+  #        enabled: true  # 启用监控页面
+  #        url-pattern: /druid/*
+  #        login-username: admin
+  #        login-password: admin
+  #      web-stat-filter:
+  #        enabled: true  # 统计Web请求
+  #        url-pattern: /*
+  #        exclusions: "*.js,*.css,/druid/*"
 
-    druid:
-      # 基础连接池参数
-      initial-size: 10
-      min-idle: 10
-      max-active: 300
-      max-wait: 60000  # 获取连接超时时间（毫秒）
 
-      # 连接存活检测
-      time-between-eviction-runs-millis: 60000  # 检测间隔
-      min-evictable-idle-time-millis: 300000  # 最小空闲时间
-      test-while-idle: true  # 空闲时检测连接有效性
-      validation-query: SELECT 1  # 检测SQL
 
-      # 监控与防火墙
-      filters: stat,wall,slf4j  # 启用统计、SQL防火墙、日志
-      filter:
-        stat:
-          slow-sql-millis: 2000  # 慢SQL阈值（2秒）
-          log-slow-sql: true
-        wall:
-          enabled: true  # 启用SQL注入防御
+  shardingsphere:
+    props:
+      sql-show: true  # 开发期建议开启，便于观测实际路由
+    datasource:
+      names: ds_common, ds_0, ds_1
 
-      # 监控页面配置
-      stat-view-servlet:
-        enabled: true  # 启用监控页面
-        url-pattern: /druid/*
-        login-username: admin
-        login-password: admin
-      web-stat-filter:
-        enabled: true  # 统计Web请求
-        url-pattern: /*
-        exclusions: "*.js,*.css,/druid/*"
+      ds_common:
+        url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&socketTimeout=150000&connectTimeout=30000
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
 
+      ds_0:
+        url: jdbc:mysql://localhost:3306/tdx_bt_0?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&socketTimeout=150000&connectTimeout=30000
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+
+      ds_1:
+        url: jdbc:mysql://localhost:3306/tdx_bt_1?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&socketTimeout=150000&connectTimeout=30000
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+
+
+
+    rules:
+      sharding:
+        # 默认数据库分片策略
+        default-database-strategy:
+          standard:
+            sharding-column: task_id
+            sharding-algorithm-name: db-inline
+
+        tables:
+          bt_trade_record:
+            actual-data-nodes: ds_$->{0..1}.bt_trade_record_$->{0..99}
+            table-strategy:
+              standard:
+                sharding-column: task_id
+                sharding-algorithm-name: trade-table-inline
+            # 添加主键生成策略
+            key-generate-strategy:
+              column: id
+              key-generator-name: snowflake
+
+          bt_position_record:
+            actual-data-nodes: ds_$->{0..1}.bt_position_record_$->{0..99}
+            table-strategy:
+              standard:
+                sharding-column: task_id
+                sharding-algorithm-name: position-table-inline
+            # 添加主键生成策略
+            key-generate-strategy:
+              column: id
+              key-generator-name: snowflake
+
+
+        sharding-algorithms:
+          db-inline:
+            type: INLINE
+            props:
+              algorithm-expression: ds_$->{task_id % 2}
+          trade-table-inline:
+            type: INLINE
+            props:
+              algorithm-expression: bt_trade_record_$->{task_id % 100}
+          position-table-inline:
+            type: INLINE
+            props:
+              algorithm-expression: bt_position_record_$->{task_id % 100}
+
+
+        # 主键生成器配置
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE
+            props:
+              worker-id: 123
+
+
+        # 绑定表配置（大表 join 优化）
+        binding-tables:
+          - bt_trade_record, bt_position_record
