@@ -481,8 +481,8 @@ public class BacktestServiceImpl implements BacktestService {
             double marketValue = positionRecordDO.getMarketValue().doubleValue();
 
 
-            double unrealizedPnl = positionRecordDO.getUnrealizedPnl().doubleValue();
-            double unrealizedPnlPct = positionRecordDO.getUnrealizedPnlPct().doubleValue();
+            double capTotalPnl = positionRecordDO.getCapTotalPnl().doubleValue();
+            double capTotalPnlPct = positionRecordDO.getCapTotalPnlPct().doubleValue();
 
             LocalDate buyDate = positionRecordDO.getBuyDate();
             int holdingDays = positionRecordDO.getHoldingDays();

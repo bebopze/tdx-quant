@@ -99,6 +99,13 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal closePrice;
 
     /**
+     * 当日涨跌幅（%）
+     */
+    @TableField("change_pct")
+    @Schema(description = "当日涨跌幅（%）")
+    private BigDecimal changePct;
+
+    /**
      * 持仓数量
      */
     @TableField("quantity")
@@ -127,60 +134,53 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal positionPct;
 
     /**
-     * 当日浮动盈亏
+     * 当日-浮动盈亏
      */
-    @Schema(description = "当日浮动盈亏")
-    @TableField("today_unrealized_pnl")
-    private BigDecimal todayUnrealizedPnl;
+    @Schema(description = "当日-浮动盈亏")
+    @TableField("cap_today_pnl")
+    private BigDecimal capTodayPnl;
 
     /**
-     * 当日盈亏率（%）
+     * 当日-盈亏率（%）
      */
-    @Schema(description = "当日盈亏率（%）")
-    @TableField("today_unrealized_pnl_pct")
-    private BigDecimal todayUnrealizedPnlPct;
+    @Schema(description = "当日-盈亏率（%）")
+    @TableField("cap_today_pnl_pct")
+    private BigDecimal capTodayPnlPct;
 
     /**
-     * 累计浮动盈亏
+     * 累计-浮动盈亏
      */
-    @Schema(description = "累计浮动盈亏")
-    @TableField("unrealized_pnl")
-    private BigDecimal unrealizedPnl;
+    @Schema(description = "累计-浮动盈亏")
+    @TableField("cap_total_pnl")
+    private BigDecimal capTotalPnl;
 
     /**
-     * 累计盈亏率（%）
+     * 累计-盈亏率（%）
      */
-    @Schema(description = "累计盈亏率（%）")
-    @TableField("unrealized_pnl_pct")
-    private BigDecimal unrealizedPnlPct;
+    @Schema(description = "累计-盈亏率（%）")
+    @TableField("cap_total_pnl_pct")
+    private BigDecimal capTotalPnlPct;
 
     /**
-     * 净值
+     * 首次买入价格-累计涨幅（%）
      */
-    @Schema(description = "净值")
-    @TableField("nav")
-    private BigDecimal nav;
+    @Schema(description = "首次买入价格-累计涨幅（%）")
+    @TableField("price_total_return_pct")
+    private BigDecimal priceTotalReturnPct;
 
     /**
-     * 最大盈利（%）
+     * 首次买入价格-最大涨幅（%）
      */
-    @Schema(description = "最大盈利（%）")
-    @TableField("max_pnl_pct")
-    private BigDecimal maxPnlPct;
-
-//    /**
-//     * 最小盈亏率（%）
-//     */
-//    @Schema(description = "最小盈亏率（%）")
-//    @TableField("min_pnl_pct")
-//    private BigDecimal minPnlPct;
+    @Schema(description = "首次买入价格-最大涨幅（%）")
+    @TableField("price_max_return_pct")
+    private BigDecimal priceMaxReturnPct;
 
     /**
-     * 最大回撤（%）
+     * 首次买入价格-最大回撤（%）
      */
-    @Schema(description = "最大回撤（%）")
-    @TableField("max_drawdown_pct")
-    private BigDecimal maxDrawdownPct;
+    @Schema(description = "首次买入价格-最大回撤（%）")
+    @TableField("price_max_drawdown_pct")
+    private BigDecimal priceMaxDrawdownPct;
 
     /**
      * 首次-买入日期
@@ -214,10 +214,6 @@ public class BtPositionRecordDO implements Serializable {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-    @TableField(exist = false)
-    private BigDecimal maxNav;
 
 
 //    @TableField(exist = false)
