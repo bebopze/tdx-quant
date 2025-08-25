@@ -12,7 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
@@ -517,13 +516,30 @@ public class LdayParser {
                 JSONObject json1 = JSON.parseObject(dto1_str);
                 JSONObject json2 = JSON.parseObject(dto2_str);
 
-                JSONObject diffFields = getDiffFields(json1, json2);
-                log.warn("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
-                         stockCode, i, dto1.tradeDate, diffFields.toJSONString());
 
-                if (diffFields.containsKey("vol")) {
-                    log.error("");
+                JSONObject diffFields = getDiffFields(json1, json2);
+                if (MapUtils.isNotEmpty(diffFields)) {
+
+
+                    // 复权/不复权   ->   不变量：vol、amo     =>     vol/amo 不等 -> 数据异常     |     vol/amo 相等 -> 复权 bug
+                    if (diffFields.containsKey("vol")) {
+
+                        // vol/amo 不等 -> 数据异常
+                        log.error("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                                  stockCode, i, dto1.tradeDate, diffFields.toJSONString());
+                    } else {
+
+                        // vol/amo 相等 -> 复权 bug
+                        log.debug("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                                  stockCode, i, dto1.tradeDate, diffFields.toJSONString());
+                    }
+
+
+                    // if (diffFields.containsKey("vol")) {
+                    //     log.error("vol - err     >>>     v1={}, v2={}", diffFields.getJSONObject("vol").getLong("v1"), diffFields.getJSONObject("vol").getLong("v2"));
+                    // }
                 }
+
 
             } else {
 
