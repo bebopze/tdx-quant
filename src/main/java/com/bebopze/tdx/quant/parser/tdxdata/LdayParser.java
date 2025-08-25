@@ -5,12 +5,15 @@ import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.StockTypeUtil;
+import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
@@ -119,8 +122,8 @@ public class LdayParser {
         // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
 
 
-        // List<LdayDTO> stockDataList = parseByStockCode("300059");
-        List<LdayDTO> stockDataList = parseByStockCode("513120");
+        List<LdayDTO> stockDataList = parseByStockCode("300059");
+        // List<LdayDTO> stockDataList = parseByStockCode("513120");
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));
@@ -361,15 +364,26 @@ public class LdayParser {
             // 成交额（元）
             BigDecimal amount = BigDecimal.valueOf(byteBuffer.getFloat());
 
-            // 成交量
+
+            // 成交量（A股：N股 -> 非N手）
+            // 成交量（ETF bug：N股[99.9%]   ->   N手[0.1%]）         stockCode : 513120 , idx : 378 , date : 2024-01-26 , diffFields : {"vol":{"v1":4550469600,"v2":45504696}}
             long vol = byteBuffer.getInt();     // 负数bug + 复权bug
             if (vol < 0) {
                 long signedVol = vol;
 
                 // vol &= 0xFFFFFFFFL;
                 vol = Integer.toUnsignedLong((int) vol);
-                log.warn("{}   -   {}   {} -> {}", code, date, signedVol, vol);
+                log.debug("{}   -   {}   {} -> {}", code, date, signedVol, vol);
+
+            } else {
+
+                // 成交量（ETF bug：N股[99.9%]   ->   N手[0.1%]）         stockCode : 513120 , idx : 378 , date : 2024-01-26 , diffFields : {"vol":{"v1":4550469600,"v2":45504696}}
+                double calcVol = amount.doubleValue() / close;
+                if (calcVol / vol > 95) {
+                    vol *= 100;
+                }
             }
+
 
             // 保留字段
             int unUsed = byteBuffer.getInt();
@@ -523,16 +537,50 @@ public class LdayParser {
     private static JSONObject getDiffFields(JSONObject json1, JSONObject json2) {
         JSONObject result = new JSONObject();
 
+
         for (String key : json1.keySet()) {
+
             Object v1 = json1.get(key);
             Object v2 = json2.get(key);
 
-            if (!Objects.equals(v1, v2)) {
-                JSONObject diff = new JSONObject();
-                diff.put("v1", v1);
-                diff.put("v2", v2);
-                result.put(key, diff);
+
+            if (v1 instanceof Number) {
+
+                BigDecimal _v1 = new BigDecimal(v1.toString());
+                BigDecimal _v2 = v2 == null ? null : new BigDecimal(v2.toString());
+
+                if (!TdxFunCheck.equals(_v1, _v2)) {
+                    JSONObject diff = new JSONObject();
+                    diff.put("v1", _v1);
+                    diff.put("v2", _v2);
+                    result.put(key, diff);
+                }
+
+
+            } else {
+
+                if (!Objects.equals(v1, v2)) {
+                    JSONObject diff = new JSONObject();
+                    diff.put("v1", v1);
+                    diff.put("v2", v2);
+                    result.put(key, diff);
+                }
             }
+
+
+            // ------------------------------------- DEBUG -------------------------------------
+
+
+            if ("vol".equals(key)) {
+                if (!v1.equals(v2)) {
+                    log.error("vol - err     >>>     v1={}, v2={}", v1, v2);
+                } else {
+                    log.debug("vol - suc     >>>     v1={}, v2={}", v1, v2);
+                }
+            }
+
+
+            // ------------------------------------- DEBUG -------------------------------------
         }
 
         return result;

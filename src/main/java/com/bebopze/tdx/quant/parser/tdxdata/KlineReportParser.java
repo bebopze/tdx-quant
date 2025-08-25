@@ -174,7 +174,7 @@ public class KlineReportParser {
                     double low = Double.parseDouble(strArr[3]);
                     // 收盘价
                     double close = Double.parseDouble(strArr[4]);
-                    // 成交量
+                    // 成交量（A股、ETF：N股 -> 非N手）
                     long vol = Long.parseLong(strArr[5]);
                     // 成交额（元）
                     BigDecimal amount = new BigDecimal(strArr[6]);
