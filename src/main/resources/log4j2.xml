@@ -52,6 +52,16 @@
             <AppenderRef ref="Console"/>
         </Logger>
 
+
+        <!-- ShardingSphere SQL 路由、改写、执行耗时（排障时临时调高到 INFO/DEBUG） -->
+        <Logger name="org.apache.shardingsphere" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.shardingsphere.sql" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+
         <!-- MyBatis-Plus 日志 -->
         <Logger name="com.baomidou.mybatisplus.core" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
@@ -61,6 +71,7 @@
         <Logger name="org.apache.ibatis" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+
 
         <!-- 根日志器：默认输出到控制台 -->
         <AsyncRoot level="INFO">

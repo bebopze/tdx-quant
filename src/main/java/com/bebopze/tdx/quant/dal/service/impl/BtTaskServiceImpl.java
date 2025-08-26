@@ -111,7 +111,7 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
 
         // 分批处理   ->   1次 N个
-        int N = 1;
+        int N = 10;
         int size = errTaskIdList.size();
 
 
