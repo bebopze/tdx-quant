@@ -216,6 +216,10 @@ public class BtPositionRecordDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @TableField(exist = false)
+    private BigDecimal initBuyPrice;
+
+
 //    @TableField(exist = false)
 //    private String blockCodePath;
 //
