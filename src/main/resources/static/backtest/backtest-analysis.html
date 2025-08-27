@@ -49,16 +49,198 @@
         .card-header {
             cursor: pointer;
         }
+
+        /* 序号列样式 */
+        .index-column {
+            width: 50px;
+            text-align: center;
+        }
+
+        /* 列表总数显示样式 */
+        .record-count {
+            font-size: 0.9em;
+            color: #6c757d; /* Bootstrap muted text color */
+            margin-left: 10px;
+        }
+
+        /* --- 列表优化样式 --- */
+        /* 缩小整个表格的字体大小 */
+        .table {
+            font-size: 0.85rem; /* 调整此值以获得所需的字体大小 */
+        }
+
+        /* 固定表头行高和垂直居中 */
+        .table thead th {
+            /* height: 40px; */ /* 可以注释掉或减小固定高度 */
+            padding-top: 6px; /* 减小内边距以适应更小字体 */
+            padding-bottom: 6px;
+            padding-left: 4px;
+            padding-right: 4px;
+            vertical-align: middle; /* 垂直居中 */
+            text-align: center; /* 水平居中 */
+            white-space: nowrap; /* 表头不换行 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* background-color: #f8f9fa; */ /* 可选：给表头一点背景色区分 */
+            position: sticky; /* 可选：固定表头 (需要在 tbody 外层容器设置 max-height 和 overflow) */
+            top: 0;
+            z-index: 10;
+        }
+
+        /* 固定表格行高和垂直居中 */
+        .table tbody td {
+            /* height: 40px; */ /* 可以注释掉或减小固定高度 */
+            padding-top: 6px; /* 减小内边距 */
+            padding-bottom: 6px;
+            padding-left: 4px;
+            padding-right: 4px;
+            vertical-align: middle; /* 垂直居中 */
+            text-align: center; /* 水平居中 */
+            white-space: nowrap; /* 默认不换行 */
+            overflow: hidden;
+            text-overflow: ellipsis; /* 超出部分显示省略号 */
+        }
+
+
+        /* --- 新增：将 '回测任务信息' 表格的内容改为左对齐 --- */
+        /* 通过 id #taskInfoCollapse 来精确选择该表格 */
+        #taskInfoCollapse .table td,
+        #taskInfoCollapse .table th {
+            text-align: left !important; /* 强制左对齐，覆盖 Bootstrap 默认的居中 */
+        }
+
+
+        /*!* --- 新增：为交易信号列添加特定样式 --- *!
+        !* 目标：让 '交易信号' 列的内容左对齐，并允许自动换行 *!
+        .table td:nth-child(4), !* 针对 '交易信号' 列（第4列） *!
+        .table th:nth-child(4) { !* 同时应用到表头 *!
+            text-align: left; !* 左对齐 *!
+            white-space: normal; !* 允许文本换行 *!
+            word-wrap: break-word; !* 长单词或URL可以在任意字符处断开 *!
+            overflow: hidden; !* 防止内容溢出单元格 *!
+            max-width: 300px; !* 可选：设置一个最大宽度，防止过宽撑大表格 *!
+        }
+
+        !* --- 新增：为 B/S详情 列表中的 '交易信号' 列添加特定样式 --- *!
+        !* 目标：让 'B/S详情' 表格的 '交易信号' 列内容左对齐，并允许自动换行 *!
+        #bsDetailsTable td:nth-child(10),
+        #bsDetailsTable th:nth-child(10) {
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: hidden;
+            max-width: 300px;
+        }*/
+
+
+        /* 特殊处理：交易信号字段的通用样式 */
+        .trade-signal-cell {
+            text-align: left !important; /* 左对齐 */
+            white-space: normal !important; /* 允许文本换行 */
+            word-wrap: break-word; /* 长单词或URL可以在任意字符处断开 */
+            overflow: hidden; /* 防止内容溢出单元格 */
+            max-width: 300px; /* 可选：设置一个最大宽度，防止过宽撑大表格 */
+        }
+
+
+        /* --- 限制表格容器高度，防止卡片被撑开 --- */
+        /* 为包含表格的 card-body 设置最大高度和滚动条 */
+        /* 针对特定的卡片内容区域 */
+        #positionCollapse .card-body,
+        #clearPositionCollapse .card-body,
+        #tradeCollapse .card-body,
+        #bsDetailsCollapse .card-body {
+            max-height: 500px; /* 设置你希望的最大高度 */
+            overflow-y: auto; /* 超出时显示滚动条 */
+            padding: 0; /* 移除默认内边距，让表格边框贴边 */
+        }
+
+        /* --- --- */
+        /* 可选：添加表格行悬停效果 */
+        .table-hover tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* --- --- */
+
+        /* --- 增加页面整体宽度 --- */
+        /* Bootstrap 的 container 默认有最大宽度限制，我们覆盖它 */
+        /* 原来的 .container 在不同断点有不同 max-width，这里统一拓宽 10% */
+
+
+        /* --- 定义页面宽度扩展比例的 CSS 变量 --- */
+        /* 修改这个变量的值即可统一调整页面整体宽度的扩展比例 */
+        :root {
+            --page-width-expansion-factor: 1.06; /* 1.1 代表 110%，即增加 10% */
+            /* 你可以尝试修改下面的值来调试，例如：
+               --page-width-expansion-factor: 1.05;  /* 增加 5% */
+            /* --page-width-expansion-factor: 1.15; /* 增加 15% */
+        }
+
+        /* --- --- */
+
+        @media (min-width: 576px) {
+            .container {
+                /* 原来可能是 540px */
+                /* max-width: calc(540px * 1.07); /* 大约 594px */
+                max-width: calc(540px * var(--page-width-expansion-factor));
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                /* 原来可能是 720px */
+                /* max-width: calc(720px * 1.07); /* 大约 792px */
+                max-width: calc(720px * var(--page-width-expansion-factor)); /* 大约 792px */
+            }
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                /* 原来可能是 960px 或 970px */
+                /* max-width: calc(960px * 1.07); /* 大约 1056px */
+                max-width: calc(960px * var(--page-width-expansion-factor)); /* 大约 1056px */
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                /* 原来可能是 1140px */
+                /* max-width: calc(1140px * 1.07); /* 大约 1254px */
+                max-width: calc(1140px * var(--page-width-expansion-factor)); /* 大约 1254px */
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .container {
+                /* 原来可能是 1320px (Bootstrap 5.3) */
+                /* max-width: calc(1320px * 1.07); /* 大约 1452px */
+                max-width: calc(1320px * var(--page-width-expansion-factor)); /* 大约 1452px */
+            }
+        }
+
+        /* 如果你希望在非常宽的屏幕上也保持 10% 的增加，
+           可以设置一个非常大的 min-width 媒体查询 */
+        @media (min-width: 2000px) {
+            /* 选择一个远大于你屏幕宽度的值 */
+            .container {
+                /* 基于 1320px 计算 */
+                /* max-width: calc(1320px * 1.07); /* 大约 1452px */
+                max-width: calc(1320px * var(--page-width-expansion-factor)); /* 大约 1452px */
+                /* 或者如果你想让它更宽，可以设置一个固定值，例如 */
+                /* max-width: 1800px; */
+            }
+        }
+
+        /* --- --- */
     </style>
 </head>
 <body>
 <div class="container mt-4">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>回测分析 - 任务ID: <span id="taskName"></span></h2>
         <a href="backtest-list.html" class="btn btn-primary">返回任务列表</a>
     </div>
-
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
@@ -92,7 +274,6 @@
             </div>
         </div>
     </div>
-
     <!-- 净值 K线图 -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
@@ -108,7 +289,6 @@
             </div>
         </div>
     </div>
-
     <!-- 收益率 K线图 -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
@@ -124,21 +304,24 @@
             </div>
         </div>
     </div>
-
     <!-- 持仓记录 -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
              data-bs-target="#positionCollapse"
              aria-expanded="true">
-            <span>当日持仓记录</span>
+            <div>
+                <span>当日持仓记录</span>
+                <span class="record-count" id="positionRecordCount"></span> <!-- 计数显示 -->
+            </div>
             <span class="collapse-icon">−</span>
         </div>
         <div id="positionCollapse" class="collapse show">
             <div class="card-body">
-                <table class="table table-bordered" id="positionTable">
+                <table class="table table-bordered table-hover" id="positionTable"> <!-- 添加 table-hover -->
                     <thead>
                     <tr>
+                        <th class="index-column">序号</th> <!-- 序号表头 -->
                         <th onclick="sortTable('stockCode', 'position')">股票代码<span class="sort-icon"
                                                                                        id="sortStockCodePosition"></span>
                         </th>
@@ -169,11 +352,17 @@
                         <th onclick="sortTable('positionPct', 'position')">仓位占比（%）<span class="sort-icon"
                                                                                             id="sortPositionPctPosition"></span>
                         </th>
-                        <th onclick="sortTable('unrealizedPnl', 'position')">浮动盈亏<span class="sort-icon"
-                                                                                           id="sortUnrealizedPnlPosition"></span>
+                        <th onclick="sortTable('capTotalPnl', 'position')">累计盈亏<span class="sort-icon"
+                                                                                         id="sortCapTotalPnlPosition"></span>
                         </th>
-                        <th onclick="sortTable('unrealizedPnlPct', 'position')">盈亏率(%)<span class="sort-icon"
-                                                                                               id="sortUnrealizedPnlPctPosition"></span>
+                        <th onclick="sortTable('capTotalPnlPct', 'position')">累计盈亏率(%)<span class="sort-icon"
+                                                                                                 id="sortCapTotalPnlPctPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTodayPnl', 'position')">当日盈亏<span class="sort-icon"
+                                                                                         id="sortCapTodayPnlPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTodayPnlPct', 'position')">当日盈亏率(%)<span class="sort-icon"
+                                                                                                 id="sortCapTodayPnlPctPosition"></span>
                         </th>
                         <th onclick="sortTable('buyDate', 'position')">买入日期<span class="sort-icon"
                                                                                      id="sortBuyDatePosition"></span>
@@ -190,43 +379,72 @@
             </div>
         </div>
     </div>
-
-    <!-- 交易记录 -->
+    <!-- 当日清仓记录 -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
-             data-bs-target="#tradeCollapse"
+             data-bs-target="#clearPositionCollapse"
              aria-expanded="true">
-            <span>当日交易记录</span>
+            <div>
+                <span>当日清仓记录</span>
+                <span class="record-count" id="clearPositionRecordCount"></span> <!-- 计数显示 -->
+            </div>
             <span class="collapse-icon">−</span>
         </div>
-        <div id="tradeCollapse" class="collapse show">
+        <div id="clearPositionCollapse" class="collapse show">
             <div class="card-body">
-                <table class="table table-bordered" id="tradeTable">
+                <table class="table table-bordered table-hover" id="clearPositionTable"> <!-- 添加 table-hover -->
                     <thead>
                     <tr>
-                        <th onclick="sortTable('tradeDate', 'trade')">交易日期<span class="sort-icon"
-                                                                                    id="sortTradeDateTrade"></span></th>
-                        <th onclick="sortTable('tradeType', 'trade')">B/S类型<span class="sort-icon"
-                                                                                   id="sortTradeTypeTrade"></span></th>
-                        <th onclick="sortTable('tradeSignal', 'trade')">交易信号<span class="sort-icon"
-                                                                                      id="sortTradeSignalTrade"></span>
+                        <th class="index-column">序号</th> <!-- 序号表头 -->
+                        <th onclick="sortTable('stockCode', 'clearPosition')">股票代码<span class="sort-icon"
+                                                                                            id="sortStockCodeClearPosition"></span>
                         </th>
-                        <th onclick="sortTable('stockCode', 'trade')">股票代码<span class="sort-icon"
-                                                                                    id="sortStockCodeTrade"></span></th>
-                        <th onclick="sortTable('stockName', 'trade')">股票名称<span class="sort-icon"
-                                                                                    id="sortStockNameTrade"></span></th>
-                        <th onclick="sortTable('price', 'trade')">交易价格<span class="sort-icon"
-                                                                                id="sortPriceTrade"></span></th>
-                        <th onclick="sortTable('quantity', 'trade')">交易数量<span class="sort-icon"
-                                                                                   id="sortQuantityTrade"></span></th>
-                        <th onclick="sortTable('amount', 'trade')">交易金额<span class="sort-icon"
-                                                                                 id="sortAmountTrade"></span></th>
-                        <th onclick="sortTable('positionPct', 'trade')">仓位占比（%）<span class="sort-icon"
-                                                                                         id="sortPositionPctTrade"></span>
+                        <th onclick="sortTable('tradeDate', 'clearPosition')">交易日<span class="sort-icon"
+                                                                                          id="sortTradeDateClearPosition"></span>
                         </th>
-                        <th onclick="sortTable('fee', 'trade')">交易费用<span class="sort-icon"
-                                                                              id="sortFeeTrade"></span>
+                        <th onclick="sortTable('stockName', 'clearPosition')">股票名称<span class="sort-icon"
+                                                                                            id="sortStockNameClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('blockNamePath', 'clearPosition')">普通行业（LV2）<span class="sort-icon"
+                                                                                                     id="sortBlockNamePathClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('avgCostPrice', 'clearPosition')">成本<span class="sort-icon"
+                                                                                           id="sortAvgCostPriceClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('closePrice', 'clearPosition')">收盘价<span class="sort-icon"
+                                                                                           id="sortClosePriceClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('quantity', 'clearPosition')">清仓数量<span class="sort-icon"
+                                                                                           id="sortQuantityClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('avlQuantity', 'clearPosition')">可用数量<span class="sort-icon"
+                                                                                              id="sortAvlQuantityClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('marketValue', 'clearPosition')">市值<span class="sort-icon"
+                                                                                          id="sortMarketValueClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('positionPct', 'clearPosition')">仓位占比（%）<span class="sort-icon"
+                                                                                                 id="sortPositionPctClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTotalPnl', 'clearPosition')">累计盈亏<span class="sort-icon"
+                                                                                              id="sortCapTotalPnlClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTotalPnlPct', 'clearPosition')">累计盈亏率(%)<span class="sort-icon"
+                                                                                                      id="sortCapTotalPnlPctClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTodayPnl', 'clearPosition')">当日盈亏<span class="sort-icon"
+                                                                                              id="sortCapTodayPnlClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('capTodayPnlPct', 'clearPosition')">当日盈亏率(%)<span class="sort-icon"
+                                                                                                      id="sortCapTodayPnlPctClearPosition"></span>
+                        </th>
+                        <!-- 修复结束 -->
+                        <th onclick="sortTable('buyDate', 'clearPosition')">买入日期<span class="sort-icon"
+                                                                                          id="sortBuyDateClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('holdingDays', 'clearPosition')">持仓天数<span class="sort-icon"
+                                                                                              id="sortHoldingDaysClearPosition"></span>
                         </th>
                     </tr>
                     </thead>
@@ -237,14 +455,72 @@
             </div>
         </div>
     </div>
-
+    <!-- 交易记录 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse"
+             data-bs-target="#tradeCollapse"
+             aria-expanded="true">
+            <div>
+                <span>当日交易记录</span>
+                <span class="record-count" id="tradeRecordCount"></span>
+            </div>
+            <span class="collapse-icon">−</span>
+        </div>
+        <div id="tradeCollapse" class="collapse show">
+            <div class="card-body">
+                <!-- 确保 table-responsive 类用于允许水平滚动 -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="tradeTable">
+                        <thead>
+                        <tr>
+                            <!-- 表头内容 -->
+                            <th class="index-column">序号</th>
+                            <th onclick="sortTable('tradeDate', 'trade')">交易日期<span class="sort-icon"
+                                                                                        id="sortTradeDateTrade"></span>
+                            </th>
+                            <th onclick="sortTable('tradeType', 'trade')">B/S类型<span class="sort-icon"
+                                                                                       id="sortTradeTypeTrade"></span>
+                            </th>
+                            <th onclick="sortTable('tradeSignalDesc', 'trade')">交易信号<span class="sort-icon"
+                                                                                              id="sortTradeSignalDescTrade"></span>
+                            </th>
+                            <th onclick="sortTable('stockCode', 'trade')">股票代码<span class="sort-icon"
+                                                                                        id="sortStockCodeTrade"></span>
+                            </th>
+                            <th onclick="sortTable('stockName', 'trade')">股票名称<span class="sort-icon"
+                                                                                        id="sortStockNameTrade"></span>
+                            </th>
+                            <th onclick="sortTable('price', 'trade')">交易价格<span class="sort-icon"
+                                                                                    id="sortPriceTrade"></span></th>
+                            <th onclick="sortTable('quantity', 'trade')">交易数量<span class="sort-icon"
+                                                                                       id="sortQuantityTrade"></span>
+                            </th>
+                            <th onclick="sortTable('amount', 'trade')">交易金额<span class="sort-icon"
+                                                                                     id="sortAmountTrade"></span></th>
+                            <th onclick="sortTable('positionPct', 'trade')">仓位占比（%）<span class="sort-icon"
+                                                                                             id="sortPositionPctTrade"></span>
+                            </th>
+                            <th onclick="sortTable('fee', 'trade')">交易费用<span class="sort-icon"
+                                                                                  id="sortFeeTrade"></span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- 个股K线图 -->
     <div class="card mb-4 d-none" id="stockChartCard">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
              data-bs-target="#stockChartCollapse"
              aria-expanded="true">
-            <span>个股K线图</span>
+            <!-- <span>个股K线图</span> -->
+            <span>个股K线图 - <span id="stock_kline"></span></span>
             <span class="collapse-icon">−</span>
         </div>
         <div id="stockChartCollapse" class="collapse show">
@@ -253,21 +529,24 @@
             </div>
         </div>
     </div>
-
     <!-- B/S详情 -->
     <div class="card mb-4 d-none" id="bsDetailsCard">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
              data-bs-target="#bsDetailsCollapse"
              aria-expanded="true">
-            <span>B/S详情 - <span id="kline_bs_record"></span></span>
+            <div>
+                <span>B/S详情 - <span id="kline_bs_record"></span></span>
+                <span class="record-count" id="bsDetailsRecordCount"></span> <!-- 计数显示 -->
+            </div>
             <span class="collapse-icon">−</span>
         </div>
         <div id="bsDetailsCollapse" class="collapse show">
             <div class="card-body">
-                <table class="table table-bordered" id="bsDetailsTable">
+                <table class="table table-bordered table-hover" id="bsDetailsTable"> <!-- 添加 table-hover -->
                     <thead>
                     <tr>
+                        <th class="index-column">序号</th> <!-- 序号表头 -->
                         <th>B/S类型</th>
                         <th>日期</th>
                         <th>价格</th>
@@ -286,79 +565,115 @@
             </div>
         </div>
     </div>
-
 </div>
-
 <script>
     let analysis = null;
     let currentDate = '';
     let stockAnalysis = null;
-
     const taskId = new URLSearchParams(window.location.search).get('taskId');
     // 修复：正确获取图表容器元素
     const returnChartDom = document.querySelector('#returnChartCollapse #returnChart');
     const navChartDom = document.querySelector('#navChartCollapse #navChart');
-
-    // 存储排序状态
+    // 存储排序状态 - 设置默认排序为 positionPct 降序
     let sortState = {
-        position: {column: null, order: 'asc'},
-        trade: {column: null, order: 'asc'}
+        position: {column: 'positionPct', order: 'desc'}, // 默认按仓位占比倒序
+        trade: {column: 'positionPct', order: 'desc'},    // 默认按仓位占比倒序
+        clearPosition: {column: 'positionPct', order: 'desc'} // 默认按仓位占比倒序
     };
 
     // 更新排序图标函数
     function updateSortIcon(tableType) {
         const state = sortState[tableType];
-        const iconIdPrefix = `sort${state.column.charAt(0).toUpperCase() + state.column.slice(1)}${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-
-        if (iconElement) {
-            iconElement.textContent = state.order === 'asc' ? '↑' : '↓';
-        }
-
-        // 清除其他列的排序图标
-        const allIcons = document.querySelectorAll(`#positionTable th span.sort-icon, #tradeTable th span.sort-icon`);
+        // 清除所有图标
+        const allIcons = document.querySelectorAll(`#${tableType === 'position' ? 'positionTable' : tableType === 'trade' ? 'tradeTable' : 'clearPositionTable'} th span.sort-icon`);
         allIcons.forEach(icon => {
-            if (icon !== iconElement) {
-                icon.textContent = '';
-            }
+            icon.textContent = '';
         });
+        if (state.column) {
+            const iconIdPrefix = `sort${state.column.charAt(0).toUpperCase() + state.column.slice(1)}${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`;
+            const iconElement = document.getElementById(iconIdPrefix);
+            if (iconElement) {
+                iconElement.textContent = state.order === 'asc' ? '↑' : '↓';
+            }
+        }
     }
 
-    // 初始化排序图标函数
-    function initializeSortIcons() {
-        ['position', 'trade'].forEach(tableType => {
-            const state = sortState[tableType];
-            if (state.column) {
-                updateSortIcon(tableType);
-            }
+    // 初始化排序图标函数 (在数据加载后调用)
+    function initializeSortIconsAfterLoad() {
+        ['position', 'clearPosition', 'trade'].forEach(tableType => {
+            updateSortIcon(tableType);
         });
     }
 
     // 排序函数：仅触发排序，不实际排序
     function sortTable(column, tableType) {
         const state = sortState[tableType];
-        state.order = state.column === column ? (state.order === 'asc' ? 'desc' : 'asc') : 'asc';
+        state.order = state.column === column ? (state.order === 'asc' ? 'desc' : 'asc') : 'desc';
         state.column = column;
-
         // 更新排序图标
         updateSortIcon(tableType);
-
         // 触发重新渲染
         if (tableType === 'position') {
             showPositionRecords(currentDate); // 使用当前日期重新加载并排序
-        } else {
+        } else if (tableType === 'clearPosition') {
+            showClearPositionRecords(currentDate);
+        } else if (tableType === 'trade') {
             showTradeRecords(currentDate);
         }
     }
 
+    // --- 新增函数：预排序数据 ---
+    function preSortRecords(tableType) {
+        if (!analysis) return;
+        const state = sortState[tableType];
+        const column = state.column;
+        const order = state.order;
+        let listToSort = [];
+        if (tableType === 'position') {
+            listToSort = analysis.positionRecordList || [];
+        } else if (tableType === 'clearPosition') {
+            listToSort = analysis.clearPositionRecordList || [];
+        } else if (tableType === 'trade') {
+            listToSort = analysis.tradeRecordList || [];
+        }
+        if (column) {
+            listToSort.sort((a, b) => {
+                const valA = a[column];
+                const valB = b[column];
+                let comparison = 0;
+                // 数字类型优先比较
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    comparison = valA - valB;
+                } else if (typeof valA === 'string' && typeof valB === 'string') {
+                    comparison = valA.localeCompare(valB);
+                } else {
+                    // 处理类型不一致或为 null/undefined 的情况
+                    if (valA == null && valB == null) comparison = 0;
+                    else if (valA == null) comparison = -1;
+                    else if (valB == null) comparison = 1;
+                    else comparison = String(valA).localeCompare(String(valB));
+                }
+                return order === 'desc' ? -comparison : comparison;
+            });
+        }
+        // 注意：sort 是原地修改，所以 analysis 中的列表已经被排序了
+    }
 
+    // --- 新增函数：加载并显示指定日期的记录 ---
+    function loadAndShowRecordsForDate(date) {
+        currentDate = date; // 更新当前日期
+        showPositionRecords(date);
+        showClearPositionRecords(date);
+        showTradeRecords(date);
+    }
+
+    // --- ---
     function renderTaskInfo(task) {
         document.getElementById('taskIdCell').textContent = task.id;
         document.getElementById('buyStrategyCell').textContent = task.buyStrategy || '-';
         document.getElementById('sellStrategyCell').textContent = task.sellStrategy || '-';
         document.getElementById('topBlockStrategyCell').textContent = task.topBlockStrategy || '-';
     }
-
 
     function loadAnalysis() {
         ApiUtils.fetch(`/api/backtest/analysis?taskId=${taskId}`)
@@ -368,39 +683,31 @@
                     alert('加载失败: ' + data.msg);
                     return;
                 }
-
                 analysis = data.data;
-
                 // 渲染任务信息
                 if (analysis.task) {
                     renderTaskInfo(analysis.task);
                 }
-
                 // 任务ID
                 document.getElementById('taskName').textContent = `${taskId}`;
-
                 // ✅ 修复：确保 tradeDate 一致
                 const dailyReturns = analysis.dailyReturnList;
                 const tradeDates = dailyReturns.map(item => item.tradeDate);
-
                 // ✅ 过滤 tradeRecordList 和 positionRecordList，只保留与 dailyReturnList 中 tradeDate 匹配的数据
                 analysis.tradeRecordList = analysis.tradeRecordList.filter(item => tradeDates.includes(item.tradeDate));
                 analysis.positionRecordList = analysis.positionRecordList.filter(item => tradeDates.includes(item.tradeDate));
-
+                analysis.clearPositionRecordList = analysis.clearPositionRecordList.filter(item => tradeDates.includes(item.tradeDate));
                 const dates = tradeDates;
                 const returns = dailyReturns.map(item => item.dailyReturn * 100); // 将 dailyReturn 转换为百分比
                 const navs = dailyReturns.map(item => item.nav);
-
                 // 初始化图表
                 const returnChart = echarts.init(returnChartDom);
                 const navChart = echarts.init(navChartDom);
-
                 // 计算净值图表的 Y 轴最小值
                 const minNav = Math.min(...navs);
                 // const minYAxis = minNav > 0.9 ? 1 : Math.max(minNav - 0.1, 0); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 // const minYAxis = Math.max(minNav - 0.1, 0).toFixed(2); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 const minYAxis = (Math.floor(minNav * 10) / 10 + (minNav * 1000 % 10 >= 5 ? .05 : 0)).toFixed(2);
-
                 // 收益率 K线图
                 const returnOption = {
                     title: {text: '收益率'},
@@ -430,7 +737,6 @@
                     grid: {right: 10}
                 };
                 returnChart.setOption(returnOption);
-
                 // 净值 K线图
                 const navOption = {
                     title: {text: '净值'},
@@ -487,31 +793,27 @@
                     grid: {right: 10}
                 };
                 navChart.setOption(navOption);
-
                 // 绑定两个图表的点击事件
                 returnChart.on('click', function (params) {
                     const date = dates[params.dataIndex];
-                    currentDate = date;
-                    showPositionRecords(date);
-                    showTradeRecords(date);
+                    loadAndShowRecordsForDate(date); // 使用新函数
                 });
-
                 navChart.on('click', function (params) {
                     const date = dates[params.dataIndex];
-                    currentDate = date;
-                    showPositionRecords(date);
-                    showTradeRecords(date);
+                    loadAndShowRecordsForDate(date); // 使用新函数
                 });
-
+                // --- 在展示数据前，先进行预排序 ---
+                preSortRecords('position');
+                preSortRecords('clearPosition');
+                preSortRecords('trade');
+                // --- ---
                 // 页面加载时展示 最新一条记录
                 if (dates.length > 0) {
                     currentDate = dates[dates.length - 1];
-                    showPositionRecords(currentDate);
-                    showTradeRecords(currentDate);
+                    loadAndShowRecordsForDate(currentDate); // 使用新函数
                 }
-
-                // 初始化排序图标
-                initializeSortIcons();
+                // 初始化排序图标 (在数据加载和预排序后)
+                initializeSortIconsAfterLoad();
             })
             .catch(error => {
                 console.error('接口请求失败:', error);
@@ -519,61 +821,91 @@
             });
     }
 
+    // --- 新增辅助函数：格式化交易信号描述 ---
+    function formatTradeSignalDesc(signalDesc) {
+        if (!signalDesc) {
+            return '-'; // 或者返回空字符串 ''
+        }
+        // 1. 按 '|' 分割
+        const parts = signalDesc.split('|');
+        // 2. 处理每个部分：去除首尾逗号，并用 <br> 连接
+        const formattedParts = parts.map(part => {
+            // 去除开头的逗号
+            let cleanedPart = part.startsWith(',') ? part.substring(1) : part;
+            // 去除结尾的逗号
+            cleanedPart = cleanedPart.endsWith(',') ? cleanedPart.slice(0, -1) : cleanedPart;
+            return cleanedPart;
+        });
+        // 3. 用换行符 <br> 连接各部分
+        return formattedParts.join('<br>');
+    }
 
+    // --- 新增辅助函数：根据数值正负返回样式字符串 ---
+    function getProfitColorStyle(value) {
+        if (value > 0) {
+            return ' style="color: red;"'; // 盈利 - 红色
+        } else if (value < 0) {
+            return ' style="color: teal;"'; // 亏损 - 蓝绿色
+        }
+        return ''; // 0 或其他情况不加样式
+    }
+
+    // --- ---
     // 显示持仓记录
     function showPositionRecords(date) {
         // 修复：正确获取 tbody 元素
         const tbody = document.querySelector('#positionCollapse #positionTable tbody');
+        const countElement = document.getElementById('positionRecordCount'); // 获取计数元素
         if (!tbody) {
             console.error('未找到 #positionTable tbody');
             return;
         }
-
         const state = sortState.position;
         const column = state.column;
         const order = state.order;
-
         tbody.innerHTML = '';
         if (!analysis || !analysis.positionRecordList) {
-            tbody.innerHTML = '<tr><td colspan="13">暂无持仓记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="17">暂无持仓记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
-        // 1. 过滤出当前日期的记录
+        // 1. 过滤出当前日期的记录 (数据已经是预排序状态)
         let filtered = analysis.positionRecordList.filter(item => item.tradeDate === date);
-
-        // 2. 如果有排序字段，则对当前日期的记录进行排序
-        if (column) {
+        // 2. 如果用户有点击排序，则对当前日期的记录进行排序 (保持原有逻辑)
+        if (column && (column !== 'positionPct' || order !== 'desc')) { // 如果不是默认排序，则重新排序
             filtered = [...filtered].sort((a, b) => {
                 const valA = a[column];
                 const valB = b[column];
-
                 // 数字类型
-                if (!isNaN(valA) && !isNaN(valB)) {
+                if (typeof valA === 'number' && typeof valB === 'number') {
                     return order === 'asc' ? valA - valB : valB - valA;
                 }
-
                 // 字符串类型
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     return order === 'asc'
                         ? valA.localeCompare(valB)
                         : valB.localeCompare(valA);
                 }
-
-                return 0;
+                // 处理类型不一致或为 null/undefined 的情况
+                if (valA == null && valB == null) return 0;
+                else if (valA == null) return order === 'asc' ? -1 : 1;
+                else if (valB == null) return order === 'asc' ? 1 : -1;
+                else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
             });
         }
-
         // 3. 渲染表格
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13">该日期无持仓</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="17">该日期无持仓</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
-        filtered.forEach(item => {
+        if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+        filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
+            // --- 修改开始：应用盈亏颜色样式 ---
             tr.innerHTML = `
+                <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td>${item.stockCode}</td>
                 <td>${item.tradeDate}</td>
                 <td>${item.stockName}</td>
@@ -584,10 +916,96 @@
                 <td>${item.avlQuantity}</td>
                 <td>${item.marketValue}</td>
                 <td>${item.positionPct}</td>
-                <td>${item.unrealizedPnl}</td>
-                <td>${item.unrealizedPnlPct}</td>
+                <!-- 累计盈亏 -->
+                <td${getProfitColorStyle(item.capTotalPnl)}>${item.capTotalPnl}</td>
+                <!-- 累计盈亏率(%) -->
+                <td${getProfitColorStyle(item.capTotalPnlPct)}>${item.capTotalPnlPct}</td>
+                <!-- 当日盈亏 -->
+                <td${getProfitColorStyle(item.capTodayPnl)}>${item.capTodayPnl}</td>
+                <!-- 当日盈亏率(%) -->
+                <td${getProfitColorStyle(item.capTodayPnlPct)}>${item.capTodayPnlPct}</td>
                 <td>${item.buyDate}</td>
                 <td>${item.holdingDays}</td>`;
+            // --- 修改结束 ---
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 显示清仓记录
+    function showClearPositionRecords(date) {
+        const tbody = document.querySelector('#clearPositionCollapse #clearPositionTable tbody');
+        const countElement = document.getElementById('clearPositionRecordCount'); // 获取计数元素
+        if (!tbody) {
+            console.error('未找到 #clearPositionTable tbody');
+            return;
+        }
+        const state = sortState.clearPosition;
+        const column = state.column;
+        const order = state.order;
+        tbody.innerHTML = '';
+        if (!analysis || !analysis.clearPositionRecordList) {
+            tbody.innerHTML = '<tr><td colspan="17">暂无清仓记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
+            return;
+        }
+        // 1. 过滤出当前日期的记录 (数据已经是预排序状态)
+        let filtered = analysis.clearPositionRecordList.filter(item => item.tradeDate === date);
+        // 2. 如果用户有点击排序，则对当前日期的记录进行排序 (保持原有逻辑)
+        if (column && (column !== 'positionPct' || order !== 'desc')) { // 如果不是默认排序，则重新排序
+            filtered = [...filtered].sort((a, b) => {
+                const valA = a[column];
+                const valB = b[column];
+                // 数字类型
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return order === 'asc' ? valA - valB : valB - valA;
+                }
+                // 字符串类型
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return order === 'asc'
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
+                // 处理类型不一致或为 null/undefined 的情况
+                if (valA == null && valB == null) return 0;
+                else if (valA == null) return order === 'asc' ? -1 : 1;
+                else if (valB == null) return order === 'asc' ? 1 : -1;
+                else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+            });
+        }
+        // 3. 渲染表格
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="17">该日期无清仓记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
+            return;
+        }
+        if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+        filtered.forEach((item, index) => { // 添加 index 参数
+            const tr = document.createElement('tr');
+            tr.addEventListener('click', () => loadStockInfo(item.stockCode));
+            // --- 修改开始：应用盈亏颜色样式 ---
+            tr.innerHTML = `
+                <td class="index-column">${index + 1}</td> <!-- 序号列 -->
+                <td>${item.stockCode}</td>
+                <td>${item.tradeDate}</td>
+                <td>${item.stockName}</td>
+                <td>${item.blockNamePath}</td>
+                <td>${item.avgCostPrice}</td>
+                <td>${item.closePrice}</td>
+                <td>${item.quantity}</td>
+                <td>${item.avlQuantity}</td>
+                <td>${item.marketValue}</td>
+                <td>${item.positionPct}</td>
+                <!-- 累计盈亏 -->
+                <td${getProfitColorStyle(item.capTotalPnl)}>${item.capTotalPnl}</td>
+                <!-- 累计盈亏率(%) -->
+                <td${getProfitColorStyle(item.capTotalPnlPct)}>${item.capTotalPnlPct}</td>
+                <!-- 当日盈亏 -->
+                <td${getProfitColorStyle(item.capTodayPnl)}>${item.capTodayPnl}</td>
+                <!-- 当日盈亏率(%) -->
+                <td${getProfitColorStyle(item.capTodayPnlPct)}>${item.capTodayPnlPct}</td>
+                <td>${item.buyDate}</td>
+                <td>${item.holdingDays}</td>`;
+            // --- 修改结束 ---
             tbody.appendChild(tr);
         });
     }
@@ -596,59 +1014,63 @@
     function showTradeRecords(date) {
         // 修复：正确获取 tbody 元素
         const tbody = document.querySelector('#tradeCollapse #tradeTable tbody');
+        const countElement = document.getElementById('tradeRecordCount'); // 获取计数元素
         if (!tbody) {
             console.error('未找到 #tradeTable tbody');
             return;
         }
-
         const state = sortState.trade;
         const column = state.column;
         const order = state.order;
-
         tbody.innerHTML = '';
         if (!analysis || !analysis.tradeRecordList) {
-            tbody.innerHTML = '<tr><td colspan="6">暂无交易记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11">暂无交易记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
-        // 1. 过滤出当前日期的记录
+        // 1. 过滤出当前日期的记录 (数据已经是预排序状态)
         let filtered = analysis.tradeRecordList.filter(item => item.tradeDate === date);
-
-        // 2. 如果有排序字段，则对当前日期的记录进行排序
-        if (column) {
+        // 2. 如果用户有点击排序，则对当前日期的记录进行排序 (保持原有逻辑)
+        if (column && (column !== 'positionPct' || order !== 'desc')) { // 如果不是默认排序，则重新排序
             filtered = [...filtered].sort((a, b) => {
                 const valA = a[column];
                 const valB = b[column];
-
                 // 数字类型
-                if (!isNaN(valA) && !isNaN(valB)) {
+                if (typeof valA === 'number' && typeof valB === 'number') {
                     return order === 'asc' ? valA - valB : valB - valA;
                 }
-
                 // 字符串类型
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     return order === 'asc'
                         ? valA.localeCompare(valB)
                         : valB.localeCompare(valA);
                 }
-
-                return 0;
+                // 处理类型不一致或为 null/undefined 的情况
+                if (valA == null && valB == null) return 0;
+                else if (valA == null) return order === 'asc' ? -1 : 1;
+                else if (valB == null) return order === 'asc' ? 1 : -1;
+                else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
             });
         }
-
         // 3. 渲染表格
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">该日期无交易</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11">该日期无交易</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
-        filtered.forEach(item => {
+        if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+        filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
+            // --- 修改开始 ---
+            // 格式化交易信号
+            const formattedSignal = formatTradeSignalDesc(item.tradeSignalDesc);
+
             tr.innerHTML = `
+                <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td>${item.tradeDate}</td>
                 <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
-                <td>${item.tradeSignal}</td>
+                <td class="trade-signal-cell">${formattedSignal}</td>
                 <td>${item.stockCode}</td>
                 <td>${item.stockName}</td>
                 <td>${item.price}</td>
@@ -656,6 +1078,7 @@
                 <td>${item.amount}</td>
                 <td>${item.positionPct}</td>
                 <td>${item.fee}</td>`;
+            // --- 修改结束 ---
             tbody.appendChild(tr);
         });
     }
@@ -665,14 +1088,11 @@
         try {
             const response = await ApiUtils.fetch(`/api/stock/info?stockCode=${stockCode}`);
             const data = await response.json();
-
             if (!data.success) {
                 alert('加载个股信息失败: ' + data.msg);
                 return;
             }
-
             stockAnalysis = data.data;
-
             displayStockChart(stockAnalysis.klineDTOList, stockAnalysis.code, stockAnalysis.name);
             displayBSDetails(stockAnalysis.code);
         } catch (error) {
@@ -683,15 +1103,17 @@
 
     // 展示个股K线图
     function displayStockChart(klines, stockCode, stockName) {
+
+        // 个股K线图 - stockName（stockCode）
+        document.getElementById('stock_kline').textContent = `${stockAnalysis.name}（${stockCode}）`;
+
         // 1. 显示容器
         const card = document.getElementById('stockChartCard');
         card.classList.remove('d-none');
-
         // 2. 清理旧实例并初始化
         const chartDom = document.querySelector('#stockChartCollapse #stockChart');
         echarts.dispose(chartDom);
         const myChart = echarts.init(chartDom);
-
         // 3. 构造数据和配置
         const dates = klines.map(item => item.date);
         const option = {
@@ -745,7 +1167,6 @@
                 }))
             ]
         };
-
         // 4. 渲染并 resize
         myChart.setOption(option);
         setTimeout(() => myChart.resize(), 100);
@@ -767,33 +1188,36 @@
 
     // 展示B/S详情
     function displayBSDetails(stockCode) {
-
-        // B/S详情：stockCode-stockName
+        // B/S详情 - stockName（stockCode）
         document.getElementById('kline_bs_record').textContent = `${stockAnalysis.name}（${stockCode}）`;
-
-
         // 修复：正确获取 tbody 元素
         const tbody = document.querySelector('#bsDetailsCollapse #bsDetailsTable tbody');
+        const countElement = document.getElementById('bsDetailsRecordCount'); // 获取计数元素
         if (!tbody) {
             console.error('未找到 #bsDetailsTable tbody');
             return;
         }
-
         tbody.innerHTML = '';
         if (!analysis || !analysis.tradeRecordList) {
-            tbody.innerHTML = '<tr><td colspan="8">暂无B/S记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10">暂无B/S记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
         const filtered = analysis.tradeRecordList.filter(item => item.stockCode === stockCode);
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">该股票无B/S记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10">该股票无B/S记录</td></tr>'; // 更新 colspan
+            if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-
-        filtered.forEach(item => {
+        if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+        filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
+            // --- 修改开始 ---
+            // 格式化交易信号
+            const formattedSignal = formatTradeSignalDesc(item.tradeSignalDesc);
+
             tr.innerHTML = `
+                <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
                 <td>${item.tradeDate}</td>
                 <td>${item.price}</td>
@@ -802,8 +1226,8 @@
                 <td>${item.positionPct}</td>
                 <td>${item.profitLossAmount}</td>
                 <td>${item.profitLossPct}</td>
-                <td>${item.tradeSignal}</td>
-            `;
+                <td class="trade-signal-cell">${formattedSignal}</td>`;
+            // --- 修改结束 ---
             tbody.appendChild(tr);
         });
 
@@ -818,22 +1242,20 @@
             {id: 'navChartCollapse', icon: 'navChartCollapse'},
             {id: 'returnChartCollapse', icon: 'returnChartCollapse'},
             {id: 'positionCollapse', icon: 'positionCollapse'},
+            {id: 'clearPositionCollapse', icon: 'clearPositionCollapse'},
             {id: 'tradeCollapse', icon: 'tradeCollapse'},
             {id: 'stockChartCollapse', icon: 'stockChartCollapse'},
             {id: 'bsDetailsCollapse', icon: 'bsDetailsCollapse'}
         ];
-
         collapses.forEach(item => {
             const collapseElement = document.getElementById(item.id);
             if (collapseElement) {
                 const collapseHeader = collapseElement.previousElementSibling;
                 const icon = collapseHeader.querySelector('.collapse-icon');
-
                 collapseElement.addEventListener('hide.bs.collapse', function () {
                     icon.textContent = '+';
                     collapseHeader.classList.add('collapsed');
                 });
-
                 collapseElement.addEventListener('show.bs.collapse', function () {
                     icon.textContent = '−';
                     collapseHeader.classList.remove('collapsed');
@@ -841,7 +1263,6 @@
             }
         });
     });
-
     window.onload = loadAnalysis;
 </script>
 </body>
