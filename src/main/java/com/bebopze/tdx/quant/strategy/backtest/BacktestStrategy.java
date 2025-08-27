@@ -1591,6 +1591,7 @@ public class BacktestStrategy {
             positionRecordDO.setStockName(positionInfo.stockName);
             positionRecordDO.setAvgCostPrice(of(avgCost));
             positionRecordDO.setClosePrice(of(closePrice));
+            // 持仓数量
             positionRecordDO.setQuantity(qty);
             positionRecordDO.setAvlQuantity(avlQuantity);
 
@@ -1810,14 +1811,15 @@ public class BacktestStrategy {
 
             positionRecordDO.setAvgCostPrice(of(avgCost));
             positionRecordDO.setClosePrice(of(closePrice));
-            positionRecordDO.setQuantity(0);
+            // 清仓数量
+            positionRecordDO.setQuantity(tr.getQuantity());
             positionRecordDO.setAvlQuantity(0);
 
 
-            // 当前市值 = 持仓数量 x 当前收盘价
+            // 当前市值 = 清仓数量 x 当前收盘价
             positionRecordDO.setMarketValue(of(tr.getQuantity() * closePrice));
 
-            // 仓位占比 = 持仓市值 / 总资金
+            // 仓位占比 = 清仓市值 / 总资金
             BigDecimal positionPct = positionRecordDO.getMarketValue().divide(of(x.get().capital), 8, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
             positionRecordDO.setPositionPct(positionPct);
 

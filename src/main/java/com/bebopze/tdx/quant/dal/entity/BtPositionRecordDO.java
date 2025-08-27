@@ -106,10 +106,10 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal changePct;
 
     /**
-     * 持仓数量
+     * 持仓/清仓数量
      */
     @TableField("quantity")
-    @Schema(description = "持仓数量")
+    @Schema(description = "持仓/清仓数量")
     private Integer quantity;
 
     /**

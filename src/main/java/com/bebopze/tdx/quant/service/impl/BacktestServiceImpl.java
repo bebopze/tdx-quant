@@ -392,15 +392,18 @@ public class BacktestServiceImpl implements BacktestService {
 
         dto.setTask(taskDO);
         dto.setTradeRecordList(btTradeRecordService.listByTaskId(taskId));
-        dto.setPositionRecordList(btPositionRecordService.listByTaskId(taskId));
+
+        List<BtPositionRecordDO> allPositionRecordDOList = btPositionRecordService.listByTaskId(taskId);
+        dto.setPositionRecordList(allPositionRecordDOList.stream().filter(e -> e.getPositionType() == 1).collect(Collectors.toList()));
+        dto.setClearPositionRecordList(allPositionRecordDOList.stream().filter(e -> e.getPositionType() == 2).collect(Collectors.toList()));
+
         dto.setDailyReturnList(btDailyReturnService.listByTaskId(taskId));
-
-
         dto.setDailyDrawdownPctList(dailyDrawdownPctList(dto.getDailyReturnList()));
 
 
         return dto;
     }
+
 
     @Override
     public int delErrTaskByBatchNo(Integer batchNo) {

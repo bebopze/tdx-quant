@@ -36,6 +36,11 @@ public class BacktestAnalysisDTO {
     private List<BtPositionRecordDO> positionRecordList;
 
     /**
+     * 清仓记录
+     */
+    private List<BtPositionRecordDO> clearPositionRecordList;
+
+    /**
      * 收益记录
      */
     private List<BtDailyReturnDO> dailyReturnList;
@@ -47,12 +52,10 @@ public class BacktestAnalysisDTO {
     private List<MaxDrawdownPctDTO> dailyDrawdownPctList;
 
 
-
     // ------------------------------------------------------------------- 持仓主线记录
 
 
     private List<PositionTopBlockDTO> positionTopBlockList;
-
 
 
 }
