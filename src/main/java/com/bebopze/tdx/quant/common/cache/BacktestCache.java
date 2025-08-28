@@ -4,24 +4,22 @@ import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalListener;
-import com.github.benmanes.caffeine.cache.Scheduler;
-import com.github.benmanes.caffeine.cache.stats.CacheStats;
+import com.github.benmanes.caffeine.cache.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -143,24 +141,25 @@ public class BacktestCache {
     //                              3、一律禁用缓存！！！❌❌❌
 
 
-    public final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
-                                                                 .maximumSize(5_000)                                // 内存容量控制（可根据对象大小调整）
-                                                                 .expireAfterWrite(30, TimeUnit.MINUTES)   // 写入后 30分钟过期（TTL）
-                                                                 .expireAfterAccess(5, TimeUnit.MINUTES)   // 最近访问后 5分钟过期（TTI）
-                                                                 .recordStats()                                    // 开启统计（命中率等）
-                                                                 .removalListener(createRemovalListener(1))  // 可选：清理时回调
-                                                                 .scheduler(Scheduler.systemScheduler())          // 使用系统调度器（更精准）
-                                                                 .build();
+    public static final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
+                                                                        .maximumSize(5_000)                                // 内存容量控制（可根据对象大小调整）
+                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)         // 写入后 30分钟过期（TTL）
+                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)    // 最近访问后 5分钟过期（TTI）
+                                                                        .recordStats()                                     // 开启统计（命中率等）
+                                                                        .removalListener(createStatsRemovalListener("stockFunCache", () -> BacktestCache.stockFunCache)) // 可选：清理时回调
+                                                                        .scheduler(Scheduler.systemScheduler())            // 使用系统调度器（更精准）
+                                                                        .build();
 
 
-    public final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
-                                                                 .maximumSize(1_000)
-                                                                 .expireAfterWrite(30, TimeUnit.MINUTES)
-                                                                 .expireAfterAccess(5, TimeUnit.MINUTES)
-                                                                 .recordStats()
-                                                                 .removalListener(createRemovalListener(2))
-                                                                 .scheduler(Scheduler.systemScheduler())
-                                                                 .build();
+    public static final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
+                                                                        .maximumSize(1_000)
+                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                        .recordStats()
+                                                                        .removalListener(createStatsRemovalListener("blockFunCache", () -> BacktestCache.blockFunCache))
+                                                                        // .removalListener((key, value, cause) -> log.info("Cache entry {} was removed due to {}     >>>     stats : {}", key, cause, BacktestCache.blockFunCache.stats()))
+                                                                        .scheduler(Scheduler.systemScheduler())
+                                                                        .build();
 
 
     public StockFun getOrCreateStockFun(String stockCode) {
@@ -171,81 +170,48 @@ public class BacktestCache {
         return stockFunCache.get(stockDO.getCode(), k -> new StockFun(stockDO));
     }
 
-    // 支持 computeIfAbsent 模式（带加载逻辑）
-    public StockFun getOrCreateStockFun(String key, Function<String, StockFun> loader) {
-        return stockFunCache.get(key, loader);
+
+    public BlockFun getOrCreateBlockFun(String blockCode) {
+        return getOrCreateBlockFun(codeBlockMap.get(blockCode));
     }
 
-    public BlockFun getOrCreateBlockFun(String key, Function<String, BlockFun> loader) {
-        return blockFunCache.get(key, loader);
-    }
-
-
-    // 获取统计信息（可用于监控）
-    public CacheStats getStockFunStats(int type) {
-        return type == 1 ? stockFunCache.stats() : blockFunCache.stats();
+    public BlockFun getOrCreateBlockFun(BaseBlockDO blockDO) {
+        return blockFunCache.get(blockDO.getCode(), k -> new BlockFun(k, blockDO));
     }
 
 
     // ====== 可选：移除监听器（用于调试/监控）======
-    private RemovalListener<String, StockFun> createRemovalListener(int type) {
+    @NotNull
+    private static <K, V> RemovalListener<K, V> createStatsRemovalListener(String cacheName,
+                                                                           Supplier<Cache<K, V>> cacheSupplier) {
 
-        return (key, value, cause) -> {
-            // 可记录日志、监控、或资源释放
-            CacheStats stats = getStockFunStats(type);
-            log.info("Cache entry {} was removed due to {}     >>>     stats : {}", key, cause, stats);
-        };
+        // String _cacheName = cacheSupplier.get().getClass().getSimpleName();
+        // Cache<K, V> kvCache = cacheSupplier.get();
+
+        // 可记录日志、监控、或资源释放
+        return (key, value, cause) -> log.info("{} entry [{}] was removed due to {}     >>>     stats : {}", cacheName, key, cause, cacheSupplier.get().stats());
     }
-
-
-//    // ====== 优化后的缓存 Guava ======
-//
-//
-//    public static final com.google.common.cache.Cache<String, StockFun> stockFunCache2 =
-//            com.google.common.cache.CacheBuilder.newBuilder()
-//                                                .maximumSize(5_000)   // 可配置：最大个股数量
-//                                                .expireAfterWrite(10, TimeUnit.MINUTES)
-//                                                .expireAfterAccess(5, TimeUnit.MINUTES)   // 可配置：5分钟未访问即回收
-//                                                .recordStats()
-//                                                .removalListener(createRemovalListener2())
-//                                                .build();
-//
-//    public static final com.google.common.cache.Cache<String, BlockFun> blockFunCache2 =
-//            com.google.common.cache.CacheBuilder.newBuilder()
-//                                                .maximumSize(1_000)
-//                                                .expireAfterWrite(10, TimeUnit.MINUTES)
-//                                                .expireAfterAccess(5, TimeUnit.MINUTES)
-//                                                .recordStats()
-//                                                .removalListener(createRemovalListener2())
-//                                                .build();
-//
-//
-//    private static com.google.common.cache.RemovalListener<String, StockFun> createRemovalListener2() {
-//
-//        return (notification) -> {
-//
-//            // 可记录日志、监控、或资源释放
-//            log.info("Cache entry {} was removed due to {}", notification.getKey(), notification.getCause());
-//        };
-//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    /**
-//     * 主线板块 Cache
-//     *
-//     * date_TopBlockStrategyEnum   /   topBlockCodeSet
-//     */
-//    public final Cache<String, Set<String>> topBlockCache = Caffeine.newBuilder()
-//                                                                    .maximumSize(5_000)
-//                                                                    .expireAfterWrite(10, TimeUnit.MINUTES)
-//                                                                    .expireAfterAccess(5, TimeUnit.MINUTES)
-//                                                                    .recordStats()
-//                                                                    // .removalListener(createRemovalListener())
-//                                                                    // .scheduler(Scheduler.systemScheduler())
-//                                                                    .build();
+    /**
+     * 大盘量化 Cache
+     *
+     * date - QaMarketMidCycleDO
+     */
+    public static final Cache<LocalDate, QaMarketMidCycleDO> marketCache = Caffeine.newBuilder()
+                                                                                   .maximumSize(2_000)
+                                                                                   // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                   .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                                   .recordStats()
+                                                                                   .removalListener(createStatsRemovalListener("marketCache", () -> BacktestCache.marketCache))
+                                                                                   .scheduler(Scheduler.systemScheduler())
+                                                                                   .build();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -253,24 +219,24 @@ public class BacktestCache {
      *
      * date     /     TopBlockStrategyEnum - topBlockCodeSet
      */
-    public final Cache<LocalDate, Map<TopBlockStrategyEnum, Set<String>>> topBlockCache = Caffeine.newBuilder()
-                                                                                                  .maximumSize(1_000)
-                                                                                                  .expireAfterWrite(10, TimeUnit.MINUTES)
-                                                                                                  .expireAfterAccess(5, TimeUnit.MINUTES)
-                                                                                                  .recordStats()
-                                                                                                  // .removalListener(createRemovalListener())
-                                                                                                  // .scheduler(Scheduler.systemScheduler())
-                                                                                                  .build();
+    public static final Cache<LocalDate, Map<TopBlockStrategyEnum, Set<String>>> topBlockCache = Caffeine.newBuilder()
+                                                                                                         .maximumSize(1_000)
+                                                                                                         // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                                         .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                                                         .recordStats()
+                                                                                                         .removalListener(createStatsRemovalListener("topBlockCache", () -> BacktestCache.topBlockCache))
+                                                                                                         .scheduler(Scheduler.systemScheduler())
+                                                                                                         .build();
 
 
-    public final Cache<String, Set<String>> stockCode_topBlockCache = Caffeine.newBuilder()
-                                                                              .maximumSize(5_000)
-                                                                              .expireAfterWrite(60, TimeUnit.MINUTES)
-                                                                              .expireAfterAccess(30, TimeUnit.MINUTES)
-                                                                              .recordStats()
-                                                                              // .removalListener(createRemovalListener())
-                                                                              // .scheduler(Scheduler.systemScheduler())
-                                                                              .build();
+    public static final Cache<String, Set<String>> stockCode_topBlockCache = Caffeine.newBuilder()
+                                                                                     .maximumSize(5_000)
+                                                                                     .expireAfterWrite(60, TimeUnit.MINUTES)
+                                                                                     .expireAfterAccess(30, TimeUnit.MINUTES)
+                                                                                     .recordStats()
+                                                                                     .removalListener(createStatsRemovalListener("stockCode_topBlockCache", () -> BacktestCache.stockCode_topBlockCache))
+                                                                                     .scheduler(Scheduler.systemScheduler())
+                                                                                     .build();
 
 
     // -----------------------------------------------------------------------------------------------------------------
