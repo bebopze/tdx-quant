@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @MapperScan("com.bebopze.tdx.quant.dal.mapper")
 @EnableScheduling
 @EnableCaching
+@EnableRetry
 public class TdxQuantApp {
 
 
@@ -42,18 +44,7 @@ public class TdxQuantApp {
 
 
         application.run(args);
-
-
-//        // 阻止程序启动后停止，如果应用内 存在@Scheduled注解的定时任务，则无需手动阻止程序停止
-//        new Thread(() -> {
-//            synchronized (TdxQuantApp.class) {
-//                try {
-//                    TdxQuantApp.class.wait();
-//                } catch (Throwable e) {
-//
-//                }
-//            }
-//        }).start();
     }
+
 
 }
