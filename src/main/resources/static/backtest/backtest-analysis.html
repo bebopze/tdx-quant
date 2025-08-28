@@ -349,7 +349,7 @@
                         <th onclick="sortTable('marketValue', 'position')">市值<span class="sort-icon"
                                                                                      id="sortMarketValuePosition"></span>
                         </th>
-                        <th onclick="sortTable('positionPct', 'position')">仓位占比（%）<span class="sort-icon"
+                        <th onclick="sortTable('positionPct', 'position')">仓位占比(%)<span class="sort-icon"
                                                                                             id="sortPositionPctPosition"></span>
                         </th>
                         <th onclick="sortTable('capTotalPnl', 'position')">累计盈亏<span class="sort-icon"
@@ -424,7 +424,7 @@
                         <th onclick="sortTable('marketValue', 'clearPosition')">市值<span class="sort-icon"
                                                                                           id="sortMarketValueClearPosition"></span>
                         </th>
-                        <th onclick="sortTable('positionPct', 'clearPosition')">仓位占比（%）<span class="sort-icon"
+                        <th onclick="sortTable('positionPct', 'clearPosition')">仓位占比(%)<span class="sort-icon"
                                                                                                  id="sortPositionPctClearPosition"></span>
                         </th>
                         <th onclick="sortTable('capTotalPnl', 'clearPosition')">累计盈亏<span class="sort-icon"
@@ -498,7 +498,7 @@
                             </th>
                             <th onclick="sortTable('amount', 'trade')">交易金额<span class="sort-icon"
                                                                                      id="sortAmountTrade"></span></th>
-                            <th onclick="sortTable('positionPct', 'trade')">仓位占比（%）<span class="sort-icon"
+                            <th onclick="sortTable('positionPct', 'trade')">仓位占比(%)<span class="sort-icon"
                                                                                              id="sortPositionPctTrade"></span>
                             </th>
                             <th onclick="sortTable('fee', 'trade')">交易费用<span class="sort-icon"
@@ -552,9 +552,9 @@
                         <th>价格</th>
                         <th>数量</th>
                         <th>成交金额</th>
-                        <th>仓位占比（%）</th>
+                        <th>仓位占比(%)</th>
                         <th>盈亏额</th>
-                        <th>盈亏率（%）</th>
+                        <th>盈亏率(%)</th>
                         <th>交易信号</th>
                     </tr>
                     </thead>
@@ -1203,16 +1203,22 @@
             if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
-        const filtered = analysis.tradeRecordList.filter(item => item.stockCode === stockCode);
+
+        const filtered = analysis.tradeRecordList
+            // 匹配 选中个股
+            .filter(item => item.stockCode === stockCode)
+            // 根据 交易日期 升序
+            .sort((a, b) => a.tradeDate.localeCompare(b.tradeDate));
+
         if (filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10">该股票无B/S记录</td></tr>'; // 更新 colspan
             if (countElement) countElement.textContent = '(0)'; // 更新计数
             return;
         }
         if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+
         filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
-            // --- 修改开始 ---
             // 格式化交易信号
             const formattedSignal = formatTradeSignalDesc(item.tradeSignalDesc);
 
@@ -1227,10 +1233,8 @@
                 <td>${item.profitLossAmount}</td>
                 <td>${item.profitLossPct}</td>
                 <td class="trade-signal-cell">${formattedSignal}</td>`;
-            // --- 修改结束 ---
             tbody.appendChild(tr);
         });
-
         document.getElementById('bsDetailsCard').classList.remove('d-none');
     }
 
