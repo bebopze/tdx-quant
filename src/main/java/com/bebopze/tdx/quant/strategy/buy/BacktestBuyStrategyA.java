@@ -106,7 +106,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 String stockCode = stockDO.getCode();
 
 
-                StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                StockFun fun = data.getOrCreateStockFun(stockDO);
 
                 ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
                 Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
@@ -346,14 +346,14 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 大盘量化
-        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
-        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
+        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
 
 
         // 大盘-牛熊：1-牛市；2-熊市；
-        Integer marketBullBearStatus = qaMarketMidCycleDO.getMarketBullBearStatus();
+        Integer marketBullBearStatus = marketInfo.getMarketBullBearStatus();
         // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
-        Integer marketMidStatus = qaMarketMidCycleDO.getMarketMidStatus();
+        Integer marketMidStatus = marketInfo.getMarketMidStatus();
 
 
         // 大盘底
@@ -428,7 +428,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
             // BUY策略   ->   已完成init
-            StockFun fun = data.stockFunCache.getIfPresent(code);
+            StockFun fun = data.getOrCreateStockFun(code);
 
 
             KlineArrDTO klineArrDTO = fun.getKlineArrDTO();

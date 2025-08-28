@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -96,7 +97,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaMarketMidCycleDO marketInfo = marketService.marketInfo(tradeDate);
+        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
+        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
 
         // 大盘-牛熊：1-牛市；2-熊市；
         Integer marketBullBearStatus = marketInfo.getMarketBullBearStatus();
@@ -599,7 +601,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             String blockCode = blockDO.getCode();
 
 
-            BlockFun fun = data.blockFunCache.get(blockCode, x -> new BlockFun(x, blockDO));
+            BlockFun fun = data.getOrCreateBlockFun(blockDO);
 
 
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();

@@ -348,7 +348,7 @@ public class BacktestSellStrategy implements SellStrategy {
      */
     private boolean topBlock_S(String topBlockCode, BacktestCache data, LocalDate tradeDate) {
 
-        BlockFun fun = data.blockFunCache.get(topBlockCode, k -> new BlockFun(k, data.codeBlockMap.get(topBlockCode)));
+        BlockFun fun = data.getOrCreateBlockFun(topBlockCode);
 
 
         ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -388,26 +388,26 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // 大盘量化
-        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
-        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
+        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
 
 
         // 大盘-牛熊：1-牛市；2-熊市；
-        Integer marketBullBearStatus = qaMarketMidCycleDO.getMarketBullBearStatus();
+        Integer marketBullBearStatus = marketInfo.getMarketBullBearStatus();
         // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
-        Integer marketMidStatus = qaMarketMidCycleDO.getMarketMidStatus();
+        Integer marketMidStatus = marketInfo.getMarketMidStatus();
         // MA50占比（%）
-        double ma50Pct = qaMarketMidCycleDO.getMa50Pct().doubleValue();
+        double ma50Pct = marketInfo.getMa50Pct().doubleValue();
         // 底_DAY
-        Integer marketLowDay = qaMarketMidCycleDO.getMarketLowDay();
+        Integer marketLowDay = marketInfo.getMarketLowDay();
         // 个股月多-占比（%）
-        double stockMonthBullPct = qaMarketMidCycleDO.getStockMonthBullPct().doubleValue();
+        double stockMonthBullPct = marketInfo.getStockMonthBullPct().doubleValue();
         // 板块月多-占比（%）
-        double blockMonthBullPct = qaMarketMidCycleDO.getBlockMonthBullPct().doubleValue();
+        double blockMonthBullPct = marketInfo.getBlockMonthBullPct().doubleValue();
         // 差值（新高-新低）
-        int highLowDiff = qaMarketMidCycleDO.getHighLowDiff();
+        int highLowDiff = marketInfo.getHighLowDiff();
         // 右侧S-占比（%）
-        double rightSellPct = qaMarketMidCycleDO.getRightSellPct().doubleValue();
+        double rightSellPct = marketInfo.getRightSellPct().doubleValue();
 
 
         // -------------------------------------------------------------------------------------------------------------
