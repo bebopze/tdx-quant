@@ -24,4 +24,7 @@ public interface IBtPositionRecordService extends IService<BtPositionRecordDO> {
     List<BtPositionRecordDO> listByTaskId(Long taskId);
 
     int deleteByTaskIds(List<Long> taskIdList);
+
+
+    boolean retryBatchSave(List<BtPositionRecordDO> entityList);
 }

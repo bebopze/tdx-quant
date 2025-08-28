@@ -81,17 +81,29 @@
         </dependency>
 
 
+        <!-- actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- actuator -->
 
 
+        <!-- test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- test -->
+
+
+        <!-- retry -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <!-- retry -->
 
 
         <!-- log4j2 -->
@@ -167,12 +179,12 @@
             <groupId>org.apache.shardingsphere</groupId>
             <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
             <version>5.2.1</version>
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.zaxxer</groupId>-->
-<!--                    <artifactId>HikariCP</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
+            <!--            <exclusions>-->
+            <!--                <exclusion>-->
+            <!--                    <groupId>com.zaxxer</groupId>-->
+            <!--                    <artifactId>HikariCP</artifactId>-->
+            <!--                </exclusion>-->
+            <!--            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
@@ -190,12 +202,12 @@
         <!-- feign -->
 
 
-        <!--lombok-->
+        <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <!--lombok-->
+        <!-- lombok -->
 
 
         <!-- jna -->
@@ -230,13 +242,20 @@
         </dependency>
         <!-- guava -->
 
-        <!--json-->
+        <!-- json -->
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
             <version>2.0.57</version>
         </dependency>
-        <!--json-->
+        <!-- json -->
+
+        <!-- cache -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- cache -->
 
 
         <!-- http -->
@@ -297,14 +316,6 @@
             <version>2.5.1</version>
         </dependency>
         <!-- pinyin4j -->
-
-
-        <!-- caffeine -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-        <!-- caffeine -->
 
 
     </dependencies>

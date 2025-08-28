@@ -37,4 +37,7 @@ public interface IBtDailyReturnService extends IService<BtDailyReturnDO> {
     List<Long> listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(Integer batchNo, int totalDays, Double dailyReturn);
 
     int deleteByTaskIds(List<Long> taskIdList);
+
+
+    boolean retrySave(BtDailyReturnDO entity);
 }

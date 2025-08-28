@@ -381,27 +381,17 @@ public class BacktestStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                            每日持仓 -> record
+        //                                            每日持仓/清仓 -> record
         // -------------------------------------------------------------------------------------------------------------
 
 
         // save -> DB
-        // btPositionRecordService.saveBatch(x.get().positionRecordDOList);
-        // btPositionRecordService.saveBatch(x.get().clearPositionRecordDOList);
+        // btPositionRecordService.retryBatchSave(x.get().positionRecordDOList);
+        // btPositionRecordService.retryBatchSave(x.get().clearPositionRecordDOList);
 
-
-        List<BtPositionRecordDO> positionRecordDOList = x.get().positionRecordDOList;
-        List<BtPositionRecordDO> clearPositionRecordDOList = x.get().clearPositionRecordDOList;
-        try {
-            btPositionRecordService.saveBatch(positionRecordDOList);
-        } catch (Exception e) {
-            log.error("{} , {}", JSON.toJSONString(positionRecordDOList), e.getMessage(), e);
-        }
-        try {
-            btPositionRecordService.saveBatch(clearPositionRecordDOList);
-        } catch (Exception e) {
-            log.error("{} , {}", JSON.toJSONString(clearPositionRecordDOList), e.getMessage(), e);
-        }
+        List<BtPositionRecordDO> holdAndClearPosList = Lists.newArrayList(x.get().positionRecordDOList);
+        holdAndClearPosList.addAll(x.get().clearPositionRecordDOList);
+        btPositionRecordService.retryBatchSave(holdAndClearPosList);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -480,7 +470,7 @@ public class BacktestStrategy {
 
 
         // save
-        btTradeRecordService.saveBatch(sell__tradeRecordDO__List);
+        btTradeRecordService.retryBatchSave(sell__tradeRecordDO__List);
     }
 
 
@@ -580,7 +570,7 @@ public class BacktestStrategy {
             sell_tradeRecordDO.setFee(BigDecimal.ZERO);
 
 
-            btTradeRecordService.save(sell_tradeRecordDO);
+            btTradeRecordService.retryBatchSave(Lists.newArrayList(sell_tradeRecordDO));
         }
     }
 
@@ -723,7 +713,7 @@ public class BacktestStrategy {
         }
 
 
-        btTradeRecordService.saveBatch(buy__tradeRecordDO__List);
+        btTradeRecordService.retryBatchSave(buy__tradeRecordDO__List);
     }
 
 
@@ -737,12 +727,12 @@ public class BacktestStrategy {
      */
     private void market__position_limit(LocalDate tradeDate) {
 
-        QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
-        Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
+        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
+        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
 
 
         // 总仓位 - %上限
-        double positionPct = qaMarketMidCycleDO.getPositionPct().doubleValue();
+        double positionPct = marketInfo.getPositionPct().doubleValue();
         x.get().positionLimitRate = positionPct == 0 ? 0 : positionPct / 100;
     }
 
@@ -990,7 +980,7 @@ public class BacktestStrategy {
         dailyReturnDO.setBenchmarkReturn(null);
 
 
-        btDailyReturnService.save(dailyReturnDO);
+        btDailyReturnService.retrySave(dailyReturnDO);
     }
 
 
@@ -1209,10 +1199,11 @@ public class BacktestStrategy {
         List<BtTradeRecordDO> todayHoldingList = Lists.newArrayList();
         // 当日清仓列表             ->   清仓stockCode - 清仓（卖出记录）
         Map<String, BtTradeRecordDO> todayClearMap = Maps.newHashMap();
+        Map<String, BtTradeRecordDO> todayBuyMap = Maps.newHashMap();
 
 
         // 持仓列表、清仓列表
-        holdingList__buyQueues__todayClearedCodes(endTradeDate, tradeRecordList__cache, todayHoldingList, todayClearMap);
+        holdingList__buyQueues__todayClearedCodes(endTradeDate, tradeRecordList__cache, todayHoldingList, todayClearMap, todayBuyMap);
 
 
         // todayHoldingList 中即为“当日未清仓”的买入记录（quantity 已是剩余量）
@@ -1240,7 +1231,7 @@ public class BacktestStrategy {
 
 
         // 4. 构造 当日持仓 对象列表
-        List<BtPositionRecordDO> positionRecordDOList = todayPositionRecordList(taskId, endTradeDate, quantityMap, avlQuantityMap, amountMap, codeInfoMap);
+        List<BtPositionRecordDO> positionRecordDOList = todayPositionRecordList(taskId, endTradeDate, quantityMap, avlQuantityMap, amountMap, codeInfoMap, todayBuyMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1266,11 +1257,13 @@ public class BacktestStrategy {
      * @param tradeRecordList__cache
      * @param todayHoldingList       当日持仓（买入记录）列表   ->   当前B/S（抵消后 -> 未清仓）
      * @param todayClearMap          当日清仓列表             ->   清仓stockCode - 清仓（卖出记录）
+     * @param todayBuyMap
      */
     private void holdingList__buyQueues__todayClearedCodes(LocalDate endTradeDate,
                                                            ThreadLocal<List<BtTradeRecordDO>> tradeRecordList__cache,
                                                            List<BtTradeRecordDO> todayHoldingList,
-                                                           Map<String, BtTradeRecordDO> todayClearMap) {
+                                                           Map<String, BtTradeRecordDO> todayClearMap,
+                                                           Map<String, BtTradeRecordDO> todayBuyMap) {
 
 
         // 构建 FIFO 队列：stockCode -> 队列里存 剩余的买单
@@ -1315,6 +1308,10 @@ public class BacktestStrategy {
                 // 如果 当日卖出 导致持仓为0，则记录 清仓标记
                 if (tr.getTradeDate().isEqual(endTradeDate) && CollectionUtils.isEmpty(queue) /*&& remaining >= 0*/) {
                     todayClearMap.put(code, tr);
+                }
+
+                if (tr.getTradeDate().isEqual(endTradeDate) && CollectionUtils.isNotEmpty(queue) /*&& remaining >= 0*/) {
+                    todayBuyMap.put(code, tr);
                 }
             }
         }
@@ -1416,6 +1413,7 @@ public class BacktestStrategy {
      * @param avlQuantityMap 个股持仓 - 可用数量（T+1）
      * @param amountMap      个股持仓 -   总成本（买入价格 x 买入数量   ->   累加）
      * @param codeInfoMap    个股持仓 - 首次买入Info
+     * @param todayBuyMap
      * @return
      */
     private List<BtPositionRecordDO> todayPositionRecordList(Long taskId,
@@ -1423,7 +1421,8 @@ public class BacktestStrategy {
                                                              Map<String, Integer> quantityMap,
                                                              Map<String, Integer> avlQuantityMap,
                                                              Map<String, Double> amountMap,
-                                                             Map<String, PositionInfo> codeInfoMap) {
+                                                             Map<String, PositionInfo> codeInfoMap,
+                                                             Map<String, BtTradeRecordDO> todayBuyMap) {
 
 
         List<BtPositionRecordDO> positionRecordDOList = Lists.newArrayList();
@@ -1452,8 +1451,8 @@ public class BacktestStrategy {
 
             // 每次B/S   ->   成本/收益/收益率   ->   独立事件（边界）     ==>     否则，上次B/S 亏损  ->  合并计入  本次B/S   =>   亏损 -> 负数bug（总成本 负数 -> 平均成本 负数）     =>     市值 爆减bug
             if (avgCost < 0) {
-                log.error("getDailyPositions - avgCost err     >>>     [{}] [{}] , totalCost : {} , qty : {} , avgCost : {}",
-                          taskId, endTradeDate, totalCost, qty, avgCost);
+                log.error("getDailyPositions - avgCost err     >>>     [{}] {} {} , totalCost : {} , qty : {} , avgCost : {}",
+                          taskId, endTradeDate, stockCode, totalCost, qty, avgCost);
             }
 
 
@@ -1532,7 +1531,7 @@ public class BacktestStrategy {
 
 
                 if (todayPnlPct > 30 || todayPnlPct < -30) {
-                    log.error("{} , {} , todayPnlPct : {}", stockCode, endTradeDate, todayPnlPct);
+                    log.error("todayPositionRecordList - err     >>>     [{}] {} {} , todayPnlPct : {} , todayPnl : {} ,totalCost : {} , prevPos : {} , todayTr : {}", taskId, endTradeDate, stockCode, todayPnlPct, todayPnl, totalCost, JSON.toJSONString(prevPos), JSON.toJSONString(todayBuyMap.get(stockCode)));
 
                     // TODO   发现有 S后 剩余1股 bug
                     todayPnlPct = Math.min(todayPnlPct, 9999.99);
@@ -1635,7 +1634,8 @@ public class BacktestStrategy {
 
 
             if (null == positionRecordDO.getPriceMaxDrawdownPct()) {
-                log.error("{} , {} , {}", stockCode, endTradeDate, JSON.toJSONString(positionRecordDO));
+                log.error("todayPositionRecordList - getPriceMaxDrawdownPct err     >>>     taskId : {} , tradeDate : {} , stockCode : {} , positionRecordDO : {}",
+                          taskId, endTradeDate, stockCode, JSON.toJSONString(positionRecordDO));
             }
 
 
@@ -1744,7 +1744,7 @@ public class BacktestStrategy {
 
 
             if (todayPnlPct > 30 || todayPnlPct < -30) {
-                log.error("{} , {} , todayPnlPct : {}", stockCode, endTradeDate, todayPnlPct);
+                log.error("todayClearPositionRecordList - err     >>>     [{}] {} {} , todayPnlPct : {} , todayPnl : {} ,totalCost : {} , prevPos : {} , todayTr : {}", taskId, endTradeDate, stockCode, todayPnlPct, todayPnl, totalCost, JSON.toJSONString(prevPos), JSON.toJSONString(prevPos));
 
                 // TODO   发现有 S后 剩余1股 bug
                 todayPnlPct = Math.min(todayPnlPct, 9999.99);
@@ -1854,7 +1854,8 @@ public class BacktestStrategy {
 
 
             if (null == positionRecordDO.getPriceMaxDrawdownPct()) {
-                log.error("{} , {} , {}", stockCode, endTradeDate, JSON.toJSONString(positionRecordDO));
+                log.error("todayClearPositionRecordList - getPriceMaxDrawdownPct err     >>>     taskId : {} , tradeDate : {} , stockCode : {} , positionRecordDO : {}",
+                          taskId, endTradeDate, stockCode, JSON.toJSONString(positionRecordDO));
             }
 
 

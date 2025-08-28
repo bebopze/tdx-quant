@@ -4,6 +4,8 @@ import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,10 +28,19 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
         return baseMapper.deleteAll(blockNewId, date);
     }
 
+
+    // @Cacheable(value = "listByBlockNewIdDateAndLimit", key = "#blockNewId + '_' + #date + '_' + #limit", sync = true)
+    @Retryable(
+            value = {Exception.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 3000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
+    )
     @Override
     public List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit) {
         return baseMapper.listByBlockNewIdDateAndLimit(blockNewId, date, limit);
     }
+
 
     @Override
     public QaBlockNewRelaStockHisDO last() {

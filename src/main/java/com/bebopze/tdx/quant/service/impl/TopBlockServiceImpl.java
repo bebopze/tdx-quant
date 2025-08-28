@@ -512,7 +512,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                 BaseStockDO stockDO = data.codeStockMap.getOrDefault(stockCode, baseStockService.getByCode(stockCode));
 
 
-                StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                StockFun fun = data.getOrCreateStockFun(stockDO);
                 Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
@@ -688,7 +688,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                 try {
 
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // N日新高
@@ -752,7 +752,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // N日涨幅
@@ -816,7 +816,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // RPS红（ RPS一线红(95) || RPS双线红(90) || RPS三线红(85) ）
@@ -877,7 +877,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // 二阶段
@@ -939,7 +939,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // 大均线多头
@@ -1000,7 +1000,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(k, stockDO));
+                    StockFun fun = data.getOrCreateStockFun(stockDO);
 
 
                     // 均线大多头
@@ -1076,7 +1076,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                     String blockCode = blockDO.getCode();
 
 
-                    BlockFun fun = data.blockFunCache.get(blockCode, k -> new BlockFun(k, blockDO));
+                    BlockFun fun = data.getOrCreateBlockFun(blockDO);
 
 
                     // value   ->   amo_blockCode_TreeMap
@@ -1209,7 +1209,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                 String blockCode = blockDO.getCode();
 
 
-                BlockFun fun = data.blockFunCache.get(blockCode, k -> new BlockFun(k, blockDO));
+                BlockFun fun = data.getOrCreateBlockFun(blockDO);
 
 
                 // value   ->   amo_blockCode_TreeMap
