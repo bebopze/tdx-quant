@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.mapper.BtDailyReturnMapper;
 import com.bebopze.tdx.quant.dal.service.IBtDailyReturnService;
@@ -28,6 +29,7 @@ import java.util.List;
 public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, BtDailyReturnDO> implements IBtDailyReturnService {
 
 
+    @TotalTime
     @Override
     public BtDailyReturnDO getByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate) {
         return baseMapper.getByTaskIdAndTradeDate(taskId, tradeDate);
@@ -59,6 +61,7 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     }
 
 
+    @TotalTime
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
             value = {Exception.class},

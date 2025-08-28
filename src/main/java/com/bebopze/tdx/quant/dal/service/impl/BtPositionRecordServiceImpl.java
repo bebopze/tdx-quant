@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.dal.mapper.BtPositionRecordMapper;
 import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
@@ -28,6 +29,7 @@ import java.util.List;
 public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMapper, BtPositionRecordDO> implements IBtPositionRecordService {
 
 
+    @TotalTime
     @Override
     public List<BtPositionRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate) {
         return baseMapper.listByTaskIdAndTradeDate(taskId, tradeDate);
@@ -49,6 +51,7 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
     }
 
 
+    @TotalTime
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
             value = {Exception.class},

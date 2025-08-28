@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+
 
 /**
  * <p>
@@ -29,10 +31,11 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
     }
 
 
+    @TotalTime
     // @Cacheable(value = "listByBlockNewIdDateAndLimit", key = "#blockNewId + '_' + #date + '_' + #limit", sync = true)
     @Retryable(
             value = {Exception.class},
-            maxAttempts = 3,
+            maxAttempts = 5,
             backoff = @Backoff(delay = 3000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
     )

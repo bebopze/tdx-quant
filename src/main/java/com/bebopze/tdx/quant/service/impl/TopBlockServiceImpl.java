@@ -27,6 +27,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -239,6 +240,8 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @TotalTime
+    @Cacheable(value = "topBlockRate", key = "#blockNewId + '_' + #date + '_' + #resultType+ '_' + #N", sync = true)
     @Override
     public Map<String, Integer> topBlockRate(int blockNewId, LocalDate date, int resultType, int N) {
 
