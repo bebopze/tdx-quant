@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 
 /**
@@ -61,6 +62,13 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // 定义一个静态的信号量，用于限制并发写入数据库的线程数
+    private static final Semaphore dbWriteSemaphore = new Semaphore(6);
+
+
     @TotalTime
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
@@ -71,19 +79,53 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     )
     @Override
     public boolean retrySave(BtDailyReturnDO entity) {
+        Long taskId = entity.getTaskId();
+        LocalDate tradeDate = entity.getTradeDate();
+
 
         try {
+            // 尝试获取信号量许可，获取不到会阻塞等待
+            dbWriteSemaphore.acquire();
+            log.info("数据库写入许可 - acquire     >>>     taskId : {}, tradeDate : {} , 队列中等待的线程数 : {}",
+                     taskId, tradeDate, dbWriteSemaphore.getQueueLength());
+
+
             return this.save(entity);
+
+
+        } catch (InterruptedException e) {
+
+            // 恢复中断状态
+            Thread.currentThread().interrupt();
+
+
+            String errMsg = String.format("数据库写入许可 - 被中断     >>>     taskId : %s , tradeDate : %s", taskId, tradeDate);
+            log.error(errMsg, e);
+
+
+            throw new RuntimeException(errMsg, e);
+
 
         } catch (Exception ex) {
 
             log.error("dailyReturn save - err     >>>     taskId : {} , tradeDate : {} , entity : {} , errMsg : {}",
-                      entity.getTaskId(), entity.getTradeDate(), JSON.toJSONString(entity), ex.getMessage(), ex);
+                      taskId, tradeDate, JSON.toJSONString(entity), ex.getMessage(), ex);
 
             throw ex;
+
+
+        } finally {
+
+            // 确保在任何情况下都释放信号量许可
+            dbWriteSemaphore.release();
+
+            log.debug("数据库写入许可 - release     >>>     taskId : {} , tradeDate : {}", taskId, tradeDate);
         }
 
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
 }

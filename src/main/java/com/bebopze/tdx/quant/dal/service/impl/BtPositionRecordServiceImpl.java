@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.dal.mapper.BtPositionRecordMapper;
 import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 
 /**
@@ -51,6 +53,13 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // 定义一个静态的信号量，用于限制并发写入数据库的线程数
+    private static final Semaphore dbWriteSemaphore = new Semaphore(6);
+
+
     @TotalTime
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
@@ -61,18 +70,61 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
     )
     @Override
     public boolean retryBatchSave(List<BtPositionRecordDO> entityList) {
+        if (CollectionUtils.isEmpty(entityList)) {
+            return true;
+        }
+
+
+        Long taskId = entityList.get(0).getTaskId();
+        LocalDate tradeDate = entityList.get(0).getTradeDate();
+        int size = entityList.size();
+
 
         try {
+            // 尝试获取信号量许可，获取不到会阻塞等待
+            dbWriteSemaphore.acquire();
+            log.info("数据库写入许可 - acquire     >>>     taskId : {}, tradeDate : {} , size : {} , 队列中等待的线程数 : {}",
+                     taskId, tradeDate, size, dbWriteSemaphore.getQueueLength());
+
+
+            // 获取许可后，执行实际的数据库写入操作
             return this.saveBatch(entityList);
+
+
+        } catch (InterruptedException e) {
+
+            // 恢复中断状态
+            Thread.currentThread().interrupt();
+
+
+            String errMsg = String.format("数据库写入许可 - 被中断     >>>     taskId : %s , tradeDate : %s , size : %s", taskId, tradeDate, size);
+            log.error(errMsg, e);
+
+
+            throw new RuntimeException(errMsg, e);
+
 
         } catch (Exception ex) {
 
             log.error("positionRecord saveBatch - err     >>>     taskId : {} , tradeDate : {} , size : {} , entityList : {} , errMsg : {}",
-                      entityList.get(0).getTaskId(), entityList.get(0).getTradeDate(), entityList.size(), JSON.toJSONString(entityList), ex.getMessage(), ex);
+                      taskId, tradeDate, size, JSON.toJSONString(entityList), ex.getMessage(), ex);
 
             throw ex;
+
+
+        } finally {
+
+            // 确保在任何情况下都释放信号量许可
+            dbWriteSemaphore.release();
+
+            log.debug("数据库写入许可 - release     >>>     taskId : {} , tradeDate : {} , size : {}", taskId, tradeDate, size);
         }
 
     }
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
 }
