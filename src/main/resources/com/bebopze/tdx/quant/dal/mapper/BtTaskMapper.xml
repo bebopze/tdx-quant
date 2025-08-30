@@ -32,7 +32,7 @@
     </select>
 
 
-    <select id="listByBatchNo" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
+    <select id="listByBatchNoAndStatus" resultType="com.bebopze.tdx.quant.dal.entity.BtTaskDO">
 
         SELECT *
 
@@ -44,18 +44,15 @@
             <if test="batchNo != null">
                 AND batch_no = #{batchNo}
             </if>
-            <if test="finish != null and finish == true">
-                AND final_capital IS NOT NULL
-            </if>
-            <if test="finish != null and finish == false">
-                AND final_capital IS NULL
+            <if test="status != null">
+                AND stauts = #{status}
             </if>
         </where>
 
     </select>
 
 
-    <select id="listIdByBatchNo" resultType="long">
+    <select id="listIdByBatchNoAndStatus" resultType="long">
 
         SELECT id
 
@@ -67,11 +64,8 @@
             <if test="batchNo != null">
                 AND batch_no = #{batchNo}
             </if>
-            <if test="finish != null and finish == true">
-                AND final_capital IS NOT NULL
-            </if>
-            <if test="finish != null and finish == false">
-                AND final_capital IS NULL
+            <if test="status != null">
+                AND stauts = #{status}
             </if>
         </where>
 

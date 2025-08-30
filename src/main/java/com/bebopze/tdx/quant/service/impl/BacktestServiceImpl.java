@@ -77,7 +77,6 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // Sell策略 ： 暂时固定
-        // List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
         // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
         List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
 
@@ -136,6 +135,7 @@ public class BacktestServiceImpl implements BacktestService {
                                      progressLog(finalBatchNo, current.incrementAndGet(), total, start);
                                  },
 
+                                 // ThreadPoolType.CPU_INTENSIVE);
                                  ThreadPoolType.IO_INTENSIVE);
 
 
@@ -152,12 +152,12 @@ public class BacktestServiceImpl implements BacktestService {
         return 1L;
     }
 
-    private String getKey(Integer finalBatchNo,
+    private String getKey(Integer batchNo,
                           String topBlockStrategyEnumDesc,
                           List<String> buyConList,
                           List<String> sellConList) {
 
-        return finalBatchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+        return batchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
     }
 
     @Override
@@ -170,8 +170,8 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // Sell策略 ： 暂时固定
-        // List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
-        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+        // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -189,13 +189,9 @@ public class BacktestServiceImpl implements BacktestService {
                               Integer batchNo) {
 
 
-        // List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
-        // List<List<String>> sell_conCombinerList = SellStrategy__ConCombiner.generateCombinations();
-
-
-        // Sell策略 ： 暂时固定
-        List<String> buyConList = Lists.newArrayList("N100日新高", "月多", "RPS一线红");
-        List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
+        // B/S策略
+        List<String> buyConList = Lists.newArrayList("N100日新高", "月多");
+        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -211,7 +207,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
     /**
-     * 中断 -> 恢复执行          =>          过滤 已[finish]   ->   继续执行 未完成（del -> 未进行）/未进行 buyConList
+     * 中断 -> 恢复执行          =>          过滤 已[finish]   ->   继续执行 未完成（del -> 未完成）/未进行 buyConList
      *
      * @param startDate
      * @param endDate
@@ -262,10 +258,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // finish list
-        List<BtTaskDO> finishTaskList = btTaskService.listByBatchNo(batchNo, true);
-        List<List<String>> finishBuyConList = finishTaskList.stream()
-                                                            .map(e -> Arrays.asList(e.getBuyStrategy().split(",")))
-                                                            .collect(Collectors.toList());
+        List<BtTaskDO> finishTaskList = btTaskService.listByBatchNoAndStatus(batchNo, 2);
 
 
         finishTaskList.forEach(e -> {
@@ -307,16 +300,7 @@ public class BacktestServiceImpl implements BacktestService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // -------------------------- 1-进行中（新开任务）
-
-
-        // remove  ->  finish
-        // buyConCombinerList.removeAll(finishBuyConList);
-
-//
-//        log.info("finishBuyConList size : [{}] , todo resumeBuyConList size : [{}]   ,   finishBuyConList : {}   ,   todo resumeBuyConList : [{}]",
-//                 finishBuyConList.size(), buyConCombinerList.size(),
-//                 JSON.toJSONString(finishBuyConList), JSON.toJSONString(buyConCombinerList));
+        // -------------------------- 1-进行中（DEL -> 新开任务）
 
 
         // del errTask
@@ -363,7 +347,7 @@ public class BacktestServiceImpl implements BacktestService {
                 // 每日 - 回测（B/S）  check
                 execCheckBacktestDaily(preTradeDate, tradeDate, taskDO);
             } catch (Exception e) {
-                log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
+                log.error("execCheckBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
             }
         }
 

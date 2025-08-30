@@ -21,7 +21,14 @@ public interface IBtTaskService extends IService<BtTaskDO> {
                                 LocalDateTime startCreateTime,
                                 LocalDateTime endCreateTime);
 
-    List<BtTaskDO> listByBatchNo(Integer batchNo, Boolean finish);
+    /**
+     * listBy   任务批次号、任务状态
+     *
+     * @param batchNo 任务批次号
+     * @param status  任务状态（用于每日 更新至最新交易日）：1-进行中（新开任务）；2-已完成（已更新至 最新交易日）；3-待更新至 最新交易日（之前已完成过）；
+     * @return
+     */
+    List<BtTaskDO> listByBatchNoAndStatus(Integer batchNo, Integer status);
 
     Integer getLastBatchNo();
 

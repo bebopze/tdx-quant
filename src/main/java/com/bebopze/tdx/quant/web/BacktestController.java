@@ -63,8 +63,8 @@ public class BacktestController {
     public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
                                   @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
 
-                                  @Schema(description = "回测-B策略", example = "N100日新高,月多,RPS一线红")
-                                  @RequestParam(defaultValue = "N100日新高,月多,RPS一线红") String buyConList,
+                                  @Schema(description = "回测-B策略", example = "N100日新高,月多")
+                                  @RequestParam(defaultValue = "N100日新高,月多") String buyConList,
 
                                   @Schema(description = "回测-开始时间", example = "2025-01-01")
                                   @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,

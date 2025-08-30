@@ -23,11 +23,11 @@ public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
                                        @Param("endTime") LocalDateTime endTime);
 
 
-    List<BtTaskDO> listByBatchNo(@Param("batchNo") Integer batchNo,
-                                 @Param("finish") Boolean finish);
+    List<BtTaskDO> listByBatchNoAndStatus(@Param("batchNo") Integer batchNo,
+                                          @Param("status") Integer status);
 
-    List<Long> listIdByBatchNo(@Param("batchNo") Integer batchNo,
-                               @Param("finish") Boolean finish);
+    List<Long> listIdByBatchNoAndStatus(@Param("batchNo") Integer batchNo,
+                                        @Param("status") Integer status);
 
 
     Integer lastBatchNo();

@@ -8,16 +8,17 @@ import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.bebopze.tdx.quant.dal.service.IBtTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
+import com.google.common.collect.Lists;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -55,8 +56,8 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
     }
 
     @Override
-    public List<BtTaskDO> listByBatchNo(Integer batchNo, Boolean finish) {
-        return baseMapper.listByBatchNo(batchNo, finish);
+    public List<BtTaskDO> listByBatchNoAndStatus(Integer batchNo, Integer status) {
+        return baseMapper.listByBatchNoAndStatus(batchNo, status);
     }
 
     @Override
@@ -86,7 +87,7 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
 
         // 未完成
-        List<Long> errTaskIdList = baseMapper.listIdByBatchNo(batchNo, false);
+        List<Long> errTaskIdList = baseMapper.listIdByBatchNoAndStatus(batchNo, 1);
         log.info("未完成     >>>     size : {} , errTaskIdList : {}", errTaskIdList.size(), errTaskIdList);
 
 
@@ -119,29 +120,42 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
         IBtTaskService taskService = applicationContext.getBean(IBtTaskService.class);
 
 
-        // del
-        for (int i = 0; i < size; ) {
+//        // del
+//        for (int i = 0; i < size; ) {
+//
+//            List<Long> subList = errTaskIdList.subList(i, Math.min(i += N, size));
+//
+//
+//            try {
+//                delTotal += taskService.delErrTaskByTaskIds(subList);
+//                log.info("delErrTaskByTaskIds suc     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {}", size, i, delTotal, subList);
+//
+//            } catch (Exception e) {
+//                log.error("delErrTaskByTaskIds fail     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, i, delTotal, subList, e.getMessage(), e);
+//            }
+//        }
 
-            List<Long> subList = errTaskIdList.subList(i, Math.min(i += N, size));
 
-
+        AtomicInteger del_total = new AtomicInteger();
+        errTaskIdList.parallelStream().forEach(taskId -> {
             try {
-                delTotal += taskService.delErrTaskByTaskIds(subList);
-                log.info("delErrTaskByTaskIds suc     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {}", size, i, delTotal, subList);
+                int count = taskService.delErrTaskByTaskIds(Lists.newArrayList(taskId));
+                del_total.addAndGet(count);
+                log.info("delErrTaskByTaskIds suc     >>>     size : {} , delTotal : {} , taskIdList : {}", size, del_total.get(), taskId);
 
             } catch (Exception e) {
-                log.error("delErrTaskByTaskIds fail     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, i, delTotal, subList, e.getMessage(), e);
+                log.info("delErrTaskByTaskIds fail     >>>     size : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, del_total.get(), taskId, e.getMessage(), e);
             }
-        }
+        });
 
 
-        return delTotal;
+        return del_total.get();
     }
 
 
     @TotalTime
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    // @Transactional(rollbackFor = Exception.class)       // 已分库分表  ->  已失效
     public int delErrTaskByTaskIds(List<Long> taskIdList) {
 
 
