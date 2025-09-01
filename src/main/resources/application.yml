@@ -11,6 +11,21 @@ spring.mvc.throw-exception-if-no-handler-found: true
 spring.web.resources.add-mappings: false
 
 
+# Actuator
+management.endpoints.web.exposure.include: '*'         # 开放所有     ->     暴露所有 Actuator 端点给 Admin Server (也就是它自己)
+management.endpoint.health.show-details: ALWAYS        # 显示详细的健康信息
+management.endpoint.shutdown.enabled: true             # 如需 /shutdown
+management.metrics.export.prometheus.enabled: true     # 如需 /prometheus
+
+
+# Admin Client
+spring.boot.admin.client.url: http://localhost:7001                    # 注册到 Admin Server 的地址
+spring.boot.admin.client.instance.name: ${spring.application.name}     # 可选，指定实例名称
+spring.boot.admin.client.enabled: false                                # Client 开关（与 @EnableAdminServer 开关  保持一致）
+
+
+
+
 
 # MyBatis-Plus 配置
 mybatis-plus:
