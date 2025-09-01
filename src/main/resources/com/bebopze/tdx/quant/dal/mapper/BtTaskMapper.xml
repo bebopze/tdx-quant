@@ -45,7 +45,7 @@
                 AND batch_no = #{batchNo}
             </if>
             <if test="status != null">
-                AND stauts = #{status}
+                AND status = #{status}
             </if>
         </where>
 
@@ -65,7 +65,7 @@
                 AND batch_no = #{batchNo}
             </if>
             <if test="status != null">
-                AND stauts = #{status}
+                AND status = #{status}
             </if>
         </where>
 
