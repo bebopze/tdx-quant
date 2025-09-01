@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
@@ -149,4 +150,11 @@ public interface TradeService {
      * @param transferAmount 取款金额（T+1 隔日7点可取）
      */
     void quickLowerFinancing(double transferAmount);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    void quickETF(String stockCode, double priceRangePct, int rangeTotal, double amount, TradeTypeEnum tradeTypeEnum);
+
 }

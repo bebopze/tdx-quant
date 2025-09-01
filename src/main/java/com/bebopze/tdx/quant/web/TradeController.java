@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
+import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
@@ -152,6 +153,35 @@ public class TradeController {
                                             @RequestParam double transferAmount) {
 
         tradeService.quickLowerFinancing(transferAmount);
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                      ETF
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "ETF快捷下单   ->   按照 指定价格区间", description = "ETF快捷下单   ->   按照 指定价格区间，逐档 梯次等比下单")
+    @GetMapping(value = "/quickOption/quickETF")
+    public Result<Void> quickETF(@Schema(description = "证券代码", example = "588000")
+                                 @RequestParam String stockCode,
+
+                                 @Schema(description = "价格间隔（%）", example = "0.5")
+                                 @RequestParam double priceRangePct,
+
+                                 @Schema(description = "价格间隔 -> 总档数", example = "10")
+                                 @RequestParam int rangeTotal,
+
+                                 @Schema(description = "每档 买入/卖出金额", example = "1000")
+                                 @RequestParam double amount,
+
+                                 @Schema(description = "交易类型（RZ_BUY-融资买入；ZY_BUY-担保买入；SELL-担保卖出）", example = "RZ_BUY")
+                                 @RequestParam TradeTypeEnum tradeTypeEnum) {
+
+
+        tradeService.quickETF(stockCode, priceRangePct, rangeTotal, amount, tradeTypeEnum);
+
         return Result.SUC();
     }
 

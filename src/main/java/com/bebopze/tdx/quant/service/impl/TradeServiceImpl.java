@@ -520,6 +520,80 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Override
+    public void quickETF(String stockCode,
+                         double priceRangePct,
+                         int rangeTotal,
+                         double amount,
+                         TradeTypeEnum tradeTypeEnum) {
+
+
+        // 实时行情：买5 / 卖5
+        SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+        String stockName = resp.getName();
+        double buy1 = resp.getFivequote().getBuy1().doubleValue();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        double price = buy1;
+
+        // A股/ETF   ->   价格精度
+        int priceScale = StockUtil.priceScale(stockCode);
+
+
+        // S -> 价格正向（阶梯 加价卖出）；B -> 价格负向（阶梯 降价买入）；
+        int sign = tradeTypeEnum.equals(TradeTypeEnum.SELL) ? +1 : -1;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 价格区间   ->   10档
+        for (int i = 0; i < rangeTotal; i++) {
+
+
+            // price = buy1 * (1 ± 0.5% * i);
+            // price = buy1 * (1 + sign * priceRangePct * 0.01 * i);
+
+
+            if (i > 0) {
+                // price x (1 ± 0.5%)
+                price = price * (1 + sign * priceRangePct * 0.01);
+            }
+            // System.out.println(i + "   " + price);
+
+
+            int qty = (int) (amount / price);
+            int quantity = StockUtil.quantity(qty, stockName);
+
+
+            // -----------------------------------------------------------
+
+
+            TradeBSParam param = new TradeBSParam();
+            param.setStockCode(stockCode);
+            param.setStockName(stockName);
+            param.setPrice(NumUtil.double2Decimal(price, priceScale));
+            param.setAmount(quantity);
+            param.setTradeType(tradeTypeEnum.getTradeType());
+
+
+            Integer wtbh = bs(param);
+
+
+            SleepUtils.randomSleep(500);
+        }
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 预校验   =>   担保比例/仓位/负债比例     ->     严格限制 极限仓位 标准
      *
