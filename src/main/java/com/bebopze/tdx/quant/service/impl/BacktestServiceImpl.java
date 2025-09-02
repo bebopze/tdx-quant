@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * 回测
+ * 策略 - 回测
  *
  * @author: bebopze
  * @date: 2025/5/20
@@ -69,7 +69,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
     @Override
-    public Long backtest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo) {
+    public void execBacktest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo) {
 
 
         List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
@@ -137,28 +137,34 @@ public class BacktestServiceImpl implements BacktestService {
 
                                  // ThreadPoolType.CPU_INTENSIVE);
                                  ThreadPoolType.IO_INTENSIVE);
-
-
-//        ParallelCalcUtil.chunkForEachWithProgress(buy_conCombinerList, 10, chuckList -> {
-//
-//            chuckList.forEach(chuck -> {
-//
-//                backTestStrategy.backtest(chuck, sellConList, startDate, endDate);
-//            });
-//
-//        }, ThreadPoolType.IO_INTENSIVE);
-
-
-        return 1L;
     }
 
-    private String getKey(Integer batchNo,
-                          String topBlockStrategyEnumDesc,
-                          List<String> buyConList,
-                          List<String> sellConList) {
 
-        return batchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+    @Override
+    public void execBacktestUpdate(Integer batchNo, List<Long> taskIdList, LocalDate startDate, LocalDate endDate) {
+
+
+        checkAndGetTaskIdList(batchNo, taskIdList, startDate, endDate);
+
+
+        ParallelCalcUtil.forEach(taskIdList,
+
+
+                                 taskId -> {
+                                     // long start = System.currentTimeMillis();
+
+
+                                     backTestStrategy.backtest_update(taskId, startDate, endDate);
+
+
+                                     // progressLog(finalBatchNo, current.incrementAndGet(), total, start);
+                                 },
+
+
+                                 // ThreadPoolType.CPU_INTENSIVE);
+                                 ThreadPoolType.IO_INTENSIVE);
     }
+
 
     @Override
     public Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
@@ -311,9 +317,36 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
 
+    private String getKey(Integer batchNo,
+                          String topBlockStrategyEnumDesc,
+                          List<String> buyConList,
+                          List<String> sellConList) {
+
+        return batchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+    }
+
     private void progressLog(Integer batchNo, int current, int total, long start) {
         String msg = "Completed " + current + "/" + total + " chunks     耗时：" + DateTimeUtil.formatNow2Hms(start);
         log.info("📊 [批次号={}] 进度: {}/{} {}% | {}", batchNo, current, total, NumUtil.of(current * 100.0 / total), msg);
+    }
+
+
+    private void checkAndGetTaskIdList(Integer batchNo, List<Long> taskIdList, LocalDate startDate, LocalDate endDate) {
+        Assert.isTrue(!startDate.isAfter(LocalDate.now()), String.format("开始日期=[%s]不能大于今日", startDate));
+        Assert.isTrue(!startDate.isAfter(endDate), String.format("开始日期=[%s]不能大于结束日期=[%s]", startDate, endDate));
+
+
+        if (null != batchNo) {
+
+            List<Long> batchNo_taskIdList = btTaskService.listIdByBatchNoAndStatus(batchNo, null);
+            Assert.notEmpty(batchNo_taskIdList, String.format("[任务批次号=%s]不存在", batchNo));
+
+            taskIdList.clear();
+            taskIdList.addAll(batchNo_taskIdList);
+
+        } else {
+            Assert.notEmpty(taskIdList, "taskIdList不能为空");
+        }
     }
 
 

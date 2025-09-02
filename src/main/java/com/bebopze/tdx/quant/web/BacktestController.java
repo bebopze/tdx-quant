@@ -39,22 +39,44 @@ public class BacktestController {
     private BacktestService backTestService;
 
 
-    @Operation(summary = "回测", description = "回测task")
+    @Operation(summary = "创建 -> 执行回测", description = "创建 -> 执行   回测task")
     @GetMapping("/exec")
-    public Result<Long> backtest(@Schema(description = "回测-开始时间", example = "2022-01-01")
-                                 @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
+    public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2022-01-01")
+                                     @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
-                                 @Schema(description = "回测-结束时间", example = "2025-07-01")
-                                 @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
+                                     @Schema(description = "回测-结束时间", example = "2100-12-31")
+                                     @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
-                                 @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局 ）", example = "true")
-                                 @RequestParam(defaultValue = "true") boolean resume,
+                                     @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局 ）", example = "true")
+                                     @RequestParam(defaultValue = "true") boolean resume,
 
-                                 @Schema(description = "任务批次号（resume=true 生效）", example = "1")
-                                 @RequestParam(required = false) Integer batchNo) {
+                                     @Schema(description = "任务批次号（resume=true 生效）", example = "1")
+                                     @RequestParam(required = false) Integer batchNo) {
+
+        backTestService.execBacktest(startDate, endDate, resume, batchNo);
+        return Result.SUC();
+    }
 
 
-        return Result.SUC(backTestService.backtest(startDate, endDate, resume, batchNo));
+    @Operation(summary = "回测task  ->  批量更新   指定时间段  回测数据", description = "回测task  ->  批量（by batchNo/taskIdList）更新   指定时间段  回测数据")
+    @GetMapping("/update")
+    public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号", example = "1")
+                                           @RequestParam(required = false) Integer batchNo,
+
+                                           @Schema(description = "任务ID列表", example = "1")
+                                           @RequestParam(required = false, defaultValue = "") String taskIdList,
+
+                                           @Schema(description = "回测-开始时间", example = "2022-01-01")
+                                           @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
+
+                                           @Schema(description = "回测-结束时间", example = "2100-12-31")
+                                           @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
+
+
+        List<Long> _taskIdList = Arrays.stream(taskIdList.split(",")).map(Long::valueOf).collect(Collectors.toList());
+        backTestService.execBacktestUpdate(batchNo, _taskIdList, startDate, endDate);
+
+        return Result.SUC();
     }
 
 
@@ -69,8 +91,8 @@ public class BacktestController {
                                   @Schema(description = "回测-开始时间", example = "2025-01-01")
                                   @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,
 
-                                  @Schema(description = "回测-结束时间", example = "2025-08-12")
-                                  @RequestParam(defaultValue = "2025-08-12") LocalDate endDate,
+                                  @Schema(description = "回测-结束时间", example = "2100-12-31")
+                                  @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
                                   @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：不支持，每次重头开始 ）", example = "true")
                                   @RequestParam(defaultValue = "true") boolean resume,
@@ -95,7 +117,7 @@ public class BacktestController {
                                       @Schema(description = "回测-开始时间", example = "2022-01-01")
                                       @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
-                                      @Schema(description = "回测-结束时间", example = "2025-07-01")
+                                      @Schema(description = "回测-结束时间", example = "2100-12-31")
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
 
 
