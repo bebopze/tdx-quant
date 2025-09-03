@@ -26,6 +26,10 @@ public interface IBtTradeRecordService extends IService<BtTradeRecordDO> {
 
     int deleteByTaskIds(List<Long> taskIdList);
 
+    int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
+
 
     boolean retryBatchSave(List<BtTradeRecordDO> entityList);
+
+
 }

@@ -18,6 +18,23 @@
     </select>
 
 
+    <select id="lastByTaskId" resultType="com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO">
+
+        SELECT *
+
+
+        FROM bt_daily_return
+
+
+        WHERE task_id = #{taskId}
+
+
+        ORDER BY trade_date DESC
+        LIMIT 1
+
+    </select>
+
+
     <select id="listByTaskIdAndTradeDateRange" resultType="com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO">
 
         SELECT *
@@ -53,6 +70,7 @@
     </select>
 
 
+    <!-- 已废弃 -->
     <select id="listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn" resultType="long">
 
         SELECT DISTINCT t.id
@@ -67,12 +85,10 @@
         AND dr.trade_date != '2020-02-03'
 
 
-        <![CDATA[     AND t.max_drawdown_pct < -20
-        ]]>
+        <![CDATA[     AND t.max_drawdown_pct < -20     ]]>
 
 
-        <![CDATA[     AND t.total_day < #{totalDays}
-        ]]>
+        <![CDATA[     AND t.total_day < #{totalDays}     ]]>
 
         <if test="dailyReturn != null">
             <![CDATA[     AND dr.daily_return <= #{dailyReturn}     ]]>
@@ -92,6 +108,25 @@
         <foreach collection="taskIdList" item="taskId" open="(" close=")" separator=",">
             #{taskId}
         </foreach>
+    </delete>
+
+
+    <delete id="deleteByTaskIdAndTradeDateRange">
+        DELETE
+        FROM bt_daily_return
+
+
+        WHERE task_id = #{taskId}
+
+
+        <if test="startTradeDate != null">
+            <![CDATA[     AND trade_date >= #{startTradeDate}     ]]>
+        </if>
+
+        <if test="endTradeDate != null">
+            <![CDATA[     AND trade_date <= #{endTradeDate}     ]]>
+        </if>
+
     </delete>
 
 

@@ -21,6 +21,7 @@ public interface BtDailyReturnMapper extends BaseMapper<BtDailyReturnDO> {
     BtDailyReturnDO getByTaskIdAndTradeDate(@Param("taskId") Long taskId,
                                             @Param("tradeDate") LocalDate tradeDate);
 
+    BtDailyReturnDO lastByTaskId(@Param("taskId") Long taskId);
 
     List<BtDailyReturnDO> listByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
                                                         @Param("startTradeDate") LocalDate startTradeDate,
@@ -38,4 +39,10 @@ public interface BtDailyReturnMapper extends BaseMapper<BtDailyReturnDO> {
 
 
     int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
+
+
+    int deleteByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
+                                        @Param("startTradeDate") LocalDate startTradeDate,
+                                        @Param("endTradeDate") LocalDate endTradeDate);
+
 }

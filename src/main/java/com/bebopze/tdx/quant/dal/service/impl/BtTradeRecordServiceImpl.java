@@ -63,6 +63,10 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         return baseMapper.deleteByTaskIds(taskIdList);
     }
 
+    public int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate) {
+        return baseMapper.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
 

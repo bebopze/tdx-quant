@@ -17,7 +17,7 @@ import java.util.List;
 public interface IBtPositionRecordService extends IService<BtPositionRecordDO> {
 
 
-    List<BtPositionRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate);
+    List<BtPositionRecordDO> listByTaskIdAndTradeDateAndPosType(Long taskId, LocalDate tradeDate, Integer positionType);
 
     List<BtPositionRecordDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
 
@@ -25,6 +25,10 @@ public interface IBtPositionRecordService extends IService<BtPositionRecordDO> {
 
     int deleteByTaskIds(List<Long> taskIdList);
 
+    int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
+
 
     boolean retryBatchSave(List<BtPositionRecordDO> entityList);
+
+
 }

@@ -100,4 +100,23 @@
     </delete>
 
 
+    <delete id="deleteByTaskIdAndTradeDateRange">
+        DELETE
+        FROM bt_trade_record
+
+
+        WHERE task_id = #{taskId}
+
+
+        <if test="startTradeDate != null">
+            <![CDATA[     AND trade_date >= #{startTradeDate}     ]]>
+        </if>
+
+        <if test="endTradeDate != null">
+            <![CDATA[     AND trade_date <= #{endTradeDate}     ]]>
+        </if>
+
+    </delete>
+
+
 </mapper>

@@ -32,4 +32,7 @@ public interface BtTradeRecordMapper extends BaseMapper<BtTradeRecordDO> {
 
     int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
 
+    int deleteByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
+                                        @Param("startTradeDate") LocalDate startTradeDate,
+                                        @Param("endTradeDate") LocalDate endTradeDate);
 }

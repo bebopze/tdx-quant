@@ -20,6 +20,8 @@ public interface IBtDailyReturnService extends IService<BtDailyReturnDO> {
 
     BtDailyReturnDO getByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate);
 
+    BtDailyReturnDO lastByTaskId(Long taskId);
+
     List<BtDailyReturnDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
 
     List<BtDailyReturnDO> listByTaskId(Long taskId);
@@ -37,6 +39,8 @@ public interface IBtDailyReturnService extends IService<BtDailyReturnDO> {
     List<Long> listTaskIdByBatchNoAndTotalDaysAndLeDailyReturn(Integer batchNo, int totalDays, Double dailyReturn);
 
     int deleteByTaskIds(List<Long> taskIdList);
+
+    int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate);
 
 
     boolean retrySave(BtDailyReturnDO entity);

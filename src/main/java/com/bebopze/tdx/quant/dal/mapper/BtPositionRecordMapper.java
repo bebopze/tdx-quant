@@ -18,8 +18,9 @@ import java.util.List;
 public interface BtPositionRecordMapper extends BaseMapper<BtPositionRecordDO> {
 
 
-    List<BtPositionRecordDO> listByTaskIdAndTradeDate(@Param("taskId") Long taskId,
-                                                      @Param("tradeDate") LocalDate tradeDate);
+    List<BtPositionRecordDO> listByTaskIdAndTradeDateAndPosType(@Param("taskId") Long taskId,
+                                                                @Param("tradeDate") LocalDate tradeDate,
+                                                                @Param("positionType") Integer positionType);
 
 
     List<BtPositionRecordDO> listByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
@@ -28,5 +29,9 @@ public interface BtPositionRecordMapper extends BaseMapper<BtPositionRecordDO> {
 
 
     int deleteByTaskIds(@Param("taskIdList") List<Long> taskIdList);
+
+    int deleteByTaskIdAndTradeDateRange(@Param("taskId") Long taskId,
+                                        @Param("startTradeDate") LocalDate startTradeDate,
+                                        @Param("endTradeDate") LocalDate endTradeDate);
 
 }

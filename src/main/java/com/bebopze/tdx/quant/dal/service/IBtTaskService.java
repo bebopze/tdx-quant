@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.dal.service;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +31,9 @@ public interface IBtTaskService extends IService<BtTaskDO> {
      */
     List<BtTaskDO> listByBatchNoAndStatus(Integer batchNo, Integer status);
 
+    List<Long> listIdByBatchNoAndStatus(Integer batchNo, Integer status);
+
+
     Integer getLastBatchNo();
 
     BtTaskDO getLastBatchNoEntity();
@@ -39,4 +43,15 @@ public interface IBtTaskService extends IService<BtTaskDO> {
     int delErrTaskByBatchNo(Integer batchNo);
 
     int delErrTaskByTaskIds(List<Long> taskIdList);
+
+
+    /**
+     * DEL     ->     待更新区间 old 回测数据
+     *
+     * @param taskId
+     * @param startDate
+     * @param endDate
+     */
+    void delBacktestDataByTaskIdAndDate(Long taskId, LocalDate startDate, LocalDate endDate);
+
 }

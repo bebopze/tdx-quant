@@ -33,8 +33,11 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
 
     @TotalTime
     @Override
-    public List<BtPositionRecordDO> listByTaskIdAndTradeDate(Long taskId, LocalDate tradeDate) {
-        return baseMapper.listByTaskIdAndTradeDate(taskId, tradeDate);
+    public List<BtPositionRecordDO> listByTaskIdAndTradeDateAndPosType(Long taskId,
+                                                                       LocalDate tradeDate,
+                                                                       Integer positionType) {
+
+        return baseMapper.listByTaskIdAndTradeDateAndPosType(taskId, tradeDate, positionType);
     }
 
     @Override
@@ -50,6 +53,11 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
     @Override
     public int deleteByTaskIds(List<Long> taskIdList) {
         return baseMapper.deleteByTaskIds(taskIdList);
+    }
+
+    @Override
+    public int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate) {
+        return baseMapper.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
 
 
@@ -121,7 +129,6 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
         }
 
     }
-
 
 
     // -----------------------------------------------------------------------------------------------------------------

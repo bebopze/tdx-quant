@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +60,12 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
     public List<BtTaskDO> listByBatchNoAndStatus(Integer batchNo, Integer status) {
         return baseMapper.listByBatchNoAndStatus(batchNo, status);
     }
+
+    @Override
+    public List<Long> listIdByBatchNoAndStatus(Integer batchNo, Integer status) {
+        return baseMapper.listIdByBatchNoAndStatus(batchNo, status);
+    }
+
 
     @Override
     public Integer getLastBatchNo() {
@@ -166,6 +173,14 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
 
         return baseMapper.deleteByIds(taskIdList);
+    }
+
+    @Override
+    public void delBacktestDataByTaskIdAndDate(Long taskId, LocalDate startDate, LocalDate endDate) {
+
+        tradeRecordService.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
+        positionRecordService.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
+        dailyReturnService.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
 
 }

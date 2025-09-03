@@ -37,6 +37,11 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     }
 
     @Override
+    public BtDailyReturnDO lastByTaskId(Long taskId) {
+        return baseMapper.lastByTaskId(taskId);
+    }
+
+    @Override
     public List<BtDailyReturnDO> listByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate) {
         return baseMapper.listByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
@@ -59,6 +64,11 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     @Override
     public int deleteByTaskIds(List<Long> taskIdList) {
         return baseMapper.deleteByTaskIds(taskIdList);
+    }
+
+    @Override
+    public int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate) {
+        return baseMapper.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
 
 
