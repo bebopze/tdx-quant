@@ -125,6 +125,17 @@ public class BacktestStrategy {
     }
 
 
+    @TotalTime
+    public void backtest_update(Long taskId, LocalDate update__startDate, LocalDate update__endDate) {
+
+        try {
+            execBacktest__update(taskId, update__startDate, update__endDate);
+        } finally {
+            clearThreadLocal();
+        }
+    }
+
+
     private Long execBacktest(Integer batchNo,
                               TopBlockStrategyEnum topBlockStrategyEnum,
                               List<String> buyConList,
@@ -207,6 +218,128 @@ public class BacktestStrategy {
 
         return taskDO.getId();
     }
+
+
+    private void execBacktest__update(Long taskId,
+                                      LocalDate update__startDate,
+                                      LocalDate update__endDate) {
+
+        log.info("execBacktest__update start     >>>     taskId : {} , update__startDate : {} , update__endDate : {}",
+                 taskId, update__startDate, update__endDate);
+
+
+        update__endDate = DateTimeUtil.min(update__endDate, LocalDate.now());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                              回测-task   pre   ==>   板块、个股   行情数据 初始化
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 数据初始化   ->   加载 全量行情数据
+        log.info("--------------------------- " + Thread.currentThread().getName() + "线程 等待🔐     >>>     😴ing");
+        long start = System.currentTimeMillis();
+        initData(update__startDate, update__endDate);
+        log.info("--------------------------- " + Thread.currentThread().getName() + "线程 释放🔐     >>>     ✅ 耗时：" + DateTimeUtil.formatNow2Hms(start));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                                            回测-task   status -> 3
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        BtTaskDO taskDO = btTaskService.getById(taskId);
+        Assert.notNull(taskDO, "任务不存在：" + taskId);
+
+
+        LocalDate endDate = taskDO.getEndDate();
+
+        taskDO.setStatus(3);
+        // taskDO.setEndDate(update__endDate);
+        btTaskService.updateById(taskDO);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        List<String> buyConList = Arrays.asList(taskDO.getBuyStrategy().split(","));
+        List<String> sellConList = Arrays.asList(taskDO.getSellStrategy().split(","));
+
+        TopBlockStrategyEnum topBlockStrategyEnum = TopBlockStrategyEnum.getByDesc(taskDO.getTopBlockStrategy());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                                            回测-task   按日 循环执行
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalDate tradeDate = taskDO.getEndDate();
+        update__endDate = DateTimeUtil.min(update__endDate, data.endDate());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        BtDailyReturnDO last_dailyReturnDO = btDailyReturnService.getByTaskIdAndTradeDate(taskId, endDate);
+
+
+        // 总资金
+        x.get().prevCapital = last_dailyReturnDO.getCapital().doubleValue();
+        // 可用金额
+        x.get().prevAvlCapital = last_dailyReturnDO.getAvlCapital().doubleValue();
+
+
+        x.get().capital = last_dailyReturnDO.getCapital().doubleValue();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        btTaskService.delBacktestDataByTaskIdAndDate(taskId, update__startDate.plusDays(1), update__endDate);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 恢复
+        restoreThreadLocal__update(taskId, tradeDate);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        while (tradeDate.isBefore(update__endDate)) {
+
+            tradeDate = tradeDateIncr(tradeDate);
+            // 备份
+            Backup backup = backupThreadLocal();
+
+
+            try {
+                // 每日 - 回测（B/S）
+                execBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO);
+            } catch (Exception e) {
+                log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
+
+
+                // retry
+                retryExecBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO, backup, 5);
+            }
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                                            总收益
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        taskDO.setEndDate(update__endDate);
+        sumTotalReturn(taskDO);
+
+
+        log.info("execBacktest__update end     >>>     taskId : {} , update__startDate : {} , update__endDate : {}", taskDO.getId(), update__startDate, update__endDate);
+    }
+
 
     private void retryExecBacktestDaily(TopBlockStrategyEnum topBlockStrategyEnum,
                                         List<String> buyConList,
@@ -2025,6 +2158,39 @@ public class BacktestStrategy {
         x.remove();
         tradeRecord___idSet__cache.remove();
         tradeRecordList__cache.remove();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * update   ->   恢复
+     *
+     * @param taskId
+     * @param tradeDate
+     */
+    private void restoreThreadLocal__update(Long taskId, LocalDate tradeDate) {
+
+
+        // ------------------------------------ x
+
+
+        x.get().taskId = taskId;
+        x.get().tradeDate = tradeDate;
+
+        refresh_statData();
+
+
+        // ------------------------------------ tradeRecord
+
+
+        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskId(taskId);
+        Set<Long> tradeRecord___idSet = tradeRecordDOList.stream().map(BtTradeRecordDO::getId).collect(Collectors.toSet());
+
+
+        tradeRecord___idSet__cache.set(tradeRecord___idSet);
+        tradeRecordList__cache.set(tradeRecordDOList);
     }
 
 

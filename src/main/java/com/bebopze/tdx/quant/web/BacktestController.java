@@ -66,10 +66,10 @@ public class BacktestController {
                                            @Schema(description = "任务ID列表", example = "1")
                                            @RequestParam(required = false, defaultValue = "") String taskIdList,
 
-                                           @Schema(description = "回测-开始时间", example = "2022-01-01")
+                                           @Schema(description = "更新-开始时间", example = "2025-01-01")
                                            @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
-                                           @Schema(description = "回测-结束时间", example = "2100-12-31")
+                                           @Schema(description = "更新-结束时间", example = "2100-12-31")
                                            @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
 
 
