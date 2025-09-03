@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -250,12 +251,8 @@ public class BacktestStrategy {
 
         BtTaskDO taskDO = btTaskService.getById(taskId);
         Assert.notNull(taskDO, "任务不存在：" + taskId);
-
-
-        LocalDate endDate = taskDO.getEndDate();
-
+        // 3-更新中
         taskDO.setStatus(3);
-        // taskDO.setEndDate(update__endDate);
         btTaskService.updateById(taskDO);
 
 
@@ -273,36 +270,29 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        LocalDate tradeDate = taskDO.getEndDate();
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // DEL     ->     待更新区间 old 回测数据
+        btTaskService.delBacktestDataByTaskIdAndDate(taskId, update__startDate, update__endDate);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // last
+        BtDailyReturnDO last_dailyReturnDO = btDailyReturnService.lastByTaskId(taskId);
+
+
+        LocalDate tradeDate = last_dailyReturnDO.getTradeDate();
         update__endDate = DateTimeUtil.min(update__endDate, data.endDate());
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        BtDailyReturnDO last_dailyReturnDO = btDailyReturnService.getByTaskIdAndTradeDate(taskId, endDate);
-
-
-        // 总资金
-        x.get().prevCapital = last_dailyReturnDO.getCapital().doubleValue();
-        // 可用金额
-        x.get().prevAvlCapital = last_dailyReturnDO.getAvlCapital().doubleValue();
-
-
-        x.get().capital = last_dailyReturnDO.getCapital().doubleValue();
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        btTaskService.delBacktestDataByTaskIdAndDate(taskId, update__startDate.plusDays(1), update__endDate);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
         // 恢复
-        restoreThreadLocal__update(taskId, tradeDate);
+        restoreThreadLocal__update(taskId, tradeDate, last_dailyReturnDO);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -434,7 +424,7 @@ public class BacktestStrategy {
         Long taskId = taskDO.getId();
 
 
-        x.get().taskId = taskDO.getId();
+        x.get().taskId = taskId;
         x.get().tradeDate = tradeDate;
 
 
@@ -726,8 +716,7 @@ public class BacktestStrategy {
             sell_tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
 
             sell_tradeRecordDO.setTradeDate(tradeDate);
-            // sell_tradeRecordDO.setTradeSignal(sell_infoMap.get(stockCode));
-            // sell_tradeRecordDO.setTradeSignal("大盘仓位限制->等比减仓");
+            // 大盘仓位限制->等比减仓
             sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S21.getType());
             sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S21.getDesc());
 
@@ -1812,7 +1801,7 @@ public class BacktestStrategy {
 
             positionRecordDO.setBuyDate(positionInfo.buyDate);
             positionRecordDO.setHoldingDays(positionInfo.getHoldingDays(endTradeDate, data.dateIndexMap));
-            positionRecordDO.setInitBuyPrice(positionInfo.initBuyPrice);
+            positionRecordDO.setBuyPrice(positionInfo.initBuyPrice);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1881,7 +1870,7 @@ public class BacktestStrategy {
 
 
             // 首次买入价格
-            double initBuyPrice = prevPos.getInitBuyPrice().doubleValue();
+            double initBuyPrice = prevPos.getBuyPrice().doubleValue();
 
 
             double prevAvgCostPrice = prevPos.getAvgCostPrice().doubleValue();
@@ -2033,6 +2022,7 @@ public class BacktestStrategy {
 
             positionRecordDO.setBuyDate(prevPos.getBuyDate());
             positionRecordDO.setHoldingDays(prevPos.getHoldingDays() + 1);
+            positionRecordDO.setBuyPrice(prevPos.getBuyPrice());
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -2169,17 +2159,36 @@ public class BacktestStrategy {
      *
      * @param taskId
      * @param tradeDate
+     * @param last_dailyReturnDO
      */
-    private void restoreThreadLocal__update(Long taskId, LocalDate tradeDate) {
+    private void restoreThreadLocal__update(Long taskId, LocalDate tradeDate, BtDailyReturnDO last_dailyReturnDO) {
 
 
         // ------------------------------------ x
 
 
-        x.get().taskId = taskId;
-        x.get().tradeDate = tradeDate;
+        List<BtPositionRecordDO> positionRecordDOList = btPositionRecordService.listByTaskIdAndTradeDateAndPosType(taskId, tradeDate, 1);
+        Map<String, BtPositionRecordDO> stockCode_positionDO_Map = positionRecordDOList.stream()
+                                                                                       .collect(Collectors.toMap(
+                                                                                               BtPositionRecordDO::getStockCode,
+                                                                                               Function.identity()
+                                                                                       ));
 
-        refresh_statData();
+
+        // ---------------------------
+
+
+        // 1、清空
+        x.remove();
+
+
+        // 2、today -> pre
+        x.get().prevCapital = last_dailyReturnDO.getCapital().doubleValue();
+        x.get().prevAvlCapital = last_dailyReturnDO.getAvlCapital().doubleValue();
+        x.get().prev__stockCode_positionDO_Map = stockCode_positionDO_Map;
+
+
+        x.get().taskId = taskId;
 
 
         // ------------------------------------ tradeRecord

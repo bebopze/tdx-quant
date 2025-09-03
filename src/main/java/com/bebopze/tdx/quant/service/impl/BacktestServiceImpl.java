@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -487,7 +488,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 持仓记录
-        List<BtPositionRecordDO> positionRecordDOList = btPositionRecordService.listByTaskIdAndTradeDate(taskId, tradeDate);
+        List<BtPositionRecordDO> positionRecordDOList = btPositionRecordService.listByTaskIdAndTradeDateAndPosType(taskId, tradeDate, 1);
 
 
         double totalMarketValue_check = 0.0;
@@ -506,6 +507,7 @@ public class BacktestServiceImpl implements BacktestService {
 
             LocalDate buyDate = positionRecordDO.getBuyDate();
             int holdingDays = positionRecordDO.getHoldingDays();
+            BigDecimal buyPrice = positionRecordDO.getBuyPrice();
 
 
             // ---------------------------------- 汇总
