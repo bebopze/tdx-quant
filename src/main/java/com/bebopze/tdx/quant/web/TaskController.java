@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.service.DataService;
+import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.task.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,9 @@ public class TaskController {
 
     @Autowired
     private DataService dataService;
+
+    @Autowired
+    private InitDataService initDataService;
 
 
     /**
@@ -63,11 +67,20 @@ public class TaskController {
         return Result.SUC(dataService.dataInfo());
     }
 
+
     @Operation(summary = "东方财富 - 刷新登录信息", description = "东方财富 - 刷新登录信息")
     @GetMapping(value = "/eastmoney/refreshSession")
     public Result<Void> eastmoneyRefreshSession(@RequestParam String validatekey,
                                                 @RequestParam String cookie) {
         dataService.eastmoneyRefreshSession(validatekey, cookie);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "BacktestCache（回测 - 全量行情Cache） -  refresh", description = "BacktestCache（回测 - 全量行情Cache） -  refresh")
+    @GetMapping(value = "/initData/refresh")
+    public Result<Void> refreshCache(@RequestParam(defaultValue = "true") Boolean refresh) {
+        initDataService.initData(null, null, refresh);
         return Result.SUC();
     }
 
