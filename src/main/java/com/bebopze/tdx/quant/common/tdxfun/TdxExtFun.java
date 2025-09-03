@@ -892,7 +892,8 @@ public class TdxExtFun {
         }
 
 
-        return MonthlyBullSignal.computeMonthlyBull(dailyKlines);
+        // return MonthlyBullSignal.computeMonthlyBull(dailyKlines);
+        return MonthlyBullSignal2.computeMonthlyBull(dailyKlines);
     }
 
 

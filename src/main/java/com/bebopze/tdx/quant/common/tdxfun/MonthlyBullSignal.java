@@ -21,7 +21,7 @@ import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.*;
 
 
 /**
- * 通达信“月多”量化公式：
+ * 通达信“月多”量化公式：                                     // 未来函数 bug
  *
  * MA20 := MA(C,20);
  * MA50 := IF(MA(C,50)=DRAWNULL,0,MA(C,50));
