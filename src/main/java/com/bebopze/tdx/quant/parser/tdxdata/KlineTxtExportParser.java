@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -11,6 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -23,7 +25,7 @@ import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
 
 
 /**
- * 导出 通达信-盘后数据     ->     解析获取 历史日线数据
+ * 导出 通达信-盘后数据（xx.txt）     ->     解析获取 历史日线数据
  *
  *
  * -   通达信  ->  34[数据导出]  ->  高级导出  ->  添加品种  ->  全部A股/板块指数               // 前复权
@@ -35,7 +37,7 @@ import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
  * @date: 2025/6/1
  */
 @Slf4j
-public class KlineReportParser {
+public class KlineTxtExportParser {
 
 
     public static void main(String[] args) {
@@ -54,7 +56,7 @@ public class KlineReportParser {
         String stockCode_zs_sh = "880003";
 
 
-        List<LdayParser.LdayDTO> stockDataList = parseByStockCode("300059");
+        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
         for (LdayParser.LdayDTO e : stockDataList) {
             String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
             System.out.println(JSON.toJSONString(item));
@@ -76,13 +78,13 @@ public class KlineReportParser {
 
 
     /**
-     * tdx 盘后数据（xx.day）   -   解析器
+     * tdx 行情导出数据（xx.txt）  -   解析器
      *
      * @param stockCode 证券代码
      * @return
      */
     @SneakyThrows
-    public static List<LdayParser.LdayDTO> parseByStockCode(String stockCode) {
+    public static List<LdayParser.LdayDTO> parseTxtByStockCode(String stockCode) {
 
         // sz/sh/bj
         String market = StockMarketEnum.getMarketSymbol(stockCode);
@@ -113,25 +115,38 @@ public class KlineReportParser {
         }
 
 
-        try {
-            return parseByFilePath(filePath);
-        } catch (Exception e) {
-            log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
-                      stockCode, filePath, e.getMessage(), e);
-        }
-
-
-        return Lists.newArrayList();
+//        try {
+        return parseTxtByFilePath(filePath);
+//        } catch (Exception e) {
+//
+//
+//            // 非 RPS指标 板块
+//            String filePath_RPS_BK = TDX_PATH + "/T0002/export/A股/SH#880515.txt";
+//            boolean PRS_BK__exists = new File(filePath_RPS_BK).exists();
+//            boolean BK__exists = StockTypeEnum.isBlock(stockCode) && new File(filePath).exists();
+//
+//
+//            if (PRS_BK__exists && !BK__exists) {
+//                // 忽略
+//                log.warn("parseTxtByFilePath - 当前板块 非RPS板块（无txt行情导出数据）    >>>     stockCode : {} , filePath : {}", stockCode, filePath);
+//            } else {
+//                log.error("parseTxtByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
+//                          stockCode, filePath, e.getMessage(), e);
+//            }
+//        }
+//
+//
+//        return Lists.newArrayList();
     }
 
 
     /**
-     * tdx 盘后数据（xx.day）   -   解析器
+     * tdx 盘后数据（xx.txt）   -   解析器
      *
-     * @param filePath 文件路径     -    /new_tdx/vipdoc/
+     * @param filePath 文件路径     -    /new_tdx/T0002/export/
      * @return
      */
-    public static List<LdayParser.LdayDTO> parseByFilePath(String filePath) {
+    public static List<LdayParser.LdayDTO> parseTxtByFilePath(String filePath) {
 
         // 股票代码
         String code = parseCode(filePath);
@@ -216,8 +231,25 @@ public class KlineReportParser {
             }
 
 
+        } catch (FileNotFoundException e) {
+
+
+            String filePath_RPS_BK = TDX_PATH + "/T0002/export/A股/SH#880515.txt";
+            // 非 RPS指标 板块
+            boolean PRS_BK__exists = new File(filePath_RPS_BK).exists();
+            boolean BK__exists = StockTypeEnum.isBlock(code) && new File(filePath).exists();
+
+
+            if (PRS_BK__exists && !BK__exists) {
+                // 忽略
+                log.warn("parseTxtByFilePath - 当前板块 非RPS板块（无txt行情导出数据）    >>>     code : {} , filePath : {}", code, filePath);
+            } else {
+                log.error("parseTxtByFilePath - err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
+            }
+
+
         } catch (Exception e) {
-            log.error("parseByFilePath - err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
+            log.error("parseTxtByFilePath - err     >>>     code : {} , date : {} , exMsg : {}", code, date, e.getMessage(), e);
         }
 
 

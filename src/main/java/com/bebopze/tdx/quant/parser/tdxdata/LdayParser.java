@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
-import static com.bebopze.tdx.quant.parser.tdxdata.KlineReportParser.TDX_SHIT_BUG___REPEAT_KLINE;
+import static com.bebopze.tdx.quant.parser.tdxdata.KlineTxtExportParser.TDX_SHIT_BUG___REPEAT_KLINE;
 
 
 /**
@@ -58,7 +58,7 @@ import static com.bebopze.tdx.quant.parser.tdxdata.KlineReportParser.TDX_SHIT_BU
  *
  * @author: bebopze
  * @date: 2024/10/9
- * @see KlineReportParser
+ * @see KlineTxtExportParser
  */
 @Slf4j
 public class LdayParser {
@@ -177,7 +177,7 @@ public class LdayParser {
 
 
         // 往期数据  ->  报表
-        List<LdayDTO> klineReport__ldayDTOList = Lists.newArrayList();
+        List<LdayDTO> klineTxtReport__ldayDTOList = Lists.newArrayList();
         // 短期数据  ->  xx.day
         List<LdayDTO> lday__ldayDTOList = Lists.newArrayList();
 
@@ -186,55 +186,55 @@ public class LdayParser {
 
 
             // 往期数据  ->  报表
-            // klineReport__ldayDTOList = Lists.newArrayList();
+            // klineTxtReport__ldayDTOList = Lists.newArrayList();
 
             // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
-            klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+            klineTxtReport__ldayDTOList = KlineTxtExportParser.parseTxtByStockCode(stockCode);
 
 
             // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-            checkReport__lastKline(klineReport__ldayDTOList);
+            checkReport__lastKline(klineTxtReport__ldayDTOList);
 
 
             // -----------------------
 
 
 //            // 往期数据  ->  报表
-//            // klineReport__ldayDTOList = Lists.newArrayList();
+//            // klineTxtReport__ldayDTOList = Lists.newArrayList();
 //            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
 //
 //                // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
-//                klineReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
+//                klineTxtReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
 //
 //
 //                // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-//                checkReport__lastKline(klineReport__ldayDTOList);
+//                checkReport__lastKline(klineTxtReport__ldayDTOList);
 //            }
 
 
             // 短期数据  ->  xx.day
-            lday__ldayDTOList = parseByFilePath(filePath);
+            lday__ldayDTOList = parseLdayByFilePath(filePath);
 
 
             // ---------------------------------------------------------------------
 
 
-            check(klineReport__ldayDTOList, lday__ldayDTOList);
+            check(klineTxtReport__ldayDTOList, lday__ldayDTOList);
 
 
-            return merge(klineReport__ldayDTOList, lday__ldayDTOList);
+            return merge(klineTxtReport__ldayDTOList, lday__ldayDTOList);
 
 
         } catch (Exception e) {
 
 
-            if (size(klineReport__ldayDTOList) == 0 && size(lday__ldayDTOList) == 0) {
+            if (size(klineTxtReport__ldayDTOList) == 0 && size(lday__ldayDTOList) == 0) {
                 // 准 新股  ->  未上市/上市失败                    688688 蚂蚁金服
-                log.warn("parseByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
-                         stockCode, filePath, size(klineReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+                log.warn("parseByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                         stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
             } else {
-                log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , klineReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
-                          stockCode, filePath, size(klineReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+                log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                          stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
             }
         }
 
@@ -269,7 +269,7 @@ public class LdayParser {
      * @return
      */
     @SneakyThrows
-    public static List<LdayDTO> parseByFilePath(String filePath) {
+    public static List<LdayDTO> parseLdayByFilePath(String filePath) {
 
         // 股票代码
         String code = parseCode(filePath);
