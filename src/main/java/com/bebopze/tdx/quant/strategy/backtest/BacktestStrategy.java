@@ -987,6 +987,13 @@ public class BacktestStrategy {
         CalcStat calcStat = new CalcStat(positionRecordDOList, tradeRecordDOList);
         // copy覆盖
         BeanUtils.copyProperties(calcStat, x.get());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 优化   ->   DEL配对历史记录（ < 持仓记录 最小BuyDate）
+        clear__TradeRecordCache();
     }
 
 
@@ -1357,7 +1364,6 @@ public class BacktestStrategy {
         incrQuery_tradeRecordList.forEach(e -> {
 
             if (tradeRecord___idSet__cache.get().add(e.getId())) {
-                // TODO 优化   ->   DEL配对历史记录（ < 持仓记录 buyDate）
                 tradeRecordList__cache.get().add(e);
             }
         });
@@ -1421,6 +1427,35 @@ public class BacktestStrategy {
 
 
         return positionRecordDOList;
+    }
+
+
+    /**
+     * 优化   ->   DEL配对历史记录（ < 持仓记录 最小BuyDate）
+     */
+    private void clear__TradeRecordCache() {
+
+        // 当前 持仓个股列表   ->   最小 买入日期
+        LocalDate minBuyDate = null;
+        for (BtPositionRecordDO positionRecordDO : x.get().getPositionRecordDOList()) {
+            LocalDate buyDate = positionRecordDO.getBuyDate();
+            minBuyDate = buyDate.isBefore(minBuyDate) ? buyDate : minBuyDate;
+        }
+
+
+        LocalDate finalMinBuyDate = minBuyDate;
+
+
+        // 优化   ->   DEL配对历史记录（ < 持仓记录 buyDate）
+        tradeRecordList__cache.get().removeIf(e -> {
+
+            if (e.getTradeDate().isBefore(finalMinBuyDate)) {
+
+                tradeRecord___idSet__cache.get().remove(e.getId());
+                return true;
+            }
+            return false;
+        });
     }
 
 
