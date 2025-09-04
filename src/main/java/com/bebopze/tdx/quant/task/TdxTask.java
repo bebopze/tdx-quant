@@ -127,6 +127,9 @@ public class TdxTask {
         marketService.importMarketMidCycle();
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
         initDataService.refreshCache();
 
 
@@ -165,6 +168,12 @@ public class TdxTask {
 
         // 大盘量化
         marketService.importMarketMidCycle();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        initDataService.refreshCache();
 
 
         log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");

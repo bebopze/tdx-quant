@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 
 
 /**
- * 回测 - 缓存数据
+ * 回测 - 全量行情Cache
  *
  * @author: bebopze
  * @date: 2025/6/10
@@ -142,7 +142,7 @@ public class BacktestCache {
 
 
     public static final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
-                                                                        .maximumSize(5_000)                                // 内存容量控制（可根据对象大小调整）
+                                                                        .maximumSize(6_000)                                // 内存容量控制（可根据对象大小调整）
                                                                         // .expireAfterWrite(30, TimeUnit.MINUTES)         // 写入后 30分钟过期（TTL）
                                                                         .expireAfterAccess(5, TimeUnit.MINUTES)    // 最近访问后 5分钟过期（TTI）
                                                                         .recordStats()                                     // 开启统计（命中率等）

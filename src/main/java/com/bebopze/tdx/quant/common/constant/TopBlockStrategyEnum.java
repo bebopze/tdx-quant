@@ -22,7 +22,7 @@ public enum TopBlockStrategyEnum {
     // 板块-月多 + RPS红 + SSF多
     LV3(3, "LV3（板块-月多2）"),
 
-    LV2_LV3(4, "LV2 <- 升级/降级 ->LV3"),
+    LV2_LV3(4, "LV2<- 升级/降级 ->LV3"),
 
 
     ;
@@ -36,6 +36,16 @@ public enum TopBlockStrategyEnum {
     public static TopBlockStrategyEnum getByType(Integer type) {
         for (TopBlockStrategyEnum value : TopBlockStrategyEnum.values()) {
             if (value.type.equals(type)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+
+    public static TopBlockStrategyEnum getByDesc(String desc) {
+        for (TopBlockStrategyEnum value : TopBlockStrategyEnum.values()) {
+            if (value.desc.equals(desc)) {
                 return value;
             }
         }

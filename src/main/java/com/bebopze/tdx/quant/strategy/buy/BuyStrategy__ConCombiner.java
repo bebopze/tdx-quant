@@ -19,16 +19,16 @@ public class BuyStrategy__ConCombiner {
 
 
     // 短期趋势
-    public static final List<String> conKeyList_1 = Lists.newArrayList("SSF多", "MA20多");
+    private static final List<String> conKeyList_1 = Lists.newArrayList("SSF多", "MA20多");
 
     // 新高
-    public static final List<String> conKeyList_2 = Lists.newArrayList("N60日新高", "N100日新高", "历史新高");
+    private static final List<String> conKeyList_2 = Lists.newArrayList("N60日新高", "N100日新高", "历史新高");
 
     // 长期趋势（均线）
-    public static final List<String> conKeyList_3 = Lists.newArrayList("月多", "均线预萌出", "均线萌出", "大均线多头");
+    private static final List<String> conKeyList_3 = Lists.newArrayList("月多", "均线预萌出", "均线萌出", "大均线多头");
 
     // RPS强度
-    public static final List<String> conKeyList_4 = Lists.newArrayList("RPS红", "RPS一线红", "RPS双线红", "RPS三线红");
+    private static final List<String> conKeyList_4 = Lists.newArrayList("RPS红", "RPS一线红", "RPS双线红", "RPS三线红");
 
 
     // -----------------------------------------------------------------------------------------------------------------

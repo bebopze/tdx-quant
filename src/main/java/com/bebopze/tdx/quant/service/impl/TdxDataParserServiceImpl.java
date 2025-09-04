@@ -1303,6 +1303,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        AtomicInteger count = new AtomicInteger(0);
+
+
         stockSnapshotList.parallelStream().forEach(e -> {
 
 
@@ -1342,6 +1345,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // --------------------- DB
 
             baseStockService.updateById(entity);
+
+
+            log.info("incrUpdate__fillStockKlineAll suc     >>>     stockCode : {} , count : {}", stockCode, count.incrementAndGet());
         });
     }
 

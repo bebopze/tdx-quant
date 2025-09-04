@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -125,6 +126,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return listAllKline(false);
     }
 
+    @TotalTime
     @Override
     public List<BaseStockDO> listAllKline(boolean refresh) {
         log.info("listAllKline     >>>     refresh : {}", refresh);

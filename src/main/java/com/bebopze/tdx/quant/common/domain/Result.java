@@ -94,7 +94,7 @@ public class Result<T> implements Serializable {
             result.setMsg(baseExEnum.getMsg());
         }
         if (data instanceof Collection && null == totalNum) {
-            result.setTotalNum(((Collection) data).size());
+            totalNum = ((Collection<?>) data).size();
         }
         result.setTotalNum(totalNum);
         result.setPageIndex(pageIndex);
