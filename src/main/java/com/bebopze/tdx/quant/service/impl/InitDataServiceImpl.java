@@ -50,8 +50,6 @@ public class InitDataServiceImpl implements InitDataService {
      */
     public static final BacktestCache data = new BacktestCache();
 
-    // public static final AtomicReference<BacktestCache> data = new AtomicReference<>();
-
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -74,6 +72,7 @@ public class InitDataServiceImpl implements InitDataService {
     public BacktestCache initData() {
         return initData(null, null, false);
     }
+
 
     @TotalTime
     @Synchronized
@@ -115,7 +114,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 加载   全量行情数据 - 板块
-        loadAllBlockKline();
+        loadAllBlockKline(refresh);
 
 
         // 板块-个股  /  个股-板块
@@ -139,7 +138,7 @@ public class InitDataServiceImpl implements InitDataService {
 //        }
 
 
-        // 全行行情     ->     startDate = null,   endDate = null
+        // 全量行情     ->     startDate = null,   endDate = null
         if (Objects.equals(startDate, data.startDate) && Objects.equals(endDate, data.endDate)) {
             return true;
         }
@@ -210,7 +209,7 @@ public class InitDataServiceImpl implements InitDataService {
         // 空数据 过滤
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
                 // TODO   基金北向
-                && e.getAmount().doubleValue() > 1 * 1_0000_0000).collect(Collectors.toList());
+                && e.getAmount().doubleValue() > 0.1 * 1_0000_0000).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -325,10 +324,10 @@ public class InitDataServiceImpl implements InitDataService {
      *
      * @return
      */
-    private void loadAllBlockKline() {
+    private void loadAllBlockKline(boolean refresh) {
 
 
-        data.blockDOList = baseBlockService.listAllKline();
+        data.blockDOList = baseBlockService.listAllKline(refresh);
 
 
         // -------
