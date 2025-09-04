@@ -45,7 +45,7 @@ BEGIN
             END IF;
 
             SET @sql = CONCAT('CREATE TABLE IF NOT EXISTS bt_trade_record_', i, ' (
-            `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT ''主键ID'',
+            `id` bigint unsigned NOT NULL COMMENT ''主键ID'',
             `task_id` bigint unsigned NOT NULL COMMENT ''回测任务ID'',
             `trade_date` date NOT NULL COMMENT ''交易日期'',
             `trade_type` tinyint unsigned NOT NULL COMMENT ''交易类型：1-买入；2-卖出；'',
@@ -63,7 +63,7 @@ BEGIN
             `gmt_modify` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT ''更新时间'',
             PRIMARY KEY (`id`),
             KEY `idx__task_id__trade_date` (`task_id`,`trade_date`) USING BTREE
-        ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT=''回测-BS交易记录'';');
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT=''回测-BS交易记录'';');
 
             PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
             SET i = i + 1;
@@ -104,7 +104,7 @@ BEGIN
             `avg_cost_price` decimal(7,3) unsigned NOT NULL COMMENT ''加权平均成本价'',
             `close_price` decimal(7,3) unsigned NOT NULL COMMENT ''收盘价'',
             `change_pct` decimal(6,2) NOT NULL COMMENT ''当日涨跌幅（%）'',
-            `quantity` mediumint unsigned NOT NULL COMMENT ''持仓数量'',
+            `quantity` mediumint unsigned NOT NULL COMMENT ''持仓/清仓数量'',
             `avl_quantity` mediumint unsigned NOT NULL COMMENT ''可用数量'',
             `market_value` decimal(11,2) unsigned NOT NULL COMMENT ''市值'',
             `position_pct` decimal(6,2) unsigned NOT NULL COMMENT ''仓位占比（%）'',
@@ -115,7 +115,8 @@ BEGIN
             `price_total_return_pct` decimal(6,2) NOT NULL COMMENT ''首次买入价格-累计涨幅（%）'',
             `price_max_return_pct` decimal(6,2) NOT NULL COMMENT ''首次买入价格-最大涨幅（%）'',
             `price_max_drawdown_pct` decimal(6,2) NOT NULL COMMENT ''首次买入价格-最大回撤（%）'',
-            `buy_date` date NOT NULL COMMENT ''买入日期'',
+            `buy_date` date NOT NULL COMMENT ''首次-买入日期'',
+            `buy_price` date NOT NULL COMMENT ''首次-买入价格'',
             `holding_days` smallint unsigned NOT NULL DEFAULT 0 COMMENT ''持仓天数'',
             `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT ''创建时间'',
             `gmt_modify` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT ''更新时间'',
