@@ -273,8 +273,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             // 当日 - 停牌（003005  ->  2022-10-27）
             Integer idx = dateIndexMap.get(tradeDate);
 
-            // 过滤 停牌/新股
-            if (idx == null || idx < 50) {
+            // 过滤 停牌/新股       // TODO 个股行情指标 异常数据bug   688692（达梦数据）     kline 301条   extData 300条（首日 2024-06-12 扩展数据 缺失）
+            if (idx == null || idx < 50 || fun.getKlineDTOList().size() != fun.getExtDataDTOList().size()) {
                 return;
             }
 
@@ -282,7 +282,16 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             // -----------------------------------------------------------------------------------------
 
 
-            Map<String, Boolean> conMap = conMap(extDataArrDTO, idx);
+            // Map<String, Boolean> conMap = conMap(extDataArrDTO, idx);
+
+
+            Map<String, Boolean> conMap = Maps.newHashMap();
+
+            try {
+                conMap = conMap(extDataArrDTO, idx);
+            } catch (Exception ex) {
+                log.error("conMap - err     >>>     stockCode : {} , tradeDate : {} , errMsg : {}", stockCode, tradeDate, ex.getMessage(), ex);
+            }
 
 
             // -----------------------------------------------------------------------------------------
