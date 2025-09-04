@@ -1581,11 +1581,18 @@ public class BacktestStrategy {
 
                 // 转换回原DO 并把 quantity 调成剩余数量
                 BtTradeRecordDO b_original = bt.b_original;
-                // original 剩余数量（当前个股 持仓数量）  ->   抵消卖单后的 剩余数量
+
+
+                // 当前买单 b_original     ->     剩余持仓量（当前个股 剩余持仓数量）  ->   抵消卖单后的 剩余数量
                 b_original.setQuantity(bt.remainingQty);
 
 
-                // 当前 持仓个股   ->   买单列表（剩余数量 -> 持仓数量）
+                // 剩余 持仓总金额  =  买入价格  x  剩余 持仓量
+                double amount = b_original.getPrice().doubleValue() * b_original.getQuantity();
+                b_original.setAmount(NumUtil.double2Decimal(amount));
+
+
+                // 当前 持仓个股   ->   买单列表（剩余 数量/金额   ->   持仓 数量/金额）         各买单 价格不变
                 todayHoldingList.add(b_original);
             }
         }
@@ -1610,6 +1617,7 @@ public class BacktestStrategy {
                                                                      Map<String, PositionInfo> codeInfoMap) {
 
 
+        // 剩余 买单列表（抵扣卖单后 -> 剩余持仓量）
         for (BtTradeRecordDO tr : todayHoldingList) {
 
 
@@ -1621,9 +1629,13 @@ public class BacktestStrategy {
             Integer tradeType = tr.getTradeType();
 
 
+            // 买入价格
             double price = tr.getPrice().doubleValue();
+            // 抵扣卖单后 -> 剩余持仓量
             int quantity = tr.getQuantity();     // 存在只卖部分的情况：大盘仓位限制->等比减仓
+
             // double amount = tr.getAmount().doubleValue();
+            // 剩余 持仓总金额 = 买入价格 x 剩余持仓量
             double amount = price * quantity;
 
 
