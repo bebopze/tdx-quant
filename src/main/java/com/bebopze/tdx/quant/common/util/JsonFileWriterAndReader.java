@@ -53,6 +53,12 @@ public class JsonFileWriterAndReader {
         del__writeLargeListToFile(filePath);
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        log.info("stock__writeLargeListToFile - start     >>>     size : {}", entityList.size());
+
+
         // write newFile
         try (JsonWriter writer = new JsonWriter(new FileWriter(filePath))) {
             writer.beginArray();
@@ -74,6 +80,9 @@ public class JsonFileWriterAndReader {
         } catch (Exception e) {
             log.error("写入文件失败: {}", e.getMessage(), e);
         }
+
+
+        log.info("stock__writeLargeListToFile - end     >>>     size : {}", entityList.size());
     }
 
 
@@ -88,6 +97,12 @@ public class JsonFileWriterAndReader {
 
         // del oldFile
         del__writeLargeListToFile(filePath);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        log.info("block__writeLargeListToFile - start     >>>     size : {}", entityList.size());
 
 
         // write newFile
@@ -111,6 +126,9 @@ public class JsonFileWriterAndReader {
         } catch (Exception e) {
             log.error("写入文件失败: {}", e.getMessage(), e);
         }
+
+
+        log.info("block__writeLargeListToFile - end     >>>     size : {}", entityList.size());
     }
 
 
@@ -133,8 +151,10 @@ public class JsonFileWriterAndReader {
                 entityList.add(readStockKLine(reader));
             }
             reader.endArray();
+        } catch (FileNotFoundException e) {
+            log.warn("stock__readLargeJsonFile - 全量个股Cache为空（缓存文件不存在）    >>>     warnMsg : {}", e.getMessage());
         } catch (Exception e) {
-            log.error("读取文件失败: {}", e.getMessage(), e);
+            log.warn("stock__readLargeJsonFile - 读取文件失败     >>>     errMsg : {}", e.getMessage(), e);
         }
 
 
@@ -158,8 +178,10 @@ public class JsonFileWriterAndReader {
                 entityList.add(readBlockKLine(reader));
             }
             reader.endArray();
+        } catch (FileNotFoundException e) {
+            log.warn("block__readLargeJsonFile - 全量板块Cache为空（缓存文件不存在）    >>>     warnMsg : {}", e.getMessage());
         } catch (Exception e) {
-            log.error("读取文件失败: {}", e.getMessage(), e);
+            log.warn("block__readLargeJsonFile - 读取文件失败     >>>     errMsg : {}", e.getMessage(), e);
         }
 
 

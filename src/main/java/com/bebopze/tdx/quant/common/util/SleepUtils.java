@@ -14,11 +14,17 @@ public class SleepUtils {
 
 
     public static void sleep(long millis) {
+        log.warn("================================ sleep start     >>>     time : {}", DateTimeUtil.format2Hms(millis));
+
+
         try {
             Thread.sleep(millis);
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
         }
+
+
+        log.info("================================ sleep end     >>>     time : {}", DateTimeUtil.format2Hms(millis));
     }
 
 
@@ -35,7 +41,6 @@ public class SleepUtils {
      * @param millis
      */
     public static void winSleep(long millis) {
-        log.info("sleep : {}s", millis / 1000);
         sleep(millis);
     }
 

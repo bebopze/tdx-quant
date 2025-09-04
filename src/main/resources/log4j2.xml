@@ -15,10 +15,12 @@
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
 
+
         <!-- 滚动文件输出：按天和按大小切分 -->
         <RollingFile name="App-File-Appender"
                      fileName="${LOG_PATH}/tdx-quant.log"
                      filePattern="${LOG_PATH}/tdx-quant-%d{yyyy-MM-dd}-%i.log">
+
             <PatternLayout pattern="${LOG_PATTERN}"/>
 
             <!-- 触发策略：每天 00:00 切分 或 单文件超过 100MB 切分 -->
@@ -34,6 +36,7 @@
                     <IfLastModified age="7d"/>
                 </Delete>
             </DefaultRolloverStrategy>
+
         </RollingFile>
 
     </Appenders>
@@ -46,6 +49,7 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="App-File-Appender"/>
         </AsyncLogger>
+
 
         <!-- HTTP 客户端日志输出到控制台 -->
         <Logger name="org.apache.http" level="INFO" additivity="false">
@@ -66,7 +70,6 @@
         <Logger name="com.baomidou.mybatisplus.core" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-
         <!-- MyBatis 日志 -->
         <Logger name="org.apache.ibatis" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
