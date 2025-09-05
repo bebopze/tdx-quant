@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.cache;
 
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
@@ -189,7 +190,7 @@ public class BacktestCache {
         // Cache<K, V> kvCache = cacheSupplier.get();
 
         // 可记录日志、监控、或资源释放
-        return (key, value, cause) -> log.info("{} entry [{}] was removed due to {}     >>>     stats : {}", cacheName, key, cause, cacheSupplier.get().stats());
+        return (key, value, cause) -> log.warn("{} entry [{}] was removed due to {}     >>>     stats : {}", cacheName, key, cause, cacheSupplier.get().stats());
     }
 
 
@@ -241,21 +242,25 @@ public class BacktestCache {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-
     @Override
     public String toString() {
         // toString  ->  OOM
         return "BacktestCache{" +
-                "dateIndexMap=" + dateIndexMap.size() +
+                "startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", dateIndexMap=" + dateIndexMap.size() +
                 ", dateList=" + dateList.size() +
-                ", stockDOList=" + (stockDOList == null ? 0 : stockDOList.size()) +
-                ", ETF_stockDOList=" + (ETF_stockDOList == null ? 0 : ETF_stockDOList.size()) +
+                ", stockDOList=" + ListUtil.size(stockDOList) +
+                ", ETF_stockDOList=" + ListUtil.size(ETF_stockDOList) +
                 ", codeStockMap=" + codeStockMap.size() +
                 ", stock__idCodeMap=" + stock__idCodeMap.size() +
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +
                 ", stock__codeNameMap=" + stock__codeNameMap.size() +
                 ", stock__dateCloseMap=" + stock__dateCloseMap.size() +
-                ", blockDOList=" + (blockDOList == null ? 0 : blockDOList.size()) +
+                ", stock_zt__codePriceMap=" + stock_zt__codePriceMap.size() +
+                ", stock_dt__codePriceMap=" + stock_dt__codePriceMap.size() +
+                ", stock__codePriceMap=" + stock__codePriceMap +
+                ", blockDOList=" + ListUtil.size(blockDOList) +
                 ", codeBlockMap=" + codeBlockMap.size() +
                 ", block__idCodeMap=" + block__idCodeMap.size() +
                 ", block__codeIdMap=" + block__codeIdMap.size() +
@@ -263,6 +268,8 @@ public class BacktestCache {
                 ", block__dateCloseMap=" + block__dateCloseMap.size() +
                 ", stockCode_blockCodeSet_Map=" + stockCode_blockCodeSet_Map.size() +
                 ", blockCode_stockCodeSet_Map=" + blockCode_stockCodeSet_Map.size() +
+                ", bk2_level1__blockCode_stockCodeSet_Map=" + bk2_level1__blockCode_stockCodeSet_Map.size() +
+                ", bk12_level1__blockCode_stockCodeSet_Map=" + bk12_level1__blockCode_stockCodeSet_Map.size() +
                 '}';
     }
 

@@ -11,12 +11,13 @@ import java.util.List;
 
 
 /**
- * Memory Size
+ * Memory Size                                  // 遍历对象图，性能开销大     ->     不适合   实时、大对象
  *
  * @author: bebopze
  * @date: 2025/9/1
  */
 @Slf4j
+@Deprecated
 public class MemorySize {
 
 
@@ -101,7 +102,6 @@ public class MemorySize {
         //
         // long printable_sizeByte = sizeByte(printable);
         // System.out.println(printable_sizeByte);
-
 
     }
 

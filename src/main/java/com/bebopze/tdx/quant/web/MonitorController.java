@@ -38,11 +38,17 @@ public class MonitorController {
     @GetMapping(value = "/memorySize/backtestCache")
     public Result<String> memorySize() {
 
+
         // double sizeMB = MemorySize.sizeMB(InitDataServiceImpl.data);
         // double sizeMB2 = MemorySize.sizeMB(BacktestCache.stockFunCache);
 
-        String size = MemorySize.format(InitDataServiceImpl.data);
-        return Result.SUC(size);
+
+        // 禁用   遍历对象图，性能开销大，不适合实时
+        // String size = MemorySize.format(InitDataServiceImpl.data);
+
+
+        String sizeInfo = InitDataServiceImpl.data.toString();
+        return Result.SUC(sizeInfo);
     }
 
 
