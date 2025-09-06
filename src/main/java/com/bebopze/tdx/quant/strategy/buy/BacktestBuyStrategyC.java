@@ -181,20 +181,21 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     /**
      * 强势个股   ->   IN 主线板块
      *
-     * @param topBlockCodeSet         主线板块
-     * @param buy__topStock__codeList 强势个股
+     * @param topBlockCodeSet    主线板块
+     * @param topStock__codeList 强势个股
      * @param data
      * @param tradeDate
      * @return
      */
     public List<String> inTopBlock__stockCodeList(Set<String> topBlockCodeSet,
-                                                  List<String> buy__topStock__codeList,
+                                                  List<String> topStock__codeList,
+
                                                   BacktestCache data,
                                                   LocalDate tradeDate) {
 
 
         // 强势个股   ->   IN 主线板块
-        List<String> inTopBlock__stockCodeList = buy__topStock__codeList
+        List<String> inTopBlock__stockCodeList = topStock__codeList
                 .stream()
                 .filter(stockCode -> {
 
@@ -211,8 +212,9 @@ public class BacktestBuyStrategyC implements BuyStrategy {
                         if (inTopBlock) {
 
 
-                            // 个股   ->   B-single   主线板块
-                            data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
+                            // 个股   ->   B-signal   主线板块
+                            // String key = tradeDate + "|" + stockCode;
+                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
 
 
                             log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
@@ -323,11 +325,11 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
     /**
-     * 主线板块
+     * 指定   主线策略 + 日期     ->     主线板块 列表
      *
-     * @param topBlockStrategyEnum
+     * @param topBlockStrategyEnum 主线策略
      * @param data
-     * @param tradeDate
+     * @param tradeDate            日期
      * @return
      */
     public Set<String> topBlock(TopBlockStrategyEnum topBlockStrategyEnum, BacktestCache data, LocalDate tradeDate) {

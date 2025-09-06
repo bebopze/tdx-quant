@@ -14,6 +14,7 @@ import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +82,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         long start_2 = System.currentTimeMillis();
-        Set<String> sell__stockCodeSet = sell__stockCodeSet(positionStockCodeList, data, tradeDate, sell_infoMap);
+        Set<String> sell__stockCodeSet = sell__stockCodeSet(positionStockCodeList, topBlockStrategyEnum, data, tradeDate, sell_infoMap);
         log.info("BacktestSellStrategy - sell__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
@@ -121,6 +122,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
     private Set<String> sell__stockCodeSet(List<String> positionStockCodeList,
+                                           TopBlockStrategyEnum topBlockStrategyEnum,
                                            BacktestCache data,
                                            LocalDate tradeDate,
                                            Map<String, SellStrategyEnum> sell_infoMap) {
@@ -158,12 +160,12 @@ public class BacktestSellStrategy implements SellStrategy {
             // -------------------------------------------
 
 
-            // 个股   B-single     ->     主线板块     ->     月空/SSF空/MA20空       =>       个股  ->  S / 减半仓
+            // 个股   B-signal     ->     主线板块     ->     月空/SSF空/MA20空       =>       个股  ->  S / 减半仓
 
             //        ==>       走弱的   前期 【主线板块】 加速出清     =>     清理  掉出【主线板块】 -  对应的个股     ->     加快 自动 【主线板块 切换】
 
 
-            boolean S_topBlock = S_topBlock(stockCode, data, tradeDate);
+            boolean S_topBlock = S_topBlock(stockCode, topBlockStrategyEnum, data, tradeDate);
 
             if (S_topBlock) {
                 // log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , S_topBlock : {}", tradeDate, stockCode, S_topBlock);
@@ -298,43 +300,60 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
     /**
-     * B-single     ->     主线板块     ->     月空/SSF空/MA20空     =>     个股  ->  S / 减半仓
+     * B-signal     ->     主线板块     ->     月空/SSF空/MA20空     =>     个股  ->  S / 减半仓
      *
      *
      * ==>       走弱的   前期 【主线板块】 加速出清     ->     加快 自动 【主线板块 切换】
      *
      * @param stockCode
+     * @param topBlockStrategyEnum
      * @param data
      * @param tradeDate
      * @return
      */
-    private boolean S_topBlock(String stockCode, BacktestCache data, LocalDate tradeDate) {
+    private boolean S_topBlock(String stockCode,
+                               TopBlockStrategyEnum topBlockStrategyEnum,
+                               BacktestCache data,
+                               LocalDate tradeDate) {
 
 
-        // 个股   ->   B-single   主线板块
-        Set<String> topBlockCodeSet = data.stockCode_topBlockCache.getIfPresent(stockCode);
-
-        if (CollectionUtils.isEmpty(topBlockCodeSet)) {
-            return false;
-        }
+        // 今日   主线板块 列表
+        Set<String> topBlockCodeSet = backtestBuyStrategyC.topBlock(topBlockStrategyEnum, data, tradeDate);
+        // 今日   个股 -> IN 主线板块
+        List<String> inTopBlock__stockCodeList = backtestBuyStrategyC.inTopBlock__stockCodeList(topBlockCodeSet, Lists.newArrayList(stockCode), data, tradeDate);
 
 
-        for (String topBlockCode : topBlockCodeSet) {
-
-            boolean topBlock_S = topBlock_S(topBlockCode, data, tradeDate);
-            // 任一 topBlock     ->     还未转空 -> 多
-            if (!topBlock_S) {
-                return false;
-            }
-        }
+        // 个股   ->   NOT IN 主线板块       =>       个股  ->  全部 topBlock   ->   全 转空
+        return CollectionUtils.isEmpty(inTopBlock__stockCodeList);
 
 
-        log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , topBlockCodeSet : {}",
-                 tradeDate, stockCode, JSON.toJSONString(topBlockCodeSet));
+        // 个股   ->   B-signal   主线板块
+        // Set<String> topBlockCodeSet = data.stockCode_topBlockCache.getIfPresent(stockCode);
+
+        // Set<String> all_topBlockCodeSet = data.topBlockCache.getIfPresent(tradeDate).get(topBlockStrategyEnum);
 
 
-        // 个股  ->  全部 topBlock   ->   全 转空
-        return true;
+//        if (CollectionUtils.isEmpty(topBlockCodeSet)) {
+//            return false;
+//        }
+//
+//
+//        for (String topBlockCode : topBlockCodeSet) {
+//
+//            boolean topBlock_S = topBlock_S(topBlockCode, data, tradeDate);
+//            // 任一 topBlock     ->     还未转空 -> 多
+//            if (!topBlock_S) {
+//                return false;
+//            }
+//        }
+//
+//
+//        log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , topBlockCodeSet : {}",
+//                 tradeDate, stockCode, JSON.toJSONString(topBlockCodeSet));
+//
+//
+//        // 个股  ->  全部 topBlock   ->   全 转空
+//        return true;
     }
 
 

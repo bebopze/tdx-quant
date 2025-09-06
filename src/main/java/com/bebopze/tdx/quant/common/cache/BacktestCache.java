@@ -103,14 +103,6 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    /**
-//     * 仅适用 回测（每日 -> 复用1次）   ->     其他 一次性计算 一律禁用🚫（Java 内存管理 非常垃圾   =>   只要涉及大对象  ->  一律卡死）
-//     */
-//    public static final Map<String, StockFun> stockFunMap = Maps.newConcurrentMap();
-//
-//    public static final Map<String, BlockFun> blockFunMap = Maps.newConcurrentMap();
-
-
     // ====== 优化后的缓存 Caffeine ======
 
 
@@ -186,9 +178,6 @@ public class BacktestCache {
     private static <K, V> RemovalListener<K, V> createStatsRemovalListener(String cacheName,
                                                                            Supplier<Cache<K, V>> cacheSupplier) {
 
-        // String _cacheName = cacheSupplier.get().getClass().getSimpleName();
-        // Cache<K, V> kvCache = cacheSupplier.get();
-
         // 可记录日志、监控、或资源释放
         return (key, value, cause) -> log.warn("{} entry [{}] was removed due to {}     >>>     stats : {}", cacheName, key, cause, cacheSupplier.get().stats());
     }
@@ -230,17 +219,18 @@ public class BacktestCache {
                                                                                                          .build();
 
 
-    public static final Cache<String, Set<String>> stockCode_topBlockCache = Caffeine.newBuilder()
-                                                                                     .maximumSize(5_000)
-                                                                                     .expireAfterWrite(60, TimeUnit.MINUTES)
-                                                                                     .expireAfterAccess(30, TimeUnit.MINUTES)
-                                                                                     .recordStats()
-                                                                                     .removalListener(createStatsRemovalListener("stockCode_topBlockCache", () -> BacktestCache.stockCode_topBlockCache))
-                                                                                     .scheduler(Scheduler.systemScheduler())
-                                                                                     .build();
+//    public static final Cache<String, Set<String>> stockCode_topBlockCache = Caffeine.newBuilder()
+//                                                                                     .maximumSize(5_000)
+//                                                                                     .expireAfterWrite(60, TimeUnit.MINUTES)
+//                                                                                     .expireAfterAccess(30, TimeUnit.MINUTES)
+//                                                                                     .recordStats()
+//                                                                                     .removalListener(createStatsRemovalListener("stockCode_topBlockCache", () -> BacktestCache.stockCode_topBlockCache))
+//                                                                                     .scheduler(Scheduler.systemScheduler())
+//                                                                                     .build();
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
 
     @Override
     public String toString() {
