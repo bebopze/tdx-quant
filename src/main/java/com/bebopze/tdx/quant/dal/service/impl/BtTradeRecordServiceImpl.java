@@ -48,10 +48,70 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         return baseMapper.listByTaskIdAndTradeDateRange(taskId, startTradeDate, endTradeDate);
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // 定义一个静态的信号量，用于限制 并发查询 数据库的线程数
+    private static final Semaphore dbReadSemaphore = new Semaphore(6);
+
+
+    @TotalTime
+    @Retryable(
+            value = {Exception.class},
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 3000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
+    )
     @Override
     public List<BtTradeRecordDO> listByTaskId(Long taskId) {
-        return listByTaskIdAndTradeDateRange(taskId, null, null);
+
+
+        try {
+            // 尝试获取信号量许可，获取不到会阻塞等待
+            dbReadSemaphore.acquire();
+            log.info("数据库查询许可 - acquire     >>>     taskId : {} , 队列中等待的线程数 : {}", taskId, dbReadSemaphore.getQueueLength());
+
+
+            // 获取许可后，执行实际的数据库查询操作
+            return listByTaskIdAndTradeDateRange(taskId, null, null);
+
+
+        } catch (InterruptedException e) {
+
+            // 恢复中断状态
+            Thread.currentThread().interrupt();
+
+
+            String errMsg = String.format("数据库查询许可 - 被中断     >>>     taskId : %s", taskId);
+            log.error(errMsg, e);
+
+
+            throw new RuntimeException(errMsg, e);
+
+
+        } catch (Exception ex) {
+
+            String errMsg = String.format("tradeRecord listByTaskId - err     >>>     taskId : %s , errMsg : %s", taskId, ex.getMessage());
+            log.error(errMsg, ex);
+
+
+            // 重新抛出异常，以便触发 @Retryable 机制
+            throw ex;
+
+
+        } finally {
+
+            // 确保在任何情况下都释放信号量许可
+            dbReadSemaphore.release();
+
+            log.debug("数据库查询许可 - release     >>>     taskId : {}", taskId);
+        }
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
     @Override
     public List<BtTradeRecordDO> listByTaskIdAndStockCode(Long taskId, String stockCode) {
@@ -71,7 +131,7 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    // 定义一个静态的信号量，用于限制并发写入数据库的线程数
+    // 定义一个静态的信号量，用于限制 并发写入 数据库的线程数
     private static final Semaphore dbWriteSemaphore = new Semaphore(6);
 
 
