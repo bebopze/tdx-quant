@@ -62,6 +62,8 @@ public class ExtDataDTO implements Serializable {
     private Boolean 均线预萌出;
     private Boolean 均线萌出;
     private Boolean 大均线多头;
+    private Boolean 均线大多头;
+    private Boolean 均线极多头;
 
 
     private Boolean RPS红;

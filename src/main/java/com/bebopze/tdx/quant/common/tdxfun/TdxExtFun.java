@@ -629,8 +629,12 @@ public class TdxExtFun {
 
     /**
      * 均线预萌出信号                         MAPreBreakout
-     * <p>
-     * 伪代码：
+     *
+     *
+     *
+     * 通达信公式：
+     *
+     *
      * MA5   := MA(C, 5);
      * MA10  := MA(C,10);
      * MA20  := MA(C,20);
@@ -773,7 +777,10 @@ public class TdxExtFun {
     /**
      * 计算“大均线多头”布尔序列                            - bigMaBull
      *
-     * 伪代码：
+     *
+     *
+     * 通达信公式：
+     *
      *
      * MA50 := IF(MA(C, 50)=DRAWNULL, 0, MA(C, 50));
      * MA60 := IF(MA(C, 60)=DRAWNULL, 0, MA(C, 60));
@@ -782,18 +789,12 @@ public class TdxExtFun {
      * MA200:= IF(MA(C,200)=DRAWNULL, 0, MA(C,200));
      * MA250:= IF(MA(C,250)=DRAWNULL, 0, MA(C,250));
      *
-     * 大均线多头 :=
-     * (C > MA50 && MA50 > MA100 && MA100 > MA200
-     * && MA50 >= REF(MA50,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
-     * ||
-     * (C > MA60 && MA60 > MA100 && MA100 > MA200
-     * && MA60 >= REF(MA60,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
-     * ||
-     * (C > MA50 && MA50 > MA120 && MA120 > MA250
-     * && MA50 >= REF(MA50,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1))
-     * ||
-     * (C > MA60 && MA60 > MA120 && MA120 > MA250
-     * && MA60 >= REF(MA60,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1));
+     *
+     *
+     * 大均线多头 :=   (C > MA50 && MA50 > MA100 && MA100 > MA200 && MA50 >= REF(MA50,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
+     * ||   (C > MA60 && MA60 > MA100 && MA100 > MA200 && MA60 >= REF(MA60,1) && MA100 >= REF(MA100,1) && MA200 >= REF(MA200,1))
+     * ||   (C > MA50 && MA50 > MA120 && MA120 > MA250 && MA50 >= REF(MA50,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1))
+     * ||   (C > MA60 && MA60 > MA120 && MA120 > MA250 && MA60 >= REF(MA60,1) && MA120 >= REF(MA120,1) && MA250 >= REF(MA250,1));
      *
      * @param close 日线收盘价数组
      * @return 与 close 等长的布尔数组，true 表示当日满足“大均线多头”
@@ -811,12 +812,12 @@ public class TdxExtFun {
         double[] MA250 = MA(close, 250);
 
         // 2. 将 NaN（周期不足）替换为 0
-        MA50 = Arrays.stream(MA50).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA60 = Arrays.stream(MA60).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA100 = Arrays.stream(MA100).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA120 = Arrays.stream(MA120).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA200 = Arrays.stream(MA200).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
-        MA250 = Arrays.stream(MA250).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
+        MA50 = NaN_2_0(MA50);
+        MA60 = NaN_2_0(MA60);
+        MA100 = NaN_2_0(MA100);
+        MA120 = NaN_2_0(MA120);
+        MA200 = NaN_2_0(MA200);
+        MA250 = NaN_2_0(MA250);
 
         // 3. 计算上一日同周期均线（REF）
         double[] MA50_1 = REF(MA50, 1);
@@ -829,6 +830,8 @@ public class TdxExtFun {
 
         // 4. 遍历逐日判断
         boolean[] result = new boolean[n];
+
+
         for (int i = 1; i < n; i++) {
 
             boolean cond1 = close[i] > MA50[i]
@@ -861,6 +864,371 @@ public class TdxExtFun {
 
 
             result[i] = cond1 || cond2 || cond3 || cond4;
+        }
+
+
+        return result;
+    }
+
+
+    /**
+     * 均线大多头
+     *
+     *
+     *
+     * 通达信公式：
+     *
+     *
+     * MA5  :=MA(C, 5);
+     * MA10 :=MA(C,10);
+     * MA20 :=MA(C,20);
+     * MA50 :=IF(MA(C, 50)=DRAWNULL, 0, MA(C, 50));
+     * MA100:=IF(MA(C,100)=DRAWNULL, 0, MA(C,100));
+     * MA120:=IF(MA(C,120)=DRAWNULL, 0, MA(C,120));
+     * MA150:=IF(MA(C,150)=DRAWNULL, 0, MA(C,150));
+     * MA200:=IF(MA(C,200)=DRAWNULL, 0, MA(C,200));
+     * MA250:=IF(MA(C,250)=DRAWNULL, 0, MA(C,250));
+     *
+     *
+     *
+     * 均线大多头 : ( C>=MA10 AND MA10>=MA20 AND MA20>=MA50 AND MA50>=MA100 AND MA100>=MA200 )
+     *
+     * AND        ( MA10>=REF(MA10,1) AND MA20>=REF(MA20,1) AND MA50>=REF(MA50,1) AND MA100>=REF(MA100,1) AND MA200>=REF(MA200,1) )     COLORRED;
+     *
+     * @param close
+     * @return
+     */
+    public static boolean[] 均线大多头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA10 = MA(close, 10);
+        double[] MA20 = MA(close, 20);
+        double[] MA50 = MA(close, 50);
+        double[] MA100 = MA(close, 100);
+        double[] MA200 = MA(close, 200);
+
+        // 2. 将 NaN（周期不足）替换为 0
+        MA10 = NaN_2_0(MA10);
+        MA20 = NaN_2_0(MA20);
+        MA50 = NaN_2_0(MA50);
+        MA100 = NaN_2_0(MA100);
+        MA200 = NaN_2_0(MA200);
+
+        // // 3. 计算上一日同周期均线（REF）
+        // double[] MA10_1 = REF(MA10, 1);
+        // double[] MA20_1 = REF(MA20, 1);
+        // double[] MA50_1 = REF(MA50, 1);
+        // double[] MA100_1 = REF(MA100, 1);
+        // double[] MA200_1 = REF(MA200, 1);
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+
+
+        for (int i = 0; i < n; i++) {
+
+            // 均线大多头 : ( C>=MA10 AND MA10>=MA20 AND MA20>=MA50 AND MA50>=MA100 AND MA100>=MA200 )
+            //
+            //  AND        ( MA10>=REF(MA10,1) AND MA20>=REF(MA20,1) AND MA50>=REF(MA50,1) AND MA100>=REF(MA100,1) AND MA200>=REF(MA200,1) )
+
+            result[i] = i > 0
+                    && close[i] >= MA10[i] && MA10[i] >= MA20[i] && MA20[i] >= MA50[i] && MA50[i] >= MA100[i] && MA100[i] >= MA200[i]
+                    && MA10[i] >= MA10[i - 1] && MA20[i] >= MA20[i - 1] && MA50[i] >= MA50[i - 1] && MA100[i] >= MA100[i - 1] && MA200[i] >= MA200[i - 1];
+        }
+
+
+        return result;
+    }
+
+
+    /**
+     * 均线极多头
+     *
+     *
+     *
+     * 通达信公式：
+     *
+     *
+     * { ----------------------------------------------------------------------------------------------------------------------------- 均线X/Y  ->  均线多头排列 }
+     * X1   :    ABS(C>MA5) + ABS(MA5>MA10) + ABS(MA10>MA20) + ABS(MA20>MA50) + ABS(MA50>MA60) + ABS(MA60>MA100)       NODRAW;
+     *
+     * X2_1 :=   MA100>MA120 AND MA120>MA200 AND MA200>MA250       NODRAW;
+     * X2_2 :=   MA100>MA150 AND MA150>MA200 AND MA200>MA250       NODRAW;
+     * X2   :    X2_1 || X2_2                                      NODRAW;
+     *
+     *
+     *
+     * Y    :    MA5>=REF(MA5,1) AND MA10>=REF(MA10,1) AND MA20>=REF(MA20,1) AND MA50>=REF(MA50,1) AND MA60>=REF(MA60,1)
+     *
+     * AND MA100>=REF(MA100,1) AND MA120>=REF(MA120,1) AND MA150>=REF(MA150,1) AND MA200>=REF(MA200,1) AND MA250>=REF(MA250,1)       NODRAW;
+     *
+     *
+     *
+     * 均线极多头_2   :   X1>=6 AND X2   AND   Y       COLORRED     DOTLINE;
+     *
+     *
+     *
+     * { ----------------------------------------------------------------------------------------------------------------------------- 均线Z  ->  均线间隔 }
+     * 均线极多头 :     EVERY(均线极多头_2,   2)       AND       ( MA5/MA10>1.01  AND   MA10/MA20>1.01 AND MA20/MA50>1.03 )       COLORYELLOW;
+     *
+     * @param close
+     * @return
+     */
+    public static boolean[] 均线极多头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA5 = MA(close, 5);
+        double[] MA10 = MA(close, 10);
+        double[] MA20 = MA(close, 20);
+        double[] MA50 = MA(close, 50);
+        double[] MA60 = MA(close, 60);
+        double[] MA100 = MA(close, 100);
+        double[] MA120 = MA(close, 120);
+        double[] MA150 = MA(close, 150);
+        double[] MA200 = MA(close, 200);
+        double[] MA250 = MA(close, 250);
+
+
+        // // 2. 将 NaN（周期不足）替换为 0
+        // MA5 = NaN_2_0(MA5);
+        // MA10 = NaN_2_0(MA10);
+        // MA20 = NaN_2_0(MA20);
+        // MA50 = NaN_2_0(MA50);
+        // MA60 = NaN_2_0(MA60);
+        // MA100 = NaN_2_0(MA100);
+        // MA120 = NaN_2_0(MA120);
+        // MA150 = NaN_2_0(MA150);
+        // MA200 = NaN_2_0(MA200);
+        // MA250 = NaN_2_0(MA250);
+
+
+        boolean[] X2 = new boolean[n];
+        boolean[] Y = new boolean[n];
+        boolean[] JDT_2 = new boolean[n];
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+
+
+        for (int i = 0; i < n; i++) {
+
+
+            // X1   :    ABS(C>MA5) + ABS(MA5>MA10) + ABS(MA10>MA20) + ABS(MA20>MA50) + ABS(MA50>MA60) + ABS(MA60>MA100)       NODRAW;
+
+            int X1 = 0;
+            if (!Double.isNaN(MA5[i]) && close[i] > MA5[i]) X1++;
+            if (!Double.isNaN(MA10[i]) && MA5[i] > MA10[i]) X1++;
+            if (!Double.isNaN(MA20[i]) && MA10[i] > MA20[i]) X1++;
+            if (!Double.isNaN(MA50[i]) && MA20[i] > MA50[i]) X1++;
+            if (!Double.isNaN(MA60[i]) && MA50[i] > MA60[i]) X1++;
+            if (!Double.isNaN(MA100[i]) && MA60[i] > MA100[i]) X1++;
+
+
+            // X2_1 :=   MA100>MA120 AND MA120>MA200 AND MA200>MA250       NODRAW;
+            // X2_2 :=   MA100>MA150 AND MA150>MA200 AND MA200>MA250       NODRAW;
+            // X2   :    X2_1 || X2_2                                      NODRAW;
+
+            boolean X2_1 = (!Double.isNaN(MA250[i]) && MA100[i] > MA120[i] && MA120[i] > MA200[i] && MA200[i] > MA250[i]);
+            boolean X2_2 = (!Double.isNaN(MA250[i]) && MA100[i] > MA150[i] && MA150[i] > MA200[i] && MA200[i] > MA250[i]);
+            X2[i] = X2_1 || X2_2;
+
+
+            // Y    :    MA5>=REF(MA5,1) AND MA10>=REF(MA10,1) AND MA20>=REF(MA20,1) AND MA50>=REF(MA50,1) AND MA60>=REF(MA60,1)
+            //
+            //          AND MA100>=REF(MA100,1) AND MA120>=REF(MA120,1) AND MA150>=REF(MA150,1) AND MA200>=REF(MA200,1) AND MA250>=REF(MA250,1)       NODRAW;
+
+            Y[i] = (i > 0
+                    && MA5[i] >= MA5[i - 1]
+                    && MA10[i] >= MA10[i - 1]
+                    && MA20[i] >= MA20[i - 1]
+                    && MA50[i] >= MA50[i - 1]
+                    && MA60[i] >= MA60[i - 1]
+                    && MA100[i] >= MA100[i - 1]
+                    && MA120[i] >= MA120[i - 1]
+                    && MA150[i] >= MA150[i - 1]
+                    && MA200[i] >= MA200[i - 1]
+                    && MA250[i] >= MA250[i - 1]);
+
+
+            // 均线极多头_2   :   X1>=6 AND X2   AND   Y       COLORRED     DOTLINE;
+            JDT_2[i] = X1 >= 6 && X2[i] && Y[i];
+
+
+            // 均线极多头 :     EVERY(均线极多头_2,   2)       AND       ( MA5/MA10>1.01  AND   MA10/MA20>1.01 AND MA20/MA50>1.03 )       COLORYELLOW;
+            result[i] = i > 0
+
+                    && JDT_2[i] && JDT_2[i - 1]
+
+                    && MA5[i] / MA10[i] > 1.01
+                    && MA10[i] / MA20[i] > 1.01
+                    && MA20[i] / MA50[i] > 1.03;
+        }
+
+
+        return result;
+    }
+
+
+    /**
+     * 大均线空头
+     *
+     *
+     *
+     * 通达信公式：
+     *
+     *
+     * MA50_MA100跌幅  :   MA_MA跌幅( 50,100)     NODRAW;
+     * MA100_MA200跌幅 :   MA_MA跌幅(100,200)     NODRAW;
+     *
+     * CON_0          :   MA50_MA100跌幅>3 || MA100_MA200跌幅>3       NODRAW;
+     *
+     *
+     * 大均线空头 :       (CON_0)   AND (
+     *
+     * (        C<MA50 AND MA50<MA100 AND MA100<MA200     AND     MA50<REF(MA50,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1)   )
+     * ||   (   C<MA60 AND MA60<MA100 AND MA100<MA200     AND     MA60<REF(MA60,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1)   )
+     *
+     *
+     * ||   (   C<MA50 AND MA50<MA120 AND MA120<MA250     AND     MA50<REF(MA50,1) AND MA120<REF(MA120,1) AND MA250<REF(MA250,1)   )
+     * ||   (   C<MA60 AND MA60<MA120 AND MA120<MA250     AND     MA60<REF(MA60,1) AND MA120<REF(MA120,1) AND MA250<REF(MA250,1)   )       )COLORCYAN;
+     *
+     * @param close
+     * @return
+     */
+    public static boolean[] 大均线空头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA50 = MA(close, 50);
+        double[] MA60 = MA(close, 60);
+        double[] MA100 = MA(close, 100);
+        double[] MA120 = MA(close, 120);
+        double[] MA200 = MA(close, 200);
+        double[] MA250 = MA(close, 250);
+
+        // 2. 将 NaN（周期不足）替换为 0
+        MA50 = NaN_2_0(MA50);
+        MA60 = NaN_2_0(MA60);
+        MA100 = NaN_2_0(MA100);
+        MA120 = NaN_2_0(MA120);
+        MA200 = NaN_2_0(MA200);
+        MA250 = NaN_2_0(MA250);
+
+        // // 3. 计算上一日同周期均线（REF）
+        // double[] MA50_1 = REF(MA50, 1);
+        // double[] MA60_1 = REF(MA60, 1);
+        // double[] MA100_1 = REF(MA100, 1);
+        // double[] MA120_1 = REF(MA120, 1);
+        // double[] MA200_1 = REF(MA200, 1);
+        // double[] MA250_1 = REF(MA250, 1);
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+
+
+        for (int i = 0; i < n; i++) {
+
+
+            //  MA50_MA100跌幅 :   MA_MA跌幅( 50,100)     NODRAW;
+            // MA100_MA200跌幅 :   MA_MA跌幅(100,200)     NODRAW;
+            //
+            // CON_0           :   MA50_MA100跌幅>3 || MA100_MA200跌幅>3       NODRAW;
+
+            boolean con_0 = MA100[i] / MA50[i] >= 1.03 && MA200[i] / MA100[i] >= 1.03;
+
+
+            //
+            //
+            // 大均线空头 :       (CON_0)   AND (
+            //
+            //               (   C<MA50 AND MA50<MA100 AND MA100<MA200     AND     MA50<REF(MA50,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1)   )
+            //          ||   (   C<MA60 AND MA60<MA100 AND MA100<MA200     AND     MA60<REF(MA60,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1)   )
+            //
+            //
+            //          ||   (   C<MA50 AND MA50<MA120 AND MA120<MA250     AND     MA50<REF(MA50,1) AND MA120<REF(MA120,1) AND MA250<REF(MA250,1)   )
+            //          ||   (   C<MA60 AND MA60<MA120 AND MA120<MA250     AND     MA60<REF(MA60,1) AND MA120<REF(MA120,1) AND MA250<REF(MA250,1)   )       )COLORCYAN;
+
+
+            result[i] = i > 0 && con_0 &&
+
+                    (
+                            (close[i] < MA50[i] && MA50[i] < MA100[i] && MA100[i] < MA200[i] && MA50[i] < MA50[i - 1] && MA100[i] < MA100[i - 1] && MA200[i] < MA200[i - 1])
+                                    || (close[i] < MA60[i] && MA60[i] < MA100[i] && MA100[i] < MA200[i] && MA60[i] < MA60[i - 1] && MA100[i] < MA100[i - 1] && MA200[i] < MA200[i - 1])
+
+                                    || (close[i] < MA50[i] && MA50[i] < MA120[i] && MA120[i] < MA250[i] && MA50[i] < MA50[i - 1] && MA120[i] < MA120[i - 1] && MA250[i] < MA250[i - 1])
+                                    || (close[i] < MA60[i] && MA60[i] < MA120[i] && MA120[i] < MA250[i] && MA60[i] < MA60[i - 1] && MA120[i] < MA120[i - 1] && MA250[i] < MA250[i - 1])
+                    );
+        }
+
+
+        return result;
+    }
+
+
+    /**
+     * 均线大空头
+     *
+     *
+     *
+     * 通达信公式：
+     *
+     * 均线大空头 :   ( C<MA10 AND MA10<MA20 AND MA20<MA50 AND MA50<MA100 AND MA100<MA200 )
+     *
+     * AND            ( MA10<REF(MA10,1) AND MA20<REF(MA20,1) AND MA50<REF(MA50,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1) )       COLORCYAN;
+     *
+     * @param close
+     * @return
+     */
+    public static boolean[] 均线大空头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA10 = MA(close, 10);
+        double[] MA20 = MA(close, 20);
+        double[] MA50 = MA(close, 50);
+        double[] MA100 = MA(close, 100);
+        double[] MA200 = MA(close, 200);
+
+        // 2. 将 NaN（周期不足）替换为 0
+        MA10 = NaN_2_0(MA10);
+        MA20 = NaN_2_0(MA20);
+        MA50 = NaN_2_0(MA50);
+        MA100 = NaN_2_0(MA100);
+        MA200 = NaN_2_0(MA200);
+
+        // // 3. 计算上一日同周期均线（REF）
+        // double[] MA50_1 = REF(MA50, 1);
+        // double[] MA60_1 = REF(MA60, 1);
+        // double[] MA100_1 = REF(MA100, 1);
+        // double[] MA120_1 = REF(MA120, 1);
+        // double[] MA200_1 = REF(MA200, 1);
+        // double[] MA250_1 = REF(MA250, 1);
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+
+
+        for (int i = 0; i < n; i++) {
+
+
+            // 均线大空头 :   ( C<MA10 AND MA10<MA20 AND MA20<MA50 AND MA50<MA100 AND MA100<MA200 )
+            //
+            //    AND       ( MA10<REF(MA10,1) AND MA20<REF(MA20,1) AND MA50<REF(MA50,1) AND MA100<REF(MA100,1) AND MA200<REF(MA200,1) )       COLORCYAN;
+
+
+            result[i] = i > 0 &&
+                    close[i] < MA10[i] && MA10[i] < MA20[i] && MA20[i] < MA50[i] && MA50[i] < MA100[i] && MA100[i] < MA200[i]
+                    && MA10[i] < MA10[i - 1] && MA20[i] < MA20[i - 1] && MA50[i] < MA50[i - 1] && MA100[i] < MA100[i - 1] && MA200[i] < MA200[i - 1];
         }
 
 
@@ -1304,6 +1672,20 @@ public class TdxExtFun {
 
 
         return MA;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 将 NaN（周期不足）替换为 0
+     *
+     * @param arr
+     * @return
+     */
+    private static double[] NaN_2_0(double[] arr) {
+        return Arrays.stream(arr).map(v -> Double.isNaN(v) ? 0.0 : v).toArray();
     }
 
 

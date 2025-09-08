@@ -104,6 +104,8 @@ public class TdxFunParserCheck {
         boolean[] 均线预萌出_arr = fun.均线预萌出();
         boolean[] 均线萌出_arr = fun.均线萌出();
         boolean[] 大均线多头_arr = fun.大均线多头();
+        boolean[] 均线大多头_arr = fun.均线大多头();
+        boolean[] 均线极多头_arr = fun.均线极多头();
 
 
         boolean[] RPS红_arr = fun.RPS红(85);
@@ -149,6 +151,8 @@ public class TdxFunParserCheck {
             boolean 均线预萌出 = dto.get均线预萌出();
             boolean 均线萌出 = dto.get均线萌出();
             boolean 大均线多头 = dto.get大均线多头();
+            boolean 均线大多头 = dto.get均线大多头();
+            boolean 均线极多头 = dto.get均线极多头();
 
 
             boolean RPS红 = dto.getRPS红();
@@ -175,6 +179,8 @@ public class TdxFunParserCheck {
             boolean _均线预萌出 = 均线预萌出_arr[idx];
             boolean _均线萌出 = 均线萌出_arr[idx];
             boolean _大均线多头 = 大均线多头_arr[idx];
+            boolean _均线大多头 = 均线大多头_arr[idx];
+            boolean _均线极多头 = 均线极多头_arr[idx];
 
 
             boolean _RPS红 = RPS红_arr[idx];
@@ -205,6 +211,8 @@ public class TdxFunParserCheck {
             checkFunVal(stockCode, date, idx, "均线预萌出", _均线预萌出, 均线预萌出, dto);
             checkFunVal(stockCode, date, idx, "均线萌出", _均线萌出, 均线萌出, dto);
             checkFunVal(stockCode, date, idx, "大均线多头", _大均线多头, 大均线多头, dto);
+            checkFunVal(stockCode, date, idx, "均线大多头", _均线大多头, 均线大多头, dto);
+            checkFunVal(stockCode, date, idx, "均线极多头", _均线极多头, 均线极多头, dto);
 
 
             checkFunVal(stockCode, date, idx, "RPS红", _RPS红, RPS红, dto);

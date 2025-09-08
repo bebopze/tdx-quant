@@ -59,6 +59,8 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] 均线预萌出;
     public boolean[] 均线萌出;
     public boolean[] 大均线多头;
+    public boolean[] 均线大多头;
+    public boolean[] 均线极多头;
 
 
     public boolean[] RPS红;
@@ -115,6 +117,8 @@ public class ExtDataArrDTO implements Serializable {
         this.均线预萌出 = new boolean[size];
         this.均线萌出 = new boolean[size];
         this.大均线多头 = new boolean[size];
+        this.均线大多头 = new boolean[size];
+        this.均线极多头 = new boolean[size];
 
 
         this.RPS红 = new boolean[size];

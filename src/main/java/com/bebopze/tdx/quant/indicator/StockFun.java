@@ -442,8 +442,11 @@ public class StockFun {
     }
 
     public boolean[] 均线大多头() {
-        // return TdxExtFun.均线大多头(close);
-        return null;
+        return TdxExtFun.均线大多头(close);
+    }
+
+    public boolean[] 均线极多头() {
+        return TdxExtFun.均线极多头(close);
     }
 
 

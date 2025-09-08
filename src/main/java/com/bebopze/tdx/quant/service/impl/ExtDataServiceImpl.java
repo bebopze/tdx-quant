@@ -444,6 +444,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 均线预萌出 = fun.均线预萌出();
         boolean[] 均线萌出 = fun.均线萌出();
         boolean[] 大均线多头 = fun.大均线多头();
+        boolean[] 均线大多头 = fun.均线大多头();
+        boolean[] 均线极多头 = fun.均线极多头();
 
 
 //        boolean[] RPS红 = fun.RPS红(85);
@@ -492,6 +494,8 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set均线预萌出(均线预萌出[i]);
             dto.set均线萌出(均线萌出[i]);
             dto.set大均线多头(大均线多头[i]);
+            dto.set均线大多头(均线大多头[i]);
+            dto.set均线极多头(均线极多头[i]);
 
 
             dto.setRPS红(RPS红[i]);

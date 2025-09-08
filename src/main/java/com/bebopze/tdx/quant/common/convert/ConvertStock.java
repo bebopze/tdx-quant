@@ -209,6 +209,8 @@ public class ConvertStock {
             arrDTO.均线预萌出[i] = of(dto.get均线预萌出());
             arrDTO.均线萌出[i] = of(dto.get均线萌出());
             arrDTO.大均线多头[i] = of(dto.get大均线多头());
+            arrDTO.均线大多头[i] = of(dto.get均线大多头());
+            arrDTO.均线极多头[i] = of(dto.get均线极多头());
 
 
             arrDTO.RPS红[i] = of(dto.getRPS红());
