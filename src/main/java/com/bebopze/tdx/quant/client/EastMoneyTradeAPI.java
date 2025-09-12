@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.config.anno.BSLimiter;
 import com.bebopze.tdx.quant.common.config.aspect.StockTradingRateLimiter;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
@@ -15,12 +14,14 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,9 +62,14 @@ public class EastMoneyTradeAPI {
 
 
     /**
-     * 当前账户 实时净资产
+     * 当前账户 实时总资金
      */
-    private static double NET_ASSET = 0;
+    private static double TOTAL_CAP = 0;
+
+    /**
+     * 单笔买入 金额限制：50万
+     */
+    private static final double PER_BUY_AMOUNT_LIMIT = 50_0000;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -123,6 +129,10 @@ public class EastMoneyTradeAPI {
 
         // ----------------------------- 持股详情 列表
         // List<CcStockInfo> stockDTOList = resp.getStocks();
+
+
+        // 实时总资金
+        TOTAL_CAP = resp.getMax_TotalCap();
 
 
         return resp;
@@ -192,7 +202,15 @@ public class EastMoneyTradeAPI {
     public static Integer submitTradeV2(SubmitTradeV2Req req) {
 
 
+        // 防误触   ->   全局校验：买入金额 < 总资金 * 20%   、  单笔买入 金额限制
+        buyCheck(req);
+
+
+        // 量化限流
         limiter(req.getStockCode());
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // https://jywg.18.cn/MarginTrade/SubmitTradeV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
@@ -244,6 +262,31 @@ public class EastMoneyTradeAPI {
     }
 
 
+    /**
+     * 全局校验：买入金额 < 总资金 * 20%   、  单笔买入 金额限制
+     *
+     * @param req
+     */
+    private static void buyCheck(SubmitTradeV2Req req) {
+
+        TradeTypeEnum tradeTypeEnum = req.getTradeTypeEnum();
+
+        if (tradeTypeEnum == TradeTypeEnum.RZ_BUY || tradeTypeEnum == TradeTypeEnum.ZY_BUY) {
+            double buyAmount = req.getPrice().doubleValue() * req.getAmount();
+
+
+            // 买入金额 < 总资金 * 20%
+            Assert.isTrue(buyAmount < TOTAL_CAP * 0.2,
+                          String.format("个股[%s]买入仓位占比[%s]超限制[20%%]", req.getStockCode(), NumUtil.of(buyAmount / TOTAL_CAP)));
+
+
+            // 单笔买入 金额限制
+            Assert.isTrue(buyAmount < PER_BUY_AMOUNT_LIMIT,
+                          String.format("个股[%s]单笔买入金额[%s]超上限[%s]", req.getStockCode(), buyAmount, PER_BUY_AMOUNT_LIMIT));
+        }
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -290,6 +333,7 @@ public class EastMoneyTradeAPI {
     public static List<RevokeOrderResultDTO> revokeOrders(RevokeOrdersReq req) {
 
 
+        // 量化限流
         limiter("-1");
 
 
@@ -354,6 +398,11 @@ public class EastMoneyTradeAPI {
     private static final StockTradingRateLimiter limiter = new StockTradingRateLimiter();
 
 
+    /**
+     * 量化限流
+     *
+     * @param stockCode
+     */
     @SneakyThrows
     public static void limiter(String stockCode) {
         long start = System.currentTimeMillis();
@@ -366,7 +415,7 @@ public class EastMoneyTradeAPI {
 
         // 限流 -> 等待许可后执行交易
         limiter.tryAcquireWithTimeout(stockCode, 60 * 1000);
-        log.info("[" + stockCode + "] 在 " + DateTimeUtil.formatNow2Hms(start) + " 执行交易");
+        log.info("[" + stockCode + "] 执行交易耗时：" + DateTimeUtil.formatNow2Hms(start));
     }
 
 
