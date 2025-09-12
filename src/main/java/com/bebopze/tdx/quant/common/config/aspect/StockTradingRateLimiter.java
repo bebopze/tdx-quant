@@ -15,8 +15,11 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  *
  * 基于上交所和深交所监管规则：
- * -     1秒内对同一证券申报次数≥5次
- * -     1分钟内对同一证券申报次数≥15-20次
+ * -   每秒 同一证券 申报次数≥5次
+ * - 每分钟 同一证券 申报次数≥15-20次
+ *
+ * -   每秒 全部证券 申报次数≥20次
+ * - 每分钟 全部证券 申报次数≥1000次
  *
  * @author: bebopze
  * @date: 2025/9/12
@@ -42,9 +45,19 @@ public class StockTradingRateLimiter {
     //     撤单率≥50%且撤单次数≥200次
 
 
+    // 全局监控：
+    //
+    //     1秒内对全部证券申报次数≥20次
+    //     1分钟内对全部证券申报次数≥1000次
+
+
     // 监管规则配置
-    private static final int MAX_REQUESTS_PER_SECOND = 4;  // 每秒最大请求数（留有余量）
-    private static final int MAX_REQUESTS_PER_MINUTE = 15; // 每分钟最大请求数
+    private static final int MAX_REQUESTS_PER_SECOND_PER_STOCK = 4;  // 每秒单股票最大请求数（留有余量）
+    private static final int MAX_REQUESTS_PER_MINUTE_PER_STOCK = 15; // 每分钟单股票最大请求数
+
+
+    private static final int MAX_REQUESTS_PER_SECOND_GLOBAL = 20;    // 每秒全局最大请求数
+    private static final int MAX_REQUESTS_PER_MINUTE_GLOBAL = 1000;  // 每分钟全局最大请求数
 
 
     // 时间窗口配置
@@ -54,6 +67,9 @@ public class StockTradingRateLimiter {
 
     // 为每只股票维护独立的限流器
     private static final ConcurrentHashMap<String, StockLimiter> stockLimiters = new ConcurrentHashMap<>();
+
+    // 全局限流器
+    private static final GlobalLimiter globalLimiter = new GlobalLimiter();
 
 
     /**
@@ -105,7 +121,8 @@ public class StockTradingRateLimiter {
                 int currentMinuteCount = minuteCounter.get();
 
 
-                if (currentSecondCount >= MAX_REQUESTS_PER_SECOND || currentMinuteCount >= MAX_REQUESTS_PER_MINUTE) {
+                if (currentSecondCount >= MAX_REQUESTS_PER_SECOND_PER_STOCK ||
+                        currentMinuteCount >= MAX_REQUESTS_PER_MINUTE_PER_STOCK) {
                     // 需要等待
                     return false;
                 }
@@ -132,9 +149,9 @@ public class StockTradingRateLimiter {
         public int getSecondRemaining() {
             long now = System.currentTimeMillis();
             if (now - lastSecondReset >= SECOND_WINDOW) {
-                return MAX_REQUESTS_PER_SECOND;
+                return MAX_REQUESTS_PER_SECOND_PER_STOCK;
             }
-            return Math.max(0, MAX_REQUESTS_PER_SECOND - secondCounter.get());
+            return Math.max(0, MAX_REQUESTS_PER_SECOND_PER_STOCK - secondCounter.get());
         }
 
 
@@ -144,9 +161,96 @@ public class StockTradingRateLimiter {
         public int getMinuteRemaining() {
             long now = System.currentTimeMillis();
             if (now - lastMinuteReset >= MINUTE_WINDOW) {
-                return MAX_REQUESTS_PER_MINUTE;
+                return MAX_REQUESTS_PER_MINUTE_PER_STOCK;
             }
-            return Math.max(0, MAX_REQUESTS_PER_MINUTE - minuteCounter.get());
+            return Math.max(0, MAX_REQUESTS_PER_MINUTE_PER_STOCK - minuteCounter.get());
+        }
+    }
+
+
+    /**
+     * 全局限流器内部类
+     */
+    private static class GlobalLimiter {
+
+        // 全局秒级计数器和时间戳
+        private final AtomicInteger globalSecondCounter = new AtomicInteger(0);
+        private volatile long lastGlobalSecondReset = System.currentTimeMillis();
+
+        // 全局分钟级计数器和时间戳
+        private final AtomicInteger globalMinuteCounter = new AtomicInteger(0);
+        private volatile long lastGlobalMinuteReset = System.currentTimeMillis();
+
+        private final ReentrantLock globalLock = new ReentrantLock();
+
+
+        /**
+         * 尝试获取全局交易许可
+         *
+         * @return true-允许交易，false-需要等待
+         */
+        public boolean tryAcquire() {
+            long now = System.currentTimeMillis();
+
+            globalLock.lock();
+
+            try {
+                // 检查并重置全局秒级计数器
+                if (now - lastGlobalSecondReset >= SECOND_WINDOW) {
+                    globalSecondCounter.set(0);
+                    lastGlobalSecondReset = now;
+                }
+
+                // 检查并重置全局分钟级计数器
+                if (now - lastGlobalMinuteReset >= MINUTE_WINDOW) {
+                    globalMinuteCounter.set(0);
+                    lastGlobalMinuteReset = now;
+                }
+
+                // 检查是否超过全局限制
+                int currentGlobalSecondCount = globalSecondCounter.get();
+                int currentGlobalMinuteCount = globalMinuteCounter.get();
+
+                if (currentGlobalSecondCount >= MAX_REQUESTS_PER_SECOND_GLOBAL ||
+                        currentGlobalMinuteCount >= MAX_REQUESTS_PER_MINUTE_GLOBAL) {
+                    // 需要等待
+                    return false;
+                }
+
+                // 增加全局计数器
+                globalSecondCounter.incrementAndGet();
+                globalMinuteCounter.incrementAndGet();
+
+                // 允许交易
+                return true;
+
+            } finally {
+                globalLock.unlock();
+            }
+        }
+
+
+        /**
+         * 获取当前全局秒级剩余配额
+         */
+        public int getGlobalSecondRemaining() {
+            long now = System.currentTimeMillis();
+            if (now - lastGlobalSecondReset >= SECOND_WINDOW) {
+                return MAX_REQUESTS_PER_SECOND_GLOBAL;
+            }
+            return Math.max(0, MAX_REQUESTS_PER_SECOND_GLOBAL - globalSecondCounter.get());
+        }
+
+
+        /**
+         * 获取当前全局分钟级剩余配额
+         */
+        public int getGlobalMinuteRemaining() {
+            long now = System.currentTimeMillis();
+            if (now - lastGlobalMinuteReset >= MINUTE_WINDOW) {
+                return MAX_REQUESTS_PER_MINUTE_GLOBAL;
+            }
+            return Math.max(0, MAX_REQUESTS_PER_MINUTE_GLOBAL - globalMinuteCounter.get());
         }
     }
 
@@ -166,15 +270,26 @@ public class StockTradingRateLimiter {
      * @throws InterruptedException 如果等待被中断
      */
     public void waitForPermit(String stockCode) throws InterruptedException {
-        StockLimiter limiter = getStockLimiter(stockCode);
+        StockLimiter stockLimiter = getStockLimiter(stockCode);
 
-        while (!limiter.tryAcquire()) {
+        while (!stockLimiter.tryAcquire() || !globalLimiter.tryAcquire()) {
             // 计算需要等待的时间
             long now = System.currentTimeMillis();
-            long waitTime = Math.min(
-                    SECOND_WINDOW - (now - limiter.lastSecondReset),
-                    MINUTE_WINDOW - (now - limiter.lastMinuteReset)
+
+            // 计算股票级别等待时间
+            long stockWaitTime = Math.min(
+                    SECOND_WINDOW - (now - stockLimiter.lastSecondReset),
+                    MINUTE_WINDOW - (now - stockLimiter.lastMinuteReset)
             );
+
+            // 计算全局级别等待时间
+            long globalWaitTime = Math.min(
+                    SECOND_WINDOW - (now - globalLimiter.lastGlobalSecondReset),
+                    MINUTE_WINDOW - (now - globalLimiter.lastGlobalMinuteReset)
+            );
+
+            // 取较小的等待时间
+            long waitTime = Math.min(stockWaitTime, globalWaitTime);
 
             // 等待一小段时间后重试（0.1s ~ 1s）
             Thread.sleep(Math.min(Math.max(waitTime / 4, 100), 1000));
@@ -193,20 +308,30 @@ public class StockTradingRateLimiter {
     public boolean tryAcquireWithTimeout(String stockCode, long timeout) throws InterruptedException {
         long startTime = System.currentTimeMillis();
 
-
-        StockLimiter limiter = getStockLimiter(stockCode);
+        StockLimiter stockLimiter = getStockLimiter(stockCode);
 
         while (System.currentTimeMillis() - startTime < timeout) {
-            if (limiter.tryAcquire()) {
+            if (stockLimiter.tryAcquire() && globalLimiter.tryAcquire()) {
                 return true;
             }
 
             // 计算需要等待的时间
             long now = System.currentTimeMillis();
-            long waitTime = Math.min(
-                    SECOND_WINDOW - (now - limiter.lastSecondReset),
-                    MINUTE_WINDOW - (now - limiter.lastMinuteReset)
+
+            // 计算股票级别等待时间
+            long stockWaitTime = Math.min(
+                    SECOND_WINDOW - (now - stockLimiter.lastSecondReset),
+                    MINUTE_WINDOW - (now - stockLimiter.lastMinuteReset)
             );
+
+            // 计算全局级别等待时间
+            long globalWaitTime = Math.min(
+                    SECOND_WINDOW - (now - globalLimiter.lastGlobalSecondReset),
+                    MINUTE_WINDOW - (now - globalLimiter.lastGlobalMinuteReset)
+            );
+
+            // 取较小的等待时间
+            long waitTime = Math.min(stockWaitTime, globalWaitTime);
 
             // 等待一小段时间后重试（0.1s ~ 1s）
             Thread.sleep(Math.min(Math.max(waitTime / 4, 50), 500));
@@ -223,20 +348,26 @@ public class StockTradingRateLimiter {
      * @return true-可以立即交易，false-需要等待
      */
     public boolean canTradeImmediately(String stockCode) {
-        return getStockLimiter(stockCode).tryAcquire();
+        StockLimiter stockLimiter = getStockLimiter(stockCode);
+        return stockLimiter.tryAcquire() && globalLimiter.tryAcquire();
     }
 
 
     /**
-     * 获取剩余配额信息
+     * 获取剩余配额信息（包括股票级别和全局级别）
      */
     public RateInfo getRateInfo(String stockCode) {
-        StockLimiter limiter = getStockLimiter(stockCode);
+        StockLimiter stockLimiter = getStockLimiter(stockCode);
+
         return new RateInfo(
-                limiter.getSecondRemaining(),
-                limiter.getMinuteRemaining(),
-                MAX_REQUESTS_PER_SECOND,
-                MAX_REQUESTS_PER_MINUTE
+                stockLimiter.getSecondRemaining(),
+                stockLimiter.getMinuteRemaining(),
+                globalLimiter.getGlobalSecondRemaining(),
+                globalLimiter.getGlobalMinuteRemaining(),
+                MAX_REQUESTS_PER_SECOND_PER_STOCK,
+                MAX_REQUESTS_PER_MINUTE_PER_STOCK,
+                MAX_REQUESTS_PER_SECOND_GLOBAL,
+                MAX_REQUESTS_PER_MINUTE_GLOBAL
         );
     }
 
@@ -246,35 +377,66 @@ public class StockTradingRateLimiter {
      */
     @Data
     public static class RateInfo {
-        private final int secondRemaining;
-        private final int minuteRemaining;
-        private final int maxSecondRequests;
-        private final int maxMinuteRequests;
+        // 股票级别
+        private final int stockSecondRemaining;
+        private final int stockMinuteRemaining;
+        // 全局级别
+        private final int globalSecondRemaining;
+        private final int globalMinuteRemaining;
 
-        public RateInfo(int secondRemaining, int minuteRemaining, int maxSecondRequests, int maxMinuteRequests) {
-            this.secondRemaining = secondRemaining;
-            this.minuteRemaining = minuteRemaining;
-            this.maxSecondRequests = maxSecondRequests;
-            this.maxMinuteRequests = maxMinuteRequests;
+        // 最大限制
+        private final int maxStockSecondRequests;
+        private final int maxStockMinuteRequests;
+        private final int maxGlobalSecondRequests;
+        private final int maxGlobalMinuteRequests;
+
+        public RateInfo(int stockSecondRemaining, int stockMinuteRemaining,
+                        int globalSecondRemaining, int globalMinuteRemaining,
+                        int maxStockSecondRequests, int maxStockMinuteRequests,
+                        int maxGlobalSecondRequests, int maxGlobalMinuteRequests) {
+            this.stockSecondRemaining = stockSecondRemaining;
+            this.stockMinuteRemaining = stockMinuteRemaining;
+            this.globalSecondRemaining = globalSecondRemaining;
+            this.globalMinuteRemaining = globalMinuteRemaining;
+            this.maxStockSecondRequests = maxStockSecondRequests;
+            this.maxStockMinuteRequests = maxStockMinuteRequests;
+            this.maxGlobalSecondRequests = maxGlobalSecondRequests;
+            this.maxGlobalMinuteRequests = maxGlobalMinuteRequests;
         }
 
 
-        public double getSecondUtilization() {
-            return (double) (maxSecondRequests - secondRemaining) / maxSecondRequests;
+        public double getStockSecondUtilization() {
+            return (double) (maxStockSecondRequests - stockSecondRemaining) / maxStockSecondRequests;
         }
 
-        public double getMinuteUtilization() {
-            return (double) (maxMinuteRequests - minuteRemaining) / maxMinuteRequests;
+        public double getStockMinuteUtilization() {
+            return (double) (maxStockMinuteRequests - stockMinuteRemaining) / maxStockMinuteRequests;
+        }
+
+        public double getGlobalSecondUtilization() {
+            return (double) (maxGlobalSecondRequests - globalSecondRemaining) / maxGlobalSecondRequests;
+        }
+
+        public double getGlobalMinuteUtilization() {
+            return (double) (maxGlobalMinuteRequests - globalMinuteRemaining) / maxGlobalMinuteRequests;
         }
 
 
         @Override
         public String toString() {
-            return String.format("RateInfo{秒级剩余=%d/%d, 分钟级剩余=%d/%d, 秒级使用率=%.2f%%, 分钟级使用率=%.2f%%}",
-                                 secondRemaining, maxSecondRequests,
-                                 minuteRemaining, maxMinuteRequests,
-                                 getSecondUtilization() * 100,
-                                 getMinuteUtilization() * 100);
+            return String.format("RateInfo{" +
+                                         "股票秒级剩余=%d/%d, 股票分钟级剩余=%d/%d, " +
+                                         "全局秒级剩余=%d/%d, 全局分钟级剩余=%d/%d, " +
+                                         "股票秒级使用率=%.2f%%, 股票分钟级使用率=%.2f%%, " +
+                                         "全局秒级使用率=%.2f%%, 全局分钟级使用率=%.2f%%}",
+                                 stockSecondRemaining, maxStockSecondRequests,
+                                 stockMinuteRemaining, maxStockMinuteRequests,
+                                 globalSecondRemaining, maxGlobalSecondRequests,
+                                 globalMinuteRemaining, maxGlobalMinuteRequests,
+                                 getStockSecondUtilization() * 100,
+                                 getStockMinuteUtilization() * 100,
+                                 getGlobalSecondUtilization() * 100,
+                                 getGlobalMinuteUtilization() * 100);
         }
     }
 
@@ -299,20 +461,22 @@ public class StockTradingRateLimiter {
         for (int i = 0; i < 30; i++) {
 
             final int taskId = i;
+            final String currentStockCode = i % 3 == 0 ? "600000" : (i % 3 == 1 ? "000001" : "600036");
 
             executor.submit(() -> {
                 try {
 
                     // 获取当前速率信息
-                    StockTradingRateLimiter.RateInfo rateInfo = limiter.getRateInfo(stockCode);
-                    System.out.println("任务" + taskId + " - " + rateInfo);
+                    StockTradingRateLimiter.RateInfo rateInfo = limiter.getRateInfo(currentStockCode);
+                    System.out.println("任务" + taskId + "(" + currentStockCode + ") - " + rateInfo);
 
 
                     // 等待许可后执行交易
-                    limiter.waitForPermit(stockCode);
+                    limiter.waitForPermit(currentStockCode);
 
 
-                    System.out.println("任务" + taskId + " 在 " + java.time.LocalTime.now() + " 执行交易");
+                    System.out.println("任务" + taskId + "(" + currentStockCode + ") 在 " +
+                                               java.time.LocalTime.now() + " 执行交易");
 
 
                     // 模拟交易处理时间
