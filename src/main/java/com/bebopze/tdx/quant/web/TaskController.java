@@ -6,12 +6,13 @@ import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.task.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
+import com.bebopze.tdx.quant.task.progress.TaskProgress;
+import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 /**
@@ -34,6 +35,9 @@ public class TaskController {
     @Autowired
     private InitDataService initDataService;
 
+    @Autowired
+    private TaskProgressManager taskProgressManager;
+
 
     /**
      * refreshAll   -   盘中 -> 增量更新
@@ -42,9 +46,9 @@ public class TaskController {
      */
     @Operation(summary = "refreshAll - 增量更新", description = "refreshAll - 盘中 -> 增量更新")
     @GetMapping(value = "/refreshAll__lataDay")
-    public Result<Void> refreshAll__lataDay() {
-        tdxTask.execTask__refreshAll__lataDay();
-        return Result.SUC();
+    public Result<String> refreshAll__lataDay() {
+        String taskId = tdxTask.execTask__refreshAll__lataDay();
+        return Result.SUC(taskId);
     }
 
 
@@ -55,9 +59,9 @@ public class TaskController {
      */
     @Operation(summary = "refreshAll - 全量更新", description = "refreshAll - 盘后 -> 全量更新")
     @GetMapping(value = "/refreshAll")
-    public Result<Void> refreshAll() {
-        tdxTask.execTask__refreshAll();
-        return Result.SUC();
+    public Result<String> refreshAll() {
+        String taskId = tdxTask.execTask__refreshAll();
+        return Result.SUC(taskId);
     }
 
 
@@ -96,5 +100,28 @@ public class TaskController {
         return Result.SUC();
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "获取任务进度", description = "获取任务进度")
+    @GetMapping(value = "/progress/{taskId}")
+    public Result<TaskProgress> getTaskProgress(@PathVariable String taskId) {
+        return Result.SUC(taskProgressManager.getProgress(taskId));
+    }
+
+
+    @Operation(summary = "获取所有活跃任务", description = "获取所有活跃任务")
+    @GetMapping(value = "/activeTasks")
+    public Result<List<TaskProgress>> getActiveTasks() {
+        return Result.SUC(taskProgressManager.getAllActiveTasks());
+    }
+
+
+    @Operation(summary = "获取任务历史", description = "获取任务历史")
+    @GetMapping(value = "/taskHistory")
+    public Result<List<TaskProgress>> getTaskHistory() {
+        return Result.SUC(taskProgressManager.getTaskHistory());
+    }
 
 }

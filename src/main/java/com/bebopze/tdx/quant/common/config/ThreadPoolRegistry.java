@@ -46,7 +46,7 @@ public class ThreadPoolRegistry {
                      ThreadPoolConfig.builder()
                                      .name("CPU-Intensive-Pool2")
                                      .corePoolSize(processors + 1)
-                                     .maxPoolSize(processors + 2)
+                                     .maxPoolSize(processors * 2 - 1)
                                      .queueCapacity(200)
                                      .build());
 

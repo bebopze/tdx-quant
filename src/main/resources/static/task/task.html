@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>任务列表 - 实时进度</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .nav-links {
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            margin-right: 15px;
+            padding: 10px 15px;
+            text-decoration: none;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            background-color: #d0d0d0;
+        }
+
+        .task-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            margin: 10px 5px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #d0d0d0;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e68900;
+        }
+
+        .btn-info {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #1976D2;
+        }
+
+        .form-group {
+            margin: 10px 0;
+        }
+
+        .form-group label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .task-item {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4CAF50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin: 10px 0;
+            height: 20px;
+        }
+
+        /* 进度条填充颜色 */
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.status-running {
+            background-color: #4CAF50;
+        }
+
+        .progress-fill.status-completed {
+            background-color: #4CAF50;
+        }
+
+        .progress-fill.status-failed {
+            background-color: #f44336;
+        }
+
+        .task-info {
+            margin: 10px 0;
+        }
+
+        /* 任务状态样式 */
+        .task-status {
+            color: #2196F3;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .task-status.status-running {
+            background-color: #e3f2fd;
+            color: #2196F3;
+        }
+
+        .task-status.status-completed {
+            background-color: #e8f5e9;
+            color: #4CAF50;
+        }
+
+        .task-status.status-failed {
+            background-color: #ffebee;
+            color: #f44336;
+        }
+
+        .sub-tasks {
+            margin-top: 15px;
+        }
+
+        .sub-task {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border-left: 3px solid #6c757d;
+            border-radius: 4px;
+        }
+
+        .sub-task-name {
+            font-weight: bold;
+        }
+
+        .sub-task-duration {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .task-time {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .task-history {
+            margin-top: 30px;
+        }
+
+        .task-history-item {
+            padding: 15px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .task-history-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .task-history-item strong {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .task-id {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .data-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .data-info-item {
+            margin: 5px 0;
+        }
+
+        .result-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .result-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 主任务列表 - 实时进度</h1>
+
+    <div class="nav-links">
+        <a href="subtask.html">🔧 子任务精细化操作 →</a>
+    </div>
+
+    <!-- 主要任务区域 -->
+    <div class="task-section">
+        <h2 class="section-title">🚀 主要任务</h2>
+        <button class="btn-primary" onclick="startTask('/api/task/refreshAll__lataDay', '增量更新 (盘中)')">
+            🔄 增量更新 (盘中)
+        </button>
+        <button class="btn-primary" onclick="startTask('/api/task/refreshAll', '全量更新 (盘后)')">
+            🔄 全量更新 (盘后)
+        </button>
+        <button onclick="loadActiveTasks()">🔄 刷新活跃任务</button>
+    </div>
+
+    <!-- 数据信息区域 -->
+    <div class="task-section">
+        <h2 class="section-title">📈 数据信息</h2>
+        <button class="btn-info" onclick="loadDataInfo()">📊 获取最新数据信息</button>
+        <div id="data-info-container"></div>
+    </div>
+
+    <!-- 东方财富设置区域 -->
+    <div class="task-section">
+        <h2 class="section-title">💰 东方财富设置</h2>
+        <div class="form-group">
+            <label for="validatekey">ValidateKey:</label>
+            <input type="text" id="validatekey" placeholder="请输入validatekey" style="width: 300px;">
+        </div>
+        <div class="form-group">
+            <label for="cookie">Cookie:</label>
+            <input type="text" id="cookie" placeholder="请输入cookie" style="width: 300px;">
+        </div>
+        <button class="btn-warning" onclick="refreshEastmoneySession()">🔄 刷新东方财富会话</button>
+        <div id="eastmoney-result"></div>
+    </div>
+
+    <!-- 缓存刷新区域 -->
+    <div class="task-section">
+        <h2 class="section-title">💾 缓存管理</h2>
+        <div class="form-group">
+            <label for="cacheRefresh">refresh:</label>
+            <select id="cacheRefresh" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="true" selected>true</option>
+                <option value="false">false</option>
+            </select>
+        </div>
+        <button class="btn-info" onclick="refreshInitDataCache()">🔄 刷新回测缓存</button>
+        <div id="cache-result"></div>
+    </div>
+
+    <!-- 活跃任务区域 -->
+    <div class="task-section">
+        <h2 class="section-title">⚡ 活跃任务</h2>
+        <div id="active-tasks" class="task-list"></div>
+    </div>
+
+    <!-- 任务历史区域 -->
+    <div class="task-section">
+        <h2 class="section-title">📜 任务历史</h2>
+        <div id="task-history" class="task-history"></div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let subscribedTasks = new Set();
+
+    // 页面加载时初始化
+    window.onload = function () {
+        connectWebSocket();
+        loadActiveTasks();
+        loadTaskHistory();
+
+        // 从LocalStorage恢复订阅
+        const savedSubscriptions = localStorage.getItem('taskSubscriptions');
+        if (savedSubscriptions) {
+            const subscriptions = JSON.parse(savedSubscriptions);
+            subscriptions.forEach(taskId => {
+                subscribeToTask(taskId);
+            });
+        }
+    };
+
+    // 页面关闭前保存订阅状态
+    window.onbeforeunload = function () {
+        localStorage.setItem('taskSubscriptions', JSON.stringify(Array.from(subscribedTasks)));
+    };
+
+    function connectWebSocket() {
+        if (ws) {
+            ws.close();
+        }
+
+        ws = new WebSocket('ws://' + window.location.host + '/ws/task-progress');
+
+        ws.onopen = function () {
+            console.log('WebSocket连接已建立');
+            // 重新订阅所有任务
+            subscribedTasks.forEach(taskId => {
+                ws.send('SUBSCRIBE:' + taskId);
+            });
+        };
+
+        ws.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (Array.isArray(data)) {
+                    updateActiveTasksUI(data);
+                } else if (data.taskId) {
+                    updateTaskUI(data);
+                }
+            } catch (e) {
+                console.error('解析WebSocket消息失败:', event.data);
+            }
+        };
+
+        ws.onerror = function (error) {
+            console.error('WebSocket错误:', error);
+        };
+
+        ws.onclose = function () {
+            console.log('WebSocket连接已关闭，5秒后重连');
+            setTimeout(connectWebSocket, 5000);
+        };
+    }
+
+    function startTask(apiPath, taskName) {
+        fetch(apiPath, {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    if (data.data && typeof data.data === 'string') {
+                        // 是任务ID
+                        const taskId = data.data;
+                        addTaskToUI(taskId, taskName);
+                        subscribeToTask(taskId);
+                        saveTaskToLocalStorage(taskId, taskName);
+                    } else {
+                        // 不是任务，显示结果
+                        showResultMessage('操作成功', 'success');
+                    }
+                } else {
+                    showResultMessage('操作失败: ' + JSON.stringify(data), 'error');
+                }
+            })
+            .catch(err => {
+                showResultMessage('请求失败: ' + err.message, 'error');
+            });
+    }
+
+    function subscribeToTask(taskId) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send('SUBSCRIBE:' + taskId);
+            subscribedTasks.add(taskId);
+        }
+    }
+
+    function loadActiveTasks() {
+        fetch('/api/task/activeTasks', {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    updateActiveTasksUI(data.data);
+                    // 自动订阅所有活跃任务
+                    data.data.forEach(task => {
+                        if (task.taskId) {
+                            subscribeToTask(task.taskId);
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('加载活跃任务失败:', err);
+            });
+    }
+
+    function loadTaskHistory() {
+        fetch('/api/task/taskHistory', {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    updateTaskHistoryUI(data.data);
+                }
+            })
+            .catch(err => {
+                console.error('加载任务历史失败:', err);
+            });
+    }
+
+    function loadDataInfo() {
+        fetch('/api/task/dataInfo', {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    displayDataInfo(data.data);
+                } else {
+                    showResultMessage('获取数据信息失败: ' + JSON.stringify(data), 'error');
+                }
+            })
+            .catch(err => {
+                showResultMessage('请求失败: ' + err.message, 'error');
+            });
+    }
+
+    function refreshEastmoneySession() {
+        const validatekey = document.getElementById('validatekey').value;
+        const cookie = document.getElementById('cookie').value;
+
+        if (!validatekey || !cookie) {
+            showResultMessage('请填写完整的参数', 'error', 'eastmoney-result');
+            return;
+        }
+
+        const params = new URLSearchParams({validatekey: validatekey, cookie: cookie});
+        fetch('/api/task/eastmoney/refreshSession?' + params.toString(), {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showResultMessage('东方财富会话刷新成功', 'success', 'eastmoney-result');
+                } else {
+                    showResultMessage('会话刷新失败: ' + JSON.stringify(data), 'error', 'eastmoney-result');
+                }
+            })
+            .catch(err => {
+                showResultMessage('请求失败: ' + err.message, 'error', 'eastmoney-result');
+            });
+    }
+
+    function refreshInitDataCache() {
+        const refresh = document.getElementById('cacheRefresh').value;
+        const refreshType = refresh === 'true' ? '强制' : '增量';
+
+        fetch(`/api/task/initData/refresh?refresh=${refresh}`, {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showResultMessage(`回测缓存刷新(${refreshType})成功`, 'success', 'cache-result');
+                } else {
+                    showResultMessage('缓存刷新失败: ' + JSON.stringify(data), 'error', 'cache-result');
+                }
+            })
+            .catch(err => {
+                showResultMessage('请求失败: ' + err.message, 'error', 'cache-result');
+            });
+    }
+
+    function addTaskToUI(taskId, taskName) {
+        const tasksDiv = document.getElementById('active-tasks');
+        const existingTask = document.getElementById('task-' + taskId);
+        if (existingTask) return;
+
+        const taskDiv = document.createElement('div');
+        taskDiv.id = 'task-' + taskId;
+        taskDiv.className = 'task-item';
+        taskDiv.innerHTML = `
+            <h3>${taskName} (${taskId.substring(0, 20)}...)</h3>
+            <div class="progress-bar">
+                <div class="progress-fill status-running" style="width: 0%">0%</div>
+            </div>
+            <div class="task-info">
+                <div>状态: <span class="task-status">准备中...</span></div>
+                <div>当前步骤: <span class="current-step">准备中...</span></div>
+                <div class="task-time">耗时: <span class="running-time">-</span></div>
+                <div class="task-time">开始时间: <span class="start-time">-</span></div>
+                <div>ID: <span class="task-id">${taskId}</span></div>
+            </div>
+            <div class="sub-tasks"></div>
+        `;
+        tasksDiv.appendChild(taskDiv);
+    }
+
+    function updateActiveTasksUI(tasks) {
+        const tasksDiv = document.getElementById('active-tasks');
+        tasksDiv.innerHTML = '';
+
+        if (!tasks || tasks.length === 0) {
+            tasksDiv.innerHTML = '<p>暂无活跃任务</p>';
+            return;
+        }
+
+        tasks.forEach(task => {
+            if (task.taskId) {
+                addTaskToUI(task.taskId, task.taskName);
+                updateTaskUI(task);
+            }
+        });
+    }
+
+    function updateTaskHistoryUI(tasks) {
+        const historyDiv = document.getElementById('task-history');
+        historyDiv.innerHTML = '';
+
+        if (!tasks || tasks.length === 0) {
+            historyDiv.innerHTML = '<p>暂无任务历史</p>';
+            return;
+        }
+
+        tasks.slice(0, 10).forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task-history-item';
+            const durationText = formatDuration(task.totalTime);
+
+            // 确保状态类名正确应用
+            const statusClass = 'status-' + task.status.toLowerCase();
+
+            taskDiv.innerHTML = `
+                <div><strong>${task.taskName}</strong></div>
+                <div>状态: <span class="task-status ${statusClass}">${task.status}</span></div>
+                <div class="task-time">耗时: ${durationText}</div>
+                <div class="task-time">开始时间: ${task.startTime}</div>
+                <div class="task-id">ID: ${task.taskId.substring(0, 30)}...</div>
+            `;
+            historyDiv.appendChild(taskDiv);
+        });
+    }
+
+    function displayDataInfo(data) {
+        const container = document.getElementById('data-info-container');
+        if (!data) {
+            container.innerHTML = '<p>暂无数据信息</p>';
+            return;
+        }
+
+        let html = '<div class="data-info">';
+
+        // 个股数据
+        if (data.stock_tradeDate) {
+            html += `
+                <div class="data-info-item"><strong>个股数据:</strong></div>
+                <div class="data-info-item">交易日期: ${data.stock_tradeDate}</div>
+                <div class="data-info-item">更新时间: ${data.stock_updateTime || 'N/A'}</div>
+            `;
+        }
+
+        // 板块数据
+        if (data.block_tradeDate) {
+            html += `
+                <div class="data-info-item"><strong>板块数据:</strong></div>
+                <div class="data-info-item">交易日期: ${data.block_tradeDate}</div>
+                <div class="data-info-item">更新时间: ${data.block_updateTime || 'N/A'}</div>
+            `;
+        }
+
+        // 主线板块数据
+        if (data.topBlock_tradeDate) {
+            html += `
+                <div class="data-info-item"><strong>主线板块数据:</strong></div>
+                <div class="data-info-item">交易日期: ${data.topBlock_tradeDate}</div>
+                <div class="data-info-item">更新时间: ${data.topBlock_updateTime || 'N/A'}</div>
+            `;
+        }
+
+        // 大盘量化数据
+        if (data.market_tradeDate) {
+            html += `
+                <div class="data-info-item"><strong>大盘量化数据:</strong></div>
+                <div class="data-info-item">交易日期: ${data.market_tradeDate}</div>
+                <div class="data-info-item">更新时间: ${data.market_updateTime || 'N/A'}</div>
+            `;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function updateTaskUI(progress) {
+        const taskDiv = document.getElementById('task-' + progress.taskId);
+        if (!taskDiv) return;
+
+        const progressBar = taskDiv.querySelector('.progress-fill');
+        const taskStatus = taskDiv.querySelector('.task-status');
+        const currentStep = taskDiv.querySelector('.current-step');
+        const runningTimeSpan = taskDiv.querySelector('.running-time');
+        const startTimeSpan = taskDiv.querySelector('.start-time');
+        const subTasksDiv = taskDiv.querySelector('.sub-tasks');
+
+        // 更新进度条
+        if (progressBar) {
+            progressBar.style.width = progress.progress + '%';
+            progressBar.textContent = progress.progress + '%';
+            // 根据状态设置进度条颜色
+            progressBar.className = 'progress-fill';
+            if (progress.status === 'RUNNING') {
+                progressBar.classList.add('status-running');
+            } else if (progress.status === 'COMPLETED') {
+                progressBar.classList.add('status-completed');
+            } else if (progress.status === 'FAILED') {
+                progressBar.classList.add('status-failed');
+            }
+        }
+
+        // 更新状态
+        if (taskStatus) {
+            taskStatus.textContent = progress.status;
+            taskStatus.className = 'task-status';
+            if (progress.status === 'RUNNING') {
+                taskStatus.classList.add('status-running');
+            } else if (progress.status === 'COMPLETED') {
+                taskStatus.classList.add('status-completed');
+            } else if (progress.status === 'FAILED') {
+                taskStatus.classList.add('status-failed');
+            }
+        }
+
+        if (currentStep) {
+            currentStep.textContent = progress.currentSubTask || '准备中...';
+        }
+
+        if (runningTimeSpan) {
+            let timeText = '-';
+            if (progress.status === 'RUNNING' && progress.runningTime) {
+                timeText = formatDuration(progress.runningTime);
+            } else if (progress.totalTime && progress.totalTime !== '0') {
+                timeText = formatDuration(progress.totalTime);
+            }
+            runningTimeSpan.textContent = timeText;
+        }
+
+        if (startTimeSpan) {
+            if (progress.startTime) {
+                // 格式化时间显示
+                startTimeSpan.textContent = progress.startTime;
+            } else {
+                startTimeSpan.textContent = '-';
+            }
+        }
+
+        // 显示子任务耗时
+        if (subTasksDiv && Array.isArray(progress.subTasks)) {
+            if (progress.subTasks.length === 0) {
+                subTasksDiv.innerHTML = '<p style="color: #999; font-style: italic; text-align: center;">暂无子任务</p>';
+            } else {
+                subTasksDiv.innerHTML = progress.subTasks.map(sub => {
+                    let durationText = '执行中...';
+                    if (sub.duration && sub.duration !== '0') {
+                        durationText = formatDuration(sub.duration);
+                    } else if (sub.runningTime) {
+                        durationText = formatDuration(sub.runningTime);
+                    }
+
+                    // 添加子任务开始时间
+                    let subStartTime = '-';
+                    if (sub.startTime) {
+                        subStartTime = sub.startTime;
+                    }
+
+                    // 子任务状态（确保状态类名正确应用）
+                    const statusClass = 'status-' + sub.status.toLowerCase();
+
+                    return `<div class="sub-task">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="sub-task-name">${sub.name}</div>
+                                </div>
+                                <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                    状态: <span class="task-status ${statusClass}">${sub.status}</span>
+                                </div>
+                                <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                    耗时: ${durationText}
+                                </div>
+                                <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                    开始时间: ${subStartTime}
+                                </div>
+                            </div>`;
+                }).join('');
+            }
+        }
+    }
+
+    function saveTaskToLocalStorage(taskId, taskName) {
+        const tasks = JSON.parse(localStorage.getItem('recentTasks') || '[]');
+        const taskExists = tasks.some(t => t.id === taskId);
+        if (!taskExists) {
+            tasks.push({id: taskId, name: taskName, timestamp: Date.now()});
+            if (tasks.length > 20) {
+                tasks.shift();
+            }
+            localStorage.setItem('recentTasks', JSON.stringify(tasks));
+        }
+    }
+
+    // 格式化时间显示
+    function formatDuration(milliseconds) {
+        if (!milliseconds || milliseconds === '0') return '-';
+
+        const ms = parseInt(milliseconds);
+
+        // 小于1秒显示 毫秒
+        if (ms < 1000) {
+            return `${ms}ms`;
+        }
+
+        // 小于1分钟显示 秒
+        const seconds = ms / 1000;
+        if (seconds < 60) {
+            return `${seconds.toFixed(1)}秒`;
+        }
+
+        // 小于1小时显示 分钟和秒
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        if (minutes < 60) {
+            if (remainingSeconds === 0) {
+                return `${minutes}分`;
+            }
+            return `${minutes}分${remainingSeconds}秒`;
+        }
+
+        // 大于等于1小时显示 小时、分钟和秒
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = Math.floor(minutes % 60);
+        if (remainingSeconds === 0 && remainingMinutes === 0) {
+            return `${hours}时`;
+        } else if (remainingSeconds === 0) {
+            return `${hours}时${remainingMinutes}分`;
+        }
+        return `${hours}时${remainingMinutes}分${remainingSeconds}秒`;
+    }
+
+    // 显示结果消息
+    function showResultMessage(message, type, containerId = null) {
+        const container = containerId ? document.getElementById(containerId) : document.body;
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `result-message result-${type}`;
+        resultDiv.textContent = message;
+
+        if (containerId) {
+            container.innerHTML = '';
+            container.appendChild(resultDiv);
+        } else {
+            // 如果没有指定容器，在页面顶部显示
+            const firstChild = container.firstChild;
+            container.insertBefore(resultDiv, firstChild);
+        }
+
+        // 3秒后自动移除消息
+        setTimeout(() => {
+            if (resultDiv.parentNode) {
+                resultDiv.parentNode.removeChild(resultDiv);
+            }
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

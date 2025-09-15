@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>子任务管理 - 精细化操作</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .task-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #333;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            font-size: 13px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #d0d0d0;
+        }
+
+        .btn-primary {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1976D2;
+        }
+
+        .btn-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #45a049;
+        }
+
+        .btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e68900;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .form-group {
+            margin: 10px 0;
+        }
+
+        .form-group label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .result-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .result-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .nav-links {
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            margin-right: 15px;
+            padding: 10px 15px;
+            text-decoration: none;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            background-color: #d0d0d0;
+        }
+
+        .quick-buttons {
+            margin-top: 5px;
+        }
+
+        .quick-buttons button {
+            padding: 3px 8px;
+            font-size: 12px;
+            margin: 2px;
+        }
+
+        h3 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+        }
+
+        #result-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔧 子任务管理 - 精细化操作</h1>
+    <p style="color: #666; margin-bottom: 20px;">
+        本页面提供精细化的子任务操作，用于数据初始化、行情更新、扩展数据计算等。
+        适用于调试、问题排查和特殊场景下的数据处理。
+    </p>
+
+    <div class="nav-links">
+        <a href="task.html">← 返回主任务页面🚀</a>
+    </div>
+
+    <!-- 数据解析相关 -->
+    <div class="task-section">
+        <h2 class="section-title">📄 通达信数据初始化</h2>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/importAll', '一键导入所有数据')">
+            🔄 一键导入所有数据
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockCfg', '导入板块配置')">
+            📄 导入板块配置
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockReport', '导入系统板块')">
+            📊 导入系统板块
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockNewReport', '导入自定义板块')">
+            🔧 导入自定义板块
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/ETF', '导入ETF数据')">
+            📈 导入ETF数据
+        </button>
+    </div>
+
+    <!-- 行情数据更新 -->
+    <div class="task-section">
+        <h2 class="section-title">📊 行情数据更新（个股/板块）</h2>
+
+        <!-- 全量更新 -->
+        <h3>全量更新</h3>
+        <div class="form-group">
+            <label>更新类型:</label>
+            <select id="updateType">
+                <option value="1">全量更新</option>
+                <option value="2">增量更新</option>
+            </select>
+        </div>
+        <div style="margin: 10px 0;">
+            <button class="btn-success" onclick="refreshKlineAll()">🔄 行情数据一键刷新（个股/板块）</button>
+            <button class="btn-success" onclick="callApi('/api/parser/tdxdata/fill/blockKlineAll', '全部板块行情更新')">
+                📊
+                全部板块行情更新
+            </button>
+            <button class="btn-success" onclick="fillStockKlineAll()">📈 全部个股行情更新</button>
+        </div>
+
+        <!-- 分隔线 -->
+        <div style="height: 1px; background-color: #eee; margin: 20px 0;"></div>
+
+        <!-- 指定板块更新 -->
+        <div class="form-group">
+            <label>板块代码:</label>
+            <input type="text" id="blockCode" placeholder="输入板块代码">
+        </div>
+        <div style="margin: 10px 0;">
+            <button class="btn-success" onclick="fillBlockKline()">📊 指定板块行情更新</button>
+        </div>
+
+        <!-- 分隔线 -->
+        <div style="height: 1px; background-color: #eee; margin: 20px 0;"></div>
+
+        <!-- 指定个股更新 -->
+        <div class="form-group">
+            <label>股票代码:</label>
+            <input type="text" id="stockCode" value="300059" placeholder="输入股票代码">
+        </div>
+        <div class="form-group">
+            <label>API类型:</label>
+            <select id="apiType">
+                <option value="1">通达信</option>
+                <option value="2">东方财富</option>
+                <option value="3">同花顺</option>
+                <option value="4">雪球</option>
+                <option value="5">腾讯</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>更新类型:</label>
+            <select id="stockUpdateType">
+                <option value="1">全量更新</option>
+                <option value="2">增量更新</option>
+            </select>
+        </div>
+        <div style="margin: 10px 0;">
+            <button class="btn-success" onclick="fillStockKline()">📈 指定个股行情更新</button>
+        </div>
+    </div>
+
+    <!-- 扩展数据计算 -->
+    <div class="task-section">
+        <h2 class="section-title">📊 扩展数据计算</h2>
+
+        <div class="form-group">
+            <label>N日参数:</label>
+            <input type="number" id="extDataN" placeholder="输入N值(可选)">
+        </div>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/refreshExtDataAll?N=' + getExtDataN(), '个股/板块扩展数据计算')">
+            🔄 个股/板块扩展数据计算
+        </button>
+        <button class="btn-warning" onclick="callApi('/api/extData/stock/calc?N=' + getExtDataN(), '个股扩展数据计算')">
+            📈 个股扩展数据计算
+        </button>
+        <button class="btn-warning" onclick="callApi('/api/extData/block/calc?N=' + getExtDataN(), '板块扩展数据计算')">
+            📊 板块扩展数据计算
+        </button>
+    </div>
+
+    <!-- 大盘量化 -->
+    <div class="task-section">
+        <h2 class="section-title">💹 大盘量化</h2>
+        <button class="btn-danger" onclick="callApi('/api/market/marketMidCycle/import', '大盘量化导入')">
+            💹 大盘量化导入
+        </button>
+    </div>
+
+    <!-- 工具接口 -->
+    <div class="task-section">
+        <h2 class="section-title">🛠️ 工具接口</h2>
+        <div class="form-group">
+            <label>前N位:</label>
+            <input type="number" id="prefixN" value="3" placeholder="输入位数">
+        </div>
+        <button class="btn-info" onclick="getStockCodePrefix()">🔢 获取股票代码前缀</button>
+        <div id="prefix-result"></div>
+    </div>
+
+    <!-- 通达信脚本 -->
+    <div class="task-section">
+        <h2 class="section-title">🔧 通达信脚本</h2>
+        <button class="btn-warning" onclick="callApi('/api/task/933', '执行任务 933')">⚡ 执行任务 933</button>
+    </div>
+
+    <!-- 结果显示区域 -->
+    <div id="result-container"></div>
+</div>
+
+<script>
+    function callApi(apiPath, taskName) {
+        showLoading(`正在执行: ${taskName}`);
+
+        fetch(apiPath, {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showResult(`✅ ${taskName} - 执行成功`, 'success');
+                } else {
+                    showResult(`❌ ${taskName} - 执行失败: ${JSON.stringify(data)}`, 'error');
+                }
+            })
+            .catch(err => {
+                showResult(`❌ ${taskName} - 请求失败: ${err.message}`, 'error');
+            });
+    }
+
+    function refreshKlineAll() {
+        const updateType = document.getElementById('updateType').value;
+        callApi(`/api/parser/tdxdata/refresh/klineAll?updateType=${updateType}`,
+            `行情数据刷新(${updateType === '1' ? '全量' : '增量'})`);
+    }
+
+    function fillBlockKline() {
+        const blockCode = document.getElementById('blockCode').value;
+        if (!blockCode) {
+            showResult('❌ 请输入板块代码', 'error');
+            return;
+        }
+        callApi(`/api/parser/tdxdata/fill/blockKline?blockCode=${blockCode}`,
+            `板块行情更新(${blockCode})`);
+    }
+
+    function fillStockKline() {
+        const stockCode = document.getElementById('stockCode').value;
+        const apiType = document.getElementById('apiType').value;
+        const updateType = document.getElementById('stockUpdateType').value;
+
+        if (!stockCode) {
+            showResult('❌ 请输入股票代码', 'error');
+            return;
+        }
+
+        callApi(`/api/parser/tdxdata/fill/stockKline?stockCode=${stockCode}&apiType=${apiType}&updateType=${updateType}`,
+            `个股行情更新(${stockCode})`);
+    }
+
+    function fillStockKlineAll() {
+        const updateType = document.getElementById('stockUpdateType').value;
+        callApi(`/api/parser/tdxdata/fill/stockKlineAll?updateType=${updateType}`,
+            `全部个股行情更新(${updateType === '1' ? '全量' : '增量'})`);
+    }
+
+    function getExtDataN() {
+        const n = document.getElementById('extDataN').value;
+        return n ? n : '';
+    }
+
+    function getStockCodePrefix() {
+        const n = document.getElementById('prefixN').value || 3;
+        fetch(`/api/parser/tdxdata/market-stockCodePrefixList?N=${n}`, {method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const resultDiv = document.getElementById('prefix-result');
+                    resultDiv.innerHTML = `
+                        <div class="result-message result-success">
+                            <strong>股票代码前缀结果:</strong>
+                            <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                        </div>
+                    `;
+                    // 滚动到结果区域
+                    resultDiv.scrollIntoView({behavior: 'smooth'});
+                } else {
+                    showResult(`❌ 获取股票代码前缀失败: ${JSON.stringify(data)}`, 'error');
+                }
+            })
+            .catch(err => {
+                showResult(`❌ 请求失败: ${err.message}`, 'error');
+            });
+    }
+
+    function showLoading(message) {
+        const container = document.getElementById('result-container');
+        container.innerHTML = `
+            <div class="result-message" style="background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7;">
+                <strong>⏳ ${message}</strong>
+            </div>
+        `;
+        // 滚动到结果区域
+        container.scrollIntoView({behavior: 'smooth'});
+    }
+
+    function showResult(message, type) {
+        const container = document.getElementById('result-container');
+        container.innerHTML = `
+            <div class="result-message result-${type}">
+                <strong>${message}</strong>
+            </div>
+        `;
+
+        // 滚动到结果区域
+        container.scrollIntoView({behavior: 'smooth'});
+
+        // 5秒后自动清除结果
+        setTimeout(() => {
+            if (container.innerHTML.includes(message)) {
+                container.innerHTML = '';
+            }
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>

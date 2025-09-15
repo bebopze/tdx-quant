@@ -4,6 +4,8 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.*;
+import com.bebopze.tdx.quant.task.progress.TaskProgress;
+import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -12,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.concurrent.Executors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
@@ -47,6 +50,10 @@ public class TdxTask {
 
     @Autowired
     private TradeService tradeService;
+
+
+    @Autowired
+    private TaskProgressManager taskProgressManager;
 
 
     /**
@@ -104,79 +111,178 @@ public class TdxTask {
     /**
      * 行情数据   盘后-全量更新   ->   DB
      */
-    @Async
+
     @TotalTime
+    // @Async
     // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
-    public void execTask__refreshAll() {
-        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
+    public String execTask__refreshAll() {
+//        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
+//
+//
+//        // 行情  ->  kline_his
+//        tdxDataParserService.refreshKlineAll(1);
+//
+//
+//        // 扩展（指标）  ->  ext_data_his
+//        extDataService.refreshExtDataAll(null);
+//
+//
+//        // 主线板块
+//        topBlockService.refreshAll();
+//
+//
+//        // 大盘量化
+//        marketService.importMarketMidCycle();
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        initDataService.refreshCache();
+//
+//
+//        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
 
 
-        // 行情  ->  kline_his
-        tdxDataParserService.refreshKlineAll(1);
+        String taskId = "refreshAll_" + System.currentTimeMillis();
+        TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘后-全量更新");
 
 
-        // 扩展（指标）  ->  ext_data_his
-        extDataService.refreshExtDataAll(null);
+        Executors.newSingleThreadExecutor().execute(() -> {
 
 
-        // 主线板块
-        topBlockService.refreshAll();
+            try {
+                taskProgressManager.startTask(taskId);
+                log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
-        // 大盘量化
-        marketService.importMarketMidCycle();
+                // 更新进度
+                taskProgressManager.updateProgress(taskId, 10, "行情数据");
+                tdxDataParserService.refreshKlineAll(1);
 
 
-        // -------------------------------------------------------------------------------------------------------------
+                taskProgressManager.updateProgress(taskId, 30, "扩展（指标）计算");
+                extDataService.refreshExtDataAll(null);
 
 
-        initDataService.refreshCache();
+                taskProgressManager.updateProgress(taskId, 50, "主线板块");
+                topBlockService.refreshAll();
 
 
-        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
+                taskProgressManager.updateProgress(taskId, 70, "大盘量化");
+                marketService.importMarketMidCycle();
+
+
+                taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
+                initDataService.refreshCache();
+
+
+                taskProgressManager.completeTask(taskId, "任务执行完成");
+                log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
+
+
+            } catch (Exception e) {
+                taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
+                log.error("任务执行失败", e);
+            }
+
+        });
+
+
+        // 返回taskId 供前端查询
+        return taskId;
     }
 
 
     /**
      * 行情数据   盘中-增量更新   ->   DB
      */
-    @Async
     @TotalTime
+    // @Async
     // @Scheduled(cron = "0 0/30 13-14 * * 1-5", zone = "Asia/Shanghai")
-    public void execTask__refreshAll__lataDay() {
-        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
+    public String execTask__refreshAll__lataDay() {
+//        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
+//
+//
+//        // ------------------ 增量更新   ->   只需控制源头 kline  ->  [起始日期]
+//
+//
+//        // 行情  ->  kline_his
+//        tdxDataParserService.refreshKlineAll(2);
+//
+//
+//        // 扩展（指标）  ->  ext_data_his
+//        extDataService.refreshExtDataAll(10);
+//
+//
+//        // 主线板块       =>       INDEX_BLOCK-880515   当日有数据（AMO>500亿）
+//        if (checkBlockLastDay()) {
+//            topBlockService.refreshAll();
+//        } else {
+//            log.warn("topBlock - refreshAll     >>>     当日[板块数据] - 未更新！");
+//        }
+//
+//
+//        // 大盘量化
+//        marketService.importMarketMidCycle();
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        initDataService.refreshCache();
+//
+//
+//        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
 
 
-        // ------------------ 增量更新   ->   只需控制源头 kline  ->  [起始日期]
+        String taskId = "refreshAll_lataDay_" + System.currentTimeMillis();
+        TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘中-增量更新");
 
 
-        // 行情  ->  kline_his
-        tdxDataParserService.refreshKlineAll(2);
+        Executors.newSingleThreadExecutor().execute(() -> {
 
 
-        // 扩展（指标）  ->  ext_data_his
-        extDataService.refreshExtDataAll(10);
+            try {
+                taskProgressManager.startTask(taskId);
+                log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
 
 
-        // 主线板块       =>       INDEX_BLOCK-880515   当日有数据（AMO>500亿）
-        if (checkBlockLastDay()) {
-            topBlockService.refreshAll();
-        } else {
-            log.warn("topBlock - refreshAll     >>>     当日[板块数据] - 未更新！");
-        }
+                taskProgressManager.updateProgress(taskId, 10, "行情数据");
+                tdxDataParserService.refreshKlineAll(2);
 
 
-        // 大盘量化
-        marketService.importMarketMidCycle();
+                taskProgressManager.updateProgress(taskId, 30, "扩展数据");
+                extDataService.refreshExtDataAll(10);
 
 
-        // -------------------------------------------------------------------------------------------------------------
+                taskProgressManager.updateProgress(taskId, 50, "主线板块");
+                if (checkBlockLastDay()) {
+                    topBlockService.refreshAll();
+                }
 
 
-        initDataService.refreshCache();
+                taskProgressManager.updateProgress(taskId, 70, "大盘量化");
+                marketService.importMarketMidCycle();
 
 
-        log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
+                taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
+                initDataService.refreshCache();
+
+
+                taskProgressManager.completeTask(taskId, "任务执行完成");
+                log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
+
+
+            } catch (Exception e) {
+                taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
+                log.error("任务执行失败", e);
+            }
+
+        });
+
+
+        return taskId;
     }
 
 
