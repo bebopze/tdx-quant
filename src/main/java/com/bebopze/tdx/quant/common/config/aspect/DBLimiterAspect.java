@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
  * - @DBLimiter 拦截器       ->       DB  read/write 并发限流
  *
  * @author: bebopze
- * @date: 2025/8/8
+ * @date: 2025/9/18
  */
 @Slf4j
 @Aspect
@@ -45,6 +45,7 @@ public class DBLimiterAspect {
 
 
         Method method = ((MethodSignature) point.getSignature()).getMethod();
+
         String className = method.getDeclaringClass().getSimpleName();
         String methodName = method.getName();
         String paramName = Arrays.toString(method.getParameters());
@@ -64,7 +65,7 @@ public class DBLimiterAspect {
         try {
             // 尝试获取信号量许可，获取不到会阻塞等待
             semaphore.acquire();
-            log.info("数据库许可 - acquire     >>>     队列中等待的线程数 : {}", semaphore.getQueueLength());
+            log.info("数据库许可[{}] - acquire     >>>     队列中等待的线程数 : {}", methodName, semaphore.getQueueLength());
 
 
             // 放行
@@ -77,7 +78,7 @@ public class DBLimiterAspect {
             Thread.currentThread().interrupt();
 
 
-            String errMsg = String.format("数据库许可 - 被中断     >>>     队列中等待的线程数 : %s", semaphore.getQueueLength());
+            String errMsg = String.format("数据库许可[%s] - 被中断     >>>     队列中等待的线程数 : %s", methodName, semaphore.getQueueLength());
             log.error(errMsg, e);
 
 
@@ -87,7 +88,7 @@ public class DBLimiterAspect {
         } catch (Exception ex) {
 
 
-            String errMsg = String.format("DB操作 - err     >>>     队列中等待的线程数 : %s", semaphore.getQueueLength());
+            String errMsg = String.format("DB操作[%s] - err     >>>     队列中等待的线程数 : %s", methodName, semaphore.getQueueLength());
             log.error(errMsg, ex);
 
 
@@ -99,8 +100,9 @@ public class DBLimiterAspect {
             // 确保在任何情况下都释放信号量许可
             semaphore.release();
 
-            log.debug("数据库许可 - release     >>>     队列中等待的线程数 : {}", semaphore.getQueueLength());
+            log.debug("数据库许可[{}] - release     >>>     队列中等待的线程数 : {}", methodName, semaphore.getQueueLength());
         }
     }
+
 
 }

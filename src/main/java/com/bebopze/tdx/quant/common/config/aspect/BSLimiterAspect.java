@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * - @BSLimiter 拦截器       ->       BS限流（量化监管）
  *
  * @author: bebopze
- * @date: 2025/8/8
+ * @date: 2025/9/13
  */
 @Slf4j
 @Aspect
@@ -27,7 +27,7 @@ public class BSLimiterAspect {
 
 
     /**
-     * 拦截 @TotalTime       ->       统计 Func耗时
+     * 拦截 @BSLimiter       ->       BS限流（量化监管）
      *
      * @param point
      */
@@ -51,7 +51,7 @@ public class BSLimiterAspect {
             SubmitTradeV2Req req = (SubmitTradeV2Req) arg;
             stockCode = req.getStockCode();
 
-        } else if (arg instanceof String) {
+        } else if (arg instanceof RevokeOrdersReq) {
 
             // 批量撤单
             RevokeOrdersReq req = (RevokeOrdersReq) arg;
@@ -81,11 +81,7 @@ public class BSLimiterAspect {
 
 
         // 放行
-        Object result = point.proceed();
-
-
-        return result;
+        return point.proceed();
     }
-
 
 }
