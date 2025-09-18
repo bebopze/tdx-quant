@@ -167,12 +167,33 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
-     * 一键卖出     =>     指定 个股列表
+     * 一键清仓     =>     指定 个股列表
      *
-     * @param sellStockCodeSet 指定卖出 个股列表
+     * @param clearStockCodeSet 指定清仓 个股列表
      */
     @Override
-    public void quickSellPosition(Set<String> sellStockCodeSet) {
+    public void quickClearPosition(Set<String> clearStockCodeSet) {
+
+        // 1、我的持仓
+        QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+
+
+        // 2、从持仓个股中   过滤出   ->   清仓 个股列表
+        List<CcStockInfo> sell__stockInfoList = posResp.getStocks().stream().filter(e -> clearStockCodeSet.contains(e.getStkcode())).collect(Collectors.toList());
+
+
+        // 3、一键清仓
+        quick__clearPosition(sell__stockInfoList);
+    }
+
+    /**
+     * 一键 等比卖出     =>     指定 个股列表
+     *
+     * @param sellStockCodeSet 指定卖出 个股列表
+     * @param sellPct          指定卖出 持仓比例
+     */
+    @Override
+    public void quickSellPosition(Set<String> sellStockCodeSet, double sellPct) {
 
         // 1、我的持仓
         QueryCreditNewPosResp posResp = queryCreditNewPosV2();
@@ -182,8 +203,8 @@ public class TradeServiceImpl implements TradeService {
         List<CcStockInfo> sell__stockInfoList = posResp.getStocks().stream().filter(e -> sellStockCodeSet.contains(e.getStkcode())).collect(Collectors.toList());
 
 
-        // 3、一键清仓
-        quick__clearPosition(sell__stockInfoList);
+        // 3、一键减仓
+        quick__sellPosition(sell__stockInfoList, sellPct);
     }
 
 
@@ -1037,14 +1058,27 @@ public class TradeServiceImpl implements TradeService {
      * @param sellStockInfoList 清仓 个股列表
      */
     private void quick__clearPosition(List<CcStockInfo> sellStockInfoList) {
+        quick__sellPosition(sellStockInfoList, 100.0);
+    }
+
+    /**
+     * 一键减仓/清仓
+     *
+     * @param sellStockInfoList 卖出 个股列表
+     * @param sellPct           卖出 持仓比例（%）
+     */
+    private void quick__sellPosition(List<CcStockInfo> sellStockInfoList, double sellPct) {
 
         sellStockInfoList.forEach(e -> {
+
+
+            String stockCode = e.getStkcode();
 
 
             Integer stkavl = e.getStkavl();
             // 当日 新买入   ->   忽略
             if (stkavl == 0) {
-                log.debug("quick__clearPosition - 当日[新买入]/当日[已挂单] -> 忽略     >>>     stock : [{}-{}]", e.getStkcode(), e.getStkname());
+                log.debug("quick__clearPosition - 当日[新买入]/当日[已挂单] -> 忽略     >>>     stock : [{}-{}]", stockCode, e.getStkname());
                 return;
             }
 
@@ -1056,11 +1090,24 @@ public class TradeServiceImpl implements TradeService {
             int scale = priceScale(e.getStktype_ex());
 
 
+            // -------------------------------------------------- 卖出数量（sellPct）
+
+
+            // 卖出数量  =  持仓数量 x sellPct
+            int sellQty = (int) (e.getStkbal() * sellPct * 0.01);
+
+            // 取整百
+            sellQty = StockUtil.quantity(sellQty, stockCode);
+
+            // 卖出数量  <=  可用数量
+            sellQty = Math.min(sellQty, stkavl);
+
+
             // --------------------------------------------------
 
 
             TradeBSParam param = new TradeBSParam();
-            param.setStockCode(e.getStkcode());
+            param.setStockCode(stockCode);
             param.setStockName(e.getStkname());
 
             // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
@@ -1068,8 +1115,9 @@ public class TradeServiceImpl implements TradeService {
             // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(1.05)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
-            // 数量（S -> 可用数量）
-            param.setAmount(e.getStkavl());
+            // S数量（S  ->  持仓数量 x sellPct）
+            param.setAmount(sellQty);
+
             // 卖出
             param.setTradeType(TradeTypeEnum.SELL.getTradeType());
 

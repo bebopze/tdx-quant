@@ -85,12 +85,21 @@ public interface TradeService {
 
     // --------------------------------------------
 
+
     /**
-     * 一键卖出     =>     指定 个股列表
+     * 一键 等比卖出     =>     指定 个股列表
      *
      * @param sellStockCodeSet 指定卖出 个股列表
+     * @param sellPct          指定卖出 持仓比例（%）
      */
-    void quickSellPosition(Set<String> sellStockCodeSet);
+    void quickSellPosition(Set<String> sellStockCodeSet, double sellPct);
+
+    /**
+     * 一键清仓     =>     指定 个股列表
+     *
+     * @param clearStockCodeSet 指定清仓 个股列表
+     */
+    void quickClearPosition(Set<String> clearStockCodeSet);
 
 
     /**
@@ -156,5 +165,4 @@ public interface TradeService {
 
 
     void quickETF(String stockCode, double priceRangePct, int rangeTotal, double amount, TradeTypeEnum tradeTypeEnum);
-
 }

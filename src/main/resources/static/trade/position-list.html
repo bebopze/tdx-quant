@@ -4,38 +4,78 @@
     <meta charset="UTF-8">
     <title>我的持仓</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 添加全局配置文件 -->
+    <script src="../js/config.js"></script>
     <style>
         .sort-icon {
             margin-left: 4px;
             font-size: 12px;
         }
 
-        .margin-buy-button {
+        .margin-buy-button, .buy-button, .sell-button {
             color: white;
-            background-color: #ed6a6a;
             border: none;
             padding: 5px 10px;
             cursor: pointer;
             border-radius: 5px;
+            text-decoration: none; /* Remove underline from links */
+            display: inline-block; /* Make links behave like buttons */
+            margin: 0 2px; /* Add some space between buttons */
+        }
+
+        .margin-buy-button {
+            background-color: #ed6a6a; /* Red for Margin Buy */
         }
 
         .buy-button {
-            color: white;
-            background-color: #c68989;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 5px;
+            background-color: #c68989; /* Brownish for Buy */
         }
 
         .sell-button {
-            color: white;
-            background-color: #73b5ea;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 5px;
+            background-color: #73b5ea; /* Blue for Sell */
         }
+
+        /* Style for the "Select All" checkbox */
+        #selectAllCheckbox {
+            transform: scale(0.8); /* Make it slightly smaller if needed */
+            margin-right: 5px;
+        }
+
+        /* Style for individual stock checkboxes */
+        .sell-checkbox {
+            transform: scale(0.8); /* Make it slightly smaller */
+            margin: 0 auto; /* Center it in the cell */
+            display: block; /* Ensure it behaves like a block element for centering */
+        }
+
+        /* Style for the Sell All button */
+        #sellAllButton {
+            margin-left: 10px; /* Add some space */
+        }
+
+        /* Style for the input for sell percentage */
+        #sellPercentageInput {
+            width: 80px; /* Adjust width as needed */
+            display: inline-block;
+            margin-left: 5px;
+            margin-right: 5px;
+            padding: 2px 5px; /* Adjust padding */
+            font-size: 14px; /* Match button font size */
+        }
+
+        /* Style for the label */
+        #sellPercentageLabel {
+            display: inline-block;
+            margin-left: 10px; /* Space from the button */
+            vertical-align: middle; /* Align vertically with button */
+        }
+
+        /* Style for the percentage symbol */
+        #percentageSymbol {
+            margin-left: 2px; /* Space after the input */
+        }
+
+
     </style>
 
     <!-- 样式调整：缩小表格字体 -->
@@ -50,6 +90,30 @@
             vertical-align: middle;
             text-align: center;
         }
+
+        /* Adjust text alignment for specific columns */
+        #positionTable th:nth-child(1), /* 序号 */
+        #positionTable td:nth-child(1),
+        #positionTable th:nth-child(16), /* 操作 */
+        #positionTable td:nth-child(16),
+        #positionTable th:nth-child(17) /* 新增的勾选列 */
+        #positionTable td:nth-child(17) {
+            text-align: center; /* Keep center alignment for序号, 操作, and Checkbox */
+        }
+
+        #positionTable th:nth-child(2), /* 证券代码 */
+        #positionTable td:nth-child(2),
+        #positionTable th:nth-child(3), /* 证券名称 */
+        #positionTable td:nth-child(3) {
+            text-align: left; /* Align left for Code and Name */
+        }
+
+        /* Align numbers to the right for better readability */
+        #positionTable th:nth-child(n+4):nth-child(-n+15):not(:nth-child(4)), /* 除了市场列，其他数字列 */
+        #positionTable td:nth-child(n+4):nth-child(-n+15):not(:nth-child(4)) {
+            text-align: right;
+        }
+
     </style>
 
 </head>
@@ -147,48 +211,68 @@
     </div>
 
     <!-- 查询按钮 -->
-    <button id="queryButton" class="btn btn-primary mb-4">查询</button>
+    <div class="d-flex align-items-center mb-3"> <!-- Use flexbox for alignment -->
+        <button id="queryButton" class="btn btn-primary">查询</button>
+
+        <!-- 一键卖出功能 -->
+        <button id="sellAllButton" class="btn btn-danger ms-3">一键等比卖出</button> <!-- ms-3 adds margin start -->
+        <label for="sellPercentageInput" id="sellPercentageLabel">比例:</label>
+        <input type="number" id="sellPercentageInput" class="form-control form-control-sm" value="100" min="0" max="100"
+               step="0.1">
+        <span id="percentageSymbol">%</span>
+    </div>
 
     <!-- 持仓记录 -->
     <div class="card">
-        <div class="card-header">持仓详情</div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>持仓详情</span>
+            <!-- Select All Checkbox in Header -->
+            <div>
+                <input type="checkbox" id="selectAllCheckbox">
+                <label for="selectAllCheckbox" class="mb-0">全选</label> <!-- mb-0 removes default margin -->
+            </div>
+        </div>
         <div class="card-body">
-            <table class="table table-bordered" id="positionTable">
-                <thead>
-                <tr>
-                    <th>序号</th>
-                    <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon" id="sortStkcode"></span></th>
-                    <th onclick="sortTable('stkname')">证券名称<span class="sort-icon" id="sortStkname"></span></th>
-                    <th onclick="sortTable('market')">市场<span class="sort-icon" id="sortMarket"></span></th>
-                    <th onclick="sortTable('costprice')">成本价<span class="sort-icon" id="sortCostprice"></span></th>
-                    <th onclick="sortTable('lastprice')">最新价<span class="sort-icon" id="sortLastprice"></span></th>
-                    <th onclick="sortTable('mktval')">市值<span class="sort-icon" id="sortMktval"></span></th>
-                    <th onclick="sortTable('profit')">持仓盈亏<span class="sort-icon" id="sortProfit"></span></th>
-                    <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-icon"
-                                                                             id="sortProfitratio"></span></th>
-                    <th onclick="sortTable('curprofit')">当日盈亏<span class="sort-icon" id="sortCurprofit"></span>
-                    <th onclick="sortTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
-                                                                                id="sortCurProfitratio"></span>
-                    <th onclick="sortTable('posratio')">仓位占比<span class="sort-icon" id="sortPosratio"></span>
-                    </th>
-                    <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon" id="sortStkbal"></span></th>
-                    <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon" id="sortStkavl"></span></th>
-                    <th onclick="sortTable('industry')">行业<span class="sort-icon" id="sortIndustry"></span></th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- 动态加载 -->
-                </tbody>
-            </table>
+            <div class="table-responsive"> <!-- Add responsive wrapper -->
+                <table class="table table-bordered table-sm" id="positionTable"> <!-- table-sm for smaller padding -->
+                    <thead>
+                    <tr>
+                        <th>勾选</th> <!-- New Checkbox Column Header -->
+                        <th>序号</th>
+                        <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon" id="sortStkcode"></span></th>
+                        <th onclick="sortTable('stkname')">证券名称<span class="sort-icon" id="sortStkname"></span></th>
+                        <th onclick="sortTable('market')">市场<span class="sort-icon" id="sortMarket"></span></th>
+                        <th onclick="sortTable('costprice')">成本价<span class="sort-icon" id="sortCostprice"></span>
+                        </th>
+                        <th onclick="sortTable('lastprice')">最新价<span class="sort-icon" id="sortLastprice"></span>
+                        </th>
+                        <th onclick="sortTable('mktval')">市值<span class="sort-icon" id="sortMktval"></span></th>
+                        <th onclick="sortTable('profit')">持仓盈亏<span class="sort-icon" id="sortProfit"></span></th>
+                        <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-icon"
+                                                                                 id="sortProfitratio"></span></th>
+                        <th onclick="sortTable('curprofit')">当日盈亏<span class="sort-icon" id="sortCurprofit"></span>
+                        </th>
+                        <th onclick="sortTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
+                                                                                    id="sortCurProfitratio"></span></th>
+                        <th onclick="sortTable('posratio')">仓位占比<span class="sort-icon" id="sortPosratio"></span>
+                        </th>
+                        <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon" id="sortStkbal"></span></th>
+                        <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon" id="sortStkavl"></span></th>
+                        <th onclick="sortTable('industry')">行业<span class="sort-icon" id="sortIndustry"></span></th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 动态加载 -->
+                    </tbody>
+                </table>
+            </div> <!-- End table-responsive -->
         </div>
     </div>
 
 </div>
 
 <script>
-
-
     // 存储排序状态
     let sortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
@@ -244,12 +328,10 @@
         showPositionRecords(positionsData);
     }
 
-
     // 市场
     function market2Xueqiu(market) {
         return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
     }
-
 
     // 显示持仓记录
     function showPositionRecords(positions) {
@@ -261,7 +343,7 @@
 
         tbody.innerHTML = '';
         if (!positions || positions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13">暂无持仓记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="17">暂无持仓记录</td></tr>'; // Update colspan
             return;
         }
 
@@ -296,7 +378,11 @@
             const marketPrefix = market2Xueqiu(item.market);
             const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
             const tr = document.createElement('tr');
+            // Add data-stkcode attribute for easy access
+            tr.setAttribute('data-stkcode', item.stkcode);
+
             tr.innerHTML = `
+              <td><input type="checkbox" class="sell-checkbox"></td> <!-- New Checkbox Column -->
               <td>${index + 1}</td>
               <td><a href="${stockLink}" target="_blank">${item.stkcode}</a></td>
               <td>${item.stkname}</td>
@@ -311,8 +397,6 @@
               <td>${(item.posratio * 100).toFixed(2)}%</td>
               <td>${item.stkbal}</td>
               <td>${item.stkavl}</td>
-
-
               <td>
                 ${(() => {
                 const hyBlock = item.blockInfoDTO?.hyBlockDTOList || [];
@@ -328,16 +412,6 @@
                 return industryStr;
             })()}
               </td>
-
-
-
-              <!--
-              <td>
-                  <button class="buy-button" onclick="handleBuy('${item.stkcode}')">买</button>
-                  <button class="sell-button" onclick="handleSell('${item.stkcode}')">卖</button>
-              </td>
-              -->
-
               <td>
                 <a class="margin-buy-button" target="_blank"
                   href="https://jywg.18.cn/MarginTrade/MarginBuy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
@@ -352,11 +426,138 @@
             `;
             tbody.appendChild(tr);
         });
+
+        // Re-attach event listeners for checkboxes after rendering
+        attachCheckboxListeners();
     }
+
+    // Function to attach event listeners for checkboxes
+    function attachCheckboxListeners() {
+        const checkboxes = document.querySelectorAll('.sell-checkbox');
+        checkboxes.forEach(checkbox => {
+            // Optional: Add individual change listener if needed for other features
+            // checkbox.addEventListener('change', handleIndividualCheckboxChange);
+        });
+
+        // Re-attach the "Select All" listener
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.removeEventListener('change', handleSelectAllChange); // Remove previous listener to avoid duplicates
+            selectAllCheckbox.addEventListener('change', handleSelectAllChange);
+        }
+    }
+
+    // Handle "Select All" checkbox change
+    function handleSelectAllChange() {
+        const isChecked = this.checked;
+        const checkboxes = document.querySelectorAll('.sell-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+    }
+
+    // --- 新增：一键卖出功能 ---
+    function handleSellAll() {
+        const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一只股票进行卖出。');
+            return;
+        }
+
+        const sellStockCodes = [];
+        selectedCheckboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr'); // Find the parent row
+            if (row) {
+                const stkcode = row.getAttribute('data-stkcode'); // Get the stock code from data attribute
+                if (stkcode) {
+                    sellStockCodes.push(stkcode);
+                }
+            }
+        });
+
+        if (sellStockCodes.length === 0) {
+            alert('未能获取到选中股票的代码，请重试。');
+            return;
+        }
+
+        // Get the sell percentage from the input
+        const sellPctInput = document.getElementById('sellPercentageInput');
+        let sellPct = parseFloat(sellPctInput.value);
+
+        // Validate the percentage
+        if (isNaN(sellPct) || sellPct < 0 || sellPct > 100) {
+            alert('请输入有效的卖出比例 (0-100%)。');
+            sellPctInput.focus();
+            return;
+        }
+
+        // Confirm with the user
+        const confirmMsg = `您确定要按 ${sellPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？\n${sellStockCodes.join(', ')}`;
+        if (!confirm(confirmMsg)) {
+            return; // User cancelled
+        }
+
+        // Prepare data for the API call
+        const sellStockCodeList = sellStockCodes.join(',');
+
+        // Show loading indicator (optional)
+        const originalBtnText = document.getElementById('sellAllButton').textContent;
+        document.getElementById('sellAllButton').textContent = '处理中...';
+        document.getElementById('sellAllButton').disabled = true;
+
+        // Make the API call using fetch
+        ApiUtils.fetch(`/api/trade/quickOption/sellPosition?sellStockCodeList=${encodeURIComponent(sellStockCodeList)}&sellPct=${sellPct}`, {
+            method: 'GET', // Assuming your API uses GET. If it's POST, change method and body accordingly.
+            headers: {
+                // Add any required headers like Authorization if needed
+                // 'Authorization': 'Bearer your_token_here',
+                'Content-Type': 'application/json' // Usually not needed for GET, but good practice if body is used
+            }
+            // body: JSON.stringify({ sellStockCodeList, sellPct }) // Uncomment and use this if it's a POST request
+        })
+            .then(response => {
+                if (!response.ok) {
+                    // Try to parse error message from response
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
+                    }).catch(e => {
+                        // If parsing JSON fails, throw a generic error
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json(); // Parse the JSON response
+            })
+            .then(data => {
+                if (data && data.success === true) { // Check if response indicates success
+                    alert(`一键卖出操作成功！`);
+                    // Optionally, refresh the position list
+                    queryPositions(); // Re-fetch data after successful sell
+                } else {
+                    // Handle API returning success=false or unexpected format
+                    const errorMsg = data.msg || '操作失败，未知错误。';
+                    alert(`一键卖出失败: ${errorMsg}`);
+                    console.error('Sell API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('一键卖出请求失败:', error);
+                alert(`一键卖出请求失败: ${error.message || error}`);
+            })
+            .finally(() => {
+                // Reset button state
+                document.getElementById('sellAllButton').textContent = originalBtnText;
+                document.getElementById('sellAllButton').disabled = false;
+            });
+    }
+
+    // Bind the sell all button event
+    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
+    // --- 结束：一键卖出功能 ---
+
 
     // 查询持仓数据
     function queryPositions() {
-        fetch('/api/trade/queryCreditNewPosV2')
+        ApiUtils.fetch('/api/trade/queryCreditNewPosV2')
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -371,37 +572,50 @@
                 // 正负收益 -> 红/绿
                 const setColor = (elementId, value) => {
                     const el = document.getElementById(elementId);
-                    el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
-                    el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
+                    if (el) { // Check if element exists
+                        el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
+                    }
                 };
 
                 // 负债（融资）
                 const setColor_rz = (elementId, value) => {
                     const el2 = document.getElementById(elementId);
-                    el2.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
-                    el2.style.color = 'teal';
+                    if (el2) { // Check if element exists
+                        el2.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        el2.style.color = 'teal';
+                    }
                 };
 
 
-                // 填充资金持仓表单
-                document.getElementById('totalAsset').value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('totalMktVal').value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('accessMoney').value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
+                // 填充资金持仓表单 (Check if elements exist before setting)
+                const totalAssetEl = document.getElementById('totalAsset');
+                if (totalAssetEl) totalAssetEl.value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                const totalMktValEl = document.getElementById('totalMktVal');
+                if (totalMktValEl) totalMktValEl.value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                const accessMoneyEl = document.getElementById('accessMoney');
+                if (accessMoneyEl) accessMoneyEl.value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
 
                 // 持仓盈亏
                 setColor('profit', responseData.profit);
                 // 当日盈亏
                 setColor('curProfit', responseData.curprofit ?? 0);
 
-                document.getElementById('posRatio').value = `${(responseData.posratio * 100).toFixed(2)}%`;
-                document.getElementById('netAsset').value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+                const posRatioEl = document.getElementById('posRatio');
+                if (posRatioEl) posRatioEl.value = `${(responseData.posratio * 100).toFixed(2)}%`;
+
+                const netAssetEl = document.getElementById('netAsset');
+                if (netAssetEl) netAssetEl.value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
 
                 // 总负债
                 setColor_rz('totalLiability', responseData.totalliability);
                 // 可融
                 setColor_rz('marginAvl', responseData.marginavl);
 
-                document.getElementById('marginRates').value = `${(responseData.marginrates * 100).toFixed(2)}%`;
+                const marginRatesEl = document.getElementById('marginRates');
+                if (marginRatesEl) marginRatesEl.value = `${(responseData.marginrates * 100).toFixed(2)}%`;
 
                 // 融资负债
                 setColor_rz('ftotaldebts', responseData.ftotaldebts);
@@ -409,9 +623,17 @@
                 // 可用资金（担）
                 setColor('avalmoney', responseData.avalmoney);
 
-                document.getElementById('realrate').value = `${(responseData.realrate * 100).toFixed(2)}%`;
-                document.getElementById('dtotaldebts').value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
-                document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+                const realrateEl = document.getElementById('realrate');
+                if (realrateEl) realrateEl.value = `${(responseData.realrate * 100).toFixed(2)}%`;
+
+                const dtotaldebtsEl = document.getElementById('dtotaldebts');
+                if (dtotaldebtsEl) dtotaldebtsEl.value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                const acreditavlEl = document.getElementById('acreditavl');
+                if (acreditavlEl) acreditavlEl.value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                const holdingStockCountEl = document.getElementById('holdingStockCount');
+                if (holdingStockCountEl) holdingStockCountEl.value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
 
                 showPositionRecords(positionsData);
 
@@ -420,7 +642,7 @@
             })
             .catch(error => {
                 console.error('接口请求失败:', error);
-                alert('加载数据失败，请检查网络或接口是否正常');
+                alert('加载数据失败，请检查网络或接口是否正常: ' + error.message);
             });
     }
 
@@ -430,7 +652,7 @@
 
 
     // 页面加载完成后自动查询
-    window.onload = queryPositions;
+    window.addEventListener('load', queryPositions); // Use addEventListener for better practice
 
     // 示例处理函数（您可以根据需要进一步实现这些功能）
     function handleBuy(stkcode) {

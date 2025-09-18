@@ -16,7 +16,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -85,12 +88,34 @@ public class TradeController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Operation(summary = "一键清仓", description = "一键清仓")
     @GetMapping(value = "/quickOption/clearPosition")
     public Result<Void> quickClearPosition() {
         tradeService.quickClearPosition();
         return Result.SUC();
     }
+
+
+    @Operation(summary = "一键 等比卖出 - 支持勾选", description = "一键 等比卖出 - 支持勾选")
+    @GetMapping(value = "/quickOption/sellPosition")
+    public Result<Void> quickSellPosition(@Schema(description = "卖出 个股code列表（逗号分隔）", example = "1,2,3")
+                                          @RequestParam String sellStockCodeList,
+
+                                          @Schema(description = "卖出 持仓比例%（100% -> 清仓，50% -> 减半仓）", example = "100.0")
+                                          @RequestParam(required = false, defaultValue = "100.0") double sellPct) {
+
+        Set<String> _sellStockCodeList = Arrays.stream(sellStockCodeList.split(",")).collect(Collectors.toSet());
+
+        tradeService.quickSellPosition(_sellStockCodeList, sellPct);
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
     @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）  =>   清仓（old） ->  买入（new）")
     @PostMapping(value = "/quickOption/buyNewPosition")
@@ -105,6 +130,9 @@ public class TradeController {
         tradeService.quickClearAndAvgBuyNewPosition(newPositionList);
         return Result.SUC();
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Operation(summary = "账户总仓位（以此刻 融+担=净x2 为100%基准）  ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）")
@@ -127,12 +155,18 @@ public class TradeController {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单")
     @GetMapping(value = "/quickOption/cancelOrder")
     public Result<Void> quickCancelOrder() {
         tradeService.quickCancelOrder();
         return Result.SUC();
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Operation(summary = "一键再融资", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金")
