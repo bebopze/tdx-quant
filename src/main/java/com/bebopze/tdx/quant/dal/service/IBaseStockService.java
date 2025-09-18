@@ -41,4 +41,10 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     Map<String, Long> codeIdMap();
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    boolean updateById(BaseStockDO entity);
+
 }

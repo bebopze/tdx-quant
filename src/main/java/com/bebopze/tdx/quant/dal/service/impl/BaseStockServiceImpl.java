@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
@@ -14,6 +15,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -269,6 +272,22 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
         log.info("listAllPageQuery     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
         return list;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @DBLimiter(12)
+    @Retryable(
+            value = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 90000),   // 最大90秒延迟
+            exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
+    )
+    @Override
+    public boolean updateById(BaseStockDO entity) {
+        return super.updateById(entity);
     }
 
 
