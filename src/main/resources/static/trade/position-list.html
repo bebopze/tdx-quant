@@ -34,13 +34,13 @@
             background-color: #73b5ea; /* Blue for Sell */
         }
 
-        /* Style for the "Select All" checkbox */
-        #selectAllCheckbox {
+        /* Style for the "Select All" checkbox (Positions) */
+        #selectAllCheckboxHeader {
             transform: scale(0.8); /* Make it slightly smaller if needed */
             margin-right: 5px;
         }
 
-        /* Style for individual stock checkboxes */
+        /* Style for individual stock checkboxes (Positions) */
         .sell-checkbox {
             transform: scale(0.8); /* Make it slightly smaller */
             margin: 0 auto; /* Center it in the cell */
@@ -52,6 +52,17 @@
             margin-left: 10px; /* Add some space */
         }
 
+        /* --- 新增：一键再融资按钮样式 --- */
+        #quickResetFinancingButton {
+            margin-left: 10px; /* Add some space */
+        }
+
+        /* --- 新增：一键取款按钮样式 --- */
+        #quickLowerFinancingButton {
+            margin-left: 5px; /* Space between input and button */
+        }
+
+        /* ----------------------------- */
         /* Style for the input for sell percentage */
         #sellPercentageInput {
             width: 80px; /* Adjust width as needed */
@@ -165,16 +176,112 @@
             color: orange; /* Or blue, depending on preference */
         }
 
-        /* Add styles for other statuses if needed */
+        /* --- 新增样式：批量撤单相关 --- */
+        /* Style for the "Select All" checkbox in Orders table header */
+        #ordersSelectAllCheckboxHeader {
+            transform: scale(0.8);
+            margin-right: 5px;
+        }
 
+        /* Style for individual order checkboxes */
+        .order-checkbox {
+            transform: scale(0.8);
+            margin: 0 auto;
+            display: block;
+        }
 
+        /* Style for the Batch Cancel button */
+        #batchCancelOrdersButton {
+            margin-left: 10px; /* Add some space */
+        }
+
+        /* Style for the Quick Cancel button */
+        #quickCancelOrdersButton {
+            margin-left: 10px; /* Add some space */
+        }
+
+        /* ----------------------------- */
+        /* Style for Card Titles with Count */
+        .card-title-with-count {
+            font-weight: bold; /* Optional: Make the title stand out */
+        }
+
+        /* --- 新增：移除证券代码链接下划线 (使用类名) --- */
+        /* 移除持仓列表和当日委托列表中证券代码链接的下划线 */
+        .stock-code-link {
+            text-decoration: none;
+        }
+
+        /* ----------------------------- */
+        /* --- 新增：一键取款模态框样式优化 --- */
+        /* 调整模态框大小和内边距 */
+        #quickLowerFinancingModal .modal-dialog {
+            max-width: 500px; /* 设置最大宽度 */
+            margin: 1rem auto; /* 增加上下边距 */
+        }
+
+        #quickLowerFinancingModal .modal-content {
+            border-radius: 8px; /* 圆角 */
+            box-shadow: 0 0.15rem 1rem rgba(0, 0, 0, 0.15); /* 添加阴影 */
+        }
+
+        /* 优化标题和内容区域 */
+        /*#quickLowerFinancingModal .modal-header {*/
+        /*    padding: 1rem 1.5rem; !* 减少顶部内边距 *!*/
+        /*    border-bottom: 1px solid #dee2e6; !* 添加底部边框 *!*/
+        /*}*/
+
+        /*#quickLowerFinancingModal .modal-body {*/
+        /*    padding: 1.5rem; !* 增加左右内边距 *!*/
+        /*}*/
+
+        /* 优化字段名和字段值的样式 */
+        /*#quickLowerFinancingModal .modal-body p {*/
+        /*    margin-bottom: 1.25rem; !* 增加段落间距 *!*/
+        /*    line-height: 1.5; !* 增加行高 *!*/
+        /*}*/
+
+        /* 字段名 (标签) - 加粗并使用深色 */
+        #quickLowerFinancingModal .modal-body .form-label {
+            font-weight: 600; /* 加粗 */
+            color: #007bff; /* 颜色 */
+            font-size: 16px; /* 增大字号 */
+        }
+
+        /* 字段值 (数值) - 使用标准字体和颜色 */
+        #quickLowerFinancingModal .modal-body span {
+            font-weight: 500; /* 半加粗 */
+            color: red; /* 颜色 */
+            font-size: 16px; /* 增大字号 */
+        }
+
+        /* 输入框样式 */
+        #quickLowerFinancingModal .form-control {
+            color: #007bff; /* 颜色 */
+            font-size: 20px; /* 增大输入框内文字大小 */
+            height: calc(1.5em + 1rem + 2px); /* 略微增大输入框高度 */
+            border-radius: 6px; /* 更圆润的边角 */
+        }
+
+        /* 按钮样式 */
+        /*#quickLowerFinancingModal .btn-secondary {*/
+        /*    font-size: 14px; !* 增大按钮文字大小 *!*/
+        /*    padding: 0.5rem 1rem; !* 调整内边距 *!*/
+        /*    border-radius: 6px; !* 更圆润的边角 *!*/
+        /*}*/
+
+        /*#quickLowerFinancingModal .btn-primary {*/
+        /*    font-size: 14px; !* 增大按钮文字大小 *!*/
+        /*    padding: 0.5rem 1rem; !* 调整内边距 *!*/
+        /*    border-radius: 6px; !* 更圆润的边角 *!*/
+        /*}*/
+
+        /* ----------------------------- */
     </style>
 </head>
 <body>
 <div class="container mt-4">
-
     <h2>我的持仓</h2>
-
     <!-- 资金持仓表单 (保持不动) -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center" onclick="toggleCollapse()">
@@ -262,17 +369,21 @@
             </form>
         </div>
     </div>
-
-    <!-- 查询按钮 & 一键卖出 -->
-    <div class="d-flex align-items-center mb-3">
+    <!-- 查询按钮 & 一键卖出 & 新增按钮 -->
+    <div class="d-flex align-items-center mb-3 flex-wrap">
         <button id="queryButton" class="btn btn-primary">查询</button>
         <button id="sellAllButton" class="btn btn-danger ms-3">一键等比卖出</button>
         <label for="sellPercentageInput" id="sellPercentageLabel">比例:</label>
         <input type="number" id="sellPercentageInput" class="form-control form-control-sm" value="100" min="0" max="100"
                step="0.1">
         <span id="percentageSymbol">%</span>
-    </div>
 
+        <!-- 新增：一键再融资按钮 -->
+        <button id="quickResetFinancingButton" class="btn btn-warning ms-3">一键再融资</button>
+
+        <!-- 新增：一键取款按钮 -->
+        <button id="quickLowerFinancingButton" class="btn btn-info ms-3">一键取款</button>
+    </div>
     <!-- Add Tabs Navigation -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
@@ -286,27 +397,23 @@
             </button>
         </li>
     </ul>
-
     <!-- Tab Content -->
     <div class="tab-content" id="myTabContent">
         <!-- My Positions Tab Content -->
         <div class="tab-pane fade show active" id="positions" role="tabpanel" aria-labelledby="positions-tab">
             <!-- 持仓详情 -->
             <div class="card mt-3">
+                <!-- Modified: 使用 span 包含标题，以便动态更新 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>持仓详情</span>
-                    <!-- Select All Checkbox in Header -->
-                    <div>
-                        <input type="checkbox" id="selectAllCheckbox">
-                        <label for="selectAllCheckbox" class="mb-0">全选</label> <!-- mb-0 removes default margin -->
-                    </div>
+                    <span id="positionsCardTitle" class="card-title-with-count">持仓详情</span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm" id="positionTable">
                             <thead>
                             <tr>
-                                <th>勾选</th> <!-- New Checkbox Column Header -->
+                                <!-- Modified: Checkbox in Header Cell -->
+                                <th><input type="checkbox" id="selectAllCheckboxHeader">勾选</th>
                                 <th>序号</th>
                                 <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon"
                                                                                  id="sortStkcode"></span></th>
@@ -353,14 +460,20 @@
                 </div>
             </div>
         </div>
-
         <!-- 当日委托 Tab Content -->
         <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
             <div class="card mt-3">
+                <!-- Modified: 使用 span 包含标题，以便动态更新 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>当日委托列表</span>
+                    <span id="ordersCardTitle" class="card-title-with-count">当日委托列表</span>
+                    <div class="d-flex align-items-center flex-wrap" id="orders-action-controls">
+                        <!-- 新增的按钮区域 -->
+                        <button id="batchCancelOrdersButton" class="btn btn-warning btn-sm">批量撤单</button>
+                        <button id="quickCancelOrdersButton" class="btn btn-danger btn-sm ms-2">一键撤单</button>
+                    </div>
+                </div>
+                <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
                     <div class="d-flex align-items-center flex-wrap" id="orders-filter-controls">
-
                         <!-- 筛选条件 -->
                         <div class="d-flex align-items-center me-3">
                             <label for="filterStatus">委托状态:</label>
@@ -374,7 +487,6 @@
                                 <option value="废单">废单</option>
                             </select>
                         </div>
-
                         <div class="d-flex align-items-center me-3">
                             <label for="filterDirection">委托方向:</label>
                             <select id="filterDirection" class="form-select form-select-sm" style="width:auto">
@@ -383,7 +495,6 @@
                                 <option value="证券卖出">证券卖出</option>
                             </select>
                         </div>
-
                         <button id="refreshOrdersButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
@@ -392,6 +503,10 @@
                         <table class="table table-bordered table-sm" id="ordersTable">
                             <thead>
                             <tr>
+                                <!-- Modified: Checkbox in Header Cell for Orders -->
+                                <th><input type="checkbox" id="ordersSelectAllCheckboxHeader">勾选</th>
+                                <th onclick="sortOrdersTable('wtbh')">委托编号<span class="sort-icon"
+                                                                                    id="sortWtbh"></span></th>
                                 <th onclick="sortOrdersTable('wtrq')">委托日期<span class="sort-icon"
                                                                                     id="sortWtrq"></span></th>
                                 <th onclick="sortOrdersTable('wtsj')">委托时间<span class="sort-icon"
@@ -430,7 +545,48 @@
             </div>
         </div>
     </div>
+</div>
 
+<!-- --- 新增：一键取款模态框 --- -->
+<div class="modal fade" id="quickLowerFinancingModal" tabindex="-1" aria-labelledby="quickLowerFinancingModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickLowerFinancingModalLabel">一键取款</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p>当前净资产：<span id="currentNetAsset">0.00</span></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p>建议取款金额（净资产10%）：<span id="suggestedAmount">0.00</span></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p>最大可取金额：<span id="maxTransferAmount">0.00</span></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="transferAmountInputModal"
+                               class="form-label"><strong>请输入取款金额：</strong></label>
+                        <input type="number" class="form-control" id="transferAmountInputModal" min="0" step="100"
+                               required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmQuickLowerFinancingBtn">确认</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -438,7 +594,6 @@
     // 存储排序状态 (持仓)
     let sortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
-
     // 存储排序状态 (委托)
     let ordersSortState = {column: null, order: 'asc'};
     let ordersData = [];
@@ -453,11 +608,9 @@
     function updateSortIcon() {
         const iconIdPrefix = `sort${sortState.column.charAt(0).toUpperCase() + sortState.column.slice(1)}`;
         const iconElement = document.getElementById(iconIdPrefix);
-
         if (iconElement) {
             iconElement.textContent = sortState.order === 'asc' ? '↑' : '↓';
         }
-
         // 清除其他列的排序图标
         const allIcons = document.querySelectorAll('#positionTable th span.sort-icon');
         allIcons.forEach(icon => {
@@ -503,52 +656,46 @@
             console.error('未找到 #positionTable tbody');
             return;
         }
-
         tbody.innerHTML = '';
         if (!positions || positions.length === 0) {
             tbody.innerHTML = '<tr><td colspan="17">暂无持仓记录</td></tr>';
+            // 更新标题显示数量 0
+            document.getElementById('positionsCardTitle').textContent = `持仓详情（0）`;
             return;
         }
-
         const holdingStockCount = positions.length;
         document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
-
         let sortedPositions = [...positions];
         if (sortState.column) {
             sortedPositions = sortedPositions.sort((a, b) => {
                 const valA = a[sortState.column] ?? 0;
                 const valB = b[sortState.column] ?? 0;
-
                 if (!isNaN(valA) && !isNaN(valB)) {
                     return sortState.order === 'asc' ? valA - valB : valB - valA;
                 }
-
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     return sortState.order === 'asc'
                         ? valA.localeCompare(valB)
                         : valB.localeCompare(valA);
                 }
-
                 return 0;
             });
         }
-
         sortedPositions.forEach((item, index) => {
             const marketPrefix = market2Xueqiu(item.market);
             const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
             const tr = document.createElement('tr');
             tr.setAttribute('data-stkcode', item.stkcode);
-
             tr.innerHTML = `
               <td><input type="checkbox" class="sell-checkbox"></td>
               <td>${index + 1}</td>
-              <td><a href="${stockLink}" target="_blank">${item.stkcode}</a></td>
+              <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stkcode}</a></td> <!-- Modified: 添加 class -->
               <td>${item.stkname}</td>
               <td>${item.market}</td>
               <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${item.mktval.toFixed(2)}</td>
-              <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit.toFixed(2)}</td>
+              <td>${item.mktval}</td>
+              <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
               <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
               <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
               <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
@@ -581,7 +728,10 @@
             `;
             tbody.appendChild(tr);
         });
-
+        // --- 新增：更新持仓列表标题数量 ---
+        const count = sortedPositions.length;
+        document.getElementById('positionsCardTitle').textContent = `持仓详情（${count}）`;
+        // --- 结束：更新持仓列表标题数量 ---
         attachCheckboxListeners();
     }
 
@@ -591,16 +741,17 @@
         checkboxes.forEach(checkbox => {
             // Optional: Add individual change listener if needed for other features
         });
-
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.removeEventListener('change', handleSelectAllChange);
-            selectAllCheckbox.addEventListener('change', handleSelectAllChange);
+        // Modified: Listen to the new header checkbox for positions
+        const selectAllCheckboxHeader = document.getElementById('selectAllCheckboxHeader');
+        if (selectAllCheckboxHeader) {
+            selectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
+            selectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
         }
     }
 
-    // Handle "Select All" checkbox change
+    // Handle "Select All" checkbox change (Positions) - Modified to use the new header checkbox
     function handleSelectAllChange() {
+        // 'this' now refers to the #selectAllCheckboxHeader
         const isChecked = this.checked;
         const checkboxes = document.querySelectorAll('.sell-checkbox');
         checkboxes.forEach(checkbox => {
@@ -615,7 +766,6 @@
             alert('请至少选择一只股票进行卖出。');
             return;
         }
-
         const sellStockCodes = [];
         selectedCheckboxes.forEach(checkbox => {
             const row = checkbox.closest('tr');
@@ -626,32 +776,26 @@
                 }
             }
         });
-
         if (sellStockCodes.length === 0) {
             alert('未能获取到选中股票的代码，请重试。');
             return;
         }
-
         const sellPctInput = document.getElementById('sellPercentageInput');
         let sellPct = parseFloat(sellPctInput.value);
-
         if (isNaN(sellPct) || sellPct < 0 || sellPct > 100) {
             alert('请输入有效的卖出比例 (0-100%)。');
             sellPctInput.focus();
             return;
         }
-
-        const confirmMsg = `您确定要按 ${sellPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？\n${sellStockCodes.join(', ')}`;
+        const confirmMsg = `您确定要按 ${sellPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？
+${sellStockCodes.join(', ')}`;
         if (!confirm(confirmMsg)) {
             return;
         }
-
         const sellStockCodeList = sellStockCodes.join(',');
-
         const originalBtnText = document.getElementById('sellAllButton').textContent;
         document.getElementById('sellAllButton').textContent = '处理中...';
         document.getElementById('sellAllButton').disabled = true;
-
         ApiUtils.fetch(`/api/trade/quickOption/sellPosition?sellStockCodeList=${encodeURIComponent(sellStockCodeList)}&sellPct=${sellPct}`, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
@@ -686,7 +830,145 @@
             });
     }
 
-    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
+    // --- 新增：一键再融资功能 ---
+    function handleQuickResetFinancing() {
+        if (!confirm('您确定要执行一键再融资操作吗？\n此操作将清仓并重置融资，然后重新融资买入。')) {
+            return;
+        }
+        const originalBtnText = this.textContent;
+        this.textContent = '处理中...';
+        this.disabled = true;
+        ApiUtils.fetch('/api/trade/quickOption/resetFinancing', {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'}
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
+                    }).catch(e => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success === true) {
+                    alert(`一键再融资操作成功！`);
+                    queryPositions(); // 刷新持仓数据
+                } else {
+                    const errorMsg = data.msg || '操作失败，未知错误。';
+                    alert(`一键再融资失败: ${errorMsg}`);
+                    console.error('Quick Reset Financing API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('一键再融资请求失败:', error);
+                alert(`一键再融资请求失败: ${error.message || error}`);
+            })
+            .finally(() => {
+                this.textContent = originalBtnText;
+                this.disabled = false;
+            });
+    }
+
+    // --- 新增：一键取款功能 ---
+    function handleQuickLowerFinancing() {
+        // 直接从全局变量 netAssetValue 获取数据
+        const netAsset = netAssetValue;
+
+        if (isNaN(netAsset) || netAsset <= 0) {
+            alert('无法读取净资产，请先查询数据。');
+            return;
+        }
+
+        // 计算建议金额（净资产的10%）和最大金额
+        const suggestedAmount = Math.floor(netAsset * 0.1);
+        const maxTransferAmount = Math.floor(netAsset);
+
+        // 设置模态框中的数值
+        document.getElementById('currentNetAsset').textContent = netAsset.toLocaleString('en-US');
+        document.getElementById('suggestedAmount').textContent = suggestedAmount.toLocaleString('en-US');
+        document.getElementById('maxTransferAmount').textContent = maxTransferAmount.toLocaleString('en-US');
+
+        // 自动填充建议金额
+        document.getElementById('transferAmountInputModal').value = suggestedAmount;
+
+        // 显示模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('quickLowerFinancingModal'));
+        if (modal) {
+            modal.show();
+        } else {
+            new bootstrap.Modal(document.getElementById('quickLowerFinancingModal')).show();
+        }
+    }
+
+    // --- 新增：确认一键取款 ---
+    function confirmQuickLowerFinancing() {
+        const transferAmountInput = document.getElementById('transferAmountInputModal');
+        let transferAmount = parseFloat(transferAmountInput.value);
+        if (isNaN(transferAmount) || transferAmount <= 0) {
+            alert('请输入有效的取款金额（大于0）。');
+            transferAmountInput.focus();
+            return;
+        }
+
+        // 验证金额是否在合理范围内
+        const maxTransferAmountStr = document.getElementById('maxTransferAmount').textContent;
+        const maxTransferAmount = parseFloat(maxTransferAmountStr.replace(/,/g, ''));
+
+        if (transferAmount > maxTransferAmount) {
+            alert(`取款金额不能超过最大可取金额 (${maxTransferAmount.toLocaleString('en-US')} 元)。`);
+            transferAmountInput.focus();
+            return;
+        }
+
+        if (!confirm(`您确定要执行一键取款操作吗？\n取款金额: ${transferAmount.toFixed(2)} 元`)) {
+            return;
+        }
+
+        const originalBtnText = document.getElementById('confirmQuickLowerFinancingBtn').textContent;
+        document.getElementById('confirmQuickLowerFinancingBtn').textContent = '处理中...';
+        document.getElementById('confirmQuickLowerFinancingBtn').disabled = true;
+
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('quickLowerFinancingModal'));
+        modal.hide();
+
+        // 发送请求
+        ApiUtils.fetch(`/api/trade/quickOption/lowerFinancing?transferAmount=${transferAmount}`, {
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'}
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
+                    }).catch(e => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success === true) {
+                    alert(`一键取款操作成功！`);
+                    queryPositions(); // 刷新持仓数据
+                } else {
+                    const errorMsg = data.msg || '操作失败，未知错误。';
+                    alert(`一键取款失败: ${errorMsg}`);
+                    console.error('Quick Lower Financing API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('一键取款请求失败:', error);
+                alert(`一键取款请求失败: ${error.message || error}`);
+            })
+            .finally(() => {
+                document.getElementById('confirmQuickLowerFinancingBtn').textContent = originalBtnText;
+                document.getElementById('confirmQuickLowerFinancingBtn').disabled = false;
+            });
+    }
 
     // 查询持仓数据
     function queryPositions() {
@@ -697,10 +979,8 @@
                     alert('加载失败: ' + data.msg);
                     return;
                 }
-
                 const responseData = data.data;
                 positionsData = responseData.stocks;
-
                 const setColor = (elementId, value) => {
                     const el = document.getElementById(elementId);
                     if (el) {
@@ -708,7 +988,6 @@
                         el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
                     }
                 };
-
                 const setColor_rz = (elementId, value) => {
                     const el2 = document.getElementById(elementId);
                     if (el2) {
@@ -716,46 +995,34 @@
                         el2.style.color = 'teal';
                     }
                 };
-
                 const totalAssetEl = document.getElementById('totalAsset');
                 if (totalAssetEl) totalAssetEl.value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-
                 const totalMktValEl = document.getElementById('totalMktVal');
                 if (totalMktValEl) totalMktValEl.value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
-
                 const accessMoneyEl = document.getElementById('accessMoney');
                 if (accessMoneyEl) accessMoneyEl.value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
-
                 setColor('profit', responseData.profit);
                 setColor('curProfit', responseData.curprofit ?? 0);
-
                 const posRatioEl = document.getElementById('posRatio');
                 if (posRatioEl) posRatioEl.value = `${(responseData.posratio * 100).toFixed(2)}%`;
-
                 const netAssetEl = document.getElementById('netAsset');
                 if (netAssetEl) netAssetEl.value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-
+                // 更新全局变量，使用原始数值
+                netAssetValue = parseFloat(responseData.netasset);
                 setColor_rz('totalLiability', responseData.totalliability);
                 setColor_rz('marginAvl', responseData.marginavl);
-
                 const marginRatesEl = document.getElementById('marginRates');
                 if (marginRatesEl) marginRatesEl.value = `${(responseData.marginrates * 100).toFixed(2)}%`;
-
                 setColor_rz('ftotaldebts', responseData.ftotaldebts);
                 setColor('avalmoney', responseData.avalmoney);
-
                 const realrateEl = document.getElementById('realrate');
                 if (realrateEl) realrateEl.value = `${(responseData.realrate * 100).toFixed(2)}%`;
-
                 const dtotaldebtsEl = document.getElementById('dtotaldebts');
                 if (dtotaldebtsEl) dtotaldebtsEl.value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
-
                 const acreditavlEl = document.getElementById('acreditavl');
                 if (acreditavlEl) acreditavlEl.value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
-
                 const holdingStockCountEl = document.getElementById('holdingStockCount');
                 if (holdingStockCountEl) holdingStockCountEl.value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
-
                 showPositionRecords(positionsData);
                 initializeSortIcons();
             })
@@ -766,21 +1033,22 @@
     }
 
     document.getElementById('queryButton').addEventListener('click', queryPositions);
+    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
+    // --- 新增：为新按钮添加事件监听器 ---
+    document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
+    document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
+    document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
+    // --- 结束：新增事件监听器 ---
     window.addEventListener('load', queryPositions);
-
-
     // --- 新增：当日委托功能 ---
-
     // Function to update sort icons for orders table
     function updateOrdersSortIcon() {
         const iconIdPrefix = `sort${ordersSortState.column ? ordersSortState.column.charAt(0).toUpperCase() + ordersSortState.column.slice(1) : ''}`;
         const iconElement = document.getElementById(iconIdPrefix);
-
         const allIcons = document.querySelectorAll('#ordersTable th span.sort-icon');
         allIcons.forEach(icon => {
             icon.textContent = '';
         });
-
         if (iconElement && ordersSortState.column) {
             iconElement.textContent = ordersSortState.order === 'asc' ? '↑' : '↓';
         }
@@ -806,10 +1074,8 @@
             console.error('未找到 #ordersTable tbody 或 #ordersTableMessage');
             return;
         }
-
         const statusFilter = document.getElementById('filterStatus').value;
         const directionFilter = document.getElementById('filterDirection').value;
-
         let filteredOrders = orders;
         if (statusFilter) {
             filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
@@ -817,77 +1083,78 @@
         if (directionFilter) {
             filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
         }
-
         let sortedOrders = [...filteredOrders];
         if (ordersSortState.column) {
             sortedOrders.sort((a, b) => {
                 let valA = a[ordersSortState.column];
                 let valB = b[ordersSortState.column];
-
                 if (valA == null) valA = '';
                 if (valB == null) valB = '';
-
                 const numA = parseFloat(valA);
                 const numB = parseFloat(valB);
                 if (!isNaN(numA) && !isNaN(numB)) {
                     return ordersSortState.order === 'asc' ? numA - numB : numB - numA;
                 }
-
                 const comparison = String(valA).localeCompare(String(valB));
                 return ordersSortState.order === 'asc' ? comparison : -comparison;
             });
         }
-
         tbody.innerHTML = '';
-
         if (sortedOrders.length === 0) {
             messageDiv.style.display = 'block';
             messageDiv.textContent = '暂无匹配的委托记录';
+            // 更新标题显示数量 0
+            document.getElementById('ordersCardTitle').textContent = `当日委托列表（0）`;
         } else {
             messageDiv.style.display = 'none';
-
             sortedOrders.forEach((order, index) => {
                 const marketPrefix = market2Xueqiu(order.market);
                 const stockLink = `https://xueqiu.com/S/${marketPrefix}${order.zqdm}`;
-
                 const tr = document.createElement('tr');
-
                 let formattedTime = order.wtsj;
                 if (order.wtsj && order.wtsj.length === 6) {
                     formattedTime = `${order.wtsj.substring(0, 2)}:${order.wtsj.substring(2, 4)}:${order.wtsj.substring(4, 6)}`;
                 }
-
+                // 确定是否显示撤单按钮 (状态为 未报/已报/部成)
+                const isCancelable = (order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+                // 确定是否允许批量勾选 (状态为 未报/已报/部成)
+                const isBatchCancelable = isCancelable;
                 tr.innerHTML = `
+                    <td>${isBatchCancelable ? `<input type="checkbox" class="order-checkbox" data-wtdh="${order.wtbh}" data-date="${order.wtrq}">` : ''}</td>
+                    <td>${order.wtbh}</td>
                     <td>${order.wtrq}</td>
                     <td>${formattedTime}</td>
-                    <td><a href="${stockLink}" target="_blank">${order.zqdm}</a></td>
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td> <!-- Modified: 添加 class -->
                     <td>${order.zqmc}</td>
                     <td>${order.mmsm}</td>
                     <td class="order-status-${order.wtzt}">${order.wtzt}</td>
-                    <td>${Number(order.wtjg).toFixed(3)}</td>
+                    <td>${Number(order.wtjg)}</td>
                     <td>${order.wtsl}</td>
-                    <td>${Number(order.wtje).toFixed(3)}</td>
-                    <td>${Number(order.cjjg).toFixed(3)}</td>
+                    <td>${Number(order.wtje)}</td>
+                    <td>${Number(order.cjjg)}</td>
                     <td>${order.cjsl}</td>
-                    <td>${Number(order.cjje).toFixed(2)}</td>
+                    <td>${Number(order.cjje)}</td>
                     <td>
-                        ${(order.wtzt === '已报' || order.wtzt === '部成') ?
-                    `<button class="cancel-order-button" data-wtbh="${order.Wtbh}" data-market="${order.Market}">撤单</button>` :
-                    '-'
-                }
+                        ${isCancelable ? `<button class="cancel-order-button" data-wtbh="${order.wtbh}" data-date="${order.wtrq}">撤单</button>` : '-'}
                     </td>
-                 `;
+                `;
                 tbody.appendChild(tr);
             });
-
+            // 为动态生成的撤单按钮绑定事件
             document.querySelectorAll('.cancel-order-button').forEach(button => {
                 button.addEventListener('click', function () {
-                    const wtbh = this.getAttribute('data-wtbh');
-                    const market = this.getAttribute('data-market');
-                    cancelOrder(wtbh, market, this);
+                    const wtbh = this.getAttribute('data-wtbh'); // 委托编号
+                    const date = this.getAttribute('data-date'); // 委托日期
+                    cancelOrder(wtbh, date, this);
                 });
             });
+            // --- 新增：更新当日委托列表标题数量 ---
+            const count = sortedOrders.length; // 使用过滤和排序后的数量
+            document.getElementById('ordersCardTitle').textContent = `当日委托列表（${count}）`;
+            // --- 结束：更新当日委托列表标题数量 ---
         }
+        // 更新全选状态
+        updateOrdersSelectAllState();
     }
 
     // Function to fetch and load orders
@@ -896,7 +1163,6 @@
         const originalText = refreshBtn.textContent;
         refreshBtn.textContent = '加载中...';
         refreshBtn.disabled = true;
-
         ApiUtils.fetch('/api/trade/getOrdersData')
             .then(res => {
                 if (!res.ok) {
@@ -908,7 +1174,7 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取委托数据失败');
                 }
-                ordersData = data.data || [];
+                ordersData = data.data || []; // 更新全局数据
                 displayOrders(ordersData);
                 updateOrdersSortIcon();
             })
@@ -920,6 +1186,8 @@
                     tbody.innerHTML = '';
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = `加载失败: ${error.message}`;
+                    // 确保在错误时也更新标题数量
+                    document.getElementById('ordersCardTitle').textContent = `当日委托列表（0）`;
                 }
             })
             .finally(() => {
@@ -928,56 +1196,298 @@
             });
     }
 
-    // Function to cancel an order (Placeholder - needs backend implementation)
-    function cancelOrder(wtbh, market, buttonElement) {
+    // 撤单
+    function cancelOrder(wtbh, date, buttonElement) {
+        // Basic validation
+        if (!wtbh || !date) {
+            console.error('撤销委托失败: 缺少必要的委托编号或日期', {wtbh, date});
+            alert('撤销委托失败: 缺少必要的委托编号或日期。');
+            return;
+        }
+
         if (!confirm(`确定要撤销委托编号 ${wtbh} 吗？`)) {
             return;
         }
 
-        const originalText = buttonElement.textContent;
         buttonElement.textContent = '撤销中...';
         buttonElement.disabled = true;
 
-        // Prepare parameters for cancellation API
-        // Adjust endpoint and parameters based on your actual backend API
-        const cancelParams = new URLSearchParams({wtbh: wtbh, market: market});
+        // Prepare parameters for the revokeOrders API
+        // The API expects an array of objects with 'wtdh' and 'date'
+        const cancelParamsList = [{wtdh: wtbh, date: date}]; // Wrap single order in an array
 
-        ApiUtils.fetch(`/api/trade/cancelOrder?${cancelParams.toString()}`, {
-            method: 'POST', // Or GET, check your backend
+        ApiUtils.fetch('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // Add other headers if required by your ApiUtils or backend (e.g., authentication)
+            },
+            body: JSON.stringify(cancelParamsList) // Send the array in the request body
         })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(errData => {
-                        throw new Error(errData.msg || `撤销失败 HTTP ${res.status}`);
+            .then(response => {
+                if (!response.ok) {
+                    // Try to parse error message from response body
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `撤销失败 HTTP ${response.status}`);
                     }).catch(() => {
-                        throw new Error(`撤销失败 HTTP ${res.status}`);
+                        // If parsing JSON fails, throw a generic error with status
+                        throw new Error(`撤销失败 HTTP ${response.status}`);
                     });
                 }
-                return res.json();
+                return response.json(); // Parse successful response JSON
             })
             .then(data => {
-                if (data.success) {
-                    alert(`委托 ${wtbh} 撤销成功！`);
-                    loadOrders(); // Reload orders
+                // Handle response based on the structure you provided earlier for revokeOrders
+                // data = { success: true, msg: "...", data: [ { revoke: "...", resultDesc: "...", suc: true/false }, ... ] }
+                if (data && data.success === true) {
+                    const results = data.data || [];
+                    if (results.length > 0) {
+                        const result = results[0]; // Get the result for the single order we tried to cancel
+                        if (result.suc === true) {
+                            alert(`委托 ${wtbh} 撤销成功！\n${result.resultDesc || ''}`);
+                            loadOrders(); // Reload the orders table to reflect the change
+                        } else {
+                            // Backend indicated the operation was not successful for this order
+                            throw new Error(result.resultDesc || `撤销操作未成功 (委托: ${wtbh})`);
+                        }
+                    } else {
+                        // Unexpected: success=true but no data returned for the order
+                        console.warn('撤销接口返回成功，但未包含订单结果。', data);
+                        alert(`委托 ${wtbh} 撤销请求已提交，但未收到明确成功确认。`);
+                        loadOrders(); // Still reload to check status
+                    }
                 } else {
+                    // Backend returned success=false or invalid structure
                     throw new Error(data.msg || '撤销操作未成功');
                 }
             })
             .catch(error => {
                 console.error('撤销委托失败:', error);
+                // Display user-friendly error message
                 alert(`撤销委托 ${wtbh} 失败: ${error.message}`);
-                buttonElement.textContent = originalText;
-                buttonElement.disabled = false;
+                // Optional: Re-enable the button on error if you want user to retry
+                // buttonElement.textContent = originalText;
+                // buttonElement.disabled = false;
+            })
+            .finally(() => {
+                // Note: The button state is not restored here because loadOrders() will re-render the table.
+                // If loadOrders fails or you decide not to reload, you might want to restore the button here.
             });
     }
 
-    // Attach event listeners for filters and refresh
+
+    // --- 新增：批量撤单功能 (根据新返回结果调整) ---
+    function handleBatchCancelOrders() {
+        const selectedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一条委托记录进行撤单。');
+            return;
+        }
+        const cancelParamsList = [];
+        selectedCheckboxes.forEach(checkbox => {
+            const wtdh = checkbox.getAttribute('data-wtdh');
+            const date = checkbox.getAttribute('data-date');
+            if (wtdh && date) {
+                // 注意：发送给后端的字段名是 wtdh 和 date，与 TradeRevokeOrdersParam DTO 对应
+                cancelParamsList.push({wtdh: wtdh, date: date});
+            }
+        });
+        if (cancelParamsList.length === 0) {
+            alert('未能获取到选中委托的编号或日期，请重试。');
+            return;
+        }
+        const confirmMsg = `您确定要撤销以下 ${cancelParamsList.length} 条委托吗？
+${cancelParamsList.map(p => p.wtdh).join(', ')}`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        const batchCancelBtn = document.getElementById('batchCancelOrdersButton');
+        const originalBtnText = batchCancelBtn.textContent;
+        batchCancelBtn.textContent = '处理中...';
+        batchCancelBtn.disabled = true;
+        ApiUtils.fetch('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cancelParamsList) // 发送参数对象的数组
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
+                    }).catch(e => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success === true) {
+                    // 处理新的返回结构
+                    const results = data.data || []; // data.data 是 RevokeOrderResultDTO 的数组
+                    let successCount = 0;
+                    let failCount = 0;
+                    let messages = [];
+                    results.forEach(res => {
+                        // {
+                        //    "revoke": "20250919_10123",
+                        //    "resultDesc": "20250919: 您的撤单委托已提交，可至当日委托查看撤单结果",
+                        //    "suc": true
+                        // }
+                        // 根据新的返回结构处理
+                        if (res.suc) { // 检查 suc 字段
+                            successCount++;
+                        } else {
+                            failCount++;
+                            // 使用 resultDesc 字段作为失败信息
+                            messages.push(`委托 ${res.revoke.split('_')[1]}: ${res.resultDesc || '未知错误'}`); // 提取 wtdh 用于显示
+                        }
+                    });
+                    let finalMsg = `批量撤单完成！成功: ${successCount}, 失败: ${failCount}`;
+                    if (messages.length > 0) {
+                        finalMsg += `失败详情:${messages.join('')}`;
+                    }
+                    alert(finalMsg);
+                    loadOrders(); // 刷新列表
+                } else {
+                    const errorMsg = data.msg || '批量撤单失败，未知错误。';
+                    alert(`批量撤单失败: ${errorMsg}`);
+                    console.error('Batch Cancel API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('批量撤单请求失败:', error);
+                alert(`批量撤单请求失败: ${error.message || error}`);
+            })
+            .finally(() => {
+                batchCancelBtn.textContent = originalBtnText;
+                batchCancelBtn.disabled = false;
+            });
+    }
+
+    // --- 新增：一键撤单功能 ---
+    function handleQuickCancelOrder() {
+        if (!confirm('您确定要撤销所有 [未报/已报/部成] 状态的委托吗？')) {
+            return;
+        }
+        const quickCancelBtn = document.getElementById('quickCancelOrdersButton');
+        const originalBtnText = quickCancelBtn.textContent;
+        quickCancelBtn.textContent = '处理中...';
+        quickCancelBtn.disabled = true;
+        ApiUtils.fetch('/api/trade/quickOption/cancelOrder', {
+            method: 'GET', // 根据你的 Controller 定义
+            headers: {'Content-Type': 'application/json'}
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
+                    }).catch(e => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success === true) {
+                    alert(`一键撤单操作成功！`);
+                    loadOrders(); // 刷新列表
+                } else {
+                    const errorMsg = data.msg || '一键撤单失败，未知错误。';
+                    alert(`一键撤单失败: ${errorMsg}`);
+                    console.error('Quick Cancel API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('一键撤单请求失败:', error);
+                alert(`一键撤单请求失败: ${error.message || error}`);
+            })
+            .finally(() => {
+                quickCancelBtn.textContent = originalBtnText;
+                quickCancelBtn.disabled = false;
+            });
+    }
+
+    // --- 新增：全选/取消全选功能 (当日委托) ---
+    function handleOrdersSelectAllChange() {
+        const isChecked = this.checked;
+        const checkboxes = document.querySelectorAll('#ordersTable .order-checkbox');
+        checkboxes.forEach(checkbox => {
+            // 只勾选那些可以被批量撤销的（即有 checkbox 的行）
+            if (checkbox.closest('tr').querySelector('input[type="checkbox"]')) {
+                checkbox.checked = isChecked;
+            }
+        });
+    }
+
+    // --- 新增：更新当日委托全选按钮状态 ---
+    function updateOrdersSelectAllState() {
+        const allCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox');
+        // Modified: Use the new header checkbox for orders
+        const selectAllCheckbox = document.getElementById('ordersSelectAllCheckboxHeader');
+        if (allCheckboxes.length === 0) {
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            return;
+        }
+        const checkedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
+        if (selectAllCheckbox) {
+            if (checkedCheckboxes.length === allCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedCheckboxes.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true; // 半选状态
+            }
+        }
+    }
+
+    // --- 新增：为表头添加点击事件以实现全选/取消全选 ---
     document.addEventListener('DOMContentLoaded', function () {
+        // --- 持仓表格全选优化 ---
+        // Modified: Use the new header checkbox for positions
+        const positionsSelectAllCheckboxHeader = document.getElementById('selectAllCheckboxHeader');
+        // Select the header cell containing the new checkbox for positions
+        const positionsCheckboxHeaderCell = document.querySelector('#positionTable thead th:first-child');
+        if (positionsCheckboxHeaderCell && positionsSelectAllCheckboxHeader) {
+            positionsCheckboxHeaderCell.style.cursor = 'pointer'; // 可选：改变鼠标样式提示可点击
+            positionsCheckboxHeaderCell.addEventListener('click', function (event) {
+                // Prevent double triggering if the checkbox itself is clicked
+                if (event.target !== positionsSelectAllCheckboxHeader) {
+                    positionsSelectAllCheckboxHeader.checked = !positionsSelectAllCheckboxHeader.checked;
+                    // Manually trigger the change event to execute the logic
+                    positionsSelectAllCheckboxHeader.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+        // --- 当日委托表格全选优化 ---
+        // Modified: Use the new header checkbox for orders
+        const ordersSelectAllCheckboxHeader = document.getElementById('ordersSelectAllCheckboxHeader');
+        // Select the header cell containing the new checkbox for orders
+        const ordersCheckboxHeaderCell = document.querySelector('#ordersTable thead th:first-child');
+        if (ordersCheckboxHeaderCell && ordersSelectAllCheckboxHeader) {
+            ordersCheckboxHeaderCell.style.cursor = 'pointer'; // 可选：改变鼠标样式提示可点击
+            ordersCheckboxHeaderCell.addEventListener('click', function (event) {
+                // Prevent double triggering if the checkbox itself is clicked
+                if (event.target !== ordersSelectAllCheckboxHeader) {
+                    ordersSelectAllCheckboxHeader.checked = !ordersSelectAllCheckboxHeader.checked;
+                    // Manually trigger the change event to execute the logic
+                    ordersSelectAllCheckboxHeader.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+        // --- 当日委托相关元素和事件 ---
         const ordersTab = document.getElementById('orders-tab');
         const filterStatus = document.getElementById('filterStatus');
         const filterDirection = document.getElementById('filterDirection');
         const refreshOrdersButton = document.getElementById('refreshOrdersButton');
-
+        const batchCancelOrdersButton = document.getElementById('batchCancelOrdersButton');
+        const quickCancelOrdersButton = document.getElementById('quickCancelOrdersButton');
+        // const ordersSelectAllCheckbox = document.getElementById('ordersSelectAllCheckbox'); // Removed
         if (ordersTab && filterStatus && filterDirection && refreshOrdersButton) {
             let hasLoadedOrders = false;
             ordersTab.addEventListener('shown.bs.tab', function (event) {
@@ -986,15 +1496,42 @@
                     hasLoadedOrders = true;
                 }
             });
-
             refreshOrdersButton.addEventListener('click', loadOrders);
             filterStatus.addEventListener('change', () => displayOrders(ordersData));
             filterDirection.addEventListener('change', () => displayOrders(ordersData));
+            // --- 现有代码：当日委托按钮事件 ---
+            if (batchCancelOrdersButton) {
+                batchCancelOrdersButton.addEventListener('click', handleBatchCancelOrders);
+            }
+            if (quickCancelOrdersButton) {
+                quickCancelOrdersButton.addEventListener('click', handleQuickCancelOrder);
+            }
+            // --- 现有代码：当日委托全选复选框事件 (Modified to use new header checkbox) ---
+            // if (ordersSelectAllCheckbox) { // Removed old listener
+            if (ordersSelectAllCheckboxHeader) { // Use new header checkbox
+                // ordersSelectAllCheckbox.removeEventListener('change', handleOrdersSelectAllChange); // Remove old listener
+                ordersSelectAllCheckboxHeader.removeEventListener('change', handleOrdersSelectAllChange); // Remove potential old listener on new element
+                ordersSelectAllCheckboxHeader.addEventListener('change', handleOrdersSelectAllChange); // Add listener to new header checkbox
+                // 为订单复选框添加监听，以便更新全选按钮状态
+                const observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        if (mutation.type === 'childList') {
+                            document.querySelectorAll('#ordersTable .order-checkbox').forEach(cb => {
+                                cb.removeEventListener('change', updateOrdersSelectAllState);
+                                cb.addEventListener('change', updateOrdersSelectAllState);
+                            });
+                        }
+                    });
+                });
+                const tbody = document.querySelector('#ordersTable tbody');
+                if (tbody) {
+                    observer.observe(tbody, {childList: true, subtree: true});
+                }
+            }
         } else {
             console.warn('未能找到当日委托相关的DOM元素');
         }
     });
-
     // --- 结束：当日委托功能 ---
 </script>
 </body>
