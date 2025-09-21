@@ -81,6 +81,15 @@
             background-color: #d32f2f;
         }
 
+        .btn-info {
+            background-color: #9c27b0;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #7b1fa2;
+        }
+
         .form-group {
             margin: 10px 0;
         }
@@ -155,6 +164,26 @@
             right: 20px;
             max-width: 400px;
             z-index: 1000;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .task-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .task-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 15px;
         }
     </style>
 </head>
@@ -252,6 +281,87 @@
         </div>
         <div style="margin: 10px 0;">
             <button class="btn-success" onclick="fillStockKline()">📈 指定个股行情更新</button>
+        </div>
+    </div>
+
+    <!-- 主线板块 -->
+    <div class="task-section">
+        <h2 class="section-title">🎯 主线板块</h2>
+
+        <!-- 主要任务 -->
+        <div class="task-grid">
+            <div class="task-card">
+                <h4>主线板块计算</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/refreshAll', '主线板块计算')">🔄
+                    主线板块计算
+                </button>
+            </div>
+        </div>
+
+        <!-- 百日新高 -->
+        <h3>📈 百日新高</h3>
+        <div class="form-group">
+            <label>N日新高:</label>
+            <input type="number" id="nDayHighN" value="100" placeholder="输入N值">
+        </div>
+        <button class="btn-info" onclick="nDayHighTask()">📊 百日新高占比分布</button>
+
+        <!-- 涨幅榜 -->
+        <h3>📈 涨幅榜</h3>
+        <div class="form-group">
+            <label>N日涨幅:</label>
+            <input type="number" id="changePctTopN" value="10" placeholder="输入N值">
+        </div>
+        <button class="btn-info" onclick="changePctTopTask()">📊 涨幅榜占比分布</button>
+
+        <!-- RPS红 -->
+        <h3>📈 RPS红</h3>
+        <div class="form-group">
+            <label>RPS阈值:</label>
+            <input type="number" id="rpsThreshold" value="85" placeholder="输入RPS值（三线红）">
+        </div>
+        <button class="btn-info" onclick="rpsRedTask()">📊 RPS红占比分布</button>
+
+        <!-- 阶段分析 -->
+        <h3>📈 阶段分析</h3>
+        <div class="task-grid">
+            <div class="task-card">
+                <h4>大均线多头</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/longTermMABullStack', '大均线多头')">📈
+                    大均线多头
+                </button>
+            </div>
+
+            <div class="task-card">
+                <h4>均线大多头</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/bullMAStack', '均线大多头')">📈
+                    均线大多头
+                </button>
+            </div>
+
+            <div class="task-card">
+                <h4>均线极多头</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/extremeBullMAStack', '均线极多头')">📈
+                    均线极多头
+                </button>
+            </div>
+
+            <div class="task-card">
+                <h4>二阶段</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/stage2', '二阶段分析')">📈 二阶段分析
+                </button>
+            </div>
+        </div>
+
+        <!-- 板块AMO -->
+        <h3>📊 板块AMO</h3>
+        <div class="task-grid">
+            <div class="task-card">
+                <h4>板块AMO-TOP1</h4>
+                <button class="btn-info" onclick="callApi('/api/topBlock/task/blockAmoTop', '板块AMO-TOP1')">📊
+                    板块AMO-TOP1
+                </button>
+            </div>
         </div>
     </div>
 
@@ -356,6 +466,22 @@
         const updateType = document.getElementById('stockUpdateType').value;
         callApi(`/api/parser/tdxdata/fill/stockKlineAll?updateType=${updateType}`,
             `全部个股行情更新(${updateType === '1' ? '全量' : '增量'})`);
+    }
+
+    // 主线板块相关函数
+    function nDayHighTask() {
+        const n = document.getElementById('nDayHighN').value || 100;
+        callApi(`/api/topBlock/task/nDayHigh?N=${n}`, `百日新高占比分布(N=${n})`);
+    }
+
+    function changePctTopTask() {
+        const n = document.getElementById('changePctTopN').value || 10;
+        callApi(`/api/topBlock/task/changePctTop?N=${n}`, `涨幅榜占比分布(N=${n})`);
+    }
+
+    function rpsRedTask() {
+        const rps = document.getElementById('rpsThreshold').value || 85;
+        callApi(`/api/topBlock/task/rpsRed?RPS=${rps}`, `RPS红占比分布(RPS=${rps})`);
     }
 
     function getExtDataN() {
