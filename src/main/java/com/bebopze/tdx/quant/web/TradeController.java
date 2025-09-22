@@ -105,11 +105,17 @@ public class TradeController {
                                           @RequestParam String sellStockCodeList,
 
                                           @Schema(description = "卖出 持仓比例%（100% -> 清仓，50% -> 减半仓）", example = "100.0")
-                                          @RequestParam(required = false, defaultValue = "100.0") double sellPct) {
+                                          @RequestParam(required = false, defaultValue = "100.0") double sellPosPct,
+
+                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，5% -> 当前价格x105% 挂S单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+
+                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
         Set<String> _sellStockCodeList = Arrays.stream(sellStockCodeList.split(",")).collect(Collectors.toSet());
 
-        tradeService.quickSellPosition(_sellStockCodeList, sellPct);
+        tradeService.quickSellPosition(_sellStockCodeList, sellPosPct, currPricePct, changePricePct);
         return Result.SUC();
     }
 

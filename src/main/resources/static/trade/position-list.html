@@ -62,29 +62,6 @@
             margin-left: 5px; /* Space between input and button */
         }
 
-        /* ----------------------------- */
-        /* Style for the input for sell percentage */
-        #sellPercentageInput {
-            width: 80px; /* Adjust width as needed */
-            display: inline-block;
-            margin-left: 5px;
-            margin-right: 5px;
-            padding: 2px 5px; /* Adjust padding */
-            font-size: 14px; /* Match button font size */
-        }
-
-        /* Style for the label */
-        #sellPercentageLabel {
-            display: inline-block;
-            margin-left: 10px; /* Space from the button */
-            vertical-align: middle; /* Align vertically with button */
-        }
-
-        /* Style for the percentage symbol */
-        #percentageSymbol {
-            margin-left: 2px; /* Space after the input */
-        }
-
         /* --- 样式调整：缩小表格字体 --- */
         #positionTable, #ordersTable {
             font-size: 13px;
@@ -157,7 +134,6 @@
             cursor: not-allowed;
         }
 
-        /* Style for wtzt status */
         .order-status-已撤 {
             color: gray;
             font-style: italic;
@@ -225,23 +201,7 @@
             box-shadow: 0 0.15rem 1rem rgba(0, 0, 0, 0.15); /* 添加阴影 */
         }
 
-        /* 优化标题和内容区域 */
-        /*#quickLowerFinancingModal .modal-header {*/
-        /*    padding: 1rem 1.5rem; !* 减少顶部内边距 *!*/
-        /*    border-bottom: 1px solid #dee2e6; !* 添加底部边框 *!*/
-        /*}*/
-
-        /*#quickLowerFinancingModal .modal-body {*/
-        /*    padding: 1.5rem; !* 增加左右内边距 *!*/
-        /*}*/
-
         /* 优化字段名和字段值的样式 */
-        /*#quickLowerFinancingModal .modal-body p {*/
-        /*    margin-bottom: 1.25rem; !* 增加段落间距 *!*/
-        /*    line-height: 1.5; !* 增加行高 *!*/
-        /*}*/
-
-        /* 字段名 (标签) - 加粗并使用深色 */
         #quickLowerFinancingModal .modal-body .form-label {
             font-weight: 600; /* 加粗 */
             color: #007bff; /* 颜色 */
@@ -263,20 +223,52 @@
             border-radius: 6px; /* 更圆润的边角 */
         }
 
-        /* 按钮样式 */
-        /*#quickLowerFinancingModal .btn-secondary {*/
-        /*    font-size: 14px; !* 增大按钮文字大小 *!*/
-        /*    padding: 0.5rem 1rem; !* 调整内边距 *!*/
-        /*    border-radius: 6px; !* 更圆润的边角 *!*/
-        /*}*/
+        /* --- 新增：一键卖出设置模态框样式 --- */
+        #sellSettingsModal .modal-dialog {
+            max-width: 500px;
+            margin: 1rem auto;
+        }
 
-        /*#quickLowerFinancingModal .btn-primary {*/
-        /*    font-size: 14px; !* 增大按钮文字大小 *!*/
-        /*    padding: 0.5rem 1rem; !* 调整内边距 *!*/
-        /*    border-radius: 6px; !* 更圆润的边角 *!*/
-        /*}*/
+        #sellSettingsModal .modal-content {
+            border-radius: 8px;
+            box-shadow: 0 0.15rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        #sellSettingsModal .modal-body .form-label {
+            font-weight: 600;
+            color: #007bff;
+            font-size: 16px;
+        }
+
+        #sellSettingsModal .form-control {
+            font-size: 16px;
+            height: calc(1.5em + 0.75rem + 2px);
+            border-radius: 6px;
+        }
+
+        #sellSettingsModal .price-strategy-option {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        #sellSettingsModal .price-strategy-option input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        #sellSettingsModal .price-strategy-option input[type="number"] {
+            width: 100px;
+            margin-left: 10px;
+            padding: 2px 5px;
+            font-size: 14px;
+        }
+
+        #sellSettingsModal .price-strategy-option span {
+            margin-left: 5px;
+        }
 
         /* ----------------------------- */
+
     </style>
 </head>
 <body>
@@ -373,14 +365,8 @@
     <div class="d-flex align-items-center mb-3 flex-wrap">
         <button id="queryButton" class="btn btn-primary">查询</button>
         <button id="sellAllButton" class="btn btn-danger ms-3">一键等比卖出</button>
-        <label for="sellPercentageInput" id="sellPercentageLabel">比例:</label>
-        <input type="number" id="sellPercentageInput" class="form-control form-control-sm" value="100" min="0" max="100"
-               step="0.1">
-        <span id="percentageSymbol">%</span>
-
         <!-- 新增：一键再融资按钮 -->
         <button id="quickResetFinancingButton" class="btn btn-warning ms-3">一键再融资</button>
-
         <!-- 新增：一键取款按钮 -->
         <button id="quickLowerFinancingButton" class="btn btn-info ms-3">一键取款</button>
     </div>
@@ -423,6 +409,9 @@
                                 </th>
                                 <th onclick="sortTable('costprice')">成本价<span class="sort-icon"
                                                                                  id="sortCostprice"></span>
+                                </th>
+                                <th onclick="sortTable('preClose')">昨收<span class="sort-icon"
+                                                                              id="sortPreClose"></span>
                                 </th>
                                 <th onclick="sortTable('lastprice')">最新价<span class="sort-icon"
                                                                                  id="sortLastprice"></span>
@@ -547,6 +536,52 @@
     </div>
 </div>
 
+<!-- --- 新增：一键卖出设置模态框 --- -->
+<div class="modal fade" id="sellSettingsModal" tabindex="-1" aria-labelledby="sellSettingsModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sellSettingsModalLabel">一键等比卖出</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalSellPercentageInput" class="form-label">卖出比例:</label>
+                    <input type="number" class="form-control" id="modalSellPercentageInput" value="100" min="0"
+                           max="100" step="1">
+                    <div class="form-text">请输入 0 到 100 之间的数值</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">价格策略:</label>
+                    <div class="price-strategy-option">
+                        <input type="radio" id="modalStrategyCurrPrice" name="modalPriceStrategy" value="currPricePct"
+                               checked>
+                        <label for="modalStrategyCurrPrice">当前价格</label>
+                        <input type="number" id="modalCurrPricePctInput" class="form-control form-control-sm" value="0"
+                               min="-30" max="30" step="0.1" disabled>
+                        <span>%</span>
+                    </div>
+                    <div class="price-strategy-option">
+                        <input type="radio" id="modalStrategyChangePrice" name="modalPriceStrategy"
+                               value="changePricePct">
+                        <label for="modalStrategyChangePrice">昨日收盘价</label>
+                        <input type="number" id="modalChangePricePctInput" class="form-control form-control-sm"
+                               value="0" min="-30" max="30" step="0.1" disabled>
+                        <span>%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmSellSettingsBtn">确认卖出</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- --- 结束：一键卖出设置模态框 --- -->
+
 <!-- --- 新增：一键取款模态框 --- -->
 <div class="modal fade" id="quickLowerFinancingModal" tabindex="-1" aria-labelledby="quickLowerFinancingModalLabel"
      aria-hidden="true">
@@ -588,7 +623,6 @@
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // 存储排序状态 (持仓)
@@ -693,6 +727,7 @@
               <td>${item.stkname}</td>
               <td>${item.market}</td>
               <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.preClose).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${item.mktval}</td>
               <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
@@ -759,8 +794,51 @@
         });
     }
 
-    // --- 新增：一键卖出功能 ---
+    // --- 新增：一键卖出功能 (弹框设置) ---
+    // 1. 主按钮点击事件：打开模态框
     function handleSellAll() {
+        const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一只股票进行卖出。');
+            return;
+        }
+        // 重置模态框内的输入
+        document.getElementById('modalSellPercentageInput').value = '100';
+        document.getElementById('modalCurrPricePctInput').value = '0';
+        document.getElementById('modalChangePricePctInput').value = '0';
+        document.getElementById('modalStrategyCurrPrice').checked = true;
+        document.getElementById('modalStrategyChangePrice').checked = false;
+        // 初始化模态框内价格策略输入框状态
+        updateModalInputStates();
+        // 显示模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('sellSettingsModal'));
+        if (modal) {
+            modal.show();
+        } else {
+            new bootstrap.Modal(document.getElementById('sellSettingsModal')).show();
+        }
+    }
+
+    // 2. 模态框内价格策略单选按钮逻辑
+    function updateModalInputStates() {
+        const strategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
+        const strategyChangePrice = document.getElementById('modalStrategyChangePrice');
+        const currPricePctInput = document.getElementById('modalCurrPricePctInput');
+        const changePricePctInput = document.getElementById('modalChangePricePctInput');
+
+        if (strategyCurrPrice.checked) {
+            currPricePctInput.disabled = false;
+            changePricePctInput.disabled = true;
+            changePricePctInput.value = '0'; // 重置未选中的输入框
+        } else if (strategyChangePrice.checked) {
+            changePricePctInput.disabled = false;
+            currPricePctInput.disabled = true;
+            currPricePctInput.value = '0'; // 重置未选中的输入框
+        }
+    }
+
+    // 3. 模态框内确认按钮事件：执行卖出
+    function executeSellAll() {
         const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
             alert('请至少选择一只股票进行卖出。');
@@ -780,38 +858,84 @@
             alert('未能获取到选中股票的代码，请重试。');
             return;
         }
-        const sellPctInput = document.getElementById('sellPercentageInput');
-        let sellPct = parseFloat(sellPctInput.value);
-        if (isNaN(sellPct) || sellPct < 0 || sellPct > 100) {
+
+        // --- 读取模态框设置 ---
+        const sellPosPctInput = document.getElementById('modalSellPercentageInput');
+        let sellPosPct = parseFloat(sellPosPctInput.value);
+        if (isNaN(sellPosPct) || sellPosPct < 0 || sellPosPct > 100) {
             alert('请输入有效的卖出比例 (0-100%)。');
-            sellPctInput.focus();
+            sellPosPctInput.focus();
             return;
         }
-        const confirmMsg = `您确定要按 ${sellPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？
+
+        let currPricePct = 0;
+        let changePricePct = 0;
+        const selectedStrategy = document.querySelector('input[name="modalPriceStrategy"]:checked').value;
+
+        if (selectedStrategy === 'currPricePct') {
+            const currPricePctInput = document.getElementById('modalCurrPricePctInput');
+            currPricePct = parseFloat(currPricePctInput.value);
+            if (isNaN(currPricePct) || currPricePct < -100 || currPricePct > 100) {
+                alert('请输入有效的当前价格涨跌幅比例 (-100% 到 100%)。');
+                currPricePctInput.focus();
+                return;
+            }
+        } else if (selectedStrategy === 'changePricePct') {
+            const changePricePctInput = document.getElementById('modalChangePricePctInput');
+            changePricePct = parseFloat(changePricePctInput.value);
+            if (isNaN(changePricePct) || changePricePct < 0 || changePricePct > 100) {
+                alert('请输入有效的昨日收盘价涨跌幅比例 (0% 到 100%)。');
+                changePricePctInput.focus();
+                return;
+            }
+        }
+        // --- 结束读取模态框设置 ---
+
+        // --- 更新确认消息 ---
+        let confirmMsg = `您确定要按 ${sellPosPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？
 ${sellStockCodes.join(', ')}`;
+        if (selectedStrategy === 'currPricePct' && currPricePct !== 0) {
+            confirmMsg += `
+价格策略: 当前价格 ${currPricePct > 0 ? '+' : ''}${currPricePct}%`;
+        } else if (selectedStrategy === 'changePricePct' && changePricePct !== 0) {
+            confirmMsg += `
+价格策略: 昨日收盘价 +${changePricePct}%`;
+        }
         if (!confirm(confirmMsg)) {
             return;
         }
+        // --- 结束更新确认消息 ---
+
         const sellStockCodeList = sellStockCodes.join(',');
-        const originalBtnText = document.getElementById('sellAllButton').textContent;
-        document.getElementById('sellAllButton').textContent = '处理中...';
-        document.getElementById('sellAllButton').disabled = true;
-        ApiUtils.fetch(`/api/trade/quickOption/sellPosition?sellStockCodeList=${encodeURIComponent(sellStockCodeList)}&sellPct=${sellPct}`, {
+        const originalBtnText = document.getElementById('confirmSellSettingsBtn').textContent;
+        document.getElementById('confirmSellSettingsBtn').textContent = '处理中...';
+        document.getElementById('confirmSellSettingsBtn').disabled = true;
+
+        // --- 构建API URL，包含新参数 ---
+        let apiUrl = `/api/trade/quickOption/sellPosition?sellStockCodeList=${encodeURIComponent(sellStockCodeList)}&sellPosPct=${sellPosPct}`;
+        if (selectedStrategy === 'currPricePct') {
+            apiUrl += `&currPricePct=${currPricePct}`;
+        } else if (selectedStrategy === 'changePricePct') {
+            apiUrl += `&changePricePct=${changePricePct}`;
+        }
+        // --- 结束构建API URL ---
+
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('sellSettingsModal'));
+        modal.hide();
+
+        ApiUtils.fetch(apiUrl, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
-                    }).catch(e => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
                     });
-                }
-                return response.json();
             })
             .then(data => {
-                if (data && data.success === true) {
+                if (data && data.success) {
                     alert(`一键卖出操作成功！`);
                     queryPositions();
                 } else {
@@ -825,8 +949,8 @@ ${sellStockCodes.join(', ')}`;
                 alert(`一键卖出请求失败: ${error.message || error}`);
             })
             .finally(() => {
-                document.getElementById('sellAllButton').textContent = originalBtnText;
-                document.getElementById('sellAllButton').disabled = false;
+                document.getElementById('confirmSellSettingsBtn').textContent = originalBtnText;
+                document.getElementById('confirmSellSettingsBtn').disabled = false;
             });
     }
 
@@ -842,18 +966,14 @@ ${sellStockCodes.join(', ')}`;
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
-                    }).catch(e => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
                     });
-                }
-                return response.json();
             })
             .then(data => {
-                if (data && data.success === true) {
+                if (data && data.success) {
                     alert(`一键再融资操作成功！`);
                     queryPositions(); // 刷新持仓数据
                 } else {
@@ -876,24 +996,19 @@ ${sellStockCodes.join(', ')}`;
     function handleQuickLowerFinancing() {
         // 直接从全局变量 netAssetValue 获取数据
         const netAsset = netAssetValue;
-
         if (isNaN(netAsset) || netAsset <= 0) {
             alert('无法读取净资产，请先查询数据。');
             return;
         }
-
         // 计算建议金额（净资产的10%）和最大金额
         const suggestedAmount = Math.floor(netAsset * 0.1);
         const maxTransferAmount = Math.floor(netAsset);
-
         // 设置模态框中的数值
         document.getElementById('currentNetAsset').textContent = netAsset.toLocaleString('en-US');
         document.getElementById('suggestedAmount').textContent = suggestedAmount.toLocaleString('en-US');
         document.getElementById('maxTransferAmount').textContent = maxTransferAmount.toLocaleString('en-US');
-
         // 自动填充建议金额
         document.getElementById('transferAmountInputModal').value = suggestedAmount;
-
         // 显示模态框
         const modal = bootstrap.Modal.getInstance(document.getElementById('quickLowerFinancingModal'));
         if (modal) {
@@ -912,46 +1027,37 @@ ${sellStockCodes.join(', ')}`;
             transferAmountInput.focus();
             return;
         }
-
         // 验证金额是否在合理范围内
         const maxTransferAmountStr = document.getElementById('maxTransferAmount').textContent;
         const maxTransferAmount = parseFloat(maxTransferAmountStr.replace(/,/g, ''));
-
         if (transferAmount > maxTransferAmount) {
             alert(`取款金额不能超过最大可取金额 (${maxTransferAmount.toLocaleString('en-US')} 元)。`);
             transferAmountInput.focus();
             return;
         }
-
         if (!confirm(`您确定要执行一键取款操作吗？\n取款金额: ${transferAmount.toFixed(2)} 元`)) {
             return;
         }
-
         const originalBtnText = document.getElementById('confirmQuickLowerFinancingBtn').textContent;
         document.getElementById('confirmQuickLowerFinancingBtn').textContent = '处理中...';
         document.getElementById('confirmQuickLowerFinancingBtn').disabled = true;
-
         // 关闭模态框
         const modal = bootstrap.Modal.getInstance(document.getElementById('quickLowerFinancingModal'));
         modal.hide();
-
         // 发送请求
         ApiUtils.fetch(`/api/trade/quickOption/lowerFinancing?transferAmount=${transferAmount}`, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
-                    }).catch(e => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    });
-                }
-                return response.json();
-            })
+            // .then(res => {
+            //     return res.ok ? res.json() :
+            //         res.json().then(errData => {
+            //             throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+            //         });
+            // })
+            .then(res => res.json())
             .then(data => {
-                if (data && data.success === true) {
+                if (data && data.success) {
                     alert(`一键取款操作成功！`);
                     queryPositions(); // 刷新持仓数据
                 } else {
@@ -1034,10 +1140,25 @@ ${sellStockCodes.join(', ')}`;
 
     document.getElementById('queryButton').addEventListener('click', queryPositions);
     document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
-    // --- 新增：为新按钮添加事件监听器 ---
-    document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
-    document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
-    document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
+    // --- 新增：为模态框按钮添加事件监听器 ---
+    document.addEventListener('DOMContentLoaded', function () {
+        // 为模态框内的确认按钮添加事件
+        document.getElementById('confirmSellSettingsBtn').addEventListener('click', executeSellAll);
+        // 为模态框内的价格策略单选按钮添加事件
+        const modalStrategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
+        const modalStrategyChangePrice = document.getElementById('modalStrategyChangePrice');
+        if (modalStrategyCurrPrice && modalStrategyChangePrice) {
+            modalStrategyCurrPrice.addEventListener('change', updateModalInputStates);
+            modalStrategyChangePrice.addEventListener('change', updateModalInputStates);
+        }
+        // --- 其他原有事件监听器 ---
+        // 一键再融资按钮
+        document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
+        // 一键取款按钮
+        document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
+        // 确认一键取款按钮
+        document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
+    });
     // --- 结束：新增事件监听器 ---
     window.addEventListener('load', queryPositions);
     // --- 新增：当日委托功能 ---
@@ -1165,10 +1286,10 @@ ${sellStockCodes.join(', ')}`;
         refreshBtn.disabled = true;
         ApiUtils.fetch('/api/trade/getOrdersData')
             .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                return res.json();
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                    });
             })
             .then(data => {
                 if (!data.success) {
@@ -1204,18 +1325,14 @@ ${sellStockCodes.join(', ')}`;
             alert('撤销委托失败: 缺少必要的委托编号或日期。');
             return;
         }
-
         if (!confirm(`确定要撤销委托编号 ${wtbh} 吗？`)) {
             return;
         }
-
         buttonElement.textContent = '撤销中...';
         buttonElement.disabled = true;
-
         // Prepare parameters for the revokeOrders API
         // The API expects an array of objects with 'wtdh' and 'date'
         const cancelParamsList = [{wtdh: wtbh, date: date}]; // Wrap single order in an array
-
         ApiUtils.fetch('/api/trade/revokeOrders', {
             method: 'POST',
             headers: {
@@ -1275,7 +1392,6 @@ ${sellStockCodes.join(', ')}`;
             });
     }
 
-
     // --- 新增：批量撤单功能 (根据新返回结果调整) ---
     function handleBatchCancelOrders() {
         const selectedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
@@ -1296,8 +1412,7 @@ ${sellStockCodes.join(', ')}`;
             alert('未能获取到选中委托的编号或日期，请重试。');
             return;
         }
-        const confirmMsg = `您确定要撤销以下 ${cancelParamsList.length} 条委托吗？
-${cancelParamsList.map(p => p.wtdh).join(', ')}`;
+        const confirmMsg = `您确定要撤销以下 ${cancelParamsList.length} 条委托吗？${cancelParamsList.map(p => p.wtdh).join(', ')}`;
         if (!confirm(confirmMsg)) {
             return;
         }
@@ -1310,18 +1425,14 @@ ${cancelParamsList.map(p => p.wtdh).join(', ')}`;
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(cancelParamsList) // 发送参数对象的数组
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
-                    }).catch(e => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
                     });
-                }
-                return response.json();
             })
             .then(data => {
-                if (data && data.success === true) {
+                if (data && data.success) {
                     // 处理新的返回结构
                     const results = data.data || []; // data.data 是 RevokeOrderResultDTO 的数组
                     let successCount = 0;
@@ -1344,7 +1455,7 @@ ${cancelParamsList.map(p => p.wtdh).join(', ')}`;
                     });
                     let finalMsg = `批量撤单完成！成功: ${successCount}, 失败: ${failCount}`;
                     if (messages.length > 0) {
-                        finalMsg += `失败详情:${messages.join('')}`;
+                        finalMsg += `\n失败详情:\n${messages.join('\n')}`;
                     }
                     alert(finalMsg);
                     loadOrders(); // 刷新列表
@@ -1377,18 +1488,14 @@ ${cancelParamsList.map(p => p.wtdh).join(', ')}`;
             method: 'GET', // 根据你的 Controller 定义
             headers: {'Content-Type': 'application/json'}
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${response.status}`);
-                    }).catch(e => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
                     });
-                }
-                return response.json();
             })
             .then(data => {
-                if (data && data.success === true) {
+                if (data && data.success) {
                     alert(`一键撤单操作成功！`);
                     loadOrders(); // 刷新列表
                 } else {
@@ -1509,7 +1616,7 @@ ${cancelParamsList.map(p => p.wtdh).join(', ')}`;
             // --- 现有代码：当日委托全选复选框事件 (Modified to use new header checkbox) ---
             // if (ordersSelectAllCheckbox) { // Removed old listener
             if (ordersSelectAllCheckboxHeader) { // Use new header checkbox
-                // ordersSelectAllCheckbox.removeEventListener('change', handleOrdersSelectAllChange); // Remove old listener
+                // ordersSelectAllCheckbox.removeEventListener('change', handleOrdersSelectAllChange); // Remove old listener on new element
                 ordersSelectAllCheckboxHeader.removeEventListener('change', handleOrdersSelectAllChange); // Remove potential old listener on new element
                 ordersSelectAllCheckboxHeader.addEventListener('change', handleOrdersSelectAllChange); // Add listener to new header checkbox
                 // 为订单复选框添加监听，以便更新全选按钮状态

@@ -2,10 +2,10 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -59,6 +59,9 @@ public class TradeServiceImpl implements TradeService {
     @Autowired
     private StockService stockService;
 
+    @Autowired
+    private PosStockCache posStockCache;
+
 
     @Override
     public QueryCreditNewPosResp queryCreditNewPosV2(boolean blockInfo) {
@@ -69,8 +72,14 @@ public class TradeServiceImpl implements TradeService {
         // block info
         if (blockInfo) {
             resp.getStocks().parallelStream().forEach(stock -> {
-                StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
-                stock.setBlockInfoDTO(dto);
+                // StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
+                // stock.setBlockInfoDTO(dto);
+
+
+                PosStockCache dto = posStockCache.get(stock.getStkcode());
+                stock.setBlockInfoDTO(dto.getStockBlockInfoDTO());
+                // stock.setPreClose(dto.getBaseStockDTO().getPreClose().doubleValue());
+                stock.setPreClose(PosStockCache.getPreClose(stock.getStkcode()));
             });
         }
 
@@ -137,9 +146,30 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList) {
 
-        RevokeOrdersReq req = convert2Req(paramList);
 
-        List<RevokeOrderResultDTO> dtoList = EastMoneyTradeAPI.revokeOrders(req);
+        // 总撤单数
+        int size = paramList.size();
+        // 1次 N单
+        int N = 5;
+
+
+        List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
+        for (int j = 0; j < size; ) {
+
+            // 1次 N单
+            List<TradeRevokeOrdersParam> subParamList = paramList.subList(j, Math.min(j += N, size));
+
+
+            // 批量撤单
+            RevokeOrdersReq req = convert2Req(subParamList);
+            List<RevokeOrderResultDTO> resultDTOS = EastMoneyTradeAPI.revokeOrders(req);
+            log.info("revokeOrders     >>>     paramList : {} , resultDTOS : {}", JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
+
+
+            dtoList.addAll(resultDTOS);
+        }
+
+
         return dtoList;
     }
 
@@ -190,10 +220,23 @@ public class TradeServiceImpl implements TradeService {
      * 一键 等比卖出     =>     指定 个股列表
      *
      * @param sellStockCodeSet 指定卖出 个股列表
-     * @param sellPct          指定卖出 持仓比例
+     * @param sellPosPct       指定卖出 持仓比例
+     * @param currPricePct     （当前价格）涨跌幅比例%
+     * @param changePricePct   （昨日收盘价）涨跌幅比例%
      */
     @Override
-    public void quickSellPosition(Set<String> sellStockCodeSet, double sellPct) {
+    public void quickSellPosition(Set<String> sellStockCodeSet,
+                                  double sellPosPct,
+                                  double currPricePct,
+                                  double changePricePct) {
+
+
+        // 以 currPricePct 为准
+        // currPricePct = currPricePct != 0 ? currPricePct : StockUtil.r1ToR0(changePricePct);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
 
         // 1、我的持仓
         QueryCreditNewPosResp posResp = queryCreditNewPosV2();
@@ -204,7 +247,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 3、一键减仓
-        quick__sellPosition(sell__stockInfoList, sellPct);
+        quick__sellPosition(sell__stockInfoList, sellPosPct, currPricePct, changePricePct);
     }
 
 
@@ -358,6 +401,7 @@ public class TradeServiceImpl implements TradeService {
             TradeBSParam param = new TradeBSParam();
             param.setStockCode(e.getStkcode());
             param.setStockName(e.getStkname());
+            param.setMarket(e.getMarket());
 
 
             // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
@@ -426,22 +470,8 @@ public class TradeServiceImpl implements TradeService {
         List<TradeRevokeOrdersParam> paramList = convert2ParamList(ordersData);
 
 
-        // ------------------------------------------------------------------------------
-
-
         // 3、批量撤单
-        int size = paramList.size();
-        for (int j = 0; j < size; ) {
-
-            // 1次 10单
-            List<TradeRevokeOrdersParam> subParamList = paramList.subList(j, Math.min(j += 10, size));
-
-            // 批量撤单
-            List<RevokeOrderResultDTO> resultDTOS = revokeOrders(subParamList);
-
-            log.info("quick__cancelOrder - revokeOrders     >>>     paramList : {} , resultDTOS : {}",
-                     JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
-        }
+        revokeOrders(paramList);
 
 
         // 等待成交   ->   1s
@@ -1058,16 +1088,21 @@ public class TradeServiceImpl implements TradeService {
      * @param sellStockInfoList 清仓 个股列表
      */
     private void quick__clearPosition(List<CcStockInfo> sellStockInfoList) {
-        quick__sellPosition(sellStockInfoList, 100.0);
+        quick__sellPosition(sellStockInfoList, 100.0, 0.0, 0.0);
     }
 
     /**
      * 一键减仓/清仓
      *
      * @param sellStockInfoList 卖出 个股列表
-     * @param sellPct           卖出 持仓比例（%）
+     * @param sellPosPct        卖出 持仓比例（%）
+     * @param currPricePct      （当前价格）涨跌幅比例%
+     * @param changePricePct    （昨日收盘价）涨跌幅比例%
      */
-    private void quick__sellPosition(List<CcStockInfo> sellStockInfoList, double sellPct) {
+    private void quick__sellPosition(List<CcStockInfo> sellStockInfoList,
+                                     double sellPosPct,
+                                     double currPricePct,
+                                     double changePricePct) {
 
         sellStockInfoList.forEach(e -> {
 
@@ -1094,7 +1129,7 @@ public class TradeServiceImpl implements TradeService {
 
 
             // 卖出数量  =  持仓数量 x sellPct
-            int sellQty = (int) (e.getStkbal() * sellPct * 0.01);
+            int sellQty = (int) (e.getStkbal() * sellPosPct * 0.01);
 
             // 取整百
             sellQty = StockUtil.quantity(sellQty, stockCode);
@@ -1109,10 +1144,12 @@ public class TradeServiceImpl implements TradeService {
             TradeBSParam param = new TradeBSParam();
             param.setStockCode(stockCode);
             param.setStockName(e.getStkname());
+            param.setMarket(e.getMarket());
+
 
             // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
-            BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
-            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(1.05)).setScale(scale, RoundingMode.HALF_UP);
+            double _price = pricePct(e, currPricePct, changePricePct);
+            BigDecimal price = new BigDecimal(_price).multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
             // S数量（S  ->  持仓数量 x sellPct）
@@ -1136,6 +1173,19 @@ public class TradeServiceImpl implements TradeService {
                 String errMsg = ex.getMessage();
 
 
+//                // TODO   委托价格超过跌停价格
+//                if (errMsg.contains("委托价格超过跌停价格")) {
+//
+//                    e.setZtPrice(e.getLastprice());
+//                    e.setDtPrice(e.getLastprice());
+//
+//
+//                    SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+//                    e.setZtPrice(resp.getTopprice());
+//                    e.setDtPrice(resp.getBottomprice());
+//                } else
+
+
                 // 下单异常：委托价格超过涨停价格
                 if (errMsg.contains("委托价格超过涨停价格")) {
                     // 清仓价甩卖   ->   不会发生
@@ -1149,6 +1199,15 @@ public class TradeServiceImpl implements TradeService {
             }
 
         });
+    }
+
+    private double pricePct(CcStockInfo e, double currPricePct, double changePricePct) {
+        if (currPricePct != 0) {
+            // 当前价格
+            return e.getLastprice().doubleValue() * (1 + currPricePct * 0.01);
+        }
+        // 昨日收盘价
+        return e.getPreClose() * (1 + changePricePct * 0.01);
     }
 
 
@@ -1238,6 +1297,8 @@ public class TradeServiceImpl implements TradeService {
             TradeBSParam param = new TradeBSParam();
             param.setStockCode(stockCode);
             param.setStockName(e.getStkname());
+            param.setMarket(e.getMarket());
+
 
             // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
             BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
@@ -1269,6 +1330,32 @@ public class TradeServiceImpl implements TradeService {
 
 
             } catch (Exception ex) {
+
+
+//                // TODO   下单异常：
+//
+//                // !!证券停牌!!
+//
+//                // 证券非交易所融资融券标的证券
+//                // 证券非融资标的证券
+//
+//
+//                // 委托价格超过涨停价格
+//                // 委托价格超过跌停价格
+//
+//                // 保证金可用余额不足,尚需1234.56
+//
+//                String errMsg = ex.getMessage();
+//                if (errMsg.contains("委托价格超过涨停价格")) {
+//
+//                    e.setZtPrice(e.getLastprice());
+//                    e.setDtPrice(e.getLastprice());
+//
+//
+//                    SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+//                    e.setZtPrice(resp.getTopprice());
+//                    e.setDtPrice(resp.getBottomprice());
+//                }
 
 
                 // 非融资类 个股     ->     只支持 担保买入
@@ -1343,6 +1430,8 @@ public class TradeServiceImpl implements TradeService {
             TradeBSParam param = new TradeBSParam();
             param.setStockCode(e.getStkcode());
             param.setStockName(e.getStkname());
+            param.setMarket(e.getMarket());
+
 
             // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
             BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
@@ -1585,7 +1674,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 市场（HA-沪A / SA-深A / B-北交所）
-        String market = StockMarketEnum.getEastMoneyMarketByStockCode(param.getStockCode());
+        String market = param.getMarket() != null ? param.getMarket() : StockMarketEnum.getEastMoneyMarketByStockCode(param.getStockCode());
         req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
 
 

@@ -90,9 +90,11 @@ public interface TradeService {
      * 一键 等比卖出     =>     指定 个股列表
      *
      * @param sellStockCodeSet 指定卖出 个股列表
-     * @param sellPct          指定卖出 持仓比例（%）
+     * @param sellPosPct       指定卖出 持仓比例（%）
+     * @param currPricePct     （当前价格）涨跌幅比例%
+     * @param changePricePct   （昨日收盘价）涨跌幅比例%
      */
-    void quickSellPosition(Set<String> sellStockCodeSet, double sellPct);
+    void quickSellPosition(Set<String> sellStockCodeSet, double sellPosPct, double currPricePct, double changePricePct);
 
     /**
      * 一键清仓     =>     指定 个股列表
