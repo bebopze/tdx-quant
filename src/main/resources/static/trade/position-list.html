@@ -195,7 +195,26 @@
         }
 
         /* ----------------------------- */
-        /* --- 新增：一键取款模态框样式优化 --- */
+        /* --- 新增：资金持仓 样式优化 --- */
+
+
+        /* 针对资金持仓模块的字段名 */
+        #collapseContent .form-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 针对资金持仓模块的字段值 */
+        #collapseContent .form-control {
+            /* 您的自定义样式，例如: */
+            font-size: 16px;
+            background-color: #f8f9fa; /* 浅灰色背景示例 */
+            /* 注意：覆盖 .form-control 的样式需要足够 specificity 或使用 !important (不推荐) */
+        }
+
+
+        /* --- 新增：一键取款 样式优化 --- */
         /* 调整模态框大小和内边距 */
         #quickLowerFinancingModal .modal-dialog {
             max-width: 500px; /* 设置最大宽度 */
@@ -273,8 +292,20 @@
             margin-left: 5px;
         }
 
-        /* ----------------------------- */
+        /* --- 新增：持仓账户配置模块样式 --- */
+        #cfgAccountForm .form-label {
+            font-weight: 500;
+        }
 
+        #cfgAccountForm .form-control {
+            font-size: 14px;
+        }
+
+        #cfgAccountForm .form-check-label {
+            font-size: 14px;
+        }
+
+        /* ----------------------------- */
     </style>
 </head>
 <body>
@@ -367,6 +398,48 @@
             </form>
         </div>
     </div>
+
+    <!-- 新增：配置-持仓账户 模块 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <span>配置-持仓账户</span>
+        </div>
+        <div class="card-body">
+            <form id="cfgAccountForm">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rzAccountCheckbox">
+                            <label class="form-check-label" for="rzAccountCheckbox">
+                                是否可融资（0-否；1-是；）
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="maxRzPctInput" class="form-label">最大融资比例（1~2.5）</label>
+                        <input type="number" class="form-control" id="maxRzPctInput" step="0.01" min="1" max="2.5">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="posLimitPctInput" class="form-label">账户-持仓上限（%）</label>
+                        <input type="number" class="form-control" id="posLimitPctInput" step="0.01" min="0" max="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="stockPosLimitPctInput" class="form-label">单只个股-持仓上限（%）</label>
+                        <input type="number" class="form-control" id="stockPosLimitPctInput" step="0.01" min="0"
+                               max="100">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-primary" id="saveCfgAccountBtn">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- 查询按钮 & 一键卖出 & 新增按钮 -->
     <div class="d-flex align-items-center mb-3 flex-wrap">
         <button id="queryButton" class="btn btn-primary">查询</button>
@@ -637,6 +710,14 @@
     // 存储排序状态 (委托)
     let ordersSortState = {column: null, order: 'asc'};
     let ordersData = [];
+    // 存储持仓账户配置数据
+    let cfgAccountData = {
+        id: null,
+        rzAccount: 0,
+        maxRzPct: 0,
+        posLimitPct: 0,
+        stockPosLimitPct: 0
+    };
 
     // --- 通用函数 ---
     function market2Xueqiu(market) {
@@ -979,17 +1060,17 @@
             })
             .then(data => {
                 if (data && data.success) {
-                    alert(`一键再融资操作成功！`);
+                    alert(`【一键再融资】操作成功！`);
                     queryPositions(); // 刷新持仓数据
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
-                    alert(`一键再融资失败：${errorMsg}`);
+                    alert(`【一键再融资】失败：${errorMsg}`);
                     console.error('Quick Reset Financing API Error:', data);
                 }
             })
             .catch(error => {
-                console.error('一键再融资请求失败:', error);
-                alert(`一键再融资请求失败：${error.message || error}`);
+                console.error('【一键再融资】请求失败:', error);
+                alert(`【一键再融资】请求失败：${error.message || error}`);
             })
             .finally(() => {
                 this.textContent = originalBtnText;
@@ -1028,7 +1109,7 @@
         const transferAmountInput = document.getElementById('transferAmountInputModal');
         let transferAmount = parseFloat(transferAmountInput.value);
         if (isNaN(transferAmount) || transferAmount <= 0) {
-            alert('请输入有效的取款金额（大于0）。');
+            alert('请输入有效的取款金额（大于0）');
             transferAmountInput.focus();
             return;
         }
@@ -1143,6 +1224,106 @@
             });
     }
 
+    // --- 新增：查询和保存持仓账户配置 ---
+    function queryCfgAccount() {
+        ApiUtils.fetch('/api/cfg/account/info?id=1') // 假设 ID 为 1
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        console.warn('未找到ID为1的持仓账户配置，使用默认值。');
+                        // 可以选择初始化默认值或保持表单为空
+                        return {success: true, data: null}; // 返回一个模拟的成功响应
+                    } else {
+                        return res.json().then(errData => {
+                            throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                        });
+                    }
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    alert('加载配置失败：' + (data.msg || '未知错误'));
+                    return;
+                }
+                cfgAccountData = data.data || cfgAccountData; // 如果data.data为null，使用默认值
+                populateCfgAccountForm(cfgAccountData);
+            })
+            .catch(error => {
+                console.error('查询持仓账户配置失败:', error);
+                alert('加载配置失败，请检查网络或接口是否正常: ' + error.message);
+            });
+    }
+
+    function populateCfgAccountForm(data) {
+        if (!data) {
+            // 如果数据为空，重置表单为默认值
+            document.getElementById('rzAccountCheckbox').checked = false;
+            document.getElementById('maxRzPctInput').value = '';
+            document.getElementById('posLimitPctInput').value = '';
+            document.getElementById('stockPosLimitPctInput').value = '';
+            return;
+        }
+        document.getElementById('rzAccountCheckbox').checked = data.rzAccount === 1;
+        document.getElementById('maxRzPctInput').value = data.maxRzPct != null ? data.maxRzPct : '';
+        document.getElementById('posLimitPctInput').value = data.posLimitPct != null ? data.posLimitPct : '';
+        document.getElementById('stockPosLimitPctInput').value = data.stockPosLimitPct != null ? data.stockPosLimitPct : '';
+        // 存储ID以便后续更新
+        cfgAccountData.id = data.id;
+    }
+
+    function saveCfgAccount() {
+        const formData = {
+            id: cfgAccountData.id, // 包含ID，如果为null则为新增
+            rzAccount: document.getElementById('rzAccountCheckbox').checked ? 1 : 0,
+            maxRzPct: parseFloat(document.getElementById('maxRzPctInput').value) || 0,
+            posLimitPct: parseFloat(document.getElementById('posLimitPctInput').value) || 0,
+            stockPosLimitPct: parseFloat(document.getElementById('stockPosLimitPctInput').value) || 0
+            // gmtCreate 和 gmtModify 通常由后端处理，前端不需要发送
+        };
+
+        const url = '/api/cfg/account/update';
+        const method = 'POST';
+
+        const saveBtn = document.getElementById('saveCfgAccountBtn');
+        const originalBtnText = saveBtn.textContent;
+        saveBtn.textContent = '保存中...';
+        saveBtn.disabled = true;
+
+        ApiUtils.fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        })
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                    });
+            })
+            .then(data => {
+                if (data && data.success) {
+                    alert('配置保存成功！');
+                    // 保存成功后，重新查询以获取最新的gmtModify时间等
+                    queryCfgAccount();
+                } else {
+                    const errorMsg = data.msg || '操作失败，未知错误。';
+                    alert(`配置保存失败：${errorMsg}`);
+                    console.error('Save CfgAccount API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('保存持仓账户配置失败:', error);
+                alert(`保存配置失败：${error.message || error}`);
+            })
+            .finally(() => {
+                saveBtn.textContent = originalBtnText;
+                saveBtn.disabled = false;
+            });
+    }
+
+    // --- 结束：查询和保存持仓账户配置 ---
+
     document.getElementById('queryButton').addEventListener('click', queryPositions);
     document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
     // --- 新增：为模态框按钮添加事件监听器 ---
@@ -1163,6 +1344,12 @@
         document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
         // 确认一键取款按钮
         document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
+
+        // --- 新增：持仓账户配置事件监听器 ---
+        document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
+        // 页面加载时查询配置
+        queryCfgAccount();
+        // --- 结束：持仓账户配置事件监听器 ---
     });
     // --- 结束：新增事件监听器 ---
     window.addEventListener('load', queryPositions);
@@ -1476,7 +1663,7 @@
 
     // --- 新增：一键撤单功能 ---
     function handleQuickCancelOrder() {
-        if (!confirm('您确定要撤销所有【未报/已报/部成】状态的委托吗？')) {
+        if (!confirm('您确定要 撤销所有【未报/已报/部成】状态的委托吗？')) {
             return;
         }
         const quickCancelBtn = document.getElementById('quickCancelOrdersButton');
