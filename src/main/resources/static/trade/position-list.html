@@ -23,14 +23,20 @@
         }
 
         .margin-buy-button {
+            font-size: 12px;
+            padding: 5px;
             background-color: #ed6a6a; /* Red for Margin Buy */
         }
 
         .buy-button {
+            font-size: 12px;
+            padding: 5px;
             background-color: #c68989; /* Brownish for Buy */
         }
 
         .sell-button {
+            font-size: 12px;
+            padding: 5px;
             background-color: #73b5ea; /* Blue for Sell */
         }
 
@@ -547,7 +553,7 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="modalSellPercentageInput" class="form-label">卖出比例:</label>
+                    <label for="modalSellPercentageInput" class="form-label">卖出仓位比例:</label>
                     <input type="number" class="form-control" id="modalSellPercentageInput" value="100" min="0"
                            max="100" step="1">
                     <div class="form-text">请输入 0 到 100 之间的数值</div>
@@ -799,7 +805,7 @@
     function handleSellAll() {
         const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
-            alert('请至少选择一只股票进行卖出。');
+            alert('请至少选择一只股票进行卖出！');
             return;
         }
         // 重置模态框内的输入
@@ -841,7 +847,7 @@
     function executeSellAll() {
         const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
-            alert('请至少选择一只股票进行卖出。');
+            alert('请至少选择一只股票进行卖出！');
             return;
         }
         const sellStockCodes = [];
@@ -855,7 +861,7 @@
             }
         });
         if (sellStockCodes.length === 0) {
-            alert('未能获取到选中股票的代码，请重试。');
+            alert('未能获取到选中股票的代码，请重试！');
             return;
         }
 
@@ -863,7 +869,7 @@
         const sellPosPctInput = document.getElementById('modalSellPercentageInput');
         let sellPosPct = parseFloat(sellPosPctInput.value);
         if (isNaN(sellPosPct) || sellPosPct < 0 || sellPosPct > 100) {
-            alert('请输入有效的卖出比例 (0-100%)。');
+            alert('请输入有效的 卖出仓位比例 (0-100%)');
             sellPosPctInput.focus();
             return;
         }
@@ -875,16 +881,16 @@
         if (selectedStrategy === 'currPricePct') {
             const currPricePctInput = document.getElementById('modalCurrPricePctInput');
             currPricePct = parseFloat(currPricePctInput.value);
-            if (isNaN(currPricePct) || currPricePct < -100 || currPricePct > 100) {
-                alert('请输入有效的当前价格涨跌幅比例 (-100% 到 100%)。');
+            if (isNaN(currPricePct) || currPricePct < -30 || currPricePct > 30) {
+                alert('请输入有效的当前价格涨跌幅比例 (-30% 到 30%)');
                 currPricePctInput.focus();
                 return;
             }
         } else if (selectedStrategy === 'changePricePct') {
             const changePricePctInput = document.getElementById('modalChangePricePctInput');
             changePricePct = parseFloat(changePricePctInput.value);
-            if (isNaN(changePricePct) || changePricePct < 0 || changePricePct > 100) {
-                alert('请输入有效的昨日收盘价涨跌幅比例 (0% 到 100%)。');
+            if (isNaN(changePricePct) || changePricePct < -30 || changePricePct > 30) {
+                alert('请输入有效的昨日收盘价涨跌幅比例 (-30% 到 30%)');
                 changePricePctInput.focus();
                 return;
             }
@@ -892,15 +898,14 @@
         // --- 结束读取模态框设置 ---
 
         // --- 更新确认消息 ---
-        let confirmMsg = `您确定要按 ${sellPosPct}% 的比例卖出以下 ${sellStockCodes.length} 只股票吗？
-${sellStockCodes.join(', ')}`;
+        let confirmMsg = `您确定要按【${sellPosPct}%】的 仓位比例，卖出以下【${sellStockCodes.length}】只股票吗？\n`;
         if (selectedStrategy === 'currPricePct' && currPricePct !== 0) {
-            confirmMsg += `
-价格策略: 当前价格 ${currPricePct > 0 ? '+' : ''}${currPricePct}%`;
+            confirmMsg += `价格策略: 当前价格【${currPricePct > 0 ? '+' : ''}${currPricePct}%】`;
         } else if (selectedStrategy === 'changePricePct' && changePricePct !== 0) {
-            confirmMsg += `
-价格策略: 昨日收盘价 +${changePricePct}%`;
+            confirmMsg += `价格策略: 昨日收盘价【${changePricePct > 0 ? '+' : ''}${changePricePct}%】`;
         }
+        confirmMsg += `\n\n${sellStockCodes.join(', ')}`;
+
         if (!confirm(confirmMsg)) {
             return;
         }
@@ -936,17 +941,17 @@ ${sellStockCodes.join(', ')}`;
             })
             .then(data => {
                 if (data && data.success) {
-                    alert(`一键卖出操作成功！`);
+                    alert(`【一键等比卖出】操作成功！`);
                     queryPositions();
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
-                    alert(`一键卖出失败: ${errorMsg}`);
+                    alert(`【一键等比卖出】失败：${errorMsg}`);
                     console.error('Sell API Error:', data);
                 }
             })
             .catch(error => {
-                console.error('一键卖出请求失败:', error);
-                alert(`一键卖出请求失败: ${error.message || error}`);
+                console.error('【一键等比卖出】请求失败:', error);
+                alert(`【一键等比卖出】请求失败：${error.message || error}`);
             })
             .finally(() => {
                 document.getElementById('confirmSellSettingsBtn').textContent = originalBtnText;
@@ -956,7 +961,7 @@ ${sellStockCodes.join(', ')}`;
 
     // --- 新增：一键再融资功能 ---
     function handleQuickResetFinancing() {
-        if (!confirm('您确定要执行一键再融资操作吗？\n此操作将清仓并重置融资，然后重新融资买入。')) {
+        if (!confirm('您确定要执行【一键再融资】操作吗？\n此操作将【清仓】并【重置融资】，然后【重新融资买入】。')) {
             return;
         }
         const originalBtnText = this.textContent;
@@ -978,13 +983,13 @@ ${sellStockCodes.join(', ')}`;
                     queryPositions(); // 刷新持仓数据
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
-                    alert(`一键再融资失败: ${errorMsg}`);
+                    alert(`一键再融资失败：${errorMsg}`);
                     console.error('Quick Reset Financing API Error:', data);
                 }
             })
             .catch(error => {
                 console.error('一键再融资请求失败:', error);
-                alert(`一键再融资请求失败: ${error.message || error}`);
+                alert(`一键再融资请求失败：${error.message || error}`);
             })
             .finally(() => {
                 this.textContent = originalBtnText;
@@ -1035,7 +1040,7 @@ ${sellStockCodes.join(', ')}`;
             transferAmountInput.focus();
             return;
         }
-        if (!confirm(`您确定要执行一键取款操作吗？\n取款金额: ${transferAmount.toFixed(2)} 元`)) {
+        if (!confirm(`您确定要执行【一键取款】操作吗？\n取款金额: ${transferAmount.toFixed(2)} 元`)) {
             return;
         }
         const originalBtnText = document.getElementById('confirmQuickLowerFinancingBtn').textContent;
@@ -1058,17 +1063,17 @@ ${sellStockCodes.join(', ')}`;
             .then(res => res.json())
             .then(data => {
                 if (data && data.success) {
-                    alert(`一键取款操作成功！`);
+                    alert(`【一键取款】操作成功！`);
                     queryPositions(); // 刷新持仓数据
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
-                    alert(`一键取款失败: ${errorMsg}`);
+                    alert(`【一键取款】失败：${errorMsg}`);
                     console.error('Quick Lower Financing API Error:', data);
                 }
             })
             .catch(error => {
-                console.error('一键取款请求失败:', error);
-                alert(`一键取款请求失败: ${error.message || error}`);
+                console.error('【一键取款】请求失败：', error);
+                alert(`【一键取款】请求失败：${error.message || error}`);
             })
             .finally(() => {
                 document.getElementById('confirmQuickLowerFinancingBtn').textContent = originalBtnText;
@@ -1082,7 +1087,7 @@ ${sellStockCodes.join(', ')}`;
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
-                    alert('加载失败: ' + data.msg);
+                    alert('加载失败：' + data.msg);
                     return;
                 }
                 const responseData = data.data;
@@ -1306,7 +1311,7 @@ ${sellStockCodes.join(', ')}`;
                 if (tbody && messageDiv) {
                     tbody.innerHTML = '';
                     messageDiv.style.display = 'block';
-                    messageDiv.textContent = `加载失败: ${error.message}`;
+                    messageDiv.textContent = `加载失败：${error.message}`;
                     // 确保在错误时也更新标题数量
                     document.getElementById('ordersCardTitle').textContent = `当日委托列表（0）`;
                 }
@@ -1321,11 +1326,11 @@ ${sellStockCodes.join(', ')}`;
     function cancelOrder(wtbh, date, buttonElement) {
         // Basic validation
         if (!wtbh || !date) {
-            console.error('撤销委托失败: 缺少必要的委托编号或日期', {wtbh, date});
-            alert('撤销委托失败: 缺少必要的委托编号或日期。');
+            console.error('撤销委托失败：缺少必要的委托编号或日期', {wtbh, date});
+            alert('撤销委托失败：缺少必要的委托编号或日期！');
             return;
         }
-        if (!confirm(`确定要撤销委托编号 ${wtbh} 吗？`)) {
+        if (!confirm(`确定要撤销委托编号【${wtbh}】吗？`)) {
             return;
         }
         buttonElement.textContent = '撤销中...';
@@ -1341,17 +1346,11 @@ ${sellStockCodes.join(', ')}`;
             },
             body: JSON.stringify(cancelParamsList) // Send the array in the request body
         })
-            .then(response => {
-                if (!response.ok) {
-                    // Try to parse error message from response body
-                    return response.json().then(errData => {
-                        throw new Error(errData.msg || `撤销失败 HTTP ${response.status}`);
-                    }).catch(() => {
-                        // If parsing JSON fails, throw a generic error with status
-                        throw new Error(`撤销失败 HTTP ${response.status}`);
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `撤销失败 HTTP ${res.status}`);
                     });
-                }
-                return response.json(); // Parse successful response JSON
             })
             .then(data => {
                 // Handle response based on the structure you provided earlier for revokeOrders
@@ -1361,7 +1360,7 @@ ${sellStockCodes.join(', ')}`;
                     if (results.length > 0) {
                         const result = results[0]; // Get the result for the single order we tried to cancel
                         if (result.suc === true) {
-                            alert(`委托 ${wtbh} 撤销成功！\n${result.resultDesc || ''}`);
+                            alert(`委托【${wtbh}】撤销成功！\n${result.resultDesc || ''}`);
                             loadOrders(); // Reload the orders table to reflect the change
                         } else {
                             // Backend indicated the operation was not successful for this order
@@ -1381,7 +1380,7 @@ ${sellStockCodes.join(', ')}`;
             .catch(error => {
                 console.error('撤销委托失败:', error);
                 // Display user-friendly error message
-                alert(`撤销委托 ${wtbh} 失败: ${error.message}`);
+                alert(`撤销委托【${wtbh}】失败：${error.message}`);
                 // Optional: Re-enable the button on error if you want user to retry
                 // buttonElement.textContent = originalText;
                 // buttonElement.disabled = false;
@@ -1396,7 +1395,7 @@ ${sellStockCodes.join(', ')}`;
     function handleBatchCancelOrders() {
         const selectedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
-            alert('请至少选择一条委托记录进行撤单。');
+            alert('请至少选择一条委托记录进行撤单！');
             return;
         }
         const cancelParamsList = [];
@@ -1409,10 +1408,10 @@ ${sellStockCodes.join(', ')}`;
             }
         });
         if (cancelParamsList.length === 0) {
-            alert('未能获取到选中委托的编号或日期，请重试。');
+            alert('未能获取到选中委托的编号或日期，请重试！');
             return;
         }
-        const confirmMsg = `您确定要撤销以下 ${cancelParamsList.length} 条委托吗？${cancelParamsList.map(p => p.wtdh).join(', ')}`;
+        const confirmMsg = `您确定要撤销以下【${cancelParamsList.length}】条委托吗？\n${cancelParamsList.map(p => p.wtdh).join(', ')}`;
         if (!confirm(confirmMsg)) {
             return;
         }
@@ -1453,7 +1452,7 @@ ${sellStockCodes.join(', ')}`;
                             messages.push(`委托 ${res.revoke.split('_')[1]}: ${res.resultDesc || '未知错误'}`); // 提取 wtdh 用于显示
                         }
                     });
-                    let finalMsg = `批量撤单完成！成功: ${successCount}, 失败: ${failCount}`;
+                    let finalMsg = `批量撤单完成！成功: ${successCount}, 失败：${failCount}`;
                     if (messages.length > 0) {
                         finalMsg += `\n失败详情:\n${messages.join('\n')}`;
                     }
@@ -1461,13 +1460,13 @@ ${sellStockCodes.join(', ')}`;
                     loadOrders(); // 刷新列表
                 } else {
                     const errorMsg = data.msg || '批量撤单失败，未知错误。';
-                    alert(`批量撤单失败: ${errorMsg}`);
+                    alert(`批量撤单失败：${errorMsg}`);
                     console.error('Batch Cancel API Error:', data);
                 }
             })
             .catch(error => {
                 console.error('批量撤单请求失败:', error);
-                alert(`批量撤单请求失败: ${error.message || error}`);
+                alert(`批量撤单请求失败：${error.message || error}`);
             })
             .finally(() => {
                 batchCancelBtn.textContent = originalBtnText;
@@ -1477,7 +1476,7 @@ ${sellStockCodes.join(', ')}`;
 
     // --- 新增：一键撤单功能 ---
     function handleQuickCancelOrder() {
-        if (!confirm('您确定要撤销所有 [未报/已报/部成] 状态的委托吗？')) {
+        if (!confirm('您确定要撤销所有【未报/已报/部成】状态的委托吗？')) {
             return;
         }
         const quickCancelBtn = document.getElementById('quickCancelOrdersButton');
@@ -1496,17 +1495,17 @@ ${sellStockCodes.join(', ')}`;
             })
             .then(data => {
                 if (data && data.success) {
-                    alert(`一键撤单操作成功！`);
+                    alert(`【一键撤单】操作成功！`);
                     loadOrders(); // 刷新列表
                 } else {
-                    const errorMsg = data.msg || '一键撤单失败，未知错误。';
-                    alert(`一键撤单失败: ${errorMsg}`);
+                    const errorMsg = data.msg || '【一键撤单】失败，未知错误。';
+                    alert(`【一键撤单】失败：${errorMsg}`);
                     console.error('Quick Cancel API Error:', data);
                 }
             })
             .catch(error => {
-                console.error('一键撤单请求失败:', error);
-                alert(`一键撤单请求失败: ${error.message || error}`);
+                console.error('【一键撤单】请求失败:', error);
+                alert(`【一键撤单】请求失败：${error.message || error}`);
             })
             .finally(() => {
                 quickCancelBtn.textContent = originalBtnText;
