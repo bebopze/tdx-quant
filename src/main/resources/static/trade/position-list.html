@@ -197,19 +197,15 @@
         /* ----------------------------- */
         /* --- 新增：资金持仓 样式优化 --- */
 
-
         /* 针对资金持仓模块的字段名 */
         #collapseContent .form-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
+            font-size: 15px;
         }
 
         /* 针对资金持仓模块的字段值 */
         #collapseContent .form-control {
-            /* 您的自定义样式，例如: */
-            font-size: 16px;
-            background-color: #f8f9fa; /* 浅灰色背景示例 */
+            font-size: 15px;
+            background-color: #f8f9fa; /* 浅灰色背景 */
             /* 注意：覆盖 .form-control 的样式需要足够 specificity 或使用 !important (不推荐) */
         }
 
@@ -294,15 +290,31 @@
 
         /* --- 新增：持仓账户配置模块样式 --- */
         #cfgAccountForm .form-label {
+            font-size: 15px;
             font-weight: 500;
         }
 
         #cfgAccountForm .form-control {
-            font-size: 14px;
+            font-size: 15px;
         }
 
         #cfgAccountForm .form-check-label {
-            font-size: 14px;
+            font-size: 15px;
+        }
+
+        /* --- 新增：为可折叠的 Card Header 添加手型光标 --- */
+        .collapsible-card-header {
+            cursor: pointer;
+        }
+
+        .collapsible-card-header .collapse-btn {
+            font-size: 0.8rem;
+            color: #6c757d; /* Bootstrap text-muted color */
+        }
+
+        /* --- 新增：为折叠内容添加过渡动画 --- */
+        .collapsible-content {
+            transition: all 0.3s ease;
         }
 
         /* ----------------------------- */
@@ -401,18 +413,26 @@
 
     <!-- 新增：配置-持仓账户 模块 -->
     <div class="card mb-4">
-        <div class="card-header">
+        <!-- 添加 ID 和 Class 用于折叠控制 -->
+        <div class="card-header d-flex justify-content-between align-items-center collapsible-card-header"
+             id="cfgAccountCardHeader" onclick="toggleCfgAccountCollapse()">
             <span>配置-持仓账户</span>
+            <!-- 添加 折叠/展开 按钮/指示器 -->
+            <span class="collapse-btn" id="cfgAccountCollapseBtn"></span>
+            <button type="button" class="btn btn-primary" id="saveCfgAccountBtn"
+                    style="font-size: 12px; padding: 2px 8px; border: 1px solid blue;">
+                保存
+            </button>
         </div>
-        <div class="card-body">
+        <!-- 添加 ID 和 Class 用于折叠内容，并设置默认隐藏 -->
+        <div class="card-body collapse-content collapsible-content" id="cfgAccountCollapseContent"
+             style="display: none;">
             <form id="cfgAccountForm">
                 <div class="row mb-3">
-                    <div class="col-md-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="rzAccountCheckbox">
-                            <label class="form-check-label" for="rzAccountCheckbox">
-                                是否可融资（0-否；1-是；）
-                            </label>
+                    <div class="col-md-12 mb-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="rzAccountCheckbox" role="switch">
+                            <label class="form-check-label" for="rzAccountCheckbox">可融资</label>
                         </div>
                     </div>
                 </div>
@@ -423,17 +443,12 @@
                     </div>
                     <div class="col-md-4">
                         <label for="posLimitPctInput" class="form-label">账户-持仓上限（%）</label>
-                        <input type="number" class="form-control" id="posLimitPctInput" step="0.01" min="0" max="100">
+                        <input type="number" class="form-control" id="posLimitPctInput" step="0.1" min="0" max="100">
                     </div>
                     <div class="col-md-4">
                         <label for="stockPosLimitPctInput" class="form-label">单只个股-持仓上限（%）</label>
-                        <input type="number" class="form-control" id="stockPosLimitPctInput" step="0.01" min="0"
-                               max="100">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button type="button" class="btn btn-primary" id="saveCfgAccountBtn">保存</button>
+                        <input type="number" class="form-control" id="stockPosLimitPctInput" step="0.1" min="0"
+                               max="25">
                     </div>
                 </div>
             </form>
@@ -1320,6 +1335,24 @@
                 saveBtn.textContent = originalBtnText;
                 saveBtn.disabled = false;
             });
+    }
+
+
+    // --- 新增：配置-持仓账户 折叠/展开 函数 ---
+    function toggleCfgAccountCollapse() {
+        const content = document.getElementById('cfgAccountCollapseContent');
+        const header = document.getElementById('cfgAccountCardHeader');
+        const btnText = document.getElementById('cfgAccountCollapseBtn');
+
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            // 可选：更新按钮文字或图标
+            // btnText.textContent = '折叠';
+        } else {
+            content.style.display = 'none';
+            // 可选：更新按钮文字或图标
+            // btnText.textContent = '展开';
+        }
     }
 
     // --- 结束：查询和保存持仓账户配置 ---
