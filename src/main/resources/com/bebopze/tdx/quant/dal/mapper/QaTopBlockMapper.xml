@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper">
+
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.QaTopBlockDO">
+        SELECT id, date
+
+        FROM qa_top_block
+    </select>
+
+
+    <select id="getByDate" resultType="com.bebopze.tdx.quant.dal.entity.QaTopBlockDO">
+        SELECT *
+
+        FROM qa_top_block
+
+        WHERE date = #{date}
+    </select>
+
+
+    <select id="lastN" resultType="com.bebopze.tdx.quant.dal.entity.QaTopBlockDO">
+        SELECT *
+
+        FROM qa_top_block
+
+
+        WHERE   <![CDATA[     date <= #{date}     ]]>
+
+
+        ORDER BY date DESC
+        LIMIT #{N}
+    </select>
+
+
+</mapper>

@@ -21,9 +21,9 @@ public class Generator {
     public static void main(String[] args) {
 
 
-        String url = PropsUtil.getProperty("spring.datasource.url");
-        String username = PropsUtil.getProperty("spring.datasource.username");
-        String password = PropsUtil.getProperty("spring.datasource.password");
+        String url = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.url");
+        String username = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.username");
+        String password = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.password");
 
 
         FastAutoGenerator.create(url, username, password)
@@ -63,7 +63,9 @@ public class Generator {
 
                                      // .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
-                                     .addInclude(/*"qa_block_new_rela_stock_his",*/ "qa_market_mid_cycle")
+                                     .addInclude(/*"qa_block_new_rela_stock_his", "qa_market_mid_cycle",*/ "qa_top_block")
+
+                                     // .addInclude("cfg_account")
 
                                      .entityBuilder()
                                      .formatFileName("%sDO")

@@ -1,5 +1,8 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 
 import java.time.LocalDate;
@@ -62,9 +65,28 @@ public interface TopBlockService {
     void bullMAStackTask();
 
     /**
+     * 7-均线极多头
+     */
+    void extremeBullMAStackTask();
+
+    /**
      * 11-板块AMO - TOP1
      */
     void blockAmoTopTask();
+
+
+    void bkyd2Task_v1();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    void bkyd2Task();
+
+
+    List<TopBlockDTO> topBlockList(LocalDate date);
+
+    List<TopStockDTO> topStockList(LocalDate date);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -97,5 +119,5 @@ public interface TopBlockService {
     List<TopBlockServiceImpl.ResultTypeLevelRateDTO> topBlockRateAll(int blockNewId, LocalDate date, int N);
 
 
-    List<TopBlockServiceImpl.TopBlockDTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N);
+    List<TopBlock2DTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N);
 }

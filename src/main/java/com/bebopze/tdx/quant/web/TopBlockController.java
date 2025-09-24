@@ -1,6 +1,9 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -122,9 +125,21 @@ public class TopBlockController {
      * @return
      */
     @Operation(summary = "均线大多头", description = "均线大多头 - 占比分布")
-    @GetMapping(value = "/task/bullMAStackTask")
+    @GetMapping(value = "/task/bullMAStack")
     public Result<Void> bullMAStackTask() {
         topBlockService.bullMAStackTask();
+        return Result.SUC();
+    }
+
+    /**
+     * 7-均线极多头 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "均线极多头", description = "均线极多头 - 占比分布")
+    @GetMapping(value = "/task/extremeBullMAStack")
+    public Result<Void> extremeBullMAStackTask() {
+        topBlockService.extremeBullMAStackTask();
         return Result.SUC();
     }
 
@@ -138,6 +153,54 @@ public class TopBlockController {
     public Result<Void> blockAmoTopTask() {
         topBlockService.blockAmoTopTask();
         return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 主线板块（板块-月多2）
+     */
+    @Operation(summary = "主线板块（板块-月多2）  ->   V1", description = "主线板块（板块-月多2）  ->   V1")
+    @GetMapping(value = "/task/v1/bk-yd2")
+    public Result<Void> topBlock_bkyd2_v1() {
+        topBlockService.bkyd2Task_v1();
+        return Result.SUC();
+    }
+
+
+    // ---------------------------------------
+
+
+    /**
+     * 主线板块（板块-月多2）
+     */
+    @Operation(summary = "主线板块（板块-月多2）", description = "主线板块（板块-月多2）")
+    @GetMapping(value = "/task/bk-yd2")
+    public Result<Void> topBlock_bkyd2() {
+        topBlockService.bkyd2Task();
+        return Result.SUC();
+    }
+
+
+    /**
+     * 主线板块（板块-月多2）
+     */
+    @Operation(summary = "主线板块 列表（板块-月多2）", description = "主线板块 列表（板块-月多2）")
+    @GetMapping(value = "/bk-yd2/topBlockList")
+    public Result<List<TopBlockDTO>> topBlockList(@Schema(description = "交易日", example = "2025-09-24")
+                                                  @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+
+        return Result.SUC(topBlockService.topBlockList(date));
+    }
+
+    @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
+    @GetMapping(value = "/bk-yd2/topStockList")
+    public Result<List<TopStockDTO>> topStockList(@Schema(description = "交易日", example = "2025-09-24")
+                                                  @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+
+        return Result.SUC(topBlockService.topStockList(date));
     }
 
 
@@ -195,15 +258,15 @@ public class TopBlockController {
      */
     @Operation(summary = "TOP榜（主线板块） - 近N日 占比分布", description = "TOP榜（主线板块） - 近N日 占比分布")
     @GetMapping(value = "/info")
-    public Result<List<TopBlockServiceImpl.TopBlockDTO>> topBlockRateInfo(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
-                                                                          @RequestParam(defaultValue = "1") int blockNewId,
+    public Result<List<TopBlock2DTO>> topBlockRateInfo(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
+                                                       @RequestParam(defaultValue = "1") int blockNewId,
 
-                                                                          @RequestParam(defaultValue = "2025-07-16") LocalDate date,
+                                                       @RequestParam(defaultValue = "2025-07-16") LocalDate date,
 
-                                                                          @Schema(description = "result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）", example = "2")
-                                                                          @RequestParam(defaultValue = "2") int resultType,
+                                                       @Schema(description = "result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）", example = "2")
+                                                       @RequestParam(defaultValue = "2") int resultType,
 
-                                                                          @RequestParam(defaultValue = "10") int N) {
+                                                       @RequestParam(defaultValue = "10") int N) {
 
 
         return Result.SUC(topBlockService.topBlockRateInfo(blockNewId, date, resultType, N));
