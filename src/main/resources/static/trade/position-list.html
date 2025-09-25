@@ -71,20 +71,24 @@
         }
 
         /* --- 样式调整：缩小表格字体 --- */
-        #positionTable, #ordersTable {
+        #positionTable, #ordersTable, #topBlocksTable, #topStocksTable {
             font-size: 13px;
         }
 
         #positionTable th,
         #positionTable td,
         #ordersTable th,
-        #ordersTable td {
+        #ordersTable td,
+        #topBlocksTable th,
+        #topBlocksTable td,
+        #topStocksTable th,
+        #topStocksTable td {
             padding: 4px 6px;
             vertical-align: middle;
             text-align: center;
         }
 
-        /* 我的持仓 标题列样式 */
+        /* 我的持仓 列样式 */
         #positionTable th:nth-child(1), /* checkbook */
         #positionTable td:nth-child(1),
         #positionTable th:nth-child(2), /* 序号 */
@@ -103,15 +107,14 @@
             text-align: left;
         }
 
-        /* 我的持仓 标题列样式 */
+        /* 我的持仓 列样式 */
         #positionTable th:nth-child(n+4):nth-child(-n+17):not(:nth-child(4)):not(:nth-child(18)), /* 除了市场列和新增列，其他数字列 */
         #positionTable td:nth-child(n+4):nth-child(-n+17):not(:nth-child(4)):not(:nth-child(18)) {
             text-align: center;
         }
 
 
-
-        /* 当日委托 标题列样式 */
+        /* 当日委托 列样式 */
         #ordersTable th:nth-child(3), /* 证券代码 */
         #ordersTable td:nth-child(3),
         #ordersTable th:nth-child(4), /* 证券名称 */
@@ -213,7 +216,6 @@
             background-color: #f8f9fa; /* 浅灰色背景 */
             /* 注意：覆盖 .form-control 的样式需要足够 specificity 或使用 !important (不推荐) */
         }
-
 
         /* --- 新增：一键取款 样式优化 --- */
         /* 调整模态框大小和内边距 */
@@ -342,6 +344,16 @@
         .top-block-list div {
             margin: 1px 0; /* 块之间的小间距 */
         }
+
+        /* --- 新增：主线板块/主线个股 列表样式 --- */
+        .top-list-item {
+            font-size: 12px;
+        }
+
+        .top-list-item div {
+            margin: 1px 0;
+        }
+
 
         /* ----------------------------- */
 
@@ -544,6 +556,18 @@
                     role="tab" aria-controls="orders" aria-selected="false">当日委托
             </button>
         </li>
+        <!-- 新增：主线板块标签页 -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="top-blocks-tab" data-bs-toggle="tab" data-bs-target="#top-blocks" type="button"
+                    role="tab" aria-controls="top-blocks" aria-selected="false">主线板块
+            </button>
+        </li>
+        <!-- 新增：主线个股标签页 -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="top-stocks-tab" data-bs-toggle="tab" data-bs-target="#top-stocks" type="button"
+                    role="tab" aria-controls="top-stocks" aria-selected="false">主线个股
+            </button>
+        </li>
     </ul>
     <!-- Tab Content -->
     <div class="tab-content" id="myTabContent">
@@ -700,6 +724,86 @@
                 </div>
             </div>
         </div>
+        <!-- 新增：主线板块 Tab Content -->
+        <div class="tab-pane fade" id="top-blocks" role="tabpanel" aria-labelledby="top-blocks-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span id="topBlocksCardTitle" class="card-title-with-count">主线板块列表</span>
+                    <!-- 新增：日期选择和刷新按钮区域 -->
+                    <div class="d-flex align-items-center flex-wrap">
+                        <label for="topBlocksDateInput" class="me-2">日期:</label>
+                        <input type="date" id="topBlocksDateInput" class="form-control form-control-sm me-2"
+                               style="width: auto;">
+                        <button id="refreshTopBlocksButton" class="btn btn-success btn-sm">刷新</button>
+                    </div>
+                </div>
+                <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
+                    <div class="d-flex align-items-center flex-wrap" id="top-blocks-filter-controls">
+                        <!-- 可以在此处添加针对主线板块的筛选控件 -->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm" id="topBlocksTable">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>板块代码</th>
+                                <th>板块名称</th>
+                                <th>上榜天数</th>
+                                <th>主线个股数量</th>
+                                <th>主线个股</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="topBlocksTableMessage" class="text-center text-muted mt-3">暂无数据</div>
+                </div>
+            </div>
+        </div>
+        <!-- 新增：主线个股 Tab Content -->
+        <div class="tab-pane fade" id="top-stocks" role="tabpanel" aria-labelledby="top-stocks-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span id="topStocksCardTitle" class="card-title-with-count">主线个股列表</span>
+                    <!-- 新增：日期选择和刷新按钮区域 -->
+                    <div class="d-flex align-items-center flex-wrap">
+                        <label for="topStocksDateInput" class="me-2">日期:</label>
+                        <input type="date" id="topStocksDateInput" class="form-control form-control-sm me-2"
+                               style="width: auto;">
+                        <button id="refreshTopStocksButton" class="btn btn-success btn-sm">刷新</button>
+                    </div>
+                </div>
+                <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
+                    <div class="d-flex align-items-center flex-wrap" id="top-stocks-filter-controls">
+                        <!-- 可以在此处添加针对主线个股的筛选控件 -->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm" id="topStocksTable">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>股票代码</th>
+                                <th>股票名称</th>
+                                <th>上榜天数</th>
+                                <th>所属主线板块数量</th>
+                                <th>所属主线板块</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="topStocksTableMessage" class="text-center text-muted mt-3">暂无数据</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -810,6 +914,13 @@
     function market2Xueqiu(market) {
         return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
     }
+
+    // --- 新增：主线板块/个股数据 ---
+    let topBlocksData = [];
+    let topStocksData = [];
+    // --- 新增：主线板块/个股当前日期 ---
+    let topBlocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
+    let topStocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
 
     // --- 原有持仓功能 ---
     // 更新排序图标函数 (持仓)
@@ -1489,6 +1600,110 @@
     });
     // --- 结束：新增事件监听器 ---
     window.addEventListener('load', queryPositions);
+
+    // --- 新增：主线板块/个股功能 ---
+    function loadTopBlocks(date = topBlocksCurrentDate) {
+        const tbody = document.querySelector('#topBlocksTable tbody');
+        const messageDiv = document.getElementById('topBlocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
+            return;
+        }
+
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topBlockList?date=${date}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线板块列表失败');
+                }
+                topBlocksData = data.data || [];
+                if (!topBlocksData || topBlocksData.length === 0) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+                    return;
+                }
+
+                topBlocksData.forEach((block, index) => {
+                    const topStocksStr = Array.isArray(block.topStockList) && block.topStockList.length > 0
+                        ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                        : '-';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${block.blockCode}</td>
+                        <td>${block.blockName}</td>
+                        <td>${block.topDays}</td>
+                        <td>${block.topStockSize}</td>
+                        <td class="top-list-item">${topStocksStr}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（${topBlocksData.length}）`;
+            })
+            .catch(error => {
+                console.error('获取主线板块列表失败:', error);
+                tbody.innerHTML = '<tr><td colspan="6">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+            });
+    }
+
+    function loadTopStocks(date = topStocksCurrentDate) {
+        const tbody = document.querySelector('#topStocksTable tbody');
+        const messageDiv = document.getElementById('topStocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
+            return;
+        }
+
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线个股列表失败');
+                }
+                topStocksData = data.data || [];
+                if (!topStocksData || topStocksData.length === 0) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+                    return;
+                }
+
+                topStocksData.forEach((stock, index) => {
+                    const topBlocksStr = Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                        ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                        : '-';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${stock.stockCode}</td>
+                        <td>${stock.stockName}</td>
+                        <td>${stock.days}</td>
+                        <td>${stock.topBlockSize}</td>
+                        <td class="top-list-item">${topBlocksStr}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（${topStocksData.length}）`;
+            })
+            .catch(error => {
+                console.error('获取主线个股列表失败:', error);
+                tbody.innerHTML = '<tr><td colspan="6">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+            });
+    }
+
     // --- 新增：当日委托功能 ---
     // Function to update sort icons for orders table
     function updateOrdersSortIcon() {
@@ -1877,6 +2092,88 @@
 
     // --- 新增：为表头添加点击事件以实现全选/取消全选 ---
     document.addEventListener('DOMContentLoaded', function () {
+        // 为模态框内的确认按钮添加事件
+        document.getElementById('confirmSellSettingsBtn').addEventListener('click', executeSellAll);
+        // 为模态框内的价格策略单选按钮添加事件
+        const modalStrategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
+        const modalStrategyChangePrice = document.getElementById('modalStrategyChangePrice');
+        if (modalStrategyCurrPrice && modalStrategyChangePrice) {
+            modalStrategyCurrPrice.addEventListener('change', updateModalInputStates);
+            modalStrategyChangePrice.addEventListener('change', updateModalInputStates);
+        }
+        // --- 其他原有事件监听器 ---
+        // 一键再融资按钮
+        document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
+        // 一键取款按钮
+        document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
+        // 确认一键取款按钮
+        document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
+        // --- 新增：持仓账户配置事件监听器 ---
+        document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
+        // 页面加载时查询配置
+        queryCfgAccount();
+        // --- 结束：持仓账户配置事件监听器 ---
+
+        // --- 新增：主线板块/个股日期和刷新按钮事件 ---
+        const topBlocksDateInput = document.getElementById('topBlocksDateInput');
+        const topStocksDateInput = document.getElementById('topStocksDateInput');
+        const refreshTopBlocksButton = document.getElementById('refreshTopBlocksButton');
+        const refreshTopStocksButton = document.getElementById('refreshTopStocksButton');
+
+        if (topBlocksDateInput) {
+            // 设置默认日期
+            topBlocksDateInput.value = topBlocksCurrentDate;
+            // 添加日期改变事件
+            topBlocksDateInput.addEventListener('change', function () {
+                topBlocksCurrentDate = this.value;
+                loadTopBlocks(topBlocksCurrentDate);
+            });
+            // 添加刷新按钮事件
+            if (refreshTopBlocksButton) {
+                refreshTopBlocksButton.addEventListener('click', () => loadTopBlocks(topBlocksCurrentDate));
+            }
+        }
+
+        if (topStocksDateInput) {
+            // 设置默认日期
+            topStocksDateInput.value = topStocksCurrentDate;
+            // 添加日期改变事件
+            topStocksDateInput.addEventListener('change', function () {
+                topStocksCurrentDate = this.value;
+                loadTopStocks(topStocksCurrentDate);
+            });
+            // 添加刷新按钮事件
+            if (refreshTopStocksButton) {
+                refreshTopStocksButton.addEventListener('click', () => loadTopStocks(topStocksCurrentDate));
+            }
+        }
+
+        // --- 结束：主线板块/个股日期和刷新按钮事件 ---
+
+        // --- 新增：主线板块/个股标签页首次显示加载数据 ---
+        const topBlocksTab = document.getElementById('top-blocks-tab');
+        const topStocksTab = document.getElementById('top-stocks-tab');
+        let hasLoadedTopBlocks = false;
+        let hasLoadedTopStocks = false;
+
+        if (topBlocksTab) {
+            topBlocksTab.addEventListener('shown.bs.tab', function (event) {
+                if (!hasLoadedTopBlocks) {
+                    loadTopBlocks(topBlocksCurrentDate); // 使用当前日期
+                    hasLoadedTopBlocks = true;
+                }
+            });
+        }
+        if (topStocksTab) {
+            topStocksTab.addEventListener('shown.bs.tab', function (event) {
+                if (!hasLoadedTopStocks) {
+                    loadTopStocks(topStocksCurrentDate); // 使用当前日期
+                    hasLoadedTopStocks = true;
+                }
+            });
+        }
+        // --- 结束：主线板块/个股标签页首次显示加载数据 ---
+
         // --- 持仓表格全选优化 ---
         // Modified: Use the new header checkbox for positions
         const positionsSelectAllCheckboxHeader = document.getElementById('selectAllCheckboxHeader');
