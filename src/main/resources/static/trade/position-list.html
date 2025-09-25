@@ -84,30 +84,34 @@
             text-align: center;
         }
 
-        /* Adjust text alignment for specific columns in Position Table */
-        #positionTable th:nth-child(1), /* 序号 */
+        /* 我的持仓 标题列样式 */
+        #positionTable th:nth-child(1), /* checkbook */
         #positionTable td:nth-child(1),
-        #positionTable th:nth-child(16), /* 操作 */
-        #positionTable td:nth-child(16),
-        #positionTable th:nth-child(17), /* 新增的勾选列 */
-        #positionTable td:nth-child(17) {
-            text-align: center; /* Keep center alignment for序号, 操作, and Checkbox */
+        #positionTable th:nth-child(2), /* 序号 */
+        #positionTable td:nth-child(2),
+        #positionTable th:nth-child(21), /* 操作 */
+        #positionTable td:nth-child(21),
+        #positionTable th:nth-child(20), /* 主线板块 列 */
+        #positionTable td:nth-child(20) {
+            text-align: center; /* 居中 */
         }
 
         #positionTable th:nth-child(2), /* 证券代码 */
         #positionTable td:nth-child(2),
         #positionTable th:nth-child(3), /* 证券名称 */
         #positionTable td:nth-child(3) {
-            text-align: left; /* Align left for Code and Name */
+            text-align: left;
         }
 
-        /* Align numbers to the right for better readability in Position Table */
-        #positionTable th:nth-child(n+4):nth-child(-n+15):not(:nth-child(4)), /* 除了市场列，其他数字列 */
-        #positionTable td:nth-child(n+4):nth-child(-n+15):not(:nth-child(4)) {
-            text-align: right;
+        /* 我的持仓 标题列样式 */
+        #positionTable th:nth-child(n+4):nth-child(-n+17):not(:nth-child(4)):not(:nth-child(18)), /* 除了市场列和新增列，其他数字列 */
+        #positionTable td:nth-child(n+4):nth-child(-n+17):not(:nth-child(4)):not(:nth-child(18)) {
+            text-align: center;
         }
 
-        /* Adjust text alignment for specific columns in Orders Table */
+
+
+        /* 当日委托 标题列样式 */
         #ordersTable th:nth-child(3), /* 证券代码 */
         #ordersTable td:nth-child(3),
         #ordersTable th:nth-child(4), /* 证券名称 */
@@ -115,14 +119,13 @@
             text-align: left; /* Align left for Code and Name */
         }
 
-        /* Align numbers to the right for better readability in Orders Table */
         #ordersTable th:nth-child(n+6):nth-child(-n+11), /* 数量, 价格, 金额列 */
         #ordersTable td:nth-child(n+6):nth-child(-n+11) {
-            text-align: right;
+            text-align: center;
         }
 
         /* --- 当日委托新增样式 --- */
-        /* Style for Cancel button */
+        /* 撤单按钮 */
         .cancel-order-button {
             color: white;
             background-color: #6c757d; /* Bootstrap secondary color */
@@ -157,7 +160,7 @@
         }
 
         .order-status-部成 {
-            color: orange; /* Or blue, depending on preference */
+            color: orange; /* Or blue */
         }
 
         /* --- 当日委托：批量撤单 --- */
@@ -319,7 +322,72 @@
             transition: all 0.3s ease;
         }
 
+        /* --- 主线个股/主线个股 相关样式 --- */
+        .top-stock-indicator {
+            background-color: #ffeb3b; /* 黄色背景 */
+            color: #333; /* 深色文字 */
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+            display: inline-block;
+            font-size: 11px;
+        }
+
+        .top-block-list {
+            font-size: 11px; /* 更小的字体 */
+            text-align: left; /* 左对齐 */
+            line-height: 1.2; /* 紧凑行高 */
+        }
+
+        .top-block-list div {
+            margin: 1px 0; /* 块之间的小间距 */
+        }
+
         /* ----------------------------- */
+
+
+        /* === 修复 持仓列表 水平滚动问题 === */
+
+        /* 1. 强化容器 */
+        #positionTableContainer {
+            overflow-x: auto;
+            min-width: 100%;
+            padding: 0;
+            margin: 0;
+            padding-bottom: 5px;
+            background-color: #fff;
+        }
+
+        /* 2. 解除父容器限制 */
+        .card-body {
+            overflow-x: visible !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+
+        /* 3. 优化表格 */
+        #positionTable th,
+        #positionTable td {
+            white-space: nowrap;
+        }
+
+        /* 4. 固定表头 (可选) */
+        #positionTable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
+
+
+        /* --- 新增：扩大页面整体宽度 --- */
+        .container {
+            min-width: 75%;
+            max-width: 85%; /* 全屏宽度的 85% */
+            width: 100%; /* 确保在小于 max-width 时能自适应 */
+        }
+
+
     </style>
 </head>
 <body>
@@ -412,7 +480,6 @@
             </form>
         </div>
     </div>
-
     <!-- 新增：配置-持仓账户 模块 -->
     <div class="card mb-4">
         <!-- 添加 ID 和 Class 用于折叠控制 -->
@@ -456,7 +523,6 @@
             </form>
         </div>
     </div>
-
     <!-- 查询按钮 & 一键卖出 & 新增按钮 -->
     <div class="d-flex align-items-center mb-3 flex-wrap">
         <button id="queryButton" class="btn btn-primary">查询</button>
@@ -490,7 +556,7 @@
                     <span id="positionsCardTitle" class="card-title-with-count">持仓详情</span>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive" id="positionTableContainer">
                         <table class="table table-bordered table-sm" id="positionTable">
                             <thead>
                             <tr>
@@ -534,6 +600,11 @@
                                                                                 id="sortStkavl"></span></th>
                                 <th onclick="sortTable('industry')">行业<span class="sort-icon"
                                                                               id="sortIndustry"></span></th>
+                                <th onclick="sortTable('topStock')">主线个股<span class="sort-icon"
+                                                                                  id="sortTopStock"></span></th>
+                                <th onclick="sortTable('inTopBlock')">IN主线板块<span class="sort-icon"
+                                                                                      id="sortInTopBlock"></span></th>
+                                <th>主线板块</th>
                                 <th>操作</th>
                             </tr>
                             </thead>
@@ -648,7 +719,6 @@
                            max="100" step="1">
                     <div class="form-text">请输入 0 到 100 之间的数值</div>
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">价格策略:</label>
                     <div class="price-strategy-option">
@@ -796,7 +866,7 @@
         }
         tbody.innerHTML = '';
         if (!positions || positions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="17">暂无持仓记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="20">暂无持仓记录</td></tr>';
             // 更新标题显示数量 0
             document.getElementById('positionsCardTitle').textContent = `持仓详情（0）`;
             return;
@@ -808,6 +878,14 @@
             sortedPositions = sortedPositions.sort((a, b) => {
                 const valA = a[sortState.column] ?? 0;
                 const valB = b[sortState.column] ?? 0;
+                // 对于 boolean 类型的 topStock 字段，特殊处理
+                if (sortState.column === 'topStock') {
+                    if (sortState.order === 'asc') {
+                        return (a.topStock ? 1 : 0) - (b.topStock ? 1 : 0);
+                    } else {
+                        return (b.topStock ? 1 : 0) - (a.topStock ? 1 : 0);
+                    }
+                }
                 if (!isNaN(valA) && !isNaN(valB)) {
                     return sortState.order === 'asc' ? valA - valB : valB - valA;
                 }
@@ -824,6 +902,13 @@
             const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
             const tr = document.createElement('tr');
             tr.setAttribute('data-stkcode', item.stkcode);
+
+            // --- 处理主线板块列表 ---
+            let topBlockListStr = '-';
+            if (Array.isArray(item.topBlockList) && item.topBlockList.length > 0) {
+                topBlockListStr = item.topBlockList.map(block => `${block.blockName} (${block.topDays}天)`).join('<br>');
+            }
+
             tr.innerHTML = `
               <td><input type="checkbox" class="sell-checkbox"></td>
               <td>${index + 1}</td>
@@ -853,6 +938,11 @@
                 return industryStr;
             })()}
               </td>
+              <!-- 主线个股 -->
+              <td>${item.topStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <td>${item.inTopBlock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <!-- 主线板块 -->
+              <td class="top-block-list">${topBlockListStr}</td>
               <td>
                 <a class="margin-buy-button" target="_blank"
                   href="https://jywg.18.cn/MarginTrade/MarginBuy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
