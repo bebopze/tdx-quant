@@ -40,17 +40,19 @@
             background-color: #73b5ea; /* Blue for Sell */
         }
 
-        /* Style for the "Select All" checkbox (Positions) */
+
+        /* --- 持仓列表：批量卖出 --- */
+        /* 全选 */
         #selectAllCheckboxHeader {
-            transform: scale(0.8); /* Make it slightly smaller if needed */
+            transform: scale(1.0);
             margin-right: 5px;
         }
 
-        /* Style for individual stock checkboxes (Positions) */
+        /* 单个 勾选☑️ */
         .sell-checkbox {
-            transform: scale(0.8); /* Make it slightly smaller */
-            margin: 0 auto; /* Center it in the cell */
-            display: block; /* Ensure it behaves like a block element for centering */
+            transform: scale(1.2); /* 复选框大小：1.0 是默认，1.2 ≈ 放大 20% */
+            margin: 0 auto; /* 居中 */
+            display: block;
         }
 
         /* Style for the Sell All button */
@@ -158,16 +160,16 @@
             color: orange; /* Or blue, depending on preference */
         }
 
-        /* --- 新增样式：批量撤单相关 --- */
-        /* Style for the "Select All" checkbox in Orders table header */
+        /* --- 当日委托：批量撤单 --- */
+        /* 全选 */
         #ordersSelectAllCheckboxHeader {
-            transform: scale(0.8);
+            transform: scale(1.0);
             margin-right: 5px;
         }
 
-        /* Style for individual order checkboxes */
+        /* 单个 勾选☑️ */
         .order-checkbox {
-            transform: scale(0.8);
+            transform: scale(1.2);
             margin: 0 auto;
             display: block;
         }
@@ -420,7 +422,7 @@
             <!-- 添加 折叠/展开 按钮/指示器 -->
             <span class="collapse-btn" id="cfgAccountCollapseBtn"></span>
             <button type="button" class="btn btn-primary" id="saveCfgAccountBtn"
-                    style="font-size: 12px; padding: 2px 8px; border: 1px solid blue;">
+                    style="font-size: 12px; padding: 2px 8px; border: 1px solid blue; display: none;">
                 保存
             </button>
         </div>
@@ -1341,6 +1343,7 @@
     // --- 新增：配置-持仓账户 折叠/展开 函数 ---
     function toggleCfgAccountCollapse() {
         const content = document.getElementById('cfgAccountCollapseContent');
+        const saveButton = document.getElementById('saveCfgAccountBtn'); // 获取保存按钮
         const header = document.getElementById('cfgAccountCardHeader');
         const btnText = document.getElementById('cfgAccountCollapseBtn');
 
@@ -1348,10 +1351,20 @@
             content.style.display = 'block';
             // 可选：更新按钮文字或图标
             // btnText.textContent = '折叠';
+
+            // 显示保存按钮
+            if (saveButton) {
+                saveButton.style.display = 'block'; // 或者使用 'inline-block' 以匹配其原始显示方式
+            }
         } else {
             content.style.display = 'none';
             // 可选：更新按钮文字或图标
             // btnText.textContent = '展开';
+
+            // 隐藏保存按钮
+            if (saveButton) {
+                saveButton.style.display = 'none';
+            }
         }
     }
 
