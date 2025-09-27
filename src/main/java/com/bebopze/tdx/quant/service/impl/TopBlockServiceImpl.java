@@ -101,6 +101,12 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- TopBlock - refreshAll     >>>     start");
 
 
+        bkyd2Task();
+
+
+        // ---------------------------------------
+
+
         // 1- N日新高
         nDayHighTask(100);
 
@@ -122,10 +128,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // TODO   13-二阶段
         // stage2Task();
-
-
-        // GC
-        // data.clear();
 
 
         // 11- 板块AMO-Top1
@@ -321,9 +323,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         lastEntity.forEach(e -> {
 
             // 主线板块
-            Set<String> topBlockCodeSet = e.getTopBlockCodeSet();
+            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet();
             // 主线个股
-            Set<String> topStockCodeSet = e.getTopStockCodeSet();
+            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet();
 
 
             topBlockCodeSet.forEach(topBlockCode -> {
@@ -339,19 +341,19 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaTopBlockDO entity = qaTopBlockService.getByDate(date);
+        QaTopBlockDO entity = lastEntity.get(0); // 倒序
         if (entity == null) {
             return Lists.newArrayList();
         }
 
 
         // 主线板块
-        Set<String> topBlockCodeSet = entity.getTopBlockCodeSet();
+        Set<String> topBlockCodeSet = entity.getTopBlockCodeJsonSet();
         // 主线个股
-        Set<String> allTopStockCodeSet = entity.getTopStockCodeSet();
+        Set<String> allTopStockCodeSet = entity.getTopStockCodeJsonSet();
 
 
-        return topBlockCodeSet.parallelStream()
+        return topBlockCodeSet.stream()
                               .map(blockCode -> {
 
 
@@ -389,9 +391,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         lastEntity.forEach(e -> {
 
             // 主线板块
-            Set<String> topBlockCodeSet = e.getTopBlockCodeSet();
+            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet();
             // 主线个股
-            Set<String> topStockCodeSet = e.getTopStockCodeSet();
+            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet();
 
 
             topBlockCodeSet.forEach(topBlockCode -> {
@@ -407,16 +409,16 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaTopBlockDO entity = qaTopBlockService.getByDate(date);
+        QaTopBlockDO entity = lastEntity.get(0); // 倒序
         if (entity == null) {
             return Lists.newArrayList();
         }
 
 
         // 主线板块
-        Set<String> allTopBlockCodeSet = entity.getTopBlockCodeSet();
+        Set<String> allTopBlockCodeSet = entity.getTopBlockCodeJsonSet();
         // 主线个股
-        Set<String> topStockCodeSet = entity.getTopStockCodeSet();
+        Set<String> topStockCodeSet = entity.getTopStockCodeJsonSet();
 
 
         return topStockCodeSet.parallelStream()
@@ -458,11 +460,12 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     private Map<LocalDate, Set<String>> calcTopBlock() {
 
+
         // 日期 - 板块_月多2（板块code 列表）
         Map<LocalDate, Set<String>> date_bkyd2__map = Maps.newConcurrentMap();
 
 
-        // --------------------------------------------------- 日期 - 板块-月多2（板块code 列表）
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 遍历计算   =>   每日 - 板块-月多2（板块code 列表）
@@ -496,13 +499,13 @@ public class TopBlockServiceImpl implements TopBlockService {
                     dateIndexMap.forEach((date, idx) -> {
 
 
-                        // LV3（板块-月多2 -> 板块-月多 + RPS红 + SSF多）
+                        // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         boolean 月多 = extDataArrDTO.月多[idx];
                         boolean RPS红 = extDataArrDTO.RPS红[idx];
                         boolean SSF多 = extDataArrDTO.SSF多[idx];
 
 
-                        // LV3（板块-月多2 -> 板块-月多 + RPS红 + SSF多）
+                        // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         if (月多 && RPS红 && SSF多) {
                             date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(blockCode);
                         }
@@ -521,11 +524,12 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     private Map<LocalDate, Set<String>> calcTopStock(Map<LocalDate, Set<String>> date_topBlockCodeSet__map) {
 
-        // --------------------------------------------------- 日期 - 主线个股（个股code 列表）
-
 
         // 日期 - 主线个股（个股code 列表）
         Map<LocalDate, Set<String>> date_topStockCodeSet__map = Maps.newConcurrentMap();
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 遍历计算   =>   每日 - 均线极多头（个股code 列表）
@@ -616,7 +620,7 @@ public class TopBlockServiceImpl implements TopBlockService {
             entity.setTopBlockCodeSet(JSON.toJSONString(topBlockCodeSet));
 
             // 当日 主线个股
-            Set<String> topStockCodeSet = date_topStockCodeSet__map.get(date);
+            Set<String> topStockCodeSet = date_topStockCodeSet__map.getOrDefault(date, Sets.newHashSet());
             entity.setTopStockCodeSet(JSON.toJSONString(topStockCodeSet));
 
 
@@ -1727,44 +1731,39 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         date__block_type_lv_____amo_blockCode_TreeMap_____map
                 .keySet()
-                        .
+                .parallelStream()
+                .forEach((date__block_type_lv) -> {
 
-                parallelStream().
-
-                forEach((date__block_type_lv) ->
-
-                        {
-
-                            // k -> v
-                            TreeMap<Double, String> amo_blockCode_TreeMap = date__block_type_lv_____amo_blockCode_TreeMap_____map.get(date__block_type_lv);
+                    // k -> v
+                    TreeMap<Double, String> amo_blockCode_TreeMap = date__block_type_lv_____amo_blockCode_TreeMap_____map.get(date__block_type_lv);
 
 
-                            // key   ->   date|blockType|blockLevel
-                            String[] keyArr = date__block_type_lv.split("\\|");
+                    // key   ->   date|blockType|blockLevel
+                    String[] keyArr = date__block_type_lv.split("\\|");
 
-                            LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
-
-
-                            QaBlockNewRelaStockHisDO entity = date_entity_map.computeIfAbsent(date, k -> new QaBlockNewRelaStockHisDO());
-
-                            entity.setBlockNewId(blockNewId);
-                            entity.setDate(date);
-                            entity.setStockIdList(null);
+                    LocalDate date = DateTimeUtil.parseDate_yyyy_MM_dd(keyArr[0]);
 
 
-                            Map.Entry<Double, String> top1 = amo_blockCode_TreeMap.firstEntry();
-                            if (top1 != null) {
+                    QaBlockNewRelaStockHisDO entity = date_entity_map.computeIfAbsent(date, k -> new QaBlockNewRelaStockHisDO());
 
-                                double amo = top1.getKey();
-                                String blockCode = top1.getValue();
-
-
-                                BaseBlockDO top1_blockDO = data.codeBlockMap.get(blockCode);
+                    entity.setBlockNewId(blockNewId);
+                    entity.setDate(date);
+                    entity.setStockIdList(null);
 
 
-                                blockAmoTop(date__block_type_lv, top1_blockDO, blockNewId, entity);
-                            }
-                        });
+                    Map.Entry<Double, String> top1 = amo_blockCode_TreeMap.firstEntry();
+                    if (top1 != null) {
+
+                        double amo = top1.getKey();
+                        String blockCode = top1.getValue();
+
+
+                        BaseBlockDO top1_blockDO = data.codeBlockMap.get(blockCode);
+
+
+                        blockAmoTop(date__block_type_lv, top1_blockDO, blockNewId, entity);
+                    }
+                });
 
 
         // dateSort  ->  save
@@ -1816,13 +1815,13 @@ public class TopBlockServiceImpl implements TopBlockService {
                     dateIndexMap.forEach((date, idx) -> {
 
 
-                        // LV3（板块-月多2 -> 板块-月多 + RPS红 + SSF多）
+                        // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         boolean 月多 = extDataArrDTO.月多[idx];
                         boolean RPS红 = extDataArrDTO.RPS红[idx];
                         boolean SSF多 = extDataArrDTO.SSF多[idx];
 
 
-                        // LV3（板块-月多2 -> 板块-月多 + RPS红 + SSF多）
+                        // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         if (月多 && RPS红 && SSF多) {
                             date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(blockCode);
                         }
@@ -1850,40 +1849,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_bkyd2__map);
         sortMap.forEach((date, blockCodeSet) -> blockSum(date, blockCodeSet, blockNewId));
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-//        Map<LocalDate, QaBlockNewRelaStockHisDO> date_entity_map = Maps.newConcurrentMap();
-//
-//
-//        // 构建或获取实体
-//        date_bkyd2__map.forEach((date, bkyd2CodeSet) -> {
-//
-//            QaBlockNewRelaStockHisDO e = new QaBlockNewRelaStockHisDO();
-//            e.setBlockNewId(blockNewId);
-//            e.setDate(date);
-//            e.setStockIdList(null);
-//
-//
-//            bkyd2CodeSet.parallelStream().forEach(blockCode -> {
-//
-//                // data.block__codeNameMap
-//
-//            });
-//
-//            e.setGnResult(JSON.toJSONString(e));
-//            e.setPthyLv2Result(JSON.toJSONString(e));
-//            e.setResult(JSON.toJSONString(e));
-//
-//
-//            date_entity_map.put(date, e);
-//        });
-//
-//
-//        // dateSort  ->  save
-//        qaBlockNewRelaStockHisService.saveBatch(new TreeMap<>(date_entity_map).values());
     }
 
 
