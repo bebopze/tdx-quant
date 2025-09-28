@@ -174,7 +174,7 @@ public class TopBlockController {
 
 
     /**
-     * 主线板块（板块-月多2）
+     * 主线板块（板块-月多2）  Task
      */
     @Operation(summary = "主线板块（板块-月多2）", description = "主线板块（板块-月多2）")
     @GetMapping(value = "/task/bk-yd2")
@@ -185,7 +185,7 @@ public class TopBlockController {
 
 
     /**
-     * 主线板块（板块-月多2）
+     * 主线板块 列表
      */
     @Operation(summary = "主线板块 列表（板块-月多2）", description = "主线板块 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topBlockList")
@@ -195,6 +195,9 @@ public class TopBlockController {
         return Result.SUC(topBlockService.topBlockList(date));
     }
 
+    /**
+     * 主线个股 列表
+     */
     @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topStockList")
     public Result<List<TopStockDTO>> topStockList(@Schema(description = "交易日", example = "2025-09-24")
