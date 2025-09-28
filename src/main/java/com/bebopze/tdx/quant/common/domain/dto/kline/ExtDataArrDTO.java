@@ -45,14 +45,21 @@ public class ExtDataArrDTO implements Serializable {
 
     public boolean[] MA20多;
     public boolean[] MA20空;
-
     public boolean[] SSF多;
     public boolean[] SSF空;
+
+    public boolean[] 上MA20;
+    public boolean[] 下MA20;
+    public boolean[] 上SSF;
+    public boolean[] 下SSF;
 
 
     public boolean[] N60日新高;
     public boolean[] N100日新高;
     public boolean[] 历史新高;
+
+
+    public boolean[] 百日新高;   // 近5日内创百日新高，并且未大幅回落
 
 
     public boolean[] 月多;
@@ -108,9 +115,18 @@ public class ExtDataArrDTO implements Serializable {
         this.SSF空 = new boolean[size];
 
 
+        this.上MA20 = new boolean[size];
+        this.下MA20 = new boolean[size];
+        this.上SSF = new boolean[size];
+        this.下SSF = new boolean[size];
+
+
         this.N60日新高 = new boolean[size];
         this.N100日新高 = new boolean[size];
         this.历史新高 = new boolean[size];
+
+
+        this.百日新高 = new boolean[size];
 
 
         this.月多 = new boolean[size];

@@ -52,10 +52,18 @@ public class ExtDataDTO implements Serializable {
     private Boolean SSF多;
     private Boolean SSF空;
 
+    private Boolean 上MA20;
+    private Boolean 下MA20;
+    private Boolean 上SSF;
+    private Boolean 下SSF;
+
 
     private Boolean N60日新高;
     private Boolean N100日新高;
     private Boolean 历史新高;
+
+
+    private Boolean 百日新高;
 
 
     private Boolean 月多;

@@ -195,14 +195,23 @@ public class ConvertStock {
 
 
             arrDTO.MA20多[i] = of(dto.getMA20多());
-            arrDTO.MA20空[i] = of(dto.getSSF空());
+            arrDTO.MA20空[i] = of(dto.getMA20空());
             arrDTO.SSF多[i] = of(dto.getSSF多());
             arrDTO.SSF空[i] = of(dto.getSSF空());
+
+
+            arrDTO.上MA20[i] = of(dto.get上MA20());
+            arrDTO.下MA20[i] = of(dto.get下MA20());
+            arrDTO.上SSF[i] = of(dto.get上SSF());
+            arrDTO.下SSF[i] = of(dto.get下SSF());
 
 
             arrDTO.N60日新高[i] = of(dto.getN60日新高());
             arrDTO.N100日新高[i] = of(dto.getN100日新高());
             arrDTO.历史新高[i] = of(dto.get历史新高());
+
+
+            arrDTO.百日新高[i] = of(dto.get百日新高());
 
 
             arrDTO.月多[i] = of(dto.get月多());

@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -11,6 +12,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -338,16 +340,22 @@ public class ExtDataServiceImpl implements ExtDataService {
         // -----------------------------------------------------------------------------------------------
 
 
-        data.stockDOList.parallelStream().forEach(stockDO -> {
-            try {
+        ParallelCalcUtil.forEach(data.stockDOList,
+                                 stockDO -> execCalcStockExtData(data, N, stockDO, count, start),
+                                 ThreadPoolType.CPU_INTENSIVE_2
+        );
 
-                execCalcStockExtData(data, N, stockDO, count, start);
 
-            } catch (Exception ex) {
-                log.error("execCalcStockExtData - err     >>>     stockCode : {} , stockDO : {} , errMsg : {}",
-                          stockDO.getCode(), JSON.toJSONString(stockDO), ex.getMessage(), ex);
-            }
-        });
+//        data.stockDOList.parallelStream().forEach(stockDO -> {
+//            try {
+//
+//                execCalcStockExtData(data, N, stockDO, count, start);
+//
+//            } catch (Exception ex) {
+//                log.error("execCalcStockExtData - err     >>>     stockCode : {} , stockDO : {} , errMsg : {}",
+//                          stockDO.getCode(), JSON.toJSONString(stockDO), ex.getMessage(), ex);
+//            }
+//        });
     }
 
     private void execCalcStockExtData(DataDTO data, Integer N, BaseStockDO stockDO, AtomicInteger count, long start) {
@@ -373,7 +381,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-        calcExtData(new StockFun(code, stockDO), new_extDataDTOList, 85);
+        calcExtData(new StockFun(stockDO), new_extDataDTOList, 85);
 
 
         log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {}",
@@ -435,9 +443,18 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] SSF空 = fun.SSF空();
 
 
+        boolean[] 上MA20 = fun.上MA(20);
+        boolean[] 下MA20 = fun.下MA(20);
+        boolean[] 上SSF = fun.上SSF();
+        boolean[] 下SSF = fun.下SSF();
+
+
         boolean[] N60日新高 = fun.N日新高(60);
         boolean[] N100日新高 = fun.N日新高(100);
         boolean[] 历史新高 = fun.历史新高();
+
+
+        boolean[] 百日新高 = fun.百日新高(100);
 
 
         boolean[] 月多 = fun.月多();
@@ -485,9 +502,18 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setSSF空(SSF空[i]);
 
 
+            dto.set上MA20(上MA20[i]);
+            dto.set下MA20(下MA20[i]);
+            dto.set上SSF(上SSF[i]);
+            dto.set下SSF(下SSF[i]);
+
+
             dto.setN60日新高(N60日新高[i]);
             dto.setN100日新高(N100日新高[i]);
             dto.set历史新高(历史新高[i]);
+
+
+            dto.set百日新高(百日新高[i]);
 
 
             dto.set月多(月多[i]);
