@@ -272,6 +272,9 @@ public class TdxExtFun {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 结果合并   -   AND
      *
@@ -289,6 +292,30 @@ public class TdxExtFun {
             for (boolean[] arr : arr_list) {
                 acc &= arr[i];
                 if (!acc) break;
+            }
+            result[i] = acc;
+        }
+
+        return result;
+    }
+
+    /**
+     * 结果合并   -   OR
+     *
+     * @param arr_list
+     * @return
+     */
+    public static boolean[] con_or(boolean[]... arr_list) {
+
+        int len = arr_list[0].length;
+        boolean[] result = new boolean[len];
+
+
+        for (int i = 0; i < len; i++) {
+            boolean acc = false;
+            for (boolean[] arr : arr_list) {
+                acc = arr[i];
+                if (acc) break;
             }
             result[i] = acc;
         }

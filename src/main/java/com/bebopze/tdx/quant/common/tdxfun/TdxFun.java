@@ -43,7 +43,7 @@ public class TdxFun {
 
 
     /**
-     * REF                          ->   已验证 ✅
+     * REF（引用若干周期前的数据）                          ->   已验证 ✅
      *
      * @param S
      * @param N
@@ -55,6 +55,17 @@ public class TdxFun {
         for (int i = N; i < S.length; i++) r[i] = S[i - N];
         return r;
     }
+
+    // REFX：引用若干周期后的数据
+    public static double[] REFX(double[] S, int N) {
+        double[] r = new double[S.length];
+        Arrays.fill(r, Double.NaN);
+        for (int i = 0; i < S.length - N; i++) {
+            r[i] = S[i + N];
+        }
+        return r;
+    }
+
 
     public static double[] DIFF(double[] S, int N) {
         double[] r = new double[S.length];
@@ -450,6 +461,30 @@ public class TdxFun {
             if (S[i]) count = 0;
             else count++;
             r[i] = count;
+        }
+        return r;
+    }
+
+    // BARSNEXT: 下次 True 到当前的周期数
+    public static int[] BARSNEXT(boolean[] S) {
+        int len = S.length;
+        int[] r = new int[len];
+        int next = Integer.MAX_VALUE; // 用一个很大的数来表示未来还没遇到 True
+
+        // 从后往前遍历，寻找下一个 True 的位置
+        for (int i = len - 1; i >= 0; i--) {
+            if (S[i]) {
+                next = 0;
+                r[i] = 0;
+            } else {
+                if (next != Integer.MAX_VALUE) {
+                    next++;
+                    r[i] = next;
+                } else {
+                    // 未来没有 True，则用 -1 表示
+                    r[i] = -1;
+                }
+            }
         }
         return r;
     }
