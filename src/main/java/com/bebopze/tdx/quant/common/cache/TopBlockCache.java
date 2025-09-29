@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.cache;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
@@ -60,7 +61,16 @@ public class TopBlockCache {
 
 
     public BaseBlockDO getBlock(String blockCode) {
-        return data.codeBlockMap.computeIfAbsent(blockCode, k -> baseBlockService.getByCode(k));
+        // return data.codeBlockMap.computeIfAbsent(blockCode, k -> baseBlockService.getByCode(k));
+
+        BaseBlockDO blockDO = data.codeBlockMap.computeIfAbsent(blockCode, k -> baseBlockService.getByCode(k));
+        if (blockDO == null) return null;
+
+        if (blockDO.getKlineDTOList().isEmpty()) {
+            blockDO = baseBlockService.getByCode(blockCode);
+            data.codeBlockMap.put(blockCode, blockDO);
+        }
+        return blockDO;
     }
 
 
@@ -109,10 +119,6 @@ public class TopBlockCache {
                 topStock.setTopDays(topStock__codeCountMap.get(topStockCode));
 
 
-                // 涨幅info
-                // fillChangePctInfo(topStock);
-
-
                 topStockList.add(topStock);
             }
         });
@@ -129,7 +135,16 @@ public class TopBlockCache {
 
     public BaseStockDO getStock(String stockCode) {
         // return data.codeStockMap.computeIfAbsent(stockCode, k -> baseStockService.getSimpleByCode(k));
-        return data.codeStockMap.computeIfAbsent(stockCode, k -> baseStockService.getByCode(k));
+        // return data.codeStockMap.computeIfAbsent(stockCode, k -> baseStockService.getByCode(k));
+
+        BaseStockDO stockDO = data.codeStockMap.computeIfAbsent(stockCode, k -> baseStockService.getByCode(k));
+        if (stockDO == null) return null;
+
+        if (stockDO.getKlineDTOList().isEmpty()) {
+            stockDO = baseStockService.getByCode(stockCode);
+            data.codeStockMap.put(stockCode, stockDO);
+        }
+        return stockDO;
     }
 
 
@@ -198,6 +213,7 @@ public class TopBlockCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @TotalTime
     public TopChangePctDTO changePctInfo(String code,
                                          LocalDate date,
                                          Map<String, TopChangePctDTO> stock_topDateInfo_map) {
@@ -231,15 +247,14 @@ public class TopBlockCache {
         Integer endTopDate_idx = dateIndexMap.get(topChangePctDTO.endTopDate);
 
 
-        endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
-
-
-        if (null == date_idx || null == firstTopDate_idx) {
+        if (null == date_idx || null == firstTopDate_idx || null == endTopDate_idx) {
             log.error("idx = null     >>>     code : {} , date : {} , firstTopDate : {} , endTopDate : {}",
                       code, date, topChangePctDTO.firstTopDate, topChangePctDTO.endTopDate);
-
-            return null;
         }
+
+
+        // 停牌
+        endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
 
 
         double date_close = klineArrDTO.close[date_idx];
@@ -264,16 +279,15 @@ public class TopBlockCache {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     private StockFun getFun(String code) {
+        return StockTypeEnum.isBlock(code) ? data.getOrCreateBlockFun(getBlock(code)) : data.getOrCreateStockFun(getStock(code));
+    }
 
-        StockFun fun;
-        if (StockTypeEnum.isBlock(code)) {
-            fun = data.getOrCreateBlockFun(getBlock(code));
-        } else {
-            fun = data.getOrCreateStockFun(getStock(code));
-        }
-
-        return fun;
+    private Set<String> getTopCodeSet(QaTopBlockDO topBlockDO, String code) {
+        return StockTypeEnum.isBlock(code) ? topBlockDO.getTopBlockCodeJsonSet() : topBlockDO.getTopStockCodeJsonSet();
     }
 
 
@@ -281,86 +295,14 @@ public class TopBlockCache {
 
 
     /**
-     * 首次上榜 -> 跌出榜单 / 指定date -> 跌出榜单     ->     上榜涨幅
+     * 获取 指定日期（基准日）   当日上榜 主线板块/个股     的     首次上榜日期（往前倒推）、跌出榜单日期（往后倒推）
      *
-     * @param topStock
-     * @param stock_topDateInfo_map
-     */
-    public void fillChangePctInfo(TopStockDTO topStock, Map<String, TopChangePctDTO> stock_topDateInfo_map) {
-
-
-        String stockCode = topStock.getStockCode();
-        // 基准日
-        LocalDate date = topStock.getDate();
-
-
-        StockFun fun = data.getOrCreateStockFun(getStock(stockCode));
-
-
-        KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
-        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 首次上榜日期、跌出榜单日期
-        TopChangePctDTO topChangePctDTO = stock_topDateInfo_map.get(stockCode);
-        if (null == topChangePctDTO) {
-            return;
-        }
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 上榜涨幅
-
-
-        Integer date_idx = dateIndexMap.get(date);
-        Integer firstTopDate_idx = dateIndexMap.get(topChangePctDTO.firstTopDate);
-        Integer endTopDate_idx = dateIndexMap.get(topChangePctDTO.endTopDate);
-
-
-        endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
-
-
-        if (null == date_idx || null == firstTopDate_idx || null == endTopDate_idx) {
-            log.error("idx = null     >>>     stockCode : {} , date : {} , firstTopDate : {} , endTopDate : {}",
-                      stockCode, date, topChangePctDTO.firstTopDate, topChangePctDTO.endTopDate);
-
-            return;
-        }
-
-
-        double date_close = klineArrDTO.close[date_idx];
-        double firstTopDate_idx_close = klineArrDTO.close[firstTopDate_idx];
-        double endTopDate_idx_close = klineArrDTO.close[endTopDate_idx];
-
-
-        double first2Today_changePct = date_close / firstTopDate_idx_close * 100 - 100;
-        double first2End_changePct = endTopDate_idx_close / firstTopDate_idx_close * 100 - 100;
-        double today2End_changePct = endTopDate_idx_close / date_close * 100 - 100;
-
-
-        topChangePctDTO.setFirst2Today_changePct(NumUtil.of(first2Today_changePct));
-        topChangePctDTO.setFirst2End_changePct(NumUtil.of(first2End_changePct));
-        topChangePctDTO.setToday2End_changePct(NumUtil.of(today2End_changePct));
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        topStock.setChangePctDTO(topChangePctDTO);
-    }
-
-
-    /**
-     * 获取 指定日期（基准日）   当日上榜的 主线个股     的     首次上榜日期（往前倒推）、跌出榜单日期（往后倒推）
-     *
-     * @param date 交易日（基准日）
+     * @param date          交易日（基准日）
+     * @param stockTypeEnum
      * @return
      */
-    public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date) {
+    @TotalTime
+    public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date, StockTypeEnum stockTypeEnum) {
         // 今日date   ->   前后 各50条
         List<QaTopBlockDO> lastEntity__before50_after50 = qaTopBlockService.lastN(date.plusDays(50), 100);
 
@@ -374,7 +316,7 @@ public class TopBlockCache {
         LocalDate baseDate = lastEntity__1.get(0).getDate();
 
 
-        return stock_topDateInfo_map(baseDate, lastEntity__before50_after50);
+        return stock_topDateInfo_map(baseDate, lastEntity__before50_after50, stockTypeEnum);
     }
 
     /**
@@ -383,7 +325,8 @@ public class TopBlockCache {
      * @return
      */
     public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date,
-                                                              List<QaTopBlockDO> lastEntity__before50_after50) {
+                                                              List<QaTopBlockDO> lastEntity__before50_after50,
+                                                              StockTypeEnum stockTypeEnum) {
 
 
         Map<String, TopChangePctDTO> stock_topDateInfo_map = Maps.newHashMap();
@@ -398,7 +341,7 @@ public class TopBlockCache {
         // 找到基准日期的索引
         int topBaseIdx = -1;
         for (int i = 0; i < sortedList.size(); i++) {
-            if (sortedList.get(i).getDate().equals(date)) {
+            if (sortedList.get(i).getDate().isEqual(date)) {
                 topBaseIdx = i;
                 break;
             }
@@ -414,23 +357,24 @@ public class TopBlockCache {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 获取基准日期 当天上榜的 板块
+        // 获取 基准日期 当天上榜的   板块/个股 code列表
         QaTopBlockDO baseEntity = sortedList.get(topBaseIdx);
-        Set<String> baseDateBlockSet = baseEntity.getTopBlockCodeJsonSet();
+        // Set<String> baseDateBlockSet = baseEntity.getTopBlockCodeJsonSet();
+        Set<String> baseDate__topCodeSet = Objects.equals(StockTypeEnum.TDX_BLOCK, stockTypeEnum) ? baseEntity.getTopBlockCodeJsonSet() : baseEntity.getTopStockCodeJsonSet();
 
 
-        for (String blockCode : baseDateBlockSet) {
+        for (String code : baseDate__topCodeSet) {
             TopChangePctDTO dto = new TopChangePctDTO();
 
 
             // 计算首次上榜日期（往前倒推）
-            dto.setFirstTopDate(calculateFirstTopDate(sortedList, date, topBaseIdx, blockCode));
+            dto.setFirstTopDate(calculateFirstTopDate(sortedList, date, topBaseIdx, code));
 
             // 计算跌出榜单日期（往后倒推）
-            dto.setEndTopDate(calculateEndTopDate(sortedList, date, topBaseIdx, blockCode));
+            dto.setEndTopDate(calculateEndTopDate(sortedList, date, topBaseIdx, code));
 
 
-            stock_topDateInfo_map.put(blockCode, dto);
+            stock_topDateInfo_map.put(code, dto);
         }
 
 
@@ -499,9 +443,10 @@ public class TopBlockCache {
             QaTopBlockDO topBlockDO = sortedList.get(i);
 
             LocalDate date = topBlockDO.getDate();
-            Set<String> topBlockCodeSet = topBlockDO.getTopBlockCodeJsonSet();
+            // Set<String> topBlockCodeSet = topBlockDO.getTopBlockCodeJsonSet();
+            Set<String> topCodeSet = getTopCodeSet(topBlockDO, code);
 
-            if (topBlockCodeSet.contains(code)) {
+            if (topCodeSet.contains(code)) {
                 return date;
             }
         }
@@ -509,6 +454,7 @@ public class TopBlockCache {
 
         return topBaseDate;
     }
+
 
     /**
      * 计算 首次跌出榜单日期（往后倒推）
@@ -573,6 +519,9 @@ public class TopBlockCache {
 
 
         LocalDate topEndDate = sortedList.get(topEndIdx).getDate();
+        if (topEndDate == null) {
+            log.error("————————————————————————————————       topEndDate == null");
+        }
         return topEndDate;
     }
 
@@ -586,168 +535,241 @@ public class TopBlockCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    /**
-     * @param date                         交易日（基准日）
-     * @param lastEntity__before50_after50 交易日（基准日）  ->   前后 各50条
-     * @return
-     */
-    public Map<String, TopChangePctDTO> stock_topDateInfo_map2(LocalDate date,
-                                                               List<QaTopBlockDO> lastEntity__before50_after50) {
-
-        Map<String, TopChangePctDTO> stock_topDateInfo_map = Maps.newHashMap();
-
-
-        // 按日期排序（升序）
-        List<QaTopBlockDO> sortedList = lastEntity__before50_after50.stream()
-                                                                    .sorted(Comparator.comparing(QaTopBlockDO::getDate))
-                                                                    .collect(Collectors.toList());
-
-        // 找到基准日期的索引
-        int baseIndex = -1;
-        for (int i = 0; i < sortedList.size(); i++) {
-            if (sortedList.get(i).getDate().equals(date)) {
-                baseIndex = i;
-                break;
-            }
-        }
-
-        if (baseIndex == -1) {
-            return stock_topDateInfo_map; // 基准日期不存在
-        }
-
-        // 获取基准日期当天上榜的个股
-        QaTopBlockDO baseEntity = sortedList.get(baseIndex);
-        Set<String> baseDayStocks = baseEntity.getTopStockCodeJsonSet();
-
-        for (String stockCode : baseDayStocks) {
-            TopChangePctDTO dto = new TopChangePctDTO();
-
-            // 计算首次上榜日期（往前倒推）
-            dto.setFirstTopDate(calculateFirstTopDate(sortedList, baseIndex, stockCode));
-
-            // 计算跌出榜单日期（往后倒推）
-            dto.setEndTopDate(calculateEndTopDate(sortedList, baseIndex, stockCode));
-
-            stock_topDateInfo_map.put(stockCode, dto);
-        }
-
-        return stock_topDateInfo_map;
-    }
-
-
-    /**
-     * 计算首次上榜日期（往前倒推）
-     * 寻找连续7日未上榜后的第一个上榜日期，若不存在则降级为连续3日，再不存在则降级为连续1日
-     */
-    private LocalDate calculateFirstTopDate(List<QaTopBlockDO> sortedList, int baseIndex, String code) {
-
-
-        // 优先级：连续5日未上榜 -> 连续3日未上榜 -> 连续1日未上榜
-        int[] priorityDays = {5, 3, 1};
-
-        for (int days : priorityDays) {
-            LocalDate result = findFirstTopDateWithConsecutiveUnTop(sortedList, baseIndex, code, days);
-            if (result != null) {
-                return result;
-            }
-        }
-
-        // 如果都没有找到，返回最早出现的上榜日期
-        for (int i = baseIndex; i >= 0; i--) {
-            if (sortedList.get(i).getTopBlockCodeJsonSet().contains(code)) {
-                return sortedList.get(i).getDate();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 查找连续N日未上榜后的第一个上榜日期
-     */
-    private LocalDate findFirstTopDateWithConsecutiveUnTop(List<QaTopBlockDO> sortedList,
-                                                           int baseIndex,
-                                                           String stockCode,
-                                                           int consecutiveDays) {
-        // 从基准日期往前找
-        for (int i = baseIndex; i >= consecutiveDays; i--) {
-            // 检查当前位置往前consecutiveDays天是否都是未上榜
-            boolean allUnTop = true;
-            for (int j = 1; j <= consecutiveDays; j++) {
-                if (sortedList.get(i - j).getTopBlockCodeJsonSet().contains(stockCode)) {
-                    allUnTop = false;
-                    break;
-                }
-            }
-
-            if (allUnTop) {
-                // 检查再往后一天是否是上榜的
-//                if (i - consecutiveDays - 1 >= 0 &&
-//                        sortedList.get(i - consecutiveDays - 1).getTopBlockCodeJsonSet().contains(stockCode)) {
+    //    /**
+//     * 首次上榜 -> 跌出榜单 / 指定date -> 跌出榜单     ->     上榜涨幅
+//     *
+//     * @param topStock
+//     * @param stock_topDateInfo_map
+//     */
+//    public void fillChangePctInfo(TopStockDTO topStock, Map<String, TopChangePctDTO> stock_topDateInfo_map) {
 //
-//                    // return sortedList.get(i - consecutiveDays - 1).getDate();
-//                    return sortedList.get(i + 1).getDate();
+//
+//        String stockCode = topStock.getStockCode();
+//        // 基准日
+//        LocalDate date = topStock.getDate();
+//
+//
+//        StockFun fun = data.getOrCreateStockFun(getStock(stockCode));
+//
+//
+//        KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+//        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // 首次上榜日期、跌出榜单日期
+//        TopChangePctDTO topChangePctDTO = stock_topDateInfo_map.get(stockCode);
+//        if (null == topChangePctDTO) {
+//            return;
+//        }
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // 上榜涨幅
+//
+//
+//        Integer date_idx = dateIndexMap.get(date);
+//        Integer firstTopDate_idx = dateIndexMap.get(topChangePctDTO.firstTopDate);
+//        Integer endTopDate_idx = dateIndexMap.get(topChangePctDTO.endTopDate);
+//
+//
+//        if (null == date_idx || null == firstTopDate_idx || null == endTopDate_idx) {
+//            log.error("idx = null     >>>     stockCode : {} , date : {} , firstTopDate : {} , endTopDate : {}",
+//                      stockCode, date, topChangePctDTO.firstTopDate, topChangePctDTO.endTopDate);
+//        }
+//
+//
+//        // 停牌
+//        endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
+//
+//
+//        double date_close = klineArrDTO.close[date_idx];
+//        double firstTopDate_idx_close = klineArrDTO.close[firstTopDate_idx];
+//        double endTopDate_idx_close = klineArrDTO.close[endTopDate_idx];
+//
+//
+//        double first2Today_changePct = date_close / firstTopDate_idx_close * 100 - 100;
+//        double first2End_changePct = endTopDate_idx_close / firstTopDate_idx_close * 100 - 100;
+//        double today2End_changePct = endTopDate_idx_close / date_close * 100 - 100;
+//
+//
+//        topChangePctDTO.setFirst2Today_changePct(NumUtil.of(first2Today_changePct));
+//        topChangePctDTO.setFirst2End_changePct(NumUtil.of(first2End_changePct));
+//        topChangePctDTO.setToday2End_changePct(NumUtil.of(today2End_changePct));
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        topStock.setChangePctDTO(topChangePctDTO);
+//    }
+//
+//
+//    /**
+//     * @param date                         交易日（基准日）
+//     * @param lastEntity__before50_after50 交易日（基准日）  ->   前后 各50条
+//     * @return
+//     */
+//    public Map<String, TopChangePctDTO> stock_topDateInfo_map2(LocalDate date,
+//                                                               List<QaTopBlockDO> lastEntity__before50_after50) {
+//
+//        Map<String, TopChangePctDTO> stock_topDateInfo_map = Maps.newHashMap();
+//
+//
+//        // 按日期排序（升序）
+//        List<QaTopBlockDO> sortedList = lastEntity__before50_after50.stream()
+//                                                                    .sorted(Comparator.comparing(QaTopBlockDO::getDate))
+//                                                                    .collect(Collectors.toList());
+//
+//        // 找到基准日期的索引
+//        int baseIndex = -1;
+//        for (int i = 0; i < sortedList.size(); i++) {
+//            if (sortedList.get(i).getDate().equals(date)) {
+//                baseIndex = i;
+//                break;
+//            }
+//        }
+//
+//        if (baseIndex == -1) {
+//            return stock_topDateInfo_map; // 基准日期不存在
+//        }
+//
+//        // 获取基准日期当天上榜的个股
+//        QaTopBlockDO baseEntity = sortedList.get(baseIndex);
+//        Set<String> baseDayStocks = baseEntity.getTopStockCodeJsonSet();
+//
+//        for (String stockCode : baseDayStocks) {
+//            TopChangePctDTO dto = new TopChangePctDTO();
+//
+//            // 计算首次上榜日期（往前倒推）
+//            dto.setFirstTopDate(calculateFirstTopDate(sortedList, baseIndex, stockCode));
+//
+//            // 计算跌出榜单日期（往后倒推）
+//            dto.setEndTopDate(calculateEndTopDate(sortedList, baseIndex, stockCode));
+//
+//            stock_topDateInfo_map.put(stockCode, dto);
+//        }
+//
+//        return stock_topDateInfo_map;
+//    }
+//
+//
+//    /**
+//     * 计算首次上榜日期（往前倒推）
+//     * 寻找连续7日未上榜后的第一个上榜日期，若不存在则降级为连续3日，再不存在则降级为连续1日
+//     */
+//    private LocalDate calculateFirstTopDate(List<QaTopBlockDO> sortedList, int baseIndex, String code) {
+//
+//
+//        // 优先级：连续5日未上榜 -> 连续3日未上榜 -> 连续1日未上榜
+//        int[] priorityDays = {5, 3, 1};
+//
+//        for (int days : priorityDays) {
+//            LocalDate result = findFirstTopDateWithConsecutiveUnTop(sortedList, baseIndex, code, days);
+//            if (result != null) {
+//                return result;
+//            }
+//        }
+//
+//        // 如果都没有找到，返回最早出现的上榜日期
+//        for (int i = baseIndex; i >= 0; i--) {
+//            if (sortedList.get(i).getTopBlockCodeJsonSet().contains(code)) {
+//                return sortedList.get(i).getDate();
+//            }
+//        }
+//
+//        return null;
+//    }
+//
+//    /**
+//     * 查找连续N日未上榜后的第一个上榜日期
+//     */
+//    private LocalDate findFirstTopDateWithConsecutiveUnTop(List<QaTopBlockDO> sortedList,
+//                                                           int baseIndex,
+//                                                           String stockCode,
+//                                                           int consecutiveDays) {
+//        // 从基准日期往前找
+//        for (int i = baseIndex; i >= consecutiveDays; i--) {
+//            // 检查当前位置往前consecutiveDays天是否都是未上榜
+//            boolean allUnTop = true;
+//            for (int j = 1; j <= consecutiveDays; j++) {
+//                if (sortedList.get(i - j).getTopBlockCodeJsonSet().contains(stockCode)) {
+//                    allUnTop = false;
+//                    break;
 //                }
-
-
-                int idx = i >= baseIndex ? baseIndex : i + 1;
-                return sortedList.get(idx).getDate();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 计算跌出榜单日期（往后倒推）
-     * 寻找连续10日未上榜中的第一个未上榜日期，若不存在则降级为连续5日，再不存在则降级为连续3日，最后降级为连续1日
-     */
-    private LocalDate calculateEndTopDate(List<QaTopBlockDO> sortedList, int baseIndex, String stockCode) {
-        // 优先级：连续10日未上榜 -> 连续5日未上榜 -> 连续3日未上榜 -> 连续1日未上榜
-        int[] priorityDays = {10, 5, 3, 1};
-
-        for (int days : priorityDays) {
-            LocalDate result = findEndTopDateWithConsecutiveUnTop(sortedList, baseIndex, stockCode, days);
-            if (result != null) {
-                return result;
-            }
-        }
-
-        // 如果都没有找到，返回最后出现的未上榜日期
-        for (int i = baseIndex + 1; i < sortedList.size(); i++) {
-            if (!sortedList.get(i).getTopBlockCodeJsonSet().contains(stockCode)) {
-                return sortedList.get(i).getDate();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 查找连续N日未上榜中的第一个未上榜日期
-     */
-    private LocalDate findEndTopDateWithConsecutiveUnTop(List<QaTopBlockDO> sortedList,
-                                                         int baseIndex,
-                                                         String stockCode,
-                                                         int consecutiveDays) {
-        // 从基准日期往后找
-        for (int i = baseIndex + 1; i <= sortedList.size() - consecutiveDays; i++) {
-            // 检查从当前位置开始的consecutiveDays天是否都是未上榜
-            boolean allUnTop = true;
-            for (int j = 0; j < consecutiveDays; j++) {
-                if (sortedList.get(i + j).getTopBlockCodeJsonSet().contains(stockCode)) {
-                    allUnTop = false;
-                    break;
-                }
-            }
-
-            if (allUnTop) {
-                return sortedList.get(i).getDate(); // 返回连续未上榜中的第一个日期
-            }
-        }
-
-        return null;
-    }
+//            }
+//
+//            if (allUnTop) {
+//                // 检查再往后一天是否是上榜的
+////                if (i - consecutiveDays - 1 >= 0 &&
+////                        sortedList.get(i - consecutiveDays - 1).getTopBlockCodeJsonSet().contains(stockCode)) {
+////
+////                    // return sortedList.get(i - consecutiveDays - 1).getDate();
+////                    return sortedList.get(i + 1).getDate();
+////                }
+//
+//
+//                int idx = i >= baseIndex ? baseIndex : i + 1;
+//                return sortedList.get(idx).getDate();
+//            }
+//        }
+//
+//        return null;
+//    }
+//
+//    /**
+//     * 计算跌出榜单日期（往后倒推）
+//     * 寻找连续10日未上榜中的第一个未上榜日期，若不存在则降级为连续5日，再不存在则降级为连续3日，最后降级为连续1日
+//     */
+//    private LocalDate calculateEndTopDate(List<QaTopBlockDO> sortedList, int baseIndex, String stockCode) {
+//        // 优先级：连续10日未上榜 -> 连续5日未上榜 -> 连续3日未上榜 -> 连续1日未上榜
+//        int[] priorityDays = {10, 5, 3, 1};
+//
+//        for (int days : priorityDays) {
+//            LocalDate result = findEndTopDateWithConsecutiveUnTop(sortedList, baseIndex, stockCode, days);
+//            if (result != null) {
+//                return result;
+//            }
+//        }
+//
+//        // 如果都没有找到，返回最后出现的未上榜日期
+//        for (int i = baseIndex + 1; i < sortedList.size(); i++) {
+//            if (!sortedList.get(i).getTopBlockCodeJsonSet().contains(stockCode)) {
+//                return sortedList.get(i).getDate();
+//            }
+//        }
+//
+//        return null;
+//    }
+//
+//    /**
+//     * 查找连续N日未上榜中的第一个未上榜日期
+//     */
+//    private LocalDate findEndTopDateWithConsecutiveUnTop(List<QaTopBlockDO> sortedList,
+//                                                         int baseIndex,
+//                                                         String stockCode,
+//                                                         int consecutiveDays) {
+//        // 从基准日期往后找
+//        for (int i = baseIndex + 1; i <= sortedList.size() - consecutiveDays; i++) {
+//            // 检查从当前位置开始的consecutiveDays天是否都是未上榜
+//            boolean allUnTop = true;
+//            for (int j = 0; j < consecutiveDays; j++) {
+//                if (sortedList.get(i + j).getTopBlockCodeJsonSet().contains(stockCode)) {
+//                    allUnTop = false;
+//                    break;
+//                }
+//            }
+//
+//            if (allUnTop) {
+//                return sortedList.get(i).getDate(); // 返回连续未上榜中的第一个日期
+//            }
+//        }
+//
+//        return null;
+//    }
 
 
 }

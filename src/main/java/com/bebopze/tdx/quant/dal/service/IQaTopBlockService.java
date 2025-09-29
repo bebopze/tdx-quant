@@ -22,6 +22,14 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
 
     QaTopBlockDO getByDate(LocalDate date);
 
+
+    /**
+     * 指定日期  倒序N条
+     *
+     * @param date 指定日期
+     * @param N    倒序N条
+     * @return
+     */
     List<QaTopBlockDO> lastN(LocalDate date, int N);
 
 }

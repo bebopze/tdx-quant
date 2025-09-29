@@ -49,10 +49,10 @@ public class QaTopBlockDO implements Serializable {
     private LocalDate date;
 
     /**
-     * 主线板块（板块-月多2：板块RPS红 + 月多 + SSF多）
+     * 主线板块（板块-月多2：月多 + RPS红 + SSF多）
      */
     @TableField("top_block_code_set")
-    @Schema(description = "主线板块（板块-月多2：板块RPS红 + 月多 + SSF多）")
+    @Schema(description = "主线板块（板块-月多2：月多 + RPS红 + SSF多）")
     private String topBlockCodeSet;
 
     /**
@@ -80,7 +80,7 @@ public class QaTopBlockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public Set<String> getTopBlockCodeSet() {
+    public Set<String> getTopBlockCodeJsonSet() {
 
         return JSON.parseArray(topBlockCodeSet, String.class)
                    .stream()
@@ -97,7 +97,7 @@ public class QaTopBlockDO implements Serializable {
     }
 
 
-    public Set<String> getTopStockCodeSet() {
+    public Set<String> getTopStockCodeJsonSet() {
 
         return JSON.parseArray(topStockCodeSet, String.class)
                    .stream()

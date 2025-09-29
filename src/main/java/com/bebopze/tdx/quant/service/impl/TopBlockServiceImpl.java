@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
@@ -351,7 +352,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, TopChangePctDTO> stock_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date);
+        // 上榜日期
+        Map<String, TopChangePctDTO> block_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date, StockTypeEnum.TDX_BLOCK);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -382,7 +384,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                                   // 上榜涨幅
-                                  topBlock.setChangePctDTO(topBlockCache.changePctInfo(blockCode, topBlock.getDate(), stock_topDateInfo_map));
+                                  topBlock.setChangePctDTO(topBlockCache.changePctInfo(blockCode, topBlock.getDate(), block_topDateInfo_map));
 
 
                                   return topBlock;
@@ -434,7 +436,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, TopChangePctDTO> stock_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date);
+        // 上榜日期
+        Map<String, TopChangePctDTO> stock_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date, StockTypeEnum.A_STOCK);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -460,11 +463,12 @@ public class TopBlockServiceImpl implements TopBlockService {
                                   topStock.setDays(topStock__codeCountMap.get(stockCode));
 
 
-                                  // topBlockCache.fillChangePctInfo(topStock, stock_topDateInfo_map);
-
-
                                   // 当前 主线个股  ->  主线板块 列表
                                   topStock.setTopBlockList(topBlockCache.getTopBlockList(stockCode, allTopBlockCodeSet, topBlock__codeCountMap));
+
+
+                                  // 上榜涨幅
+                                  topStock.setChangePctDTO(topBlockCache.changePctInfo(stockCode, topStock.getDate(), stock_topDateInfo_map));
 
 
                                   return topStock;
