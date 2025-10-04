@@ -556,16 +556,16 @@
                     role="tab" aria-controls="orders" aria-selected="false">当日委托
             </button>
         </li>
-        <!-- 新增：主线板块标签页 -->
+        <!-- 主线板块标签页 -->
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="top-blocks-tab" data-bs-toggle="tab" data-bs-target="#top-blocks" type="button"
-                    role="tab" aria-controls="top-blocks" aria-selected="false">主线板块
+                    role="tab" aria-controls="top-blocks" aria-selected="false">主线板块（机选）
             </button>
         </li>
-        <!-- 新增：主线个股标签页 -->
+        <!-- 主线个股标签页 -->
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="top-stocks-tab" data-bs-toggle="tab" data-bs-target="#top-stocks" type="button"
-                    role="tab" aria-controls="top-stocks" aria-selected="false">主线个股
+                    role="tab" aria-controls="top-stocks" aria-selected="false">主线个股（机选）
             </button>
         </li>
     </ul>
@@ -747,12 +747,41 @@
                         <table class="table table-bordered table-sm" id="topBlocksTable">
                             <thead>
                             <tr>
-                                <th>序号</th>
-                                <th>板块代码</th>
-                                <th>板块名称</th>
-                                <th>上榜天数</th>
-                                <th>主线个股数量</th>
-                                <th>主线个股</th>
+                                <th onclick="sortTopBlocksTable('rank')">序号<span class="sort-icon"
+                                                                                   id="sortTopBlocksRank"></span></th>
+                                <th onclick="sortTopBlocksTable('blockCode')">板块代码<span class="sort-icon"
+                                                                                            id="sortTopBlocksBlockCode"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('blockName')">板块名称<span class="sort-icon"
+                                                                                            id="sortTopBlocksBlockName"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('topDays')">上榜天数<span class="sort-icon"
+                                                                                          id="sortTopBlocksTopDays"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('topStockSize')">主线个股数量<span class="sort-icon"
+                                                                                                   id="sortTopBlocksTopStockSize"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('topStockList')">主线个股<span class="sort-icon"
+                                                                                               id="sortTopBlocksTopStockList"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('topStartDate')">首次上榜日期<span class="sort-icon"
+                                                                                                   id="sortTopBlocksTopStartDate"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('topEndDate')">跌出榜单日期<span class="sort-icon"
+                                                                                                 id="sortTopBlocksTopEndDate"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('start2Today_changePct')">上榜至今涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Today_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2End_changePct')">上榜至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2End_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Next_changePct')">今日至nextDay涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2End_changePct"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -787,12 +816,41 @@
                         <table class="table table-bordered table-sm" id="topStocksTable">
                             <thead>
                             <tr>
-                                <th>序号</th>
-                                <th>股票代码</th>
-                                <th>股票名称</th>
-                                <th>上榜天数</th>
-                                <th>所属主线板块数量</th>
-                                <th>所属主线板块</th>
+                                <th onclick="sortTopStocksTable('rank')">序号<span class="sort-icon"
+                                                                                   id="sortTopStocksRank"></span></th>
+                                <th onclick="sortTopStocksTable('stockCode')">股票代码<span class="sort-icon"
+                                                                                            id="sortTopStocksStockCode"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('stockName')">股票名称<span class="sort-icon"
+                                                                                            id="sortTopStocksStockName"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('topDays')">上榜天数<span class="sort-icon"
+                                                                                          id="sortTopStocksDays"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('topBlockSize')">所属主线板块数量<span class="sort-icon"
+                                                                                                       id="sortTopStocksTopBlockSize"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('topBlockList')">所属主线板块<span class="sort-icon"
+                                                                                                   id="sortTopStocksTopBlockList"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('topStartDate')">首次上榜日期<span class="sort-icon"
+                                                                                                   id="sortTopStocksTopStartDate"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('topEndDate')">跌出榜单日期<span class="sort-icon"
+                                                                                                 id="sortTopStocksTopEndDate"></span>
+                                </th>
+                                <th onclick="sortTopStocksTable('start2Today_changePct')">上榜至今涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Today_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2End_changePct')">上榜至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2End_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Next_changePct')">今日至nextDay涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2End_changePct"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -918,6 +976,12 @@
     // --- 新增：主线板块/个股数据 ---
     let topBlocksData = [];
     let topStocksData = [];
+
+    // 存储排序状态 (主线板块)
+    let topBlocksSortState = {column: 'topStockSize', order: 'desc'}; // 默认按topStockSize倒序
+    // 存储排序状态 (主线个股)
+    let topStocksSortState = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
+
     // --- 新增：主线板块/个股当前日期 ---
     let topBlocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
     let topStocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
@@ -1620,35 +1684,40 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取主线板块列表失败');
                 }
-                topBlocksData = data.data || [];
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topBlocksData = (data.data || []).map((block, index) => {
+                    const changePctDTO = block.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        blockCode: block.blockCode,
+                        blockName: block.blockName,
+                        topDays: block.topDays,
+                        topStockSize: block.topStockSize,
+                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                            ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                    };
+                });
+
                 if (!topBlocksData || topBlocksData.length === 0) {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
                     document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
                     return;
                 }
-
-                topBlocksData.forEach((block, index) => {
-                    const topStocksStr = Array.isArray(block.topStockList) && block.topStockList.length > 0
-                        ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                        : '-';
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${block.blockCode}</td>
-                        <td>${block.blockName}</td>
-                        <td>${block.topDays}</td>
-                        <td>${block.topStockSize}</td>
-                        <td class="top-list-item">${topStocksStr}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（${topBlocksData.length}）`;
+                // 根据当前排序状态显示数据
+                displayTopBlocks(topBlocksData);
             })
             .catch(error => {
                 console.error('获取主线板块列表失败:', error);
-                tbody.innerHTML = '<tr><td colspan="6">加载失败：' + error.message + '</td></tr>';
+                // 注意：colspan 改为 11
+                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
             });
     }
@@ -1671,37 +1740,210 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取主线个股列表失败');
                 }
-                topStocksData = data.data || [];
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topStocksData = (data.data || []).map((stock, index) => {
+                    const changePctDTO = stock.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        stockCode: stock.stockCode,
+                        stockName: stock.stockName,
+                        topDays: stock.topDays,
+                        topBlockSize: stock.topBlockSize,
+                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                    };
+                });
+
                 if (!topStocksData || topStocksData.length === 0) {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
                     document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
                     return;
                 }
-
-                topStocksData.forEach((stock, index) => {
-                    const topBlocksStr = Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                        ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                        : '-';
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${stock.stockCode}</td>
-                        <td>${stock.stockName}</td>
-                        <td>${stock.days}</td>
-                        <td>${stock.topBlockSize}</td>
-                        <td class="top-list-item">${topBlocksStr}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（${topStocksData.length}）`;
+                // 根据当前排序状态显示数据
+                displayTopStocks(topStocksData);
             })
             .catch(error => {
                 console.error('获取主线个股列表失败:', error);
-                tbody.innerHTML = '<tr><td colspan="6">加载失败：' + error.message + '</td></tr>';
+                // 注意：colspan 改为 11
+                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
             });
+    }
+
+    // --- 新增：主线板块表格排序 ---
+    function updateTopBlocksSortIcon() {
+        const iconIdPrefix = `sortTopBlocks${topBlocksSortState.column ? topBlocksSortState.column.charAt(0).toUpperCase() + topBlocksSortState.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topBlocksTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topBlocksSortState.column) {
+            iconElement.textContent = topBlocksSortState.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+    function sortTopBlocksTable(column) {
+        if (topBlocksSortState.column === column) {
+            topBlocksSortState.order = topBlocksSortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topBlocksSortState.order = 'desc'; // 默认倒序
+            topBlocksSortState.column = column;
+        }
+        updateTopBlocksSortIcon();
+        displayTopBlocks(topBlocksData);
+    }
+
+    function displayTopBlocks(blocks) {
+        const tbody = document.querySelector('#topBlocksTable tbody');
+        const messageDiv = document.getElementById('topBlocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
+            return;
+        }
+
+        let sortedBlocks = [...blocks];
+        if (topBlocksSortState.column) {
+            sortedBlocks.sort((a, b) => {
+                let valA = a[topBlocksSortState.column];
+                let valB = b[topBlocksSortState.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topBlocksSortState.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topBlocksSortState.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        tbody.innerHTML = '';
+        if (sortedBlocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedBlocks.forEach((block) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${block.rank}</td>
+                    <td>${block.blockCode}</td>
+                    <td>${block.blockName}</td>
+                    <td>${block.topDays}</td>
+                    <td>${block.topStockSize}</td>
+                    <td class="top-list-item">${block.topStockList}</td>
+                    <td>${block.topStartDate}</td>
+                    <td>${block.topEndDate}</td>
+                    <td>${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td>${block.start2End_changePct.toFixed(2)}%</td>
+                    <td>${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td>${block.today2End_changePct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（${sortedBlocks.length}）`;
+        }
+    }
+
+    // --- 新增：主线个股表格排序 ---
+    function updateTopStocksSortIcon() {
+        const iconIdPrefix = `sortTopStocks${topStocksSortState.column ? topStocksSortState.column.charAt(0).toUpperCase() + topStocksSortState.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topStocksTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topStocksSortState.column) {
+            iconElement.textContent = topStocksSortState.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+    function sortTopStocksTable(column) {
+        if (topStocksSortState.column === column) {
+            topStocksSortState.order = topStocksSortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topStocksSortState.order = 'desc'; // 默认倒序
+            topStocksSortState.column = column;
+        }
+        updateTopStocksSortIcon();
+        displayTopStocks(topStocksData);
+    }
+
+    function displayTopStocks(stocks) {
+        const tbody = document.querySelector('#topStocksTable tbody');
+        const messageDiv = document.getElementById('topStocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
+            return;
+        }
+
+        let sortedStocks = [...stocks];
+        if (topStocksSortState.column) {
+            sortedStocks.sort((a, b) => {
+                let valA = a[topStocksSortState.column];
+                let valB = b[topStocksSortState.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topStocksSortState.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topStocksSortState.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        tbody.innerHTML = '';
+        if (sortedStocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedStocks.forEach((stock) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${stock.rank}</td>
+                    <td>${stock.stockCode}</td>
+                    <td>${stock.stockName}</td>
+                    <td>${stock.topDays}</td>
+                    <td>${stock.topBlockSize}</td>
+                    <td class="top-list-item">${stock.topBlockList}</td>
+                    <td>${stock.topStartDate}</td>
+                    <td>${stock.topEndDate.toString()}</td>
+                    <td>${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td>${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td>${stock.today2End_changePct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（${sortedStocks.length}）`;
+        }
     }
 
     // --- 新增：当日委托功能 ---
@@ -2259,6 +2501,12 @@
         }
     });
     // --- 结束：当日委托功能 ---
+
+    document.getElementById('queryButton').addEventListener('click', queryPositions);
+    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
+    // --- 新增：为模态框按钮添加事件监听器 ---
+    // --- 结束：新增事件监听器 ---
+    window.addEventListener('load', queryPositions);
 </script>
 </body>
 </html>
