@@ -22,6 +22,8 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
     BaseBlockDO getByCode(@Param("code") String code);
 
+    BaseBlockDO getSimpleByCode(@Param("code") String code);
+
     BaseBlockDO getSimpleById(@Param("id") Long id);
 
 

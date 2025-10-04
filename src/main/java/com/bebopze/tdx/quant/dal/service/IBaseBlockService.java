@@ -23,6 +23,8 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     BaseBlockDO getByCode(String code);
 
+    BaseBlockDO getSimpleByCode(String code);
+
     BaseBlockDO getSimpleById(Long id);
 
 

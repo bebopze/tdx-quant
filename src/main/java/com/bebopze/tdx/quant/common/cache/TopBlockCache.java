@@ -62,7 +62,7 @@ public class TopBlockCache {
 
 
     public BaseBlockDO getBlock(String blockCode) {
-        return data.codeBlockMap.computeIfAbsent(blockCode, k -> baseBlockService.getByCode(k));
+        return data.codeBlockMap.computeIfAbsent(blockCode, k -> baseBlockService.getSimpleByCode(k));
     }
 
 

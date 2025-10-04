@@ -17,6 +17,22 @@
     </select>
 
 
+    <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT id,
+               code,
+               name,
+               code_path,
+               name_path,
+               parent_id,
+               type,
+               level,
+               end_level
+
+        FROM base_block
+        WHERE code = #{code}
+    </select>
+
+
     <select id="getSimpleById" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT id,
                code,
