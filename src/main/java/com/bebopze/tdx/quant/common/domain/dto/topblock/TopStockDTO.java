@@ -1,9 +1,5 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
-import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -31,7 +27,7 @@ public class TopStockDTO {
     /**
      * 主线个股 上榜天数
      */
-    private int days;
+    private int topDays;
 
 
     private List<TopBlock> topBlockList;
@@ -62,29 +58,29 @@ public class TopStockDTO {
 
 
     // 上榜日期、涨幅
-    TopChangePctDTO changePctDTO;
+    private TopChangePctDTO changePctDTO;
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
     // 持仓详情
-    CcStockInfo ccStockInfo;
+    // CcStockInfo ccStockInfo;
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
     // 个股详情（去除 kline_his、ext_data_his）
-    BaseStockDO stockDO;
+    // BaseStockDO stockDO;
 
 
     // 板块 - kline
-    KlineDTO klineDTO;
+    // KlineDTO klineDTO;
 
 
     // 板块 - extData 指标
-    ExtDataDTO extDataDTO;
+    // ExtDataDTO extDataDTO;
 
 
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,36 +82,30 @@ public class QaTopBlockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public List<TopChangePctDTO> getTopBlockList() {
+        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class);
+    }
+
+    public List<TopChangePctDTO> getTopStockList() {
+        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public Set<String> getTopBlockCodeJsonSet() {
-
-        return JSON.parseArray(topBlockCodeSet, String.class)
+        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .map(code -> {
-
-                       if (code.length() < 6) {
-                           // 保证6位补零（反序列化 bug ： 002755   ->   2755）
-                           code = String.format("%06d", Integer.parseInt(code));
-                       }
-
-                       return code;
-                   })
+                   .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
 
 
     public Set<String> getTopStockCodeJsonSet() {
-
-        return JSON.parseArray(topStockCodeSet, String.class)
+        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .map(code -> {
-
-                       if (code.length() < 6) {
-                           // 保证6位补零（反序列化 bug ： 002755   ->   2755）
-                           code = String.format("%06d", Integer.parseInt(code));
-                       }
-
-                       return code;
-                   })
+                   .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
 

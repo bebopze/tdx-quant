@@ -61,14 +61,14 @@ public class TopBlockDTO {
 
 
     // 涨幅
-    TopChangePctDTO changePctDTO;
+    private TopChangePctDTO changePctDTO;
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
     // 持仓详情（当前板块 -> 持仓个股 列表）
-    List<CcStockInfo> ccStockInfoList;
+    // List<CcStockInfo> ccStockInfoList;
 
 
     // 持仓板块 汇总统计（板块仓位、盈亏、数量、...）
@@ -79,15 +79,15 @@ public class TopBlockDTO {
 
 
     // 板块详情（去除 kline_his、ext_data_his）
-    BaseBlockDO blockDO;
+    // BaseBlockDO blockDO;
 
 
     // 板块 - kline
-    KlineDTO klineDTO;
+    // KlineDTO klineDTO;
 
 
     // 板块 - extData 指标
-    ExtDataDTO extDataDTO;
+    // ExtDataDTO extDataDTO;
 
 
 }

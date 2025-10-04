@@ -1,17 +1,21 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 
 /**
- * 上榜涨幅
+ * 上榜日期、涨幅
  *
  * @author: bebopze
  * @date: 2025/9/28
  */
 @Data
+@NoArgsConstructor
 public class TopChangePctDTO {
 
 
@@ -19,24 +23,44 @@ public class TopChangePctDTO {
     // private LocalDate today;
 
 
-    // 首次 上榜日期（以 today 为基准日期，往前倒推          直至   连续 7日 未上榜   ->   取idx=7，即这 7个日期 之后的 第1个日期）
-    //                                               若不存在 连续 7日 未上榜   ->   降级为   连续3日 未上榜）
-    //                                               若不存在 连续 3日 未上榜   ->   降级为   连续1日 未上榜）
-    public LocalDate firstTopDate;
+    /**
+     * 主线 板块/个股code
+     */
+    private String code;
 
-    // 跌出 榜单日期（以 today 为基准日期，往后倒推          直至   连续10日 未上榜   ->   取idx=0，即这10个日期中的 第1个日期）
-    //                                               若不存在 连续10日 未上榜   ->   降级为   连续5日 未上榜）
-    //                                               若不存在 连续 5日 未上榜   ->   降级为   连续3日 未上榜）
-    //                                               若不存在 连续 3日 未上榜   ->   降级为   连续1日 未上榜）
-    public LocalDate endTopDate;
+
+    // 首次 上榜日期（以 today 为基准日期，往前倒推          SSF空/MA20空 -> 至今   区间   首次上榜）
+    @JSONField(format = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    public LocalDate topStartDate;
+
+
+    // 跌出 榜单日期（以 today 为基准日期，往后倒推          今日 往后   ->   首次 下SSF/下MA20）
+    @JSONField(format = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    public LocalDate topEndDate;
 
 
     // 上榜涨幅（首次 上榜日期  收盘价   ->   today）
-    public double first2Today_changePct;
+    private double start2Today_changePct;
 
     // 上榜涨幅（首次 上榜日期  收盘价   ->   endTopDate）
-    public double first2End_changePct;
+    private double start2End_changePct;
+
+
+    // 上榜涨幅（        今日  收盘价   ->   nextDay）
+    private double today2Next_changePct;
 
     // 上榜涨幅（        今日  收盘价   ->   endTopDate）
-    public double today2End_changePct;
+    private double today2End_changePct;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public TopChangePctDTO(String code) {
+        this.code = code;
+    }
+
+
 }
