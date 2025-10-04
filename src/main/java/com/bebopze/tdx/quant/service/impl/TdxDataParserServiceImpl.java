@@ -1140,6 +1140,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         }
 
 
+        // 昨日
+        if (ldayDTOList.size() >= 2) {
+            LdayParser.LdayDTO pre = ldayDTOList.get(ldayDTOList.size() - 2);
+            baseBlockDO.setPreClose(pre.getClose());
+        }
+
+
         // 板块 - 实时行情
         LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
 
@@ -1362,13 +1369,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         entity.setKlineHis(JSON.toJSONString(klines));
 
 
+        // 昨日
+        if (klines.size() >= 2) {
+            KlineDTO preKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
+            entity.setPreClose(of(preKlineDTO.getClose()));
+        }
+
+
         // 实时行情   -   last kline
         entity.setTradeDate(e.getDate());
 
         entity.setOpen(of(e.getOpen()));
-        entity.setClose(of(e.getClose()));
         entity.setHigh(of(e.getHigh()));
         entity.setLow(of(e.getLow()));
+        entity.setClose(of(e.getClose()));
 
         entity.setVolume(e.getVol());
         entity.setAmount(of(e.getAmo()));
