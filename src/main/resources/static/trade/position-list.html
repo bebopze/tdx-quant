@@ -1125,7 +1125,7 @@
             tr.innerHTML = `
               <td><input type="checkbox" class="sell-checkbox"></td>
               <td>${index + 1}</td>
-              <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stkcode}</a></td> <!-- Modified: 添加 class -->
+              <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stkcode}</a></td>
               <td>${item.stkname}</td>
               <td>${item.market}</td>
               <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
@@ -1732,7 +1732,8 @@
                         topDays: block.topDays,
                         topStockSize: block.topStockSize,
                         topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                            ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
                             : '-',
                         topStartDate: changePctDTO.topStartDate || '-',
                         topEndDate: changePctDTO.topEndDate || '-',
@@ -1766,6 +1767,12 @@
             });
     }
 
+    function stockLink(xueqiuMarket, stockCode, stockName, topDays) {
+        const stockLink = `https://xueqiu.com/S/${xueqiuMarket}${stockCode}`;
+        return `<a href="${stockLink}" target="_blank" class="stock-code-link">${stockName} (${topDays}天)</a>`;
+    }
+
+
     function loadTopStocks(date = topStocksCurrentDate) {
         const tbody = document.querySelector('#topStocksTable tbody');
         const messageDiv = document.getElementById('topStocksTableMessage');
@@ -1791,6 +1798,7 @@
                         rank: index + 1, // 添加序号
                         stockCode: stock.stockCode,
                         stockName: stock.stockName,
+                        xueqiuMarket: stock.xueqiuMarket,
                         topDays: stock.topDays,
                         topBlockSize: stock.topBlockSize,
                         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
@@ -1981,10 +1989,11 @@
         } else {
             messageDiv.style.display = 'none';
             sortedStocks.forEach((stock) => {
+                const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${stock.rank}</td>
-                    <td>${stock.stockCode}</td>
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
                     <td>${stock.stockName}</td>
                     <td>${stock.topDays}</td>
                     <td>${stock.topBlockSize}</td>
@@ -2092,7 +2101,7 @@
                     <td>${order.wtbh}</td>
                     <td>${order.wtrq}</td>
                     <td>${formattedTime}</td>
-                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td> <!-- Modified: 添加 class -->
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td>
                     <td>${order.zqmc}</td>
                     <td>${order.mmsm}</td>
                     <td class="order-status-${order.wtzt}">${order.wtzt}</td>

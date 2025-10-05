@@ -1,9 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
-import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
-import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -49,11 +46,17 @@ public class TopBlockDTO {
     public static class TopStock {
         private String stockCode;
         private String stockName;
+        private String xueqiuMarket;
 
         /**
          * 主线个股 上榜天数
          */
         private int topDays;
+
+
+        public String getXueqiuMarket() {
+            return StockMarketEnum.getXueqiuMarket(stockCode);
+        }
     }
 
 

@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ public class TopStockDTO {
 
     private String stockCode;
     private String stockName;
+    private String xueqiuMarket;
 
 
     /**
@@ -36,6 +38,10 @@ public class TopStockDTO {
 
     public int getTopBlockSize() {
         return topBlockList.size();
+    }
+
+    public String getXueqiuMarket() {
+        return StockMarketEnum.getXueqiuMarket(stockCode);
     }
 
 
@@ -81,6 +87,5 @@ public class TopStockDTO {
 
     // 板块 - extData 指标
     // ExtDataDTO extDataDTO;
-
 
 }
