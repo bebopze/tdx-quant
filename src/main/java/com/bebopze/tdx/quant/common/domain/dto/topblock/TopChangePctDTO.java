@@ -44,6 +44,15 @@ public class TopChangePctDTO {
     // 上榜涨幅（首次 上榜日期  收盘价   ->   today）
     private double start2Today_changePct;
 
+
+    private double start2Next_changePct;
+    private double start2Next3_changePct;
+    private double start2Next5_changePct;
+    private double start2Next10_changePct;
+    private double start2Next15_changePct;
+    private double start2Next20_changePct;
+
+
     // 上榜涨幅（首次 上榜日期  收盘价   ->   endTopDate）
     private double start2End_changePct;
 

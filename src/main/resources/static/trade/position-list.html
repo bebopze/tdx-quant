@@ -782,6 +782,25 @@
                                 <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday2End_changePct"></span></th>
+
+                                <th onclick="sortTopBlocksTable('start2Next_changePct')">上榜至N1涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Next3_changePct')">上榜至N3涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next3_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Next5_changePct')">上榜至N5涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next5_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Next10_changePct')">上榜至N10涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next10_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Next15_changePct')">上榜至N15涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next15_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Next20_changePct')">上榜至N20涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Next20_changePct"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -851,6 +870,25 @@
                                 <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday2End_changePct"></span></th>
+
+                                <th onclick="sortTopStocksTable('start2Next_changePct')">上榜至N1涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Next3_changePct')">上榜至N3涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next3_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Next5_changePct')">上榜至N5涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next5_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Next10_changePct')">上榜至N10涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next10_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Next15_changePct')">上榜至N15涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next15_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Next20_changePct')">上榜至N20涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Next20_changePct"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -1702,6 +1740,12 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
                     };
                 });
 
@@ -1758,6 +1802,12 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
                     };
                 });
 
@@ -1855,6 +1905,12 @@
                     <td>${block.start2End_changePct.toFixed(2)}%</td>
                     <td>${block.today2Next_changePct.toFixed(2)}%</td>
                     <td>${block.today2End_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next3_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next5_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next10_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next15_changePct.toFixed(2)}%</td>
+                    <td>${block.start2Next20_changePct.toFixed(2)}%</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1939,6 +1995,12 @@
                     <td>${stock.start2End_changePct.toFixed(2)}%</td>
                     <td>${stock.today2Next_changePct.toFixed(2)}%</td>
                     <td>${stock.today2End_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next3_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next5_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next10_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next15_changePct.toFixed(2)}%</td>
+                    <td>${stock.start2Next20_changePct.toFixed(2)}%</td>
                 `;
                 tbody.appendChild(tr);
             });

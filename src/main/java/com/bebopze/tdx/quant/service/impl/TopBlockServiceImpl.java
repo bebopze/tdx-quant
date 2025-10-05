@@ -821,6 +821,10 @@ public class TopBlockServiceImpl implements TopBlockService {
                     Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
+                    double[] close = klineArrDTO.close;
+                    int maxIdx = dateIndexMap.size() - 1;
+
+
                     // -------------------------------------------------------------------------------------------------
 
 
@@ -947,8 +951,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         if (null == topChangePctDTO || null == topChangePctDTO.getTopStartDate()) {
 
-                            // QaTopBlockDO base__topBlockDO = topEntity__before50_after50.get(topBaseIdx);
-                            LocalDate base_date = base__topBlockDO.getDate();
                             Set<String> topBlockCodeSet = base__topBlockDO.getTopBlockCodeJsonSet();
                             Set<String> topStockCodeSet = base__topBlockDO.getTopStockCodeJsonSet();
 
@@ -988,26 +990,22 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                         Integer date_idx = kline_idx;
-                        Integer nextDate_idx = Math.min(date_idx + 1, dateIndexMap.size() - 1);
+                        Integer nextDate_idx = Math.min(date_idx + 1, maxIdx);
 
                         Integer startTopDate_idx = dateIndexMap.get(topChangePctDTO.topStartDate);
                         Integer endTopDate_idx = dateIndexMap.get(topChangePctDTO.topEndDate);
-
-
-//                        if (null == date_idx || null == startTopDate_idx || null == endTopDate_idx) {
-//                            log.error("idx = null     >>>     code : {} , date : {} , startTopDate : {} , endTopDate : {}",
-//                                      code, date, topChangePctDTO.topStartDate, topChangePctDTO.topEndDate);
-//                        }
-
 
                         // 停牌
                         endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
 
 
-                        double date_close = klineArrDTO.close[date_idx];
-                        double nextDate_idx_close = klineArrDTO.close[nextDate_idx];
-                        double startTopDate_idx_close = klineArrDTO.close[startTopDate_idx];
-                        double endTopDate_idx_close = klineArrDTO.close[endTopDate_idx];
+                        // ----------------------------------------------------------------------------
+
+
+                        double date_close = close[date_idx];
+                        double nextDate_idx_close = close[nextDate_idx];
+                        double startTopDate_idx_close = close[startTopDate_idx];
+                        double endTopDate_idx_close = close[endTopDate_idx];
 
 
                         double start2Today_changePct = date_close / startTopDate_idx_close * 100 - 100;
@@ -1015,11 +1013,28 @@ public class TopBlockServiceImpl implements TopBlockService {
                         double today2Next_changePct = nextDate_idx_close / date_close * 100 - 100;
                         double today2End_changePct = endTopDate_idx_close / date_close * 100 - 100;
 
+                        double start2Next_changePct = close[Math.min(startTopDate_idx + 1, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+                        double start2Next3_changePct = close[Math.min(startTopDate_idx + 3, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+                        double start2Next5_changePct = close[Math.min(startTopDate_idx + 5, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+                        double start2Next10_changePct = close[Math.min(startTopDate_idx + 10, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+                        double start2Next15_changePct = close[Math.min(startTopDate_idx + 15, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+                        double start2Next20_changePct = close[Math.min(startTopDate_idx + 20, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
+
+
+                        // ----------------------------------------------------------------------------
+
 
                         topChangePctDTO.setStart2Today_changePct(NumUtil.of(start2Today_changePct));
                         topChangePctDTO.setStart2End_changePct(NumUtil.of(start2End_changePct));
                         topChangePctDTO.setToday2Next_changePct(NumUtil.of(today2Next_changePct));
                         topChangePctDTO.setToday2End_changePct(NumUtil.of(today2End_changePct));
+
+                        topChangePctDTO.setStart2Next_changePct(NumUtil.of(start2Next_changePct));
+                        topChangePctDTO.setStart2Next3_changePct(NumUtil.of(start2Next3_changePct));
+                        topChangePctDTO.setStart2Next5_changePct(NumUtil.of(start2Next5_changePct));
+                        topChangePctDTO.setStart2Next10_changePct(NumUtil.of(start2Next10_changePct));
+                        topChangePctDTO.setStart2Next15_changePct(NumUtil.of(start2Next15_changePct));
+                        topChangePctDTO.setStart2Next20_changePct(NumUtil.of(start2Next20_changePct));
                     });
 
 
