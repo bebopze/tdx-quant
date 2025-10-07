@@ -911,9 +911,6 @@ public class TopBlockServiceImpl implements TopBlockService {
             TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(Lists.newArrayList(blockCode_topDate__Map.values()));
             TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(Lists.newArrayList(stockCode_topDate__Map.values()));
 
-            // TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(e.getTopBlockList());
-            // TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(e.getTopStockList());
-
 
             // ---------------------------------------------------------------
 
@@ -1213,8 +1210,11 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         double start2Today_changePct = date_close / startTopDate_idx_close * 100 - 100;
                         double start2End_changePct = endTopDate_idx_close / startTopDate_idx_close * 100 - 100;
+                        double start2Max_changePct = maxClose(close, Math.min(startTopDate_idx + 1, endTopDate_idx), endTopDate_idx) / startTopDate_idx_close * 100 - 100;
+
                         double today2Next_changePct = nextDate_idx_close / date_close * 100 - 100;
                         double today2End_changePct = endTopDate_idx_close / date_close * 100 - 100;
+                        double today2Max_changePct = maxClose(close, nextDate_idx, endTopDate_idx) / date_close * 100 - 100;
 
                         double start2Next_changePct = close[Math.min(startTopDate_idx + 1, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
                         double start2Next3_changePct = close[Math.min(startTopDate_idx + 3, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
@@ -1222,9 +1222,6 @@ public class TopBlockServiceImpl implements TopBlockService {
                         double start2Next10_changePct = close[Math.min(startTopDate_idx + 10, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
                         double start2Next15_changePct = close[Math.min(startTopDate_idx + 15, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
                         double start2Next20_changePct = close[Math.min(startTopDate_idx + 20, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
-
-                        double start2Max_changePct = maxClose(close, startTopDate_idx + 1, endTopDate_idx) / startTopDate_idx_close * 100 - 100;
-                        double today2Max_changePct = maxClose(close, nextDate_idx, endTopDate_idx) / startTopDate_idx_close * 100 - 100;
 
 
                         // ----------------------------------------------------------------------------
