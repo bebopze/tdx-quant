@@ -9,10 +9,7 @@ import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -312,11 +309,136 @@ public class TopBlockServiceImpl implements TopBlockService {
         calc_bkyd2();
 
         calcTopInfoTask();
+
+        // calcTopPoolNextChangePctTask();
+    }
+
+
+//    private void calcTopPoolNextChangePctTask() {
+//
+//
+//        List<QaTopBlockDO> topSortListAll = qaTopBlockService.list()
+//                                                             .stream()
+//                                                             .sorted(Comparator.comparing(QaTopBlockDO::getDate))
+//                                                             .collect(Collectors.toList());
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        int N = 1;
+//
+//
+//        topSortListAll.parallelStream().forEach(e -> {
+//
+//
+//            double blockPct = calcChangePct(e.getTopBlockCodeJsonSet(), e.getDate(), N);
+//            double stockPct = calcChangePct(e.getTopStockCodeJsonSet(), e.getDate(), N);
+//
+//
+//            // e.setBlockChangePct(NumUtil.double2Decimal(blockPct));
+//            // e.setStockChangePct(NumUtil.double2Decimal(stockPct));
+//
+//
+//            qaTopBlockService.updateById(e);
+//        });
+//    }
+
+
+    @Override
+    public double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N) {
+
+
+        Set<Double> pctSet = Sets.newHashSet();
+
+
+        stockCodeSet.forEach(stockCode -> {
+
+
+            StockFun fun = data.getFun(stockCode);
+
+
+            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+            int maxIdx = dateIndexMap.size() - 1;
+
+
+            // -----------------------------------------------------------------
+
+
+            Integer idx = dateIndexMap.get(date);
+
+
+            // 停牌
+            if (idx == null) {
+                return;
+            }
+
+
+            // -----------------------------------------------------------------
+
+
+            double close = klineArrDTO.close[idx];
+            double next_close = klineArrDTO.close[Math.min(idx + N, maxIdx)];
+
+
+            // 个股 收益率
+            double pct = next_close / close * 100 - 100;
+
+
+            pctSet.add(pct);
+        });
+
+
+        // -----------------------------------------------------------------
+
+
+        // 汇总计算   ->   指数（股票池）收益率
+
+
+        // 计算 pctSet 中所有收益率的算术平均值
+        DoubleSummaryStatistics statistics = pctSet.stream().mapToDouble(Double::doubleValue).summaryStatistics();
+        double averagePct = statistics.getAverage();
+
+
+        // 1. 中位数 (Median)
+        // double[] sortedPcts = pctSet.stream().mapToDouble(Double::doubleValue).sorted().toArray();
+        // int size = sortedPcts.length;
+        // double medianPct;
+        // if (size % 2 == 0) {
+        //     medianPct = (sortedPcts[size / 2 - 1] + sortedPcts[size / 2]) / 2.0;
+        // } else {
+        //     medianPct = sortedPcts[size / 2];
+        // }
+
+
+        // 2. 加权平均 (Weighted Average) - 需要权重数据，例如流通市值
+        // double totalWeight = 0;
+        // double weightedSum = 0;
+        // for (String code : stockCodeSet) {
+        //     // 获取该股票的权重 (weight)
+        //     // double weight = getWeight(code, date); // 假设有一个获取权重的方法
+        //     // double pctForCode = getIndividualPct(code, date, N); // 从 pctSet 或重新计算
+        //     // weightedSum += pctForCode * weight;
+        //     // totalWeight += weight;
+        // }
+        // double wAvgPct = totalWeight > 0 ? weightedSum / totalWeight : Double.NaN;
+
+
+        return averagePct;
     }
 
 
     @Override
-    public List<TopBlockDTO> topBlockList(LocalDate date) {
+    public TopBlockPoolDTO topBlockList(LocalDate date) {
+
+
+        TopBlockPoolDTO dto = new TopBlockPoolDTO();
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         List<QaTopBlockDO> lastEntityList = qaTopBlockService.lastN(date, 10);
@@ -349,7 +471,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         QaTopBlockDO entity = lastEntityList.get(0); // 倒序
         if (entity == null) {
-            return Lists.newArrayList();
+            return dto;
         }
 
 
@@ -364,6 +486,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                                                                    .collect(Collectors.toMap(TopChangePctDTO::getCode, Function.identity()));
 
 
+        dto.setTopBlockAvgPctDTO(entity.getTopBlockAvgPct());
+
+
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -373,39 +498,50 @@ public class TopBlockServiceImpl implements TopBlockService {
         Set<String> allTopStockCodeSet = entity.getTopStockCodeJsonSet();
 
 
-        return topBlockCodeSet.parallelStream()
-                              .map(blockCode -> {
+        List<TopBlockDTO> topBlockDTOList = topBlockCodeSet.parallelStream()
+                                                           .map(blockCode -> {
 
 
-                                  TopBlockDTO topBlock = new TopBlockDTO();
-                                  topBlock.setDate(entity.getDate());
+                                                               TopBlockDTO topBlock = new TopBlockDTO();
+                                                               topBlock.setDate(entity.getDate());
 
 
-                                  // 主线板块
-                                  topBlock.setBlockCode(blockCode);
-                                  topBlock.setBlockName(topBlockCache.getBlockName(blockCode));
-                                  topBlock.setTopDays(topBlock__codeCountMap.get(blockCode));
+                                                               // 主线板块
+                                                               topBlock.setBlockCode(blockCode);
+                                                               topBlock.setBlockName(topBlockCache.getBlockName(blockCode));
+                                                               topBlock.setTopDays(topBlock__codeCountMap.get(blockCode));
 
 
-                                  // 当前 主线板块  ->  主线个股 列表
-                                  topBlock.setTopStockList(topBlockCache.getTopStockList(blockCode, allTopStockCodeSet, topStock__codeCountMap));
+                                                               // 当前 主线板块  ->  主线个股 列表
+                                                               topBlock.setTopStockList(topBlockCache.getTopStockList(blockCode, allTopStockCodeSet, topStock__codeCountMap));
 
 
-                                  // 上榜涨幅
-                                  // topBlock.setChangePctDTO(topBlockCache.changePctInfo(blockCode, topBlock.getDate(), block_topDateInfo_map));
-                                  topBlock.setChangePctDTO(block_topDateInfo_map.get(blockCode));
+                                                               // 上榜涨幅
+                                                               // topBlock.setChangePctDTO(topBlockCache.changePctInfo(blockCode, topBlock.getDate(), block_topDateInfo_map));
+                                                               topBlock.setChangePctDTO(block_topDateInfo_map.get(blockCode));
 
 
-                                  return topBlock;
-                              })
-                              .sorted(Comparator.comparing(TopBlockDTO::getTopDays).reversed())
-                              .sorted(Comparator.comparing(TopBlockDTO::getTopStockSize).reversed())
-                              .collect(Collectors.toList());
+                                                               return topBlock;
+                                                           })
+                                                           .sorted(Comparator.comparing(TopBlockDTO::getTopDays).reversed())
+                                                           .sorted(Comparator.comparing(TopBlockDTO::getTopStockSize).reversed())
+                                                           .collect(Collectors.toList());
+
+        dto.setTopBlockDTOList(topBlockDTOList);
+
+
+        return dto;
     }
 
 
     @Override
-    public List<TopStockDTO> topStockList(LocalDate date) {
+    public TopStockPoolDTO topStockList(LocalDate date) {
+
+
+        TopStockPoolDTO dto = new TopStockPoolDTO();
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         List<QaTopBlockDO> lastEntityList = qaTopBlockService.lastN(date, 10);
@@ -438,7 +574,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         QaTopBlockDO entity = lastEntityList.get(0); // 倒序
         if (entity == null) {
-            return Lists.newArrayList();
+            return dto;
         }
 
 
@@ -453,6 +589,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                                                                    .collect(Collectors.toMap(TopChangePctDTO::getCode, Function.identity()));
 
 
+        dto.setTopStockAvgPctDTO(entity.getTopStockAvgPct());
+
+
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -462,34 +601,40 @@ public class TopBlockServiceImpl implements TopBlockService {
         Set<String> topStockCodeSet = entity.getTopStockCodeJsonSet();
 
 
-        return topStockCodeSet.parallelStream()
-                              .map(stockCode -> {
+        List<TopStockDTO> topStockDTOList = topStockCodeSet.parallelStream()
+                                                           .map(stockCode -> {
 
 
-                                  TopStockDTO topStock = new TopStockDTO();
-                                  topStock.setDate(entity.getDate());
+                                                               TopStockDTO topStock = new TopStockDTO();
+                                                               topStock.setDate(entity.getDate());
 
 
-                                  // 主线个股
-                                  topStock.setStockCode(stockCode);
-                                  topStock.setStockName(topBlockCache.getStockName(stockCode));
-                                  topStock.setTopDays(topStock__codeCountMap.get(stockCode));
+                                                               // 主线个股
+                                                               topStock.setStockCode(stockCode);
+                                                               topStock.setStockName(topBlockCache.getStockName(stockCode));
+                                                               topStock.setTopDays(topStock__codeCountMap.get(stockCode));
 
 
-                                  // 当前 主线个股  ->  主线板块 列表
-                                  topStock.setTopBlockList(topBlockCache.getTopBlockList(stockCode, allTopBlockCodeSet, topBlock__codeCountMap));
+                                                               // 当前 主线个股  ->  主线板块 列表
+                                                               topStock.setTopBlockList(topBlockCache.getTopBlockList(stockCode, allTopBlockCodeSet, topBlock__codeCountMap));
 
 
-                                  // 上榜涨幅
-                                  // topStock.setChangePctDTO(topBlockCache.changePctInfo(stockCode, topStock.getDate(), stock_topDateInfo_map));
-                                  topStock.setChangePctDTO(sotck_topDateInfo_map.get(stockCode));
+                                                               // 上榜涨幅
+                                                               // topStock.setChangePctDTO(topBlockCache.changePctInfo(stockCode, topStock.getDate(), stock_topDateInfo_map));
+                                                               topStock.setChangePctDTO(sotck_topDateInfo_map.get(stockCode));
 
 
-                                  return topStock;
-                              })
-                              .sorted(Comparator.comparing(TopStockDTO::getTopDays).reversed())
-                              .sorted(Comparator.comparing(TopStockDTO::getTopBlockSize).reversed())
-                              .collect(Collectors.toList());
+                                                               return topStock;
+                                                           })
+                                                           .sorted(Comparator.comparing(TopStockDTO::getTopDays).reversed())
+                                                           .sorted(Comparator.comparing(TopStockDTO::getTopBlockSize).reversed())
+                                                           .collect(Collectors.toList());
+
+
+        dto.setTopStockDTOList(topStockDTOList);
+
+
+        return dto;
     }
 
 
@@ -762,6 +907,17 @@ public class TopBlockServiceImpl implements TopBlockService {
             // ---------------------------------------------------------------
 
 
+            // 主线 板块/个股 池     涨跌幅
+            TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(Lists.newArrayList(blockCode_topDate__Map.values()));
+            TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(Lists.newArrayList(stockCode_topDate__Map.values()));
+
+            // TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(e.getTopBlockList());
+            // TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(e.getTopStockList());
+
+
+            // ---------------------------------------------------------------
+
+
             // 主线板块、主线个股   列表
             e.setTopBlockCodeSet(JSON.toJSONString(blockCode_topDate__Map.values()));
             e.setTopStockCodeSet(JSON.toJSONString(stockCode_topDate__Map.values()));
@@ -770,8 +926,61 @@ public class TopBlockServiceImpl implements TopBlockService {
             // ---------------------------------------------------------------
 
 
+            // 主线板块、主线个股 池   涨跌幅
+            e.setBlockAvgPct(JSON.toJSONString(blockPool__avgPctDTO));
+            e.setStockAvgPct(JSON.toJSONString(stockPool__avgPctDTO));
+
+
+            // ---------------------------------------------------------------
+
+
             qaTopBlockService.updateById(e);
         });
+    }
+
+    private TopPoolAvgPctDTO avgPct(List<TopChangePctDTO> topChangePctList) {
+        if (CollectionUtils.isEmpty(topChangePctList)) {
+            return new TopPoolAvgPctDTO();
+        }
+
+
+        // 使用 Stream 和 DoubleSummaryStatistics 同时计算多个字段的平均值
+        DoubleSummaryStatistics start2TodayStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Today_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2EndStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2End_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2MaxStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Max_changePct).summaryStatistics();
+
+        DoubleSummaryStatistics today2NextStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getToday2Next_changePct).summaryStatistics();
+        DoubleSummaryStatistics today2EndStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getToday2End_changePct).summaryStatistics();
+        DoubleSummaryStatistics today2MaxStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getToday2Max_changePct).summaryStatistics();
+
+        DoubleSummaryStatistics start2NextStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2Next3Stats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next3_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2Next5Stats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next5_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2Next10Stats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next10_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2Next15Stats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next15_changePct).summaryStatistics();
+        DoubleSummaryStatistics start2Next20Stats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getStart2Next20_changePct).summaryStatistics();
+
+
+        // 创建结果对象并设置平均值
+        TopPoolAvgPctDTO avgPct = new TopPoolAvgPctDTO();
+
+        avgPct.setStart2Today_changePct(NumUtil.of(start2TodayStats.getAverage()));
+        avgPct.setStart2End_changePct(NumUtil.of(start2EndStats.getAverage()));
+        avgPct.setStart2Max_changePct(NumUtil.of(start2MaxStats.getAverage()));
+
+        avgPct.setToday2Next_changePct(NumUtil.of(today2NextStats.getAverage()));
+        avgPct.setToday2End_changePct(NumUtil.of(today2EndStats.getAverage()));
+        avgPct.setToday2Max_changePct(NumUtil.of(today2MaxStats.getAverage()));
+
+        avgPct.setStart2Next_changePct(NumUtil.of(start2NextStats.getAverage()));
+        avgPct.setStart2Next3_changePct(NumUtil.of(start2Next3Stats.getAverage()));
+        avgPct.setStart2Next5_changePct(NumUtil.of(start2Next5Stats.getAverage()));
+        avgPct.setStart2Next10_changePct(NumUtil.of(start2Next10Stats.getAverage()));
+        avgPct.setStart2Next15_changePct(NumUtil.of(start2Next15Stats.getAverage()));
+        avgPct.setStart2Next20_changePct(NumUtil.of(start2Next20Stats.getAverage()));
+
+
+        return avgPct;
     }
 
 
@@ -898,12 +1107,6 @@ public class TopBlockServiceImpl implements TopBlockService {
                         Set<String> base__topCodeSet = TopBlockCache.getTopCodeSet(base__topBlockDO, code);
                         // 当前板块/个股       当日 -> IN主线
                         if (!base__topCodeSet.contains(code)) {
-
-//                            Set<String> topBlockCodeSet = base__topBlockDO.getTopBlockCodeJsonSet();
-//                            Set<String> topStockCodeSet = base__topBlockDO.getTopStockCodeJsonSet();
-//
-//                            log.warn("当前板块/个股 当日->非主线     >>>     {} , {} , topBlockCodeSet : {} , topStockCodeSet : {}",
-//                                     date, code, topBlockCodeSet, topStockCodeSet);
                             return;
                         }
 
@@ -1020,6 +1223,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                         double start2Next15_changePct = close[Math.min(startTopDate_idx + 15, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
                         double start2Next20_changePct = close[Math.min(startTopDate_idx + 20, endTopDate_idx)] / startTopDate_idx_close * 100 - 100;
 
+                        double start2Max_changePct = maxClose(close, startTopDate_idx + 1, endTopDate_idx) / startTopDate_idx_close * 100 - 100;
+                        double today2Max_changePct = maxClose(close, nextDate_idx, endTopDate_idx) / startTopDate_idx_close * 100 - 100;
+
 
                         // ----------------------------------------------------------------------------
 
@@ -1035,6 +1241,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                         topChangePctDTO.setStart2Next10_changePct(NumUtil.of(start2Next10_changePct));
                         topChangePctDTO.setStart2Next15_changePct(NumUtil.of(start2Next15_changePct));
                         topChangePctDTO.setStart2Next20_changePct(NumUtil.of(start2Next20_changePct));
+
+                        topChangePctDTO.setStart2Max_changePct(NumUtil.of(start2Max_changePct));
+                        topChangePctDTO.setToday2Max_changePct(NumUtil.of(today2Max_changePct));
                     });
 
 
@@ -1048,6 +1257,15 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         return date__code_topDate__Map;
+    }
+
+
+    private double maxClose(double[] close, int start, int end) {
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = start; i <= end; i++) {
+            max = Math.max(max, close[i]);
+        }
+        return max;
     }
 
 

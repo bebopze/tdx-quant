@@ -1,13 +1,12 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -84,9 +83,12 @@ public interface TopBlockService {
     void bkyd2Task();
 
 
-    List<TopBlockDTO> topBlockList(LocalDate date);
+    TopBlockPoolDTO topBlockList(LocalDate date);
 
-    List<TopStockDTO> topStockList(LocalDate date);
+    TopStockPoolDTO topStockList(LocalDate date);
+
+
+    double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);
 
 
     // -----------------------------------------------------------------------------------------------------------------

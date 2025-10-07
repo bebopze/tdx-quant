@@ -43,6 +43,16 @@ public class TopChangePctDTO {
 
     // 上榜涨幅（首次 上榜日期  收盘价   ->   today）
     private double start2Today_changePct;
+    // 上榜涨幅（首次 上榜日期  收盘价   ->   endTopDate）
+    private double start2End_changePct;
+    private double start2Max_changePct;
+
+
+    // 上榜涨幅（        今日  收盘价   ->   nextDay）
+    private double today2Next_changePct;
+    // 上榜涨幅（        今日  收盘价   ->   endTopDate）
+    private double today2End_changePct;
+    private double today2Max_changePct;
 
 
     private double start2Next_changePct;
@@ -53,23 +63,11 @@ public class TopChangePctDTO {
     private double start2Next20_changePct;
 
 
-    // 上榜涨幅（首次 上榜日期  收盘价   ->   endTopDate）
-    private double start2End_changePct;
-
-
-    // 上榜涨幅（        今日  收盘价   ->   nextDay）
-    private double today2Next_changePct;
-
-    // 上榜涨幅（        今日  收盘价   ->   endTopDate）
-    private double today2End_changePct;
-
-
     // -----------------------------------------------------------------------------------------------------------------
 
 
     public TopChangePctDTO(String code) {
         this.code = code;
     }
-
 
 }

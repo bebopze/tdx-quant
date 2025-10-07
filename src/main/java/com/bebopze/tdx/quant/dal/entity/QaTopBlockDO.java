@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -65,6 +66,20 @@ public class QaTopBlockDO implements Serializable {
     private String topStockCodeSet;
 
     /**
+     * 板块池-平均涨跌幅（%）
+     */
+    @TableField("block_avg_pct")
+    @Schema(description = "板块池-平均涨跌幅（%）")
+    private String blockAvgPct;
+
+    /**
+     * 股票池-平均涨跌幅（%）
+     */
+    @TableField("stock_avg_pct")
+    @Schema(description = "股票池-平均涨跌幅（%）")
+    private String stockAvgPct;
+
+    /**
      * 创建时间
      */
     @TableField("gmt_create")
@@ -88,6 +103,16 @@ public class QaTopBlockDO implements Serializable {
 
     public List<TopChangePctDTO> getTopStockList() {
         return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class);
+    }
+
+
+
+    public TopPoolAvgPctDTO getTopBlockAvgPct() {
+        return JSON.to(TopPoolAvgPctDTO.class, blockAvgPct);
+    }
+
+    public TopPoolAvgPctDTO getTopStockAvgPct() {
+        return JSON.to(TopPoolAvgPctDTO.class, stockAvgPct);
     }
 
 

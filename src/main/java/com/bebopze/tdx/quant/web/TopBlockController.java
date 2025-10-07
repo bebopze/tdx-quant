@@ -1,9 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlock2DTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
-import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -189,8 +187,8 @@ public class TopBlockController {
      */
     @Operation(summary = "主线板块 列表（板块-月多2）", description = "主线板块 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topBlockList")
-    public Result<List<TopBlockDTO>> topBlockList(@Schema(description = "交易日", example = "2025-09-24")
-                                                  @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+    public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-24")
+                                                @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
 
         return Result.SUC(topBlockService.topBlockList(date));
     }
@@ -200,8 +198,8 @@ public class TopBlockController {
      */
     @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topStockList")
-    public Result<List<TopStockDTO>> topStockList(@Schema(description = "交易日", example = "2025-09-24")
-                                                  @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+    public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-24")
+                                                @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
 
         return Result.SUC(topBlockService.topStockList(date));
     }
