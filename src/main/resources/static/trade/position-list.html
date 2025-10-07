@@ -358,6 +358,35 @@
         /* ----------------------------- */
 
 
+        /* 平均值行 */
+
+        .avg-row {
+            background-color: #dee2e6;
+            font-weight: bold;
+            font-style: italic;
+            border-top: 2px solid #dee2e6;
+        }
+
+        /* 针对平均值行中所有单元格的样式 */
+        .avg-row td {
+            background-color: #dee2e6;
+            border: 1px solid #adb5bd; /* 显式设置一个比背景色深的边框颜色，确保列分隔线可见 */
+            padding: 4px 6px;
+        }
+
+        /* 针对平均值行中合并列的标签单元格样式 */
+        .avg-row .avg-label {
+            background-color: #dee2e6;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            text-align: center;
+            border: 1px solid #adb5bd;
+        }
+
+
+        /* ----------------------------- */
+
+
         /* === 修复 持仓列表 水平滚动问题 === */
 
         /* 1. 强化容器 */
@@ -776,13 +805,18 @@
                                 <th onclick="sortTopBlocksTable('start2End_changePct')">上榜至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksStart2End_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('start2Max_changePct')">上榜至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksStart2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTable('today2Next_changePct')">今日至nextDay涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday2Next_changePct"></span></th>
                                 <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday2End_changePct"></span></th>
-
+                                <th onclick="sortTopBlocksTable('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTable('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksStart2Next_changePct"></span></th>
@@ -864,13 +898,18 @@
                                 <th onclick="sortTopStocksTable('start2End_changePct')">上榜至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2End_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('start2Max_changePct')">上榜至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksStart2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTable('today2Next_changePct')">今日至nextDay涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday2Next_changePct"></span></th>
                                 <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday2End_changePct"></span></th>
-
+                                <th onclick="sortTopStocksTable('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTable('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2Next_changePct"></span></th>
@@ -1014,6 +1053,9 @@
     // --- 新增：主线板块/个股数据 ---
     let topBlocksData = [];
     let topStocksData = [];
+
+    let topBlockAvgPctData = {};
+    let topStockAvgPctData = {};
 
     // 存储排序状态 (主线板块)
     let topBlocksSortState = {column: 'topStockSize', order: 'desc'}; // 默认按topStockSize倒序
@@ -1722,8 +1764,11 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取主线板块列表失败');
                 }
+
+                topBlockAvgPctData = data.data.topBlockAvgPctDTO;
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topBlocksData = (data.data || []).map((block, index) => {
+                topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
                     const changePctDTO = block.changePctDTO || {};
                     return {
                         rank: index + 1, // 添加序号
@@ -1739,8 +1784,10 @@
                         topEndDate: changePctDTO.topEndDate || '-',
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
                         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
                         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
@@ -1751,11 +1798,25 @@
                 });
 
                 if (!topBlocksData || topBlocksData.length === 0) {
+
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
                     document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+
+                    // 移除平均值行
+                    const thead = document.querySelector('#topBlocksTable thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+
                     return;
                 }
+
+                // 渲染平均值行
+                displayTopBlocksAvgRow(topBlockAvgPctData);
                 // 根据当前排序状态显示数据
                 displayTopBlocks(topBlocksData);
             })
@@ -1791,8 +1852,11 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取主线个股列表失败');
                 }
+
+                topStockAvgPctData = data.data.topStockAvgPctDTO;
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topStocksData = (data.data || []).map((stock, index) => {
+                topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
                     const changePctDTO = stock.changePctDTO || {};
                     return {
                         rank: index + 1, // 添加序号
@@ -1808,8 +1872,10 @@
                         topEndDate: changePctDTO.topEndDate || '-',
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
                         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
                         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
@@ -1820,11 +1886,26 @@
                 });
 
                 if (!topStocksData || topStocksData.length === 0) {
+
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
                     document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+
+                    // 移除平均值行
+                    const thead = document.querySelector('#topStocksTable thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+
                     return;
                 }
+
+
+                // 渲染平均值行
+                displayTopStocksAvgRow(topStockAvgPctData);
                 // 根据当前排序状态显示数据
                 displayTopStocks(topStocksData);
             })
@@ -1858,6 +1939,68 @@
         }
         updateTopBlocksSortIcon();
         displayTopBlocks(topBlocksData);
+    }
+
+    // 渲染平均值行
+    function displayTopBlocksAvgRow(avgPct) {
+        const thead = document.querySelector('#topBlocksTable thead');
+        if (!thead) {
+            console.error('未找到 #topBlocksTable thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topBlocksTable thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
     }
 
     function displayTopBlocks(blocks) {
@@ -1898,6 +2041,23 @@
             document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（0）`;
         } else {
             messageDiv.style.display = 'none';
+
+
+            // document.getElementById('sortTopBlocksToday2Next_changePct').textContent = `（${avgPct.today2Next_changePct}%）`;
+            // document.getElementById('sortTopBlocksToday2End_changePct').textContent = `（${avgPct.today2End_changePct}%）`;
+
+
+            // const today2Next_pct = avgPct.today2Next_changePct;
+            // const today2Next_el = document.getElementById('sortTopBlocksToday2Next_changePct');
+            // today2Next_el.innerHTML = `（<span class="num">${today2Next_pct}%</span>）`;
+            // today2Next_el.querySelector('.num').style.color = today2Next_pct > 0 ? 'red' : today2Next_pct < 0 ? 'teal' : 'black';
+            //
+            // const today2End_pct = avgPct.today2End_changePct;
+            // const today2End_el = document.getElementById('sortTopBlocksToday2End_changePct');
+            // today2End_el.innerHTML = `（<span class="num">${today2End_pct}%</span>）`;
+            // today2End_el.querySelector('.num').style.color = today2End_pct > 0 ? 'red' : today2End_pct < 0 ? 'teal' : 'black';
+
+
             sortedBlocks.forEach((block) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1909,16 +2069,18 @@
                     <td class="top-list-item">${block.topStockList}</td>
                     <td>${block.topStartDate}</td>
                     <td>${block.topEndDate}</td>
-                    <td>${block.start2Today_changePct.toFixed(2)}%</td>
-                    <td>${block.start2End_changePct.toFixed(2)}%</td>
-                    <td>${block.today2Next_changePct.toFixed(2)}%</td>
-                    <td>${block.today2End_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next3_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next5_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next10_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next15_changePct.toFixed(2)}%</td>
-                    <td>${block.start2Next20_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next10_changePct > 0 ? 'red' : block.start2Next10_changePct < 0 ? 'teal' : 'black'}">${block.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next15_changePct > 0 ? 'red' : block.start2Next15_changePct < 0 ? 'teal' : 'black'}">${block.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next20_changePct > 0 ? 'red' : block.start2Next20_changePct < 0 ? 'teal' : 'black'}">${block.start2Next20_changePct.toFixed(2)}%</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1948,6 +2110,68 @@
         }
         updateTopStocksSortIcon();
         displayTopStocks(topStocksData);
+    }
+
+    // 渲染平均值行
+    function displayTopStocksAvgRow(avgPct) {
+        const thead = document.querySelector('#topStocksTable thead');
+        if (!thead) {
+            console.error('未找到 #topStocksTable thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topStocksTable thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
     }
 
     function displayTopStocks(stocks) {
@@ -1988,6 +2212,23 @@
             document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（0）`;
         } else {
             messageDiv.style.display = 'none';
+
+
+            // document.getElementById('sortTopStocksToday2Next_changePct').textContent = `今日至跌出涨幅（${avgPct.today2Next_changePct}%）`;
+            // document.getElementById('sortTopStocksToday2End_changePct').textContent = `今日至跌出涨幅（${avgPct.today2End_changePct}%）`;
+
+
+            // const today2Next_pct = avgPct.today2Next_changePct;
+            // const today2Next_el = document.getElementById('sortTopStocksToday2Next_changePct');
+            // today2Next_el.innerHTML = `（<span class="num">${today2Next_pct}%</span>）`;
+            // today2Next_el.querySelector('.num').style.color = today2Next_pct > 0 ? 'red' : today2Next_pct < 0 ? 'teal' : 'black';
+            //
+            // const today2End_pct = avgPct.today2End_changePct;
+            // const today2End_el = document.getElementById('sortTopStocksToday2End_changePct');
+            // today2End_el.innerHTML = `（<span class="num">${today2End_pct}%</span>）`;
+            // today2End_el.querySelector('.num').style.color = today2End_pct > 0 ? 'red' : today2End_pct < 0 ? 'teal' : 'black';
+
+
             sortedStocks.forEach((stock) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
@@ -2000,16 +2241,18 @@
                     <td class="top-list-item">${stock.topBlockList}</td>
                     <td>${stock.topStartDate}</td>
                     <td>${stock.topEndDate.toString()}</td>
-                    <td>${stock.start2Today_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2End_changePct.toFixed(2)}%</td>
-                    <td>${stock.today2Next_changePct.toFixed(2)}%</td>
-                    <td>${stock.today2End_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next3_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next5_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next10_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next15_changePct.toFixed(2)}%</td>
-                    <td>${stock.start2Next20_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
                 `;
                 tbody.appendChild(tr);
             });
