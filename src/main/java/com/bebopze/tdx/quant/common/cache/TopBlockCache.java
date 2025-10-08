@@ -277,8 +277,8 @@ public class TopBlockCache {
         return StockTypeEnum.isBlock(code) ? data.getOrCreateBlockFun(code) : data.getOrCreateStockFun(code);
     }
 
-    public static Set<String> getTopCodeSet(QaTopBlockDO topBlockDO, String code) {
-        return StockTypeEnum.isBlock(code) ? topBlockDO.getTopBlockCodeJsonSet() : topBlockDO.getTopStockCodeJsonSet();
+    public static Set<String> getTopCodeSet(QaTopBlockDO topBlockDO, String code, int type) {
+        return StockTypeEnum.isBlock(code) ? topBlockDO.getTopBlockCodeJsonSet(type) : topBlockDO.getTopStockCodeJsonSet(type);
     }
 
 
@@ -293,7 +293,7 @@ public class TopBlockCache {
      * @return
      */
     @TotalTime
-    public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date, StockTypeEnum stockTypeEnum) {
+    public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date, StockTypeEnum stockTypeEnum, int type) {
         // 今日date   ->   前后 各50条
         int days = StockUtil.tradeDays2NatureDays(50); // 交易日天数 -> 自然日天数
         List<QaTopBlockDO> lastEntity__before50_after50 = qaTopBlockService.lastN(date.plusDays(days), 100);
@@ -308,7 +308,7 @@ public class TopBlockCache {
         LocalDate baseDate = lastEntity__1.get(0).getDate();
 
 
-        return stock_topDateInfo_map(baseDate, lastEntity__before50_after50, stockTypeEnum);
+        return stock_topDateInfo_map(baseDate, lastEntity__before50_after50, stockTypeEnum, type);
     }
 
     /**
@@ -318,7 +318,8 @@ public class TopBlockCache {
      */
     public Map<String, TopChangePctDTO> stock_topDateInfo_map(LocalDate date,
                                                               List<QaTopBlockDO> lastEntity__before50_after50,
-                                                              StockTypeEnum stockTypeEnum) {
+                                                              StockTypeEnum stockTypeEnum,
+                                                              int type) {
 
 
         Map<String, TopChangePctDTO> stock_topDateInfo_map = Maps.newHashMap();
@@ -351,7 +352,7 @@ public class TopBlockCache {
 
         // 获取 基准日期 当天上榜的   板块/个股 code列表
         QaTopBlockDO baseEntity = sortedList.get(topBaseIdx);
-        Set<String> baseDate__topCodeSet = Objects.equals(StockTypeEnum.TDX_BLOCK, stockTypeEnum) ? baseEntity.getTopBlockCodeJsonSet() : baseEntity.getTopStockCodeJsonSet();
+        Set<String> baseDate__topCodeSet = Objects.equals(StockTypeEnum.TDX_BLOCK, stockTypeEnum) ? baseEntity.getTopBlockCodeJsonSet(type) : baseEntity.getTopStockCodeJsonSet(type);
 
 
         for (String code : baseDate__topCodeSet) {
@@ -359,10 +360,10 @@ public class TopBlockCache {
 
 
             // 计算首次上榜日期（往前倒推）
-            dto.setTopStartDate(calculateFirstTopDate(sortedList, date, topBaseIdx, code));
+            dto.setTopStartDate(calculateFirstTopDate(sortedList, date, topBaseIdx, code, type));
 
             // 计算跌出榜单日期（往后倒推）
-            dto.setTopEndDate(calculateEndTopDate(sortedList, date, topBaseIdx, code));
+            dto.setTopEndDate(calculateEndTopDate(sortedList, date, topBaseIdx, code, type));
 
 
             stock_topDateInfo_map.put(code, dto);
@@ -379,7 +380,8 @@ public class TopBlockCache {
     private LocalDate calculateFirstTopDate(List<QaTopBlockDO> sortedList,
                                             LocalDate topBaseDate,
                                             int topBaseIdx,
-                                            String code) {
+                                            String code,
+                                            int type) {
 
 
         StockFun fun = getFun(code);
@@ -435,7 +437,7 @@ public class TopBlockCache {
 
             LocalDate date = topBlockDO.getDate();
             // Set<String> topBlockCodeSet = topBlockDO.getTopBlockCodeJsonSet();
-            Set<String> topCodeSet = getTopCodeSet(topBlockDO, code);
+            Set<String> topCodeSet = getTopCodeSet(topBlockDO, code, type);
 
             if (topCodeSet.contains(code)) {
                 return date;
@@ -453,7 +455,7 @@ public class TopBlockCache {
     private LocalDate calculateEndTopDate(List<QaTopBlockDO> sortedList,
                                           LocalDate topBaseDate,
                                           int topBaseIdx,
-                                          String code) {
+                                          String code, int type) {
 
 
         StockFun fun = getFun(code);

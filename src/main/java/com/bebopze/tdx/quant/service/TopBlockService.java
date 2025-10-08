@@ -6,7 +6,6 @@ import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -80,15 +79,32 @@ public interface TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 主线板块（板块-月多2）
+     */
     void bkyd2Task();
 
 
-    TopBlockPoolDTO topBlockList(LocalDate date);
+    /**
+     * 主线板块 列表
+     *
+     * @param date 交易日
+     * @param type 类型：1-机选；2-人选；
+     * @return
+     */
+    TopBlockPoolDTO topBlockList(LocalDate date, Integer type);
 
-    TopStockPoolDTO topStockList(LocalDate date);
+    /**
+     * 主线个股 列表
+     *
+     * @param date 交易日
+     * @param type 类型：1-机选；2-人选；
+     * @return
+     */
+    TopStockPoolDTO topStockList(LocalDate date, Integer type);
 
 
-    double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);
+    // double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);
 
 
     // -----------------------------------------------------------------------------------------------------------------

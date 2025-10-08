@@ -36,6 +36,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -309,8 +310,6 @@ public class TopBlockServiceImpl implements TopBlockService {
         calc_bkyd2();
 
         calcTopInfoTask();
-
-        // calcTopPoolNextChangePctTask();
     }
 
 
@@ -345,94 +344,94 @@ public class TopBlockServiceImpl implements TopBlockService {
 //    }
 
 
+//    @Override
+//    public double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N) {
+//
+//
+//        Set<Double> pctSet = Sets.newHashSet();
+//
+//
+//        stockCodeSet.forEach(stockCode -> {
+//
+//
+//            StockFun fun = data.getFun(stockCode);
+//
+//
+//            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+//            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+//
+//
+//            int maxIdx = dateIndexMap.size() - 1;
+//
+//
+//            // -----------------------------------------------------------------
+//
+//
+//            Integer idx = dateIndexMap.get(date);
+//
+//
+//            // 停牌
+//            if (idx == null) {
+//                return;
+//            }
+//
+//
+//            // -----------------------------------------------------------------
+//
+//
+//            double close = klineArrDTO.close[idx];
+//            double next_close = klineArrDTO.close[Math.min(idx + N, maxIdx)];
+//
+//
+//            // 个股 收益率
+//            double pct = next_close / close * 100 - 100;
+//
+//
+//            pctSet.add(pct);
+//        });
+//
+//
+//        // -----------------------------------------------------------------
+//
+//
+//        // 汇总计算   ->   指数（股票池）收益率
+//
+//
+//        // 计算 pctSet 中所有收益率的算术平均值
+//        DoubleSummaryStatistics statistics = pctSet.stream().mapToDouble(Double::doubleValue).summaryStatistics();
+//        double averagePct = statistics.getAverage();
+//
+//
+//        // 1. 中位数 (Median)
+//        // double[] sortedPcts = pctSet.stream().mapToDouble(Double::doubleValue).sorted().toArray();
+//        // int size = sortedPcts.length;
+//        // double medianPct;
+//        // if (size % 2 == 0) {
+//        //     medianPct = (sortedPcts[size / 2 - 1] + sortedPcts[size / 2]) / 2.0;
+//        // } else {
+//        //     medianPct = sortedPcts[size / 2];
+//        // }
+//
+//
+//        // 2. 加权平均 (Weighted Average) - 需要权重数据，例如流通市值
+//        // double totalWeight = 0;
+//        // double weightedSum = 0;
+//        // for (String code : stockCodeSet) {
+//        //     // 获取该股票的权重 (weight)
+//        //     // double weight = getWeight(code, date); // 假设有一个获取权重的方法
+//        //     // double pctForCode = getIndividualPct(code, date, N); // 从 pctSet 或重新计算
+//        //     // weightedSum += pctForCode * weight;
+//        //     // totalWeight += weight;
+//        // }
+//        // double wAvgPct = totalWeight > 0 ? weightedSum / totalWeight : Double.NaN;
+//
+//
+//        return averagePct;
+//    }
+
+
     @Override
-    public double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N) {
-
-
-        Set<Double> pctSet = Sets.newHashSet();
-
-
-        stockCodeSet.forEach(stockCode -> {
-
-
-            StockFun fun = data.getFun(stockCode);
-
-
-            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-            int maxIdx = dateIndexMap.size() - 1;
-
-
-            // -----------------------------------------------------------------
-
-
-            Integer idx = dateIndexMap.get(date);
-
-
-            // 停牌
-            if (idx == null) {
-                return;
-            }
-
-
-            // -----------------------------------------------------------------
-
-
-            double close = klineArrDTO.close[idx];
-            double next_close = klineArrDTO.close[Math.min(idx + N, maxIdx)];
-
-
-            // 个股 收益率
-            double pct = next_close / close * 100 - 100;
-
-
-            pctSet.add(pct);
-        });
-
-
-        // -----------------------------------------------------------------
-
-
-        // 汇总计算   ->   指数（股票池）收益率
-
-
-        // 计算 pctSet 中所有收益率的算术平均值
-        DoubleSummaryStatistics statistics = pctSet.stream().mapToDouble(Double::doubleValue).summaryStatistics();
-        double averagePct = statistics.getAverage();
-
-
-        // 1. 中位数 (Median)
-        // double[] sortedPcts = pctSet.stream().mapToDouble(Double::doubleValue).sorted().toArray();
-        // int size = sortedPcts.length;
-        // double medianPct;
-        // if (size % 2 == 0) {
-        //     medianPct = (sortedPcts[size / 2 - 1] + sortedPcts[size / 2]) / 2.0;
-        // } else {
-        //     medianPct = sortedPcts[size / 2];
-        // }
-
-
-        // 2. 加权平均 (Weighted Average) - 需要权重数据，例如流通市值
-        // double totalWeight = 0;
-        // double weightedSum = 0;
-        // for (String code : stockCodeSet) {
-        //     // 获取该股票的权重 (weight)
-        //     // double weight = getWeight(code, date); // 假设有一个获取权重的方法
-        //     // double pctForCode = getIndividualPct(code, date, N); // 从 pctSet 或重新计算
-        //     // weightedSum += pctForCode * weight;
-        //     // totalWeight += weight;
-        // }
-        // double wAvgPct = totalWeight > 0 ? weightedSum / totalWeight : Double.NaN;
-
-
-        return averagePct;
-    }
-
-
-    @Override
-    public TopBlockPoolDTO topBlockList(LocalDate date) {
+    public TopBlockPoolDTO topBlockList(LocalDate date, Integer type) {
 
 
         TopBlockPoolDTO dto = new TopBlockPoolDTO();
@@ -451,9 +450,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         lastEntityList.forEach(e -> {
 
             // 主线板块
-            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet();
+            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet(type);
             // 主线个股
-            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet();
+            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet(type);
 
 
             topBlockCodeSet.forEach(topBlockCode -> {
@@ -478,24 +477,21 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 上榜日期
-        // Map<String, TopChangePctDTO> block_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date, StockTypeEnum.TDX_BLOCK);
-
-
-        Map<String, TopChangePctDTO> block_topDateInfo_map = entity.getTopBlockList().stream()
+        // 上榜info
+        Map<String, TopChangePctDTO> block_topDateInfo_map = entity.getTopBlockList(type).stream()
                                                                    .collect(Collectors.toMap(TopChangePctDTO::getCode, Function.identity()));
 
 
-        dto.setTopBlockAvgPctDTO(entity.getTopBlockAvgPct());
+        dto.setTopBlockAvgPctDTO(entity.getTopBlockAvgPct(type));
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 主线板块
-        Set<String> topBlockCodeSet = entity.getTopBlockCodeJsonSet();
+        Set<String> topBlockCodeSet = entity.getTopBlockCodeJsonSet(type);
         // 主线个股
-        Set<String> allTopStockCodeSet = entity.getTopStockCodeJsonSet();
+        Set<String> allTopStockCodeSet = entity.getTopStockCodeJsonSet(type);
 
 
         List<TopBlockDTO> topBlockDTOList = topBlockCodeSet.parallelStream()
@@ -535,7 +531,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     @Override
-    public TopStockPoolDTO topStockList(LocalDate date) {
+    public TopStockPoolDTO topStockList(LocalDate date, Integer type) {
 
 
         TopStockPoolDTO dto = new TopStockPoolDTO();
@@ -554,9 +550,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         lastEntityList.forEach(e -> {
 
             // 主线板块
-            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet();
+            Set<String> topBlockCodeSet = e.getTopBlockCodeJsonSet(type);
             // 主线个股
-            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet();
+            Set<String> topStockCodeSet = e.getTopStockCodeJsonSet(type);
 
 
             topBlockCodeSet.forEach(topBlockCode -> {
@@ -581,24 +577,21 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 上榜日期
-        // Map<String, TopChangePctDTO> stock_topDateInfo_map = topBlockCache.stock_topDateInfo_map(date, StockTypeEnum.A_STOCK);
-
-
-        Map<String, TopChangePctDTO> sotck_topDateInfo_map = entity.getTopStockList().stream()
+        // 上榜info
+        Map<String, TopChangePctDTO> sotck_topDateInfo_map = entity.getTopStockList(type).stream()
                                                                    .collect(Collectors.toMap(TopChangePctDTO::getCode, Function.identity()));
 
 
-        dto.setTopStockAvgPctDTO(entity.getTopStockAvgPct());
+        dto.setTopStockAvgPctDTO(entity.getTopStockAvgPct(type));
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 主线板块
-        Set<String> allTopBlockCodeSet = entity.getTopBlockCodeJsonSet();
+        Set<String> allTopBlockCodeSet = entity.getTopBlockCodeJsonSet(type);
         // 主线个股
-        Set<String> topStockCodeSet = entity.getTopStockCodeJsonSet();
+        Set<String> topStockCodeSet = entity.getTopStockCodeJsonSet(type);
 
 
         List<TopStockDTO> topStockDTOList = topStockCodeSet.parallelStream()
@@ -878,7 +871,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // -------------------------------------------------------------------------------------------------------------
 
-
+        // 涨跌幅 计算
         Map<LocalDate, Map<String, TopChangePctDTO>> date__blockCode_topDate__Map = calcTopInfoTask(data.blockDOList, topSortListAll);
         Map<LocalDate, Map<String, TopChangePctDTO>> date__stockCode_topDate__Map = calcTopInfoTask(data.stockDOList, topSortListAll);
 
@@ -896,23 +889,9 @@ public class TopBlockServiceImpl implements TopBlockService {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // ---------------------------------------------------------------
-
-
             // code - 主线 板块/个股
             Map<String, TopChangePctDTO> blockCode_topDate__Map = date__blockCode_topDate__Map.getOrDefault(date, Maps.newHashMap());
             Map<String, TopChangePctDTO> stockCode_topDate__Map = date__stockCode_topDate__Map.getOrDefault(date, Maps.newHashMap());
-
-
-            // ---------------------------------------------------------------
-
-
-            // 主线 板块/个股 池     涨跌幅
-            TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(Lists.newArrayList(blockCode_topDate__Map.values()));
-            TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(Lists.newArrayList(stockCode_topDate__Map.values()));
-
-
-            // ---------------------------------------------------------------
 
 
             // 主线板块、主线个股   列表
@@ -920,15 +899,38 @@ public class TopBlockServiceImpl implements TopBlockService {
             e.setTopStockCodeSet(JSON.toJSONString(stockCode_topDate__Map.values()));
 
 
-            // ---------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
 
 
-            // 主线板块、主线个股 池   涨跌幅
+            // 当日 板块/个股列表   ->   涨跌幅汇总 均值计算
+            TopPoolAvgPctDTO blockPool__avgPctDTO = avgPct(Lists.newArrayList(blockCode_topDate__Map.values()));
+            TopPoolAvgPctDTO stockPool__avgPctDTO = avgPct(Lists.newArrayList(stockCode_topDate__Map.values()));
+
+
+            // 均值
             e.setBlockAvgPct(JSON.toJSONString(blockPool__avgPctDTO));
             e.setStockAvgPct(JSON.toJSONString(stockPool__avgPctDTO));
 
 
-            // ---------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // init 人选     =>     机选 -> 人选
+            if (StringUtils.isEmpty(e.getTopBlockCodeSetMan())) {
+                e.setTopBlockCodeSetMan(e.getTopBlockCodeSet());
+            }
+            if (StringUtils.isEmpty(e.getTopStockCodeSetMan())) {
+                e.setTopStockCodeSetMan(e.getTopStockCodeSet());
+            }
+            if (StringUtils.isEmpty(e.getBlockAvgPctMan())) {
+                e.setBlockAvgPctMan(e.getBlockAvgPct());
+            }
+            if (StringUtils.isEmpty(e.getStockAvgPctMan())) {
+                e.setStockAvgPctMan(e.getStockAvgPct());
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             qaTopBlockService.updateById(e);
@@ -1101,7 +1103,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                         // 当日   ->   主线板块/个股   列表
-                        Set<String> base__topCodeSet = TopBlockCache.getTopCodeSet(base__topBlockDO, code);
+                        Set<String> base__topCodeSet = TopBlockCache.getTopCodeSet(base__topBlockDO, code, 1);
                         // 当前板块/个股       当日 -> IN主线
                         if (!base__topCodeSet.contains(code)) {
                             return;
@@ -1125,7 +1127,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                             QaTopBlockDO start__topBlockDO = topEntity__before50_after50.get(i);
 
                             LocalDate topStartDate = start__topBlockDO.getDate();
-                            Set<String> start__topCodeSet = TopBlockCache.getTopCodeSet(start__topBlockDO, code);
+                            Set<String> start__topCodeSet = TopBlockCache.getTopCodeSet(start__topBlockDO, code, 1);
 
 
                             // 当前个股     ==>     当日 IN主线     =>     当日 -> topStartDate
@@ -1151,8 +1153,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         if (null == topChangePctDTO || null == topChangePctDTO.getTopStartDate()) {
 
-                            Set<String> topBlockCodeSet = base__topBlockDO.getTopBlockCodeJsonSet();
-                            Set<String> topStockCodeSet = base__topBlockDO.getTopStockCodeJsonSet();
+                            Set<String> topBlockCodeSet = base__topBlockDO.getTopBlockCodeJsonSet(1);
+                            Set<String> topStockCodeSet = base__topBlockDO.getTopStockCodeJsonSet(1);
 
                             log.error("topChangePctDTO = null   -   当前个股 当日   非主线     >>>     {} , {} , topBlockCodeSet : {} , topStockCodeSet : {}",
                                       date, code, topBlockCodeSet, topStockCodeSet);

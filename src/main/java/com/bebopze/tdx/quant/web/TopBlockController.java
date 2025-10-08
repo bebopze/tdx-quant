@@ -187,10 +187,13 @@ public class TopBlockController {
      */
     @Operation(summary = "主线板块 列表（板块-月多2）", description = "主线板块 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topBlockList")
-    public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-24")
-                                                @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+    public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-30")
+                                                @RequestParam(defaultValue = "2025-09-30") LocalDate date,
 
-        return Result.SUC(topBlockService.topBlockList(date));
+                                                @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
+                                                @RequestParam(defaultValue = "1") Integer type) {
+
+        return Result.SUC(topBlockService.topBlockList(date, type));
     }
 
     /**
@@ -198,10 +201,13 @@ public class TopBlockController {
      */
     @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topStockList")
-    public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-24")
-                                                @RequestParam(defaultValue = "2025-09-24") LocalDate date) {
+    public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-30")
+                                                @RequestParam(defaultValue = "2025-09-30") LocalDate date,
 
-        return Result.SUC(topBlockService.topStockList(date));
+                                                @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
+                                                @RequestParam(defaultValue = "1") Integer type) {
+
+        return Result.SUC(topBlockService.topStockList(date, type));
     }
 
 
