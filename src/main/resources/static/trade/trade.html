@@ -439,23 +439,23 @@
 
 
     async function quickClearPosition() {
-        const data = await fetchWithCheck('/api/trade/quickOption/clearPosition');
+        const data = await fetchWithCheck('/api/trade/quick/clearPosition');
         alert("suc");
     }
 
     async function quickCancelOrder() {
-        const data = await fetchWithCheck('/api/trade/quickOption/cancelOrder');
+        const data = await fetchWithCheck('/api/trade/quick/cancelOrder');
         alert("suc");
     }
 
     async function quickResetFinancing() {
-        const data = await fetchWithCheck('/api/trade/quickOption/resetFinancing');
+        const data = await fetchWithCheck('/api/trade/quick/resetFinancing');
         alert("suc");
     }
 
     async function quickBuyNewPosition() {
         const body = []; // 请根据实际需要构建请求体
-        const data = await fetchWithCheck('/api/trade/quickOption/buyNewPosition', {
+        const data = await fetchWithCheck('/api/trade/quick/buyNewPosition', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(body)
@@ -472,7 +472,7 @@
         if (!confirm(confirmMsg)) return;
 
         try {
-            await fetchWithCheck(`/api/trade/quickOption/lowerFinancing?transferAmount=${amount}`);
+            await fetchWithCheck(`/api/trade/quick/lowerFinancing?transferAmount=${amount}`);
             alert('一键取款成功！');
             bootstrap.Modal.getInstance(document.getElementById('withdrawModal')).hide();
             location.reload(); // ✅ 成功后刷新页面

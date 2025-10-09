@@ -43,7 +43,7 @@
 
         /* --- 持仓列表：批量卖出 --- */
         /* 全选 */
-        #selectAllCheckboxHeader {
+        #positionSelectAllCheckboxHeader {
             transform: scale(1.0);
             margin-right: 5px;
         }
@@ -562,7 +562,7 @@
             </form>
         </div>
     </div>
-    <!-- 查询按钮 & 一键卖出 & 新增按钮 -->
+    <!-- 查询按钮 & 一键等比卖出 & 新增按钮 -->
     <div class="d-flex align-items-center mb-3 flex-wrap">
         <button id="queryButton" class="btn btn-primary">查询</button>
         <button id="sellAllButton" class="btn btn-danger ms-3">一键等比卖出</button>
@@ -570,6 +570,8 @@
         <button id="quickResetFinancingButton" class="btn btn-warning ms-3">一键再融资</button>
         <!-- 新增：一键取款按钮 -->
         <button id="quickLowerFinancingButton" class="btn btn-info ms-3">一键取款</button>
+        <!-- 新增：一键等比买入按钮 -->
+        <button id="buyNewPositionButton" class="btn btn-success ms-3">一键等比买入（调仓换股）</button>
     </div>
     <!-- Add Tabs Navigation -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -625,8 +627,7 @@
                         <table class="table table-bordered table-sm" id="positionTable">
                             <thead>
                             <tr>
-                                <!-- Modified: Checkbox in Header Cell -->
-                                <th><input type="checkbox" id="selectAllCheckboxHeader">勾选</th>
+                                <th><input type="checkbox" id="positionSelectAllCheckboxHeader">勾选</th>
                                 <th>序号</th>
                                 <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon"
                                                                                  id="sortStkcode"></span></th>
@@ -724,7 +725,6 @@
                         <table class="table table-bordered table-sm" id="ordersTable">
                             <thead>
                             <tr>
-                                <!-- Modified: Checkbox in Header Cell for Orders -->
                                 <th><input type="checkbox" id="ordersSelectAllCheckboxHeader">勾选</th>
                                 <th onclick="sortOrdersTable('wtbh')">委托编号<span class="sort-icon"
                                                                                     id="sortWtbh"></span></th>
@@ -1074,6 +1074,10 @@
                         <table class="table table-bordered table-sm" id="topStocksTableManual">
                             <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="topStocksManualSelectAllCheckboxHeader"
+                                           class="select-all-checkbox-top-stocks-manual" title="全选/取消全选">勾选
+                                </th>
                                 <th onclick="sortTopStocksTableManual('rank')">序号<span class="sort-icon"
                                                                                          id="sortTopStocksManualRank"></span>
                                 </th>
@@ -1151,7 +1155,7 @@
     </div>
 </div>
 
-<!-- --- 新增：一键卖出设置模态框 --- -->
+<!-- --- 新增：一键等比卖出 设置模态框 --- -->
 <div class="modal fade" id="sellSettingsModal" tabindex="-1" aria-labelledby="sellSettingsModalLabel"
      aria-hidden="true">
     <div class="modal-dialog">
@@ -1194,9 +1198,9 @@
         </div>
     </div>
 </div>
-<!-- --- 结束：一键卖出设置模态框 --- -->
+<!-- --- 结束：一键等比卖出 设置模态框 --- -->
 
-<!-- --- 新增：一键取款模态框 --- -->
+<!-- --- 新增：一键取款 模态框 --- -->
 <div class="modal fade" id="quickLowerFinancingModal" tabindex="-1" aria-labelledby="quickLowerFinancingModalLabel"
      aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1237,6 +1241,63 @@
         </div>
     </div>
 </div>
+<!-- --- 结束：一键取款 模态框 --- -->
+
+<!-- - 新增：一键等比买入 设置模态框 - -->
+<div class="modal fade" id="buyNewPositionSettingsModal" tabindex="-1"
+     aria-labelledby="buyNewPositionSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="buyNewPositionSettingsModalLabel">一键等比买入（调仓换股）</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="modalBuyPosPctInput" class="form-label">买入总仓位比例 (%):</label>
+                    <input type="number" class="form-control" id="modalBuyPosPctInput" value="100" min="0" max="100"
+                           step="1" required>
+                    <div class="form-text">请输入 0 到 100 之间的数值 (例如: 100 表示满仓买入选中股票)</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">价格策略:</label>
+                    <div class="price-strategy-option">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modalBuyPriceStrategy"
+                                   id="modalStrategyBuyCurrPrice" value="currPricePct" checked>
+                            <label class="form-check-label" for="modalStrategyBuyCurrPrice">按当前价格涨跌幅%</label>
+                        </div>
+                        <div class="input-group mt-1">
+                            <input type="number" class="form-control" id="modalBuyCurrPricePctInput" value="0" min="-30"
+                                   max="30" step="0.1" placeholder="例如: -1.0 表示挂单价格为当前价的 99%">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="price-strategy-option mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modalBuyPriceStrategy"
+                                   id="modalStrategyBuyChangePrice" value="changePricePct">
+                            <label class="form-check-label"
+                                   for="modalStrategyBuyChangePrice">按昨日收盘价涨跌幅%</label>
+                        </div>
+                        <div class="input-group mt-1">
+                            <input type="number" class="form-control" id="modalBuyChangePricePctInput" value="0"
+                                   min="-30" max="30" step="0.1" placeholder="例如: -1.0 表示挂单价格为昨收价的 99%">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmBuyNewPositionSettingsBtn">确认买入</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- - 结束：一键等比买入 设置模态框 - -->
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // 存储排序状态 (持仓)
@@ -1449,16 +1510,16 @@
             // Optional: Add individual change listener if needed for other features
         });
         // Modified: Listen to the new header checkbox for positions
-        const selectAllCheckboxHeader = document.getElementById('selectAllCheckboxHeader');
-        if (selectAllCheckboxHeader) {
-            selectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
-            selectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
+        const positionSelectAllCheckboxHeader = document.getElementById('positionSelectAllCheckboxHeader');
+        if (positionSelectAllCheckboxHeader) {
+            positionSelectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
+            positionSelectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
         }
     }
 
     // Handle "Select All" checkbox change (Positions) - Modified to use the new header checkbox
     function handleSelectAllChange() {
-        // 'this' now refers to the #selectAllCheckboxHeader
+        // 'this' now refers to the #positionSelectAllCheckboxHeader
         const isChecked = this.checked;
         const checkboxes = document.querySelectorAll('.sell-checkbox');
         checkboxes.forEach(checkbox => {
@@ -2791,7 +2852,7 @@
 
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td colspan="9" class="text-center avg-label">【指数】平均值</td>
             <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.start2Today_changePct.toFixed(2)}%
             </td>
@@ -2871,7 +2932,10 @@
             sortedStocks.forEach((stock) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
+                // 添加 data-stockcode 属性
+                tr.setAttribute('data-stockcode', stock.stockCode);
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="top-stocks-manual-checkbox" data-stockcode="${stock.stockCode}"></td>
                     <td>${stock.rank}</td>
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
                     <td>${stock.stockName}</td>
@@ -2896,6 +2960,9 @@
                 tbody.appendChild(tr);
             });
             document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（${sortedStocks.length}）`;
+
+            // 为新渲染的复选框添加事件监听器
+            attachTopStocksManualCheckboxListeners();
         }
     }
 
@@ -3050,6 +3117,219 @@
                 refreshBtn.textContent = originalText;
                 refreshBtn.disabled = false;
             });
+    }
+
+
+    // --- 新增：主线个股（人选）勾选相关逻辑 ---
+
+
+    // 主线个股（人选）  ->   复选框 事件监听
+    function attachTopStocksManualCheckboxListeners() {
+        const checkboxes = document.querySelectorAll('.top-stocks-manual-checkbox');
+        const selectAllCheckbox = document.getElementById('topStocksManualSelectAllCheckboxHeader');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateTopStocksManualSelectAllState);
+        });
+
+        // 全选/取消全选事件
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const checkboxes = document.querySelectorAll('.top-stocks-manual-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                // 更新半选状态图标
+                updateTopStocksManualSelectAllState();
+            });
+        }
+    }
+
+    // 主线个股（人选）  ->   全选/取消全选
+    function updateTopStocksManualSelectAllState() {
+        const checkboxes = document.querySelectorAll('.top-stocks-manual-checkbox');
+        const selectAllCheckbox = document.getElementById('topStocksManualSelectAllCheckboxHeader');
+        if (!selectAllCheckbox) return; // 防止找不到元素报错
+
+        const checkedBoxes = document.querySelectorAll('.top-stocks-manual-checkbox:checked');
+        const totalBoxes = checkboxes.length;
+
+        if (totalBoxes === 0) {
+            // 如果没有可选项，全选框应为未选中且非半选
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === totalBoxes) {
+            // 全部选中
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length > 0) {
+            // 部分选中
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            // 全部未选中
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+
+
+    // 1. 主按钮点击事件：打开模态框
+    function handleBuyNewPosition() {
+        const selectedCheckboxes = document.querySelectorAll('.top-stocks-manual-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一只股票进行买入！');
+            return;
+        }
+        // 重置模态框内的输入
+        document.getElementById('modalBuyPosPctInput').value = '100';
+        document.getElementById('modalBuyCurrPricePctInput').value = '0';
+        document.getElementById('modalBuyChangePricePctInput').value = '0';
+        // 默认选择当前价格策略
+        document.getElementById('modalStrategyBuyCurrPrice').checked = true;
+        document.getElementById('modalBuyChangePricePctInput').disabled = true; // 禁用另一个输入框
+        document.getElementById('modalBuyCurrPricePctInput').disabled = false; // 启用当前输入框
+
+        // 显示模态框
+        const modal = new bootstrap.Modal(document.getElementById('buyNewPositionSettingsModal'));
+        modal.show();
+    }
+
+    // 2. 价格策略单选按钮互斥事件
+    function setupBuyPriceStrategyToggle() {
+        const currPriceRadio = document.getElementById('modalStrategyBuyCurrPrice');
+        const changePriceRadio = document.getElementById('modalStrategyBuyChangePrice');
+        const currPriceInput = document.getElementById('modalBuyCurrPricePctInput');
+        const changePriceInput = document.getElementById('modalBuyChangePricePctInput');
+
+        if (currPriceRadio && changePriceRadio && currPriceInput && changePriceInput) {
+            function handleRadioChange() {
+                if (currPriceRadio.checked) {
+                    currPriceInput.disabled = false;
+                    changePriceInput.disabled = true;
+                } else if (changePriceRadio.checked) {
+                    currPriceInput.disabled = true;
+                    changePriceInput.disabled = false;
+                }
+            }
+
+            currPriceRadio.addEventListener('change', handleRadioChange);
+            changePriceRadio.addEventListener('change', handleRadioChange);
+
+            // 初始化状态
+            handleRadioChange();
+        }
+    }
+
+    // 3. 确认按钮点击事件：执行买入操作
+    function executeBuyNewPosition() {
+        const selectedCheckboxes = document.querySelectorAll('.top-stocks-manual-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一只股票进行买入！');
+            return;
+        }
+
+        const buyStockCodes = [];
+        selectedCheckboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            if (row) {
+                const stockCode = row.getAttribute('data-stockcode'); // 假设行上存储了股票代码
+                if (stockCode) {
+                    buyStockCodes.push(stockCode);
+                }
+            }
+        });
+
+        if (buyStockCodes.length === 0) {
+            alert('未能获取到选中股票的代码，请重试！');
+            return;
+        }
+
+        // - 读取模态框设置 -
+        const buyPosPctInput = document.getElementById('modalBuyPosPctInput');
+        let buyPosPct = parseFloat(buyPosPctInput.value);
+        if (isNaN(buyPosPct) || buyPosPct < 0 || buyPosPct > 100) {
+            alert('请输入有效的 买入总仓位比例 (0-100%)');
+            buyPosPctInput.focus();
+            return;
+        }
+
+        let currPricePct = 0;
+        let changePricePct = 0;
+        const selectedStrategy = document.querySelector('input[name="modalBuyPriceStrategy"]:checked').value;
+
+        if (selectedStrategy === 'currPricePct') {
+            const currPricePctInput = document.getElementById('modalBuyCurrPricePctInput');
+            currPricePct = parseFloat(currPricePctInput.value);
+            if (isNaN(currPricePct) || currPricePct < -30 || currPricePct > 30) {
+                alert('请输入有效的当前价格涨跌幅比例 (-30% 到 30%)');
+                currPricePctInput.focus();
+                return;
+            }
+        } else if (selectedStrategy === 'changePricePct') {
+            const changePricePctInput = document.getElementById('modalBuyChangePricePctInput');
+            changePricePct = parseFloat(changePricePctInput.value);
+            if (isNaN(changePricePct) || changePricePct < -30 || changePricePct > 30) {
+                alert('请输入有效的昨日收盘价涨跌幅比例 (-30% 到 30%)');
+                changePricePctInput.focus();
+                return;
+            }
+        }
+        // - 结束读取模态框设置 -
+
+        // - 更新确认消息 -
+        let confirmMsg = `您确定要买入以下【${buyStockCodes.length}】只股票吗？`;
+        confirmMsg += `\n买入总仓位比例: ${buyPosPct}%`;
+        if (selectedStrategy === 'currPricePct' && currPricePct !== 0) {
+            confirmMsg += `\n价格策略: 当前价格【${currPricePct > 0 ? '+' : ''}${currPricePct}%】`;
+        } else if (selectedStrategy === 'changePricePct' && changePricePct !== 0) {
+            confirmMsg += `\n价格策略: 昨日收盘价【${changePricePct > 0 ? '+' : ''}${changePricePct}%】`;
+        }
+        confirmMsg += `\n\n股票代码: ${buyStockCodes.join(', ')}`;
+        // - 结束更新确认消息 -
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        const buyStockCodeList = buyStockCodes.join(',');
+        const originalBtnText = document.getElementById('confirmBuyNewPositionSettingsBtn').textContent;
+        document.getElementById('confirmBuyNewPositionSettingsBtn').textContent = '处理中...';
+        document.getElementById('confirmBuyNewPositionSettingsBtn').disabled = true;
+
+        ApiUtils.fetch(`/api/trade/quick/eqRatio/keepExistBuyNew?buyStockCodeList=${buyStockCodeList}&buyPosPct=${buyPosPct}&currPricePct=${currPricePct}&changePricePct=${changePricePct}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(res => {
+            return res.ok ? res.json() : res.json().then(errData => {
+                throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+            });
+        }).then(data => {
+            if (data && data.success) {
+                alert(`【一键等比买入（调仓换股）】操作成功！`);
+                // 可选：刷新持仓或主线个股数据
+                queryPositions(); // 如果需要 刷新持仓
+                loadTopStocksManual(); // 如果需要 刷新主线个股（人选）
+            } else {
+                const errorMsg = data.msg || '操作失败，未知错误。';
+                alert(`【一键等比买入（调仓换股）】失败：${errorMsg}`);
+                console.error('Buy New Position API Error:', data);
+            }
+        }).catch(error => {
+            console.error('【一键等比买入（调仓换股）】请求失败:', error);
+            alert(`【一键等比买入（调仓换股）】请求失败：${error.message || error}`);
+        }).finally(() => {
+            document.getElementById('confirmBuyNewPositionSettingsBtn').textContent = originalBtnText;
+            document.getElementById('confirmBuyNewPositionSettingsBtn').disabled = false;
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('buyNewPositionSettingsModal'));
+            if (modal) {
+                modal.hide();
+            }
+        });
     }
 
 
@@ -3429,9 +3709,21 @@
         // --- 结束：主线板块/个股标签页首次显示加载数据 ---
 
 
+        // --- 一键等比买入 ---
+
+        // 为模态框内的确认按钮添加事件 (买入)
+        document.getElementById('confirmBuyNewPositionSettingsBtn').addEventListener('click', executeBuyNewPosition);
+        // 为模态框内的价格策略单选按钮添加事件 (买入)
+        setupBuyPriceStrategyToggle();
+        // 为买入按钮添加事件
+        document.getElementById('buyNewPositionButton').addEventListener('click', handleBuyNewPosition);
+
+        // --- 结束：一键等比买入 ---
+
+
         // --- 持仓表格全选优化 ---
         // Modified: Use the new header checkbox for positions
-        const positionsSelectAllCheckboxHeader = document.getElementById('selectAllCheckboxHeader');
+        const positionsSelectAllCheckboxHeader = document.getElementById('positionSelectAllCheckboxHeader');
         // Select the header cell containing the new checkbox for positions
         const positionsCheckboxHeaderCell = document.querySelector('#positionTable thead th:first-child');
         if (positionsCheckboxHeaderCell && positionsSelectAllCheckboxHeader) {
@@ -3445,6 +3737,8 @@
                 }
             });
         }
+
+
         // --- 当日委托表格全选优化 ---
         // Modified: Use the new header checkbox for orders
         const ordersSelectAllCheckboxHeader = document.getElementById('ordersSelectAllCheckboxHeader');
@@ -3461,6 +3755,7 @@
                 }
             });
         }
+
         // --- 当日委托相关元素和事件 ---
         const ordersTab = document.getElementById('orders-tab');
         const filterStatus = document.getElementById('filterStatus');
