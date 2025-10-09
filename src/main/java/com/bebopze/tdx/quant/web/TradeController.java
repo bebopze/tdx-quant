@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
-import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
@@ -92,7 +91,7 @@ public class TradeController {
 
 
     @Operation(summary = "一键清仓", description = "一键清仓")
-    @GetMapping(value = "/quickOption/clearPosition")
+    @GetMapping(value = "/quick/clearPosition")
     public Result<Void> quickClearPosition() {
         tradeService.quickClearPosition();
         return Result.SUC();
@@ -100,7 +99,7 @@ public class TradeController {
 
 
     @Operation(summary = "一键 等比卖出 - 支持勾选", description = "一键 等比卖出 - 支持勾选")
-    @GetMapping(value = "/quickOption/sellPosition")
+    @GetMapping(value = "/quick/sellPosition")
     public Result<Void> quickSellPosition(@Schema(description = "卖出 个股code列表（逗号分隔）", example = "1,2,3")
                                           @RequestParam String sellStockCodeList,
 
@@ -113,9 +112,10 @@ public class TradeController {
                                           @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
                                           @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
-        Set<String> _sellStockCodeList = Arrays.stream(sellStockCodeList.split(",")).collect(Collectors.toSet());
 
-        tradeService.quickSellPosition(_sellStockCodeList, sellPosPct, currPricePct, changePricePct);
+        Set<String> sellStockCodeSet = Arrays.stream(sellStockCodeList.split(",")).collect(Collectors.toSet());
+
+        tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, changePricePct);
         return Result.SUC();
     }
 
@@ -123,18 +123,81 @@ public class TradeController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Deprecated
     @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）  =>   清仓（old） ->  买入（new）")
-    @PostMapping(value = "/quickOption/buyNewPosition")
-    public Result<Void> quickBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
-        tradeService.quickClearAndBuyNewPosition(newPositionList);
+    @GetMapping(value = "/quick/buyNewPosition")
+    public Result<Void> quickBuyNewPosition(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+                                            @RequestParam String buyStockCodeList) {
+
+
+        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+
+        // tradeService.quickClearAndBuyNewPosition(buyStockCodeSet);
         return Result.SUC();
     }
 
-    @Operation(summary = "一键 等比买入（调仓换股）", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
-    @PostMapping(value = "/quickOption/equalRatio/buyNewPosition")
-    public Result<Void> avgBuyNewPosition(@RequestBody List<QuickBuyPositionParam> newPositionList) {
-        tradeService.quickClearAndAvgBuyNewPosition(newPositionList);
+    @Operation(summary = "一键 等比买入（调仓换股）- 支持勾选", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
+    @GetMapping(value = "/quick/eqRatio/buyNewPosition")
+    public Result<Void> avgBuyNewPosition(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+                                          @RequestParam String buyStockCodeList,
+
+                                          @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+                                          @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+
+                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+
+                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+
+
+        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+
+        tradeService.quickClearAndAvgBuyNewPosition(buyStockCodeSet);
         return Result.SUC();
+    }
+
+
+    @Operation(summary = "一键 等比买入（调仓换股）-> 降低手续费", description = "一键 等比买入（调仓换股）  =>   清仓（不存在） +  保留/减仓（已存在） ->  买入（new）")
+    @GetMapping(value = "/quick/eqRatio/keepExistBuyNew")
+    public Result<Void> keepExistBuyNew(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+                                        @RequestParam String buyStockCodeList,
+
+                                        @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+                                        @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+
+                                        @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+                                        @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+
+                                        @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+                                        @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+
+
+        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+
+        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, currPricePct, changePricePct);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "成本估算", description = "成本估算")
+    @GetMapping(value = "/quick/eqRatio/buyCost")
+    public Result<Object> buyCost(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+                                  @RequestParam String buyStockCodeList,
+
+                                  @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+                                  @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+
+                                  @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+                                  @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+
+                                  @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+                                  @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+
+
+        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+
+        return Result.SUC(tradeService.buyCost(buyStockCodeSet, buyPosPct, currPricePct, changePricePct));
     }
 
 
@@ -142,21 +205,21 @@ public class TradeController {
 
 
     @Operation(summary = "账户总仓位（以此刻 融+担=净x2 为100%基准）  ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）")
-    @GetMapping(value = "/quickOption/totalAccount/equalRatio/sellPosition")
-    public Result<Void> totalAccount__equalRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
-                                                             @RequestParam(defaultValue = "1") double newPositionRate) {
+    @GetMapping(value = "/quick/totalAccount/eqRatio/sellPosition")
+    public Result<Void> totalAccount__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+                                                          @RequestParam(defaultValue = "1") double newPositionRate) {
 
-        tradeService.totalAccount__equalRatioSellPosition(newPositionRate);
+        tradeService.totalAccount__eqRatioSellPosition(newPositionRate);
         return Result.SUC();
     }
 
 
     @Operation(summary = "当前持仓   ->   一键 等比减仓（等比卖出）", description = "将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位")
-    @GetMapping(value = "/quickOption/currPosition/equalRatio/sellPosition")
-    public Result<Void> currPosition__equalRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
-                                                             @RequestParam(defaultValue = "1") double newPositionRate) {
+    @GetMapping(value = "/quick/currPos/eqRatio/sellPosition")
+    public Result<Void> currPos__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+                                                     @RequestParam(defaultValue = "1") double newPositionRate) {
 
-        tradeService.currPosition__equalRatioSellPosition(newPositionRate);
+        tradeService.currPos__eqRatioSellPosition(newPositionRate);
         return Result.SUC();
     }
 
@@ -165,7 +228,7 @@ public class TradeController {
 
 
     @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单")
-    @GetMapping(value = "/quickOption/cancelOrder")
+    @GetMapping(value = "/quick/cancelOrder")
     public Result<Void> quickCancelOrder() {
         tradeService.quickCancelOrder();
         return Result.SUC();
@@ -176,7 +239,7 @@ public class TradeController {
 
 
     @Operation(summary = "一键再融资", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金")
-    @GetMapping(value = "/quickOption/resetFinancing")
+    @GetMapping(value = "/quick/resetFinancing")
     public Result<Void> quickResetFinancing() {
         tradeService.quickResetFinancing();
         return Result.SUC();
@@ -188,7 +251,7 @@ public class TradeController {
                     "等比减仓（只涉及到 SELL   ->   无2次重复买入     =>     减免2次BS的 交易费）")
     // @Operation(summary = "已替换成 一键 等比减仓（减免 再融资 -> 手续费）  // 一键取款（担保比例 >= 300%     ->     隔日 可取款）",
     //        description = "控制担保比例 -> 计算 最大融资额   =>   一键清仓  ->  limit_融资 再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
-    @GetMapping(value = "/quickOption/lowerFinancing")
+    @GetMapping(value = "/quick/lowerFinancing")
     public Result<Void> quickLowerFinancing(@Schema(description = "取款金额（T+1 隔日7点可取）", example = "50000")
                                             @RequestParam double transferAmount) {
 
@@ -203,7 +266,7 @@ public class TradeController {
 
 
     @Operation(summary = "ETF快捷下单   ->   按照 指定价格区间", description = "ETF快捷下单   ->   按照 指定价格区间，逐档 梯次等比下单")
-    @GetMapping(value = "/quickOption/quickETF")
+    @GetMapping(value = "/quick/quickETF")
     public Result<Void> quickETF(@Schema(description = "证券代码", example = "588000")
                                  @RequestParam String stockCode,
 

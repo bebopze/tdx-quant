@@ -39,4 +39,16 @@ public class TradeBSParam implements Serializable {
 
     @Schema(description = "交易类型：1-融资买入；2-担保买入；3-卖出", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer tradeType;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 非必须（可根据 stockCode  ->  自动转换）
+     */
+    @Schema(description = "市场（HA：沪A / SA：深A / B：北交所）", example = "HA", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private String market;
+
+
 }

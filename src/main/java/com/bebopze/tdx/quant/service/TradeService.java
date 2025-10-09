@@ -112,8 +112,6 @@ public interface TradeService {
     void quickBuyPosition(List<QuickBuyPositionParam> newPositionList);
 
 
-    // --------------------------------------------
-
     /**
      * 一键买入（调仓换股）    =>     清仓（old） ->  买入（new）
      *
@@ -121,12 +119,41 @@ public interface TradeService {
      */
     void quickClearAndBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 一键 等比买入（调仓换股）    =>     清仓（old） ->  买入（new）
      *
-     * @param newPositionList
+     * @param buyStockCodeSet
      */
-    void quickClearAndAvgBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+    void quickClearAndAvgBuyNewPosition(Set<String> buyStockCodeSet);
+
+
+    /**
+     * 一键 等比买入（调仓换股）    =>     降低手续费（保留exist  ->  买入new）
+     *
+     * @param buyStockCodeSet
+     * @param buyPosPct
+     * @param currPricePct
+     * @param changePricePct
+     */
+    void keepExistBuyNew(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double changePricePct);
+
+
+    /**
+     * 成本估算
+     *
+     * @param buyStockCodeSet
+     * @param buyPosPct
+     * @param currPricePct
+     * @param changePricePct
+     */
+    Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double changePricePct);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -134,14 +161,14 @@ public interface TradeService {
      *
      * @param newPositionRate 新仓位
      */
-    void totalAccount__equalRatioSellPosition(double newPositionRate);
+    void totalAccount__eqRatioSellPosition(double newPositionRate);
 
     /**
      * 当前持仓（以 此刻持仓市值 为100%基准）   =>   一键 等比减仓（等比卖出）
      *
      * @param newPositionRate 新仓位
      */
-    void currPosition__equalRatioSellPosition(double newPositionRate);
+    void currPos__eqRatioSellPosition(double newPositionRate);
 
 
     /**
