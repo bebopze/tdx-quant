@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,10 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 /**
@@ -64,6 +64,18 @@ public class TradeController {
     @GetMapping(value = "/getOrdersData")
     public Result<List<GetOrdersDataResp>> getOrdersData() {
         return Result.SUC(tradeService.getOrdersData());
+    }
+
+
+    @Operation(summary = "历史 委托单列表（含当日）", description = "历史 委托单列表（含当日）")
+    @GetMapping(value = "/queryCreditHisOrderV2")
+    public Result<List<GetOrdersDataResp>> queryCreditHisOrderV2(@Schema(description = "查询 - 开始日期", example = "2025-10-01")
+                                                                 @RequestParam LocalDate startDate,
+
+                                                                 @Schema(description = "查询 - 结束日期", example = "2025-10-31")
+                                                                 @RequestParam LocalDate endDate) {
+
+        return Result.SUC(tradeService.queryCreditHisOrderV2(startDate, endDate));
     }
 
 
@@ -113,7 +125,7 @@ public class TradeController {
                                           @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
 
-        Set<String> sellStockCodeSet = Arrays.stream(sellStockCodeList.split(",")).collect(Collectors.toSet());
+        Set<String> sellStockCodeSet = ConvertUtil.str2Set(sellStockCodeList);
 
         tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, changePricePct);
         return Result.SUC();
@@ -130,7 +142,7 @@ public class TradeController {
                                             @RequestParam String buyStockCodeList) {
 
 
-        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
         // tradeService.quickClearAndBuyNewPosition(buyStockCodeSet);
         return Result.SUC();
@@ -151,7 +163,7 @@ public class TradeController {
                                           @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
 
-        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
         tradeService.quickClearAndAvgBuyNewPosition(buyStockCodeSet);
         return Result.SUC();
@@ -173,7 +185,7 @@ public class TradeController {
                                         @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
 
-        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
         tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, currPricePct, changePricePct);
         return Result.SUC();
@@ -195,7 +207,7 @@ public class TradeController {
                                   @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
 
 
-        Set<String> buyStockCodeSet = Arrays.stream(buyStockCodeList.split(",")).collect(Collectors.toSet());
+        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
         return Result.SUC(tradeService.buyCost(buyStockCodeSet, buyPosPct, currPricePct, changePricePct));
     }

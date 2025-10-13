@@ -12,12 +12,10 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.req.QueryCreditHisOrderV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
-import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
-import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.*;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
@@ -181,10 +179,52 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     public List<GetOrdersDataResp> getOrdersData() {
-
         List<GetOrdersDataResp> respList = EastMoneyTradeAPI.getOrdersData();
         return respList;
     }
+
+
+    @Override
+    public List<GetOrdersDataResp> queryCreditHisOrderV2(LocalDate startDate, LocalDate endDate) {
+
+
+        // ---------------------------------- 当日委托单
+
+
+        List<GetOrdersDataResp> today__ordersDataList = Lists.newArrayList();
+        if (DateTimeUtil.between(LocalDate.now(), startDate, endDate)) {
+            today__ordersDataList = getOrdersData();
+        }
+
+
+        // ---------------------------------- 历史委托单
+
+
+        QueryCreditHisOrderV2Req req = new QueryCreditHisOrderV2Req();
+        req.setSt(startDate);
+        req.setEt(endDate);
+        req.setQqhs(500);
+
+
+        List<GetOrdersDataResp> respList = EastMoneyTradeAPI.queryCreditHisOrderV2(req);
+
+
+        // ---------------------------------- 历史 + 当日
+
+
+        if (CollectionUtils.isNotEmpty(today__ordersDataList)) {
+            respList.addAll(today__ordersDataList);
+
+            respList = respList.stream()
+                               .sorted(Comparator.comparing(GetOrdersDataResp::getWtrq).reversed())
+                               .sorted(Comparator.comparing(GetOrdersDataResp::getWtsj).reversed())
+                               .collect(Collectors.toList());
+        }
+
+
+        return respList;
+    }
+
 
     @Override
     public List<GetOrdersDataResp> getRevokeList() {

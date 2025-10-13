@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -56,6 +57,15 @@ public interface TradeService {
      * @return
      */
     List<GetOrdersDataResp> getOrdersData();
+
+    /**
+     * 历史委托单 列表
+     *
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    List<GetOrdersDataResp> queryCreditHisOrderV2(LocalDate startDate, LocalDate endDate);
 
     /**
      * 全部 可撤单列表
