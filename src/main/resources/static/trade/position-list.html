@@ -701,6 +701,10 @@
                             <label for="filterStatus">委托状态:</label>
                             <select id="filterStatus" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
+                                // 已成交 -> 已撤/已成/废单
+                                // 未成交 -> 未报/已报/部成
+                                <option value="未成交">未成交</option>
+                                <option value="已成交">已成交</option>
                                 <option value="未报">未报</option>
                                 <option value="已报">已报</option>
                                 <option value="已撤">已撤</option>
@@ -716,6 +720,14 @@
                                 <option value="证券买入">证券买入</option>
                                 <option value="证券卖出">证券卖出</option>
                             </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
+                            <label for="ordersStartDateInput" class="me-2">查询日期：</label>
+                            <input type="date" id="ordersStartDateInput" class="form-control form-control-sm me-2"
+                                   style="width: auto;">
+                            <label for="ordersEndDateInput" class="me-2"> ~ </label>
+                            <input type="date" id="ordersEndDateInput" class="form-control form-control-sm me-2"
+                                   style="width: auto;">
                         </div>
                         <button id="refreshOrdersButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
@@ -1342,12 +1354,21 @@
     let topStocksSortStateManual = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
 
 
+    // 使用 toLocaleDateString 获取本地日期字符串，并指定格式
+    // 'zh-CN' 是中国地区代码，'en-CA' 也能返回 YYYY-MM-DD 格式
+    // { timeZone: 'Asia/Shanghai' } 明确指定时区，更可靠
+    const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Shanghai'});
+
+    // 委托单
+    let ordersStartDate = today; // 默认为今天
+    let ordersEndDate = today;   // 默认为今天
+
     // - 新增：主线板块/个股当前日期 (机选) -
-    let topBlocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
-    let topStocksCurrentDate = new Date().toISOString().split('T')[0]; // 默认为今天
+    let topBlocksCurrentDate = today; // 默认为今天
+    let topStocksCurrentDate = today; // 默认为今天
     // - 新增：主线板块/个股当前日期 (人选) -
-    let topBlocksCurrentDateManual = new Date().toISOString().split('T')[0]; // 默认为今天
-    let topStocksCurrentDateManual = new Date().toISOString().split('T')[0]; // 默认为今天
+    let topBlocksCurrentDateManual = today; // 默认为今天
+    let topStocksCurrentDateManual = today; // 默认为今天
 
 
     // --- 原有持仓功能 ---
@@ -1999,35 +2020,6 @@
 
     // --- 结束：查询和保存持仓账户配置 ---
 
-    document.getElementById('queryButton').addEventListener('click', queryPositions);
-    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
-    // --- 新增：为模态框按钮添加事件监听器 ---
-    document.addEventListener('DOMContentLoaded', function () {
-        // 为模态框内的确认按钮添加事件
-        document.getElementById('confirmSellSettingsBtn').addEventListener('click', executeSellAll);
-        // 为模态框内的价格策略单选按钮添加事件
-        const modalStrategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
-        const modalStrategyChangePrice = document.getElementById('modalStrategyChangePrice');
-        if (modalStrategyCurrPrice && modalStrategyChangePrice) {
-            modalStrategyCurrPrice.addEventListener('change', updateModalInputStates);
-            modalStrategyChangePrice.addEventListener('change', updateModalInputStates);
-        }
-        // --- 其他原有事件监听器 ---
-        // 一键再融资按钮
-        document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
-        // 一键取款按钮
-        document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
-        // 确认一键取款按钮
-        document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
-
-        // --- 新增：持仓账户配置事件监听器 ---
-        document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
-        // 页面加载时查询配置
-        queryCfgAccount();
-        // --- 结束：持仓账户配置事件监听器 ---
-    });
-    // --- 结束：新增事件监听器 ---
-    window.addEventListener('load', queryPositions);
 
     // --- 新增：主线板块/个股功能 ---
     function loadTopBlocks(date = topBlocksCurrentDate) {
@@ -2049,7 +2041,7 @@
                     throw new Error(data.msg || '获取主线板块列表失败');
                 }
 
-                topBlockAvgPctData = data.data.topBlockAvgPctDTO;
+                topBlockAvgPctData = data.data.topBlockAvgPctDTO || {};
 
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
                 topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
@@ -2137,7 +2129,7 @@
                     throw new Error(data.msg || '获取主线个股列表失败');
                 }
 
-                topStockAvgPctData = data.data.topStockAvgPctDTO;
+                topStockAvgPctData = data.data.topStockAvgPctDTO || {};
 
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
                 topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
@@ -3002,7 +2994,16 @@
         const directionFilter = document.getElementById('filterDirection').value;
         let filteredOrders = orders;
         if (statusFilter) {
-            filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
+            // 未成交 -> 未报/已报/部成
+            if (statusFilter === '未成交') {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+            }
+            // 已成交 -> 已撤/已成/废单
+            else if (statusFilter === '已成交') {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '已撤' || order.wtzt === '已成' || order.wtzt === '废单');
+            } else {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
+            }
         }
         if (directionFilter) {
             filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
@@ -3086,7 +3087,42 @@
         const originalText = refreshBtn.textContent;
         refreshBtn.textContent = '加载中...';
         refreshBtn.disabled = true;
-        ApiUtils.fetch('/api/trade/getOrdersData')
+
+
+        // --- 新增：获取日期范围 ---
+        // 或者，你想默认加载今天的数据，可以设置默认值。
+        const ordersStartDateInput = document.getElementById('ordersStartDateInput');
+        const ordersEndDateInput = document.getElementById('ordersEndDateInput');
+
+        let ordersStartDate = ordersStartDateInput.value ? ordersStartDateInput.value : today; // 获取开始日期
+        let ordersEndDate = ordersEndDateInput.value ? ordersEndDateInput.value : today;       // 获取结束日期
+
+
+        // 验证日期（简单验证）
+        if (ordersStartDate && ordersEndDate && ordersStartDate > ordersEndDate) {
+            alert('开始日期不能晚于结束日期！');
+            refreshBtn.textContent = originalText;
+            refreshBtn.disabled = false;
+            return;
+        }
+
+        // // 如果没有提供日期，则默认查询今天的数据
+        // if (!ordersStartDate || !ordersEndDate) {
+        //     // const today = today; // 格式化为 YYYY-MM-DD
+        //     ordersStartDate = today;
+        //     ordersEndDate = today;
+        //     console.warn("未指定日期范围，默认查询今日数据。");
+        //
+        //     // 如果你想强制用户选择日期，可以取消注释下面的代码
+        //     // alert("请先选择开始日期和结束日期。");
+        //     // refreshBtn.textContent = originalText;
+        //     // refreshBtn.disabled = false;
+        //     // return;
+        // }
+
+
+        // ApiUtils.fetch('/api/trade/getOrdersData')
+        ApiUtils.fetch(`/api/trade/queryCreditHisOrderV2?startDate=${ordersStartDate}&endDate=${ordersEndDate}`)
             .then(res => {
                 return res.ok ? res.json() :
                     res.json().then(errData => {
@@ -3763,7 +3799,23 @@
         const refreshOrdersButton = document.getElementById('refreshOrdersButton');
         const batchCancelOrdersButton = document.getElementById('batchCancelOrdersButton');
         const quickCancelOrdersButton = document.getElementById('quickCancelOrdersButton');
-        // const ordersSelectAllCheckbox = document.getElementById('ordersSelectAllCheckbox'); // Removed
+
+
+        // - 新增：为日期范围输入框添加默认值和事件监听 -
+        const startDateInput = document.getElementById('ordersStartDateInput');
+        const endDateInput = document.getElementById('ordersEndDateInput');
+
+        if (startDateInput && endDateInput && refreshOrdersButton) {
+            // 设置默认日期为今日
+            startDateInput.value = ordersStartDate;
+            endDateInput.value = ordersEndDate;
+
+            // 日期改变时，重新加载数据
+            startDateInput.addEventListener('change', loadOrders);
+            endDateInput.addEventListener('change', loadOrders);
+        }
+
+
         if (ordersTab && filterStatus && filterDirection && refreshOrdersButton) {
             let hasLoadedOrders = false;
             ordersTab.addEventListener('shown.bs.tab', function (event) {
@@ -3783,9 +3835,7 @@
                 quickCancelOrdersButton.addEventListener('click', handleQuickCancelOrder);
             }
             // --- 现有代码：当日委托全选复选框事件 (Modified to use new header checkbox) ---
-            // if (ordersSelectAllCheckbox) { // Removed old listener
             if (ordersSelectAllCheckboxHeader) { // Use new header checkbox
-                // ordersSelectAllCheckbox.removeEventListener('change', handleOrdersSelectAllChange); // Remove old listener on new element
                 ordersSelectAllCheckboxHeader.removeEventListener('change', handleOrdersSelectAllChange); // Remove potential old listener on new element
                 ordersSelectAllCheckboxHeader.addEventListener('change', handleOrdersSelectAllChange); // Add listener to new header checkbox
                 // 为订单复选框添加监听，以便更新全选按钮状态
@@ -3807,14 +3857,17 @@
         } else {
             console.warn('未能找到当日委托相关的DOM元素');
         }
+
     });
     // --- 结束：当日委托功能 ---
 
+
     document.getElementById('queryButton').addEventListener('click', queryPositions);
     document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
-    // --- 新增：为模态框按钮添加事件监听器 ---
-    // --- 结束：新增事件监听器 ---
+
     window.addEventListener('load', queryPositions);
+
+
 </script>
 </body>
 </html>
