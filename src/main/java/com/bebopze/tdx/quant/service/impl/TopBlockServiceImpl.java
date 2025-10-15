@@ -1,14 +1,11 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.alibaba.druid.sql.visitor.functions.If;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
-import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
-import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
-import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
+import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
@@ -34,12 +31,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -104,41 +101,41 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void refreshAll() {
+    public void refreshAll(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- TopBlock - refreshAll     >>>     start");
 
 
-        bkyd2Task();
+        bkyd2Task(updateTypeEnum);
 
 
         // ---------------------------------------
 
 
         // 1- N日新高
-        nDayHighTask(100);
+        nDayHighTask(updateTypeEnum, 100);
 
         // 2- N日涨幅 - TOP榜
-        changePctTopTask(10);
+        changePctTopTask(updateTypeEnum, 10);
 
         // 3-均线极多头
-        extremeBullMAStackTask();
+        extremeBullMAStackTask(updateTypeEnum);
 
         // 4-均线大多头
-        bullMAStackTask();
+        bullMAStackTask(updateTypeEnum);
 
 
         // 11-RPS红
-        rpsRedTask(85);
+        rpsRedTask(updateTypeEnum, 85);
 
         // 12-大均线多头
-        longTermMABullStackTask();
+        longTermMABullStackTask(updateTypeEnum);
 
         // TODO   13-二阶段
         // stage2Task();
 
 
         // 11- 板块AMO-Top1
-        blockAmoTopTask();
+        blockAmoTopTask(updateTypeEnum);
 
 
         // GC
@@ -151,14 +148,14 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void nDayHighTask(int N) {
+    public void nDayHighTask(UpdateTypeEnum updateTypeEnum, int N) {
         log.info("-------------------------------- nDayHighTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
-        calcNDayHigh(N);
+        calcNDayHigh(updateTypeEnum, N);
 
 
         log.info("-------------------------------- nDayHighTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -166,16 +163,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void changePctTopTask(int N) {
+    public void changePctTopTask(UpdateTypeEnum updateTypeEnum, int N) {
         log.info("-------------------------------- changePctTopTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // N日涨幅 > 25%
-        calcChangePctTop(N, 25.0);
+        calcChangePctTop(updateTypeEnum, N, 25.0);
 
 
         log.info("-------------------------------- changePctTopTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -183,16 +180,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void rpsRedTask(double RPS) {
+    public void rpsRedTask(UpdateTypeEnum updateTypeEnum, double RPS) {
         log.info("-------------------------------- rpsRedTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // RPS红
-        calcRpsRed(RPS);
+        calcRpsRed(updateTypeEnum, RPS);
 
 
         log.info("-------------------------------- rpsRedTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -200,12 +197,12 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void stage2Task() {
+    public void stage2Task(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- stage2Task     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // TODO   二阶段
@@ -217,16 +214,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void longTermMABullStackTask() {
+    public void longTermMABullStackTask(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- longTermMABullStackTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // 大均线多头
-        calcLongTermMABullStack();
+        calcLongTermMABullStack(updateTypeEnum);
 
 
         log.info("-------------------------------- longTermMABullStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -234,16 +231,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void bullMAStackTask() {
+    public void bullMAStackTask(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- bullMAStackTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // 均线大多头
-        calcBullMAStack();
+        calcBullMAStack(updateTypeEnum);
 
 
         log.info("-------------------------------- bullMAStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -251,16 +248,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void extremeBullMAStackTask() {
+    public void extremeBullMAStackTask(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- extremeBullMAStackTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         // 均线极多头
-        calcExtremeBullMAStackTask();
+        calcExtremeBullMAStackTask(updateTypeEnum);
 
 
         log.info("-------------------------------- extremeBullMAStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -268,15 +265,15 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void blockAmoTopTask() {
+    public void blockAmoTopTask(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- blockAmoTopTask     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
         // 2min 6s     -     21.4s
-        calcBlockAmoTop();
+        calcBlockAmoTop(updateTypeEnum);
 
         // totalTime : 21.7s
         // calcBlockAmoTop2();
@@ -288,12 +285,12 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void bkyd2Task_v1() {
+    public void bkyd2Task_v1(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- bkyd2Task_v1     >>>     start");
         long start = System.currentTimeMillis();
 
 
-        initCache();
+        initCache(updateTypeEnum);
 
 
         calcBkyd2_v1();
@@ -308,19 +305,22 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     @TotalTime
     @Override
-    public void bkyd2Task() {
+    public void bkyd2Task(UpdateTypeEnum updateTypeEnum) {
 
-        initCache();
 
+        initCache(updateTypeEnum);
+
+
+        // dateIndexMap   +   saveOrUpdate     ->     自动跟随 initCache  ->  startDate、endDate （无需 updateTypeEnum）
         calc_bkyd2();
 
-        calcTopInfoTask();
+        calcTopInfoTask(updateTypeEnum);
 
-        calcTopETFTask();
+        calcTopETFTask(updateTypeEnum);
     }
 
 
-    private void calcTopETFTask() {
+    private void calcTopETFTask(UpdateTypeEnum updateTypeEnum) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -352,6 +352,21 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                           TopPoolAvgPctDTO topPoolAvgPctDTO = new TopPoolAvgPctDTO();
                           e.setEtfAvgPct(JSON.toJSONString(topPoolAvgPctDTO));
+
+
+                          // -------------------------------------------------------------------------------------------
+
+
+//                          // old != null     +     new -> null     +     INCR_UPDATE
+//                          if (StringUtils.isNotBlank(e.getTopEtfCodeSet()) && MapUtils.isEmpty(blockCode_topDate__Map)
+//                                  && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+//                              return;
+//                          }
+//
+//                          if (StringUtils.isNotBlank(e.getEtfAvgPct()) && MapUtils.isEmpty(stockCode_topDate__Map)
+//                                  && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+//                              return;
+//                          }
 
 
                           // -------------------------------------------------------------------------------------------
@@ -931,7 +946,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     /**
      * 计算 上榜日期、涨幅       ->       首次上榜日期（往前倒推）、跌出榜单日期  、 上榜涨幅
      */
-    private void calcTopInfoTask() {
+    private void calcTopInfoTask(UpdateTypeEnum updateTypeEnum) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -944,6 +959,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // -------------------------------------------------------------------------------------------------------------
+
 
         // 涨跌幅 计算
         Map<LocalDate, Map<String, TopChangePctDTO>> date__blockCode_topDate__Map = calcTopInfoTask(data.blockDOList, topSortListAll);
@@ -966,6 +982,24 @@ public class TopBlockServiceImpl implements TopBlockService {
             // code - 主线 板块/个股
             Map<String, TopChangePctDTO> blockCode_topDate__Map = date__blockCode_topDate__Map.getOrDefault(date, Maps.newHashMap());
             Map<String, TopChangePctDTO> stockCode_topDate__Map = date__stockCode_topDate__Map.getOrDefault(date, Maps.newHashMap());
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // old != null     +     new -> null     +     INCR_UPDATE
+            if (StringUtils.isNotBlank(e.getTopBlockCodeSet()) && MapUtils.isEmpty(blockCode_topDate__Map)
+                    && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+                return;
+            }
+
+            if (StringUtils.isNotBlank(e.getTopStockCodeSet()) && MapUtils.isEmpty(stockCode_topDate__Map)
+                    && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+                return;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 主线板块、主线个股   列表
@@ -1624,7 +1658,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     public List<TopBlock2DTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N) {
 
 
-        initCache();
+        initCache(UpdateTypeEnum.ALL);
 
 
         // -----------------------------------------
@@ -1758,8 +1792,12 @@ public class TopBlockServiceImpl implements TopBlockService {
 // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void initCache() {
-        data = initDataService.initData();
+    private void initCache(UpdateTypeEnum updateTypeEnum) {
+        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+            initDataService.incrUpdateInitData();
+        } else {
+            data = initDataService.initData();
+        }
     }
 
 
@@ -1963,19 +2001,19 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// ...
+    // ...
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcNDayHigh(int N) {
+    private void calcNDayHigh(UpdateTypeEnum updateTypeEnum, int N) {
 
 
         // --------------------------------------------------- 日期 - 百日新高（个股code 列表）
@@ -2023,13 +2061,27 @@ public class TopBlockServiceImpl implements TopBlockService {
         });
 
 
+//        // --------------------------------------------------- 按 板块 分类
+//
+//
+//        Integer blockNewId = BlockNewIdEnum.百日新高.getBlockNewId();
+//
+//
+//        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__highMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+
+
         // --------------------------------------------------- 按 板块 分类
 
 
         Integer blockNewId = BlockNewIdEnum.百日新高.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__highMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__highMap);
@@ -2037,10 +2089,10 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcChangePctTop(int N, double limitChangePct) {
+    private void calcChangePctTop(UpdateTypeEnum updateTypeEnum, int N, double limitChangePct) {
 
 
         // --------------------------------------------------- 日期 - N日涨幅榜（个股code 列表）
@@ -2091,9 +2143,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.涨幅榜.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
@@ -2101,10 +2154,10 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcRpsRed(double RPS) {
+    private void calcRpsRed(UpdateTypeEnum updateTypeEnum, double RPS) {
 
 
         // --------------------------------------------------- 日期 - RPS红（个股code 列表）
@@ -2152,9 +2205,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.RPS红.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
@@ -2162,7 +2216,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     private void calcStage2() {
@@ -2227,7 +2281,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcLongTermMABullStack() {
+    private void calcLongTermMABullStack(UpdateTypeEnum updateTypeEnum) {
 
 
         // --------------------------------------------------- 日期 - 大均线多头（个股code 列表）
@@ -2275,9 +2329,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.大均线多头.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
@@ -2285,10 +2340,10 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcBullMAStack() {
+    private void calcBullMAStack(UpdateTypeEnum updateTypeEnum) {
 
 
         // --------------------------------------------------- 日期 - 均线大多头（个股code 列表）
@@ -2336,9 +2391,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.均线大多头.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
@@ -2346,10 +2402,10 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcExtremeBullMAStackTask() {
+    private void calcExtremeBullMAStackTask(UpdateTypeEnum updateTypeEnum) {
 
 
         // --------------------------------------------------- 日期 - 均线极多头（个股code 列表）
@@ -2397,9 +2453,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         Integer blockNewId = BlockNewIdEnum.均线极多头.getBlockNewId();
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        delOld(blockNewId, dateSet, updateTypeEnum);
 
 
         Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
@@ -2407,10 +2464,10 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void calcBlockAmoTop() {
+    private void calcBlockAmoTop(UpdateTypeEnum updateTypeEnum) {
         AtomicInteger x = new AtomicInteger(0);
 
 
@@ -2422,7 +2479,6 @@ public class TopBlockServiceImpl implements TopBlockService {
         ParallelCalcUtil.chunkForEachWithProgress(data.dateList, 200, chunk -> {
 
 
-            // data.dateList.forEach(date -> {
             chunk.forEach(date -> {
 
 
@@ -2488,7 +2544,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         Integer blockNewId = BlockNewIdEnum.板块AMO_TOP1.getBlockNewId();
 
 
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+//        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
 
 
         Map<LocalDate, QaBlockNewRelaStockHisDO> date_entity_map = Maps.newConcurrentMap();
@@ -2531,12 +2587,19 @@ public class TopBlockServiceImpl implements TopBlockService {
                 });
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // del old
+        delOld(blockNewId, date_entity_map.keySet(), updateTypeEnum);
+
+
         // dateSort  ->  save
         qaBlockNewRelaStockHisService.saveBatch(new TreeMap<>(date_entity_map).values());
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     private void calcBkyd2_v1() {
@@ -2701,8 +2764,18 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
+
+    private void delOld(Integer blockNewId, Set<LocalDate> dateSet, UpdateTypeEnum updateTypeEnum) {
+        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+            qaBlockNewRelaStockHisService.deleteByDateSet(blockNewId, dateSet);
+        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+            qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
+        } else {
+            throw new BizException("updateTypeEnum 异常：" + updateTypeEnum);
+        }
+    }
 
     /**
      * 按 板块 分类统计

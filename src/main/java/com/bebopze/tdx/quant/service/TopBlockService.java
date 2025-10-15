@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 
@@ -21,7 +22,7 @@ public interface TopBlockService {
     /**
      * refreshAll
      */
-    void refreshAll();
+    void refreshAll(UpdateTypeEnum updateTypeEnum);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -32,49 +33,49 @@ public interface TopBlockService {
      *
      * @param N
      */
-    void nDayHighTask(int N);
+    void nDayHighTask(UpdateTypeEnum updateTypeEnum, int N);
 
     /**
      * 2-涨幅榜（N日涨幅>25%）
      *
      * @param N
      */
-    void changePctTopTask(int N);
+    void changePctTopTask(UpdateTypeEnum updateTypeEnum, int N);
 
     /**
      * 3-RPS红（一线95/双线90/三线85）
      *
      * @param RPS
      */
-    void rpsRedTask(double RPS);
+    void rpsRedTask(UpdateTypeEnum updateTypeEnum, double RPS);
 
     /**
      * 4-二阶段
      */
-    void stage2Task();
+    void stage2Task(UpdateTypeEnum updateTypeEnum);
 
     /**
      * 5-大均线多头
      */
-    void longTermMABullStackTask();
+    void longTermMABullStackTask(UpdateTypeEnum updateTypeEnum);
 
     /**
      * 6-均线大多头
      */
-    void bullMAStackTask();
+    void bullMAStackTask(UpdateTypeEnum updateTypeEnum);
 
     /**
      * 7-均线极多头
      */
-    void extremeBullMAStackTask();
+    void extremeBullMAStackTask(UpdateTypeEnum updateTypeEnum);
 
     /**
      * 11-板块AMO - TOP1
      */
-    void blockAmoTopTask();
+    void blockAmoTopTask(UpdateTypeEnum updateTypeEnum);
 
 
-    void bkyd2Task_v1();
+    void bkyd2Task_v1(UpdateTypeEnum updateTypeEnum);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ public interface TopBlockService {
     /**
      * 主线板块（板块-月多2）
      */
-    void bkyd2Task();
+    void bkyd2Task(UpdateTypeEnum updateTypeEnum);
 
 
     /**

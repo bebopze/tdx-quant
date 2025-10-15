@@ -33,4 +33,14 @@ public class TopPoolAvgPctDTO {
     private double start2Next10_changePct;
     private double start2Next15_changePct;
     private double start2Next20_changePct;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 类型：1-机选；2-人选；
+     */
+    private int type = 1;
+
 }
