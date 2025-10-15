@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
+import com.google.common.collect.Sets;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +61,13 @@ public class QaTopBlockDO implements Serializable {
     private String topBlockCodeSet;
 
     /**
+     * 主线ETF（板块-月多2：月多 + RPS红 + SSF多）     [机选]
+     */
+    @TableField("top_etf_code_set")
+    @Schema(description = "主线ETF（板块-月多2：月多 + RPS红 + SSF多）     [机选]")
+    private String topEtfCodeSet;
+
+    /**
      * 主线个股（N100日新高 + 月多 + IN主线）     [机选]
      */
     @TableField("top_stock_code_set")
@@ -73,39 +82,18 @@ public class QaTopBlockDO implements Serializable {
     private String blockAvgPct;
 
     /**
+     * ETF池-平均涨跌幅（%）     [机选]
+     */
+    @TableField("etf_avg_pct")
+    @Schema(description = "ETF池-平均涨跌幅（%）     [机选]")
+    private String etfAvgPct;
+
+    /**
      * 股票池-平均涨跌幅（%）     [机选]
      */
     @TableField("stock_avg_pct")
     @Schema(description = "股票池-平均涨跌幅（%）     [机选]")
     private String stockAvgPct;
-
-    /**
-     * 主线板块     [人选]
-     */
-    @TableField("top_block_code_set_man")
-    @Schema(description = "主线板块     [人选]")
-    private String topBlockCodeSetMan;
-
-    /**
-     * 主线个股     [人选]
-     */
-    @TableField("top_stock_code_set_man")
-    @Schema(description = "主线个股     [人选]")
-    private String topStockCodeSetMan;
-
-    /**
-     * 板块池-平均涨跌幅（%）     [人选]
-     */
-    @TableField("block_avg_pct_man")
-    @Schema(description = "板块池-平均涨跌幅（%）     [人选]")
-    private String blockAvgPctMan;
-
-    /**
-     * 股票池-平均涨跌幅（%）     [人选]
-     */
-    @TableField("stock_avg_pct_man")
-    @Schema(description = "股票池-平均涨跌幅（%）     [人选]")
-    private String stockAvgPctMan;
 
     /**
      * 创建时间
@@ -126,64 +114,91 @@ public class QaTopBlockDO implements Serializable {
 
 
     public List<TopChangePctDTO> getTopBlockList(int type) {
-        String topBlockCodeSet_type = type == 1 ? topBlockCodeSet : topBlockCodeSetMan;
-        return JSON.parseArray(topBlockCodeSet_type, TopChangePctDTO.class);
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class)
+                   .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
+                   .collect(Collectors.toList());
+    }
+
+    public List<TopChangePctDTO> getTopEtfList(int type) {
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topEtfCodeSet, TopChangePctDTO.class)
+                   .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
+                   .collect(Collectors.toList());
     }
 
     public List<TopChangePctDTO> getTopStockList(int type) {
-        String topStockCodeSet_type = type == 1 ? topStockCodeSet : topStockCodeSetMan;
-        return JSON.parseArray(topStockCodeSet_type, TopChangePctDTO.class);
-    }
+        Set<Integer> typeSet = typeSet(type);
 
-
-    public TopPoolAvgPctDTO getTopBlockAvgPct(int type) {
-        String blockAvgPct_type = type == 1 ? blockAvgPct : blockAvgPctMan;
-        return JSON.to(TopPoolAvgPctDTO.class, blockAvgPct_type);
-    }
-
-    public TopPoolAvgPctDTO getTopStockAvgPct(int type) {
-        String stockAvgPct_type = type == 1 ? stockAvgPct : stockAvgPctMan;
-        return JSON.to(TopPoolAvgPctDTO.class, stockAvgPct_type);
+        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class)
+                   .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
+                   .collect(Collectors.toList());
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    public List<TopChangePctDTO> getManTopBlockList() {
-//        return JSON.parseArray(topBlockCodeSetMan, TopChangePctDTO.class);
-//    }
-//
-//    public List<TopChangePctDTO> getManTopStockList() {
-//        return JSON.parseArray(topStockCodeSetMan, TopChangePctDTO.class);
-//    }
-//
-//
-//    public TopPoolAvgPctDTO getManTopBlockAvgPct() {
-//        return JSON.to(TopPoolAvgPctDTO.class, blockAvgPctMan);
-//    }
-//
-//    public TopPoolAvgPctDTO getManTopStockAvgPct() {
-//        return JSON.to(TopPoolAvgPctDTO.class, stockAvgPctMan);
-//    }
+    public TopPoolAvgPctDTO getTopBlockAvgPct(int type) {
+        return JSON.parseArray(blockAvgPct, TopPoolAvgPctDTO.class)
+                   .stream()
+                   .filter(e -> e.getType() == type)
+                   .findFirst()
+                   .orElse(null);
+    }
+
+    public TopPoolAvgPctDTO getTopEtfAvgPct(int type) {
+        return JSON.parseArray(etfAvgPct, TopPoolAvgPctDTO.class)
+                   .stream()
+                   .filter(e -> e.getType() == type)
+                   .findFirst()
+                   .orElse(null);
+    }
+
+    public TopPoolAvgPctDTO getTopStockAvgPct(int type) {
+        return JSON.parseArray(stockAvgPct, TopPoolAvgPctDTO.class)
+                   .stream()
+                   .filter(e -> e.getType() == type)
+                   .findFirst()
+                   .orElse(null);
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
     public Set<String> getTopBlockCodeJsonSet(int type) {
-        String topBlockCodeSet_type = type == 1 ? topBlockCodeSet : topBlockCodeSetMan;
-        return JSON.parseArray(topBlockCodeSet_type, TopChangePctDTO.class)
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class)
                    .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
+                   .map(TopChangePctDTO::getCode)
+                   .collect(Collectors.toSet());
+    }
+
+    public Set<String> getTopEtfCodeJsonSet(int type) {
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topEtfCodeSet, TopChangePctDTO.class)
+                   .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
                    .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
 
 
     public Set<String> getTopStockCodeJsonSet(int type) {
-        String topStockCodeSet_type = type == 1 ? topStockCodeSet : topStockCodeSetMan;
-        return JSON.parseArray(topStockCodeSet_type, TopChangePctDTO.class)
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class)
                    .stream()
+                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
                    .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
@@ -192,20 +207,17 @@ public class QaTopBlockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    public Set<String> getManTopBlockCodeJsonSet() {
-//        return JSON.parseArray(topBlockCodeSetMan, TopChangePctDTO.class)
-//                   .stream()
-//                   .map(TopChangePctDTO::getCode)
-//                   .collect(Collectors.toSet());
-//    }
-//
-//
-//    public Set<String> getManTopStockCodeJsonSet() {
-//        return JSON.parseArray(topStockCodeSetMan, TopChangePctDTO.class)
-//                   .stream()
-//                   .map(TopChangePctDTO::getCode)
-//                   .collect(Collectors.toSet());
-//    }
+    private Set<Integer> typeSet(int type) {
+        Set<Integer> typeSet = Sets.newHashSet(type);
 
+        if (type == TopTypeEnum.AUTO.type) {
+            typeSet.add(TopTypeEnum.AUTO.type);
+        } else if (type == TopTypeEnum.MANUAL.type) {
+            typeSet.add(TopTypeEnum.AUTO.type);
+            typeSet.add(TopTypeEnum.MANUAL.type);
+        }
+
+        return typeSet;
+    }
 
 }

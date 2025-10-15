@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -102,6 +103,25 @@ public interface TopBlockService {
      * @return
      */
     TopStockPoolDTO topStockList(LocalDate date, Integer type);
+
+
+    /**
+     * 主线个股  -  批量 add
+     *
+     * @param date
+     * @param stockCodeSet
+     * @return
+     */
+    int addTopStockSet(LocalDate date, Set<String> stockCodeSet);
+
+    /**
+     * 主线个股  -  批量 DEL
+     *
+     * @param date
+     * @param stockCodeSet
+     * @return
+     */
+    int delTopStockSet(LocalDate date, Set<String> stockCodeSet);
 
 
     // double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);

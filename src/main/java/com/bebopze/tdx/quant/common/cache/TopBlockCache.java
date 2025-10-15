@@ -436,7 +436,6 @@ public class TopBlockCache {
             QaTopBlockDO topBlockDO = sortedList.get(i);
 
             LocalDate date = topBlockDO.getDate();
-            // Set<String> topBlockCodeSet = topBlockDO.getTopBlockCodeJsonSet();
             Set<String> topCodeSet = getTopCodeSet(topBlockDO, code, type);
 
             if (topCodeSet.contains(code)) {

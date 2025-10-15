@@ -32,4 +32,14 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
      */
     List<QaTopBlockDO> lastN(LocalDate date, int N);
 
+
+    /**
+     * 以 date 为中心，前后各取 N 条（共 2N+1 条），按日期倒序排列
+     *
+     * @param date 指定日期
+     * @param N    前后 N条
+     * @return
+     */
+    List<QaTopBlockDO> beforeAfterN(LocalDate date, int N);
+
 }

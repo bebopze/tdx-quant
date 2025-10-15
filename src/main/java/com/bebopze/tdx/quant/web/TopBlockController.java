@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -208,6 +210,41 @@ public class TopBlockController {
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
         return Result.SUC(topBlockService.topStockList(date, type));
+    }
+
+
+    /**
+     * 主线个股 - add
+     */
+    @Operation(summary = "主线个股  -  批量 add", description = "主线个股  -  批量 add")
+    @GetMapping(value = "/bk-yd2/topStockList/add")
+    public Result<Integer> addTopStockList(@Schema(description = "交易日", example = "2025-09-30")
+                                           @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+
+                                           @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
+                                           @RequestParam String stockCodeList) {
+
+
+        Set<String> stockCodeSet = ConvertUtil.str2Set(stockCodeList);
+
+        return Result.SUC(topBlockService.addTopStockSet(date, stockCodeSet));
+    }
+
+    /**
+     * 主线个股 - DEL
+     */
+    @Operation(summary = "主线个股  -  批量 DEL", description = "主线个股  -  批量 DEL")
+    @GetMapping(value = "/bk-yd2/topStockList/delete")
+    public Result<Integer> delTopStockList(@Schema(description = "交易日", example = "2025-09-30")
+                                           @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+
+                                           @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
+                                           @RequestParam String stockCodeList) {
+
+
+        Set<String> stockCodeSet = ConvertUtil.str2Set(stockCodeList);
+
+        return Result.SUC(topBlockService.delTopStockSet(date, stockCodeSet));
     }
 
 
