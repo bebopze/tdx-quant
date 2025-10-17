@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
@@ -107,7 +108,7 @@ public class TradeServiceImpl implements TradeService {
         LocalDate date = LocalDate.now();
 
 
-        List<TopBlockDTO> topBlockList = topBlockService.topBlockList(date, 1).getTopBlockDTOList();
+        List<TopBlockDTO> topBlockList = topBlockService.topBlockList(date, TopTypeEnum.AUTO.type).getTopBlockDTOList();
 
         Set<String> allTopBlockCodeSet = Sets.newHashSet();
         Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
@@ -121,7 +122,7 @@ public class TradeServiceImpl implements TradeService {
         });
 
 
-        List<TopStockDTO> topStockList = topBlockService.topStockList(date, 1).getTopStockDTOList();
+        List<TopStockDTO> topStockList = topBlockService.topStockList(date, TopTypeEnum.AUTO.type).getTopStockDTOList();
 
         Map<String, TopStockDTO> stock__codeTopMap = Maps.newHashMap();
         topStockList.forEach(topStockDTO -> {
@@ -1449,12 +1450,12 @@ public class TradeServiceImpl implements TradeService {
     }
 
     private double pricePct(CcStockInfo e, double currPricePct, double changePricePct) {
-        if (currPricePct != 0) {
-            // 当前价格
-            return e.getLastprice().doubleValue() * (1 + currPricePct * 0.01);
+        if (changePricePct != 0) {
+            // 昨日收盘价
+            return e.getPreClose() * (1 + changePricePct * 0.01);
         }
-        // 昨日收盘价
-        return e.getPreClose() * (1 + changePricePct * 0.01);
+        // 当前价格
+        return e.getLastprice().doubleValue() * (1 + currPricePct * 0.01);
     }
 
 
