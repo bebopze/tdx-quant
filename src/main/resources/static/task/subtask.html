@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>子任务管理 - 精细化操作</title>
+    <!-- 添加全局配置文件 -->
+    <script src="../js/config.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -224,8 +226,8 @@
     <div class="task-section">
         <h2 class="section-title">📊 行情数据更新（个股/板块）</h2>
 
-        <!-- 全量更新 -->
-        <h3>全量更新</h3>
+        <!-- 全量 个股/板块 -->
+        <h3>全部 个股/板块</h3>
         <div class="form-group">
             <label>更新类型:</label>
             <select id="updateType">
@@ -236,8 +238,7 @@
         <div style="margin: 10px 0;">
             <button class="btn-success" onclick="refreshKlineAll()">🔄 行情数据一键刷新（个股/板块）</button>
             <button class="btn-success" onclick="callApi('/api/parser/tdxdata/fill/blockKlineAll', '全部板块行情更新')">
-                📊
-                全部板块行情更新
+                📊 全部板块行情更新
             </button>
             <button class="btn-success" onclick="fillStockKlineAll()">📈 全部个股行情更新</button>
         </div>
@@ -246,6 +247,7 @@
         <div style="height: 1px; background-color: #eee; margin: 20px 0;"></div>
 
         <!-- 指定板块更新 -->
+        <h3>指定板块</h3>
         <div class="form-group">
             <label>板块代码:</label>
             <input type="text" id="blockCode" placeholder="输入板块代码">
@@ -258,6 +260,7 @@
         <div style="height: 1px; background-color: #eee; margin: 20px 0;"></div>
 
         <!-- 指定个股更新 -->
+        <h3>指定个股</h3>
         <div class="form-group">
             <label>股票代码:</label>
             <input type="text" id="stockCode" value="300059" placeholder="输入股票代码">
@@ -284,16 +287,63 @@
         </div>
     </div>
 
+    <!-- 扩展数据计算 -->
+    <div class="task-section">
+        <h2 class="section-title">📊 扩展数据计算（个股/板块）</h2>
+
+        <div class="form-group">
+            <label>N日参数（可选）:</label>
+            <input type="number" id="extDataN" placeholder="输入N值(0-100)" min="0" max="100">
+        </div>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/refreshExtDataAll?N=' + getExtDataN(), '扩展数据计算 - 个股/板块')">
+            🔄 扩展数据计算 - 个股/板块
+        </button>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/stock/calc?N=' + getExtDataN(), '扩展数据计算 - 个股')">
+            📈 扩展数据计算 - 个股
+        </button>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/block/calc?N=' + getExtDataN(), '扩展数据计算 - 板块')">
+            📊 扩展数据计算 - 板块
+        </button>
+    </div>
+
     <!-- 主线板块 -->
     <div class="task-section">
         <h2 class="section-title">🎯 主线板块</h2>
+
+
+        <!-- 更新类型 -->
+        <h3 class="task-grid">
+            <div class="task-card form-group">
+                <label>更新类型:</label>
+                <select id="topBlock_updateType">
+                    <option value="ALL">全量更新</option>
+                    <option value="INCR">增量更新</option>
+                </select>
+            </div>
+        </h3>
+
 
         <!-- 主要任务 -->
         <div class="task-grid">
             <div class="task-card">
                 <h4>主线板块计算</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/refreshAll', '主线板块计算')">🔄
-                    主线板块计算
+                <button class="btn-info" onclick="callApi_topBlock('/api/topBlock/task/refreshAll', `主线板块计算`)">
+                    🔄 主线板块计算
+                </button>
+            </div>
+        </div>
+
+        <!-- 主线板块（板块-月多2） -->
+        <h3>📊 主线板块（板块-月多2）</h3>
+        <div class="task-grid">
+            <div class="task-card">
+                <h4>主线板块（板块-月多2）</h4>
+                <button class="btn-info"
+                        onclick="callApi_topBlock('/api/topBlock/task/bk-yd2', '主线板块（板块-月多2）')">
+                    📊 主线板块（板块-月多2）
                 </button>
             </div>
         </div>
@@ -327,28 +377,30 @@
         <div class="task-grid">
             <div class="task-card">
                 <h4>大均线多头</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/longTermMABullStack', '大均线多头')">📈
+                <button class="btn-info"
+                        onclick="callApi_topBlock('/api/topBlock/task/longTermMABullStack', '大均线多头')">📈
                     大均线多头
                 </button>
             </div>
 
             <div class="task-card">
                 <h4>均线大多头</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/bullMAStack', '均线大多头')">📈
+                <button class="btn-info" onclick="callApi_topBlock('/api/topBlock/task/bullMAStack', '均线大多头')">📈
                     均线大多头
                 </button>
             </div>
 
             <div class="task-card">
                 <h4>均线极多头</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/extremeBullMAStack', '均线极多头')">📈
+                <button class="btn-info"
+                        onclick="callApi_topBlock('/api/topBlock/task/extremeBullMAStack', '均线极多头')">📈
                     均线极多头
                 </button>
             </div>
 
             <div class="task-card">
                 <h4>二阶段</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/stage2', '二阶段分析')">📈 二阶段分析
+                <button class="btn-info" onclick="callApi_topBlock('/api/topBlock/task/stage2', '二阶段分析')">📈 二阶段分析
                 </button>
             </div>
         </div>
@@ -358,31 +410,11 @@
         <div class="task-grid">
             <div class="task-card">
                 <h4>板块AMO-TOP1</h4>
-                <button class="btn-info" onclick="callApi('/api/topBlock/task/blockAmoTop', '板块AMO-TOP1')">📊
+                <button class="btn-info" onclick="callApi_topBlock('/api/topBlock/task/blockAmoTop', '板块AMO-TOP1')">📊
                     板块AMO-TOP1
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- 扩展数据计算 -->
-    <div class="task-section">
-        <h2 class="section-title">📊 扩展数据计算</h2>
-
-        <div class="form-group">
-            <label>N日参数:</label>
-            <input type="number" id="extDataN" placeholder="输入N值(可选)">
-        </div>
-        <button class="btn-warning"
-                onclick="callApi('/api/extData/refreshExtDataAll?N=' + getExtDataN(), '个股/板块扩展数据计算')">
-            🔄 个股/板块扩展数据计算
-        </button>
-        <button class="btn-warning" onclick="callApi('/api/extData/stock/calc?N=' + getExtDataN(), '个股扩展数据计算')">
-            📈 个股扩展数据计算
-        </button>
-        <button class="btn-warning" onclick="callApi('/api/extData/block/calc?N=' + getExtDataN(), '板块扩展数据计算')">
-            📊 板块扩展数据计算
-        </button>
     </div>
 
     <!-- 大盘量化 -->
@@ -418,7 +450,7 @@
     function callApi(apiPath, taskName) {
         showLoading(`正在执行: ${taskName}`);
 
-        fetch(apiPath, {method: 'GET'})
+        ApiUtils.fetch(apiPath, {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -430,6 +462,15 @@
             .catch(err => {
                 showResult(`❌ ${taskName} - 请求失败: ${err.message}`, 'error');
             });
+    }
+
+    function callApi_topBlock(apiPath, taskName) {
+        const topBlock_updateType = document.getElementById('topBlock_updateType').value;
+
+        apiPath = apiPath + (apiPath.includes('?') ? '&' : '?') + `updateTypeEnum=${topBlock_updateType}`;
+        taskName = `${taskName}(${topBlock_updateType === 'ALL' ? '全量' : '增量'})`;
+
+        callApi(apiPath, taskName);
     }
 
     function refreshKlineAll() {
@@ -471,17 +512,17 @@
     // 主线板块相关函数
     function nDayHighTask() {
         const n = document.getElementById('nDayHighN').value || 100;
-        callApi(`/api/topBlock/task/nDayHigh?N=${n}`, `百日新高占比分布(N=${n})`);
+        callApi_topBlock(`/api/topBlock/task/nDayHigh?N=${n}`, `百日新高占比分布(N=${n})`);
     }
 
     function changePctTopTask() {
         const n = document.getElementById('changePctTopN').value || 10;
-        callApi(`/api/topBlock/task/changePctTop?N=${n}`, `涨幅榜占比分布(N=${n})`);
+        callApi_topBlock(`/api/topBlock/task/changePctTop?N=${n}`, `涨幅榜占比分布(N=${n})`);
     }
 
     function rpsRedTask() {
         const rps = document.getElementById('rpsThreshold').value || 85;
-        callApi(`/api/topBlock/task/rpsRed?RPS=${rps}`, `RPS红占比分布(RPS=${rps})`);
+        callApi_topBlock(`/api/topBlock/task/rpsRed?RPS=${rps}`, `RPS红占比分布(RPS=${rps})`);
     }
 
     function getExtDataN() {
