@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
 import lombok.Data;
 
+import java.time.LocalDate;
+
 
 /**
  * 主线板块/个股 池   ->   指数 涨跌幅（汇总 计算平均值）
@@ -11,6 +13,13 @@ import lombok.Data;
  */
 @Data
 public class TopPoolAvgPctDTO {
+
+
+    // 交易日
+    private transient LocalDate date;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     // 上榜涨幅（首次 上榜日期  收盘价   ->   today）

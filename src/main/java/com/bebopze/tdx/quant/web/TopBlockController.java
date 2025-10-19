@@ -44,7 +44,7 @@ public class TopBlockController {
      */
     @Operation(summary = "refreshAll", description = "refreshAll")
     @GetMapping(value = "/task/refreshAll")
-    public Result<Void> refreshAllTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> refreshAllTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                        @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.refreshAll(updateTypeEnum);
@@ -59,7 +59,7 @@ public class TopBlockController {
      */
     @Operation(summary = "百日新高", description = "百日新高 - 占比分布")
     @GetMapping(value = "/task/nDayHigh")
-    public Result<Void> nDayHighTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> nDayHighTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                      @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum,
 
                                      @Schema(description = "N日新高", example = "100")
@@ -77,7 +77,7 @@ public class TopBlockController {
      */
     @Operation(summary = "涨幅榜（N日涨幅>25% / TOP100）", description = "涨幅榜（N日涨幅>25%）- 占比分布")
     @GetMapping(value = "/task/changePctTop")
-    public Result<Void> changePctTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> changePctTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                          @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum,
 
                                          @Schema(description = "N日涨幅", example = "10")
@@ -94,7 +94,7 @@ public class TopBlockController {
      */
     @Operation(summary = "RPS红", description = "RPS红（一线95/双线90/三线85）- 占比分布")
     @GetMapping(value = "/task/rpsRed")
-    public Result<Void> changePctTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> changePctTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                          @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum,
 
                                          @Schema(description = "RPS三线红", example = "85")
@@ -111,7 +111,7 @@ public class TopBlockController {
      */
     @Operation(summary = "二阶段", description = "Stage 2 – Advancing Phase（上升阶段）- 占比分布")
     @GetMapping(value = "/task/stage2")
-    public Result<Void> stage2Task(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> stage2Task(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                    @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.stage2Task(updateTypeEnum);
@@ -125,7 +125,7 @@ public class TopBlockController {
      */
     @Operation(summary = "大均线多头", description = "大均线多头 - 占比分布")
     @GetMapping(value = "/task/longTermMABullStack")
-    public Result<Void> longTermMABullStack(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> longTermMABullStack(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                             @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.longTermMABullStackTask(updateTypeEnum);
@@ -139,7 +139,7 @@ public class TopBlockController {
      */
     @Operation(summary = "均线大多头", description = "均线大多头 - 占比分布")
     @GetMapping(value = "/task/bullMAStack")
-    public Result<Void> bullMAStackTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> bullMAStackTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                         @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.bullMAStackTask(updateTypeEnum);
@@ -153,7 +153,7 @@ public class TopBlockController {
      */
     @Operation(summary = "均线极多头", description = "均线极多头 - 占比分布")
     @GetMapping(value = "/task/extremeBullMAStack")
-    public Result<Void> extremeBullMAStackTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> extremeBullMAStackTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                                @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.extremeBullMAStackTask(updateTypeEnum);
@@ -167,7 +167,7 @@ public class TopBlockController {
      */
     @Operation(summary = "板块AMO - TOP1", description = "板块AMO - TOP1")
     @GetMapping(value = "/task/blockAmoTop")
-    public Result<Void> blockAmoTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> blockAmoTopTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                         @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.blockAmoTopTask(updateTypeEnum);
@@ -183,7 +183,7 @@ public class TopBlockController {
      */
     @Operation(summary = "主线板块（板块-月多2）  ->   V1", description = "主线板块（板块-月多2）  ->   V1")
     @GetMapping(value = "/task/v1/bk-yd2")
-    public Result<Void> topBlock_bkyd2_v1(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> topBlock_bkyd2_v1(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                           @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.bkyd2Task_v1(updateTypeEnum);
@@ -199,7 +199,7 @@ public class TopBlockController {
      */
     @Operation(summary = "主线板块（板块-月多2）", description = "主线板块（板块-月多2）")
     @GetMapping(value = "/task/bk-yd2")
-    public Result<Void> topBlock_bkyd2(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL")
+    public Result<Void> topBlock_bkyd2(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
                                        @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.bkyd2Task(updateTypeEnum);

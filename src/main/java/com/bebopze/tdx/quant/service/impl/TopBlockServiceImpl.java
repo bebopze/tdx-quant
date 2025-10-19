@@ -306,6 +306,8 @@ public class TopBlockServiceImpl implements TopBlockService {
     @TotalTime
     @Override
     public void bkyd2Task(UpdateTypeEnum updateTypeEnum) {
+        log.info("-------------------------------- bkyd2Task     >>>     start");
+        long start = System.currentTimeMillis();
 
 
         initCache(updateTypeEnum);
@@ -316,7 +318,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         calcTopInfoTask(updateTypeEnum);
 
-        calcTopETFTask(updateTypeEnum);
+//        calcTopETFTask(updateTypeEnum);
+
+
+        log.info("-------------------------------- bkyd2Task     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
 
@@ -976,6 +981,11 @@ public class TopBlockServiceImpl implements TopBlockService {
             LocalDate date = e.getDate();
 
 
+            if (!data.between(date)) {
+                return;
+            }
+
+
             // ---------------------------------------------------------------------------------------------------------
 
 
@@ -1035,26 +1045,44 @@ public class TopBlockServiceImpl implements TopBlockService {
 //            }
 
 
+            // 人选
+            Integer type = TopTypeEnum.MANUAL.type;
+            TopPoolAvgPctDTO topBlockAvgPct = e.getTopBlockAvgPct(type);
+            TopPoolAvgPctDTO topStockAvgPct = e.getTopStockAvgPct(type);
+
+
             List<TopPoolAvgPctDTO> blockPool__avgPctDTOList = Lists.newArrayList(blockPool__avgPctDTO);
-            if (StringUtils.isEmpty(e.getBlockAvgPct())) {
+            if (null == topBlockAvgPct) {
                 TopPoolAvgPctDTO avgPctDTO_type2 = new TopPoolAvgPctDTO();
                 BeanUtils.copyProperties(blockPool__avgPctDTO, avgPctDTO_type2);
-                avgPctDTO_type2.setType(2);
+                avgPctDTO_type2.setType(type);
 
                 blockPool__avgPctDTOList.add(avgPctDTO_type2);
+            } else {
+                blockPool__avgPctDTOList.add(topBlockAvgPct);
             }
             e.setBlockAvgPct(JSON.toJSONString(blockPool__avgPctDTOList));
 
 
             List<TopPoolAvgPctDTO> stockPool__avgPctDTOList = Lists.newArrayList(stockPool__avgPctDTO);
-            if (StringUtils.isEmpty(e.getStockAvgPct())) {
+            if (null == topStockAvgPct) {
                 TopPoolAvgPctDTO avgPctDTO_type2 = new TopPoolAvgPctDTO();
                 BeanUtils.copyProperties(stockPool__avgPctDTO, avgPctDTO_type2);
-                avgPctDTO_type2.setType(2);
+                avgPctDTO_type2.setType(type);
 
                 stockPool__avgPctDTOList.add(avgPctDTO_type2);
+            } else {
+                stockPool__avgPctDTOList.add(topStockAvgPct);
             }
             e.setStockAvgPct(JSON.toJSONString(stockPool__avgPctDTOList));
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+//            if (blockPool__avgPctDTOList.size() != 2 || stockPool__avgPctDTOList.size() != 2) {
+//                log.error("——————————————————————————————————————————");
+//            }
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1801,7 +1829,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**

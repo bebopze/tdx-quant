@@ -2492,7 +2492,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（${sortedBlocks.length}）`;
+            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlockAvgPctData.date}）（${sortedBlocks.length}）`;
         }
     }
 
@@ -2647,7 +2647,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（${sortedStocks.length}）`;
+            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStockAvgPctData.date}）（${sortedStocks.length}）`;
         }
     }
 
@@ -2797,7 +2797,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（${sortedBlocks.length}）`;
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocks.length}）`;
         }
     }
 
@@ -2951,7 +2951,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（${sortedStocks.length}）`;
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocks.length}）`;
 
             // 为新渲染的复选框添加事件监听器
             attachTopStocksManualCheckboxListeners();

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -114,27 +115,22 @@ public class QaTopBlockDO implements Serializable {
 
 
     public List<TopChangePctDTO> getTopBlockList(int type) {
-        Set<Integer> typeSet = typeSet(type);
-
-        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class)
-                   .stream()
-                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
-                   .collect(Collectors.toList());
+        return getTopList(topBlockCodeSet, type);
     }
 
     public List<TopChangePctDTO> getTopEtfList(int type) {
-        Set<Integer> typeSet = typeSet(type);
-
-        return JSON.parseArray(topEtfCodeSet, TopChangePctDTO.class)
-                   .stream()
-                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
-                   .collect(Collectors.toList());
+        return getTopList(topEtfCodeSet, type);
     }
 
     public List<TopChangePctDTO> getTopStockList(int type) {
+        return getTopList(topStockCodeSet, type);
+    }
+
+
+    private List<TopChangePctDTO> getTopList(String topCodeSet, int type) {
         Set<Integer> typeSet = typeSet(type);
 
-        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class)
+        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
                    .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
                    .collect(Collectors.toList());
@@ -145,26 +141,27 @@ public class QaTopBlockDO implements Serializable {
 
 
     public TopPoolAvgPctDTO getTopBlockAvgPct(int type) {
-        return JSON.parseArray(blockAvgPct, TopPoolAvgPctDTO.class)
-                   .stream()
-                   .filter(e -> e.getType() == type)
-                   .findFirst()
-                   .orElse(null);
+        return getTopAvgPct(blockAvgPct, type);
     }
 
     public TopPoolAvgPctDTO getTopEtfAvgPct(int type) {
-        return JSON.parseArray(etfAvgPct, TopPoolAvgPctDTO.class)
-                   .stream()
-                   .filter(e -> e.getType() == type)
-                   .findFirst()
-                   .orElse(null);
+        return getTopAvgPct(etfAvgPct, type);
     }
 
     public TopPoolAvgPctDTO getTopStockAvgPct(int type) {
-        return JSON.parseArray(stockAvgPct, TopPoolAvgPctDTO.class)
+        return getTopAvgPct(stockAvgPct, type);
+    }
+
+
+    private TopPoolAvgPctDTO getTopAvgPct(String avgPct, int type) {
+        return JSON.parseArray(StringUtils.defaultString(avgPct, "[]"), TopPoolAvgPctDTO.class)
                    .stream()
                    .filter(e -> e.getType() == type)
                    .findFirst()
+                   .map(e -> {
+                       e.setDate(date);
+                       return e;
+                   })
                    .orElse(null);
     }
 
@@ -173,30 +170,22 @@ public class QaTopBlockDO implements Serializable {
 
 
     public Set<String> getTopBlockCodeJsonSet(int type) {
-        Set<Integer> typeSet = typeSet(type);
-
-        return JSON.parseArray(topBlockCodeSet, TopChangePctDTO.class)
-                   .stream()
-                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
-                   .map(TopChangePctDTO::getCode)
-                   .collect(Collectors.toSet());
+        return getTopCodeJsonSet(topBlockCodeSet, type);
     }
 
     public Set<String> getTopEtfCodeJsonSet(int type) {
-        Set<Integer> typeSet = typeSet(type);
+        return getTopCodeJsonSet(topEtfCodeSet, type);
+    }
 
-        return JSON.parseArray(topEtfCodeSet, TopChangePctDTO.class)
-                   .stream()
-                   .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
-                   .map(TopChangePctDTO::getCode)
-                   .collect(Collectors.toSet());
+    public Set<String> getTopStockCodeJsonSet(int type) {
+        return getTopCodeJsonSet(topStockCodeSet, type);
     }
 
 
-    public Set<String> getTopStockCodeJsonSet(int type) {
+    private Set<String> getTopCodeJsonSet(String topCodeSet, int type) {
         Set<Integer> typeSet = typeSet(type);
 
-        return JSON.parseArray(topStockCodeSet, TopChangePctDTO.class)
+        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
                    .filter(e -> typeSet.contains(e.getType()) && e.getIsDel() == 0)
                    .map(TopChangePctDTO::getCode)
@@ -219,5 +208,6 @@ public class QaTopBlockDO implements Serializable {
 
         return typeSet;
     }
+
 
 }
