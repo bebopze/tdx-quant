@@ -3433,7 +3433,8 @@
                         const result = results[0]; // Get the result for the single order we tried to cancel
                         if (result.suc === true) {
                             alert(`委托【${wtbh}】撤销成功！\n${result.resultDesc || ''}`);
-                            loadOrders(); // Reload the orders table to reflect the change
+                            loadOrders();
+                            queryPositions();
                         } else {
                             // Backend indicated the operation was not successful for this order
                             throw new Error(result.resultDesc || `撤销操作未成功 (委托: ${wtbh})`);
@@ -3442,7 +3443,8 @@
                         // Unexpected: success=true but no data returned for the order
                         console.warn('撤销接口返回成功，但未包含订单结果。', data);
                         alert(`委托 ${wtbh} 撤销请求已提交，但未收到明确成功确认。`);
-                        loadOrders(); // Still reload to check status
+                        loadOrders();
+                        queryPositions();
                     }
                 } else {
                     // Backend returned success=false or invalid structure
@@ -3530,6 +3532,7 @@
                     }
                     alert(finalMsg);
                     loadOrders(); // 刷新列表
+                    queryPositions();
                 } else {
                     const errorMsg = data.msg || '批量撤单失败，未知错误。';
                     alert(`批量撤单失败：${errorMsg}`);
@@ -3569,6 +3572,7 @@
                 if (data && data.success) {
                     alert(`【一键撤单】操作成功！`);
                     loadOrders(); // 刷新列表
+                    queryPositions();
                 } else {
                     const errorMsg = data.msg || '【一键撤单】失败，未知错误。';
                     alert(`【一键撤单】失败：${errorMsg}`);
