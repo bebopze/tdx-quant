@@ -4,9 +4,9 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.aspect.StockTradingRateLimiter;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.trade.req.QueryCreditHisOrderV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
@@ -23,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.Assert;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,7 +65,7 @@ public class EastMoneyTradeAPI {
     /**
      * 当前账户 实时总资金
      */
-    private static double TOTAL_CAP = 0;
+    private static double TOTAL_CAP = 1_0000;
 
     /**
      * 单笔买入 金额限制：50万
@@ -187,6 +188,54 @@ public class EastMoneyTradeAPI {
     }
 
 
+    /**
+     * 历史委托 列表
+     * -
+     * - https://jywg.18.cn/MarginSearch/queryCreditHisOrderV2?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+     *
+     * @return
+     */
+    public static List<GetOrdersDataResp> queryCreditHisOrderV2(QueryCreditHisOrderV2Req req) {
+
+
+        // 不区分   Request Method
+
+        String url = "https://jywg.18.cn/MarginSearch/queryCreditHisOrderV2?validatekey=" + SID;
+
+
+        List<GetOrdersDataResp> dataList = Lists.newArrayList();
+
+
+        boolean haxNext = true;
+        while (haxNext) {
+
+
+            JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
+            String result = HttpUtil.doPost(url, formData, headers);
+
+            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+            if (resultJson.getInteger("Status") == 0) {
+                log.info("/MarginSearch/queryCreditHisOrderV2   suc     >>>     result : {}", result);
+            }
+
+
+            // ----------------------------- 历史委托 列表
+            List<GetOrdersDataResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(GetOrdersDataResp.class);
+            dataList.addAll(pageDataList);
+
+
+            // 下一页
+            haxNext = pageDataList.size() >= req.getQqhs();
+            if (haxNext) {
+                req.setDwc(pageDataList.get(pageDataList.size() - 1).getDwc());
+            }
+        }
+
+
+        return dataList;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -272,7 +321,7 @@ public class EastMoneyTradeAPI {
         TradeTypeEnum tradeTypeEnum = req.getTradeTypeEnum();
 
         if (tradeTypeEnum == TradeTypeEnum.RZ_BUY || tradeTypeEnum == TradeTypeEnum.ZY_BUY) {
-            double buyAmount = req.getPrice().doubleValue() * req.getAmount();
+            double buyAmount = req.getPrice() * req.getAmount();
 
 
             // 买入金额 < 总资金 * 20%
@@ -327,14 +376,22 @@ public class EastMoneyTradeAPI {
      * - https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
      *
      * @param req
+     * @param wtbh_stockCode_Map
      * @return
      */
     // @BSLimiter
-    public static List<RevokeOrderResultDTO> revokeOrders(RevokeOrdersReq req) {
+    public static List<RevokeOrderResultDTO> revokeOrders(RevokeOrdersReq req, Map<String, String> wtbh_stockCode_Map) {
 
 
         // 量化限流
-        limiter("-1");
+        Arrays.stream(req.getRevokes().split(",")).forEach(e -> {
+            // 委托日期_委托编号
+            String stockCode = wtbh_stockCode_Map.getOrDefault(e, "-1");
+            limiter(stockCode);
+        });
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
@@ -425,25 +482,40 @@ public class EastMoneyTradeAPI {
     public static void main(String[] args) {
 
 
-        for (int i = 0; i < 10; i++) {
+        QueryCreditHisOrderV2Req req_1 = new QueryCreditHisOrderV2Req();
+        req_1.setSt(LocalDate.of(2025, 10, 1));
+        req_1.setEt(LocalDate.of(2025, 10, 13));
+        req_1.setQqhs(500);
 
-            SubmitTradeV2Req req = new SubmitTradeV2Req();
-            req.setStockCode("588000");
-            req.setStockName("科创50ETF");
-            req.setPrice(new BigDecimal("0.123"));
-            req.setAmount(100);
-
-
-            req.setTradeTypeEnum(TradeTypeEnum.ZY_BUY);
-            req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
-            req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
-
-            String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
-            req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
+        List<GetOrdersDataResp> resp_1 = queryCreditHisOrderV2(req_1);
 
 
-            Integer wtbh1 = submitTradeV2(req);
-        }
+        System.out.println(resp_1.size());
+        System.out.println(resp_1);
+
+
+        // --------------------------------------------------------------------------------------
+
+
+//        for (int i = 0; i < 10; i++) {
+//
+//            SubmitTradeV2Req req = new SubmitTradeV2Req();
+//            req.setStockCode("588000");
+//            req.setStockName("科创50ETF");
+//            req.setPrice(new BigDecimal("0.123"));
+//            req.setAmount(100);
+//
+//
+//            req.setTradeTypeEnum(TradeTypeEnum.ZY_BUY);
+//            req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
+//            req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
+//
+//            String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
+//            req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
+//
+//
+//            Integer wtbh1 = submitTradeV2(req);
+//        }
 
 
 //        // --------------------------------- 我的持仓   -   信用账户
@@ -519,8 +591,8 @@ public class EastMoneyTradeAPI {
         // --------------------------------- 买5/卖5
 
 
-        SHSZQuoteSnapshotResp resp = SHSZQuoteSnapshot("300059");
-        System.out.println(JSON.toJSONString(resp));
+        // SHSZQuoteSnapshotResp resp = SHSZQuoteSnapshot("300059");
+        // System.out.println(JSON.toJSONString(resp));
     }
 
 
