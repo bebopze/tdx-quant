@@ -758,6 +758,8 @@
                                                                                     id="sortWtsl"></span></th>
                                 <th onclick="sortOrdersTable('wtje')">委托金额<span class="sort-icon"
                                                                                     id="sortWtje"></span></th>
+                                <th onclick="sortOrdersTable('posPct')">仓位占比(%)<span class="sort-icon"
+                                                                                      id="sortPosPct"></span></th>
                                 <th onclick="sortOrdersTable('cjjg')">成交价格<span class="sort-icon"
                                                                                     id="sortCjjg"></span></th>
                                 <th onclick="sortOrdersTable('cjsl')">成交数量<span class="sort-icon"
@@ -3056,6 +3058,7 @@
                     <td>${Number(order.wtjg)}</td>
                     <td>${order.wtsl}</td>
                     <td>${Number(order.wtje)}</td>
+                    <td>${Number(order.posPct)}</td>
                     <td>${Number(order.cjjg)}</td>
                     <td>${order.cjsl}</td>
                     <td>${Number(order.cjje)}</td>
