@@ -724,10 +724,10 @@
                         <div class="d-flex align-items-center me-3">
                             <label for="ordersStartDateInput" class="me-2">查询日期：</label>
                             <input type="date" id="ordersStartDateInput" class="form-control form-control-sm me-2"
-                                   style="width: auto;">
+                                   style="width: auto;" min="1990-01-01" max="">
                             <label for="ordersEndDateInput" class="me-2"> ~ </label>
                             <input type="date" id="ordersEndDateInput" class="form-control form-control-sm me-2"
-                                   style="width: auto;">
+                                   style="width: auto;" min="1990-01-01" max="">
                         </div>
                         <button id="refreshOrdersButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
@@ -787,7 +787,7 @@
                     <div class="d-flex align-items-center flex-wrap">
                         <label for="topBlocksDateInput" class="me-2">日期:</label>
                         <input type="date" id="topBlocksDateInput" class="form-control form-control-sm me-2"
-                               style="width: auto;">
+                               style="width: auto;" min="1990-01-01" max="">
                         <button id="refreshTopBlocksButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
@@ -881,7 +881,7 @@
                     <div class="d-flex align-items-center flex-wrap">
                         <label for="topStocksDateInput" class="me-2">日期:</label>
                         <input type="date" id="topStocksDateInput" class="form-control form-control-sm me-2"
-                               style="width: auto;">
+                               style="width: auto;" min="1990-01-01" max="">
                         <button id="refreshTopStocksButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
@@ -975,7 +975,7 @@
                     <div class="d-flex align-items-center flex-wrap">
                         <label for="topBlocksManualDateInput" class="me-2">日期:</label>
                         <input type="date" id="topBlocksManualDateInput" class="form-control form-control-sm me-2"
-                               style="width: auto;">
+                               style="width: auto;" min="1990-01-01" max="">
                         <button id="refreshTopBlocksManualButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
@@ -1072,7 +1072,7 @@
                     <div class="d-flex align-items-center flex-wrap">
                         <label for="topStocksManualDateInput" class="me-2">日期:</label>
                         <input type="date" id="topStocksManualDateInput" class="form-control form-control-sm me-2"
-                               style="width: auto;">
+                               style="width: auto;" min="1990-01-01">
                         <button id="refreshTopStocksManualButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
@@ -3094,6 +3094,14 @@
         const ordersStartDateInput = document.getElementById('ordersStartDateInput');
         const ordersEndDateInput = document.getElementById('ordersEndDateInput');
 
+        if (ordersStartDateInput) {
+            ordersStartDateInput.max = today;
+        }
+        if (ordersEndDateInput) {
+            ordersEndDateInput.max = today;
+        }
+
+
         let ordersStartDate = ordersStartDateInput.value ? ordersStartDateInput.value : today; // 获取开始日期
         let ordersEndDate = ordersEndDateInput.value ? ordersEndDateInput.value : today;       // 获取结束日期
 
@@ -3104,6 +3112,23 @@
             refreshBtn.textContent = originalText;
             refreshBtn.disabled = false;
             return;
+        }
+
+        // 修正：验证日期范围不能超过1年 (365天)
+        if (ordersStartDate && ordersEndDate) {
+            const startDateObj = new Date(ordersStartDate);
+            const endDateObj = new Date(ordersEndDate);
+            // 计算时间差（毫秒）
+            const timeDifference = endDateObj.getTime() - startDateObj.getTime();
+            // 转换为天数
+            const dayDifference = timeDifference / (1000 * 3600 * 24);
+
+            if (dayDifference > 365) {
+                alert('查询范围不能超过1年！');
+                refreshBtn.textContent = originalText;
+                refreshBtn.disabled = false;
+                return;
+            }
         }
 
         // // 如果没有提供日期，则默认查询今天的数据
@@ -3633,6 +3658,7 @@
 
         // 机选
         if (topBlocksDateInput) {
+            topBlocksDateInput.max = today;
             // 设置默认日期
             topBlocksDateInput.value = topBlocksCurrentDate;
             // 添加日期改变事件
@@ -3647,6 +3673,7 @@
         }
 
         if (topStocksDateInput) {
+            topStocksDateInput.max = today;
             // 设置默认日期
             topStocksDateInput.value = topStocksCurrentDate;
             // 添加日期改变事件
@@ -3667,7 +3694,9 @@
         const refreshTopBlocksManualButton = document.getElementById('refreshTopBlocksManualButton');
         const refreshTopStocksManualButton = document.getElementById('refreshTopStocksManualButton');
 
+
         if (topBlocksManualDateInput) {
+            topBlocksManualDateInput.max = today;
             topBlocksManualDateInput.value = topBlocksCurrentDateManual;
             topBlocksManualDateInput.addEventListener('change', function () {
                 topBlocksCurrentDateManual = this.value;
@@ -3678,6 +3707,7 @@
             }
         }
         if (topStocksManualDateInput) {
+            topStocksManualDateInput.max = today;
             topStocksManualDateInput.value = topStocksCurrentDateManual;
             topStocksManualDateInput.addEventListener('change', function () {
                 topStocksCurrentDateManual = this.value;
