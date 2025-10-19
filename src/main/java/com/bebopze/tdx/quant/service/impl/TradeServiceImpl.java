@@ -181,6 +181,13 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public List<GetOrdersDataResp> getOrdersData() {
         List<GetOrdersDataResp> respList = EastMoneyTradeAPI.getOrdersData();
+
+
+        // -------------------- 仓位占比
+        double netAsset = queryCreditNewPosV2().getNetasset().doubleValue();
+        respList.forEach(e -> e.setNetAsset(netAsset));
+
+
         return respList;
     }
 
@@ -255,6 +262,21 @@ public class TradeServiceImpl implements TradeService {
     public List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList) {
 
 
+        // 限流用（当日委托单列表 -> map）
+        Map<String, String> wtbh_stockCode_Map = Maps.newHashMap();
+        getOrdersData().forEach(e -> {
+            String wtrq = e.getWtrq();
+            String wtbh = e.getWtbh();
+            String zqdm = e.getZqdm();
+
+            // 委托日期_委托编号   -   股票代码
+            wtbh_stockCode_Map.put(wtrq + "_" + wtbh, zqdm);
+        });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // 总撤单数
         int size = paramList.size();
         // 1次 N单
@@ -270,7 +292,7 @@ public class TradeServiceImpl implements TradeService {
 
             // 批量撤单
             RevokeOrdersReq req = convert2Req(subParamList);
-            List<RevokeOrderResultDTO> resultDTOS = EastMoneyTradeAPI.revokeOrders(req);
+            List<RevokeOrderResultDTO> resultDTOS = EastMoneyTradeAPI.revokeOrders(req, wtbh_stockCode_Map);
             log.info("revokeOrders     >>>     paramList : {} , resultDTOS : {}", JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
 
 
@@ -430,7 +452,7 @@ public class TradeServiceImpl implements TradeService {
 
         // 等比
         int avgPosPct = 100 / buyStockCodeSet.size();
-        newPositionList.forEach(e -> e.setPositionPct(avgPosPct));
+        newPositionList.forEach(e -> e.setPosPct(avgPosPct));
 
 
         // 一键   清仓->买入
@@ -440,7 +462,7 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     public void keepExistBuyNew(Set<String> buyStockCodeSet,
-                                double avgBuyPosPct,
+                                double buyPosPct,
                                 double currPricePct,
                                 double changePricePct) {
 
@@ -452,8 +474,8 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 等比
-        int avgPositionPct = 100 / newPositionList.size();
-        newPositionList.forEach(e -> e.setPositionPct(avgPositionPct));
+        double avgPosPct = buyPosPct / newPositionList.size();
+        newPositionList.forEach(e -> e.setPosPct(avgPosPct));
 
 
         // 一键买入（保留exist  ->  买入new）
@@ -478,7 +500,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 待买入
-        Map<String, Double> buy__code_posPct_map = newPositionList.stream().collect(Collectors.toMap(QuickBuyPositionParam::getStockCode, QuickBuyPositionParam::getPositionPct));
+        Map<String, Double> buy__code_posPct_map = newPositionList.stream().collect(Collectors.toMap(QuickBuyPositionParam::getStockCode, QuickBuyPositionParam::getPosPct));
         Map<String, QuickBuyPositionParam> buy__code_entity_map = newPositionList.stream().collect(Collectors.toMap(QuickBuyPositionParam::getStockCode, Function.identity()));
 
 
@@ -553,7 +575,7 @@ public class TradeServiceImpl implements TradeService {
             QuickBuyPositionParam newBuyPosition = new QuickBuyPositionParam();
             newBuyPosition.setStockCode(stockCode);
             newBuyPosition.setStockName(entity.getStockName());
-            newBuyPosition.setPositionPct(posPct);
+            newBuyPosition.setPosPct(posPct);
             newBuyPosition.setPrice(entity.getPrice());
             newBuyPosition.setQuantity(entity.getQuantity());
 
@@ -833,7 +855,7 @@ public class TradeServiceImpl implements TradeService {
         // 实时行情：买5 / 卖5
         SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
         String stockName = resp.getName();
-        double buy1 = resp.getFivequote().getBuy1().doubleValue();
+        double buy1 = resp.getFivequote().getBuy1();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1911,7 +1933,7 @@ public class TradeServiceImpl implements TradeService {
         SubmitTradeV2Req req = new SubmitTradeV2Req();
         req.setStockCode(param.getStockCode());
         req.setStockName(param.getStockName());
-        req.setPrice(param.getPrice());
+        req.setPrice(param.getPrice().doubleValue());
         req.setAmount(param.getAmount());
 
 
@@ -2112,12 +2134,12 @@ public class TradeServiceImpl implements TradeService {
 
 
         // --------------------- 单只个股 仓位   ->   最大5%
-        newPositionList.forEach(e -> e.setPositionPct(Math.min(e.getPositionPct(), STOCK__POS_PCT_LIMIT)));
+        newPositionList.forEach(e -> e.setPosPct(Math.min(e.getPosPct(), STOCK__POS_PCT_LIMIT)));
 
 
         // ---------------------  待买入 总仓位   =   new 仓位累加
         double preBuy_totalPosPct = newPositionList.stream()
-                                                   .map(QuickBuyPositionParam::getPositionPct)
+                                                   .map(QuickBuyPositionParam::getPosPct)
                                                    .reduce(0.0, Double::sum);
 
 
@@ -2185,14 +2207,14 @@ public class TradeServiceImpl implements TradeService {
 
 
             // 当前个股 -> 新买入仓位
-            double new_posPct = e.getPositionPct();
+            double new_posPct = e.getPosPct();
 
 
             // 待买入总仓位  >  可买仓位     =>     根据仓位数值  ->  重新计算 仓位比例
             if (preBuy_totalPosPct > max_buyPosPct) {
 
                 // 个股 实际可买仓位   =  （个股待买入 / 总待买入） x  可买仓位
-                new_posPct = e.getPositionPct() / preBuy_totalPosPct * max_buyPosPct;
+                new_posPct = e.getPosPct() / preBuy_totalPosPct * max_buyPosPct;
             }
 
 
@@ -2203,7 +2225,7 @@ public class TradeServiceImpl implements TradeService {
             new_posPct = Math.max(Math.min(new_posPct, STOCK__POS_PCT_LIMIT - old_posPct), 0);
 
 
-            e.setPositionPct(new_posPct);
+            e.setPosPct(new_posPct);
 
 
             // ------------------------------------
@@ -2270,7 +2292,7 @@ public class TradeServiceImpl implements TradeService {
             double price = e.getPrice();
 
             // 数量 = 可用总资金 * 仓位占比 / 价格
-            int qty = (int) (maxBuyCap * e.getPositionRate() / price);
+            int qty = (int) (maxBuyCap * e.getPosRate() / price);
 
 
             // qty 规则计算
