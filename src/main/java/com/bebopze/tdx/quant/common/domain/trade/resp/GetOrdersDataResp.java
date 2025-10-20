@@ -1,8 +1,11 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalTime;
 
 
 /**
@@ -58,15 +61,15 @@ public class GetOrdersDataResp implements Serializable {
 
 
     // 委托数量（100）
-    private String Wtsl;
+    private int Wtsl;
     // 委托状态（未报/已报/已撤/部成/已成/废单）
     private String Wtzt;
     // 委托价格（12.340）
-    private String Wtjg;
+    private double Wtjg;
     // 成交数量（0）
-    private String Cjsl;
+    private int Cjsl;
     // 成交金额（0）
-    private String Cjje;
+    private double Cjje;
 
 
     // 交易所（HA）
@@ -83,8 +86,68 @@ public class GetOrdersDataResp implements Serializable {
 
 
     // 成交价格（0.000000）
-    private String Cjjg;
+    private double Cjjg;
     // 信用交易类型-备注【交易类别】（卖出担保品）
     private String Xyjylbbz;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // ------------------------ 历史委托单
+
+
+    // 委托编号（长）
+    private String Htxh;
+
+
+    // ------------------------ 自定义
+
+
+    /**
+     * 仓位占比（仅 当日委托单有效）
+     */
+    private double posPct;
+    // 账户净资产（仅 当日委托单有效）
+    private double netAsset;
+
+
+    public double getPosPct() {
+        // 金额
+        double amount = getWtje();
+        // 仓位占比
+        return netAsset == 0 ? Double.NaN : NumUtil.of(amount / netAsset * 100, 2);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // "Wtrq": "20250911",
+    // "Wtsj": "144843",
+
+
+//    public LocalDate getWtrq() {
+//        return DateTimeUtil.parseDate_yyyyMMdd(Wtrq);
+//    }
+
+
+    public LocalTime getWtsj() {
+        return DateTimeUtil.parseTime_HHmmss(Wtsj);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 委托金额 = 委托价格 x 委托数量
+     *
+     * @return
+     */
+    public double getWtje() {
+        return NumUtil.of(Wtjg * Wtsl);
+    }
+
 
 }

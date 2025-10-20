@@ -56,7 +56,7 @@
         }
 
         /* Style for the Sell All button */
-        #sellAllButton {
+        #sellPositionsButton {
             margin-left: 10px; /* Add some space */
         }
 
@@ -564,8 +564,8 @@
     </div>
     <!-- 查询按钮 & 一键等比卖出 & 新增按钮 -->
     <div class="d-flex align-items-center mb-3 flex-wrap">
-        <button id="queryButton" class="btn btn-primary">查询</button>
-        <button id="sellAllButton" class="btn btn-danger ms-3">一键等比卖出</button>
+        <button id="loadPositionsButton" class="btn btn-primary">查询</button>
+        <button id="sellPositionsButton" class="btn btn-danger ms-3">一键等比卖出</button>
         <!-- 新增：一键再融资按钮 -->
         <button id="quickResetFinancingButton" class="btn btn-warning ms-3">一键再融资</button>
         <!-- 新增：一键取款按钮 -->
@@ -629,47 +629,51 @@
                             <tr>
                                 <th><input type="checkbox" id="positionSelectAllCheckboxHeader">勾选</th>
                                 <th>序号</th>
-                                <th onclick="sortTable('stkcode')">证券代码<span class="sort-icon"
-                                                                                 id="sortStkcode"></span></th>
-                                <th onclick="sortTable('stkname')">证券名称<span class="sort-icon"
-                                                                                 id="sortStkname"></span></th>
-                                <th onclick="sortTable('market')">市场<span class="sort-icon" id="sortMarket"></span>
+                                <th onclick="sortPositionsTable('stkcode')">证券代码<span class="sort-icon"
+                                                                                          id="sortStkcode"></span></th>
+                                <th onclick="sortPositionsTable('stkname')">证券名称<span class="sort-icon"
+                                                                                          id="sortStkname"></span></th>
+                                <th onclick="sortPositionsTable('market')">市场<span class="sort-icon"
+                                                                                     id="sortMarket"></span>
                                 </th>
-                                <th onclick="sortTable('costprice')">成本价<span class="sort-icon"
-                                                                                 id="sortCostprice"></span>
+                                <th onclick="sortPositionsTable('costprice')">成本价<span class="sort-icon"
+                                                                                          id="sortCostprice"></span>
                                 </th>
-                                <th onclick="sortTable('preClose')">昨收<span class="sort-icon"
-                                                                              id="sortPreClose"></span>
+                                <th onclick="sortPositionsTable('preClose')">昨收<span class="sort-icon"
+                                                                                       id="sortPreClose"></span>
                                 </th>
-                                <th onclick="sortTable('lastprice')">最新价<span class="sort-icon"
-                                                                                 id="sortLastprice"></span>
+                                <th onclick="sortPositionsTable('lastprice')">最新价<span class="sort-icon"
+                                                                                          id="sortLastprice"></span>
                                 </th>
-                                <th onclick="sortTable('mktval')">市值<span class="sort-icon" id="sortMktval"></span>
+                                <th onclick="sortPositionsTable('mktval')">市值<span class="sort-icon"
+                                                                                     id="sortMktval"></span>
                                 </th>
-                                <th onclick="sortTable('profit')">持仓盈亏<span class="sort-icon"
-                                                                                id="sortProfit"></span></th>
-                                <th onclick="sortTable('profitratio')">持仓盈亏比例<span class="sort-icon"
-                                                                                         id="sortProfitratio"></span>
+                                <th onclick="sortPositionsTable('profit')">持仓盈亏<span class="sort-icon"
+                                                                                         id="sortProfit"></span></th>
+                                <th onclick="sortPositionsTable('profitratio')">持仓盈亏比例<span class="sort-icon"
+                                                                                                  id="sortProfitratio"></span>
                                 </th>
-                                <th onclick="sortTable('curprofit')">当日盈亏<span class="sort-icon"
-                                                                                   id="sortCurprofit"></span>
+                                <th onclick="sortPositionsTable('curprofit')">当日盈亏<span class="sort-icon"
+                                                                                            id="sortCurprofit"></span>
                                 </th>
-                                <th onclick="sortTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
-                                                                                            id="sortCurProfitratio"></span>
+                                <th onclick="sortPositionsTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
+                                                                                                     id="sortCurProfitratio"></span>
                                 </th>
-                                <th onclick="sortTable('posratio')">仓位占比<span class="sort-icon"
-                                                                                  id="sortPosratio"></span>
+                                <th onclick="sortPositionsTable('posratio')">仓位占比<span class="sort-icon"
+                                                                                           id="sortPosratio"></span>
                                 </th>
-                                <th onclick="sortTable('stkbal')">持仓数量<span class="sort-icon"
-                                                                                id="sortStkbal"></span></th>
-                                <th onclick="sortTable('stkavl')">可用数量<span class="sort-icon"
-                                                                                id="sortStkavl"></span></th>
-                                <th onclick="sortTable('industry')">行业<span class="sort-icon"
-                                                                              id="sortIndustry"></span></th>
-                                <th onclick="sortTable('topStock')">主线个股<span class="sort-icon"
-                                                                                  id="sortTopStock"></span></th>
-                                <th onclick="sortTable('inTopBlock')">IN主线板块<span class="sort-icon"
-                                                                                      id="sortInTopBlock"></span></th>
+                                <th onclick="sortPositionsTable('stkbal')">持仓数量<span class="sort-icon"
+                                                                                         id="sortStkbal"></span></th>
+                                <th onclick="sortPositionsTable('stkavl')">可用数量<span class="sort-icon"
+                                                                                         id="sortStkavl"></span></th>
+                                <th onclick="sortPositionsTable('industry')">行业<span class="sort-icon"
+                                                                                       id="sortIndustry"></span></th>
+                                <th onclick="sortPositionsTable('topStock')">主线个股<span class="sort-icon"
+                                                                                           id="sortTopStock"></span>
+                                </th>
+                                <th onclick="sortPositionsTable('inTopBlock')">IN主线板块<span class="sort-icon"
+                                                                                               id="sortInTopBlock"></span>
+                                </th>
                                 <th>主线板块</th>
                                 <th>操作</th>
                             </tr>
@@ -705,11 +709,11 @@
                                 // 未成交 -> 未报/已报/部成
                                 <option value="未成交">未成交</option>
                                 <option value="已成交">已成交</option>
-                                <option value="未报">未报</option>
-                                <option value="已报">已报</option>
-                                <option value="已撤">已撤</option>
-                                <option value="部成">部成</option>
                                 <option value="已成">已成</option>
+                                <option value="部成">部成</option>
+                                <option value="已报">已报</option>
+                                <option value="未报">未报</option>
+                                <option value="已撤">已撤</option>
                                 <option value="废单">废单</option>
                             </select>
                         </div>
@@ -759,7 +763,7 @@
                                 <th onclick="sortOrdersTable('wtje')">委托金额<span class="sort-icon"
                                                                                     id="sortWtje"></span></th>
                                 <th onclick="sortOrdersTable('posPct')">仓位占比(%)<span class="sort-icon"
-                                                                                      id="sortPosPct"></span></th>
+                                                                                         id="sortPosPct"></span></th>
                                 <th onclick="sortOrdersTable('cjjg')">成交价格<span class="sort-icon"
                                                                                     id="sortCjjg"></span></th>
                                 <th onclick="sortOrdersTable('cjsl')">成交数量<span class="sort-icon"
@@ -1070,6 +1074,7 @@
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="topStocksManualCardTitle" class="card-title-with-count">主线个股列表</span>
+                    <button id="batchDeleteTopStocksManualButton" class="btn btn-danger btn-sm ms-2">批量删除</button>
                     <!-- 新增：日期选择和刷新按钮区域 -->
                     <div class="d-flex align-items-center flex-wrap">
                         <label for="topStocksManualDateInput" class="me-2">日期:</label>
@@ -1155,6 +1160,7 @@
                                 <th onclick="sortTopStocksTableManual('start2Next20_changePct')">上榜至N20涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualStart2Next20_changePct"></span></th>
+                                <th>操作</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -1373,186 +1379,16 @@
     let topStocksCurrentDateManual = today; // 默认为今天
 
 
-    // --- 原有持仓功能 ---
-    // 更新排序图标函数 (持仓)
-    function updateSortIcon() {
-        const iconIdPrefix = `sort${sortState.column.charAt(0).toUpperCase() + sortState.column.slice(1)}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        if (iconElement) {
-            iconElement.textContent = sortState.order === 'asc' ? '↑' : '↓';
-        }
-        // 清除其他列的排序图标
-        const allIcons = document.querySelectorAll('#positionTable th span.sort-icon');
-        allIcons.forEach(icon => {
-            if (icon !== iconElement) {
-                icon.textContent = '';
-            }
-        });
-    }
+    // ----------------------------------------- 一键 B/S 快捷按钮 -------------------------------------------------------
 
-    // 初始化排序图标函数 (持仓)
-    function initializeSortIcons() {
-        if (sortState.column) {
-            updateSortIcon();
-        }
-    }
 
-    // 展开/折叠详细信息
-    function toggleCollapse() {
-        const content = document.getElementById('collapseContent');
-        if (content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block';
-        } else {
-            content.style.display = 'none';
-        }
-    }
+    // ----------   一键等比卖出
 
-    // 排序函数：仅触发排序 (持仓)
-    function sortTable(column) {
-        if (sortState.column === column) {
-            sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            sortState.order = 'desc';
-            sortState.column = column;
-        }
-        updateSortIcon();
-        showPositionRecords(positionsData);
-    }
 
-    // 显示持仓记录
-    function showPositionRecords(positions) {
-        const tbody = document.querySelector('#positionTable tbody');
-        if (!tbody) {
-            console.error('未找到 #positionTable tbody');
-            return;
-        }
-        tbody.innerHTML = '';
-        if (!positions || positions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="20">暂无持仓记录</td></tr>';
-            // 更新标题显示数量 0
-            document.getElementById('positionsCardTitle').textContent = `持仓详情（0）`;
-            return;
-        }
-        const holdingStockCount = positions.length;
-        document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
-        let sortedPositions = [...positions];
-        if (sortState.column) {
-            sortedPositions = sortedPositions.sort((a, b) => {
-                const valA = a[sortState.column] ?? 0;
-                const valB = b[sortState.column] ?? 0;
-                // 对于 boolean 类型的 topStock 字段，特殊处理
-                if (sortState.column === 'topStock') {
-                    if (sortState.order === 'asc') {
-                        return (a.topStock ? 1 : 0) - (b.topStock ? 1 : 0);
-                    } else {
-                        return (b.topStock ? 1 : 0) - (a.topStock ? 1 : 0);
-                    }
-                }
-                if (!isNaN(valA) && !isNaN(valB)) {
-                    return sortState.order === 'asc' ? valA - valB : valB - valA;
-                }
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    return sortState.order === 'asc'
-                        ? valA.localeCompare(valB)
-                        : valB.localeCompare(valA);
-                }
-                return 0;
-            });
-        }
-        sortedPositions.forEach((item, index) => {
-            const marketPrefix = market2Xueqiu(item.market);
-            const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
-            const tr = document.createElement('tr');
-            tr.setAttribute('data-stkcode', item.stkcode);
+    // 一键卖出功能 (弹框设置)
 
-            // --- 处理主线板块列表 ---
-            let topBlockListStr = '-';
-            if (Array.isArray(item.topBlockList) && item.topBlockList.length > 0) {
-                topBlockListStr = item.topBlockList.map(block => `${block.blockName} (${block.topDays}天)`).join('<br>');
-            }
-
-            tr.innerHTML = `
-              <td><input type="checkbox" class="sell-checkbox"></td>
-              <td>${index + 1}</td>
-              <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stkcode}</a></td>
-              <td>${item.stkname}</td>
-              <td>${item.market}</td>
-              <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${Number(item.preClose).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${item.mktval}</td>
-              <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
-              <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
-              <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
-              <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
-              <td>${(item.posratio * 100).toFixed(2)}%</td>
-              <td>${item.stkbal}</td>
-              <td>${item.stkavl}</td>
-              <td>
-                ${(() => {
-                const hyBlock = item.blockInfoDTO?.hyBlockDTOList || [];
-                const normalIndustry = hyBlock.find(b => b.blockType === 2);
-                const researchIndustry = hyBlock.find(b => b.blockType === 12);
-                const normalName = normalIndustry ? normalIndustry.blockNamePath.split('-')[1] : '';
-                const researchName = researchIndustry ? researchIndustry.blockNamePath.split('-')[0] : '';
-                const industryStr = [normalName, researchName].filter(Boolean).join(' / ');
-                item.industry = industryStr;
-                return industryStr;
-            })()}
-              </td>
-              <!-- 主线个股 -->
-              <td>${item.topStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
-              <td>${item.inTopBlock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
-              <!-- 主线板块 -->
-              <td class="top-block-list">${topBlockListStr}</td>
-              <td>
-                <a class="margin-buy-button" target="_blank"
-                  href="https://jywg.18.cn/MarginTrade/MarginBuy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
-                >融</a>
-                <a class="buy-button" target="_blank"
-                  href="https://jywg.18.cn/MarginTrade/Buy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
-                >担</a>
-                <a class="sell-button" target="_blank"
-                  href="https://jywg.18.cn/MarginTrade/Sale?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
-                >卖</a>
-              </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        // --- 新增：更新持仓列表标题数量 ---
-        const count = sortedPositions.length;
-        document.getElementById('positionsCardTitle').textContent = `持仓详情（${count}）`;
-        // --- 结束：更新持仓列表标题数量 ---
-        attachCheckboxListeners();
-    }
-
-    // Function to attach event listeners for checkboxes
-    function attachCheckboxListeners() {
-        const checkboxes = document.querySelectorAll('.sell-checkbox');
-        checkboxes.forEach(checkbox => {
-            // Optional: Add individual change listener if needed for other features
-        });
-        // Modified: Listen to the new header checkbox for positions
-        const positionSelectAllCheckboxHeader = document.getElementById('positionSelectAllCheckboxHeader');
-        if (positionSelectAllCheckboxHeader) {
-            positionSelectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
-            positionSelectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
-        }
-    }
-
-    // Handle "Select All" checkbox change (Positions) - Modified to use the new header checkbox
-    function handleSelectAllChange() {
-        // 'this' now refers to the #positionSelectAllCheckboxHeader
-        const isChecked = this.checked;
-        const checkboxes = document.querySelectorAll('.sell-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = isChecked;
-        });
-    }
-
-    // --- 新增：一键卖出功能 (弹框设置) ---
-    // 1. 主按钮点击事件：打开模态框
-    function handleSellAll() {
+    // 1. 主按钮：打开 价格策略
+    function handleSellPositions() {
         const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
             alert('请至少选择一只股票进行卖出！');
@@ -1575,7 +1411,7 @@
         }
     }
 
-    // 2. 模态框内价格策略单选按钮逻辑
+    // 2. 价格策略（互斥）
     function updateModalInputStates() {
         const strategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
         const strategyChangePrice = document.getElementById('modalStrategyChangePrice');
@@ -1593,7 +1429,7 @@
         }
     }
 
-    // 3. 模态框内确认按钮事件：执行卖出
+    // 3. 确认 -> 执行卖出
     function executeSellAll() {
         const selectedCheckboxes = document.querySelectorAll('.sell-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
@@ -1709,7 +1545,8 @@
             });
     }
 
-    // --- 新增：一键再融资功能 ---
+
+    // ----------   一键再融资
     function handleQuickResetFinancing() {
         if (!confirm('您确定要执行【一键再融资】操作吗？\n此操作将【清仓】并【重置融资】，然后【重新融资买入】。')) {
             return;
@@ -1747,7 +1584,10 @@
             });
     }
 
-    // --- 新增：一键取款功能 ---
+
+    // ----------   一键取款
+
+    // 一键取款：主按钮
     function handleQuickLowerFinancing() {
         // 直接从全局变量 netAssetValue 获取数据
         const netAsset = netAssetValue;
@@ -1773,7 +1613,7 @@
         }
     }
 
-    // --- 新增：确认一键取款 ---
+    // 一键取款：确认
     function confirmQuickLowerFinancing() {
         const transferAmountInput = document.getElementById('transferAmountInputModal');
         let transferAmount = parseFloat(transferAmountInput.value);
@@ -1831,8 +1671,12 @@
             });
     }
 
-    // 查询持仓数据
-    function queryPositions() {
+
+    // ----------------------------------------- 我的持仓 列表 -----------------------------------------------------------
+
+
+    // 加载
+    function loadPositions() {
         ApiUtils.fetch('/api/trade/queryCreditNewPosV2')
             .then(res => res.json())
             .then(data => {
@@ -1884,8 +1728,8 @@
                 if (acreditavlEl) acreditavlEl.value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
                 const holdingStockCountEl = document.getElementById('holdingStockCount');
                 if (holdingStockCountEl) holdingStockCountEl.value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
-                showPositionRecords(positionsData);
-                initializeSortIcons();
+                displayPositionRecords(positionsData);
+                initializePositionsSortIcons();
             })
             .catch(error => {
                 console.error('接口请求失败:', error);
@@ -1893,8 +1737,191 @@
             });
     }
 
-    // --- 新增：查询和保存持仓账户配置 ---
-    function queryCfgAccount() {
+
+    // 展示
+    function displayPositionRecords(positions) {
+        const tbody = document.querySelector('#positionTable tbody');
+        if (!tbody) {
+            console.error('未找到 #positionTable tbody');
+            return;
+        }
+        tbody.innerHTML = '';
+        if (!positions || positions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="20">暂无持仓记录</td></tr>';
+            // 更新标题显示数量 0
+            document.getElementById('positionsCardTitle').textContent = `持仓详情（0）`;
+            return;
+        }
+        const holdingStockCount = positions.length;
+        document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
+        let sortedPositions = [...positions];
+        if (sortState.column) {
+            sortedPositions = sortedPositions.sort((a, b) => {
+                const valA = a[sortState.column] ?? 0;
+                const valB = b[sortState.column] ?? 0;
+                // 对于 boolean 类型的 topStock 字段，特殊处理
+                if (sortState.column === 'topStock') {
+                    if (sortState.order === 'asc') {
+                        return (a.topStock ? 1 : 0) - (b.topStock ? 1 : 0);
+                    } else {
+                        return (b.topStock ? 1 : 0) - (a.topStock ? 1 : 0);
+                    }
+                }
+                if (!isNaN(valA) && !isNaN(valB)) {
+                    return sortState.order === 'asc' ? valA - valB : valB - valA;
+                }
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return sortState.order === 'asc'
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
+                return 0;
+            });
+        }
+        sortedPositions.forEach((item, index) => {
+            const marketPrefix = market2Xueqiu(item.market);
+            const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-stkcode', item.stkcode);
+
+            // --- 处理主线板块列表 ---
+            let topBlockListStr = '-';
+            if (Array.isArray(item.topBlockList) && item.topBlockList.length > 0) {
+                topBlockListStr = item.topBlockList.map(block => `${block.blockName} (${block.topDays}天)`).join('<br>');
+            }
+
+            tr.innerHTML = `
+              <td><input type="checkbox" class="sell-checkbox"></td>
+              <td>${index + 1}</td>
+              <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stkcode}</a></td>
+              <td>${item.stkname}</td>
+              <td>${item.market}</td>
+              <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.preClose).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${item.mktval}</td>
+              <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
+              <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
+              <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
+              <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
+              <td>${(item.posratio * 100).toFixed(2)}%</td>
+              <td>${item.stkbal}</td>
+              <td>${item.stkavl}</td>
+              <td>
+                ${(() => {
+                const hyBlock = item.blockInfoDTO?.hyBlockDTOList || [];
+                const normalIndustry = hyBlock.find(b => b.blockType === 2);
+                const researchIndustry = hyBlock.find(b => b.blockType === 12);
+                const normalName = normalIndustry ? normalIndustry.blockNamePath.split('-')[1] : '';
+                const researchName = researchIndustry ? researchIndustry.blockNamePath.split('-')[0] : '';
+                const industryStr = [normalName, researchName].filter(Boolean).join(' / ');
+                item.industry = industryStr;
+                return industryStr;
+            })()}
+              </td>
+              <!-- 主线个股 -->
+              <td>${item.topStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <td>${item.inTopBlock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <!-- 主线板块 -->
+              <td class="top-block-list">${topBlockListStr}</td>
+              <td>
+                <a class="margin-buy-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/MarginBuy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >融</a>
+                <a class="buy-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/Buy?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >担</a>
+                <a class="sell-button" target="_blank"
+                  href="https://jywg.18.cn/MarginTrade/Sale?code=${item.stkcode}&name=${encodeURIComponent(item.stkname)}&zqlx=${item.stktype_ex}&mt=${item.market === 'HA' ? 1 : item.market === 'SA' ? 2 : 'B'}&market=${item.market}"
+                >卖</a>
+              </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        // --- 新增：更新持仓列表标题数量 ---
+        const count = sortedPositions.length;
+        document.getElementById('positionsCardTitle').textContent = `持仓详情（${count}）`;
+        // --- 结束：更新持仓列表标题数量 ---
+        attachCheckboxListeners();
+    }
+
+
+    // 排序
+    function sortPositionsTable(column) {
+        if (sortState.column === column) {
+            sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortState.order = 'desc';
+            sortState.column = column;
+        }
+        updatePositionsSortIcon();
+        displayPositionRecords(positionsData);
+    }
+
+    function updatePositionsSortIcon() {
+        const iconIdPrefix = `sort${sortState.column.charAt(0).toUpperCase() + sortState.column.slice(1)}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        if (iconElement) {
+            iconElement.textContent = sortState.order === 'asc' ? '↑' : '↓';
+        }
+        // 清除其他列的排序图标
+        const allIcons = document.querySelectorAll('#positionTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            if (icon !== iconElement) {
+                icon.textContent = '';
+            }
+        });
+    }
+
+    // 初始化 排序图标
+    function initializePositionsSortIcons() {
+        if (sortState.column) {
+            updatePositionsSortIcon();
+        }
+    }
+
+
+    // 折叠/展开
+    function toggleCollapse() {
+        const content = document.getElementById('collapseContent');
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+        } else {
+            content.style.display = 'none';
+        }
+    }
+
+
+    // 全选 / 取消全选
+    function handleSelectAllChange() {
+        // 'this' now refers to the #positionSelectAllCheckboxHeader
+        const isChecked = this.checked;
+        const checkboxes = document.querySelectorAll('.sell-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+    }
+
+    // 勾选（单个）
+    function attachCheckboxListeners() {
+        const checkboxes = document.querySelectorAll('.sell-checkbox');
+        checkboxes.forEach(checkbox => {
+            // Optional: Add individual change listener if needed for other features
+        });
+        // Modified: Listen to the new header checkbox for positions
+        const positionSelectAllCheckboxHeader = document.getElementById('positionSelectAllCheckboxHeader');
+        if (positionSelectAllCheckboxHeader) {
+            positionSelectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
+            positionSelectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
+        }
+    }
+
+
+    // ----------------------------------------- 账户设置（融资上限、仓位上限、个股上限）--------------------------------------
+
+
+    // 加载
+    function loadCfgAccount() {
         ApiUtils.fetch('/api/cfg/account/info?id=1') // 假设 ID 为 1
             .then(res => {
                 if (!res.ok) {
@@ -1916,7 +1943,7 @@
                     return;
                 }
                 cfgAccountData = data.data || cfgAccountData; // 如果data.data为null，使用默认值
-                populateCfgAccountForm(cfgAccountData);
+                displayCfgAccountForm(cfgAccountData);
             })
             .catch(error => {
                 console.error('查询持仓账户配置失败:', error);
@@ -1924,7 +1951,8 @@
             });
     }
 
-    function populateCfgAccountForm(data) {
+    // 展示
+    function displayCfgAccountForm(data) {
         if (!data) {
             // 如果数据为空，重置表单为默认值
             document.getElementById('rzAccountCheckbox').checked = false;
@@ -1941,6 +1969,7 @@
         cfgAccountData.id = data.id;
     }
 
+    // 保存
     function saveCfgAccount() {
         const formData = {
             id: cfgAccountData.id, // 包含ID，如果为null则为新增
@@ -1974,7 +2003,7 @@
                 if (data && data.success) {
                     alert('配置保存成功！');
                     // 保存成功后，重新查询以获取最新的gmtModify时间等
-                    queryCfgAccount();
+                    loadCfgAccount();
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
                     alert(`配置保存失败：${errorMsg}`);
@@ -1991,8 +2020,7 @@
             });
     }
 
-
-    // --- 新增：配置-持仓账户 折叠/展开 函数 ---
+    // 折叠/展开
     function toggleCfgAccountCollapse() {
         const content = document.getElementById('cfgAccountCollapseContent');
         const saveButton = document.getElementById('saveCfgAccountBtn'); // 获取保存按钮
@@ -2020,1071 +2048,11 @@
         }
     }
 
-    // --- 结束：查询和保存持仓账户配置 ---
 
+    // ----------------------------------------- 当日委托 列表 -----------------------------------------------------------
 
-    // --- 新增：主线板块/个股功能 ---
-    function loadTopBlocks(date = topBlocksCurrentDate) {
-        const tbody = document.querySelector('#topBlocksTable tbody');
-        const messageDiv = document.getElementById('topBlocksTableMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
-            return;
-        }
 
-        // 清空内容
-        tbody.innerHTML = '';
-        messageDiv.style.display = 'none';
-
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topBlockList?date=${date}&type=1`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.msg || '获取主线板块列表失败');
-                }
-
-                topBlockAvgPctData = data.data.topBlockAvgPctDTO || {};
-
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
-                    const changePctDTO = block.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        blockCode: block.blockCode,
-                        blockName: block.blockName,
-                        topDays: block.topDays,
-                        topStockSize: block.topStockSize,
-                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
-
-                if (!topBlocksData || topBlocksData.length === 0) {
-
-                    messageDiv.style.display = 'block';
-                    messageDiv.textContent = '暂无数据';
-                    document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
-
-                    // 移除平均值行
-                    const thead = document.querySelector('#topBlocksTable thead');
-                    if (thead) {
-                        const existingAvgRow = thead.querySelector('tr.avg-row');
-                        if (existingAvgRow) {
-                            existingAvgRow.remove();
-                        }
-                    }
-
-                    return;
-                }
-
-                // 渲染平均值行
-                displayTopBlocksAvgRow(topBlockAvgPctData);
-                // 根据当前排序状态显示数据
-                displayTopBlocks(topBlocksData);
-            })
-            .catch(error => {
-                console.error('获取主线板块列表失败:', error);
-                // 注意：colspan 改为 11
-                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
-            });
-    }
-
-    function stockLink(xueqiuMarket, stockCode, stockName, topDays) {
-        const stockLink = `https://xueqiu.com/S/${xueqiuMarket}${stockCode}`;
-        return `<a href="${stockLink}" target="_blank" class="stock-code-link">${stockName} (${topDays}天)</a>`;
-    }
-
-
-    function loadTopStocks(date = topStocksCurrentDate) {
-        const tbody = document.querySelector('#topStocksTable tbody');
-        const messageDiv = document.getElementById('topStocksTableMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
-            return;
-        }
-
-        // 清空内容
-        tbody.innerHTML = '';
-        messageDiv.style.display = 'none';
-
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=1`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.msg || '获取主线个股列表失败');
-                }
-
-                topStockAvgPctData = data.data.topStockAvgPctDTO || {};
-
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
-                    const changePctDTO = stock.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        stockCode: stock.stockCode,
-                        stockName: stock.stockName,
-                        xueqiuMarket: stock.xueqiuMarket,
-                        topDays: stock.topDays,
-                        topBlockSize: stock.topBlockSize,
-                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
-
-                if (!topStocksData || topStocksData.length === 0) {
-
-                    messageDiv.style.display = 'block';
-                    messageDiv.textContent = '暂无数据';
-                    document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
-
-                    // 移除平均值行
-                    const thead = document.querySelector('#topStocksTable thead');
-                    if (thead) {
-                        const existingAvgRow = thead.querySelector('tr.avg-row');
-                        if (existingAvgRow) {
-                            existingAvgRow.remove();
-                        }
-                    }
-
-                    return;
-                }
-
-
-                // 渲染平均值行
-                displayTopStocksAvgRow(topStockAvgPctData);
-                // 根据当前排序状态显示数据
-                displayTopStocks(topStocksData);
-            })
-            .catch(error => {
-                console.error('获取主线个股列表失败:', error);
-                // 注意：colspan 改为 11
-                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
-            });
-    }
-
-
-    // - 新增：主线板块 (人选) -
-    function loadTopBlocksManual(date = topBlocksCurrentDateManual) {
-        const tbody = document.querySelector('#topBlocksTableManual tbody');
-        const messageDiv = document.getElementById('topBlocksTableManualMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topBlocksTableManual tbody 或 #topBlocksTableManualMessage');
-            return;
-        }
-        // 清空内容
-        tbody.innerHTML = '';
-        messageDiv.style.display = 'none';
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topBlockList?date=${date}&type=2`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.msg || '获取主线板块列表(人选)失败');
-                }
-                topBlockAvgPctDataManual = data.data.topBlockAvgPctDTO;
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => {
-                    const changePctDTO = block.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        blockCode: block.blockCode,
-                        blockName: block.blockName,
-                        topDays: block.topDays,
-                        topStockSize: block.topStockSize,
-                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
-
-                if (!topBlocksDataManual || topBlocksDataManual.length === 0) {
-                    messageDiv.style.display = 'block';
-                    messageDiv.textContent = '暂无数据';
-                    document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
-                    // 移除平均值行
-                    const thead = document.querySelector('#topBlocksTableManual thead');
-                    if (thead) {
-                        const existingAvgRow = thead.querySelector('tr.avg-row');
-                        if (existingAvgRow) {
-                            existingAvgRow.remove();
-                        }
-                    }
-                    return;
-                }
-                // 渲染平均值行
-                displayTopBlocksAvgRowManual(topBlockAvgPctDataManual);
-                // 根据当前排序状态显示数据
-                displayTopBlocksManual(topBlocksDataManual);
-            })
-            .catch(error => {
-                console.error('获取主线板块列表(人选)失败:', error);
-                tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
-            });
-    }
-
-    // - 新增：主线个股 (人选) -
-    function loadTopStocksManual(date = topStocksCurrentDateManual) {
-        const tbody = document.querySelector('#topStocksTableManual tbody');
-        const messageDiv = document.getElementById('topStocksTableManualMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
-            return;
-        }
-        // 清空内容
-        tbody.innerHTML = '';
-        messageDiv.style.display = 'none';
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=2`)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.msg || '获取主线个股列表(人选)失败');
-                }
-                topStockAvgPctDataManual = data.data.topStockAvgPctDTO;
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => {
-                    const changePctDTO = stock.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        stockCode: stock.stockCode,
-                        stockName: stock.stockName,
-                        xueqiuMarket: stock.xueqiuMarket,
-                        topDays: stock.topDays,
-                        topBlockSize: stock.topBlockSize,
-                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
-
-                if (!topStocksDataManual || topStocksDataManual.length === 0) {
-                    messageDiv.style.display = 'block';
-                    messageDiv.textContent = '暂无数据';
-                    document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
-                    // 移除平均值行
-                    const thead = document.querySelector('#topStocksTableManual thead');
-                    if (thead) {
-                        const existingAvgRow = thead.querySelector('tr.avg-row');
-                        if (existingAvgRow) {
-                            existingAvgRow.remove();
-                        }
-                    }
-                    return;
-                }
-                // 渲染平均值行
-                displayTopStocksAvgRowManual(topStockAvgPctDataManual);
-                // 根据当前排序状态显示数据
-                displayTopStocksManual(topStocksDataManual);
-            })
-            .catch(error => {
-                console.error('获取主线个股列表(人选)失败:', error);
-                tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
-            });
-    }
-
-
-    // 主线板块 表格排序（机选）
-    function updateTopBlocksSortIcon() {
-        const iconIdPrefix = `sortTopBlocks${topBlocksSortState.column ? topBlocksSortState.column.charAt(0).toUpperCase() + topBlocksSortState.column.slice(1) : ''}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        const allIcons = document.querySelectorAll('#topBlocksTable th span.sort-icon');
-        allIcons.forEach(icon => {
-            icon.textContent = '';
-        });
-        if (iconElement && topBlocksSortState.column) {
-            iconElement.textContent = topBlocksSortState.order === 'asc' ? '↑' : '↓';
-        }
-    }
-
-    function sortTopBlocksTable(column) {
-        if (topBlocksSortState.column === column) {
-            topBlocksSortState.order = topBlocksSortState.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            topBlocksSortState.order = 'desc'; // 默认倒序
-            topBlocksSortState.column = column;
-        }
-        updateTopBlocksSortIcon();
-        displayTopBlocks(topBlocksData);
-    }
-
-    function displayTopBlocksAvgRow(avgPct) {
-        const thead = document.querySelector('#topBlocksTable thead');
-        if (!thead) {
-            console.error('未找到 #topBlocksTable thead');
-            return;
-        }
-
-        // 清除可能已存在的平均值行
-        const existingAvgRow = document.querySelector('#topBlocksTable thead tr.avg-row');
-        if (existingAvgRow) {
-            existingAvgRow.remove();
-        }
-
-        const avgRow = document.createElement('tr');
-        avgRow.className = 'avg-row'; // 添加类名以便样式控制
-
-        // 前8列是基本信息，需要合并显示标签
-        avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next3_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next5_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next10_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next15_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next20_changePct.toFixed(2)}%
-            </td>
-        `;
-
-        // 将平均值行插入到原始表头行之后
-        thead.appendChild(avgRow);
-    }
-
-    function displayTopBlocks(blocks) {
-        const tbody = document.querySelector('#topBlocksTable tbody');
-        const messageDiv = document.getElementById('topBlocksTableMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
-            return;
-        }
-
-        let sortedBlocks = [...blocks];
-        if (topBlocksSortState.column) {
-            sortedBlocks.sort((a, b) => {
-                let valA = a[topBlocksSortState.column];
-                let valB = b[topBlocksSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topBlocksSortState.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topBlocksSortState.order === 'asc' ? comparison : -comparison;
-            });
-        }
-
-        tbody.innerHTML = '';
-        if (sortedBlocks.length === 0) {
-            messageDiv.style.display = 'block';
-            messageDiv.textContent = '暂无数据';
-            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（0）`;
-        } else {
-            messageDiv.style.display = 'none';
-            sortedBlocks.forEach((block) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${block.rank}</td>
-                    <td>${block.blockCode}</td>
-                    <td>${block.blockName}</td>
-                    <td>${block.topDays}</td>
-                    <td>${block.topStockSize}</td>
-                    <td class="top-list-item">${block.topStockList}</td>
-                    <td>${block.topStartDate}</td>
-                    <td>${block.topEndDate}</td>
-                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next10_changePct > 0 ? 'red' : block.start2Next10_changePct < 0 ? 'teal' : 'black'}">${block.start2Next10_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next15_changePct > 0 ? 'red' : block.start2Next15_changePct < 0 ? 'teal' : 'black'}">${block.start2Next15_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next20_changePct > 0 ? 'red' : block.start2Next20_changePct < 0 ? 'teal' : 'black'}">${block.start2Next20_changePct.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlockAvgPctData.date}）（${sortedBlocks.length}）`;
-        }
-    }
-
-
-    // 主线个股 表格排序（机选）
-    function updateTopStocksSortIcon() {
-        const iconIdPrefix = `sortTopStocks${topStocksSortState.column ? topStocksSortState.column.charAt(0).toUpperCase() + topStocksSortState.column.slice(1) : ''}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        const allIcons = document.querySelectorAll('#topStocksTable th span.sort-icon');
-        allIcons.forEach(icon => {
-            icon.textContent = '';
-        });
-        if (iconElement && topStocksSortState.column) {
-            iconElement.textContent = topStocksSortState.order === 'asc' ? '↑' : '↓';
-        }
-    }
-
-    function sortTopStocksTable(column) {
-        if (topStocksSortState.column === column) {
-            topStocksSortState.order = topStocksSortState.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            topStocksSortState.order = 'desc'; // 默认倒序
-            topStocksSortState.column = column;
-        }
-        updateTopStocksSortIcon();
-        displayTopStocks(topStocksData);
-    }
-
-    function displayTopStocksAvgRow(avgPct) {
-        const thead = document.querySelector('#topStocksTable thead');
-        if (!thead) {
-            console.error('未找到 #topStocksTable thead');
-            return;
-        }
-
-        // 清除可能已存在的平均值行
-        const existingAvgRow = document.querySelector('#topStocksTable thead tr.avg-row');
-        if (existingAvgRow) {
-            existingAvgRow.remove();
-        }
-
-        const avgRow = document.createElement('tr');
-        avgRow.className = 'avg-row'; // 添加类名以便样式控制
-
-        // 前8列是基本信息，需要合并显示标签
-        avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next3_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next5_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next10_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next15_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next20_changePct.toFixed(2)}%
-            </td>
-        `;
-
-        // 将平均值行插入到原始表头行之后
-        thead.appendChild(avgRow);
-    }
-
-    function displayTopStocks(stocks) {
-        const tbody = document.querySelector('#topStocksTable tbody');
-        const messageDiv = document.getElementById('topStocksTableMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
-            return;
-        }
-
-        let sortedStocks = [...stocks];
-        if (topStocksSortState.column) {
-            sortedStocks.sort((a, b) => {
-                let valA = a[topStocksSortState.column];
-                let valB = b[topStocksSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topStocksSortState.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topStocksSortState.order === 'asc' ? comparison : -comparison;
-            });
-        }
-
-        tbody.innerHTML = '';
-        if (sortedStocks.length === 0) {
-            messageDiv.style.display = 'block';
-            messageDiv.textContent = '暂无数据';
-            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（0）`;
-        } else {
-            messageDiv.style.display = 'none';
-            sortedStocks.forEach((stock) => {
-                const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${stock.rank}</td>
-                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
-                    <td>${stock.stockName}</td>
-                    <td>${stock.topDays}</td>
-                    <td>${stock.topBlockSize}</td>
-                    <td class="top-list-item">${stock.topBlockList}</td>
-                    <td>${stock.topStartDate}</td>
-                    <td>${stock.topEndDate.toString()}</td>
-                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStockAvgPctData.date}）（${sortedStocks.length}）`;
-        }
-    }
-
-
-    // 主线板块 表格排序（人选）
-    function updateTopBlocksSortIconManual() {
-        const iconIdPrefix = `sortTopBlocksManual${topBlocksSortStateManual.column ? topBlocksSortStateManual.column.charAt(0).toUpperCase() + topBlocksSortStateManual.column.slice(1) : ''}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        const allIcons = document.querySelectorAll('#topBlocksTableManual th span.sort-icon');
-        allIcons.forEach(icon => {
-            icon.textContent = '';
-        });
-        if (iconElement && topBlocksSortStateManual.column) {
-            iconElement.textContent = topBlocksSortStateManual.order === 'asc' ? '↑' : '↓';
-        }
-    }
-
-    function sortTopBlocksTableManual(column) {
-        if (topBlocksSortStateManual.column === column) {
-            topBlocksSortStateManual.order = topBlocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            topBlocksSortStateManual.order = 'desc'; // 默认倒序
-            topBlocksSortStateManual.column = column;
-        }
-        updateTopBlocksSortIconManual();
-        displayTopBlocksManual(topBlocksDataManual);
-    }
-
-    function displayTopBlocksAvgRowManual(avgPct) {
-        const thead = document.querySelector('#topBlocksTableManual thead');
-        if (!thead) {
-            console.error('未找到 #topBlocksTable thead');
-            return;
-        }
-
-        // 清除可能已存在的平均值行
-        const existingAvgRow = document.querySelector('#topBlocksTableManual thead tr.avg-row');
-        if (existingAvgRow) {
-            existingAvgRow.remove();
-        }
-
-        const avgRow = document.createElement('tr');
-        avgRow.className = 'avg-row'; // 添加类名以便样式控制
-
-        // 前8列是基本信息，需要合并显示标签
-        avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next3_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next5_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next10_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next15_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next20_changePct.toFixed(2)}%
-            </td>
-        `;
-
-        // 将平均值行插入到原始表头行之后
-        thead.appendChild(avgRow);
-    }
-
-    function displayTopBlocksManual(blocks) {
-        const tbody = document.querySelector('#topBlocksTableManual tbody');
-        const messageDiv = document.getElementById('topBlocksTableManualMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topBlocksTableManual tbody 或 #topBlocksTableManualMessage');
-            return;
-        }
-        let sortedBlocks = [...blocks];
-        if (topBlocksSortStateManual.column) {
-            sortedBlocks.sort((a, b) => {
-                let valA = a[topBlocksSortStateManual.column];
-                let valB = b[topBlocksSortStateManual.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topBlocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topBlocksSortStateManual.order === 'asc' ? comparison : -comparison;
-            });
-        }
-        tbody.innerHTML = '';
-        if (sortedBlocks.length === 0) {
-            messageDiv.style.display = 'block';
-            messageDiv.textContent = '暂无数据';
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（0）`;
-        } else {
-            messageDiv.style.display = 'none';
-            sortedBlocks.forEach((block) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${block.rank}</td>
-                    <td>${block.blockCode}</td>
-                    <td>${block.blockName}</td>
-                    <td>${block.topDays}</td>
-                    <td>${block.topStockSize}</td>
-                    <td class="top-list-item">${block.topStockList}</td>
-                    <td>${block.topStartDate}</td>
-                    <td>${block.topEndDate}</td>
-                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next10_changePct > 0 ? 'red' : block.start2Next10_changePct < 0 ? 'teal' : 'black'}">${block.start2Next10_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next15_changePct > 0 ? 'red' : block.start2Next15_changePct < 0 ? 'teal' : 'black'}">${block.start2Next15_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Next20_changePct > 0 ? 'red' : block.start2Next20_changePct < 0 ? 'teal' : 'black'}">${block.start2Next20_changePct.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocks.length}）`;
-        }
-    }
-
-
-    // 主线个股 表格排序（人选）
-    function updateTopStocksSortIconManual() {
-        const iconIdPrefix = `sortTopStocksManual${topStocksSortStateManual.column ? topStocksSortStateManual.column.charAt(0).toUpperCase() + topStocksSortStateManual.column.slice(1) : ''}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        const allIcons = document.querySelectorAll('#topStocksTableManual th span.sort-icon');
-        allIcons.forEach(icon => {
-            icon.textContent = '';
-        });
-        if (iconElement && topStocksSortStateManual.column) {
-            iconElement.textContent = topStocksSortStateManual.order === 'asc' ? '↑' : '↓';
-        }
-    }
-
-    function sortTopStocksTableManual(column) {
-        if (topStocksSortStateManual.column === column) {
-            topStocksSortStateManual.order = topStocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            topStocksSortStateManual.order = 'desc'; // 默认倒序
-            topStocksSortStateManual.column = column;
-        }
-        updateTopStocksSortIconManual();
-        displayTopStocksManual(topStocksDataManual);
-    }
-
-    function displayTopStocksAvgRowManual(avgPct) {
-        const thead = document.querySelector('#topStocksTableManual thead');
-        if (!thead) {
-            console.error('未找到 #topStocksTableManual thead');
-            return;
-        }
-
-        // 清除可能已存在的平均值行
-        const existingAvgRow = document.querySelector('#topStocksTableManual thead tr.avg-row');
-        if (existingAvgRow) {
-            existingAvgRow.remove();
-        }
-
-        const avgRow = document.createElement('tr');
-        avgRow.className = 'avg-row'; // 添加类名以便样式控制
-
-        // 前8列是基本信息，需要合并显示标签
-        avgRow.innerHTML = `
-            <td colspan="9" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2End_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Max_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next3_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next5_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next10_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next15_changePct.toFixed(2)}%
-            </td>
-            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Next20_changePct.toFixed(2)}%
-            </td>
-        `;
-
-        // 将平均值行插入到原始表头行之后
-        thead.appendChild(avgRow);
-    }
-
-    function displayTopStocksManual(stocks) {
-        const tbody = document.querySelector('#topStocksTableManual tbody');
-        const messageDiv = document.getElementById('topStocksTableManualMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
-            return;
-        }
-        let sortedStocks = [...stocks];
-        if (topStocksSortStateManual.column) {
-            sortedStocks.sort((a, b) => {
-                let valA = a[topStocksSortStateManual.column];
-                let valB = b[topStocksSortStateManual.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topStocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topStocksSortStateManual.order === 'asc' ? comparison : -comparison;
-            });
-        }
-        tbody.innerHTML = '';
-        if (sortedStocks.length === 0) {
-            messageDiv.style.display = 'block';
-            messageDiv.textContent = '暂无数据';
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（0）`;
-        } else {
-            messageDiv.style.display = 'none';
-            sortedStocks.forEach((stock) => {
-                const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
-                const tr = document.createElement('tr');
-                // 添加 data-stockcode 属性
-                tr.setAttribute('data-stockcode', stock.stockCode);
-                tr.innerHTML = `
-                    <td><input type="checkbox" class="top-stocks-manual-checkbox" data-stockcode="${stock.stockCode}"></td>
-                    <td>${stock.rank}</td>
-                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
-                    <td>${stock.stockName}</td>
-                    <td>${stock.topDays}</td>
-                    <td>${stock.topBlockSize}</td>
-                    <td class="top-list-item">${stock.topBlockList}</td>
-                    <td>${stock.topStartDate}</td>
-                    <td>${stock.topEndDate.toString()}</td>
-                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocks.length}）`;
-
-            // 为新渲染的复选框添加事件监听器
-            attachTopStocksManualCheckboxListeners();
-        }
-    }
-
-
-    // --- 新增：当日委托功能 ---
-    function updateOrdersSortIcon() {
-        const iconIdPrefix = `sort${ordersSortState.column ? ordersSortState.column.charAt(0).toUpperCase() + ordersSortState.column.slice(1) : ''}`;
-        const iconElement = document.getElementById(iconIdPrefix);
-        const allIcons = document.querySelectorAll('#ordersTable th span.sort-icon');
-        allIcons.forEach(icon => {
-            icon.textContent = '';
-        });
-        if (iconElement && ordersSortState.column) {
-            iconElement.textContent = ordersSortState.order === 'asc' ? '↑' : '↓';
-        }
-    }
-
-    function sortOrdersTable(column) {
-        if (ordersSortState.column === column) {
-            ordersSortState.order = ordersSortState.order === 'asc' ? 'desc' : 'asc';
-        } else {
-            ordersSortState.order = 'asc';
-            ordersSortState.column = column;
-        }
-        updateOrdersSortIcon();
-        displayOrders(ordersData);
-    }
-
-    function displayOrders(orders) {
-        const tbody = document.querySelector('#ordersTable tbody');
-        const messageDiv = document.getElementById('ordersTableMessage');
-        if (!tbody || !messageDiv) {
-            console.error('未找到 #ordersTable tbody 或 #ordersTableMessage');
-            return;
-        }
-        const statusFilter = document.getElementById('filterStatus').value;
-        const directionFilter = document.getElementById('filterDirection').value;
-        let filteredOrders = orders;
-        if (statusFilter) {
-            // 未成交 -> 未报/已报/部成
-            if (statusFilter === '未成交') {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
-            }
-            // 已成交 -> 已撤/已成/废单
-            else if (statusFilter === '已成交') {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === '已撤' || order.wtzt === '已成' || order.wtzt === '废单');
-            } else {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
-            }
-        }
-        if (directionFilter) {
-            filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
-        }
-        let sortedOrders = [...filteredOrders];
-        if (ordersSortState.column) {
-            sortedOrders.sort((a, b) => {
-                let valA = a[ordersSortState.column];
-                let valB = b[ordersSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                const numA = parseFloat(valA);
-                const numB = parseFloat(valB);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return ordersSortState.order === 'asc' ? numA - numB : numB - numA;
-                }
-                const comparison = String(valA).localeCompare(String(valB));
-                return ordersSortState.order === 'asc' ? comparison : -comparison;
-            });
-        }
-        tbody.innerHTML = '';
-        if (sortedOrders.length === 0) {
-            messageDiv.style.display = 'block';
-            messageDiv.textContent = '暂无匹配的委托记录';
-            // 更新标题显示数量 0
-            document.getElementById('ordersCardTitle').textContent = `当日委托列表（0）`;
-        } else {
-            messageDiv.style.display = 'none';
-            sortedOrders.forEach((order, index) => {
-                const marketPrefix = market2Xueqiu(order.market);
-                const stockLink = `https://xueqiu.com/S/${marketPrefix}${order.zqdm}`;
-                const tr = document.createElement('tr');
-                let formattedTime = order.wtsj;
-                if (order.wtsj && order.wtsj.length === 6) {
-                    formattedTime = `${order.wtsj.substring(0, 2)}:${order.wtsj.substring(2, 4)}:${order.wtsj.substring(4, 6)}`;
-                }
-                // 确定是否显示撤单按钮 (状态为 未报/已报/部成)
-                const isCancelable = (order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
-                // 确定是否允许批量勾选 (状态为 未报/已报/部成)
-                const isBatchCancelable = isCancelable;
-                tr.innerHTML = `
-                    <td>${isBatchCancelable ? `<input type="checkbox" class="order-checkbox" data-wtdh="${order.wtbh}" data-date="${order.wtrq}">` : ''}</td>
-                    <td>${order.wtbh}</td>
-                    <td>${order.wtrq}</td>
-                    <td>${formattedTime}</td>
-                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td>
-                    <td>${order.zqmc}</td>
-                    <td>${order.mmsm}</td>
-                    <td class="order-status-${order.wtzt}">${order.wtzt}</td>
-                    <td>${Number(order.wtjg)}</td>
-                    <td>${order.wtsl}</td>
-                    <td>${Number(order.wtje)}</td>
-                    <td>${Number(order.posPct)}</td>
-                    <td>${Number(order.cjjg)}</td>
-                    <td>${order.cjsl}</td>
-                    <td>${Number(order.cjje)}</td>
-                    <td>
-                        ${isCancelable ? `<button class="cancel-order-button" data-wtbh="${order.wtbh}" data-date="${order.wtrq}">撤单</button>` : '-'}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            // 为动态生成的撤单按钮绑定事件
-            document.querySelectorAll('.cancel-order-button').forEach(button => {
-                button.addEventListener('click', function () {
-                    const wtbh = this.getAttribute('data-wtbh'); // 委托编号
-                    const date = this.getAttribute('data-date'); // 委托日期
-                    cancelOrder(wtbh, date, this);
-                });
-            });
-            // --- 新增：更新当日委托列表标题数量 ---
-            const count = sortedOrders.length; // 使用过滤和排序后的数量
-            document.getElementById('ordersCardTitle').textContent = `当日委托列表（${count}）`;
-            // --- 结束：更新当日委托列表标题数量 ---
-        }
-        // 更新全选状态
-        updateOrdersSelectAllState();
-    }
-
+    // 加载
     function loadOrders() {
         const refreshBtn = document.getElementById('refreshOrdersButton');
         const originalText = refreshBtn.textContent;
@@ -3184,7 +2152,1321 @@
     }
 
 
-    // --- 新增：主线个股（人选）勾选相关逻辑 ---
+    // 展示
+    function displayOrders(orders) {
+        const tbody = document.querySelector('#ordersTable tbody');
+        const messageDiv = document.getElementById('ordersTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #ordersTable tbody 或 #ordersTableMessage');
+            return;
+        }
+        const statusFilter = document.getElementById('filterStatus').value;
+        const directionFilter = document.getElementById('filterDirection').value;
+        let filteredOrders = orders;
+        if (statusFilter) {
+            // 未成交 -> 未报/已报/部成
+            if (statusFilter === '未成交') {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+            }
+            // 已成交 -> 已撤/已成/废单
+            else if (statusFilter === '已成交') {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '已撤' || order.wtzt === '已成' || order.wtzt === '废单');
+            } else {
+                filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
+            }
+        }
+        if (directionFilter) {
+            filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
+        }
+        let sortedOrders = [...filteredOrders];
+        if (ordersSortState.column) {
+            sortedOrders.sort((a, b) => {
+                let valA = a[ordersSortState.column];
+                let valB = b[ordersSortState.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return ordersSortState.order === 'asc' ? numA - numB : numB - numA;
+                }
+                const comparison = String(valA).localeCompare(String(valB));
+                return ordersSortState.order === 'asc' ? comparison : -comparison;
+            });
+        }
+        tbody.innerHTML = '';
+        if (sortedOrders.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无匹配的委托记录';
+            // 更新标题显示数量 0
+            document.getElementById('ordersCardTitle').textContent = `当日委托列表（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedOrders.forEach((order, index) => {
+                const marketPrefix = market2Xueqiu(order.market);
+                const stockLink = `https://xueqiu.com/S/${marketPrefix}${order.zqdm}`;
+                const tr = document.createElement('tr');
+                let formattedTime = order.wtsj;
+                if (order.wtsj && order.wtsj.length === 6) {
+                    formattedTime = `${order.wtsj.substring(0, 2)}:${order.wtsj.substring(2, 4)}:${order.wtsj.substring(4, 6)}`;
+                }
+                // 确定是否显示撤单按钮 (状态为 未报/已报/部成)
+                const isCancelable = (order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+                // 确定是否允许批量勾选 (状态为 未报/已报/部成)
+                const isBatchCancelable = isCancelable;
+                tr.innerHTML = `
+                    <td>${isBatchCancelable ? `<input type="checkbox" class="order-checkbox" data-wtdh="${order.wtbh}" data-date="${order.wtrq}">` : ''}</td>
+                    <td>${order.wtbh}</td>
+                    <td>${order.wtrq}</td>
+                    <td>${formattedTime}</td>
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td>
+                    <td>${order.zqmc}</td>
+                    <td>${order.mmsm}</td>
+                    <td class="order-status-${order.wtzt}">${order.wtzt}</td>
+                    <td>${Number(order.wtjg)}</td>
+                    <td>${order.wtsl}</td>
+                    <td>${Number(order.wtje)}</td>
+                    <td>${Number(order.posPct)}</td>
+                    <td>${Number(order.cjjg)}</td>
+                    <td>${order.cjsl}</td>
+                    <td>${Number(order.cjje)}</td>
+                    <td>
+                        ${isCancelable ? `<button class="cancel-order-button" data-wtbh="${order.wtbh}" data-date="${order.wtrq}">撤单</button>` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 更新当日委托列表 标题数量
+            const count = sortedOrders.length; // 使用过滤和排序后的数量
+            document.getElementById('ordersCardTitle').textContent = `当日委托列表（${count}）`;
+        }
+
+        // 更新全选状态
+        updateOrdersSelectAllState();
+    }
+
+
+    // 排序
+    function sortOrdersTable(column) {
+        if (ordersSortState.column === column) {
+            ordersSortState.order = ordersSortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            ordersSortState.order = 'asc';
+            ordersSortState.column = column;
+        }
+        updateOrdersSortIcon();
+        displayOrders(ordersData);
+    }
+
+    function updateOrdersSortIcon() {
+        const iconIdPrefix = `sort${ordersSortState.column ? ordersSortState.column.charAt(0).toUpperCase() + ordersSortState.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#ordersTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && ordersSortState.column) {
+            iconElement.textContent = ordersSortState.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+
+    // 撤单（单个）
+    function cancelOrder(date, wtbh, buttonElement) {
+        // Basic validation
+        if (!date || !wtbh) {
+            console.error('撤销委托失败：缺少必要的委托日期或编号', {date, wtbh});
+            alert('撤销委托失败：缺少必要的委托日期或编号！');
+            return;
+        }
+        if (!confirm(`确定要撤销委托编号【${wtbh}】吗？`)) {
+            return;
+        }
+        buttonElement.textContent = '撤销中...';
+        buttonElement.disabled = true;
+
+        const cancelParamsList = [{date: date, wtdh: wtbh}];
+        ApiUtils.fetch('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(cancelParamsList) // Send the array in the request body
+        })
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `撤销失败 HTTP ${res.status}`);
+                    });
+            })
+            .then(data => {
+                // data = { success: true, msg: "...", data: [ { revoke: "...", resultDesc: "...", suc: true/false }, ... ] }
+                if (data && data.success === true) {
+                    const results = data.data || [];
+                    if (results.length > 0) {
+                        // 操作结果（单个委托单）
+                        const result = results[0];
+                        if (result.suc === true) {
+                            alert(`委托【${wtbh}】撤销成功！\n${result.resultDesc || ''}`);
+                            loadOrders();
+                            loadPositions();
+                        } else {
+                            // 操作失败
+                            throw new Error(result.resultDesc || `撤销操作未成功 (委托: ${wtbh})`);
+                        }
+                    } else {
+                        // Unexpected: success=true but no data returned for the order
+                        console.warn('撤销接口返回成功，但未包含订单结果。', data);
+                        alert(`委托 ${wtbh} 撤销请求已提交，但未收到明确成功确认。`);
+                        loadOrders();
+                        loadPositions();
+                    }
+                } else {
+                    // 异常
+                    throw new Error(data.msg || '撤销操作未成功');
+                }
+            })
+            .catch(error => {
+                console.error('撤销委托失败:', error);
+                // 异常 弹框提示
+                alert(`撤销委托【${wtbh}】失败：${error.message}`);
+                // Optional: Re-enable the button on error if you want user to retry
+                // buttonElement.textContent = originalText;
+                // buttonElement.disabled = false;
+            })
+            .finally(() => {
+                // Note: The button state is not restored here because loadOrders() will re-render the table.
+                // If loadOrders fails or you decide not to reload, you might want to restore the button here.
+            });
+    }
+
+    // 批量撤单 (根据新返回结果调整)
+    function handleBatchCancelOrders() {
+        const selectedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('请至少选择一条委托记录进行撤单！');
+            return;
+        }
+        const cancelParamsList = [];
+        selectedCheckboxes.forEach(checkbox => {
+            const wtdh = checkbox.getAttribute('data-wtdh');
+            const date = checkbox.getAttribute('data-date');
+            if (wtdh && date) {
+                // 注意：发送给后端的字段名是 wtdh 和 date，与 TradeRevokeOrdersParam DTO 对应
+                cancelParamsList.push({wtdh: wtdh, date: date});
+            }
+        });
+        if (cancelParamsList.length === 0) {
+            alert('未能获取到选中委托的编号或日期，请重试！');
+            return;
+        }
+        const confirmMsg = `您确定要撤销以下【${cancelParamsList.length}】条委托吗？\n${cancelParamsList.map(p => p.wtdh).join(', ')}`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        const batchCancelBtn = document.getElementById('batchCancelOrdersButton');
+        const originalBtnText = batchCancelBtn.textContent;
+        batchCancelBtn.textContent = '处理中...';
+        batchCancelBtn.disabled = true;
+        ApiUtils.fetch('/api/trade/revokeOrders', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cancelParamsList) // 发送参数对象的数组
+        })
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                    });
+            })
+            .then(data => {
+                if (data && data.success) {
+                    // 处理新的返回结构
+                    const results = data.data || []; // data.data 是 RevokeOrderResultDTO 的数组
+                    let successCount = 0;
+                    let failCount = 0;
+                    let messages = [];
+                    results.forEach(res => {
+                        // {
+                        //    "revoke": "20250919_10123",
+                        //    "resultDesc": "20250919: 您的撤单委托已提交，可至当日委托查看撤单结果",
+                        //    "suc": true
+                        // }
+                        // 根据新的返回结构处理
+                        if (res.suc) { // 检查 suc 字段
+                            successCount++;
+                        } else {
+                            failCount++;
+                            // 使用 resultDesc 字段作为失败信息
+                            messages.push(`委托 ${res.revoke.split('_')[1]}: ${res.resultDesc || '未知错误'}`); // 提取 wtdh 用于显示
+                        }
+                    });
+                    let finalMsg = `批量撤单完成！成功: ${successCount}, 失败：${failCount}`;
+                    if (messages.length > 0) {
+                        finalMsg += `\n失败详情:\n${messages.join('\n')}`;
+                    }
+                    alert(finalMsg);
+                    loadOrders(); // 刷新列表
+                    loadPositions();
+                } else {
+                    const errorMsg = data.msg || '批量撤单失败，未知错误。';
+                    alert(`批量撤单失败：${errorMsg}`);
+                    console.error('Batch Cancel API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('批量撤单请求失败:', error);
+                alert(`批量撤单请求失败：${error.message || error}`);
+            })
+            .finally(() => {
+                batchCancelBtn.textContent = originalBtnText;
+                batchCancelBtn.disabled = false;
+            });
+    }
+
+    // 一键撤单
+    function handleQuickCancelOrder() {
+        if (!confirm('您确定要 撤销所有【未报/已报/部成】状态的委托吗？')) {
+            return;
+        }
+        const quickCancelBtn = document.getElementById('quickCancelOrdersButton');
+        const originalBtnText = quickCancelBtn.textContent;
+        quickCancelBtn.textContent = '处理中...';
+        quickCancelBtn.disabled = true;
+        ApiUtils.fetch('/api/trade/quick/cancelOrder', {
+            method: 'GET', // 根据你的 Controller 定义
+            headers: {'Content-Type': 'application/json'}
+        })
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                    });
+            })
+            .then(data => {
+                if (data && data.success) {
+                    alert(`【一键撤单】操作成功！`);
+                    loadOrders(); // 刷新列表
+                    loadPositions();
+                } else {
+                    const errorMsg = data.msg || '【一键撤单】失败，未知错误。';
+                    alert(`【一键撤单】失败：${errorMsg}`);
+                    console.error('Quick Cancel API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('【一键撤单】请求失败:', error);
+                alert(`【一键撤单】请求失败：${error.message || error}`);
+            })
+            .finally(() => {
+                quickCancelBtn.textContent = originalBtnText;
+                quickCancelBtn.disabled = false;
+            });
+    }
+
+    // 全选 / 取消全选
+    function handleOrdersSelectAllChange() {
+        const isChecked = this.checked;
+        const checkboxes = document.querySelectorAll('#ordersTable .order-checkbox');
+        checkboxes.forEach(checkbox => {
+            // 只勾选那些可以被批量撤销的（即有 checkbox 的行）
+            if (checkbox.closest('tr').querySelector('input[type="checkbox"]')) {
+                checkbox.checked = isChecked;
+            }
+        });
+    }
+
+    // 更新 全选按钮 状态
+    function updateOrdersSelectAllState() {
+        const allCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox');
+        // Modified: Use the new header checkbox for orders
+        const selectAllCheckbox = document.getElementById('ordersSelectAllCheckboxHeader');
+        if (allCheckboxes.length === 0) {
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            return;
+        }
+        const checkedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
+        if (selectAllCheckbox) {
+            if (checkedCheckboxes.length === allCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedCheckboxes.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true; // 半选状态
+            }
+        }
+    }
+
+
+    // ----------------------------------------- 主线板块 列表（机选）-----------------------------------------------------
+
+
+    // 加载
+    function loadTopBlocks(date = topBlocksCurrentDate) {
+        const tbody = document.querySelector('#topBlocksTable tbody');
+        const messageDiv = document.getElementById('topBlocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
+            return;
+        }
+
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topBlockList?date=${date}&type=1`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线板块列表失败');
+                }
+
+                topBlockAvgPctData = data.data.topBlockAvgPctDTO || {};
+
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
+                    const changePctDTO = block.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        blockCode: block.blockCode,
+                        blockName: block.blockName,
+                        topDays: block.topDays,
+                        topStockSize: block.topStockSize,
+                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                    };
+                });
+
+                if (!topBlocksData || topBlocksData.length === 0) {
+
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+
+                    // 移除平均值行
+                    const thead = document.querySelector('#topBlocksTable thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+
+                    return;
+                }
+
+                // 渲染平均值行
+                displayTopBlocksAvgRow(topBlockAvgPctData);
+                // 根据当前排序状态显示数据
+                displayTopBlocks(topBlocksData);
+            })
+            .catch(error => {
+                console.error('获取主线板块列表失败:', error);
+                // 注意：colspan 改为 11
+                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+            });
+    }
+
+    function stockLink(xueqiuMarket, stockCode, stockName, topDays) {
+        const stockLink = `https://xueqiu.com/S/${xueqiuMarket}${stockCode}`;
+        return `<a href="${stockLink}" target="_blank" class="stock-code-link">${stockName} (${topDays}天)</a>`;
+    }
+
+
+    // 展示
+    function displayTopBlocks(blocks) {
+        const tbody = document.querySelector('#topBlocksTable tbody');
+        const messageDiv = document.getElementById('topBlocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTable tbody 或 #topBlocksTableMessage');
+            return;
+        }
+
+        let sortedBlocks = [...blocks];
+        if (topBlocksSortState.column) {
+            sortedBlocks.sort((a, b) => {
+                let valA = a[topBlocksSortState.column];
+                let valB = b[topBlocksSortState.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topBlocksSortState.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topBlocksSortState.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        tbody.innerHTML = '';
+        if (sortedBlocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedBlocks.forEach((block) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${block.rank}</td>
+                    <td>${block.blockCode}</td>
+                    <td>${block.blockName}</td>
+                    <td>${block.topDays}</td>
+                    <td>${block.topStockSize}</td>
+                    <td class="top-list-item">${block.topStockList}</td>
+                    <td>${block.topStartDate}</td>
+                    <td>${block.topEndDate}</td>
+                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next10_changePct > 0 ? 'red' : block.start2Next10_changePct < 0 ? 'teal' : 'black'}">${block.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next15_changePct > 0 ? 'red' : block.start2Next15_changePct < 0 ? 'teal' : 'black'}">${block.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next20_changePct > 0 ? 'red' : block.start2Next20_changePct < 0 ? 'teal' : 'black'}">${block.start2Next20_changePct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlockAvgPctData.date}）（${sortedBlocks.length}）`;
+        }
+    }
+
+    function displayTopBlocksAvgRow(avgPct) {
+        const thead = document.querySelector('#topBlocksTable thead');
+        if (!thead) {
+            console.error('未找到 #topBlocksTable thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topBlocksTable thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
+    }
+
+
+    // 排序
+    function updateTopBlocksSortIcon() {
+        const iconIdPrefix = `sortTopBlocks${topBlocksSortState.column ? topBlocksSortState.column.charAt(0).toUpperCase() + topBlocksSortState.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topBlocksTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topBlocksSortState.column) {
+            iconElement.textContent = topBlocksSortState.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+    function sortTopBlocksTable(column) {
+        if (topBlocksSortState.column === column) {
+            topBlocksSortState.order = topBlocksSortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topBlocksSortState.order = 'desc'; // 默认倒序
+            topBlocksSortState.column = column;
+        }
+        updateTopBlocksSortIcon();
+        displayTopBlocks(topBlocksData);
+    }
+
+
+    // ----------------------------------------- 主线个股 列表（机选）-----------------------------------------------------
+
+    // 加载
+    function loadTopStocks(date = topStocksCurrentDate) {
+        const tbody = document.querySelector('#topStocksTable tbody');
+        const messageDiv = document.getElementById('topStocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
+            return;
+        }
+
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=1`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线个股列表失败');
+                }
+
+                topStockAvgPctData = data.data.topStockAvgPctDTO || {};
+
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
+                    const changePctDTO = stock.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        stockCode: stock.stockCode,
+                        stockName: stock.stockName,
+                        xueqiuMarket: stock.xueqiuMarket,
+                        topDays: stock.topDays,
+                        topBlockSize: stock.topBlockSize,
+                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                    };
+                });
+
+                if (!topStocksData || topStocksData.length === 0) {
+
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+
+                    // 移除平均值行
+                    const thead = document.querySelector('#topStocksTable thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+
+                    return;
+                }
+
+
+                // 渲染平均值行
+                displayTopStocksAvgRow(topStockAvgPctData);
+                // 根据当前排序状态显示数据
+                displayTopStocks(topStocksData);
+            })
+            .catch(error => {
+                console.error('获取主线个股列表失败:', error);
+                // 注意：colspan 改为 11
+                tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+            });
+    }
+
+
+    // 展示
+    function displayTopStocks(stocks) {
+        const tbody = document.querySelector('#topStocksTable tbody');
+        const messageDiv = document.getElementById('topStocksTableMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTable tbody 或 #topStocksTableMessage');
+            return;
+        }
+
+        let sortedStocks = [...stocks];
+        if (topStocksSortState.column) {
+            sortedStocks.sort((a, b) => {
+                let valA = a[topStocksSortState.column];
+                let valB = b[topStocksSortState.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topStocksSortState.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topStocksSortState.order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        tbody.innerHTML = '';
+        if (sortedStocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedStocks.forEach((stock) => {
+                const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${stock.rank}</td>
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
+                    <td>${stock.stockName}</td>
+                    <td>${stock.topDays}</td>
+                    <td>${stock.topBlockSize}</td>
+                    <td class="top-list-item">${stock.topBlockList}</td>
+                    <td>${stock.topStartDate}</td>
+                    <td>${stock.topEndDate.toString()}</td>
+                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStockAvgPctData.date}）（${sortedStocks.length}）`;
+        }
+    }
+
+    function displayTopStocksAvgRow(avgPct) {
+        const thead = document.querySelector('#topStocksTable thead');
+        if (!thead) {
+            console.error('未找到 #topStocksTable thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topStocksTable thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
+    }
+
+
+    // 排序
+    function updateTopStocksSortIcon() {
+        const iconIdPrefix = `sortTopStocks${topStocksSortState.column ? topStocksSortState.column.charAt(0).toUpperCase() + topStocksSortState.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topStocksTable th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topStocksSortState.column) {
+            iconElement.textContent = topStocksSortState.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+    function sortTopStocksTable(column) {
+        if (topStocksSortState.column === column) {
+            topStocksSortState.order = topStocksSortState.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topStocksSortState.order = 'desc'; // 默认倒序
+            topStocksSortState.column = column;
+        }
+        updateTopStocksSortIcon();
+        displayTopStocks(topStocksData);
+    }
+
+
+    // ----------------------------------------- 主线板块 列表（人选）-----------------------------------------------------
+
+
+    // 加载
+    function loadTopBlocksManual(date = topBlocksCurrentDateManual) {
+        const tbody = document.querySelector('#topBlocksTableManual tbody');
+        const messageDiv = document.getElementById('topBlocksTableManualMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTableManual tbody 或 #topBlocksTableManualMessage');
+            return;
+        }
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topBlockList?date=${date}&type=2`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线板块列表(人选)失败');
+                }
+                topBlockAvgPctDataManual = data.data.topBlockAvgPctDTO;
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => {
+                    const changePctDTO = block.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        blockCode: block.blockCode,
+                        blockName: block.blockName,
+                        topDays: block.topDays,
+                        topStockSize: block.topStockSize,
+                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                    };
+                });
+
+                if (!topBlocksDataManual || topBlocksDataManual.length === 0) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
+                    // 移除平均值行
+                    const thead = document.querySelector('#topBlocksTableManual thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+                    return;
+                }
+                // 渲染平均值行
+                displayTopBlocksAvgRowManual(topBlockAvgPctDataManual);
+                // 根据当前排序状态显示数据
+                displayTopBlocksManual(topBlocksDataManual);
+            })
+            .catch(error => {
+                console.error('获取主线板块列表(人选)失败:', error);
+                tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
+            });
+    }
+
+
+    // 展示
+    function displayTopBlocksManual(blocks) {
+        const tbody = document.querySelector('#topBlocksTableManual tbody');
+        const messageDiv = document.getElementById('topBlocksTableManualMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topBlocksTableManual tbody 或 #topBlocksTableManualMessage');
+            return;
+        }
+        let sortedBlocks = [...blocks];
+        if (topBlocksSortStateManual.column) {
+            sortedBlocks.sort((a, b) => {
+                let valA = a[topBlocksSortStateManual.column];
+                let valB = b[topBlocksSortStateManual.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topBlocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topBlocksSortStateManual.order === 'asc' ? comparison : -comparison;
+            });
+        }
+        tbody.innerHTML = '';
+        if (sortedBlocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedBlocks.forEach((block) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${block.rank}</td>
+                    <td>${block.blockCode}</td>
+                    <td>${block.blockName}</td>
+                    <td>${block.topDays}</td>
+                    <td>${block.topStockSize}</td>
+                    <td class="top-list-item">${block.topStockList}</td>
+                    <td>${block.topStartDate}</td>
+                    <td>${block.topEndDate}</td>
+                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next10_changePct > 0 ? 'red' : block.start2Next10_changePct < 0 ? 'teal' : 'black'}">${block.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next15_changePct > 0 ? 'red' : block.start2Next15_changePct < 0 ? 'teal' : 'black'}">${block.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Next20_changePct > 0 ? 'red' : block.start2Next20_changePct < 0 ? 'teal' : 'black'}">${block.start2Next20_changePct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocks.length}）`;
+        }
+    }
+
+    function displayTopBlocksAvgRowManual(avgPct) {
+        const thead = document.querySelector('#topBlocksTableManual thead');
+        if (!thead) {
+            console.error('未找到 #topBlocksTable thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topBlocksTableManual thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
+    }
+
+
+    // 排序
+    function sortTopBlocksTableManual(column) {
+        if (topBlocksSortStateManual.column === column) {
+            topBlocksSortStateManual.order = topBlocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topBlocksSortStateManual.order = 'desc'; // 默认倒序
+            topBlocksSortStateManual.column = column;
+        }
+        updateTopBlocksSortIconManual();
+        displayTopBlocksManual(topBlocksDataManual);
+    }
+
+    function updateTopBlocksSortIconManual() {
+        const iconIdPrefix = `sortTopBlocksManual${topBlocksSortStateManual.column ? topBlocksSortStateManual.column.charAt(0).toUpperCase() + topBlocksSortStateManual.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topBlocksTableManual th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topBlocksSortStateManual.column) {
+            iconElement.textContent = topBlocksSortStateManual.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+
+    // ----------------------------------------- 主线个股 列表（人选）-----------------------------------------------------
+
+
+    // 加载
+    function loadTopStocksManual(date = topStocksCurrentDateManual) {
+        const tbody = document.querySelector('#topStocksTableManual tbody');
+        const messageDiv = document.getElementById('topStocksTableManualMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
+            return;
+        }
+        // 清空内容
+        tbody.innerHTML = '';
+        messageDiv.style.display = 'none';
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=2`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.msg || '获取主线个股列表(人选)失败');
+                }
+                topStockAvgPctDataManual = data.data.topStockAvgPctDTO;
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => {
+                    const changePctDTO = stock.changePctDTO || {};
+                    return {
+                        rank: index + 1, // 添加序号
+                        stockCode: stock.stockCode,
+                        stockName: stock.stockName,
+                        xueqiuMarket: stock.xueqiuMarket,
+                        topDays: stock.topDays,
+                        topBlockSize: stock.topBlockSize,
+                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                            : '-',
+                        topStartDate: changePctDTO.topStartDate || '-',
+                        topEndDate: changePctDTO.topEndDate || '-',
+                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                        start2End_changePct: changePctDTO.start2End_changePct || 0,
+                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2End_changePct: changePctDTO.today2End_changePct || 0,
+                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                    };
+                });
+
+                if (!topStocksDataManual || topStocksDataManual.length === 0) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.textContent = '暂无数据';
+                    document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
+                    // 移除平均值行
+                    const thead = document.querySelector('#topStocksTableManual thead');
+                    if (thead) {
+                        const existingAvgRow = thead.querySelector('tr.avg-row');
+                        if (existingAvgRow) {
+                            existingAvgRow.remove();
+                        }
+                    }
+                    return;
+                }
+                // 渲染平均值行
+                displayTopStocksAvgRowManual(topStockAvgPctDataManual);
+                // 根据当前排序状态显示数据
+                displayTopStocksManual(topStocksDataManual);
+            })
+            .catch(error => {
+                console.error('获取主线个股列表(人选)失败:', error);
+                tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
+                document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
+            });
+    }
+
+
+    // 展示
+    function displayTopStocksManual(stocks) {
+        const tbody = document.querySelector('#topStocksTableManual tbody');
+        const messageDiv = document.getElementById('topStocksTableManualMessage');
+        if (!tbody || !messageDiv) {
+            console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
+            return;
+        }
+        let sortedStocks = [...stocks];
+        if (topStocksSortStateManual.column) {
+            sortedStocks.sort((a, b) => {
+                let valA = a[topStocksSortStateManual.column];
+                let valB = b[topStocksSortStateManual.column];
+                if (valA == null) valA = '';
+                if (valB == null) valB = '';
+                // number
+                if (typeof valA === 'number') {
+                    const numA = parseFloat(valA);
+                    const numB = parseFloat(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return topStocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+                // string
+                const comparison = String(valA).localeCompare(String(valB));
+                return topStocksSortStateManual.order === 'asc' ? comparison : -comparison;
+            });
+        }
+        tbody.innerHTML = '';
+        if (sortedStocks.length === 0) {
+            messageDiv.style.display = 'block';
+            messageDiv.textContent = '暂无数据';
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（0）`;
+        } else {
+            messageDiv.style.display = 'none';
+            sortedStocks.forEach((stock) => {
+                const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
+                const tr = document.createElement('tr');
+                // 添加 data-stockcode 属性
+                tr.setAttribute('data-stockcode', stock.stockCode);
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="top-stocks-manual-checkbox" data-stockcode="${stock.stockCode}"></td>
+                    <td>${stock.rank}</td>
+                    <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
+                    <td>${stock.stockName}</td>
+                    <td>${stock.topDays}</td>
+                    <td>${stock.topBlockSize}</td>
+                    <td class="top-list-item">${stock.topBlockList}</td>
+                    <td>${stock.topStartDate}</td>
+                    <td>${stock.topEndDate.toString()}</td>
+                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
+                    <td><button class="btn btn-danger btn-sm btn-stockManual-delete-row" data-stockcode="${stock.stockCode}">删除</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocks.length}）`;
+
+            // 为新渲染的复选框添加事件监听器
+            attachTopStocksManualCheckboxListeners();
+        }
+    }
+
+    function displayTopStocksAvgRowManual(avgPct) {
+        const thead = document.querySelector('#topStocksTableManual thead');
+        if (!thead) {
+            console.error('未找到 #topStocksTableManual thead');
+            return;
+        }
+
+        // 清除可能已存在的平均值行
+        const existingAvgRow = document.querySelector('#topStocksTableManual thead tr.avg-row');
+        if (existingAvgRow) {
+            existingAvgRow.remove();
+        }
+
+        const avgRow = document.createElement('tr');
+        avgRow.className = 'avg-row'; // 添加类名以便样式控制
+
+        // 前8列是基本信息，需要合并显示标签
+        avgRow.innerHTML = `
+            <td colspan="9" class="text-center avg-label">【指数】平均值</td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next3_changePct > 0 ? 'red' : avgPct.start2Next3_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next3_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next5_changePct > 0 ? 'red' : avgPct.start2Next5_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next5_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next10_changePct > 0 ? 'red' : avgPct.start2Next10_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next10_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next15_changePct > 0 ? 'red' : avgPct.start2Next15_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next15_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Next20_changePct > 0 ? 'red' : avgPct.start2Next20_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Next20_changePct.toFixed(2)}%
+            </td>
+            <td>-</td>
+        `;
+
+        // 将平均值行插入到原始表头行之后
+        thead.appendChild(avgRow);
+    }
+
+
+    // 排序
+    function updateTopStocksSortIconManual() {
+        const iconIdPrefix = `sortTopStocksManual${topStocksSortStateManual.column ? topStocksSortStateManual.column.charAt(0).toUpperCase() + topStocksSortStateManual.column.slice(1) : ''}`;
+        const iconElement = document.getElementById(iconIdPrefix);
+        const allIcons = document.querySelectorAll('#topStocksTableManual th span.sort-icon');
+        allIcons.forEach(icon => {
+            icon.textContent = '';
+        });
+        if (iconElement && topStocksSortStateManual.column) {
+            iconElement.textContent = topStocksSortStateManual.order === 'asc' ? '↑' : '↓';
+        }
+    }
+
+    function sortTopStocksTableManual(column) {
+        if (topStocksSortStateManual.column === column) {
+            topStocksSortStateManual.order = topStocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
+        } else {
+            topStocksSortStateManual.order = 'desc'; // 默认倒序
+            topStocksSortStateManual.column = column;
+        }
+        updateTopStocksSortIconManual();
+        displayTopStocksManual(topStocksDataManual);
+    }
+
+
+    // ------- 主线个股（人选）：支持勾选（等比买入 / 批量删除）
 
 
     // 主线个股（人选）  ->   复选框 事件监听
@@ -3239,7 +3521,9 @@
     }
 
 
-    // 1. 主按钮点击事件：打开模态框
+    // ------- 主线个股（人选）：一键等比买入（支持勾选）
+
+    // 1. 按钮
     function handleBuyNewPosition() {
         const selectedCheckboxes = document.querySelectorAll('.top-stocks-manual-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
@@ -3375,7 +3659,7 @@
             if (data && data.success) {
                 alert(`【一键等比买入（调仓换股）】操作成功！`);
                 // 可选：刷新持仓或主线个股数据
-                queryPositions(); // 如果需要 刷新持仓
+                loadPositions(); // 如果需要 刷新持仓
                 loadTopStocksManual(); // 如果需要 刷新主线个股（人选）
             } else {
                 const errorMsg = data.msg || '操作失败，未知错误。';
@@ -3397,273 +3681,140 @@
     }
 
 
-    // 撤单
-    function cancelOrder(wtbh, date, buttonElement) {
-        // Basic validation
-        if (!wtbh || !date) {
-            console.error('撤销委托失败：缺少必要的委托编号或日期', {wtbh, date});
-            alert('撤销委托失败：缺少必要的委托编号或日期！');
+    // 主线个股（人选）- 删除（单个）
+    function deleteTopStockManual(stockCode, buttonElement) {
+        const date = topStockAvgPctDataManual.date;
+
+        if (!confirm(`确定要删除股票代码 ${stockCode} 的记录吗？`)) {
             return;
         }
-        if (!confirm(`确定要撤销委托编号【${wtbh}】吗？`)) {
-            return;
-        }
-        buttonElement.textContent = '撤销中...';
+
+        buttonElement.textContent = '删除中...';
         buttonElement.disabled = true;
-        // Prepare parameters for the revokeOrders API
-        // The API expects an array of objects with 'wtdh' and 'date'
-        const cancelParamsList = [{wtdh: wtbh, date: date}]; // Wrap single order in an array
-        ApiUtils.fetch('/api/trade/revokeOrders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // Add other headers if required by your ApiUtils or backend (e.g., authentication)
-            },
-            body: JSON.stringify(cancelParamsList) // Send the array in the request body
-        })
-            .then(res => {
-                return res.ok ? res.json() :
-                    res.json().then(errData => {
-                        throw new Error(errData.msg || `撤销失败 HTTP ${res.status}`);
-                    });
-            })
+
+        // Call the API
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList/delete?date=${date}&stockCodeList=${encodeURIComponent(stockCode)}`)
+            .then(response => response.json())
             .then(data => {
-                // Handle response based on the structure you provided earlier for revokeOrders
-                // data = { success: true, msg: "...", data: [ { revoke: "...", resultDesc: "...", suc: true/false }, ... ] }
-                if (data && data.success === true) {
-                    const results = data.data || [];
-                    if (results.length > 0) {
-                        const result = results[0]; // Get the result for the single order we tried to cancel
-                        if (result.suc === true) {
-                            alert(`委托【${wtbh}】撤销成功！\n${result.resultDesc || ''}`);
-                            loadOrders();
-                            queryPositions();
-                        } else {
-                            // Backend indicated the operation was not successful for this order
-                            throw new Error(result.resultDesc || `撤销操作未成功 (委托: ${wtbh})`);
-                        }
-                    } else {
-                        // Unexpected: success=true but no data returned for the order
-                        console.warn('撤销接口返回成功，但未包含订单结果。', data);
-                        alert(`委托 ${wtbh} 撤销请求已提交，但未收到明确成功确认。`);
-                        loadOrders();
-                        queryPositions();
-                    }
+                if (data.success) {
+                    alert(`成功删除记录 ${stockCode}。`);
+                    loadTopStocksManual(date);
                 } else {
-                    // Backend returned success=false or invalid structure
-                    throw new Error(data.msg || '撤销操作未成功');
+                    alert(`删除失败：${data.msg || '未知错误'}`);
+                    console.error('Delete failed for stock:', stockCode, data);
                 }
             })
             .catch(error => {
-                console.error('撤销委托失败:', error);
-                // Display user-friendly error message
-                alert(`撤销委托【${wtbh}】失败：${error.message}`);
-                // Optional: Re-enable the button on error if you want user to retry
-                // buttonElement.textContent = originalText;
-                // buttonElement.disabled = false;
-            })
-            .finally(() => {
-                // Note: The button state is not restored here because loadOrders() will re-render the table.
-                // If loadOrders fails or you decide not to reload, you might want to restore the button here.
+                console.error('删除主线个股列表（人选）单行失败:', stockCode, error);
+                alert(`删除请求失败：${error.message || error}`);
             });
     }
 
-    // --- 新增：批量撤单功能 (根据新返回结果调整) ---
-    function handleBatchCancelOrders() {
-        const selectedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
-        if (selectedCheckboxes.length === 0) {
-            alert('请至少选择一条委托记录进行撤单！');
+    // 主线个股（人选）- 批量删除
+    function batchDeleteTopStocksManual() {
+        const checkboxes = document.querySelectorAll('#topStocksTableManual tbody input[type="checkbox"]:checked');
+        if (checkboxes.length === 0) {
+            alert('请至少勾选一项进行删除。');
             return;
         }
-        const cancelParamsList = [];
-        selectedCheckboxes.forEach(checkbox => {
-            const wtdh = checkbox.getAttribute('data-wtdh');
-            const date = checkbox.getAttribute('data-date');
-            if (wtdh && date) {
-                // 注意：发送给后端的字段名是 wtdh 和 date，与 TradeRevokeOrdersParam DTO 对应
-                cancelParamsList.push({wtdh: wtdh, date: date});
-            }
-        });
-        if (cancelParamsList.length === 0) {
-            alert('未能获取到选中委托的编号或日期，请重试！');
+
+        const stockCodes = Array.from(checkboxes)
+            .map(checkbox => checkbox.getAttribute('data-stockcode'))
+            .filter(code => code); // Filter out any potentially missing codes
+
+        if (stockCodes.length === 0) {
+            alert('获取勾选的股票代码失败。');
+            console.error('No stock codes found for selected items.');
             return;
         }
-        const confirmMsg = `您确定要撤销以下【${cancelParamsList.length}】条委托吗？\n${cancelParamsList.map(p => p.wtdh).join(', ')}`;
-        if (!confirm(confirmMsg)) {
-            return;
+
+        const stockCodeList = stockCodes.join(',');
+        const date = topStockAvgPctDataManual.date;
+
+        if (!confirm(`确定要删除 ${stockCodes.length} 条主线个股记录吗？`)) {
+            return; // User cancelled
         }
-        const batchCancelBtn = document.getElementById('batchCancelOrdersButton');
-        const originalBtnText = batchCancelBtn.textContent;
-        batchCancelBtn.textContent = '处理中...';
-        batchCancelBtn.disabled = true;
-        ApiUtils.fetch('/api/trade/revokeOrders', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(cancelParamsList) // 发送参数对象的数组
-        })
-            .then(res => {
-                return res.ok ? res.json() :
-                    res.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
-                    });
-            })
+
+        // Call the API
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList/delete?date=${date}&stockCodeList=${encodeURIComponent(stockCodeList)}`)
+            .then(response => response.json())
             .then(data => {
-                if (data && data.success) {
-                    // 处理新的返回结构
-                    const results = data.data || []; // data.data 是 RevokeOrderResultDTO 的数组
-                    let successCount = 0;
-                    let failCount = 0;
-                    let messages = [];
-                    results.forEach(res => {
-                        // {
-                        //    "revoke": "20250919_10123",
-                        //    "resultDesc": "20250919: 您的撤单委托已提交，可至当日委托查看撤单结果",
-                        //    "suc": true
-                        // }
-                        // 根据新的返回结构处理
-                        if (res.suc) { // 检查 suc 字段
-                            successCount++;
-                        } else {
-                            failCount++;
-                            // 使用 resultDesc 字段作为失败信息
-                            messages.push(`委托 ${res.revoke.split('_')[1]}: ${res.resultDesc || '未知错误'}`); // 提取 wtdh 用于显示
-                        }
-                    });
-                    let finalMsg = `批量撤单完成！成功: ${successCount}, 失败：${failCount}`;
-                    if (messages.length > 0) {
-                        finalMsg += `\n失败详情:\n${messages.join('\n')}`;
-                    }
-                    alert(finalMsg);
-                    loadOrders(); // 刷新列表
-                    queryPositions();
+                if (data.success) {
+                    alert(`成功删除 ${data.data || stockCodes.length} 条记录。`);
+                    // Reload the table data to reflect changes
+                    loadTopStocksManual(date);
                 } else {
-                    const errorMsg = data.msg || '批量撤单失败，未知错误。';
-                    alert(`批量撤单失败：${errorMsg}`);
-                    console.error('Batch Cancel API Error:', data);
+                    alert(`删除失败：${data.msg || '未知错误'}`);
+                    console.error('Batch delete failed:', data);
                 }
             })
             .catch(error => {
-                console.error('批量撤单请求失败:', error);
-                alert(`批量撤单请求失败：${error.message || error}`);
-            })
-            .finally(() => {
-                batchCancelBtn.textContent = originalBtnText;
-                batchCancelBtn.disabled = false;
+                console.error('删除主线个股列表（人选）失败:', error);
+                alert(`删除请求失败：${error.message || error}`);
             });
     }
 
-    // --- 新增：一键撤单功能 ---
-    function handleQuickCancelOrder() {
-        if (!confirm('您确定要 撤销所有【未报/已报/部成】状态的委托吗？')) {
-            return;
-        }
-        const quickCancelBtn = document.getElementById('quickCancelOrdersButton');
-        const originalBtnText = quickCancelBtn.textContent;
-        quickCancelBtn.textContent = '处理中...';
-        quickCancelBtn.disabled = true;
-        ApiUtils.fetch('/api/trade/quick/cancelOrder', {
-            method: 'GET', // 根据你的 Controller 定义
-            headers: {'Content-Type': 'application/json'}
-        })
-            .then(res => {
-                return res.ok ? res.json() :
-                    res.json().then(errData => {
-                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
-                    });
-            })
-            .then(data => {
-                if (data && data.success) {
-                    alert(`【一键撤单】操作成功！`);
-                    loadOrders(); // 刷新列表
-                    queryPositions();
-                } else {
-                    const errorMsg = data.msg || '【一键撤单】失败，未知错误。';
-                    alert(`【一键撤单】失败：${errorMsg}`);
-                    console.error('Quick Cancel API Error:', data);
-                }
-            })
-            .catch(error => {
-                console.error('【一键撤单】请求失败:', error);
-                alert(`【一键撤单】请求失败：${error.message || error}`);
-            })
-            .finally(() => {
-                quickCancelBtn.textContent = originalBtnText;
-                quickCancelBtn.disabled = false;
-            });
-    }
 
-    // --- 新增：全选/取消全选功能 (当日委托) ---
-    function handleOrdersSelectAllChange() {
-        const isChecked = this.checked;
-        const checkboxes = document.querySelectorAll('#ordersTable .order-checkbox');
-        checkboxes.forEach(checkbox => {
-            // 只勾选那些可以被批量撤销的（即有 checkbox 的行）
-            if (checkbox.closest('tr').querySelector('input[type="checkbox"]')) {
-                checkbox.checked = isChecked;
-            }
-        });
-    }
+    // ----------------------------------------- 按钮事件 ---------------------------------------------------------------
 
-    // --- 新增：更新当日委托全选按钮状态 ---
-    function updateOrdersSelectAllState() {
-        const allCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox');
-        // Modified: Use the new header checkbox for orders
-        const selectAllCheckbox = document.getElementById('ordersSelectAllCheckboxHeader');
-        if (allCheckboxes.length === 0) {
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            }
-            return;
-        }
-        const checkedCheckboxes = document.querySelectorAll('#ordersTable .order-checkbox:checked');
-        if (selectAllCheckbox) {
-            if (checkedCheckboxes.length === allCheckboxes.length) {
-                selectAllCheckbox.checked = true;
-                selectAllCheckbox.indeterminate = false;
-            } else if (checkedCheckboxes.length === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = true; // 半选状态
-            }
-        }
-    }
 
-    // --- 新增：为表头添加点击事件以实现全选/取消全选 ---
+    // 将所有页面 初始化相关的事件监听器 和 数据加载   都放入 DOMContentLoaded 内
     document.addEventListener('DOMContentLoaded', function () {
-        // 为模态框内的确认按钮添加事件
-        document.getElementById('confirmSellSettingsBtn').addEventListener('click', executeSellAll);
-        // 为模态框内的价格策略单选按钮添加事件
-        const modalStrategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
-        const modalStrategyChangePrice = document.getElementById('modalStrategyChangePrice');
-        if (modalStrategyCurrPrice && modalStrategyChangePrice) {
-            modalStrategyCurrPrice.addEventListener('change', updateModalInputStates);
-            modalStrategyChangePrice.addEventListener('change', updateModalInputStates);
-        }
-        // --- 其他原有事件监听器 ---
-        // 一键再融资按钮
+
+
+        // -------------------------- 一键 B/S 按钮
+
+
+        // 查询（持仓）
+        document.getElementById('loadPositionsButton').addEventListener('click', loadPositions);
+
+        // 一键再融资
         document.getElementById('quickResetFinancingButton').addEventListener('click', handleQuickResetFinancing);
-        // 一键取款按钮
+
+        // 一键取款 主按钮
         document.getElementById('quickLowerFinancingButton').addEventListener('click', handleQuickLowerFinancing);
-        // 确认一键取款按钮
+        // 一键取款 确认按钮
         document.getElementById('confirmQuickLowerFinancingBtn').addEventListener('click', confirmQuickLowerFinancing);
-        // --- 新增：持仓账户配置事件监听器 ---
+
+
+        // --- 一键等比卖出 ---
+
+        // 主按钮
+        document.getElementById('sellPositionsButton').addEventListener('click', handleSellPositions);
+        // 价格策略（互斥单选）
+        document.getElementById('modalStrategyCurrPrice').addEventListener('change', updateModalInputStates);   // 当前价格
+        document.getElementById('modalStrategyChangePrice').addEventListener('change', updateModalInputStates); // 昨日收盘价
+        // 确认按钮
+        document.getElementById('confirmSellSettingsBtn').addEventListener('click', executeSellAll);
+
+
+        // --- 一键等比买入 ---
+
+        // 主按钮
+        document.getElementById('buyNewPositionButton').addEventListener('click', handleBuyNewPosition);
+        // 价格策略（互斥单选）
+        setupBuyPriceStrategyToggle();
+        // 确认按钮
+        document.getElementById('confirmBuyNewPositionSettingsBtn').addEventListener('click', executeBuyNewPosition);
+
+
+        // -------------------------- 配置-持仓账户
+
+
+        // 持仓账户配置 事件监听器
         document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
-        // 页面加载时查询配置
-        queryCfgAccount();
-        // --- 结束：持仓账户配置事件监听器 ---
 
 
-        // --- 新增：主线板块/个股日期和刷新按钮事件 ---
+        // -------------------------- 主线 板块/个股（机选）
+
+
+        // 主线板块/个股   日期、刷新 按钮事件
         const topBlocksDateInput = document.getElementById('topBlocksDateInput');
         const topStocksDateInput = document.getElementById('topStocksDateInput');
         const refreshTopBlocksButton = document.getElementById('refreshTopBlocksButton');
         const refreshTopStocksButton = document.getElementById('refreshTopStocksButton');
 
 
-        // 机选
         if (topBlocksDateInput) {
             topBlocksDateInput.max = today;
             // 设置默认日期
@@ -3695,7 +3846,10 @@
         }
 
 
-        // 人选
+        // -------------------------- 主线 板块/个股（人选）
+
+
+        // 主线板块/个股   日期、刷新 按钮事件
         const topBlocksManualDateInput = document.getElementById('topBlocksManualDateInput');
         const topStocksManualDateInput = document.getElementById('topStocksManualDateInput');
         const refreshTopBlocksManualButton = document.getElementById('refreshTopBlocksManualButton');
@@ -3713,6 +3867,7 @@
                 refreshTopBlocksManualButton.addEventListener('click', () => loadTopBlocksManual(topBlocksCurrentDateManual));
             }
         }
+
         if (topStocksManualDateInput) {
             topStocksManualDateInput.max = today;
             topStocksManualDateInput.value = topStocksCurrentDateManual;
@@ -3726,10 +3881,7 @@
         }
 
 
-        // --- 结束：主线板块/个股日期和刷新按钮事件 ---
-
-
-        // --- 新增：主线板块/个股标签页首次显示加载数据 ---
+        // --- 新增：主线板块/个股标签页 首次显示加载数据 ---
         const topBlocksTab = document.getElementById('top-blocks-tab');
         const topStocksTab = document.getElementById('top-stocks-tab');
         const topBlocksManualTab = document.getElementById('top-blocks-manual-tab');
@@ -3779,21 +3931,6 @@
         }
 
 
-        // --- 结束：主线板块/个股标签页首次显示加载数据 ---
-
-
-        // --- 一键等比买入 ---
-
-        // 为模态框内的确认按钮添加事件 (买入)
-        document.getElementById('confirmBuyNewPositionSettingsBtn').addEventListener('click', executeBuyNewPosition);
-        // 为模态框内的价格策略单选按钮添加事件 (买入)
-        setupBuyPriceStrategyToggle();
-        // 为买入按钮添加事件
-        document.getElementById('buyNewPositionButton').addEventListener('click', handleBuyNewPosition);
-
-        // --- 结束：一键等比买入 ---
-
-
         // --- 持仓表格全选优化 ---
         // Modified: Use the new header checkbox for positions
         const positionsSelectAllCheckboxHeader = document.getElementById('positionSelectAllCheckboxHeader');
@@ -3828,6 +3965,7 @@
                 }
             });
         }
+
 
         // --- 当日委托相关元素和事件 ---
         const ordersTab = document.getElementById('orders-tab');
@@ -3895,14 +4033,38 @@
             console.warn('未能找到当日委托相关的DOM元素');
         }
 
+
+        // 主线个股（人选）- 批量删除
+        document.getElementById('batchDeleteTopStocksManualButton').addEventListener('click', batchDeleteTopStocksManual);
+
+
+        // 为动态生成的 删除按钮 绑定事件
+        document.addEventListener('click', function (e) {
+            // 当日委托列表：撤单（单个）
+            if (e.target.classList.contains('cancel-order-button')) {
+                const date = e.target.getAttribute('data-date'); // 委托日期
+                const wtbh = e.target.getAttribute('data-wtbh'); // 委托编号
+                cancelOrder(date, wtbh, e.target);
+            }
+
+            // 主线个股（人选）：删除（单个）
+            if (e.target.classList.contains('btn-stockManual-delete-row')) {
+                const stockCode = e.target.getAttribute('data-stockcode'); // 个股代码
+                deleteTopStockManual(stockCode, e.target);
+            }
+        });
+
+
+        // ----------------------------- 页面加载时 加载初始数据
+
+        // 查询持仓
+        loadPositions();
+        // 查询配置
+        loadCfgAccount();
     });
-    // --- 结束：当日委托功能 ---
 
 
-    document.getElementById('queryButton').addEventListener('click', queryPositions);
-    document.getElementById('sellAllButton').addEventListener('click', handleSellAll);
-
-    window.addEventListener('load', queryPositions);
+    // window.addEventListener('load', loadPositions);
 
 
 </script>
