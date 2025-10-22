@@ -935,6 +935,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                         // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         if (月多 && RPS红 && SSF多) {
                             date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(blockCode);
+                        } else {
+                            // 当日 无主线   ->   记录 空数据行
+                            date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet());
                         }
                     });
 
