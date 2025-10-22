@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +41,11 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
         return baseMapper.getByDate(date);
     }
 
+    @Override
+    public List<QaTopBlockDO> listByDate(LocalDate startDate, LocalDate endDate) {
+        return baseMapper.listByDate(startDate, endDate);
+    }
+
 
     @Override
     public List<QaTopBlockDO> lastN(LocalDate date, int N) {
@@ -53,6 +57,5 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
         date = date.plusDays(N / 5 * 7);
         return lastN(date, N);
     }
-
 
 }

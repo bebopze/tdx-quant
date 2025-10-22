@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.config.BizException;
@@ -9,9 +10,11 @@ import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -431,7 +434,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaTopBlockDO entity = lastEntityList.get(0); // 倒序
+        QaTopBlockDO entity = CollectionUtils.isEmpty(lastEntityList) ? null : lastEntityList.get(0); // 倒序
         if (entity == null) {
             return dto;
         }
@@ -532,7 +535,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaTopBlockDO entity = lastEntityList.get(0); // 倒序
+        QaTopBlockDO entity = CollectionUtils.isEmpty(lastEntityList) ? null : lastEntityList.get(0); // 倒序
         if (entity == null) {
             return dto;
         }
@@ -591,7 +594,45 @@ public class TopBlockServiceImpl implements TopBlockService {
         dto.setTopStockDTOList(topStockDTOList);
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // today
+        todayInfo(date, dto);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         return dto;
+    }
+
+
+    private void todayInfo(LocalDate date, TopStockPoolDTO dto) {
+        if (date.isBefore(LocalDate.now())) {
+            return;
+        }
+
+
+        List<TopChangePctDTO> topChangePctList = Lists.newArrayList();
+        dto.getTopStockDTOList().forEach(e -> {
+            String stockCode = e.getStockCode();
+
+
+            StockSnapshotKlineDTO r = KlineAPI.klineCache(stockCode);
+
+
+            TopChangePctDTO changePctDTO = e.getChangePctDTO();
+            // 次日涨跌幅（今日 实时涨跌幅）
+            changePctDTO.setToday2Next_changePct(r.getChange_pct());
+
+            topChangePctList.add(changePctDTO);
+        });
+
+
+        // avg
+        DoubleSummaryStatistics today2NextStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getToday2Next_changePct).summaryStatistics();
+        dto.getTopStockAvgPctDTO().setToday2Next_changePct(NumUtil.of(today2NextStats.getAverage()));
     }
 
 
@@ -605,8 +646,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         // ---------------------------------------------
 
 
-        Integer type = TopTypeEnum.MANUAL.type;
+        Integer type = TopTypeEnum.AUTO.type;
 
+        // exist（机选 -> 全部）
         Set<String> exist_topStockCodeSet = entity.getTopStockCodeJsonSet(type);
         List<TopChangePctDTO> exist_topStockList = entity.getTopStockList(type);
 
@@ -623,7 +665,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 计算 topInfo（上榜日、涨跌幅、...）
         List<TopChangePctDTO> new_topStockList = calcTopInfo(stockCodeSet, date);
-        new_topStockList.forEach(e -> e.setType(type));
+        new_topStockList.forEach(e -> e.setType(TopTypeEnum.MANUAL.type)); // type -> 人选
 
 
         // ---------------------------------------------
@@ -662,31 +704,156 @@ public class TopBlockServiceImpl implements TopBlockService {
         Assert.notNull(entity, String.format("[%s]：数据为空", date));
 
 
-        // exist
-        List<TopChangePctDTO> exist_topStockList = entity.getTopStockList(TopTypeEnum.MANUAL.type);
-
-
-        // DEL       exist -> remove
-//        exist_topStockList.removeIf(k -> stockCodeSet.contains(k.getCode()));
+        // exist（机选 -> 全部）
+        List<TopChangePctDTO> exist_topStockList = entity.getTopStockList(TopTypeEnum.AUTO.type);
 
 
         // DEL
+        int[] count = {0};
         exist_topStockList.forEach(e -> {
             if (stockCodeSet.contains(e.getCode())) {
                 e.setIsDel(1);
+                count[0]++;
             }
         });
 
 
         // update
-//        entity.setTopStockCodeSetMan(JSON.toJSONString(exist_topStockList));
-
-
         entity.setTopStockCodeSet(JSON.toJSONString(exist_topStockList));
         qaTopBlockService.updateById(entity);
 
 
-        return stockCodeSet.size();
+        return count[0];
+    }
+
+
+    @Override
+    public TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate, LocalDate endDate, Integer type) {
+        TopStockPoolAnalysisDTO dto = new TopStockPoolAnalysisDTO();
+
+
+        List<QaTopBlockDO> list = qaTopBlockService.listByDate(startDate, endDate);
+
+
+        double nav = 1.0000;
+        double capital = 100_0000;
+
+        int winCount = 0;
+        int lossCount = 0;
+
+
+        TopStockPoolSumReturnDTO sumReturnDTO = new TopStockPoolSumReturnDTO();
+        LocalDate actualStartDate = null; // 实际开始日期
+        sumReturnDTO.setStartDate(startDate);
+        sumReturnDTO.setEndDate(endDate);
+        sumReturnDTO.setInitialNav(nav);
+        sumReturnDTO.setFinalCapital(nav);
+        sumReturnDTO.setInitialCapital(capital);
+        sumReturnDTO.setFinalCapital(capital);
+
+
+        List<TopStockPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
+        for (QaTopBlockDO entity : list) {
+            TopStockPoolDailyReturnDTO dr = new TopStockPoolDailyReturnDTO();
+
+
+            TopPoolAvgPctDTO avgPct = entity.getTopStockAvgPct(type);
+            double daily_return = avgPct.getToday2Next_changePct();
+
+
+            if (actualStartDate == null && daily_return != 0) {
+                actualStartDate = entity.getDate();
+            }
+
+
+            if (actualStartDate != null) {
+
+                double rate = 1 + daily_return * 0.01;
+
+                nav = nav * rate;
+                capital = capital * rate;
+
+
+                dr.setDate(entity.getDate());
+                dr.setDaily_return(NumUtil.of(daily_return));
+                dr.setNav(NumUtil.of(nav));
+                dr.setCapital(NumUtil.of(capital));
+
+
+                dailyReturnDTOList.add(dr);
+
+
+                // -------------------------
+
+
+                if (daily_return > 0) {
+                    winCount++;
+                }
+                if (daily_return < 0) {
+                    lossCount++;
+                }
+            }
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        TopStockPoolDailyReturnDTO last = ListUtil.last(dailyReturnDTOList);
+        int totalDays = dailyReturnDTOList.size();
+        sumReturnDTO.setTotalDay(totalDays);
+
+
+        if (null != last) {
+            sumReturnDTO.setStartDate(actualStartDate);
+            sumReturnDTO.setEndDate(last.getDate());
+
+            sumReturnDTO.setFinalNav(last.getNav());
+            sumReturnDTO.setFinalCapital(last.getCapital());
+            sumReturnDTO.setTotalReturnPct(NumUtil.of((last.getNav() - 1) * 100.0));
+
+
+            // 年化收益率（%） = （期末净值 / 初始净值）^(252 / 总天数) - 1          x 100%
+            double annualReturnPct = (Math.pow(sumReturnDTO.getFinalNav(), 252.0 / sumReturnDTO.getTotalDay()) - 1) * 100;
+            sumReturnDTO.setAnnualReturnPct(NumUtil.of(annualReturnPct));
+
+
+            // 胜率
+            double winRate = (double) winCount / totalDays;
+            // 败率
+            double lossRate = (double) lossCount / totalDays;
+            sumReturnDTO.setWinPct(NumUtil.of(winRate * 100));
+
+
+            // 盈亏比 = 所有盈利日平均收益 / 所有亏损日平均亏损
+            double avgWinPct = dailyReturnDTOList.stream().mapToDouble(TopStockPoolDailyReturnDTO::getDaily_return).filter(r -> r > 0).average().orElse(0);
+            double avgLossPct = dailyReturnDTOList.stream().mapToDouble(TopStockPoolDailyReturnDTO::getDaily_return).filter(r -> r < 0).map(Math::abs).average().orElse(0);
+
+            double profitFactor = avgLossPct == 0 ? Double.POSITIVE_INFINITY : avgWinPct / avgLossPct;
+            sumReturnDTO.setProfitFactor(NumUtil.of(profitFactor));
+
+
+            // 期望值 = (胜率×平均盈利) - (败率×平均亏损)
+            double expectedValuePct = winRate * avgWinPct - lossRate * avgLossPct;
+            sumReturnDTO.setExpectedValuePct(NumUtil.of(expectedValuePct));
+
+
+            // 净值期望 = (1 + 平均盈利)^盈利天数 × (1 - 平均亏损)^亏损天数
+            // 净值期望 = 初始净值 × (1 + 期望值) ^ 期数
+            double expectedNav = Math.pow(1 + avgWinPct * 0.01, winCount) * Math.pow(1 - avgLossPct * 0.01, lossCount);
+            double expectedNav2 = Math.pow(1 + expectedValuePct * 0.01, totalDays);
+            sumReturnDTO.setExpectedNav(NumUtil.of(expectedNav));
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        dto.setSumReturnDTO(sumReturnDTO);
+        dto.setDailyReturnDTOList(dailyReturnDTOList);
+
+
+        return dto;
     }
 
 

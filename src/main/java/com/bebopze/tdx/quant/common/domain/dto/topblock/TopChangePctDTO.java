@@ -67,8 +67,6 @@ public class TopChangePctDTO {
 
 
     /**
-     * 备选优化方案（替代 -> xxx_man 字段）
-     *
      * 类型：1-机选；2-人选；
      */
     private int type = 1;
@@ -76,6 +74,8 @@ public class TopChangePctDTO {
 
     /**
      * 人选列表 -> 是否删除：0-否；1-是；
+     *
+     * 机选列表 -> 此字段无效
      */
     private int isDel = 0;
 

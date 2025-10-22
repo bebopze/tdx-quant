@@ -22,6 +22,8 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
 
     QaTopBlockDO getByDate(LocalDate date);
 
+    List<QaTopBlockDO> listByDate(LocalDate startDate, LocalDate endDate);
+
 
     /**
      * 指定日期  倒序N条
@@ -41,5 +43,4 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
      * @return
      */
     List<QaTopBlockDO> beforeAfterN(LocalDate date, int N);
-
 }

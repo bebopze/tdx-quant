@@ -213,11 +213,12 @@ public class TopBlockController {
     @Operation(summary = "主线板块 列表（板块-月多2）", description = "主线板块 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topBlockList")
     public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-30")
-                                                @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+                                                @RequestParam(required = false) LocalDate date,
 
                                                 @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(topBlockService.topBlockList(date, type));
     }
 
@@ -227,11 +228,12 @@ public class TopBlockController {
     @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topStockList")
     public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-30")
-                                                @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+                                                @RequestParam(required = false) LocalDate date,
 
                                                 @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(topBlockService.topStockList(date, type));
     }
 
@@ -242,7 +244,7 @@ public class TopBlockController {
     @Operation(summary = "主线个股  -  批量 add", description = "主线个股  -  批量 add")
     @GetMapping(value = "/bk-yd2/topStockList/add")
     public Result<Integer> addTopStockList(@Schema(description = "交易日", example = "2025-09-30")
-                                           @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+                                           @RequestParam LocalDate date,
 
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
                                            @RequestParam String stockCodeList) {
@@ -259,7 +261,7 @@ public class TopBlockController {
     @Operation(summary = "主线个股  -  批量 DEL", description = "主线个股  -  批量 DEL")
     @GetMapping(value = "/bk-yd2/topStockList/delete")
     public Result<Integer> delTopStockList(@Schema(description = "交易日", example = "2025-09-30")
-                                           @RequestParam(defaultValue = "2025-09-30") LocalDate date,
+                                           @RequestParam LocalDate date,
 
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
                                            @RequestParam String stockCodeList) {
@@ -268,6 +270,25 @@ public class TopBlockController {
         Set<String> stockCodeSet = ConvertUtil.str2Set(stockCodeList);
 
         return Result.SUC(topBlockService.delTopStockSet(date, stockCodeSet));
+    }
+
+
+    /**
+     * 主线个股列表 - 收益率分析
+     */
+    @Operation(summary = "主线个股列表 - 收益率分析（指定时间段）", description = "主线个股列表 - 收益率分析（指定时间段）")
+    @GetMapping(value = "/bk-yd2/topStockList/analysis")
+    public Result<TopStockPoolAnalysisDTO> topStockListAnalysis(@Schema(description = "交易日", example = "2017-01-01")
+                                                                @RequestParam(defaultValue = "2017-01-01") LocalDate startDate,
+
+                                                                @Schema(description = "交易日", example = "2025-10-31")
+                                                                @RequestParam(required = false) LocalDate endDate,
+
+                                                                @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
+                                                                @RequestParam(defaultValue = "1") Integer type) {
+
+        endDate = endDate == null ? LocalDate.now() : endDate;
+        return Result.SUC(topBlockService.topStockListAnalysis(startDate, endDate, type));
     }
 
 
@@ -284,7 +305,8 @@ public class TopBlockController {
     public Result<Map<String, Integer>> topBlockRate(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
                                                      @RequestParam(defaultValue = "1") int blockNewId,
 
-                                                     @RequestParam(defaultValue = "2025-07-16") LocalDate date,
+                                                     @Schema(description = "交易日")
+                                                     @RequestParam(required = false) LocalDate date,
 
                                                      @Schema(description = "result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）", example = "2")
                                                      @RequestParam(defaultValue = "2") int resultType,
@@ -295,6 +317,7 @@ public class TopBlockController {
                                                      @RequestParam(defaultValue = "10") int N) {
 
 
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(topBlockService.topBlockRate(blockNewId, date, resultType, hyLevel, N));
     }
 
@@ -309,11 +332,13 @@ public class TopBlockController {
     public Result<List<TopBlockServiceImpl.ResultTypeLevelRateDTO>> topBlockRateAll(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
                                                                                     @RequestParam(defaultValue = "1") int blockNewId,
 
-                                                                                    @RequestParam(defaultValue = "2025-07-16") LocalDate date,
+                                                                                    @Schema(description = "交易日")
+                                                                                    @RequestParam(required = false) LocalDate date,
 
                                                                                     @RequestParam(defaultValue = "10") int N) {
 
 
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(topBlockService.topBlockRateAll(blockNewId, date, N));
     }
 
@@ -328,7 +353,8 @@ public class TopBlockController {
     public Result<List<TopBlock2DTO>> topBlockRateInfo(@Schema(description = "1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；6-均线大多头；11-板块AMO-TOP1", example = "1")
                                                        @RequestParam(defaultValue = "1") int blockNewId,
 
-                                                       @RequestParam(defaultValue = "2025-07-16") LocalDate date,
+                                                       @Schema(description = "交易日")
+                                                       @RequestParam(required = false) LocalDate date,
 
                                                        @Schema(description = "result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）", example = "2")
                                                        @RequestParam(defaultValue = "2") int resultType,
@@ -336,6 +362,7 @@ public class TopBlockController {
                                                        @RequestParam(defaultValue = "10") int N) {
 
 
+        date = date == null ? LocalDate.now() : date;
         return Result.SUC(topBlockService.topBlockRateInfo(blockNewId, date, resultType, N));
     }
 

@@ -19,6 +19,20 @@
     </select>
 
 
+    <select id="listByDate" resultType="com.bebopze.tdx.quant.dal.entity.QaTopBlockDO">
+        SELECT *
+
+        FROM qa_top_block
+
+
+        WHERE   <![CDATA[     date >= #{startDate}     ]]>
+        AND     <![CDATA[     date <= #{endDate}       ]]>
+
+
+        ORDER BY date ASC
+    </select>
+
+
     <select id="lastN" resultType="com.bebopze.tdx.quant.dal.entity.QaTopBlockDO">
         SELECT *
 
