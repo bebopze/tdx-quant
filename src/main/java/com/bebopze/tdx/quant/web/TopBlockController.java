@@ -284,11 +284,14 @@ public class TopBlockController {
                                                                 @Schema(description = "交易日", example = "2025-10-31")
                                                                 @RequestParam(required = false) LocalDate endDate,
 
+                                                                @Schema(description = "主线类型：1-板块；2-ETF；3-个股；", example = "1")
+                                                                @RequestParam(defaultValue = "3") Integer topPoolType,
+
                                                                 @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
                                                                 @RequestParam(defaultValue = "1") Integer type) {
 
         endDate = endDate == null ? LocalDate.now() : endDate;
-        return Result.SUC(topBlockService.topStockListAnalysis(startDate, endDate, type));
+        return Result.SUC(topBlockService.topStockListAnalysis(startDate, endDate, topPoolType, type));
     }
 
 

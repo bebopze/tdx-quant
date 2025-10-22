@@ -128,7 +128,10 @@ public interface TopBlockService {
     // double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);
 
 
-    TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate, LocalDate endDate, Integer type);
+    TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate,
+                                                 LocalDate endDate,
+                                                 Integer topPoolType,
+                                                 Integer type);
 
 
     // -----------------------------------------------------------------------------------------------------------------

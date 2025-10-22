@@ -728,7 +728,11 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     @Override
-    public TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate, LocalDate endDate, Integer type) {
+    public TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate,
+                                                        LocalDate endDate,
+                                                        Integer topPoolType,
+                                                        Integer type) {
+
         TopStockPoolAnalysisDTO dto = new TopStockPoolAnalysisDTO();
 
 
@@ -757,7 +761,18 @@ public class TopBlockServiceImpl implements TopBlockService {
             TopStockPoolDailyReturnDTO dr = new TopStockPoolDailyReturnDTO();
 
 
-            TopPoolAvgPctDTO avgPct = entity.getTopStockAvgPct(type);
+            TopPoolAvgPctDTO avgPct;
+            if (topPoolType == 1) {
+                avgPct = entity.getTopBlockAvgPct(type);
+            } else if (topPoolType == 2) {
+                avgPct = entity.getTopEtfAvgPct(type);
+            } else if (topPoolType == 3) {
+                avgPct = entity.getTopStockAvgPct(type);
+            } else {
+                throw new BizException("主线列表类型异常：" + topPoolType);
+            }
+
+
             double daily_return = avgPct.getToday2Next_changePct();
 
 
@@ -3222,7 +3237,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         }
 
 
-        Integer idx = BacktestCache.tradeDateIdx(fun.getDate(), fun.getDateIndexMap(), date);
+        Integer idx = tradeDateIdx(fun.getDate(), fun.getDateIndexMap(), date);
         return idx != null && SSF多_arr[idx];
     }
 
