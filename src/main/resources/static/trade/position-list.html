@@ -188,6 +188,25 @@
             margin-left: 10px; /* Add some space */
         }
 
+
+        /* ---------- 主线个股（人选） ->  删除（操作按钮） ---------- */
+        .btn-stockManual-delete-row {
+            color: white;
+            background-color: #336aba;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+
+            /* 添加过渡效果，使悬停变化更平滑 */
+            transition: all 0.2s ease-in-out;
+
+            /* 可选：添加轻微阴影 */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+
         /* ----------------------------- */
         /* Style for Card Titles with Count */
         .card-title-with-count {
@@ -747,7 +766,7 @@
                                 <th onclick="sortOrdersTable('wtrq')">委托日期<span class="sort-icon"
                                                                                     id="sortWtrq"></span></th>
                                 <th onclick="sortOrdersTable('wtsj')">委托时间<span class="sort-icon"
-                                                                                    id="sortwtsj"></span></th>
+                                                                                    id="sortWtsj"></span></th>
                                 <th onclick="sortOrdersTable('zqdm')">证券代码<span class="sort-icon"
                                                                                     id="sortZqdm"></span></th>
                                 <th onclick="sortOrdersTable('zqmc')">证券名称<span class="sort-icon"
@@ -1074,18 +1093,20 @@
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="topStocksManualCardTitle" class="card-title-with-count">主线个股列表</span>
-                    <button id="batchDeleteTopStocksManualButton" class="btn btn-danger btn-sm ms-2">批量删除</button>
                     <!-- 新增：日期选择和刷新按钮区域 -->
-                    <div class="d-flex align-items-center flex-wrap">
+                    <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-action-controls">
                         <label for="topStocksManualDateInput" class="me-2">日期:</label>
                         <input type="date" id="topStocksManualDateInput" class="form-control form-control-sm me-2"
                                style="width: auto;" min="1990-01-01">
                         <button id="refreshTopStocksManualButton" class="btn btn-success btn-sm">刷新</button>
+                        <button id="batchDeleteTopStocksManualButton" class="btn btn-danger btn-sm ms-2">批量删除
+                        </button>
                     </div>
                 </div>
                 <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
                     <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-filter-controls">
                         <!-- 可以在此处添加针对主线个股的筛选控件 -->
+                        <!-- <button id="batchDeleteTopStocksManualButton" class="btn btn-danger btn-sm ms-2">批量删除</button> -->
                     </div>
                 </div>
                 <div class="card-body">
@@ -1335,10 +1356,6 @@
         stockPosLimitPct: 0
     };
 
-    // --- 通用函数 ---
-    function market2Xueqiu(market) {
-        return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
-    }
 
     // --- 新增：主线板块/个股数据 (机选) ---
     let topBlocksData = [];
@@ -1377,6 +1394,36 @@
     // - 新增：主线板块/个股当前日期 (人选) -
     let topBlocksCurrentDateManual = today; // 默认为今天
     let topStocksCurrentDateManual = today; // 默认为今天
+
+
+    // ----------------------------------------- 通用函数 ---------------------------------------------------------------
+
+
+    // 雪球（沪深京）
+    function market2Xueqiu(market) {
+        return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
+    }
+
+    // 通用排序
+    function sort(sortedList, sortState) {
+        sortedList.sort((a, b) => {
+            let valA = a[sortState.column];
+            let valB = b[sortState.column];
+            if (valA == null) valA = '';
+            if (valB == null) valB = '';
+            // number
+            if (typeof valA === 'number') {
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return sortState.order === 'asc' ? numA - numB : numB - numA;
+                }
+            }
+            // string
+            const comparison = String(valA).localeCompare(String(valB));
+            return sortState.order === 'asc' ? comparison : -comparison;
+        });
+    }
 
 
     // ----------------------------------------- 一键 B/S 快捷按钮 -------------------------------------------------------
@@ -2180,19 +2227,7 @@
         }
         let sortedOrders = [...filteredOrders];
         if (ordersSortState.column) {
-            sortedOrders.sort((a, b) => {
-                let valA = a[ordersSortState.column];
-                let valB = b[ordersSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                const numA = parseFloat(valA);
-                const numB = parseFloat(valB);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return ordersSortState.order === 'asc' ? numA - numB : numB - numA;
-                }
-                const comparison = String(valA).localeCompare(String(valB));
-                return ordersSortState.order === 'asc' ? comparison : -comparison;
-            });
+            sort(sortedOrders, ordersSortState);
         }
         tbody.innerHTML = '';
         if (sortedOrders.length === 0) {
@@ -2608,25 +2643,7 @@
 
         let sortedBlocks = [...blocks];
         if (topBlocksSortState.column) {
-            sortedBlocks.sort((a, b) => {
-                let valA = a[topBlocksSortState.column];
-                let valB = b[topBlocksSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topBlocksSortState.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topBlocksSortState.order === 'asc' ? comparison : -comparison;
-            });
+            sort(sortedBlocks, topBlocksSortState);
         }
 
         tbody.innerHTML = '';
@@ -2851,25 +2868,7 @@
 
         let sortedStocks = [...stocks];
         if (topStocksSortState.column) {
-            sortedStocks.sort((a, b) => {
-                let valA = a[topStocksSortState.column];
-                let valB = b[topStocksSortState.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topStocksSortState.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topStocksSortState.order === 'asc' ? comparison : -comparison;
-            });
+            sort(sortedStocks, topStocksSortState);
         }
 
         tbody.innerHTML = '';
@@ -3085,23 +3084,7 @@
         }
         let sortedBlocks = [...blocks];
         if (topBlocksSortStateManual.column) {
-            sortedBlocks.sort((a, b) => {
-                let valA = a[topBlocksSortStateManual.column];
-                let valB = b[topBlocksSortStateManual.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topBlocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topBlocksSortStateManual.order === 'asc' ? comparison : -comparison;
-            });
+            sort(sortedBlocks, topBlocksSortStateManual);
         }
         tbody.innerHTML = '';
         if (sortedBlocks.length === 0) {
@@ -3315,23 +3298,7 @@
         }
         let sortedStocks = [...stocks];
         if (topStocksSortStateManual.column) {
-            sortedStocks.sort((a, b) => {
-                let valA = a[topStocksSortStateManual.column];
-                let valB = b[topStocksSortStateManual.column];
-                if (valA == null) valA = '';
-                if (valB == null) valB = '';
-                // number
-                if (typeof valA === 'number') {
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return topStocksSortStateManual.order === 'asc' ? numA - numB : numB - numA;
-                    }
-                }
-                // string
-                const comparison = String(valA).localeCompare(String(valB));
-                return topStocksSortStateManual.order === 'asc' ? comparison : -comparison;
-            });
+            sort(sortedStocks, topStocksSortStateManual);
         }
         tbody.innerHTML = '';
         if (sortedStocks.length === 0) {
@@ -3740,7 +3707,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`成功删除 ${data.data || stockCodes.length} 条记录。`);
+                    alert(`成功删除 ${data.data || stockCodes.length} 条记录`);
                     // Reload the table data to reflect changes
                     loadTopStocksManual(date);
                 } else {
