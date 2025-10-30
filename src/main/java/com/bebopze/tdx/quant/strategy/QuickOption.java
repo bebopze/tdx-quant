@@ -60,7 +60,7 @@ public class QuickOption {
         String stockCode = fun.getStockCode();
         String stockName = fun.getStockName();
 
-        BigDecimal buy5 = fun.getShszQuoteSnapshotResp().getFivequote().getBuy5();
+        double buy5 = fun.getShszQuoteSnapshotResp().getFivequote().getBuy5();
 
 
         // ---------- check
@@ -160,7 +160,7 @@ public class QuickOption {
             String stockName = fun.getStockName();
 
             // 卖5
-            BigDecimal sell5 = fun.getShszQuoteSnapshotResp().getFivequote().getSale5();
+            double sell5 = fun.getShszQuoteSnapshotResp().getFivequote().getSale5();
 
 
             // 融资-剩余额度
@@ -183,7 +183,7 @@ public class QuickOption {
 
 
             // 买入金额
-            double curr_buyAmount = req.getPrice().doubleValue() * req.getAmount();
+            double curr_buyAmount = req.getPrice() * req.getAmount();
 
 
             // 融资-剩余额度 > 买入金额
@@ -199,7 +199,7 @@ public class QuickOption {
             } else {
 
                 // 最大-可买数量  =  融资-剩余额度 / 买入价格
-                int rz_max_buyCount = (int) (curr_acreditavl.doubleValue() / sell5.doubleValue() / 100);
+                int rz_max_buyCount = (int) (curr_acreditavl.doubleValue() / sell5 / 100);
 
                 if (rz_max_buyCount > 0) {
 
@@ -345,9 +345,9 @@ public class QuickOption {
     }
 
 
-    private static int buyCount(double avgAmount, BigDecimal sell5) {
+    private static int buyCount(double avgAmount, double sell5) {
 
-        double count = avgAmount / sell5.doubleValue() / 100;
+        double count = avgAmount / sell5 / 100;
 
 
         // 整数
@@ -392,8 +392,8 @@ public class QuickOption {
 
     }
 
-    private static int amoCompare(SHSZQuoteSnapshotResp o1, SHSZQuoteSnapshotResp o2) {
-        return o1.getRealtimequote().getAmount().compareTo(o2.getRealtimequote().getAmount());
+    private static double amoCompare(SHSZQuoteSnapshotResp o1, SHSZQuoteSnapshotResp o2) {
+        return o1.getRealtimequote().getAmount() - o2.getRealtimequote().getAmount();
     }
 
 

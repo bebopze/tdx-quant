@@ -17,6 +17,29 @@ public class ListUtil {
 
 
     /**
+     * 截取  前N条
+     *
+     * @param list
+     * @param n
+     * @param <E>
+     * @return
+     */
+    public static <E> List<E> firstN(List<E> list, int n) {
+        if (CollectionUtils.isEmpty(list) || n <= 0) {
+            return Collections.emptyList();
+        }
+
+
+        int size = list.size();
+        if (n >= size) {
+            return list;
+        }
+
+        return list.subList(0, n);
+    }
+
+
+    /**
      * 截取  最后N条
      *
      * @param list

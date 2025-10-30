@@ -28,14 +28,19 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     Map<String, List<String>> market_stockCodePrefixList_map(int N);
 
 
-    List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList);
+    List<BaseStockDO> listByCodeList(Collection<String> codeList);
 
-    Map<String, Long> codeIdMap(Collection<String> stockCodeList);
+    List<BaseStockDO> listSimpleByCodeList(Collection<String> codeList);
+
+    Map<String, Long> codeIdMap(Collection<String> codeList);
 
 
     List<BaseStockDO> listAllKline();
 
     List<BaseStockDO> listAllKline(boolean refresh);
+
+    List<BaseStockDO> listAllETFKline();
+
 
     List<BaseStockDO> listAllSimple();
 
@@ -46,5 +51,4 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
 
     boolean updateById(BaseStockDO entity);
-
 }

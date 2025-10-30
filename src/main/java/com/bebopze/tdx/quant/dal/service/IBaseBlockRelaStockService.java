@@ -5,7 +5,9 @@ import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -25,12 +27,16 @@ public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockD
     int deleteAll();
 
 
+    List<BaseBlockRelaStockDO> listByBlockCodeList(Collection<String> blockCodeList);
+
+    List<BaseBlockRelaStockDO> listByStockCodeList(Collection<String> stockCodeList);
+
+
     List<BaseBlockDO> listBlockByStockCode(String stockCode);
 
+    List<BaseBlockDO> listBlockByStockCodeList(Collection<String> stockCodeList);
 
-    List<BaseBlockDO> listBlockByStockCodeList(List<String> stockCodeList);
-
-    List<BaseStockDO> listStockByBlockCodeList(List<String> blockCodeList);
+    List<BaseStockDO> listStockByBlockCodeList(Collection<String> blockCodeList);
 
 
     /**
@@ -39,4 +45,7 @@ public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockD
      * @return
      */
     List<BaseBlockRelaStockDO> listAll();
+
+
+    List<BaseStockDO> listETFByBlockCodes(Set<String> topBlockCodeSet);
 }

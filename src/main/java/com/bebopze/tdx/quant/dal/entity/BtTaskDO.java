@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -206,6 +207,15 @@ public class BtTaskDO implements Serializable {
     private String drawdownResult;
 
     /**
+     * 扩展字段-JSON
+     */
+    @Schema(description = "扩展字段-JSON")
+    @TableField("ext_data")
+    // @JsonIgnore
+    @JsonRawValue
+    private String extData;
+
+    /**
      * 创建时间
      */
     @TableField("gmt_create")
@@ -240,6 +250,12 @@ public class BtTaskDO implements Serializable {
 //
 //        return JSON.parseObject(tradeStatResult);
 //    }
+
+
+    @JsonRawValue
+    public String getExtData() {
+        return null == extData ? "" : extData;
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

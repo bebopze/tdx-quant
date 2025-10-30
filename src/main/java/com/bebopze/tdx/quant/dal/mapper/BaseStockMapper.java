@@ -29,6 +29,8 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     List<BaseStockDO> listAllKline();
 
+    List<BaseStockDO> listAllETFKline();
+
     /**
      * 游标分页（非 OFFSET分页）
      *
@@ -40,7 +42,9 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
                                    @Param("pageSize") int pageSize);
 
 
-    List<BaseStockDO> listSimpleByCodeList(@Param("codeList") Collection<String> stockCodeList);
+    List<BaseStockDO> listByCodeList(@Param("codeList") Collection<String> codeList);
 
-    List<BaseStockDO> listBaseByCodeList(@Param("codeList") Collection<String> stockCodeList);
+    List<BaseStockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);
+
+    List<BaseStockDO> listBaseByCodeList(@Param("codeList") Collection<String> codeList);
 }

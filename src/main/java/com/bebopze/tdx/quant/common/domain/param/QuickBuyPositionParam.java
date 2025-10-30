@@ -29,15 +29,15 @@ public class QuickBuyPositionParam {
     /**
      * 仓位占比
      */
-    private double positionPct;
+    private double posPct;
 
 
     // ----------------------------------------------------
 
 
-    public double getPositionRate() {
+    public double getPosRate() {
         // 15%  ->  0.15
-        return positionPct * 0.01;
+        return posPct * 0.01;
     }
 
 

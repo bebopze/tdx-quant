@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.util;
 import java.text.DecimalFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 
 /**
@@ -14,11 +15,14 @@ import java.time.format.DateTimeFormatter;
 public class DateTimeUtil {
 
 
+    private static final DateTimeFormatter yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter yyyy_MM_dd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter yyyyMMdd__slash = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    private static final DateTimeFormatter yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    private static final DateTimeFormatter yyyy_MM_dd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter HHmmss = DateTimeFormatter.ofPattern("HHmmss");
+    public static final DateTimeFormatter HH_mm_ss = DateTimeFormatter.ofPattern("HH:mm:ss");
+
 
     private static final DateTimeFormatter yyyy_MM_dd_HHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -34,6 +38,10 @@ public class DateTimeUtil {
         // 时间戳
         long timestamp = System.currentTimeMillis();
         millis2Time(timestamp);
+
+
+        long diff = diff(LocalDate.now(), LocalDate.of(2025, 9, 1));
+        System.out.println(diff);
     }
 
 
@@ -126,6 +134,21 @@ public class DateTimeUtil {
     }
 
 
+    /**
+     * HHmmss -> LocalTime
+     *
+     * @param timeStr
+     * @return
+     */
+    public static LocalTime parseTime_HHmmss(String timeStr) {
+        return LocalTime.parse(timeStr, HHmmss);
+    }
+
+    public static LocalTime parseTime__HH_mm_ss(String timeStr) {
+        return LocalTime.parse(timeStr, HH_mm_ss);
+    }
+
+
     public static LocalDateTime parseTime_yyyy_MM_dd(String dateStr) {
         return LocalDateTime.parse(dateStr, yyyy_MM_dd_HHmmss);
     }
@@ -170,6 +193,14 @@ public class DateTimeUtil {
     }
 
 
+    /**
+     * date   ∈   [start,end]
+     *
+     * @param date
+     * @param start
+     * @param end
+     * @return
+     */
     public static boolean between(LocalDate date, LocalDate start, LocalDate end) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("起始和结束日期不能为空");
@@ -177,6 +208,14 @@ public class DateTimeUtil {
         return !date.isBefore(start) && !date.isAfter(end);
     }
 
+    /**
+     * time   ∈   [start,end]
+     *
+     * @param time
+     * @param start
+     * @param end
+     * @return
+     */
     public static boolean between(LocalTime time, LocalTime start, LocalTime end) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("起始和结束时间不能为空");
@@ -198,6 +237,21 @@ public class DateTimeUtil {
             throw new IllegalArgumentException("日期不能为空");
         }
         return date1.isAfter(date2) ? date1 : date2;
+    }
+
+
+    /**
+     * 天数差  =  date2 - date1
+     *
+     * @param date1
+     * @param date2
+     * @return
+     */
+    public static long diff(LocalDate date1, LocalDate date2) {
+        if (date1 == null || date2 == null) {
+            throw new IllegalArgumentException("日期不能为空");
+        }
+        return ChronoUnit.DAYS.between(date1, date2);
     }
 
 

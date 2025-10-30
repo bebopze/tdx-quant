@@ -95,21 +95,30 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return market_stockCodePrefixList_map;
     }
 
-
     @Override
-    public List<BaseStockDO> listSimpleByCodeList(Collection<String> stockCodeList) {
-        if (CollectionUtils.isEmpty(stockCodeList)) {
+    public List<BaseStockDO> listByCodeList(Collection<String> codeList) {
+        if (CollectionUtils.isEmpty(codeList)) {
             return Collections.emptyList();
         }
 
-        return baseMapper.listSimpleByCodeList(stockCodeList);
+        return baseMapper.listByCodeList(codeList);
     }
 
 
     @Override
-    public Map<String, Long> codeIdMap(Collection<String> stockCodeList) {
+    public List<BaseStockDO> listSimpleByCodeList(Collection<String> codeList) {
+        if (CollectionUtils.isEmpty(codeList)) {
+            return Collections.emptyList();
+        }
 
-        List<BaseStockDO> entityList = listSimpleByCodeList(stockCodeList);
+        return baseMapper.listSimpleByCodeList(codeList);
+    }
+
+
+    @Override
+    public Map<String, Long> codeIdMap(Collection<String> codeList) {
+
+        List<BaseStockDO> entityList = listSimpleByCodeList(codeList);
 
 
         Map<String, Long> code_id_map = entityList.stream()
@@ -149,6 +158,11 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
         // 不可用（OFFSET  =>  全表顺序读 + 丢弃）
         // return listAllPageQuery();
+    }
+
+    @Override
+    public List<BaseStockDO> listAllETFKline() {
+        return baseMapper.listAllETFKline();
     }
 
 

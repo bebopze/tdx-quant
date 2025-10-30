@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,13 +26,18 @@ public interface BaseBlockRelaStockMapper extends BaseMapper<BaseBlockRelaStockD
     int deleteAll();
 
 
+    List<BaseBlockRelaStockDO> listByBlockCodeList(@Param("blockCodeList") Collection<String> blockCodeList);
+
+    List<BaseBlockRelaStockDO> listByStockCodeList(@Param("stockCodeList") Collection<String> stockCodeList);
+
+
     List<BaseBlockDO> listBlockByStockCode(@Param("stockCode") String stockCode);
 
+    List<BaseBlockDO> listBlockByStockCodeList(@Param("stockCodeList") Collection<String> stockCodeList);
 
-    List<BaseBlockDO> listBlockByStockCodeList(@Param("stockCodeList") List<String> stockCodeList);
-
-    List<BaseStockDO> listStockByBlockCodeList(@Param("blockCodeList") List<String> blockCodeList);
+    List<BaseStockDO> listStockByBlockCodeList(@Param("blockCodeList") Collection<String> blockCodeList);
 
 
     List<BaseBlockRelaStockDO> listAll();
+
 }

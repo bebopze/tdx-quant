@@ -149,7 +149,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         data.stockDOList = baseStockService.listAllKline();
-        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHis()) /*&& e.getType() == 1*/).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -234,6 +234,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         data.blockDOList = baseBlockService.listAllRpsKline();
         data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+
+        // 行业ETF
+        // data.stockDOList = baseStockService.listAllETFKline();
 
 
         data.blockDOList.parallelStream().forEach(e -> {

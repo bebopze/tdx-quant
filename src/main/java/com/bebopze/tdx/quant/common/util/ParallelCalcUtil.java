@@ -52,7 +52,7 @@ public class ParallelCalcUtil {
     /**
      * 并行处理集合（无返回值）
      */
-    public static <T> void forEach(List<T> dataList, ThrowingConsumer<T> processor, ThreadPoolType poolType) {
+    public static <T> void forEach(Collection<T> dataList, ThrowingConsumer<T> processor, ThreadPoolType poolType) {
         if (dataList == null || dataList.isEmpty()) return;
 
         List<CompletableFuture<Void>> futures = new ArrayList<>(dataList.size());
@@ -74,8 +74,13 @@ public class ParallelCalcUtil {
     /**
      * 并行映射（有返回值，顺序一致）
      */
-    public static <T, R> List<R> map(List<T> dataList, ThrowingFunction<T, R> mapper, ThreadPoolType poolType) {
-        if (dataList == null || dataList.isEmpty()) return Collections.emptyList();
+    public static <T, R> List<R> map(Collection<T> dataCollection,
+                                     ThrowingFunction<T, R> mapper,
+                                     ThreadPoolType poolType) {
+
+        if (dataCollection == null || dataCollection.isEmpty()) return Collections.emptyList();
+
+        List<T> dataList = new ArrayList<>(dataCollection);
 
         @SuppressWarnings("unchecked")
         CompletableFuture<R>[] futures = new CompletableFuture[dataList.size()];
@@ -184,7 +189,7 @@ public class ParallelCalcUtil {
                                                     int chunkSize,
                                                     ThrowingConsumer<List<T>> processor) {
 
-        chunkForEachWithProgress(dataList, chunkSize, processor, ThreadPoolType.CPU_INTENSIVE);
+        chunkForEachWithProgress(dataList, chunkSize, processor, ThreadPoolType.CPU_INTENSIVE_2);
     }
 
     public static <T> void chunkForEachWithProgress(List<T> dataList,

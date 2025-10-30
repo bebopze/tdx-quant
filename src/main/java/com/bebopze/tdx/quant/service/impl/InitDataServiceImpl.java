@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
+import static com.bebopze.tdx.quant.common.constant.TdxConst.INVALID_BLOCK;
 
 
 /**
@@ -75,6 +76,22 @@ public class InitDataServiceImpl implements InitDataService {
 
 
     @TotalTime
+    @Override
+    public BacktestCache incrUpdateInitData() {
+
+
+        // 最近N（>= 250天）条   K线数据
+        int N = 10;
+
+        LocalDate startDate = LocalDate.now().minusDays(N);
+        LocalDate endDate = LocalDate.now();
+
+
+        return initData(startDate, endDate, false);
+    }
+
+
+    @TotalTime
     @Synchronized
     @Override
     public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh) {
@@ -83,16 +100,20 @@ public class InitDataServiceImpl implements InitDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // null -> 全量行情（近10年）
+        startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
+        endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
+
+
         // 内存够用！暂时不截取了！！     ->     此参数 先忽略！！！
-        startDate = null;
-        endDate = null;
+//        startDate = null;
+//        endDate = null;
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         if (init && !refresh) {
-
 
             boolean inCacheDateRange = inCacheDateRange(startDate, endDate);
             if (inCacheDateRange) {
@@ -103,9 +124,6 @@ public class InitDataServiceImpl implements InitDataService {
             // 超出 Cache日期区间   ->   Cache不可用     =>     扩展 Cache日期边界   ->   refreshCache
             startDate = DateTimeUtil.min(startDate, data.startDate);
             endDate = DateTimeUtil.max(endDate, data.endDate);
-
-
-            // TODO   ->   暂时 忽略 缓存更新   ->   数据同步问题（仅回测Test -> 不影响）
         }
 
 
@@ -114,6 +132,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 加载   全量行情数据 - 板块
+        // TODO   loadAllBlockKline(startDate, endDate, refresh);
         loadAllBlockKline(refresh);
 
 
@@ -145,14 +164,8 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // IN Cache日期区间   ->   Cache可用
-        if (DateTimeUtil.between(startDate, data.startDate, data.endDate)
-                && DateTimeUtil.between(endDate, data.startDate, data.endDate)) {
-
-            return true;
-        }
-
-
-        return false;
+        return DateTimeUtil.between(startDate, data.startDate, data.endDate)
+                && DateTimeUtil.between(endDate, data.startDate, data.endDate);
     }
 
 
@@ -194,9 +207,9 @@ public class InitDataServiceImpl implements InitDataService {
     private void loadAllStockKline(LocalDate startDate, LocalDate endDate, boolean refresh) {
 
 
-        // null -> 全量行情（近10年）
-        startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
-        endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
+//        // null -> 全量行情（近10年）
+//        startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
+//        endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
 
         log.info("loadAllStockKline     >>>     startDate : {}, endDate : {}", startDate, endDate);
 
@@ -290,7 +303,7 @@ public class InitDataServiceImpl implements InitDataService {
         // -----------------------------------------------------------------------------
 
 
-        data.stockDOList.forEach(e -> {
+        data.stockDOList.parallelStream().forEach(e -> {
 
 
             String stockCode = e.getCode();
@@ -333,7 +346,7 @@ public class InitDataServiceImpl implements InitDataService {
         // -------
 
 
-        data.blockDOList.forEach(e -> {
+        data.blockDOList.parallelStream().forEach(e -> {
 
             String blockCode = e.getCode();
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
@@ -404,7 +417,8 @@ public class InitDataServiceImpl implements InitDataService {
 //            }
 
 
-            if (null == stockCode) {
+            // 无效板块过滤
+            if (null == stockCode || Objects.equals(blockCode, INVALID_BLOCK)) {
                 // null   =>   基金北向 过滤
                 log.debug("loadAllBlockRelaStock - null     >>>     blockCode : [{}-{}] , stockCode : [{}-{}]",
                           blockId, blockCode, stockId, stockCode);
@@ -413,6 +427,7 @@ public class InitDataServiceImpl implements InitDataService {
             }
 
 
+            // LV3
             data.blockCode_stockCodeSet_Map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
             data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(blockCode);
 
@@ -442,6 +457,8 @@ public class InitDataServiceImpl implements InitDataService {
                     for (int i = 0; i < codePathArr.length - 1; i++) {
                         String pCode = codePathArr[i];
 
+
+                        // LV1、LV2
                         data.blockCode_stockCodeSet_Map.computeIfAbsent(pCode, k -> Sets.newHashSet()).add(stockCode);
                         data.stockCode_blockCodeSet_Map.computeIfAbsent(stockCode, k -> Sets.newHashSet()).add(pCode);
                     }

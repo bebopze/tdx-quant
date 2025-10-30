@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -17,6 +18,9 @@ import java.util.List;
 public interface IQaBlockNewRelaStockHisService extends IService<QaBlockNewRelaStockHisDO> {
 
     int deleteAll(Integer blockNewId, LocalDate date);
+
+    void deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet);
+
 
     List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit);
 

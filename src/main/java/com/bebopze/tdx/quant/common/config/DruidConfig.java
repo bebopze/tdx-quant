@@ -99,8 +99,10 @@ public class DruidConfig {
 
 
                 Properties properties = new Properties();
-                properties.setProperty("druid.stat.mergeSql", "true");
+                // druid.stat.slowSqlMillis=3000;druid.stat.logSlowSql=true;druid.stat.mergeSql=true;
                 properties.setProperty("druid.stat.slowSqlMillis", "2000");
+                properties.setProperty("druid.stat.logSlowSql", "true");
+                properties.setProperty("druid.stat.mergeSql", "true");
                 dataSource.setConnectProperties(properties);
 
             } else {

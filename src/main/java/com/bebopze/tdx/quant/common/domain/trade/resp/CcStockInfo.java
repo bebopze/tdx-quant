@@ -1,10 +1,15 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.google.common.collect.Lists;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 
 /**
@@ -13,6 +18,7 @@ import java.math.BigDecimal;
  * @author: bebopze
  * @date: 2025/5/10
  */
+@Slf4j
 @Data
 public class CcStockInfo implements Serializable {
 
@@ -100,7 +106,74 @@ public class CcStockInfo implements Serializable {
     private String stktype_ex;
 
 
+    // ---------------------------------------------------- 自定义字段 ---------------------------------------------------
+
+
+    // --------------------------------------------------- 个股 - 涨跌停 价格限制
+
+
+    // 涨停价
+    private BigDecimal ztPrice = BigDecimal.ZERO;
+    // 跌停价
+    private BigDecimal dtPrice = BigDecimal.ZERO;
+
+
+    // 昨日收盘价
+    private Double preClose;
+
+    public double getPreClose() {
+        if (preClose != null) {
+            return preClose;
+        }
+
+
+        Double preClose = PosStockCache.getPreClose(stkcode);
+        if (preClose != null) {
+            return preClose;
+        }
+
+
+        // --------------------------
+
+
+        // 盘后
+        if (curProfitratio == null && lastprice != null) {
+            return lastprice.doubleValue();
+        }
+
+        // 盘中     ->     昨日收盘价 = 收盘价 / 涨跌幅
+        return lastprice == null ? Double.NaN : lastprice.doubleValue() / (1 + curProfitratio.doubleValue());
+    }
+
+
     // --------------------------------------------------- 个股 - 板块
 
+
     StockBlockInfoDTO blockInfoDTO;
+
+
+    // --------------------------------------------------- 主线个股 / 主线板块
+
+
+    /**
+     * 是否   主线个股（板块-月多2）
+     */
+    boolean topStock = false;
+
+    /**
+     * 是否   IN 主线板块（板块-月多2）
+     */
+    boolean inTopBlock;
+
+    /**
+     * 个股 -> 主线板块（板块-月多2）
+     */
+    List<TopStockDTO.TopBlock> topBlockList = Lists.newArrayList();
+
+
+    public boolean isInTopBlock() {
+        return !topBlockList.isEmpty();
+    }
+
+
 }

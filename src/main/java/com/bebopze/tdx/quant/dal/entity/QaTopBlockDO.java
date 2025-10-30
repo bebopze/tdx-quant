@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -194,6 +195,37 @@ public class QaTopBlockDO implements Serializable {
                            && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.getIsDel() == 0))
                    .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public Map<String, String> getTopBlockCodeNameMap(int type) {
+        return getTopCodeNameMap(topBlockCodeSet, type);
+    }
+
+    public Map<String, String> getTopEtfCodeNameMap(int type) {
+        return getTopCodeNameMap(topEtfCodeSet, type);
+    }
+
+    public Map<String, String> getTopStockCodeNameMap(int type) {
+        return getTopCodeNameMap(topStockCodeSet, type);
+    }
+
+
+    private Map<String, String> getTopCodeNameMap(String topCodeSet, int type) {
+        Set<Integer> typeSet = typeSet(type);
+
+        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
+                   .stream()
+                   .filter(e -> typeSet.contains(e.getType())
+                           // 仅 人选列表   ->   is_del=0
+                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.getIsDel() == 0))
+                   // .collect(Collectors.toMap(TopChangePctDTO::getCode, TopChangePctDTO::getName));
+                   .collect(Collectors.toMap(TopChangePctDTO::getCode,
+                                             e -> e.getName() == null ? "" : e.getName()
+                   ));
     }
 
 

@@ -17,6 +17,7 @@ import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.net.URLEncoder;
 import java.time.LocalDate;
@@ -44,7 +45,7 @@ public class EastMoneyKlineAPI {
 
 
         // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
-        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allETFSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllETFSnapshotKline();
 
         System.out.println(stockSnapshotKlineDTOS.size());
 
@@ -72,15 +73,19 @@ public class EastMoneyKlineAPI {
      *
      * @return
      */
-    public static List<StockSnapshotKlineDTO> allStockETFSnapshotKline() {
+    public static List<StockSnapshotKlineDTO> pullAllStockETFSnapshotKline() {
 
         // 全A
-        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllStockSnapshotKline();
         // 全部ETF
-        List<StockSnapshotKlineDTO> ETFSnapshotKlineDTOS = allETFSnapshotKline();
+        List<StockSnapshotKlineDTO> ETFSnapshotKlineDTOS = pullAllETFSnapshotKline();
 
 
         stockSnapshotKlineDTOS.addAll(ETFSnapshotKlineDTOS);
+
+
+        Assert.notEmpty(stockSnapshotKlineDTOS, String.format("pullAllStockETFSnapshotKline - err     >>>     东方财富 -> 批量拉取 全A（ETF）实时行情 异常 , size : %s",
+                                                              stockSnapshotKlineDTOS.size()));
 
 
         return stockSnapshotKlineDTOS;
@@ -95,7 +100,7 @@ public class EastMoneyKlineAPI {
      *
      * @return
      */
-    public static List<StockSnapshotKlineDTO> allStockSnapshotKline() {
+    public static List<StockSnapshotKlineDTO> pullAllStockSnapshotKline() {
 
 
         int pageNum = 1;
@@ -133,6 +138,7 @@ public class EastMoneyKlineAPI {
 
                                                              // 包含大量 退市/停牌 个股（东方财富 A股 -> 5735）
                                                              if (isErrStock(json)) {
+                                                                 log.warn("个股行情 异常 -> 退市/停牌/未上市/盘前     >>>     {} {}", json.getString("f12"), json.getString("f14"));
                                                                  return null;
                                                              }
 
@@ -157,8 +163,8 @@ public class EastMoneyKlineAPI {
             }
 
 
-            // 间隔0.15s
-            SleepUtils.winSleep(150);
+            // 间隔 0.15s ~ 0.3s
+            SleepUtils.randomSleep(150, 300);
         }
 
 
@@ -185,7 +191,7 @@ public class EastMoneyKlineAPI {
      *
      * @return
      */
-    public static List<StockSnapshotKlineDTO> allETFSnapshotKline() {
+    public static List<StockSnapshotKlineDTO> pullAllETFSnapshotKline() {
 
 
         int pageNum = 1;
@@ -247,8 +253,8 @@ public class EastMoneyKlineAPI {
             }
 
 
-            // 间隔0.15s
-            SleepUtils.winSleep(150);
+            // 间隔 0.15s ~ 0.3s
+            SleepUtils.randomSleep(150, 300);
         }
 
 

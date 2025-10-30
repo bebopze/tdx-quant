@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 量化分析 - 主线板块
+ * 量化分析 - 主线板块                // 强势个股 数量  ->  主线板块
  * </p>
  *
  * @author bebopze
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @TableName("qa_block_new_rela_stock_his")
-@Schema(name = "QaBlockNewRelaStockHisDO", description = "量化分析 - 主线板块")
+@Schema(name = "QaBlockNewRelaStockHisDO", description = "量化分析 - 主线板块（强势个股 数量  ->  主线板块）")
 public class QaBlockNewRelaStockHisDO implements Serializable {
 
     private static final long serialVersionUID = 1L;

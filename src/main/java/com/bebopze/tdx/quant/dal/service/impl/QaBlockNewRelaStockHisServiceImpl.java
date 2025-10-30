@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -28,6 +29,11 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
     @Override
     public int deleteAll(Integer blockNewId, LocalDate date) {
         return baseMapper.deleteAll(blockNewId, date);
+    }
+
+    @Override
+    public void deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet) {
+        baseMapper.deleteByBlockNewIdAndDateSet(blockNewId, dateSet);
     }
 
 

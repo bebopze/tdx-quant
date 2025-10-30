@@ -47,16 +47,21 @@ public class ExtDataDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    // ------- 多空
+
     private Boolean MA20多;
     private Boolean MA20空;
     private Boolean SSF多;
     private Boolean SSF空;
+
 
     private Boolean 上MA20;
     private Boolean 下MA20;
     private Boolean 上SSF;
     private Boolean 下SSF;
 
+
+    // ------- 新高
 
     private Boolean N60日新高;
     private Boolean N100日新高;
@@ -66,6 +71,8 @@ public class ExtDataDTO implements Serializable {
     private Boolean 百日新高;
 
 
+    // ------- 均线形态
+
     private Boolean 月多;
     private Boolean 均线预萌出;
     private Boolean 均线萌出;
@@ -73,6 +80,8 @@ public class ExtDataDTO implements Serializable {
     private Boolean 均线大多头;
     private Boolean 均线极多头;
 
+
+    // ------- RPS强度
 
     private Boolean RPS红;
     private Boolean RPS一线红;

@@ -23,6 +23,48 @@
     </delete>
 
 
+    <select id="listByBlockCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO">
+        SELECT
+
+        DISTINCT
+
+        r.*, s.code AS stockCode, s.name AS stockName, b.code AS blockCode, b.name AS blockName
+
+
+        FROM base_block_rela_stock r
+        LEFT JOIN base_stock s ON r.stock_id = s.id
+        LEFT JOIN base_block b ON r.block_id = b.id
+
+        <where>
+            b.code IN
+            <foreach collection="blockCodeList" item="blockCode" open="(" separator="," close=")">
+                #{blockCode}
+            </foreach>
+        </where>
+    </select>
+
+
+    <select id="listByStockCodeList" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO">
+        SELECT
+
+        DISTINCT
+
+        r.*, s.code AS stockCode, s.name AS stockName, b.code AS blockCode, b.name AS blockName
+
+
+        FROM base_block_rela_stock r
+        LEFT JOIN base_stock s ON r.stock_id = s.id
+        LEFT JOIN base_block b ON r.block_id = b.id
+
+        <where>
+            s.code IN
+            <foreach collection="stockCodeList" item="stockCode" open="(" separator="," close=")">
+                #{stockCode}
+            </foreach>
+        </where>
+    </select>
+
+
     <select id="listBlockByStockCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT DISTINCT b.id,
                         b.code,

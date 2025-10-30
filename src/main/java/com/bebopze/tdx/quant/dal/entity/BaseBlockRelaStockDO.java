@@ -63,4 +63,23 @@ public class BaseBlockRelaStockDO implements Serializable {
     @TableField("gmt_modify")
     @Schema(description = "更新时间")
     private LocalDateTime gmtModify;
+
+
+    // ------------------------------------------------- non db field --------------------------------------------------
+
+
+    @TableField(exist = false)
+    private String stockCode;
+
+    @TableField(exist = false)
+    private String stockName;
+
+
+    @TableField(exist = false)
+    private String blockCode;
+
+    @TableField(exist = false)
+    private String blockName;
+
+
 }

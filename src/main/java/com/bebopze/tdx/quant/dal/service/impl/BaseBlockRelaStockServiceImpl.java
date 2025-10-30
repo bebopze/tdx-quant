@@ -8,7 +8,10 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -42,23 +45,40 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
 
 
     @Override
+    public List<BaseBlockRelaStockDO> listByBlockCodeList(Collection<String> blockCodeList) {
+        return baseMapper.listByBlockCodeList(blockCodeList);
+    }
+
+    @Override
+    public List<BaseBlockRelaStockDO> listByStockCodeList(Collection<String> stockCodeList) {
+        return baseMapper.listByStockCodeList(stockCodeList);
+    }
+
+
+    @Override
     public List<BaseBlockDO> listBlockByStockCode(String stockCode) {
         return baseMapper.listBlockByStockCode(stockCode);
     }
 
     @Override
-    public List<BaseBlockDO> listBlockByStockCodeList(List<String> stockCodeList) {
+    public List<BaseBlockDO> listBlockByStockCodeList(Collection<String> stockCodeList) {
         return baseMapper.listBlockByStockCodeList(stockCodeList);
     }
 
     @Override
-    public List<BaseStockDO> listStockByBlockCodeList(List<String> blockCodeList) {
+    public List<BaseStockDO> listStockByBlockCodeList(Collection<String> blockCodeList) {
         return baseMapper.listStockByBlockCodeList(blockCodeList);
     }
 
     @Override
     public List<BaseBlockRelaStockDO> listAll() {
         return baseMapper.listAll();
+    }
+
+    @Override
+    public List<BaseStockDO> listETFByBlockCodes(Set<String> topBlockCodeSet) {
+        // TODO
+        return Collections.emptyList();
     }
 
 }

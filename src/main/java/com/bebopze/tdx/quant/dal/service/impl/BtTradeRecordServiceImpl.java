@@ -123,6 +123,7 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         return baseMapper.deleteByTaskIds(taskIdList);
     }
 
+    @Override
     public int deleteByTaskIdAndTradeDateRange(Long taskId, LocalDate startDate, LocalDate endDate) {
         return baseMapper.deleteByTaskIdAndTradeDateRange(taskId, startDate, endDate);
     }
@@ -158,7 +159,7 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
         try {
             // 尝试获取信号量许可，获取不到会阻塞等待
             dbWriteSemaphore.acquire();
-            log.info("数据库写入许可 - acquire     >>>     taskId : {}, tradeDate : {} , size : {} , 队列中等待的线程数 : {}",
+            log.info("数据库写入许可 - acquire     >>>     taskId : {} , tradeDate : {} , size : {} , 队列中等待的线程数 : {}",
                      taskId, tradeDate, size, dbWriteSemaphore.getQueueLength());
 
 

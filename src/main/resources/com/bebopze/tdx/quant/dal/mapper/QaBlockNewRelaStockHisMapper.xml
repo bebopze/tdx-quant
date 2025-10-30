@@ -11,7 +11,26 @@
         WHERE block_new_id = #{blockNewId}
 
         <if test="date != null">
-            AND date = {date}
+            AND date = #{date}
+        </if>
+
+    </delete>
+
+
+    <delete id="deleteByBlockNewIdAndDateSet">
+
+        DELETE FROM qa_block_new_rela_stock_his
+
+
+        WHERE block_new_id = #{blockNewId}
+
+
+        <if test="dateSet != null   and   dateSet.size() > 0">
+            AND date IN
+
+            <foreach collection="dateSet" item="date" open="(" close=")" separator=",">
+                #{date}
+            </foreach>
         </if>
 
     </delete>

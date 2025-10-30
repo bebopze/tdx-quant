@@ -42,6 +42,14 @@
         FROM base_stock
     </select>
 
+    <select id="listAllETFKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT *
+
+        FROM base_stock
+
+        WHERE type = 2
+    </select>
+
     <select id="listByCursor" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
@@ -52,6 +60,20 @@
         ORDER BY id
 
         LIMIT #{pageSize}
+    </select>
+
+
+    <select id="listByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT *
+
+        FROM base_stock
+
+        <where>
+            code IN
+            <foreach collection="codeList" open="(" separator="," close=")" item="code">
+                #{code}
+            </foreach>
+        </where>
     </select>
 
 

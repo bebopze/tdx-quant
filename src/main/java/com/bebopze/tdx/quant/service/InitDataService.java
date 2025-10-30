@@ -14,8 +14,28 @@ import java.time.LocalDate;
 public interface InitDataService {
 
 
+    /**
+     * 全量更新  ->  近10年 行情Cache
+     *
+     * @return
+     */
     BacktestCache initData();
 
+    /**
+     * 增量更新  ->  近N（>=250）日 行情Cache
+     *
+     * @return
+     */
+    BacktestCache incrUpdateInitData();
+
+    /**
+     * 指定日期范围   ->   行情Cache
+     *
+     * @param startDate
+     * @param endDate
+     * @param refresh
+     * @return
+     */
     BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh);
 
 
