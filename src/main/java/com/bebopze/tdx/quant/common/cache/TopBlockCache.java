@@ -108,7 +108,7 @@ public class TopBlockCache {
                 TopBlockDTO.TopStock topStock = new TopBlockDTO.TopStock();
                 topStock.setStockCode(topStockCode);
                 topStock.setStockName(data.codeStockMap.getOrDefault(topStockCode, new BaseStockDO()).getName());
-                topStock.setTopDays(topStock__codeCountMap.get(topStockCode));
+                topStock.setTopDays(topStock__codeCountMap.getOrDefault(topStockCode, 0));
 
 
                 topStockList.add(topStock);
@@ -172,7 +172,7 @@ public class TopBlockCache {
                 TopStockDTO.TopBlock topBlock = new TopStockDTO.TopBlock();
                 topBlock.setBlockCode(topBlockCode);
                 topBlock.setBlockName(data.codeBlockMap.get(topBlockCode).getName());
-                topBlock.setTopDays(topBlock__codeCountMap.get(topBlockCode));
+                topBlock.setTopDays(topBlock__codeCountMap.getOrDefault(topBlockCode, 0));
 
 
                 topBlockList.add(topBlock);

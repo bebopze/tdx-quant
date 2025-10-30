@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 
@@ -22,13 +23,15 @@ public interface BacktestService {
     /**
      * 创建 -> 执行   回测task
      *
-     * @param startDate 回测-开始日期
-     * @param endDate   回测-结束日期
-     * @param resume    回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局 ）
-     * @param batchNo   任务批次号（resume=true 生效）
+     * @param startDate    回测-开始日期
+     * @param endDate      回测-结束日期
+     * @param resume       回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局 ）
+     * @param batchNo      任务批次号（resume=true 生效）
+     * @param btCompareDTO
      * @return
      */
-    void execBacktest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
+    void execBacktest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo,
+                      BacktestCompareDTO btCompareDTO);
 
 
     /**
@@ -56,7 +59,7 @@ public interface BacktestService {
                             LocalDateTime startCreateTime,
                             LocalDateTime endCreateTime);
 
-    BacktestAnalysisDTO analysis(Long taskId);
+    BacktestAnalysisDTO analysis(Long taskId, LocalDate startDate, LocalDate endDate);
 
 
     /**
@@ -85,7 +88,4 @@ public interface BacktestService {
      */
     List<BtTradeRecordDO> stockTradeRecordList(Long taskId, String stockCode);
 
-
-    @Deprecated
-    void holdingStockRule(String stockCode);
 }

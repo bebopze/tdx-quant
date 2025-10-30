@@ -14,13 +14,9 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
-import com.bebopze.tdx.quant.dal.entity.QaTopBlockDO;
+import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -632,7 +628,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // avg
         DoubleSummaryStatistics today2NextStats = topChangePctList.stream().mapToDouble(TopChangePctDTO::getToday2Next_changePct).summaryStatistics();
-        dto.getTopStockAvgPctDTO().setToday2Next_changePct(NumUtil.of(today2NextStats.getAverage()));
+        dto.getTopStockAvgPctDTO().setToday2Next_changePct(of(today2NextStats.getAverage()));
     }
 
 
@@ -727,150 +723,19 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-    @Override
-    public TopStockPoolAnalysisDTO topStockListAnalysis(LocalDate startDate,
-                                                        LocalDate endDate,
-                                                        Integer topPoolType,
-                                                        Integer type) {
-
-        TopStockPoolAnalysisDTO dto = new TopStockPoolAnalysisDTO();
-
-
-        List<QaTopBlockDO> list = qaTopBlockService.listByDate(startDate, endDate);
-
-
-        double nav = 1.0000;
-        double capital = 100_0000;
-
-        int winCount = 0;
-        int lossCount = 0;
-
-
-        TopStockPoolSumReturnDTO sumReturnDTO = new TopStockPoolSumReturnDTO();
-        LocalDate actualStartDate = null; // 实际开始日期
-        sumReturnDTO.setStartDate(startDate);
-        sumReturnDTO.setEndDate(endDate);
-        sumReturnDTO.setInitialNav(nav);
-        sumReturnDTO.setFinalCapital(nav);
-        sumReturnDTO.setInitialCapital(capital);
-        sumReturnDTO.setFinalCapital(capital);
-
-
-        List<TopStockPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
-        for (QaTopBlockDO entity : list) {
-            TopStockPoolDailyReturnDTO dr = new TopStockPoolDailyReturnDTO();
-
-
-            TopPoolAvgPctDTO avgPct;
-            if (topPoolType == 1) {
-                avgPct = entity.getTopBlockAvgPct(type);
-            } else if (topPoolType == 2) {
-                avgPct = entity.getTopEtfAvgPct(type);
-            } else if (topPoolType == 3) {
-                avgPct = entity.getTopStockAvgPct(type);
-            } else {
-                throw new BizException("主线列表类型异常：" + topPoolType);
-            }
-
-
-            double daily_return = avgPct.getToday2Next_changePct();
-
-
-            if (actualStartDate == null && daily_return != 0) {
-                actualStartDate = entity.getDate();
-            }
-
-
-            if (actualStartDate != null) {
-
-                double rate = 1 + daily_return * 0.01;
-
-                nav = nav * rate;
-                capital = capital * rate;
-
-
-                dr.setDate(entity.getDate());
-                dr.setDaily_return(NumUtil.of(daily_return));
-                dr.setNav(NumUtil.of(nav));
-                dr.setCapital(NumUtil.of(capital));
-
-
-                dailyReturnDTOList.add(dr);
-
-
-                // -------------------------
-
-
-                if (daily_return > 0) {
-                    winCount++;
-                }
-                if (daily_return < 0) {
-                    lossCount++;
-                }
-            }
-        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        TopStockPoolDailyReturnDTO last = ListUtil.last(dailyReturnDTOList);
-        int totalDays = dailyReturnDTOList.size();
-        sumReturnDTO.setTotalDay(totalDays);
-
-
-        if (null != last) {
-            sumReturnDTO.setStartDate(actualStartDate);
-            sumReturnDTO.setEndDate(last.getDate());
-
-            sumReturnDTO.setFinalNav(last.getNav());
-            sumReturnDTO.setFinalCapital(last.getCapital());
-            sumReturnDTO.setTotalReturnPct(NumUtil.of((last.getNav() - 1) * 100.0));
-
-
-            // 年化收益率（%） = （期末净值 / 初始净值）^(252 / 总天数) - 1          x 100%
-            double annualReturnPct = (Math.pow(sumReturnDTO.getFinalNav(), 252.0 / sumReturnDTO.getTotalDay()) - 1) * 100;
-            sumReturnDTO.setAnnualReturnPct(NumUtil.of(annualReturnPct));
-
-
-            // 胜率
-            double winRate = (double) winCount / totalDays;
-            // 败率
-            double lossRate = (double) lossCount / totalDays;
-            sumReturnDTO.setWinPct(NumUtil.of(winRate * 100));
-
-
-            // 盈亏比 = 所有盈利日平均收益 / 所有亏损日平均亏损
-            double avgWinPct = dailyReturnDTOList.stream().mapToDouble(TopStockPoolDailyReturnDTO::getDaily_return).filter(r -> r > 0).average().orElse(0);
-            double avgLossPct = dailyReturnDTOList.stream().mapToDouble(TopStockPoolDailyReturnDTO::getDaily_return).filter(r -> r < 0).map(Math::abs).average().orElse(0);
-
-            double profitFactor = avgLossPct == 0 ? Double.POSITIVE_INFINITY : avgWinPct / avgLossPct;
-            sumReturnDTO.setProfitFactor(NumUtil.of(profitFactor));
-
-
-            // 期望值 = (胜率×平均盈利) - (败率×平均亏损)
-            double expectedValuePct = winRate * avgWinPct - lossRate * avgLossPct;
-            sumReturnDTO.setExpectedValuePct(NumUtil.of(expectedValuePct));
-
-
-            // 净值期望 = (1 + 平均盈利)^盈利天数 × (1 - 平均亏损)^亏损天数
-            // 净值期望 = 初始净值 × (1 + 期望值) ^ 期数
-            double expectedNav = Math.pow(1 + avgWinPct * 0.01, winCount) * Math.pow(1 - avgLossPct * 0.01, lossCount);
-            double expectedNav2 = Math.pow(1 + expectedValuePct * 0.01, totalDays);
-            sumReturnDTO.setExpectedNav(NumUtil.of(expectedNav));
-        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        dto.setSumReturnDTO(sumReturnDTO);
-        dto.setDailyReturnDTOList(dailyReturnDTOList);
-
-
-        return dto;
-    }
-
+//    public static void main(String[] args) {
+//
+//        double[] pctList = {10.02, 10.006, 10.022, 0.446, 9.991, 7.576, 9.996, 10.017, -7.384, 3.041, -7.279, -7.86, 9.99, 1.788, 9.992, 9.998, 10.004, 0.387, 10.004, 8.025, 10.008, -7.122, -4.334, 1.071, -3.448, 2.212};
+//
+//        double nav = 1.0;
+//
+//        for (double pct : pctList) {
+//            nav = nav * (1 + pct * 0.01);
+//
+//            // System.out.println(of(nav));
+//            System.out.println(of(nav * 100 - 100));
+//        }
+//    }
 
     private void calc_bkyd2() {
 
@@ -1091,7 +956,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     private List<TopChangePctDTO> convert2InitTopDTOList(Set<String> topCodeSet) {
-        return topCodeSet.stream().map(TopChangePctDTO::new).collect(Collectors.toList());
+        return topCodeSet.stream().map(code -> {
+            String name = StockTypeEnum.isBlock(code) ? data.block__codeNameMap.get(code) : data.stock__codeNameMap.get(code);
+            return new TopChangePctDTO(code, name);
+        }).collect(Collectors.toList());
     }
 
 
@@ -1303,20 +1171,20 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 创建结果对象并设置平均值
         TopPoolAvgPctDTO avgPct = new TopPoolAvgPctDTO();
 
-        avgPct.setStart2Today_changePct(NumUtil.of(start2TodayStats.getAverage()));
-        avgPct.setStart2End_changePct(NumUtil.of(start2EndStats.getAverage()));
-        avgPct.setStart2Max_changePct(NumUtil.of(start2MaxStats.getAverage()));
+        avgPct.setStart2Today_changePct(of(start2TodayStats.getAverage()));
+        avgPct.setStart2End_changePct(of(start2EndStats.getAverage()));
+        avgPct.setStart2Max_changePct(of(start2MaxStats.getAverage()));
 
-        avgPct.setToday2Next_changePct(NumUtil.of(today2NextStats.getAverage()));
-        avgPct.setToday2End_changePct(NumUtil.of(today2EndStats.getAverage()));
-        avgPct.setToday2Max_changePct(NumUtil.of(today2MaxStats.getAverage()));
+        avgPct.setToday2Next_changePct(of(today2NextStats.getAverage()));
+        avgPct.setToday2End_changePct(of(today2EndStats.getAverage()));
+        avgPct.setToday2Max_changePct(of(today2MaxStats.getAverage()));
 
-        avgPct.setStart2Next_changePct(NumUtil.of(start2NextStats.getAverage()));
-        avgPct.setStart2Next3_changePct(NumUtil.of(start2Next3Stats.getAverage()));
-        avgPct.setStart2Next5_changePct(NumUtil.of(start2Next5Stats.getAverage()));
-        avgPct.setStart2Next10_changePct(NumUtil.of(start2Next10Stats.getAverage()));
-        avgPct.setStart2Next15_changePct(NumUtil.of(start2Next15Stats.getAverage()));
-        avgPct.setStart2Next20_changePct(NumUtil.of(start2Next20Stats.getAverage()));
+        avgPct.setStart2Next_changePct(of(start2NextStats.getAverage()));
+        avgPct.setStart2Next3_changePct(of(start2Next3Stats.getAverage()));
+        avgPct.setStart2Next5_changePct(of(start2Next5Stats.getAverage()));
+        avgPct.setStart2Next10_changePct(of(start2Next10Stats.getAverage()));
+        avgPct.setStart2Next15_changePct(of(start2Next15Stats.getAverage()));
+        avgPct.setStart2Next20_changePct(of(start2Next20Stats.getAverage()));
 
 
         return avgPct;
@@ -1376,6 +1244,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String code = stockDO instanceof BaseStockDO ? ((BaseStockDO) stockDO).getCode() : ((BaseBlockDO) stockDO).getCode();
+                    String name = stockDO instanceof BaseStockDO ? ((BaseStockDO) stockDO).getName() : ((BaseBlockDO) stockDO).getName();
                     StockFun fun = stockDO instanceof BaseStockDO ? data.getOrCreateStockFun((BaseStockDO) stockDO) : data.getOrCreateBlockFun((BaseBlockDO) stockDO);
 
 
@@ -1504,7 +1373,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                                 // date  -  code_topDate
                                 date__code_topDate__Map.computeIfAbsent(date, k -> Maps.newConcurrentMap())
-                                                       .computeIfAbsent(code, k -> new TopChangePctDTO(code))
+                                                       .computeIfAbsent(code, k -> new TopChangePctDTO(code, name))
                                                        .setTopStartDate(topStartDate);
 
                                 break;
@@ -1517,7 +1386,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         // date  -  code_topDate
                         TopChangePctDTO topChangePctDTO = date__code_topDate__Map.computeIfAbsent(date, k -> Maps.newConcurrentMap())
-                                                                                 .computeIfAbsent(code, k -> new TopChangePctDTO(code));
+                                                                                 .computeIfAbsent(code, k -> new TopChangePctDTO(code, name));
 
 
                         if (/*null == topChangePctDTO ||*/ null == topChangePctDTO.getTopStartDate()) {
@@ -1603,20 +1472,20 @@ public class TopBlockServiceImpl implements TopBlockService {
                         // ----------------------------------------------------------------------------
 
 
-                        topChangePctDTO.setStart2Today_changePct(NumUtil.of(start2Today_changePct));
-                        topChangePctDTO.setStart2End_changePct(NumUtil.of(start2End_changePct));
-                        topChangePctDTO.setToday2Next_changePct(NumUtil.of(today2Next_changePct));
-                        topChangePctDTO.setToday2End_changePct(NumUtil.of(today2End_changePct));
+                        topChangePctDTO.setStart2Today_changePct(of(start2Today_changePct));
+                        topChangePctDTO.setStart2End_changePct(of(start2End_changePct));
+                        topChangePctDTO.setToday2Next_changePct(of(today2Next_changePct));
+                        topChangePctDTO.setToday2End_changePct(of(today2End_changePct));
 
-                        topChangePctDTO.setStart2Next_changePct(NumUtil.of(start2Next_changePct));
-                        topChangePctDTO.setStart2Next3_changePct(NumUtil.of(start2Next3_changePct));
-                        topChangePctDTO.setStart2Next5_changePct(NumUtil.of(start2Next5_changePct));
-                        topChangePctDTO.setStart2Next10_changePct(NumUtil.of(start2Next10_changePct));
-                        topChangePctDTO.setStart2Next15_changePct(NumUtil.of(start2Next15_changePct));
-                        topChangePctDTO.setStart2Next20_changePct(NumUtil.of(start2Next20_changePct));
+                        topChangePctDTO.setStart2Next_changePct(of(start2Next_changePct));
+                        topChangePctDTO.setStart2Next3_changePct(of(start2Next3_changePct));
+                        topChangePctDTO.setStart2Next5_changePct(of(start2Next5_changePct));
+                        topChangePctDTO.setStart2Next10_changePct(of(start2Next10_changePct));
+                        topChangePctDTO.setStart2Next15_changePct(of(start2Next15_changePct));
+                        topChangePctDTO.setStart2Next20_changePct(of(start2Next20_changePct));
 
-                        topChangePctDTO.setStart2Max_changePct(NumUtil.of(start2Max_changePct));
-                        topChangePctDTO.setToday2Max_changePct(NumUtil.of(today2Max_changePct));
+                        topChangePctDTO.setStart2Max_changePct(of(start2Max_changePct));
+                        topChangePctDTO.setToday2Max_changePct(of(today2Max_changePct));
                     });
 
 
@@ -1952,7 +1821,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 // 个股 - RPS强度
                 double RPS三线和 = fun.RPS三线和()[idx];
-                stockCode_rps强度_map.put(stockCode, NumUtil.of(RPS三线和));
+                stockCode_rps强度_map.put(stockCode, of(RPS三线和));
             }
 
 
@@ -3245,7 +3114,15 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static double of(Number val) {
+        return NumUtil.of(val);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Data

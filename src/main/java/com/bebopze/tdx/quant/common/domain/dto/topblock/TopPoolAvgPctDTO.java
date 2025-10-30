@@ -18,6 +18,8 @@ public class TopPoolAvgPctDTO {
     // 交易日
     private transient LocalDate date;
 
+    private int total;
+
 
     // -----------------------------------------------------------------------------------------------------------------
 

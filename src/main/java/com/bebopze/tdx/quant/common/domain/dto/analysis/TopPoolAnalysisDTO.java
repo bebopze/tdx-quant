@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.common.domain.dto.topblock;
+package com.bebopze.tdx.quant.common.domain.dto.analysis;
 
 import lombok.Data;
 
@@ -12,19 +12,24 @@ import java.util.List;
  * @date: 2025/10/21
  */
 @Data
-public class TopStockPoolAnalysisDTO {
+public class TopPoolAnalysisDTO {
 
 
     /**
      * 收益率 汇总统计
      */
-    TopStockPoolSumReturnDTO sumReturnDTO;
+    TopPoolSumReturnDTO sumReturnDTO;
 
 
     /**
      * 每日收益率
      */
-    List<TopStockPoolDailyReturnDTO> dailyReturnDTOList;
+    List<TopPoolDailyReturnDTO> dailyReturnDTOList;
 
+
+    /**
+     * 上榜 次数/涨幅 统计
+     */
+    List<TopCountDTO> countDTOList;
 
 }

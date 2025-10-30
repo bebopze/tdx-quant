@@ -3,24 +3,20 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.bebopze.tdx.quant.service.BacktestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -40,7 +36,7 @@ public class BacktestController {
 
 
     @Operation(summary = "创建 -> 执行回测", description = "创建 -> 执行   回测task")
-    @GetMapping("/exec")
+    @PostMapping("/exec")
     public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2022-01-01")
                                      @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
@@ -51,9 +47,14 @@ public class BacktestController {
                                      @RequestParam(defaultValue = "true") boolean resume,
 
                                      @Schema(description = "任务批次号（resume=true 生效）", example = "1")
-                                     @RequestParam(required = false) Integer batchNo) {
+                                     @RequestParam(required = false) Integer batchNo,
 
-        backTestService.execBacktest(startDate, endDate, resume, batchNo);
+
+                                     @Schema(description = "回测-对照组 可变参数")
+                                     @RequestBody BacktestCompareDTO btCompareDTO) {
+
+
+        backTestService.execBacktest(startDate, endDate, resume, batchNo, btCompareDTO);
         return Result.SUC();
     }
 
@@ -63,8 +64,8 @@ public class BacktestController {
     public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号", example = "1")
                                            @RequestParam(required = false) Integer batchNo,
 
-                                           @Schema(description = "任务ID列表", example = "1")
-                                           @RequestParam(required = false, defaultValue = "") String taskIdList,
+                                           @Schema(description = "任务ID列表", example = "1,2,3")
+                                           @RequestParam(required = false, defaultValue = "-1") String taskIdList,
 
                                            @Schema(description = "更新-开始时间", example = "2025-01-01")
                                            @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
@@ -73,9 +74,9 @@ public class BacktestController {
                                            @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
 
 
-        List<Long> _taskIdList = Arrays.stream(taskIdList.split(",")).map(Long::valueOf).collect(Collectors.toList());
-        backTestService.execBacktestUpdate(batchNo, _taskIdList, startDate, endDate);
+        List<Long> _taskIdList = ConvertUtil.str2LongList(taskIdList);
 
+        backTestService.execBacktestUpdate(batchNo, _taskIdList, startDate, endDate);
         return Result.SUC();
     }
 
@@ -101,9 +102,7 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo) {
 
 
-        List<String> _buyConList = Arrays.stream(buyConList.split(","))
-                                         .map(String::trim)
-                                         .collect(Collectors.toList());
+        List<String> _buyConList = ConvertUtil.str2List(buyConList);
 
         return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate, resume, batchNo));
     }
@@ -141,10 +140,7 @@ public class BacktestController {
                                            @RequestParam(required = false) LocalDateTime endCreateTime) {
 
 
-        List<Integer> _batchNoList = Arrays.stream(batchNoList.split(","))
-                                           .filter(StringUtils::isNotBlank)
-                                           .map(Integer::valueOf)
-                                           .collect(Collectors.toList());
+        List<Integer> _batchNoList = ConvertUtil.str2IntList(batchNoList);
 
         return Result.SUC(backTestService.listTask(taskId, _batchNoList, startCreateTime, endCreateTime));
     }
@@ -152,8 +148,17 @@ public class BacktestController {
 
     @Operation(summary = "回测 - 结果分析", description = "回测 - 结果分析")
     @GetMapping("/analysis")
-    public Result<BacktestAnalysisDTO> analysis(@RequestParam(defaultValue = "1") Long taskId) {
-        return Result.SUC(backTestService.analysis(taskId));
+    public Result<BacktestAnalysisDTO> analysis(@RequestParam(defaultValue = "1") Long taskId,
+
+                                                @Schema(description = "交易日", example = "2017-01-01")
+                                                @RequestParam(defaultValue = "2017-01-01") LocalDate startDate,
+
+                                                @Schema(description = "交易日", example = "2025-10-31")
+                                                @RequestParam(required = false) LocalDate endDate) {
+
+
+        endDate = endDate == null ? LocalDate.now() : endDate;
+        return Result.SUC(backTestService.analysis(taskId, startDate, endDate));
     }
 
 
@@ -171,10 +176,7 @@ public class BacktestController {
     public Result<Integer> deleteByTaskIds(@Schema(description = "taskId列表（逗号分隔）", example = "1,2,3")
                                            @RequestParam String taskIdList) {
 
-
-        List<Long> taskIds = Arrays.stream(taskIdList.split(","))
-                                   .map(Long::valueOf)
-                                   .collect(Collectors.toList());
+        List<Long> taskIds = ConvertUtil.str2LongList(taskIdList);
 
         return Result.SUC(backTestService.deleteByTaskIds(taskIds));
     }
@@ -184,15 +186,9 @@ public class BacktestController {
     @GetMapping("/tradeRecord/stock")
     public Result<List<BtTradeRecordDO>> stockTradeRecordList(@RequestParam(defaultValue = "1") Long taskId,
                                                               @RequestParam(defaultValue = "300587") String stockCode) {
+
         return Result.SUC(backTestService.stockTradeRecordList(taskId, stockCode));
     }
 
-
-    @Deprecated
-    @GetMapping("/holdingStockRule")
-    public Result<Void> test(@RequestParam String stockCode) {
-        backTestService.holdingStockRule(stockCode);
-        return Result.SUC();
-    }
 
 }

@@ -27,6 +27,7 @@ public class TopChangePctDTO {
      * 主线 板块/个股code
      */
     private String code;
+    private String name;
 
 
     // 首次 上榜日期（以 today 为基准日期，往前倒推          SSF空/MA20空 -> 至今   区间   首次上榜）
@@ -83,8 +84,9 @@ public class TopChangePctDTO {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public TopChangePctDTO(String code) {
+    public TopChangePctDTO(String code, String name) {
         this.code = code;
+        this.name = name;
     }
 
 }

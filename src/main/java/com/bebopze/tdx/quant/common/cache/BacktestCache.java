@@ -1,7 +1,10 @@
 package com.bebopze.tdx.quant.common.cache;
 
+import com.bebopze.tdx.quant.common.config.BizException;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -14,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
@@ -56,27 +60,28 @@ public class BacktestCache {
      */
     public List<BaseStockDO> stockDOList;
     public List<BaseStockDO> ETF_stockDOList;
-    public Map<String, BaseStockDO> codeStockMap = Maps.newHashMap();
-    public Map<Long, String> stock__idCodeMap = Maps.newHashMap();
-    public Map<String, Long> stock__codeIdMap = Maps.newHashMap();
-    public Map<String, String> stock__codeNameMap = Maps.newHashMap();
-    public Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newHashMap();
+    public Map<String, BaseStockDO> codeStockMap = Maps.newConcurrentMap();
+    public Map<Long, String> stock__idCodeMap = Maps.newConcurrentMap();
+    public Map<String, Long> stock__codeIdMap = Maps.newConcurrentMap();
+    public Map<String, String> stock__codeNameMap = Maps.newConcurrentMap();
+    public Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newConcurrentMap();
 
 
-    public Map<String, Double> stock_zt__codePriceMap = Maps.newHashMap(); // 涨停价   -> 东财API
-    public Map<String, Double> stock_dt__codePriceMap = Maps.newHashMap(); // 跌停价   -> 东财API
-    public Map<String, Double> stock__codePriceMap = Maps.newHashMap();    // 实时行情 -> 东财API
+    public Map<String, Double> rt_stock_zt__codePriceMap = Maps.newHashMap(); // 涨停价     ->  东财API
+    public Map<String, Double> rt_stock_dt__codePriceMap = Maps.newHashMap(); // 跌停价     ->  东财API
+    public Map<String, Double> rt_stock__codePriceMap = Maps.newHashMap();    // 实时行情   ->  东财API
+    public Map<String, Double> rt_stock__codePctMap = Maps.newHashMap();      // 实时涨跌幅 ->  东财API
 
 
     /**
      * 板块
      */
     public List<BaseBlockDO> blockDOList;
-    public Map<String, BaseBlockDO> codeBlockMap = Maps.newHashMap();
-    public Map<Long, String> block__idCodeMap = Maps.newHashMap();
-    public Map<String, Long> block__codeIdMap = Maps.newHashMap();
-    public Map<String, String> block__codeNameMap = Maps.newHashMap();
-    public Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newHashMap();
+    public Map<String, BaseBlockDO> codeBlockMap = Maps.newConcurrentMap();
+    public Map<Long, String> block__idCodeMap = Maps.newConcurrentMap();
+    public Map<String, Long> block__codeIdMap = Maps.newConcurrentMap();
+    public Map<String, String> block__codeNameMap = Maps.newConcurrentMap();
+    public Map<String, Map<LocalDate, Double>> block__dateCloseMap = Maps.newConcurrentMap();
 
 
     /**
@@ -155,6 +160,11 @@ public class BacktestCache {
                                                                         .build();
 
 
+    public StockFun getFun(String code) {
+        return StockTypeEnum.isBlock(code) ? getOrCreateBlockFun(code) : getOrCreateStockFun(code);
+    }
+
+
     public StockFun getOrCreateStockFun(String stockCode) {
         return getOrCreateStockFun(codeStockMap.get(stockCode));
     }
@@ -175,8 +185,8 @@ public class BacktestCache {
 
     // ====== 可选：移除监听器（用于调试/监控）======
     @NotNull
-    private static <K, V> RemovalListener<K, V> createStatsRemovalListener(String cacheName,
-                                                                           Supplier<Cache<K, V>> cacheSupplier) {
+    public static <K, V> RemovalListener<K, V> createStatsRemovalListener(String cacheName,
+                                                                          Supplier<Cache<K, V>> cacheSupplier) {
 
         // 可记录日志、监控、或资源释放
         return (key, value, cause) -> log.warn("{} entry [{}] was removed due to {}     >>>     stats : {}", cacheName, key, cause, cacheSupplier.get().stats());
@@ -219,16 +229,6 @@ public class BacktestCache {
                                                                                                          .build();
 
 
-//    public static final Cache<String, Set<String>> stockCode_topBlockCache = Caffeine.newBuilder()
-//                                                                                     .maximumSize(5_000)
-//                                                                                     .expireAfterWrite(60, TimeUnit.MINUTES)
-//                                                                                     .expireAfterAccess(30, TimeUnit.MINUTES)
-//                                                                                     .recordStats()
-//                                                                                     .removalListener(createStatsRemovalListener("stockCode_topBlockCache", () -> BacktestCache.stockCode_topBlockCache))
-//                                                                                     .scheduler(Scheduler.systemScheduler())
-//                                                                                     .build();
-
-
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -247,9 +247,10 @@ public class BacktestCache {
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +
                 ", stock__codeNameMap=" + stock__codeNameMap.size() +
                 ", stock__dateCloseMap=" + stock__dateCloseMap.size() +
-                ", stock_zt__codePriceMap=" + stock_zt__codePriceMap.size() +
-                ", stock_dt__codePriceMap=" + stock_dt__codePriceMap.size() +
-                ", stock__codePriceMap=" + stock__codePriceMap +
+                ", rt_stock_zt__codePriceMap=" + rt_stock_zt__codePriceMap.size() +
+                ", rt_stock_dt__codePriceMap=" + rt_stock_dt__codePriceMap.size() +
+                ", rt_stock__codePriceMap=" + rt_stock__codePriceMap.size() +
+                ", rt_stock__codePctMap=" + rt_stock__codePctMap.size() +
                 ", blockDOList=" + ListUtil.size(blockDOList) +
                 ", codeBlockMap=" + codeBlockMap.size() +
                 ", block__idCodeMap=" + block__idCodeMap.size() +
@@ -265,6 +266,52 @@ public class BacktestCache {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 最近的 有效交易日 idx
+     *
+     * @param dateArr      交易日数组
+     * @param dateIndexMap 交易日 - 数组idx
+     * @param tradeDate    指定交易日
+     * @return
+     */
+    public static Integer tradeDateIdx(LocalDate[] dateArr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
+        if (dateArr.length == 0) {
+            return null;
+        }
+
+
+        LocalDate startDate = dateArr[0];
+        LocalDate endDate = dateArr[dateArr.length - 1];
+
+
+        tradeDate = tradeDate.isAfter(endDate) ? endDate : tradeDate;
+
+
+        // --------------------------------------------------------- ---------------------------------------------------
+
+
+        Integer idx = dateIndexMap.get(tradeDate);
+
+
+        // 非交易日
+        while (idx == null) {
+
+            // 上一自然日   ->   直至 交易日
+            tradeDate = tradeDate.minusDays(1);
+            idx = dateIndexMap.get(tradeDate);
+
+
+            if (!DateTimeUtil.between(tradeDate, startDate, endDate)) {
+                throw new BizException(String.format("[日期：%s]非法，超出有效交易日范围", tradeDate));
+            }
+        }
+
+
+        // 最近的 有效交易日 idx
+        return idx;
+    }
 
 
     public static boolean getByDate(boolean[] arr, Map<LocalDate, Integer> dateIndexMap, LocalDate tradeDate) {
@@ -465,11 +512,11 @@ public class BacktestCache {
 
 
     public LocalDate startDate() {
-        return dateList.get(0);
+        return CollectionUtils.isEmpty(dateList) ? null : dateList.get(0);
     }
 
     public LocalDate endDate() {
-        return dateList.get(dateList.size() - 1);
+        return CollectionUtils.isEmpty(dateList) ? null : dateList.get(dateList.size() - 1);
     }
 
 
@@ -482,6 +529,11 @@ public class BacktestCache {
     public void clear() {
         stockFunCache.invalidateAll();
         blockFunCache.invalidateAll();
+    }
+
+
+    public boolean between(LocalDate date) {
+        return DateTimeUtil.between(date, startDate(), endDate());
     }
 
 

@@ -17,7 +17,7 @@ import java.util.concurrent.*;
  * @date: 2025/8/11
  */
 @Slf4j
-@UtilityClass
+@UtilityClass // 全局静态
 public class ThreadPoolRegistry {
 
 
@@ -38,7 +38,7 @@ public class ThreadPoolRegistry {
                      ThreadPoolConfig.builder()
                                      .name("CPU-Intensive-Pool")
                                      .corePoolSize(processors)
-                                     .maxPoolSize(processors)
+                                     .maxPoolSize(processors + 1)
                                      .queueCapacity(200)
                                      .build());
 
@@ -62,7 +62,7 @@ public class ThreadPoolRegistry {
         registerPool(ThreadPoolType.IO_INTENSIVE_2,
                      ThreadPoolConfig.builder()
                                      .name("IO-Intensive-Pool2")
-                                     .corePoolSize(processors * 2)
+                                     .corePoolSize(processors * 3)
                                      .maxPoolSize(processors * 4)
                                      .queueCapacity(1000)
                                      .build());
