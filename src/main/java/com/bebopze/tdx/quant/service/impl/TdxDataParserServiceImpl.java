@@ -1303,7 +1303,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 东方财富   ->   批量拉取  全A（ETF） 实时行情
-        List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.allStockETFSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.pullAllStockETFSnapshotKline();
         log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
 
 
@@ -1626,8 +1626,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     @Override
-    public Map<String, List<String>> marketRelaStockCodePrefixList(int N) {
-        Map<String, List<String>> market_stockCodeList_map = baseStockService.market_stockCodePrefixList_map(N);
+    public Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N) {
+        Map<String, Set<String>> market_stockCodeList_map = baseStockService.market_stockCodePrefixList_map(type, N);
         return market_stockCodeList_map;
     }
 

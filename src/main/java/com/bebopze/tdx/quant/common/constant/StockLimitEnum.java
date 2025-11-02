@@ -19,12 +19,12 @@ public enum StockLimitEnum {
 
     // 300
     // 301
-    SZ("创业板", 1, 20, Lists.newArrayList("30")),
+    CY("创业板", 1, 20, Lists.newArrayList("30")),
 
 
     // 688
     // 689
-    SH("科创板", 2, 20, Lists.newArrayList("68")),
+    KC("科创板", 2, 20, Lists.newArrayList("68")),
 
 
     // 430
@@ -42,8 +42,11 @@ public enum StockLimitEnum {
     // 871
     // 872
     // 873
+
     // 920
-    BJ("北交所", 3, 30, Lists.newArrayList("43", "83", "87", "92"));
+
+    //  "43", "83", "87"   ->   已废弃（已全部迁移到 92）
+    BJ("北交所", 3, 30, Lists.newArrayList("92", "43", "83", "87"));
 
 
     /**
@@ -115,9 +118,7 @@ public enum StockLimitEnum {
 
 
     public static Integer getChangePctLimit(String stockCode, String stockName) {
-        if (is5CM(stockName)) return ST_LIMIT;
         if (is20CM_ETF(stockCode, stockName)) return LIMIT_20;
-
 
         StockLimitEnum stockLimitEnum = getByStockCode(stockCode);
         return stockLimitEnum == null ? DEFAULT_LIMIT : stockLimitEnum.getChangePctLimit();
@@ -159,17 +160,35 @@ public enum StockLimitEnum {
      */
     public static boolean is10CM(String stockCode, String stockName) {
         Integer changePctLimit = getChangePctLimit(stockCode, stockName);
-        return changePctLimit <= 10;
+        return changePctLimit <= 10 && !isST(stockName);
     }
 
 
     /**
      * 是否 5CM
      *
+     * @param stockCode
      * @param stockName
      * @return
      */
-    public static boolean is5CM(String stockName) {
+    public static boolean is5CM(String stockCode, String stockName) {
+        // ST（暂未进入退市 -> 可能退市）、*ST（退市中 -> 即将退市）
+
+        //  ST     主板 5%，创业板/科创板 20%，北交所 30%
+        // *ST     主板 5%，创业板/科创板 20%，北交所 30%
+
+        Integer changePctLimit = getChangePctLimit(stockCode, stockName);
+        return changePctLimit <= 10 && isST(stockName);
+    }
+
+
+    /**
+     * 是否 ST / *ST
+     *
+     * @param stockName
+     * @return
+     */
+    public static boolean isST(String stockName) {
         return stockName != null && stockName.contains("ST");
     }
 

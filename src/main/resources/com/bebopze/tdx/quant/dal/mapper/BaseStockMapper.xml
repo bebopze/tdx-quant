@@ -21,7 +21,7 @@
 
 
     <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT id, code, name, tdx_market_type
+        SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
 
@@ -30,7 +30,7 @@
 
 
     <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT id, code, name, tdx_market_type
+        SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
     </select>
@@ -81,7 +81,7 @@
 
         SELECT
 
-        id,code, name, tdx_market_type
+        SELECT id, code, name, type, tdx_market_type
 
 
         FROM base_stock
@@ -98,7 +98,7 @@
     <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
-        id,code, name, tdx_market_type
+        SELECT id, code, name, type, tdx_market_type
 
 
         FROM base_stock

@@ -13,16 +13,24 @@ import java.util.List;
  * @author: bebopze
  * @date: 2025/7/29
  */
+@Getter
 @AllArgsConstructor
 public enum StockTypeEnum {
 
 
-    A_STOCK(1, "A股", Lists.newArrayList()),
-
-    ETF(2, "ETF", Lists.newArrayList("15", "51", "56", "58")),
+    //  北交所   "43", "83", "87"   ->   已废弃（已全部迁移到 92）
 
 
-    TDX_BLOCK(3, "板块", Lists.newArrayList("88")),
+    //    A_STOCK(1, "A股", Lists.newArrayList("00", "30", "60", "68", "92", "43", "83", "87")),
+    A_STOCK(1, "A股", Lists.newArrayList("0", "3", "6", "9", "4", "8")),
+
+
+    //    ETF(2, "ETF", Lists.newArrayList("15", "16", "50", "51", "56", "58")),
+    ETF(2, "ETF", Lists.newArrayList("1", "5")),
+
+
+    //    TDX_BLOCK(3, "板块", Lists.newArrayList("88")),
+    TDX_BLOCK(3, "板块", Lists.newArrayList("8")),
 
 
     ;
@@ -35,8 +43,7 @@ public enum StockTypeEnum {
     /**
      * 个股（A股/ETF） -  股票代码 前缀（前2位）
      */
-    @Getter
-    private List<String> stockCodePrefixList;
+    private final List<String> stockCodePrefixList;
 
 
     public static String getDescByType(Integer type) {
@@ -50,8 +57,8 @@ public enum StockTypeEnum {
 
 
     public static StockTypeEnum getByStockCode(String stockCode) {
-        // 前2位
-        String codePrefix = stockCode.trim().substring(0, 2);
+        // 前1位
+        String codePrefix = stockCode.trim().substring(0, 1);
 
         for (StockTypeEnum value : StockTypeEnum.values()) {
             if (value.stockCodePrefixList.contains(codePrefix)) {
@@ -69,6 +76,16 @@ public enum StockTypeEnum {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+
+    public static boolean isStock(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return A_STOCK.equals(stockTypeEnum);
+    }
+
+    public static boolean isETF(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return ETF.equals(stockTypeEnum);
+    }
 
     public static boolean isBlock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
