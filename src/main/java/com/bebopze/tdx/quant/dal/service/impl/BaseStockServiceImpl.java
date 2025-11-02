@@ -1,11 +1,12 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,8 +14,10 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStockDO> implements IBaseStockService {
+
+
+    @Autowired
+    private BaseBlockMapper baseBlockMapper;
 
 
     /**
@@ -67,29 +74,35 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public Map<String, List<String>> market_stockCodePrefixList_map(int N) {
-        Map<String, List<String>> market_stockCodePrefixList_map = Maps.newHashMap();
+    public Map<String, Set<String>> market_stockCodePrefixList_map(int type, int N) {
+        Map<String, Set<String>> market_stockCodePrefixList_map = Maps.newHashMap();
 
 
-        // selectMaps 返回 List<Map<String,Object>>，然后映射成 DTO
-        List<Map<String, Object>> rows = baseMapper.selectMaps(
+        // 1-股票；2-ETF；
+        if (type == 1 || type == 2) {
+            List<BaseStockDO> baseStockDOList = baseMapper.listAllSimple();
+            baseStockDOList.stream()
+                           .filter(e -> Objects.equals(type, e.getType()))
+                           .forEach(e -> {
 
-                new QueryWrapper<BaseStockDO>()
-                        // 指定 distinct 和 要查询的列
-                        //.select("DISTINCT   LEFT(code,3) AS code_prefix", "tdx_market_type")
-                        .select(String.format("DISTINCT   LEFT(code, %s) AS code_prefix", N), "tdx_market_type")
-                        .orderByAsc("tdx_market_type")
-        );
+                               String tdxMarketType = e.getTdxMarketType().toString();
+                               String code_prefix = e.getCode().substring(0, N);
 
+                               market_stockCodePrefixList_map.computeIfAbsent(tdxMarketType, k -> Sets.newHashSet(code_prefix)).add(code_prefix);
+                           });
+        }
 
-        rows.forEach(row -> {
+        // 3-板块
+        else if (type == 3) {
+            List<BaseBlockDO> baseBlockDOList = baseBlockMapper.listAllSimple();
+            baseBlockDOList.forEach(e -> {
 
-            String market_type = String.valueOf(row.get("tdx_market_type"));
-            String code_prefix = (String) row.get("code_prefix");
+                String tdxBlockType = e.getTypeDesc();
+                String code_prefix = e.getCode().substring(0, N);
 
-
-            market_stockCodePrefixList_map.computeIfAbsent(market_type, k -> Lists.newArrayList()).add(code_prefix);
-        });
+                market_stockCodePrefixList_map.computeIfAbsent(tdxBlockType, k -> Sets.newHashSet()).add(code_prefix);
+            });
+        }
 
 
         return market_stockCodePrefixList_map;

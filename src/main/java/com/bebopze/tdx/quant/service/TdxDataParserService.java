@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -49,5 +49,5 @@ public interface TdxDataParserService {
     // ----------------------------------------------------------------
 
 
-    Map<String, List<String>> marketRelaStockCodePrefixList(int N);
+    Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N);
 }

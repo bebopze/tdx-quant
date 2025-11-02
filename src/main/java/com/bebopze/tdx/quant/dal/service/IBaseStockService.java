@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -25,7 +26,7 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     BaseStockDO getSimpleByCode(String code);
 
 
-    Map<String, List<String>> market_stockCodePrefixList_map(int N);
+    Map<String, Set<String>> market_stockCodePrefixList_map(int type, int N);
 
 
     List<BaseStockDO> listByCodeList(Collection<String> codeList);

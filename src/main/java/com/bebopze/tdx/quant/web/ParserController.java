@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -150,10 +150,13 @@ public class ParserController {
      */
     @Operation(summary = "交易所 - 股票代码 前缀", description = "交易所 - 股票代码 前缀")
     @GetMapping(value = "/market-stockCodePrefixList")
-    public Result<Map<String, List<String>>> market_stockCodePrefixList(@Schema(description = "前N位", example = "3")
-                                                                        @RequestParam(required = false, defaultValue = "3") int N) {
+    public Result<Map<String, Set<String>>> market_stockCodePrefixList(@Schema(description = "股票类型：1-A股；2-ETF；3-板块；", example = "1")
+                                                                       @RequestParam(required = false, defaultValue = "1") int type,
 
-        return Result.SUC(tdxDataParserService.marketRelaStockCodePrefixList(N));
+                                                                       @Schema(description = "前N位", example = "2")
+                                                                       @RequestParam(required = false, defaultValue = "2") int N) {
+
+        return Result.SUC(tdxDataParserService.marketRelaStockCodePrefixList(type, N));
     }
 
 }
