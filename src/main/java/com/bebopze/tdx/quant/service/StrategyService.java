@@ -17,7 +17,5 @@ public interface StrategyService {
 
     BSStrategyInfoDTO bsTradeRead();
 
-    void holdingStockRule(String stockCode);
-
-    void breakSell();
+    void bsTopStockList();
 }
