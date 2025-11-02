@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.StrategyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -37,7 +36,7 @@ public class StrategyController {
 
     @Operation(summary = "策略交易", description = "策略交易")
     @GetMapping(value = "/bsTrade")
-    public Result<BSStrategyInfoDTO> bsTrade(@Schema(description = "主线策略", example = "LV3（板块-月多2 -> 板块RPS红 + 月多 + SSF多）")
+    public Result<BSStrategyInfoDTO> bsTrade(@Schema(description = "主线策略", example = "LV3（板块-月多2 -> 月多 + RPS红 + SSF多）")
                                              @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
 
                                              @Schema(description = "B策略", example = "N100日新高,月多,RPS一线红")
@@ -51,13 +50,10 @@ public class StrategyController {
                                              @RequestParam(required = false) LocalDate tradeDate) {
 
 
-
-        // 主线策略： LV3（板块-月多2 -> 板块RPS红 + 月多 + SSF多）
+        // 主线策略： LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
 
         // B策略：   N100日新高,月多
         // S策略：   个股S,板块S,主线S
-
-
 
 
         // 2019-01-01 ~ 2025-08-18          1606天
@@ -74,8 +70,9 @@ public class StrategyController {
         // 7_7524_4020.04元
 
 
-        List<String> _buyConList = Arrays.stream(buyConList.split(",")).map(String::trim).collect(Collectors.toList());
-        List<String> _sellConList = Arrays.stream(sellConList.split(",")).map(String::trim).collect(Collectors.toList());
+        List<String> _buyConList = ConvertUtil.str2List(buyConList);
+        List<String> _sellConList = ConvertUtil.str2List(sellConList);
+
 
         return Result.SUC(strategyService.bsTrade(topBlockStrategyEnum, _buyConList, _sellConList, tradeDate));
     }
@@ -88,21 +85,12 @@ public class StrategyController {
     }
 
 
-    @Deprecated
-    @Operation(summary = "持仓策略", description = "持仓策略")
-    @GetMapping(value = "/holdingStockRule")
-    public Result<Object> holdingStockRule(@RequestParam(required = false) String stockCode) {
-        strategyService.holdingStockRule(stockCode);
+    @Operation(summary = "策略交易 - 主线个股", description = "策略交易 - 主线个股")
+    @GetMapping(value = "/bsTrade/topStockList")
+    public Result<Void> topStockList() {
+        strategyService.bsTopStockList();
         return Result.SUC();
     }
 
-
-    @Deprecated
-    @Operation(summary = "破位卖出", description = "破位卖出")
-    @GetMapping(value = "/breakSell")
-    public Result<Object> breakSell(@RequestParam(required = false) String stockCode) {
-        strategyService.breakSell();
-        return Result.SUC();
-    }
 
 }

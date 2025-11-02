@@ -3,35 +3,45 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockPoolDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.util.NumUtil;
-import com.bebopze.tdx.quant.indicator.StockFunLast;
+import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.StrategyService;
+import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
-import com.bebopze.tdx.quant.strategy.sell.DownMASellStrategy;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.AccountConst.STOCK__POS_PCT_LIMIT;
+import static com.bebopze.tdx.quant.service.impl.InitDataServiceImpl.data;
 
 
 /**
@@ -45,7 +55,7 @@ import static com.bebopze.tdx.quant.common.constant.AccountConst.STOCK__POS_PCT_
 public class StrategyServiceImpl implements StrategyService {
 
 
-    BacktestCache data = new BacktestCache();
+    // private static final BacktestCache data = InitDataServiceImpl.data;
 
 
     @Autowired
@@ -64,7 +74,7 @@ public class StrategyServiceImpl implements StrategyService {
     private SellStrategyFactory sellStrategyFactory;
 
     @Autowired
-    private DownMASellStrategy sellStrategy;
+    private TopBlockService topBlockService;
 
 
     @Override
@@ -89,7 +99,7 @@ public class StrategyServiceImpl implements StrategyService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        data = initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false);
+        initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false);
         // data = initDataService.initData();
 
 
@@ -179,10 +189,6 @@ public class StrategyServiceImpl implements StrategyService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 拉取 实时行情（全A/ETF）
-        pullStockSnapshotPrice();
-
-
         // -------------------------------------------------------------------------------------------------------------
 
         // newPositionList
@@ -221,15 +227,11 @@ public class StrategyServiceImpl implements StrategyService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 一键卖出   ->   指定 个股列表
-        tradeService.quickSellPosition(Sets.newHashSet(sell__stockCodeSet));
+        // 一键清仓   ->   指定 个股列表
+        tradeService.quickClearPosition(Sets.newHashSet(sell__stockCodeSet));
 
 
         // -------------------------------------------------------------------------------------------------------------
-
-
-        // 拉取 实时行情（全A/ETF）
-        pullStockSnapshotPrice();
 
 
         // newPositionList
@@ -262,19 +264,83 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
 
-    /**
-     * 拉取 实时行情（全A/ETF）
-     */
-    private void pullStockSnapshotPrice() {
+    @Override
+    public void bsTopStockList() {
 
-        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = EastMoneyKlineAPI.allStockETFSnapshotKline();
-        stockSnapshotKlineDTOS.forEach(e -> {
-            String stockCode = e.getStockCode();
 
-            data.stock__codePriceMap.put(stockCode, NumUtil.of(e.getClose() * 1.005, 5));   // 略有延迟（20s） ->  保险起见：price x 1.005
-            data.stock_zt__codePriceMap.put(stockCode, NumUtil.of(e.getZtPrice(), 5));
-            data.stock_dt__codePriceMap.put(stockCode, NumUtil.of(e.getDtPrice(), 5));
+        // 我的持仓（昨日买入）
+        QueryCreditNewPosResp posResp = tradeService.queryCreditNewPosV2();
+        List<CcStockInfo> old_posStockList = posResp.getStocks();
+
+
+        // 今日 主线个股列表 （待调仓换股）
+        LocalDate today = LocalDate.now();
+        today = LocalDate.of(2025, 10, 31);
+        TopStockPoolDTO new_dto = topBlockService.topStockList(today, TopTypeEnum.AUTO.type);
+
+
+        // ------------------------------------------------- check -----------------------------------------------------
+
+
+        TopPoolAvgPctDTO avgPctDTO = new_dto.getTopStockAvgPctDTO();
+        Assert.isTrue(avgPctDTO.getDate().isEqual(today), "今日主线个股列表 数据为空，请检查是否[未刷新]今日主线数据");
+
+        List<TopStockDTO> topStockDTOList = new_dto.getTopStockDTOList();
+        if (CollectionUtils.isEmpty(topStockDTOList)) {
+            log.warn("bsTopStockList - 今日主线数据为空（上榜个股=0） ->  将清仓     >>>     [{}] , topStockDTOList : {}",
+                     today, JSON.toJSONString(topStockDTOList));
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        Set<String> new__stockCodeSet = topStockDTOList.stream().map(TopStockDTO::getStockCode).collect(Collectors.toSet());
+
+
+        Set<String> clearStockCodeSet = Sets.newHashSet();
+        Set<String> posStockCodeSet = Sets.newHashSet();
+        Set<String> buyStockCodeSet = Sets.newHashSet(new__stockCodeSet);
+
+
+        old_posStockList.forEach(e -> {
+            String stockCode = e.getStkcode();
+
+
+            // not_in_new   ->   sell
+            if (!new__stockCodeSet.contains(stockCode)) {
+                clearStockCodeSet.add(stockCode);
+            } else {
+                // in_new   ->   继续持有/加仓
+                posStockCodeSet.add(stockCode);
+                // new 买入列表剔除 已持仓股票
+                buyStockCodeSet.remove(stockCode);
+            }
         });
+
+
+        // ----------------------------------------------- 特殊处理 -----------------------------------------------------
+
+
+        // ETF（略过 -> sell）
+        clearStockCodeSet.removeIf(StockTypeEnum::isETF);
+
+
+        // 手动主动买入（略过 -> sell）
+
+
+        // ...
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 一键清仓   ->   指定 个股列表
+        tradeService.quickClearPosition(clearStockCodeSet);
+
+
+        // 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
+        tradeService.quickBuyPosition(convert__newPositionList(buyStockCodeSet));
     }
 
 
@@ -331,30 +397,36 @@ public class StrategyServiceImpl implements StrategyService {
      * @param buy__stockCodeList
      * @return
      */
-    private List<QuickBuyPositionParam> convert__newPositionList(List<String> buy__stockCodeList) {
+    public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList) {
+
+
+        // 拉取 实时行情（全A/ETF）
+        pullStockSnapshotPrice(buy__stockCodeList);
 
 
         return buy__stockCodeList.stream().map(stockCode -> {
 
-                                     QuickBuyPositionParam newPosition = new QuickBuyPositionParam();
+                                     String stockName = data.stock__codeNameMap.get(stockCode);
 
+
+                                     QuickBuyPositionParam newPosition = new QuickBuyPositionParam();
                                      newPosition.setStockCode(stockCode);
-                                     newPosition.setStockName(data.stock__codeNameMap.get(stockCode));
+                                     newPosition.setStockName(stockName);
 
 
                                      // 单只个股 仓位   ->   最大5%
-                                     newPosition.setPositionPct(STOCK__POS_PCT_LIMIT);
+                                     newPosition.setPosPct(STOCK__POS_PCT_LIMIT);
 
 
                                      // 价格
-                                     double price = data.stock__codePriceMap.computeIfAbsent(stockCode,
-                                                                                             // 买5/卖5     ->     卖5价（最高价 -> 一键买入）
-                                                                                             k -> NumUtil.of(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getFivequote().getSale5()));
+                                     double price = data.rt_stock__codePriceMap.computeIfAbsent(stockCode,
+                                                                                                // 买5/卖5     ->     卖5价（最高价 -> 一键买入）
+                                                                                                k -> NumUtil.of(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getFivequote().getSale5()));
 
 
                                      // 价格异常   ->   停牌
                                      if (Double.isNaN(price)) {
-                                         log.debug("convert__newPositionList     >>>     [{}] , price is NaN", stockCode);
+                                         log.warn("convert__newPositionList - err     >>>     [{} {}]   ->   price is NaN", stockCode, stockName);
                                          return null;
                                      }
 
@@ -368,18 +440,35 @@ public class StrategyServiceImpl implements StrategyService {
                                      // --------------------------------------------------------------------------------
 
 
+                                     // ST（暂未进入退市）、*ST（退市中）
+                                     if (stockName.contains("*ST")) {
+                                         log.warn("买入[{} {}]   -   [退市中] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                                  stockCode, stockName, price, data.rt_stock__codePctMap.get(stockCode));
+
+                                         // 限制买入 -> 极少仓位
+                                         // newPosition.setPositionPct(Math.min(0.1 * STOCK__POS_PCT_LIMIT, 1));
+
+                                         // 略过
+                                         return null;
+                                     }
+
+
                                      // 小账户 -> 禁止买入 百元股
-                                     if (price > 100 || (stockCode.startsWith("68") && price > 60)) {
+                                     if (price > 300 || (stockCode.startsWith("68") && price > 200)) {
+                                         log.warn("买入[{} {}]   -   [高价股] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                                  stockCode, stockName, price, data.rt_stock__codePctMap.get(stockCode));
                                          return null;
                                      }
 
 
                                      // 涨停股
-                                     double zt_price = data.stock_zt__codePriceMap.computeIfAbsent(stockCode,
-                                                                                                   // 买5/卖5     ->     涨/跌停价
-                                                                                                   k -> NumUtil.of(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getTopprice()));
+                                     double zt_price = data.rt_stock_zt__codePriceMap.computeIfAbsent(stockCode,
+                                                                                                      // 买5/卖5     ->     涨/跌停价
+                                                                                                      k -> EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getTopprice());
 
                                      if (price >= zt_price) {
+                                         log.warn("买入[{} {}]   -   [已涨停] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                                  stockCode, stockName, price, data.rt_stock__codePctMap.get(stockCode));
                                          return null;
                                      }
 
@@ -388,40 +477,77 @@ public class StrategyServiceImpl implements StrategyService {
 
 
                                      return newPosition;
-
-
                                  })
                                  .filter(Objects::nonNull)
                                  .collect(Collectors.toList());
     }
 
 
-    @Deprecated
-    @Override
-    public void holdingStockRule(String stockCode) {
-
-        sellStrategy.holdingStockRule(stockCode);
-    }
+    /**
+     * 拉取 实时行情（全A/ETF）
+     */
+    private static void pullStockSnapshotPrice(Collection<String> buy__stockCodeList) {
 
 
-    @Override
-    public void breakSell() {
+        try {
+            List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = EastMoneyKlineAPI.pullAllStockETFSnapshotKline();
 
 
-        // 持仓
-        QueryCreditNewPosResp queryCreditNewPosResp = EastMoneyTradeAPI.queryCreditNewPosV2();
-
-        List<CcStockInfo> stocks = queryCreditNewPosResp.getStocks();
+            stockSnapshotKlineDTOS.forEach(e -> {
+                String stockCode = e.getStockCode();
 
 
-        stocks.forEach(stock -> {
-
-            //
-            String stockCode = stock.getStkcode();
-
-            StockFunLast fun = new StockFunLast(stockCode);
+                data.stock__codeNameMap.put(stockCode, e.getStockName());
+                data.rt_stock__codePctMap.put(stockCode, e.getChange_pct());
 
 
+                data.rt_stock__codePriceMap.put(stockCode, NumUtil.of(e.getClose() * 1.003, 5));   // 略有延迟（20s） ->  保险起见：price x 1.003
+                data.rt_stock_zt__codePriceMap.put(stockCode, NumUtil.of(e.getZtPrice(), 5));
+                data.rt_stock_dt__codePriceMap.put(stockCode, NumUtil.of(e.getDtPrice(), 5));
+            });
+
+        } catch (Exception e) {
+
+            // 封禁IP
+            log.error(e.getMessage(), e);
+        }
+
+
+        // ------------------------------------
+
+
+        buy__stockCodeList.forEach(stockCode -> {
+
+
+//            SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+//            SleepUtils.randomSleep(50, 100);
+//
+//
+//            String stockName = resp.getName();
+//            double change_pct = resp.getRealtimequote().getZdf();
+//            double currPrice = resp.getRealtimequote().getCurrentPrice();
+//            double ztPrice = resp.getTopprice();
+//            double dtPrice = resp.getBottomprice();
+
+
+            StockSnapshotKlineDTO dto = KlineAPI.kline(stockCode);
+            SleepUtils.randomSleep(50, 100);
+
+
+            String stockName = dto.getStockName();
+            double change_pct = dto.getChange_pct();
+            double currPrice = dto.getClose();
+            double ztPrice = dto.getZtPrice();
+            double dtPrice = dto.getDtPrice();
+
+
+            data.stock__codeNameMap.put(stockCode, stockName);
+            data.rt_stock__codePctMap.put(stockCode, change_pct);
+
+
+            data.rt_stock__codePriceMap.put(stockCode, NumUtil.of(currPrice * 1.001, 5));   // 略有延迟（1s） ->  保险起见：price x 1.001
+            data.rt_stock_zt__codePriceMap.put(stockCode, ztPrice);
+            data.rt_stock_dt__codePriceMap.put(stockCode, dtPrice);
         });
     }
 
