@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,13 +127,20 @@ public class TdxBlockNewReaderWriter {
         //   /T0002/blocknew/IDEA-test.blk
         String filePath = baseFilePath + blockNewCode + ".blk";
 
+        Assert.isTrue(new File(filePath).exists(), String.format("通达信当前板块[%s]不存在，请在通达信中新建[%s]自定义板块", blockNewCode, blockNewCode));
 
-        List<String> codeList = stockOrBlockCodeList.stream().map(code -> {
-            // 0300059     -7位->     交易所：012   +   个股/板块 code
 
-            // 如果是 板块   ->   全部：1-沪市
-            return StockMarketEnum.getTdxMarketType(code) + code;
-        }).collect(Collectors.toList());
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        List<String> codeList = stockOrBlockCodeList.stream()
+                                                    // 0300059     -7位->     交易所：0/1/2   +   个股/板块 code
+                                                    // 如果是 板块   ->   全部：1-沪市
+                                                    .map(code -> StockMarketEnum.getTdxMarketType(code) + code)
+                                                    .collect(Collectors.toList());
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         try {
