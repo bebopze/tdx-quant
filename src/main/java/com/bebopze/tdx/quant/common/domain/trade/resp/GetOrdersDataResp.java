@@ -87,7 +87,7 @@ public class GetOrdersDataResp implements Serializable {
 
     // 成交价格（0.000000）
     private double Cjjg;
-    // 信用交易类型-备注【交易类别】（卖出担保品）
+    // 信用交易类型-备注【交易类别】（买入担保品、融资开仓、卖出担保品）
     private String Xyjylbbz;
 
 
