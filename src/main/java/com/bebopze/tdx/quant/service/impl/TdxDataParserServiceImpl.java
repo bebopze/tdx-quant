@@ -691,6 +691,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             String blockCode = e.getBlockCode();
             String blockName = e.getBlockName();
+            Integer blockType = e.getBlockType();
 
             String stockCode = e.getStockCode();
             String stockName = e.getStockName();
@@ -706,6 +707,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 BaseBlockDO blockEntity = new BaseBlockDO();
                 blockEntity.setCode(blockCode);
                 blockEntity.setName(blockName);
+                blockEntity.setType(blockType);
 
                 baseBlockService.save(blockEntity);
 
