@@ -78,11 +78,7 @@
 
 
     <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-
-        SELECT
-
         SELECT id, code, name, type, tdx_market_type
-
 
         FROM base_stock
 
@@ -96,10 +92,7 @@
 
 
     <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT
-
         SELECT id, code, name, type, tdx_market_type
-
 
         FROM base_stock
 
