@@ -190,6 +190,7 @@ public class BlockReportParser {
                     ExportBlockDTO dto = new ExportBlockDTO();
                     dto.setBlockCode(blockCode);
                     dto.setBlockName(blockName);
+                    dto.setBlockType(blockTypeEnum.getType());
                     dto.setStockCode(stockCode);
                     dto.setStockName(stockName);
 
@@ -225,6 +226,11 @@ public class BlockReportParser {
          * 板块name
          */
         private String blockName;
+        /**
+         * 板块type
+         */
+        private Integer blockType;
+
 
         /**
          * 个股code
@@ -244,7 +250,9 @@ public class BlockReportParser {
          * -
          * - 简略方案：只存储 个股 关系，非个股（直接pass）
          */
+        @Deprecated
         private Integer type = 1;
     }
+
 
 }
