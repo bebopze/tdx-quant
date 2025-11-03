@@ -636,14 +636,22 @@
     </ul>
     <!-- Tab Content -->
     <div class="tab-content" id="myTabContent">
-        <!-- My Positions Tab Content -->
+        <!-- 我的持仓 Tab Content -->
         <div class="tab-pane fade show active" id="positions" role="tabpanel" aria-labelledby="positions-tab">
             <!-- 持仓详情 -->
             <div class="card mt-3">
-                <!-- Modified: 使用 span 包含标题，以便动态更新 -->
+                <!-- 使用 span 包含标题，以便动态更新 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="positionsCardTitle" class="card-title-with-count">持仓详情</span>
+                    <div class="d-flex align-items-center flex-wrap" id="positions-action-controls">
+                        <!-- 一键同步按钮 -->
+                        <button id="syncPositionsToTdxBtn" class="btn btn-warning btn-sm"
+                                title="将当前持仓列表 同步到 通达信（持仓）板块">
+                            一键同步(持仓->通达信)
+                        </button>
+                    </div>
                 </div>
+                <!-- 持仓表格 -->
                 <div class="card-body">
                     <div class="table-responsive" id="positionTableContainer">
                         <table class="table table-bordered table-sm" id="positionTable">
@@ -708,10 +716,11 @@
                 </div>
             </div>
         </div>
+
         <!-- 当日委托 Tab Content -->
         <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
             <div class="card mt-3">
-                <!-- Modified: 使用 span 包含标题，以便动态更新 -->
+                <!-- 使用 span 包含标题，以便动态更新 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="ordersCardTitle" class="card-title-with-count">当日委托列表</span>
                     <div class="d-flex align-items-center flex-wrap" id="orders-action-controls">
@@ -1967,6 +1976,54 @@
             positionSelectAllCheckboxHeader.removeEventListener('change', handleSelectAllChange);
             positionSelectAllCheckboxHeader.addEventListener('change', handleSelectAllChange);
         }
+    }
+
+
+    // 一键同步（持仓->通达信）
+    function syncPositionsToTdx() {
+
+        // 确保持仓数据已加载
+        if (!positionsData || positionsData.length === 0) {
+            alert('当前持仓列表为空，无法同步！');
+            return;
+        }
+
+        // 提取持仓中的股票代码
+        // 假设股票代码字段名为 'stkcode'，请根据实际数据结构调整
+        const codeList = positionsData.map(item => item.stkcode).filter(code => code && code.trim() !== '');
+        if (codeList.length === 0) {
+            alert('当前持仓列表中未找到有效的股票代码，无法同步！');
+            return;
+        }
+
+        const codeListStr = codeList.join(','); // 用逗号连接成字符串
+        const blockNewCode = 'CC'; // 固定参数（CC -> 持仓 自定义板块）
+
+        console.log(`准备同步代码列表: ${codeListStr} 到板块: ${blockNewCode}`);
+
+        // 调用后端API
+        ApiUtils.fetch(`/api/blockNew/importTdx?blockNewCode=${blockNewCode}&codeList=${encodeURIComponent(codeListStr)}`)
+            .then(res => {
+                return res.ok ? res.json() :
+                    res.json().then(errData => {
+                        throw new Error(errData.msg || `HTTP error! status: ${res.status}`);
+                    });
+            })
+            .then(data => {
+                if (data && data.success) {
+                    alert('【一键同步(持仓->通达信)】操作成功！');
+                    console.log('同步成功:', data);
+                    // 可选：同步成功后可以执行其他操作，例如刷新页面提示等
+                } else {
+                    const errorMsg = data?.msg || '操作失败，未知错误。';
+                    alert(`【一键同步(持仓->通达信)】失败：${errorMsg}`);
+                    console.error('Sync to TDX API Error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('【一键同步(持仓->通达信)】请求失败:', error);
+                alert(`【一键同步(持仓->通达信)】操作失败：${error.message || error}`);
+            });
     }
 
 
@@ -3851,6 +3908,12 @@
 
         // 持仓账户配置 事件监听器
         document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
+
+
+        // -------------------------- 一键同步（持仓->通达信）
+
+
+        document.getElementById('syncPositionsToTdxBtn').addEventListener('click', syncPositionsToTdx);
 
 
         // -------------------------- 主线 板块/个股（机选）
