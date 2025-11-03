@@ -3,8 +3,10 @@ package com.bebopze.tdx.quant.common.constant;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -26,22 +28,6 @@ public enum StockLimitEnum {
     // 689
     KC("科创板", 2, 20, Lists.newArrayList("68")),
 
-
-    // 430
-    // 830
-    // 831
-    // 832
-    // 833
-    // 834
-    // 835
-    // 836
-    // 837
-    // 838
-    // 839
-    // 870
-    // 871
-    // 872
-    // 873
 
     // 920
 
@@ -106,7 +92,7 @@ public enum StockLimitEnum {
 
     public static StockLimitEnum getByStockCode(String stockCode) {
         // 前2位
-        String codePrefix = stockCode.trim().substring(0, 2);
+        String codePrefix = StringUtils.isBlank(stockCode) ? "" : stockCode.trim().substring(0, 2);
 
         for (StockLimitEnum value : StockLimitEnum.values()) {
             if (value.stockCodePrefixList.contains(codePrefix)) {
@@ -212,7 +198,7 @@ public enum StockLimitEnum {
         // ...
 
 
-        if (stockCode.equals("588000") || stockCode.contains("159915")) {
+        if (Objects.equals(stockCode, "588000") || Objects.equals(stockCode, "159915")) {
             return true;
         }
 
