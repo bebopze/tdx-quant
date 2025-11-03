@@ -776,6 +776,9 @@
                                                                                     id="sortZqmc"></span></th>
                                 <th onclick="sortOrdersTable('mmsm')">委托方向<span class="sort-icon"
                                                                                     id="sortMmsm"></span></th>
+                                <th onclick="sortOrdersTable('xyjylbbz')">信用交易类型<span class="sort-icon"
+                                                                                            id="sortXyjylbbz"></span>
+                                </th>
                                 <th onclick="sortOrdersTable('wtzt')">委托状态<span class="sort-icon"
                                                                                     id="sortWtzt"></span></th>
                                 <th onclick="sortOrdersTable('wtjg')">委托价格<span class="sort-icon"
@@ -1298,10 +1301,10 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="modalBuyPosPctInput" class="form-label">买入总仓位比例 (%):</label>
-                    <input type="number" class="form-control" id="modalBuyPosPctInput" value="100" min="0" max="100"
+                    <label for="modalBuyPosPctInput" class="form-label">买入账户总仓位比例 (%):</label>
+                    <input type="number" class="form-control" id="modalBuyPosPctInput" value="100" min="0" max="200"
                            step="1" required>
-                    <div class="form-text">请输入 0 到 100 之间的数值 (例如: 100 表示满仓买入选中股票)</div>
+                    <div class="form-text">请输入 0 到 200（融资账户 范围：0~200%） 之间的数值</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">价格策略:</label>
@@ -2270,6 +2273,7 @@
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td>
                     <td>${order.zqmc}</td>
                     <td>${order.mmsm}</td>
+                    <td>${order.xyjylbbz}</td>
                     <td class="order-status-${order.wtzt}">${order.wtzt}</td>
                     <td>${Number(order.wtjg)}</td>
                     <td>${order.wtsl}</td>
@@ -2318,7 +2322,7 @@
         sumRow.classList.add('sum-row'); // 添加特定类名用于样式
 
         // 根据表头结构填充合计行，非数字列可填充提示文字或空
-        // 假设表头顺序是: Checkbox, WTBH, WTRQ, WTSJ, ZQDM, ZQMC, MMSM, WTZT, WTJG, WTSJ, WTJE, POSPCT, CJJG, CJSL, CJJE, 操作
+        // 假设表头顺序是: Checkbox, WTBH, WTRQ, WTSJ, ZQDM, ZQMC, MMSM, xyjylbbz, WTZT, WTJG, WTSJ, WTJE, POSPCT, CJJG, CJSL, CJJE, 操作
         // 对应的列索引 (0-based) 需要根据实际HTML调整
         // 索引 0: Checkbox
         sumRow.innerHTML += `<td></td>`; // Checkbox 列，通常为空或用于放置“合计”标签
@@ -2334,6 +2338,8 @@
         sumRow.innerHTML += `<td></td>`;
         // 索引 6: MMSM (委托方向) - 非合计列
         sumRow.innerHTML += `<td></td>`;
+        // 索引 6: xyjylbbz (信用交易类别) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
         // 索引 7: WTZT (委托状态) - 非合计列
         sumRow.innerHTML += `<td></td>`;
         // 索引 8: WTJG (委托价格) - 非合计列 (或可以计算加权平均)
@@ -2341,7 +2347,7 @@
         // 索引 9: WTSJ (委托数量) - 合计列
         sumRow.innerHTML += `<td>${sumValues.wtsl}</td>`;
         // 索引 10: WTJE (委托金额) - 合计列
-        sumRow.innerHTML += `<td>${sumValues.wtje}</td>`;
+        sumRow.innerHTML += `<td>${sumValues.wtje.toFixed(2)}</td>`; // 保留两位小数
         // 索引 11: POSPCT (仓位占比) - 合计列
         sumRow.innerHTML += `<td>${sumValues.posPct.toFixed(2)}</td>`; // 保留两位小数
         // 索引 12: CJJG (成交价格) - 非合计列 (或可以计算加权平均)
@@ -3639,8 +3645,8 @@
         // - 读取模态框设置 -
         const buyPosPctInput = document.getElementById('modalBuyPosPctInput');
         let buyPosPct = parseFloat(buyPosPctInput.value);
-        if (isNaN(buyPosPct) || buyPosPct < 0 || buyPosPct > 100) {
-            alert('请输入有效的 买入总仓位比例 (0-100%)');
+        if (isNaN(buyPosPct) || buyPosPct < 0 || buyPosPct > 200) {
+            alert('请输入有效的 买入账户总仓位比例 (0-200%)');
             buyPosPctInput.focus();
             return;
         }
