@@ -204,27 +204,32 @@
 
     <!-- 数据解析相关 -->
     <div class="task-section">
-        <h2 class="section-title">📄 通达信数据初始化</h2>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/importAll', '一键导入所有数据')">
+        <h2 class="section-title">📄 通达信数据初始化（每月执行1次 -> 同步 新板块/个股、淘汰 过时板块/ST个股）</h2>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/importAll', '一键导入所有数据')"
+                title="一键导入所有数据（板块/个股/ETF）">
             🔄 一键导入所有数据
         </button>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockCfg', '导入板块配置')">
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockCfg', '导入板块配置')"
+                title="导入板块配置（cfg文件 板块-个股 code关联）">
             📄 导入板块配置
         </button>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockReport', '导入系统板块')">
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockReport', '导入系统板块')"
+                title="导入系统板块（export文件 通达信板块-个股 code关联）">
             📊 导入系统板块
         </button>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockNewReport', '导入自定义板块')">
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockNewReport', '导入自定义板块')"
+                title="导入自定义板块（export文件 自定义板块-个股/板块/指数 code关联）">
             🔧 导入自定义板块
         </button>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/ETF', '导入ETF数据')">
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/ETF', '导入ETF数据')"
+                title="导入ETF数据（ETF name -> API拉取补全）">
             📈 导入ETF数据
         </button>
     </div>
 
     <!-- 行情数据更新 -->
     <div class="task-section">
-        <h2 class="section-title">📊 行情数据更新（个股/板块）</h2>
+        <h2 class="section-title">📊 行情数据更新（个股/板块）（每日执行N次）</h2>
 
         <!-- 全量 个股/板块 -->
         <h3>全部 个股/板块</h3>
@@ -289,7 +294,7 @@
 
     <!-- 扩展数据计算 -->
     <div class="task-section">
-        <h2 class="section-title">📊 扩展数据计算（个股/板块）</h2>
+        <h2 class="section-title">📊 扩展数据计算（个股/板块）（每日执行N次）</h2>
 
         <div class="form-group">
             <label>N日参数（可选）:</label>
@@ -311,7 +316,7 @@
 
     <!-- 主线板块 -->
     <div class="task-section">
-        <h2 class="section-title">🎯 主线板块</h2>
+        <h2 class="section-title">🎯 主线板块（每日执行N次）</h2>
 
 
         <!-- 更新类型 -->
@@ -419,7 +424,7 @@
 
     <!-- 大盘量化 -->
     <div class="task-section">
-        <h2 class="section-title">💹 大盘量化</h2>
+        <h2 class="section-title">💹 大盘量化（每日执行N次）</h2>
         <button class="btn-danger" onclick="callApi('/api/market/marketMidCycle/import', '大盘量化导入')">
             💹 大盘量化导入
         </button>
@@ -429,8 +434,16 @@
     <div class="task-section">
         <h2 class="section-title">🛠️ 工具接口</h2>
         <div class="form-group">
+            <label>股票类型:</label>
+            <select id="stockType">
+                <option value="1" selected>A股</option>
+                <option value="2">ETF</option>
+                <option value="3">板块</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label>前N位:</label>
-            <input type="number" id="prefixN" value="3" placeholder="输入位数">
+            <input type="number" id="prefixN" value="2" placeholder="输入位数" min="1" max="6">
         </div>
         <button class="btn-info" onclick="getStockCodePrefix()">🔢 获取股票代码前缀</button>
         <div id="prefix-result"></div>
@@ -531,8 +544,9 @@
     }
 
     function getStockCodePrefix() {
-        const n = document.getElementById('prefixN').value || 3;
-        fetch(`/api/parser/tdxdata/market-stockCodePrefixList?N=${n}`, {method: 'GET'})
+        const stockType = document.getElementById('stockType').value || 1;
+        const prefixN = document.getElementById('prefixN').value || 3;
+        ApiUtils.fetch(`/api/parser/tdxdata/market-stockCodePrefixList?type=${stockType}&N=${prefixN}`, {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
