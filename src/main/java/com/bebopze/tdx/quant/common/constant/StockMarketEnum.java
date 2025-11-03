@@ -24,8 +24,11 @@ public enum StockMarketEnum {
     // 300	0
     // 301	0
 
+
+    // 个股 - 0xxxxx
+    // 个股 - 3xxxxx
     // ETF - 15xxxx
-    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("00", "30", "15")),
+    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("0", "3", "1")),
 
 
     // 600	1
@@ -35,28 +38,18 @@ public enum StockMarketEnum {
     // 688	1
     // 689	1
 
+
+    // 个股 - 6xxxxx
     // ETF - 5xxxxx
     // 板块 - 88xxxx
-    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("60", "68", "51", "56", "58","88")),
+    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("6", "5", "8")),
 
 
-    // 430	2
-    // 830	2
-    // 831	2
-    // 832	2
-    // 833	2
-    // 834	2
-    // 835	2
-    // 836	2
-    // 837	2
-    // 838	2
-    // 839	2
-    // 870	2
-    // 871	2
-    // 872	2
-    // 873	2
-    // 920	2
-    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("43", "83", "87", "92"));
+    // 92   2
+
+
+    // 个股 - 92xxxx
+    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("9"));
 
 
     /**
@@ -98,8 +91,8 @@ public enum StockMarketEnum {
 
 
     public static StockMarketEnum getByStockCode(String stockCode) {
-        // 前2位
-        String codePrefix = stockCode.trim().substring(0, 2);
+        // 前1位
+        String codePrefix = stockCode.trim().substring(0, 1);
 
         for (StockMarketEnum value : StockMarketEnum.values()) {
             if (value.stockCodePrefixList.contains(codePrefix)) {
@@ -152,5 +145,6 @@ public enum StockMarketEnum {
         StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
         return stockMarketEnum == null ? null : stockMarketEnum.tdxMarketType;
     }
+
 
 }
