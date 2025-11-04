@@ -1120,10 +1120,24 @@
                 </div>
                 <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
                     <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-filter-controls">
-                        <!-- 可以在此处添加针对主线个股的筛选控件 -->
-                        <!-- <button id="batchDeleteTopStocksManualButton" class="btn btn-danger btn-sm ms-2">批量删除</button> -->
+                        <!-- 筛选条件 -->
+                        <div class="d-flex align-items-center me-3">
+                            <label for="filterTopStocksManualPct__today2NextPct__min"
+                                   class="me-2">今日涨幅范围（%）:</label>
+                            <input type="number" id="filterTopStocksManualPct__today2NextPct__min"
+                                   class="form-control form-control-sm me-2"
+                                   style="width: auto;" min="-30" max="30" step="0.5" value="-30">
+                            <label for="filterTopStocksManualPct__today2NextPct__max"
+                                   class="me-2"> ~ </label>
+                            <input type="number" id="filterTopStocksManualPct__today2NextPct__max"
+                                   class="form-control form-control-sm me-2"
+                                   style="width: auto;" min="-30" max="30" step="0.5" value="30">
+                        </div>
+                        <button id="filterTopStocksManualPctButton" class="btn btn-success btn-sm">筛选</button>
                     </div>
                 </div>
+
+                <!-- 列表 -->
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm" id="topStocksTableManual">
@@ -3428,6 +3442,22 @@
 
     // 展示
     function displayTopStocksManual(stocks) {
+
+        const today2NextPct__min = document.getElementById('filterTopStocksManualPct__today2NextPct__min').value;
+        const today2NextPct__max = document.getElementById('filterTopStocksManualPct__today2NextPct__max').value;
+
+
+        let filteredStocks = stocks;
+        if (today2NextPct__min) {
+            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct >= today2NextPct__min);
+        }
+        if (today2NextPct__max) {
+            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct < today2NextPct__max);
+        }
+        // let sortedStocks = [...filteredStocks];
+        stocks = [...filteredStocks];
+
+
         const tbody = document.querySelector('#topStocksTableManual tbody');
         const messageDiv = document.getElementById('topStocksTableManualMessage');
         if (!tbody || !messageDiv) {
@@ -4039,6 +4069,18 @@
                     hasLoadedTopStocksManual = true;
                 }
             });
+
+
+            const today2NextPct__min = document.getElementById('filterTopStocksManualPct__today2NextPct__min');
+            const today2NextPct__max = document.getElementById('filterTopStocksManualPct__today2NextPct__max');
+            const filterTopStocksManualPctButton = document.getElementById('filterTopStocksManualPctButton');
+
+            if (today2NextPct__min && today2NextPct__max && filterTopStocksManualPctButton) {
+                today2NextPct__min.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+                today2NextPct__max.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+            } else {
+                console.warn('未能找到 主线个股（人选）相关的DOM元素');
+            }
         }
 
 
