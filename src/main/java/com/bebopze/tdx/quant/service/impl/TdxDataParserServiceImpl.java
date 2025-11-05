@@ -1144,8 +1144,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 昨日
         if (ldayDTOList.size() >= 2) {
-            LdayParser.LdayDTO pre = ldayDTOList.get(ldayDTOList.size() - 2);
-            baseBlockDO.setPreClose(pre.getClose());
+            LdayParser.LdayDTO prev = ldayDTOList.get(ldayDTOList.size() - 2);
+            baseBlockDO.setPrevClose(prev.getClose());
         }
 
 
@@ -1374,7 +1374,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // 昨日
         if (klines.size() >= 2) {
             KlineDTO preKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
-            entity.setPreClose(of(preKlineDTO.getClose()));
+            entity.setPrevClose(of(preKlineDTO.getClose()));
         }
 
 

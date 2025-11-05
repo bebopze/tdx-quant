@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.domain.trade.resp;
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +84,7 @@ public class CcStockInfo implements Serializable {
     // 0/1
     private String rzDebt;
     // 股东账号（ 0808088888 ）
+    @JsonIgnore
     private transient String secuid;
     // 持仓数量-融资（0 / --）
     private String stkRzBal;
@@ -119,17 +121,17 @@ public class CcStockInfo implements Serializable {
 
 
     // 昨日收盘价
-    private Double preClose;
+    private Double prevClose;
 
-    public double getPreClose() {
-        if (preClose != null) {
-            return preClose;
+    public double getPrevClose() {
+        if (prevClose != null) {
+            return prevClose;
         }
 
 
-        Double preClose = PosStockCache.getPreClose(stkcode);
-        if (preClose != null) {
-            return preClose;
+        Double prevClose = PosStockCache.getPrevClose(stkcode);
+        if (prevClose != null) {
+            return prevClose;
         }
 
 
@@ -164,6 +166,7 @@ public class CcStockInfo implements Serializable {
      * 是否   IN 主线板块（板块-月多2）
      */
     boolean inTopBlock;
+
 
     /**
      * 个股 -> 主线板块（板块-月多2）

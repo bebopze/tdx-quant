@@ -30,7 +30,7 @@ public class StockSnapshotKlineDTO extends KlineDTO {
     /**
      * 昨日 收盘价
      */
-    private double preClose;
+    private double prevClose;
     /**
      * 今日 涨停价
      */
@@ -55,11 +55,11 @@ public class StockSnapshotKlineDTO extends KlineDTO {
 
 
     public double getZtPrice() {
-        return NumUtil.of(preClose * (1 + getChangePctLimit() * 0.01), 3);
+        return NumUtil.of(prevClose * (1 + getChangePctLimit() * 0.01), 3);
     }
 
     public double getDtPrice() {
-        return NumUtil.of(preClose * (1 - getChangePctLimit() * 0.01), 3);
+        return NumUtil.of(prevClose * (1 - getChangePctLimit() * 0.01), 3);
     }
 
 

@@ -141,9 +141,9 @@ public class BaseBlockDO implements Serializable {
     /**
      * 昨日收盘价
      */
-    @TableField("pre_close")
+    @TableField("prev_close")
     @Schema(description = "昨日收盘价")
-    private BigDecimal preClose;
+    private BigDecimal prevClose;
 
     /**
      * 成交量

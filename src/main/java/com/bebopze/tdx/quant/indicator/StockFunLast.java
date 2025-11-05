@@ -99,7 +99,7 @@ public class StockFunLast {
 
 
         // 收盘价 - 实时
-        double C = realtimequote.getCurrentPrice().doubleValue();
+        double C = realtimequote.getCurrentPrice();
 
 
         // 历史行情
