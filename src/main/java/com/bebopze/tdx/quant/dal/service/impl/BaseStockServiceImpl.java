@@ -218,7 +218,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         // read Cache
         List<BaseStockDO> list = JsonFileWriterAndReader.readLargeListFromFile___stock_listAllKline();
 
-        if (CollectionUtils.isEmpty(list) || refresh) {
+        if (CollectionUtils.isEmpty(list) || list.size() < 5500 || refresh) {
             list = listByCursor();
 
 

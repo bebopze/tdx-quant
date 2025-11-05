@@ -138,7 +138,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
         // read Cache
         List<BaseBlockDO> list = JsonFileWriterAndReader.readLargeListFromFile___block_listAllKline();
 
-        if (CollectionUtils.isEmpty(list) || refresh) {
+        if (CollectionUtils.isEmpty(list) || list.size() < 850 || refresh) {
             list = baseMapper.listAllKline();
 
 
