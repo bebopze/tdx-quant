@@ -669,8 +669,8 @@
                                 <th onclick="sortPositionsTable('costprice')">成本价<span class="sort-icon"
                                                                                           id="sortCostprice"></span>
                                 </th>
-                                <th onclick="sortPositionsTable('preClose')">昨收<span class="sort-icon"
-                                                                                       id="sortPreClose"></span>
+                                <th onclick="sortPositionsTable('prevClose')">昨收<span class="sort-icon"
+                                                                                        id="sortPrevClose"></span>
                                 </th>
                                 <th onclick="sortPositionsTable('lastprice')">最新价<span class="sort-icon"
                                                                                           id="sortLastprice"></span>
@@ -736,13 +736,15 @@
                             <label for="filterStatus">委托状态:</label>
                             <select id="filterStatus" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
-                                // 已成交 -> 已撤/已成/废单
+                                // 已成交 -> 已撤/已成/废单/正报/已报待撤
                                 // 未成交 -> 未报/已报/部成
                                 <option value="未成交">未成交</option>
                                 <option value="已成交">已成交</option>
                                 <option value="已成">已成</option>
                                 <option value="部成">部成</option>
+                                <option value="正报">正报</option>
                                 <option value="已报">已报</option>
+                                <option value="已报待撤">已报待撤</option>
                                 <option value="未报">未报</option>
                                 <option value="已撤">已撤</option>
                                 <option value="废单">废单</option>
@@ -864,6 +866,24 @@
                                 <th onclick="sortTopBlocksTable('topEndDate')">跌出榜单日期<span class="sort-icon"
                                                                                                  id="sortTopBlocksTopEndDate"></span>
                                 </th>
+                                <th onclick="sortTopBlocksTable('prev_close')">昨日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksPrev_close"></span></th>
+                                <th onclick="sortTopBlocksTable('today_close')">今日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday_close"></span></th>
+                                <th onclick="sortTopBlocksTable('today_changePct')">今日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Next_changePct')">次日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2End_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTable('start2Today_changePct')">上榜至今涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksStart2Today_changePct"></span></th>
@@ -873,15 +893,6 @@
                                 <th onclick="sortTopBlocksTable('start2Max_changePct')">上榜至MAX涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksStart2Max_changePct"></span></th>
-                                <th onclick="sortTopBlocksTable('today2Next_changePct')">今日至nextDay涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksToday2Next_changePct"></span></th>
-                                <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksToday2End_changePct"></span></th>
-                                <th onclick="sortTopBlocksTable('today2Max_changePct')">今日至MAX涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTable('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksStart2Next_changePct"></span></th>
@@ -958,6 +969,24 @@
                                 <th onclick="sortTopStocksTable('topEndDate')">跌出榜单日期<span class="sort-icon"
                                                                                                  id="sortTopStocksTopEndDate"></span>
                                 </th>
+                                <th onclick="sortTopStocksTable('prev_close')">昨日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopStocksPrev_close"></span></th>
+                                <th onclick="sortTopStocksTable('today_close')">今日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday_close"></span></th>
+                                <th onclick="sortTopStocksTable('today_changePct')">今日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Next_changePct')">次日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2End_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTable('start2Today_changePct')">上榜至今涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2Today_changePct"></span></th>
@@ -967,15 +996,6 @@
                                 <th onclick="sortTopStocksTable('start2Max_changePct')">上榜至MAX涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2Max_changePct"></span></th>
-                                <th onclick="sortTopStocksTable('today2Next_changePct')">今日至nextDay涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksToday2Next_changePct"></span></th>
-                                <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksToday2End_changePct"></span></th>
-                                <th onclick="sortTopStocksTable('today2Max_changePct')">今日至MAX涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksToday2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTable('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2Next_changePct"></span></th>
@@ -1055,6 +1075,24 @@
                                 <th onclick="sortTopBlocksTableManual('topEndDate')">跌出榜单日期<span class="sort-icon"
                                                                                                        id="sortTopBlocksManualTopEndDate"></span>
                                 </th>
+                                <th onclick="sortTopBlocksTableManual('prev_close')">昨日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualPrev_close"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today_close')">今日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday_close"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today_changePct')">今日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday_changePct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2Next_changePct')">次日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2End_changePct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTableManual('start2Today_changePct')">上榜至今涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualStart2Today_changePct"></span></th>
@@ -1064,15 +1102,6 @@
                                 <th onclick="sortTopBlocksTableManual('start2Max_changePct')">上榜至MAX涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualStart2Max_changePct"></span></th>
-                                <th onclick="sortTopBlocksTableManual('today2Next_changePct')">今日至nextDay涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksManualToday2Next_changePct"></span></th>
-                                <th onclick="sortTopBlocksTableManual('today2End_changePct')">今日至跌出涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksManualToday2End_changePct"></span></th>
-                                <th onclick="sortTopBlocksTableManual('today2Max_changePct')">今日至MAX涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopBlocksManualToday2Max_changePct"></span></th>
                                 <th onclick="sortTopBlocksTableManual('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualStart2Next_changePct"></span></th>
@@ -1122,14 +1151,14 @@
                     <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-filter-controls">
                         <!-- 筛选条件 -->
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterTopStocksManualPct__today2NextPct__min"
+                            <label for="filterTopStocksManualPct__todayChangePct__min"
                                    class="me-2">今日涨幅范围（%）:</label>
-                            <input type="number" id="filterTopStocksManualPct__today2NextPct__min"
+                            <input type="number" id="filterTopStocksManualPct__todayChangePct__min"
                                    class="form-control form-control-sm me-2"
                                    style="width: auto;" min="-30" max="30" step="0.5" value="-30">
-                            <label for="filterTopStocksManualPct__today2NextPct__max"
+                            <label for="filterTopStocksManualPct__todayChangePct__max"
                                    class="me-2"> ~ </label>
-                            <input type="number" id="filterTopStocksManualPct__today2NextPct__max"
+                            <input type="number" id="filterTopStocksManualPct__todayChangePct__max"
                                    class="form-control form-control-sm me-2"
                                    style="width: auto;" min="-30" max="30" step="0.5" value="30">
                         </div>
@@ -1174,6 +1203,24 @@
                                 <th onclick="sortTopStocksTableManual('topEndDate')">跌出榜单日期<span class="sort-icon"
                                                                                                        id="sortTopStocksManualTopEndDate"></span>
                                 </th>
+                                <th onclick="sortTopStocksTableManual('prev_close')">昨日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualPrev_close"></span></th>
+                                <th onclick="sortTopStocksTableManual('today_close')">今日收盘价<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday_close"></span></th>
+                                <th onclick="sortTopStocksTableManual('today_changePct')">今日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday_changePct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2Next_changePct')">次日涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2End_changePct')">今日至跌出涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2End_changePct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2Max_changePct')">今日至MAX涨幅<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTableManual('start2Today_changePct')">上榜至今涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualStart2Today_changePct"></span></th>
@@ -1183,15 +1230,6 @@
                                 <th onclick="sortTopStocksTableManual('start2Max_changePct')">上榜至MAX涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualStart2Max_changePct"></span></th>
-                                <th onclick="sortTopStocksTableManual('today2Next_changePct')">今日至nextDay涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksManualToday2Next_changePct"></span></th>
-                                <th onclick="sortTopStocksTableManual('today2End_changePct')">今日至跌出涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksManualToday2End_changePct"></span></th>
-                                <th onclick="sortTopStocksTableManual('today2Max_changePct')">今日至MAX涨幅<span
-                                        class="sort-icon"
-                                        id="sortTopStocksManualToday2Max_changePct"></span></th>
                                 <th onclick="sortTopStocksTableManual('start2Next_changePct')">上榜至N1涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualStart2Next_changePct"></span></th>
@@ -1253,9 +1291,9 @@
                     </div>
                     <div class="price-strategy-option">
                         <input type="radio" id="modalStrategyChangePrice" name="modalPriceStrategy"
-                               value="changePricePct">
+                               value="prevPricePct">
                         <label for="modalStrategyChangePrice">昨日收盘价</label>
-                        <input type="number" id="modalChangePricePctInput" class="form-control form-control-sm"
+                        <input type="number" id="modalPrevPricePctInput" class="form-control form-control-sm"
                                value="0" min="-30" max="30" step="0.1" disabled>
                         <span>%</span>
                     </div>
@@ -1346,12 +1384,12 @@
                     <div class="price-strategy-option mt-2">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="modalBuyPriceStrategy"
-                                   id="modalStrategyBuyChangePrice" value="changePricePct">
+                                   id="modalStrategyBuyChangePrice" value="prevPricePct">
                             <label class="form-check-label"
                                    for="modalStrategyBuyChangePrice">按昨日收盘价涨跌幅%</label>
                         </div>
                         <div class="input-group mt-1">
-                            <input type="number" class="form-control" id="modalBuyChangePricePctInput" value="0"
+                            <input type="number" class="form-control" id="modalBuyPrevPricePctInput" value="0"
                                    min="-30" max="30" step="0.1" placeholder="例如: -1.0 表示挂单价格为昨收价的 99%">
                             <span class="input-group-text">%</span>
                         </div>
@@ -1473,7 +1511,7 @@
         // 重置模态框内的输入
         document.getElementById('modalSellPercentageInput').value = '100';
         document.getElementById('modalCurrPricePctInput').value = '0';
-        document.getElementById('modalChangePricePctInput').value = '0';
+        document.getElementById('modalPrevPricePctInput').value = '0';
         document.getElementById('modalStrategyCurrPrice').checked = true;
         document.getElementById('modalStrategyChangePrice').checked = false;
         // 初始化模态框内价格策略输入框状态
@@ -1492,14 +1530,14 @@
         const strategyCurrPrice = document.getElementById('modalStrategyCurrPrice');
         const strategyChangePrice = document.getElementById('modalStrategyChangePrice');
         const currPricePctInput = document.getElementById('modalCurrPricePctInput');
-        const changePricePctInput = document.getElementById('modalChangePricePctInput');
+        const prevPricePctInput = document.getElementById('modalPrevPricePctInput');
 
         if (strategyCurrPrice.checked) {
             currPricePctInput.disabled = false;
-            changePricePctInput.disabled = true;
-            changePricePctInput.value = '0'; // 重置未选中的输入框
+            prevPricePctInput.disabled = true;
+            prevPricePctInput.value = '0'; // 重置未选中的输入框
         } else if (strategyChangePrice.checked) {
-            changePricePctInput.disabled = false;
+            prevPricePctInput.disabled = false;
             currPricePctInput.disabled = true;
             currPricePctInput.value = '0'; // 重置未选中的输入框
         }
@@ -1537,7 +1575,7 @@
         }
 
         let currPricePct = 0;
-        let changePricePct = 0;
+        let prevPricePct = 0;
         const selectedStrategy = document.querySelector('input[name="modalPriceStrategy"]:checked').value;
 
         if (selectedStrategy === 'currPricePct') {
@@ -1548,12 +1586,12 @@
                 currPricePctInput.focus();
                 return;
             }
-        } else if (selectedStrategy === 'changePricePct') {
-            const changePricePctInput = document.getElementById('modalChangePricePctInput');
-            changePricePct = parseFloat(changePricePctInput.value);
-            if (isNaN(changePricePct) || changePricePct < -30 || changePricePct > 30) {
+        } else if (selectedStrategy === 'prevPricePct') {
+            const prevPricePctInput = document.getElementById('modalPrevPricePctInput');
+            prevPricePct = parseFloat(prevPricePctInput.value);
+            if (isNaN(prevPricePct) || prevPricePct < -30 || prevPricePct > 30) {
                 alert('请输入有效的昨日收盘价涨跌幅比例 (-30% 到 30%)');
-                changePricePctInput.focus();
+                prevPricePctInput.focus();
                 return;
             }
         }
@@ -1563,8 +1601,8 @@
         let confirmMsg = `您确定要按【${sellPosPct}%】的 仓位比例，卖出以下【${sellStockCodes.length}】只股票吗？\n`;
         if (selectedStrategy === 'currPricePct' && currPricePct !== 0) {
             confirmMsg += `价格策略: 当前价格【${currPricePct > 0 ? '+' : ''}${currPricePct}%】`;
-        } else if (selectedStrategy === 'changePricePct' && changePricePct !== 0) {
-            confirmMsg += `价格策略: 昨日收盘价【${changePricePct > 0 ? '+' : ''}${changePricePct}%】`;
+        } else if (selectedStrategy === 'prevPricePct' && prevPricePct !== 0) {
+            confirmMsg += `价格策略: 昨日收盘价【${prevPricePct > 0 ? '+' : ''}${prevPricePct}%】`;
         }
         confirmMsg += `\n\n${sellStockCodes.join(', ')}`;
 
@@ -1582,8 +1620,8 @@
         let apiUrl = `/api/trade/quick/sellPosition?sellStockCodeList=${encodeURIComponent(sellStockCodeList)}&sellPosPct=${sellPosPct}`;
         if (selectedStrategy === 'currPricePct') {
             apiUrl += `&currPricePct=${currPricePct}`;
-        } else if (selectedStrategy === 'changePricePct') {
-            apiUrl += `&changePricePct=${changePricePct}`;
+        } else if (selectedStrategy === 'prevPricePct') {
+            apiUrl += `&prevPricePct=${prevPricePct}`;
         }
         // --- 结束构建API URL ---
 
@@ -1873,7 +1911,7 @@
               <td>${item.stkname}</td>
               <td>${item.market}</td>
               <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${Number(item.preClose).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.prevClose).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${item.mktval}</td>
               <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
@@ -2290,9 +2328,9 @@
         const directionFilter = document.getElementById('filterDirection').value;
         let filteredOrders = orders;
         if (statusFilter) {
-            // 未成交 -> 未报/已报/部成
+            // 未成交 -> 未报/已报/部成/正报/已报待撤
             if (statusFilter === '未成交') {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成' || order.wtzt === '正报' || order.wtzt === '已报待撤');
             }
             // 已成交 -> 已撤/已成/废单
             else if (statusFilter === '已成交') {
@@ -2732,6 +2770,9 @@
                             : '-',
                         topStartDate: changePctDTO.topStartDate || '-',
                         topEndDate: changePctDTO.topEndDate || '-',
+                        prev_close: changePctDTO.prev_close || 0,
+                        today_close: changePctDTO.today_close || 0,
+                        today_changePct: changePctDTO.today_changePct || 0,
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
@@ -2816,12 +2857,15 @@
                     <td class="top-list-item">${block.topStockList}</td>
                     <td>${block.topStartDate}</td>
                     <td>${block.topEndDate}</td>
-                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
+                    <td>${block.prev_close}</td>
+                    <td>${block.today_close}</td>
+                    <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
@@ -2854,14 +2898,14 @@
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
             <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.prev_close > 3000 ? 'red' : avgPct.prev_close < 3000 ? 'teal' : 'black'};">
+                ${avgPct.prev_close}
             </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_close > 3000 ? 'red' : avgPct.today_close < 3000 ? 'teal' : 'black'};">
+                ${avgPct.today_close}
             </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
@@ -2871,6 +2915,15 @@
             </td>
             <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.start2Next_changePct.toFixed(2)}%
@@ -2961,6 +3014,9 @@
                             : '-',
                         topStartDate: changePctDTO.topStartDate || '-',
                         topEndDate: changePctDTO.topEndDate || '-',
+                        prev_close: changePctDTO.prev_close || 0,
+                        today_close: changePctDTO.today_close || 0,
+                        today_changePct: changePctDTO.today_changePct || 0,
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
@@ -3041,13 +3097,16 @@
                     <td>${stock.topBlockSize}</td>
                     <td class="top-list-item">${stock.topBlockList}</td>
                     <td>${stock.topStartDate}</td>
-                    <td>${stock.topEndDate.toString()}</td>
-                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
+                    <td>${stock.topEndDate}</td>
+                    <td>${stock.prev_close}</td>
+                    <td>${stock.today_close}</td>
+                    <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
@@ -3080,14 +3139,14 @@
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
             <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.prev_close > 50 ? 'red' : avgPct.prev_close < 50 ? 'teal' : 'black'};">
+                ${avgPct.prev_close}
             </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_close > 50 ? 'red' : avgPct.today_close < 50 ? 'teal' : 'black'};">
+                ${avgPct.today_close}
             </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
@@ -3097,6 +3156,15 @@
             </td>
             <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.start2Next_changePct.toFixed(2)}%
@@ -3184,6 +3252,9 @@
                             : '-',
                         topStartDate: changePctDTO.topStartDate || '-',
                         topEndDate: changePctDTO.topEndDate || '-',
+                        prev_close: changePctDTO.prev_close || 0,
+                        today_close: changePctDTO.today_close || 0,
+                        today_changePct: changePctDTO.today_changePct || 0,
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
@@ -3256,12 +3327,15 @@
                     <td class="top-list-item">${block.topStockList}</td>
                     <td>${block.topStartDate}</td>
                     <td>${block.topEndDate}</td>
-                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
+                    <td>${block.prev_close}</td>
+                    <td>${block.today_close}</td>
+                    <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2End_changePct > 0 ? 'red' : block.start2End_changePct < 0 ? 'teal' : 'black'}">${block.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.start2Max_changePct > 0 ? 'red' : block.start2Max_changePct < 0 ? 'teal' : 'black'}">${block.start2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next_changePct > 0 ? 'red' : block.start2Next_changePct < 0 ? 'teal' : 'black'}">${block.start2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next3_changePct > 0 ? 'red' : block.start2Next3_changePct < 0 ? 'teal' : 'black'}">${block.start2Next3_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Next5_changePct > 0 ? 'red' : block.start2Next5_changePct < 0 ? 'teal' : 'black'}">${block.start2Next5_changePct.toFixed(2)}%</td>
@@ -3294,14 +3368,14 @@
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
             <td colspan="8" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.prev_close > 3000 ? 'red' : avgPct.prev_close < 3000 ? 'teal' : 'black'};">
+                ${avgPct.prev_close}
             </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_close > 3000 ? 'red' : avgPct.today_close < 3000 ? 'teal' : 'black'};">
+                ${avgPct.today_close}
             </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
@@ -3311,6 +3385,15 @@
             </td>
             <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.start2Next_changePct.toFixed(2)}%
@@ -3398,6 +3481,9 @@
                             : '-',
                         topStartDate: changePctDTO.topStartDate || '-',
                         topEndDate: changePctDTO.topEndDate || '-',
+                        prev_close: changePctDTO.prev_close || 0,
+                        today_close: changePctDTO.today_close || 0,
+                        today_changePct: changePctDTO.today_changePct || 0,
                         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
@@ -3443,16 +3529,16 @@
     // 展示
     function displayTopStocksManual(stocks) {
 
-        const today2NextPct__min = document.getElementById('filterTopStocksManualPct__today2NextPct__min').value;
-        const today2NextPct__max = document.getElementById('filterTopStocksManualPct__today2NextPct__max').value;
+        const todayChangePct__min = document.getElementById('filterTopStocksManualPct__todayChangePct__min').value;
+        const todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max').value;
 
 
         let filteredStocks = stocks;
-        if (today2NextPct__min) {
-            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct >= today2NextPct__min);
+        if (todayChangePct__min) {
+            filteredStocks = filteredStocks.filter(stock => stock.today_changePct >= todayChangePct__min);
         }
-        if (today2NextPct__max) {
-            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct < today2NextPct__max);
+        if (todayChangePct__max) {
+            filteredStocks = filteredStocks.filter(stock => stock.today_changePct < todayChangePct__max);
         }
         // let sortedStocks = [...filteredStocks];
         stocks = [...filteredStocks];
@@ -3489,13 +3575,16 @@
                     <td>${stock.topBlockSize}</td>
                     <td class="top-list-item">${stock.topBlockList}</td>
                     <td>${stock.topStartDate}</td>
-                    <td>${stock.topEndDate.toString()}</td>
-                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
-                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
+                    <td>${stock.topEndDate}</td>
+                    <td>${stock.prev_close}</td>
+                    <td>${stock.today_close}</td>
+                    <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2End_changePct > 0 ? 'red' : stock.start2End_changePct < 0 ? 'teal' : 'black'}">${stock.start2End_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.start2Max_changePct > 0 ? 'red' : stock.start2Max_changePct < 0 ? 'teal' : 'black'}">${stock.start2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next_changePct > 0 ? 'red' : stock.start2Next_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next3_changePct > 0 ? 'red' : stock.start2Next3_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next3_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next5_changePct > 0 ? 'red' : stock.start2Next5_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next5_changePct.toFixed(2)}%</td>
@@ -3532,14 +3621,14 @@
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
             <td colspan="9" class="text-center avg-label">【指数】平均值</td>
-            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Today_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.prev_close > 50 ? 'red' : avgPct.prev_close < 50 ? 'teal' : 'black'};">
+                ${avgPct.prev_close}
             </td>
-            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2End_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_close > 50 ? 'red' : avgPct.today_close < 50 ? 'teal' : 'black'};">
+                ${avgPct.today_close}
             </td>
-            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.start2Max_changePct.toFixed(2)}%
+            <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
@@ -3549,6 +3638,15 @@
             </td>
             <td style="color: ${avgPct.today2Max_changePct > 0 ? 'red' : avgPct.today2Max_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Max_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Today_changePct > 0 ? 'red' : avgPct.start2Today_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Today_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2End_changePct > 0 ? 'red' : avgPct.start2End_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2End_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.start2Max_changePct > 0 ? 'red' : avgPct.start2Max_changePct < 0 ? 'teal' : 'black'};">
+                ${avgPct.start2Max_changePct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.start2Next_changePct > 0 ? 'red' : avgPct.start2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.start2Next_changePct.toFixed(2)}%
@@ -3668,10 +3766,10 @@
         // 重置模态框内的输入
         document.getElementById('modalBuyPosPctInput').value = '100';
         document.getElementById('modalBuyCurrPricePctInput').value = '0';
-        document.getElementById('modalBuyChangePricePctInput').value = '0';
+        document.getElementById('modalBuyPrevPricePctInput').value = '0';
         // 默认选择当前价格策略
         document.getElementById('modalStrategyBuyCurrPrice').checked = true;
-        document.getElementById('modalBuyChangePricePctInput').disabled = true; // 禁用另一个输入框
+        document.getElementById('modalBuyPrevPricePctInput').disabled = true; // 禁用另一个输入框
         document.getElementById('modalBuyCurrPricePctInput').disabled = false; // 启用当前输入框
 
         // 显示模态框
@@ -3684,7 +3782,7 @@
         const currPriceRadio = document.getElementById('modalStrategyBuyCurrPrice');
         const changePriceRadio = document.getElementById('modalStrategyBuyChangePrice');
         const currPriceInput = document.getElementById('modalBuyCurrPricePctInput');
-        const changePriceInput = document.getElementById('modalBuyChangePricePctInput');
+        const changePriceInput = document.getElementById('modalBuyPrevPricePctInput');
 
         if (currPriceRadio && changePriceRadio && currPriceInput && changePriceInput) {
             function handleRadioChange() {
@@ -3739,7 +3837,7 @@
         }
 
         let currPricePct = 0;
-        let changePricePct = 0;
+        let prevPricePct = 0;
         const selectedStrategy = document.querySelector('input[name="modalBuyPriceStrategy"]:checked').value;
 
         if (selectedStrategy === 'currPricePct') {
@@ -3750,12 +3848,12 @@
                 currPricePctInput.focus();
                 return;
             }
-        } else if (selectedStrategy === 'changePricePct') {
-            const changePricePctInput = document.getElementById('modalBuyChangePricePctInput');
-            changePricePct = parseFloat(changePricePctInput.value);
-            if (isNaN(changePricePct) || changePricePct < -30 || changePricePct > 30) {
+        } else if (selectedStrategy === 'prevPricePct') {
+            const prevPricePctInput = document.getElementById('modalBuyPrevPricePctInput');
+            prevPricePct = parseFloat(prevPricePctInput.value);
+            if (isNaN(prevPricePct) || prevPricePct < -30 || prevPricePct > 30) {
                 alert('请输入有效的昨日收盘价涨跌幅比例 (-30% 到 30%)');
-                changePricePctInput.focus();
+                prevPricePctInput.focus();
                 return;
             }
         }
@@ -3766,8 +3864,8 @@
         confirmMsg += `\n买入总仓位比例: ${buyPosPct}%`;
         if (selectedStrategy === 'currPricePct' && currPricePct !== 0) {
             confirmMsg += `\n价格策略: 当前价格【${currPricePct > 0 ? '+' : ''}${currPricePct}%】`;
-        } else if (selectedStrategy === 'changePricePct' && changePricePct !== 0) {
-            confirmMsg += `\n价格策略: 昨日收盘价【${changePricePct > 0 ? '+' : ''}${changePricePct}%】`;
+        } else if (selectedStrategy === 'prevPricePct' && prevPricePct !== 0) {
+            confirmMsg += `\n价格策略: 昨日收盘价【${prevPricePct > 0 ? '+' : ''}${prevPricePct}%】`;
         }
         confirmMsg += `\n\n股票代码: ${buyStockCodes.join(', ')}`;
         // - 结束更新确认消息 -
@@ -3781,7 +3879,7 @@
         document.getElementById('confirmBuyNewPositionSettingsBtn').textContent = '处理中...';
         document.getElementById('confirmBuyNewPositionSettingsBtn').disabled = true;
 
-        ApiUtils.fetch(`/api/trade/quick/eqRatio/keepExistBuyNew?buyStockCodeList=${buyStockCodeList}&buyPosPct=${buyPosPct}&currPricePct=${currPricePct}&changePricePct=${changePricePct}`, {
+        ApiUtils.fetch(`/api/trade/quick/eqRatio/keepExistBuyNew?buyStockCodeList=${buyStockCodeList}&buyPosPct=${buyPosPct}&currPricePct=${currPricePct}&prevPricePct=${prevPricePct}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -4071,13 +4169,13 @@
             });
 
 
-            const today2NextPct__min = document.getElementById('filterTopStocksManualPct__today2NextPct__min');
-            const today2NextPct__max = document.getElementById('filterTopStocksManualPct__today2NextPct__max');
+            const todayChangePct__min = document.getElementById('filterTopStocksManualPct__todayChangePct__min');
+            const todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max');
             const filterTopStocksManualPctButton = document.getElementById('filterTopStocksManualPctButton');
 
-            if (today2NextPct__min && today2NextPct__max && filterTopStocksManualPctButton) {
-                today2NextPct__min.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
-                today2NextPct__max.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+            if (todayChangePct__min && todayChangePct__max && filterTopStocksManualPctButton) {
+                todayChangePct__min.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+                todayChangePct__max.addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             } else {
                 console.warn('未能找到 主线个股（人选）相关的DOM元素');
             }

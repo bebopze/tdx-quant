@@ -73,21 +73,13 @@ public class TopBlockCache {
 
 
     public List<TopBlockDTO.TopStock> getTopStockList(String blockCode,
-                                                      Set<String> allTopStockCodeSet,
+                                                      List<TopChangePctDTO> topStockDataList,
                                                       Map<String, Integer> topStock__codeCountMap) {
 
 
         // 板块 - 个股列表
         Set<String> block_stockCodeSet = data.blockCode_stockCodeSet_Map.computeIfAbsent(blockCode, k -> {
-
             List<BaseStockDO> block__stockDOList = baseBlockRelaStockService.listStockByBlockCodeList(Lists.newArrayList(blockCode));
-
-
-            block__stockDOList.forEach(simpleStockDO -> {
-                data.codeStockMap.computeIfAbsent(simpleStockDO.getCode(), x -> simpleStockDO);
-            });
-
-
             return block__stockDOList.stream().map(BaseStockDO::getCode).collect(Collectors.toSet());
         });
 
@@ -99,7 +91,9 @@ public class TopBlockCache {
 
 
         // 主线个股
-        allTopStockCodeSet.forEach(topStockCode -> {
+        topStockDataList.forEach(topStockData -> {
+            String topStockCode = topStockData.getCode();
+
 
             // 板块个股  ->  IN 主线个股
             if (block_stockCodeSet.contains(topStockCode)) {
@@ -107,7 +101,7 @@ public class TopBlockCache {
 
                 TopBlockDTO.TopStock topStock = new TopBlockDTO.TopStock();
                 topStock.setStockCode(topStockCode);
-                topStock.setStockName(data.codeStockMap.getOrDefault(topStockCode, new BaseStockDO()).getName());
+                topStock.setStockName(topStockData.getName());
                 topStock.setTopDays(topStock__codeCountMap.getOrDefault(topStockCode, 0));
 
 
@@ -137,7 +131,7 @@ public class TopBlockCache {
 
 
     public List<TopStockDTO.TopBlock> getTopBlockList(String stockCode,
-                                                      Set<String> allTopBlockCodeSet,
+                                                      List<TopChangePctDTO> topBlockDataList,
                                                       Map<String, Integer> topBlock__codeCountMap) {
 
 
@@ -147,9 +141,9 @@ public class TopBlockCache {
             List<BaseBlockDO> stock__blockDOList = baseBlockRelaStockService.listBlockByStockCodeList(Lists.newArrayList(stockCode));
 
 
-            stock__blockDOList.forEach(simpleBlockDO -> {
-                data.codeBlockMap.computeIfAbsent(simpleBlockDO.getCode(), x -> simpleBlockDO);
-            });
+//            stock__blockDOList.forEach(simpleBlockDO -> {
+//                data.codeBlockMap.computeIfAbsent(simpleBlockDO.getCode(), x -> simpleBlockDO);
+//            });
 
 
             return stock__blockDOList.stream().map(BaseBlockDO::getCode).collect(Collectors.toSet());
@@ -163,7 +157,9 @@ public class TopBlockCache {
 
 
         // 主线板块
-        allTopBlockCodeSet.forEach(topBlockCode -> {
+        topBlockDataList.forEach(topBlockData -> {
+            String topBlockCode = topBlockData.getCode();
+
 
             // 个股板块  ->  IN 主线板块
             if (stock_blockCodeSet.contains(topBlockCode)) {
@@ -171,7 +167,7 @@ public class TopBlockCache {
 
                 TopStockDTO.TopBlock topBlock = new TopStockDTO.TopBlock();
                 topBlock.setBlockCode(topBlockCode);
-                topBlock.setBlockName(data.codeBlockMap.get(topBlockCode).getName());
+                topBlock.setBlockName(topBlockData.getName());
                 topBlock.setTopDays(topBlock__codeCountMap.getOrDefault(topBlockCode, 0));
 
 

@@ -125,14 +125,14 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
     // 涨停价（昨日收盘价 计算 - 今日有效）
-    private BigDecimal topprice;
+    private double topprice;
     // 跌停价（昨日收盘价 计算 - 今日有效）
-    private BigDecimal bottomprice;
+    private double bottomprice;
 
     // 预估-涨停价（今日收盘价 计算 - 明日有效）
-    private BigDecimal nt;
+    private double nt;
     // 预估-跌停价（今日收盘价 计算 - 明日有效）
-    private BigDecimal nb;
+    private double nb;
 
 
     // -
@@ -180,35 +180,35 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // 昨日-收盘价
-        private BigDecimal yesClosePrice;
+        private double yesClosePrice;
         // -
-        private BigDecimal yesSettlePrice;
+        private double yesSettlePrice;
         // -
-        private BigDecimal yesClosePriceE;
+        private double yesClosePriceE;
         // 今日-开盘价
-        private BigDecimal openPrice;
+        private double openPrice;
 
 
         // 卖1->卖5       小 -> 大
 
         // 11
-        private BigDecimal sale1;
-        private BigDecimal sale2;
-        private BigDecimal sale3;
-        private BigDecimal sale4;
+        private double sale1;
+        private double sale2;
+        private double sale3;
+        private double sale4;
         // 15（报价最高）
-        private BigDecimal sale5;   // 一键买入
+        private double sale5;   // 一键买入
 
 
         // 买1->买5       大 -> 小
 
         // 15
-        private BigDecimal buy1;
-        private BigDecimal buy2;
-        private BigDecimal buy3;
-        private BigDecimal buy4;
+        private double buy1;
+        private double buy2;
+        private double buy3;
+        private double buy4;
         // 11（出价最低）
-        private BigDecimal buy5;   // 一键卖出
+        private double buy5;   // 一键卖出
 
 
         // S量
@@ -263,15 +263,15 @@ public class SHSZQuoteSnapshotResp implements Serializable {
     public static class RealtimequoteDTO implements Serializable {
 
 
-        private BigDecimal open;
-        private BigDecimal high;
-        private BigDecimal low;
+        private double open;
+        private double high;
+        private double low;
         // 均价
-        private BigDecimal avg;
+        private double avg;
 
 
         // 涨跌额（-0.39）
-        private BigDecimal zd;
+        private double zd;
         // 涨跌幅（-1.84%）
         private String zdf;
         // 换手率（1.65%）
@@ -279,17 +279,17 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // 当前价格（实时）
-        private BigDecimal currentPrice;
+        private double currentPrice;
 
 
         //
-        private BigDecimal settlePrice;
+        private double settlePrice;
 
 
         // 成交量（2203757）
         private Long volume;
         // 成交额（4607385600 - 46亿）
-        private BigDecimal amount;
+        private double amount;
 
 
         // 875529
@@ -324,14 +324,14 @@ public class SHSZQuoteSnapshotResp implements Serializable {
             return volume * 100;
         }
 
-        public BigDecimal getZdf() {
+        public double getZdf() {
             // -1.84%   ->   -1.84
-            return new BigDecimal(zdf.split("%")[0]);
+            return Double.parseDouble(zdf.split("%")[0]);
         }
 
-        public BigDecimal getTurnover() {
+        public double getTurnover() {
             // 1.65%   ->   1.65
-            return new BigDecimal(turnover.split("%")[0]);
+            return Double.parseDouble(turnover.split("%")[0]);
         }
 
 
@@ -340,10 +340,9 @@ public class SHSZQuoteSnapshotResp implements Serializable {
          *
          * @return
          */
-        public BigDecimal getRangePct() {
+        public double getRangePct() {
             // 振幅       (H/L - 1) x 100%
-            double rangePct = low.doubleValue() == 0 ? 0 : (high.doubleValue() / low.doubleValue() - 1) * 100;
-            return NumUtil.double2Decimal(rangePct);
+            return NumUtil.of(low == 0 ? 0 : (high / low - 1) * 100);
         }
 
 
@@ -376,9 +375,9 @@ public class SHSZQuoteSnapshotResp implements Serializable {
 
 
         // 价格上限   （ C x 1.02 ）
-        private BigDecimal upper;
+        private double upper;
         // 价格下限   （ C x 0.98 ）
-        private BigDecimal lower;
+        private double lower;
     }
 
 }

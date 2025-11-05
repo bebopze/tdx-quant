@@ -31,7 +31,7 @@ public class SubmitTradeV2Req {
     private String stockName;
 
     // 价格
-    private BigDecimal price;
+    private Double price;
     // 数量（100 x N       ->       150 : 不允许将整股拆成零股来卖）
     private Integer amount;
 

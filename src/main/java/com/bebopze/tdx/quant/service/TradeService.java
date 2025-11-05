@@ -102,9 +102,9 @@ public interface TradeService {
      * @param sellStockCodeSet 指定卖出 个股列表
      * @param sellPosPct       指定卖出 持仓比例（%）
      * @param currPricePct     （当前价格）涨跌幅比例%
-     * @param changePricePct   （昨日收盘价）涨跌幅比例%
+     * @param prevPricePct     （昨日收盘价）涨跌幅比例%
      */
-    void quickSellPosition(Set<String> sellStockCodeSet, double sellPosPct, double currPricePct, double changePricePct);
+    void quickSellPosition(Set<String> sellStockCodeSet, double sellPosPct, double currPricePct, double prevPricePct);
 
     /**
      * 一键清仓     =>     指定 个股列表
@@ -145,11 +145,11 @@ public interface TradeService {
      * 一键 等比买入（调仓换股）    =>     降低手续费（保留exist  ->  买入new）
      *
      * @param buyStockCodeSet
-     * @param buyPosPct
+     * @param buyPosPct       买入 持仓比例%（账户总仓位 相对比例，融资账户 范围：0~200%）
      * @param currPricePct
-     * @param changePricePct
+     * @param prevPricePct
      */
-    void keepExistBuyNew(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double changePricePct);
+    void keepExistBuyNew(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double prevPricePct);
 
 
     /**
@@ -158,9 +158,9 @@ public interface TradeService {
      * @param buyStockCodeSet
      * @param buyPosPct
      * @param currPricePct
-     * @param changePricePct
+     * @param prevPricePct
      */
-    Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double changePricePct);
+    Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double prevPricePct);
 
 
     // -----------------------------------------------------------------------------------------------------------------

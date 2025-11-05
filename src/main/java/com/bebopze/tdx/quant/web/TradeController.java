@@ -122,12 +122,12 @@ public class TradeController {
                                           @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
 
                                           @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
-                                          @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+                                          @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
 
 
         Set<String> sellStockCodeSet = ConvertUtil.str2Set(sellStockCodeList);
 
-        tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, changePricePct);
+        tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, prevPricePct);
         return Result.SUC();
     }
 
@@ -175,19 +175,19 @@ public class TradeController {
     public Result<Void> keepExistBuyNew(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
                                         @RequestParam String buyStockCodeList,
 
-                                        @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+                                        @Schema(description = "买入 持仓比例%（账户总仓位 相对比例，融资账户 范围：0~200%）", example = "100.0")
                                         @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
 
                                         @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
                                         @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
 
                                         @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
-                                        @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+                                        @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
 
 
         Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
-        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, currPricePct, changePricePct);
+        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, currPricePct, prevPricePct);
         return Result.SUC();
     }
 
@@ -204,12 +204,12 @@ public class TradeController {
                                   @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
 
                                   @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
-                                  @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+                                  @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
 
 
         Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
-        return Result.SUC(tradeService.buyCost(buyStockCodeSet, buyPosPct, currPricePct, changePricePct));
+        return Result.SUC(tradeService.buyCost(buyStockCodeSet, buyPosPct, currPricePct, prevPricePct));
     }
 
 

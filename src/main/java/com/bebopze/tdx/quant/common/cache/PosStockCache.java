@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.common.cache;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.service.StockService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -32,9 +31,6 @@ public class PosStockCache {
 
     @Autowired
     private StockService stockService;
-
-    @Autowired
-    private IBaseStockService baseStockService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -75,7 +71,7 @@ public class PosStockCache {
     }
 
 
-    public static Double getPreClose(String stockCode) {
+    public static Double getPrevClose(String stockCode) {
         PosStockCache dto = POS_STOCK_CACHE.getIfPresent(stockCode);
         if (dto != null) {
 
@@ -85,9 +81,9 @@ public class PosStockCache {
             }
 
 
-            BigDecimal preClose = baseStockDTO.getPreClose();
-            if (preClose != null) {
-                return preClose.doubleValue();
+            BigDecimal prevClose = baseStockDTO.getPrevClose();
+            if (prevClose != null) {
+                return prevClose.doubleValue();
             }
 
 

@@ -303,7 +303,7 @@ public class EastMoneyKlineAPI {
             dto.setStockCode(e.getF12());
             dto.setStockName(e.getF14());
 
-            dto.setPreClose(e.getF18());
+            dto.setPrevClose(e.getF18());
 
 
             // -------------------------------
