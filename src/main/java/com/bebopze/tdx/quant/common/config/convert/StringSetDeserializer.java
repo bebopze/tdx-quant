@@ -12,11 +12,12 @@ import java.util.*;
 
 
 /**
- * bug : 002550 -> 2550               fastjson2 bug（以后项目中   严禁使用  🐶💩国产）
+ * bug : 002550 -> 2550               fastjson2 bug（以后项目中   严禁使用  🐶💩国产）  ->   已修复
  *
  * @author: bebopze
  * @date: 2025/7/20
  */
+@Deprecated
 public class StringSetDeserializer implements ObjectReader<Set<String>> {
 
 
