@@ -78,9 +78,8 @@ public class GetOrdersDataResp implements Serializable {
     private String Wtbh;
     // 股东代码（E060000001）
     private String Gddm;
-    // 0（已撤）
     // 信用交易类型（6-担保买入; 7-卖出; a-融资买入;   [A-融券卖出];）
-    private String Xyjylx;
+    private String Xyjylx; // 历史委托列表 有值
     // -
     private String Dwc;
 
@@ -88,7 +87,19 @@ public class GetOrdersDataResp implements Serializable {
     // 成交价格（0.000000）
     private double Cjjg;
     // 信用交易类型-备注【交易类别】（买入担保品、融资开仓、卖出担保品）
-    private String Xyjylbbz;
+    private String Xyjylbbz; // 今日委托列表 有值
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public String getXyjylbbz() {
+        return Xyjylbbz == null ? Xyjylx : Xyjylbbz;
+    }
+
+    public String getXyjylx() {
+        return Xyjylx == null || Xyjylx.equals("0") ? Xyjylbbz : Xyjylx;
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
