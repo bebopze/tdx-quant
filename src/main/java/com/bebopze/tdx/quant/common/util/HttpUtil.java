@@ -70,7 +70,7 @@ public class HttpUtil {
         try {
             result = CLIENT.execute(httpGet, handler);
         } catch (Exception ex) {
-            log.error("doGet - err     >>>     url : {} , result : {} , errMsg : {}", url, JSON.toJSONString(result), ex.getMessage(), ex);
+            log.error("doGet - err     >>>     url : {} , result : {} , errMsg : {}", url, result, ex.getMessage(), ex);
             throw ex;
         }
 
@@ -78,10 +78,10 @@ public class HttpUtil {
         log.info("status : {}", status[0]);
 
         if (result.contains("<!DOCTYPE HTML PUBLIC")) {
-            log.error("doGet     cookie过期，请重新登录！   >>>     url : {}, result : {}", url, JSON.toJSONString(result));
+            log.error("doGet     cookie过期，请重新登录！   >>>     url : {}, result : {}", url, result);
             throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
         } else {
-            log.info("doGet     >>>     url : {} , result : {}", url, JSON.toJSONString(result));
+            log.info("doGet     >>>     url : {} , result : {}", url, result);
         }
 
         return result;
@@ -138,15 +138,16 @@ public class HttpUtil {
             // {"Status":-1,"Message":"custCode 字段不能为空","Errcode":0}
             // <h2>Object moved to <a href="/LogIn/ExitLogin?returl=/MarginSearch/queryCreditNewPosV2?validatekey=as32dsf45-233f2-4ccd-dsds-3213">here</a>.
             if (result.contains("该登录已超时") || result.contains("字段不能为空") || result.contains("<h2>Object moved to <a href=\"/LogIn/ExitLogin?returl=")) {
-                log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(result));
+                log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), result);
                 throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
             } else {
-                log.info("doPost     >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), JSON.toJSONString(result));
+                log.info("doPost     >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), result);
             }
 
 
             return result;
         }
     }
+
 
 }
