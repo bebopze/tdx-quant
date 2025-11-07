@@ -4,12 +4,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONFactory;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
-import com.alibaba.fastjson2.writer.ObjectWriterPrimitiveImpl;
 import com.bebopze.tdx.quant.common.config.convert.DoubleArrayWriter;
 import com.bebopze.tdx.quant.common.config.convert.StringToBigDecimalReader;
 import org.springframework.context.annotation.Configuration;
 
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 
 
@@ -44,25 +42,10 @@ public class FastJson2Config {
 
 
         JSON.config(JSONReader.Feature.AllowUnQuotedFieldNames, // 字段名称支持没有双引号的反序列化
-                    JSONReader.Feature.SupportSmartMatch,       // 当序列化的值为字符串时直接输出字符串，而不是再加一层引号或双引号，如`JSON.toJSONString("test")`直接输出"test"，而不是"\"test\""
+                    // 当序列化的值为字符串时直接输出字符串，而不是再加一层引号或双引号，如`JSON.toJSONString("test")`直接输出"test"，而不是"\"test\""
+
+                    JSONReader.Feature.SupportSmartMatch,
                     JSONReader.Feature.NullOnError);
-
-
-        // 这段代码把全局 String 的序列化器彻底替换了
-        // writeRaw 的含义是：原样输出，不经过任何 JSON 转义，也不加双引号。
-        //
-        // 于是所有 String 字段（包括 Set<String> 里的元素）都被直接 append 到缓冲区，结果就成了：
-        // "codeList": [300059, 1234, 333]
-        // "buySignalSet": [RPS一线红, N100日新高, 上MA20, 上SSF]
-
-
-//        JSON.register(String.class, new ObjectWriterPrimitiveImpl<String>() {
-//
-//            @Override
-//            public void write(JSONWriter jsonWriter, Object object, Object fieldName, Type fieldType, long features) {
-//                jsonWriter.writeRaw((String) object);
-//            }
-//        });
     }
 
 
@@ -76,6 +59,5 @@ public class FastJson2Config {
 //        JSONFactory.getDefaultObjectReaderProvider()
 //                   .register(Set.class, new StringSetDeserializer());
     }
-
 
 }
