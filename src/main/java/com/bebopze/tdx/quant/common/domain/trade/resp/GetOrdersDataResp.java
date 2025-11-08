@@ -118,16 +118,16 @@ public class GetOrdersDataResp implements Serializable {
     /**
      * 仓位占比（仅 当日委托单有效）
      */
-    private double posPct;
+    private Double posPct;
     // 账户净资产（仅 当日委托单有效）
     private double netAsset;
 
 
-    public double getPosPct() {
+    public Double getPosPct() {
         // 金额
         double amount = getWtje();
         // 仓位占比
-        return netAsset == 0 ? Double.NaN : NumUtil.of(amount / netAsset * 100, 2);
+        return netAsset == 0 || Double.isNaN(netAsset) ? null : NumUtil.of(amount / netAsset * 100, 2);
     }
 
 

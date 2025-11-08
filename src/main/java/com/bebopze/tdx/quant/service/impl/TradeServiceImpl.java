@@ -5,9 +5,11 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
@@ -89,7 +91,7 @@ public class TradeServiceImpl implements TradeService {
                 PosStockCache dto = posStockCache.get(stock.getStkcode());
                 stock.setBlockInfoDTO(dto.getStockBlockInfoDTO());
                 // stock.setPreClose(dto.getBaseStockDTO().getPreClose().doubleValue());
-                stock.setPreClose(PosStockCache.getPreClose(stock.getStkcode()));
+                stock.setPrevClose(PosStockCache.getPrevClose(stock.getStkcode()));
             });
 
 
@@ -105,51 +107,49 @@ public class TradeServiceImpl implements TradeService {
     private void topBlockInfo(List<CcStockInfo> stocks) {
 
 
-        LocalDate date = LocalDate.now();
+        LocalDate today = LocalDate.now();
 
 
-        List<TopBlockDTO> topBlockList = topBlockService.topBlockList(date, TopTypeEnum.AUTO.type).getTopBlockDTOList();
+        // ------------------------- 主线板块 列表
 
-        Set<String> allTopBlockCodeSet = Sets.newHashSet();
-        Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
+        List<TopBlockDTO> topBlockList = topBlockService.topBlockList(today, TopTypeEnum.AUTO.type).getTopBlockDTOList();
 
-        topBlockList.forEach(topBlockDTO -> {
-            String topBlockCode = topBlockDTO.getBlockCode();
-            int topDays = topBlockDTO.getTopDays();
-
-            allTopBlockCodeSet.add(topBlockCode);
-            topBlock__codeCountMap.put(topBlockCode, topDays);
-        });
+        // info列表
+        List<TopChangePctDTO> topBlockDataList = topBlockList.stream().map(TopBlockDTO::getChangePctDTO).collect(Collectors.toList());
+        // code - 上榜天数
+        Map<String, Integer> topBlock__codeCountMap = topBlockList.stream().collect(Collectors.toMap(TopBlockDTO::getBlockCode, TopBlockDTO::getTopDays));
 
 
-        List<TopStockDTO> topStockList = topBlockService.topStockList(date, TopTypeEnum.AUTO.type).getTopStockDTOList();
+        // ------------------------- 主线个股 列表
 
-        Map<String, TopStockDTO> stock__codeTopMap = Maps.newHashMap();
-        topStockList.forEach(topStockDTO -> {
-            stock__codeTopMap.put(topStockDTO.getStockCode(), topStockDTO);
-        });
-
-
-        stocks.parallelStream().forEach(stock -> {
-            String stockCode = stock.getStkcode();
+        List<TopStockDTO> topStockList = topBlockService.topStockList(today, TopTypeEnum.AUTO.type).getTopStockDTOList();
+        // code - topStock
+        Map<String, TopStockDTO> code_topStock__Map = Maps.uniqueIndex(topStockList, TopStockDTO::getStockCode);
 
 
-            TopStockDTO topStockDTO = stock__codeTopMap.get(stockCode);
-            if (topStockDTO != null) {
-
-                List<TopStockDTO.TopBlock> stock__topBlockList = topStockDTO.getTopBlockList();
-                stock.setTopBlockList(stock__topBlockList);
-                stock.setTopStock(true);
+        // -------------------------------------------------------------------------------------------------------------
 
 
-            } else {
+        stocks.parallelStream()
+              .forEach(stock -> {
+                  String stockCode = stock.getStkcode();
 
-                // 当前 个股  ->  主线板块 列表
-                List<TopStockDTO.TopBlock> stock__topBlockList = topBlockCache.getTopBlockList(stockCode, allTopBlockCodeSet, topBlock__codeCountMap);
-                stock.setTopBlockList(stock__topBlockList);
-                stock.setTopStock(false);
-            }
-        });
+
+                  TopStockDTO topStockDTO = code_topStock__Map.get(stockCode);
+                  if (topStockDTO != null) {
+
+                      // 当前 主线个股  ->  主线板块 列表
+                      stock.setTopBlockList(topStockDTO.getTopBlockList());
+                      stock.setTopStock(true);   // 主线个股
+
+                  } else {
+
+                      // 当前 非主线个股  ->  主线板块 列表（可能属于 主线板块  ->  但是 个股形态 已走弱  ->  跌出 主线个股）
+                      List<TopStockDTO.TopBlock> stock__topBlockList = topBlockCache.getTopBlockList(stockCode, topBlockDataList, topBlock__codeCountMap);
+                      stock.setTopBlockList(stock__topBlockList);
+                      stock.setTopStock(false);   // 非主线个股
+                  }
+              });
     }
 
 
@@ -221,16 +221,21 @@ public class TradeServiceImpl implements TradeService {
 
 
         if (CollectionUtils.isNotEmpty(today__ordersDataList)) {
-            respList.addAll(today__ordersDataList);
+            today__ordersDataList.forEach(today -> respList.removeIf(his -> key(his).equals(key(today))));
 
-            respList = respList.stream()
-                               .sorted(Comparator.comparing(GetOrdersDataResp::getWtrq).reversed())
-                               .sorted(Comparator.comparing(GetOrdersDataResp::getWtsj).reversed())
-                               .collect(Collectors.toList());
+            respList.addAll(today__ordersDataList);
         }
 
 
-        return respList;
+        return respList.stream()
+                       .sorted(Comparator.comparing(GetOrdersDataResp::getWtrq).reversed())
+                       .sorted(Comparator.comparing(GetOrdersDataResp::getWtsj).reversed())
+                       .collect(Collectors.toList());
+    }
+
+    private String key(GetOrdersDataResp e) {
+        //  key： 股票代码_委托编号_委托日期_委托时间
+        return e.getZqdm() + "_" + e.getWtbh() + "_" + e.getWtrq() + "_" + e.getWtsj();
     }
 
 
@@ -304,7 +309,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -352,13 +357,13 @@ public class TradeServiceImpl implements TradeService {
      * @param sellStockCodeSet 指定卖出 个股列表
      * @param sellPosPct       指定卖出 持仓比例
      * @param currPricePct     （当前价格）涨跌幅比例%
-     * @param changePricePct   （昨日收盘价）涨跌幅比例%
+     * @param prevPricePct     （昨日收盘价）涨跌幅比例%
      */
     @Override
     public void quickSellPosition(Set<String> sellStockCodeSet,
                                   double sellPosPct,
                                   double currPricePct,
-                                  double changePricePct) {
+                                  double prevPricePct) {
 
 
         // 以 currPricePct 为准
@@ -377,7 +382,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 3、一键减仓
-        quick__sellPosition(sell__stockInfoList, sellPosPct, currPricePct, changePricePct);
+        quick__sellPosition(sell__stockInfoList, sellPosPct, currPricePct, prevPricePct);
     }
 
 
@@ -390,8 +395,8 @@ public class TradeServiceImpl implements TradeService {
     public void quickBuyPosition(List<QuickBuyPositionParam> newPositionList) {
 
 
-        // 1、check  持仓比例
-        check__newPositionList(newPositionList, false);
+        // 1、check持仓比例、计算持仓数量
+        checkAncCalcQty__newPositionList(newPositionList, false);
 
 
         // 2、组装   param -> PosResp
@@ -425,7 +430,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 1、check  持仓比例
-        check__newPositionList(newPositionList, true);
+        checkAncCalcQty__newPositionList(newPositionList, true);
 
 
         // 2、组装   param -> PosResp
@@ -464,16 +469,16 @@ public class TradeServiceImpl implements TradeService {
     public void keepExistBuyNew(Set<String> buyStockCodeSet,
                                 double buyPosPct,
                                 double currPricePct,
-                                double changePricePct) {
+                                double prevPricePct) {
 
         Assert.notEmpty(buyStockCodeSet, "buyStockCodeSet不能为空");
 
 
         // 拉取 实时行情（全A/ETF）    ->     B参数 补全：name、price、...
-        List<QuickBuyPositionParam> newPositionList = StrategyServiceImpl.convert__newPositionList(buyStockCodeSet);
+        List<QuickBuyPositionParam> newPositionList = StrategyServiceImpl.convert__newPositionList(buyStockCodeSet, currPricePct, prevPricePct);
 
 
-        // 等比
+        // 等比（buyPosPct  ->  指定 买入总仓位比例  ∈  0~200%）
         double avgPosPct = buyPosPct / newPositionList.size();
         newPositionList.forEach(e -> e.setPosPct(avgPosPct));
 
@@ -484,7 +489,7 @@ public class TradeServiceImpl implements TradeService {
 
 
     @Override
-    public Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double changePricePct) {
+    public Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double prevPricePct) {
 
 
         return null;
@@ -535,7 +540,7 @@ public class TradeServiceImpl implements TradeService {
                 if (new_posPct < 0) {
 
                     // 减仓
-                    e.setPosratio(new BigDecimal(-1 * new_posPct));
+                    e.setPosratio(BigDecimal.valueOf(-1 * new_posPct));
                     sellList.add(e);
 
                     // 不再买入 新仓位
@@ -558,12 +563,23 @@ public class TradeServiceImpl implements TradeService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 清仓
-        quick__clearPosition(clearList);
+        // ---------------------------- TODO 特殊处理
 
 
-        // 减仓
-        quick__clearPosition(sellList);
+        // 移除 ETF（ETF 一律视为手动操作   ->   暂不参与BS策略）
+        clearList.removeIf(e -> StockTypeEnum.isETF(e.getStkcode()));
+        sellList.removeIf(e -> StockTypeEnum.isETF(e.getStkcode()));
+
+
+        // ----------------------------
+
+
+        // TODO   清仓
+//        quick__clearPosition(clearList);
+
+
+        // TODO   减仓
+//        quick__clearPosition(sellList);
 
 
         // 新买入
@@ -841,7 +857,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     @Override
@@ -912,7 +928,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -1367,12 +1383,12 @@ public class TradeServiceImpl implements TradeService {
      * @param sellStockInfoList 卖出 个股列表
      * @param sellPosPct        卖出 持仓比例（%）
      * @param currPricePct      （当前价格）涨跌幅比例%
-     * @param changePricePct    （昨日收盘价）涨跌幅比例%
+     * @param prevPricePct      （昨日收盘价）涨跌幅比例%
      */
     private void quick__sellPosition(List<CcStockInfo> sellStockInfoList,
                                      double sellPosPct,
                                      double currPricePct,
-                                     double changePricePct) {
+                                     double prevPricePct) {
 
         sellStockInfoList.forEach(e -> {
 
@@ -1417,9 +1433,10 @@ public class TradeServiceImpl implements TradeService {
             param.setMarket(e.getMarket());
 
 
+            // S价格策略
+            double _price = sellPriceStrategyPct(e, currPricePct, prevPricePct);
             // S价格 -> 最低价（买5价 -> 确保100%成交）  =>   C x 99.5%
-            double _price = pricePct(e, currPricePct, changePricePct);
-            BigDecimal price = new BigDecimal(_price).multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
+            BigDecimal price = BigDecimal.valueOf(_price).multiply(BigDecimal.valueOf(0.995)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
             // S数量（S  ->  持仓数量 x sellPct）
@@ -1466,15 +1483,28 @@ public class TradeServiceImpl implements TradeService {
                 } else {
 
                 }
+
+
+                // [ERROR] 2025-11-03 08:17:12.738 [http-nio-7001-exec-2] TradeServiceImpl - 担保再买入 - [担保买入]   =>   下单FAIL     >>>     stock : [300175-ST朗源] , posStock : {"costprice":"0","curProfitratio":"0","curprofit":"0","dtPrice":"0","inTopBlock":"false","isApplyStg":"0","lastprice":"6.389","market":"","mktval":"5750.084","needGyjg":"0","needJzd":"0","posratio":"0","preClose":"6.389","profit":"0","profitratio":"0","rzDebt":"","stkRzBal":"","stkZyBal":"0","stkavl":"900","stkbal":"0","stkclasses":"","stkcode":"300175","stkname":"ST朗源","stktype":"","stktype_ex":"0","topBlockList":[],"topStock":"false","ztPrice":"0"} , param : {"amount":"900","market":"","price":"6.42","stockCode":"300175","stockName":"ST朗源","tradeType":"2"} , errMsg : 下单异常：该证券账户[0606068888]无此权限[04 开通风险警示证券买入权限]
+                //com.bebopze.tdx.quant.common.config.BizException: 下单异常：该证券账户[0606068888]无此权限[04 开通风险警示证券买入权限]
             }
 
         });
     }
 
-    private double pricePct(CcStockInfo e, double currPricePct, double changePricePct) {
-        if (changePricePct != 0) {
+
+    /**
+     * S价格策略
+     *
+     * @param e
+     * @param currPricePct 按当前价格涨跌幅%
+     * @param prevPricePct 按昨日收盘价涨跌幅%
+     * @return
+     */
+    private double sellPriceStrategyPct(CcStockInfo e, double currPricePct, double prevPricePct) {
+        if (prevPricePct != 0) {
             // 昨日收盘价
-            return e.getPreClose() * (1 + changePricePct * 0.01);
+            return e.getPrevClose() * (1 + prevPricePct * 0.01);
         }
         // 当前价格
         return e.getLastprice().doubleValue() * (1 + currPricePct * 0.01);
@@ -1893,7 +1923,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -1919,7 +1949,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -1983,7 +2013,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -2037,11 +2067,12 @@ public class TradeServiceImpl implements TradeService {
 
     /**
      * check  持仓比例     是否合理     ->     否则，自动重新计算 仓位比例
+     * -                             ->     计算 持仓数量
      *
      * @param newPositionList 待买入 新持仓列表
      * @param clearPosition   是否 清仓旧持仓
      */
-    private void check__newPositionList(List<QuickBuyPositionParam> newPositionList, boolean clearPosition) {
+    private void checkAncCalcQty__newPositionList(List<QuickBuyPositionParam> newPositionList, boolean clearPosition) {
 
 
         // check     =>     防止 [误操作] -> [清仓]
@@ -2320,19 +2351,19 @@ public class TradeServiceImpl implements TradeService {
                      qty0_newPositionList.size(), JSON.toJSONString(qty0_newPositionList));
 
 
-            // ---------------------------------------------------------
+            // --------------------------------------------------------- TODO   DEL
 
 
-            // B策略 -> 买入失败（qty=0）      ->       写回TDX（B策略-qty0）
+            // TODO   B策略 -> 买入失败（qty=0）      ->       写回TDX（B策略-qty0）
             TdxBlockNewReaderWriter.write("BCL-QTY0", qty0_newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
 
-            // B策略 -> 买入成功（qty>0）      ->       写回TDX（B策略-SUC）
+            // TODO   B策略 -> 买入成功（qty>0）      ->       写回TDX（B策略-SUC）
             TdxBlockNewReaderWriter.write("BCL-SUC", newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
         }
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     public static BigDecimal of(double value) {
