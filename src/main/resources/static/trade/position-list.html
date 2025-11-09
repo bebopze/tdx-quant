@@ -1406,14 +1406,49 @@
 <!-- - 结束：一键等比买入 设置模态框 - -->
 
 
+<!-- 新增：一键同步 选择同步数据源的模态框 -->
+<div class="modal fade" id="selectDataSourceModal" tabindex="-1" aria-labelledby="selectDataSourceModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectDataSourceModalLabel">选择同步数据源</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="dataSourceSelect" class="form-label">请选择要同步的数据源：</label>
+                    <select class="form-select" id="dataSourceSelect">
+                        <option value="CC">持仓列表</option>
+                        <option value="ZXBK">主线板块列表（机选）</option>
+                        <option value="ZXGG">主线个股列表（机选）</option>
+                    </select>
+                </div>
+                <div id="syncConfirmationMessage" class="alert alert-info" style="display: none;">
+                    <!-- 动态显示确认信息 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmSyncBtn" disabled>确认同步</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // 存储排序状态 (持仓)
     let sortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
+
     // 存储排序状态 (委托)
     let ordersSortState = {column: null, order: 'asc'};
     let ordersData = [];
+
     // 存储持仓账户配置数据
     let cfgAccountData = {
         id: null,
@@ -1422,6 +1457,13 @@
         posLimitPct: 0,
         stockPosLimitPct: 0
     };
+
+
+    // 个股/板块列表 同步到通达信
+    let sync2TdxBlockNewData = [
+        {blockNewCode: 'CC', blockNewName: '持仓'},
+        {blockNewCode: 'ZXBK', blockNewName: '主线板块'},
+        {blockNewCode: 'ZXGG', blockNewName: '主线个股'}];
 
 
     // --- 新增：主线板块/个股数据 (机选) ---
@@ -2031,30 +2073,124 @@
     }
 
 
-    // 一键同步（持仓->通达信）
-    function syncPositionsToTdx() {
+    // --------------------------------------------- 一键同步（持仓/主线板块/主线个股 -> 通达信）
 
-        // 确保持仓数据已加载
-        if (!positionsData || positionsData.length === 0) {
-            alert('当前持仓列表为空，无法同步！');
+    // 一键同步（持仓/主线板块/主线个股 -> 通达信）按钮事件
+    function openSyncToTdxModel() {
+        // 打开模态框
+        const modal = new bootstrap.Modal(document.getElementById('selectDataSourceModal'));
+        modal.show();
+
+        // 清空之前的选择和状态
+        document.getElementById('dataSourceSelect').value = 'CC'; // 重置为默认选项
+        document.getElementById('syncConfirmationMessage').style.display = 'none';
+        document.getElementById('confirmSyncBtn').disabled = false;
+
+
+        // 触发默认选项的change事件（display）
+        syncToTdxChange();
+    }
+
+    // 处理数据源选择变化
+    function syncToTdxChange() {
+        const selectedCode = document.getElementById('dataSourceSelect').value;
+        let selectedData = null;
+        let dataSourceName = '';
+
+        // 根据选择的 code 确定对应的数据源
+        if (selectedCode === 'CC') {
+            selectedData = positionsData;
+            dataSourceName = '持仓列表';
+        } else if (selectedCode === 'ZXBK') {
+            selectedData = topBlocksData; // 机选板块数据
+            dataSourceName = '主线板块列表（机选）';
+        } else if (selectedCode === 'ZXGG') {
+            selectedData = topStocksData; // 机选个股数据
+            dataSourceName = '主线个股列表（机选）';
+        }
+
+        if (selectedData && selectedData.length > 0) {
+            // 如果数据源不为空，启用确认按钮并显示确认信息
+            document.getElementById('confirmSyncBtn').disabled = false;
+            const codeList = selectedData.map(item => {
+                // 根据不同数据源结构，获取正确的股票/板块代码字段
+                if (selectedCode === 'CC') {
+                    return item.stkcode;
+                } else if (selectedCode === 'ZXBK') {
+                    return item.blockCode;
+                } else if (selectedCode === 'ZXGG') {
+                    return item.stockCode;
+                }
+                return null; // 如果字段名不同或不存在
+            }).filter(code => code && code.trim() !== '');
+
+            if (codeList.length > 0) {
+                const blockNewName = sync2TdxBlockNewData.find(item => item.blockNewCode === selectedCode)?.blockNewName ?? '';
+                document.getElementById('syncConfirmationMessage').innerHTML = `确认将 <strong>${dataSourceName}</strong> (${codeList.length} 条记录) 同步到通达信板块 <strong>${blockNewName}（${selectedCode}）</strong> ?`;
+                document.getElementById('syncConfirmationMessage').style.display = 'block';
+            } else {
+                document.getElementById('confirmSyncBtn').disabled = true; // 如果提取的代码为空，则禁用
+                document.getElementById('syncConfirmationMessage').innerHTML = `<strong>警告：</strong> 从 <strong>${dataSourceName}</strong> 中未能提取到有效的代码，无法同步。`;
+                document.getElementById('syncConfirmationMessage').style.display = 'block';
+            }
+        } else {
+            // 如果数据源为空，禁用确认按钮
+            document.getElementById('confirmSyncBtn').disabled = true;
+            document.getElementById('syncConfirmationMessage').innerHTML = `<strong>提示：</strong> 当前 <strong>${dataSourceName}</strong> 为空，无法同步。`;
+            document.getElementById('syncConfirmationMessage').style.display = 'block';
+        }
+    }
+
+    // confirmSyncBtn   处理确认同步按钮点击事件
+    function syncToTdx() {
+        const selectedCode = document.getElementById('dataSourceSelect').value;
+        let selectedData = null;
+        let dataSourceName = '';
+
+        // 再次确认选中的数据源
+        if (selectedCode === 'CC') {
+            selectedData = positionsData;
+            dataSourceName = '持仓列表';
+        } else if (selectedCode === 'ZXBK') {
+            selectedData = topBlocksData; // 机选板块数据
+            dataSourceName = '主线板块列表（机选）';
+        } else if (selectedCode === 'ZXGG') {
+            selectedData = topStocksData; // 机选个股数据
+            dataSourceName = '主线个股列表（机选）';
+        }
+
+        if (!selectedData || selectedData.length === 0) {
+            alert(`当前 ${dataSourceName} 为空，无法同步！`);
             return;
         }
 
-        // 提取持仓中的股票代码
-        // 假设股票代码字段名为 'stkcode'，请根据实际数据结构调整
-        const codeList = positionsData.map(item => item.stkcode).filter(code => code && code.trim() !== '');
+        // 提取对应数据源的代码列表
+        let codeList = [];
+        if (selectedCode === 'CC') {
+            codeList = selectedData.map(item => item.stkcode);
+        } else if (selectedCode === 'ZXBK') {
+            codeList = selectedData.map(item => item.blockCode);
+        } else if (selectedCode === 'ZXGG') {
+            codeList = selectedData.map(item => item.stockCode);
+        }
+
+
+        // 过滤掉无效code
+        codeList = codeList.filter(code => code && code.trim() !== '');
+
         if (codeList.length === 0) {
-            alert('当前持仓列表中未找到有效的股票代码，无法同步！');
+            alert(`从 ${dataSourceName} 中未能提取到有效的代码，无法同步！`);
             return;
         }
+
 
         const codeListStr = codeList.join(','); // 用逗号连接成字符串
-        const blockNewCode = 'CC'; // 固定参数（CC -> 持仓 自定义板块）
 
-        console.log(`准备同步代码列表: ${codeListStr} 到板块: ${blockNewCode}`);
+
+        console.log(`准备同步 ${dataSourceName} 的代码列表: ${codeListStr} 到板块: ${selectedCode}`);
 
         // 调用后端API
-        ApiUtils.fetch(`/api/blockNew/importTdx?blockNewCode=${blockNewCode}&codeList=${encodeURIComponent(codeListStr)}`)
+        ApiUtils.fetch(`/api/blockNew/importTdx?blockNewCode=${selectedCode}&codeList=${encodeURIComponent(codeListStr)}`)
             .then(res => {
                 return res.ok ? res.json() :
                     res.json().then(errData => {
@@ -2063,18 +2199,22 @@
             })
             .then(data => {
                 if (data && data.success) {
-                    alert('【一键同步(持仓->通达信)】操作成功！');
+                    alert(`【一键同步(${dataSourceName} -> 通达信)】操作成功！`);
                     console.log('同步成功:', data);
-                    // 可选：同步成功后可以执行其他操作，例如刷新页面提示等
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('selectDataSourceModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
                 } else {
                     const errorMsg = data?.msg || '操作失败，未知错误。';
-                    alert(`【一键同步(持仓->通达信)】失败：${errorMsg}`);
+                    alert(`【一键同步(${dataSourceName} -> 通达信)】失败：${errorMsg}`);
                     console.error('Sync to TDX API Error:', data);
                 }
             })
             .catch(error => {
-                console.error('【一键同步(持仓->通达信)】请求失败:', error);
-                alert(`【一键同步(持仓->通达信)】操作失败：${error.message || error}`);
+                console.error(`【一键同步(${dataSourceName} -> 通达信)】请求失败:`, error);
+                alert(`【一键同步(${dataSourceName} -> 通达信)】操作失败：${error.message || error}`);
             });
     }
 
@@ -2387,7 +2527,7 @@
                     <td>${Number(order.wtjg)}</td>
                     <td>${order.wtsl}</td>
                     <td>${Number(order.wtje)}</td>
-                    <td>${Number(order.posPct)}</td>
+                    <td>${order.posPct == null ? '-' : Number(order.posPct)}</td>
                     <td>${Number(order.cjjg)}</td>
                     <td>${order.cjsl}</td>
                     <td>${Number(order.cjje)}</td>
@@ -4041,7 +4181,9 @@
         // -------------------------- 一键同步（持仓->通达信）
 
 
-        document.getElementById('syncPositionsToTdxBtn').addEventListener('click', syncPositionsToTdx);
+        document.getElementById('syncPositionsToTdxBtn').addEventListener('click', openSyncToTdxModel);
+        document.getElementById('dataSourceSelect').addEventListener('change', syncToTdxChange);
+        document.getElementById('confirmSyncBtn').addEventListener('click', syncToTdx);
 
 
         // -------------------------- 主线 板块/个股（机选）
