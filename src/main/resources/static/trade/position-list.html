@@ -1978,6 +1978,14 @@
         }
         const holdingStockCount = positions.length;
         document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
+
+
+        // 合计行
+        const sumRow = createPositionsSumRow(sortedPositions);
+        tbody.appendChild(sumRow); // 将合计行添加到 tbody 的开头（紧跟在清空之后，但在列表行之前）
+
+
+        // 列表行
         sortedPositions.forEach((item, index) => {
             const marketPrefix = market2Xueqiu(item.market);
             const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
@@ -2043,6 +2051,82 @@
         document.getElementById('positionsCardTitle').textContent = `持仓详情（${count}）`;
         // --- 结束：更新持仓列表标题数量 ---
         attachCheckboxListeners();
+    }
+
+    // 持仓列表 -> 合计行
+    function createPositionsSumRow(sortedPositions) {
+        let sumValues = {
+            mktval: 0,         // 市值
+            profit: 0,         // 持仓盈亏
+            profitratio: 0,    // 持仓盈亏比例
+            curprofit: 0,      // 当日盈亏
+            curProfitratio: 0, // 当日盈亏比例
+            posratio: 0,       // 仓位占比
+        };
+
+        sortedPositions.forEach(position => {
+            // 累加数字列
+            if (typeof position.mktval === 'number') sumValues.mktval += position.mktval;
+            if (typeof position.profit === 'number') sumValues.profit += position.profit;
+            if (typeof position.profitratio === 'number') sumValues.profitratio += position.profitratio;
+            if (typeof position.curprofit === 'number') sumValues.curprofit += position.curprofit;
+            if (typeof position.curProfitratio === 'number') sumValues.curProfitratio += position.curProfitratio;
+            if (typeof position.posratio === 'number') sumValues.posratio += position.posratio;
+        });
+
+        // 创建并插入合计行
+        const sumRow = document.createElement('tr');
+        sumRow.classList.add('sum-row'); // 添加特定类名用于样式
+
+        // 根据表头结构填充合计行，非数字列可填充提示文字或空
+        // 假设表头顺序是: Checkbox, 序号, 证券代码, 证券名称, 市场, 成本价, 昨收, 最新价, 市值, 持仓盈亏, 持仓盈亏比例, 当日盈亏, 当日盈亏比例, 仓位占比, 持仓数量, 可用数量, 行业, 主线个股, IN主线板块, 主线板块, 操作
+        // 对应的列索引 (0-based) 需要根据实际HTML调整
+        // 索引 0: Checkbox
+        sumRow.innerHTML += `<td></td>`; // Checkbox 列，通常为空或用于放置“合计”标签
+        // 索引 1:  (序号) - 非合计列
+        sumRow.innerHTML += `<td>合计</td>`;
+        // 索引 2:  (证券代码) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 3:  (证券名称) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 4:  (市场) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 5:  (成本价) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 6:  (昨收) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 7:  (最新价) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+
+        // 索引 8: mktval (市值) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.mktval.toFixed(0)}</td>`;
+        // 索引 9: profit (持仓盈亏) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.profit.toFixed(0)}</td>`;
+        // 索引 10: profitratio (持仓盈亏比例) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.profitratio.toFixed(2)}%</td>`;
+        // 索引 11: curprofit (当日盈亏) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.curprofit.toFixed(2)}</td>`;
+        // 索引 12: curProfitratio (当日盈亏比例) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.curProfitratio.toFixed(2)}%</td>`;
+        // 索引 13: posratio (仓位占比) - 合计列
+        sumRow.innerHTML += `<td>${Number(sumValues.posratio * 100).toFixed(2)}%</td>`;
+
+        // 索引 14:  (持仓数量) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 15:  (可用数量) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 16:  (行业) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 17:  (主线个股) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 18:  (IN主线板块) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 19:  (主线板块) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 20: 操作 - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+
+        return sumRow;
     }
 
 
@@ -2528,9 +2612,9 @@
 
             // 合计行
             const sumRow = createOrdersSumRow(sortedOrders);
-            tbody.appendChild(sumRow); // 将合计行添加到 tbody 的开头（紧跟在清空之后，但在订单行之前）
+            tbody.appendChild(sumRow); // 将合计行添加到 tbody 的开头（紧跟在清空之后，但在列表行之前）
 
-            // 订单行
+            // 列表行
             sortedOrders.forEach((order, index) => {
                 const marketPrefix = market2Xueqiu(order.market);
                 const stockLink = `https://xueqiu.com/S/${marketPrefix}${order.zqdm}`;
@@ -2595,7 +2679,7 @@
             if (typeof order.posPct === 'number') sumValues.posPct += order.posPct;
         });
 
-        // --- 新增：创建并插入合计行 ---
+        // 创建并插入合计行
         const sumRow = document.createElement('tr');
         sumRow.classList.add('sum-row'); // 添加特定类名用于样式
 
