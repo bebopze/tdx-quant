@@ -636,11 +636,11 @@
     </ul>
     <!-- Tab Content -->
     <div class="tab-content" id="myTabContent">
-        <!-- 我的持仓 Tab Content -->
+
+        <!-- 我的持仓 Tab -->
         <div class="tab-pane fade show active" id="positions" role="tabpanel" aria-labelledby="positions-tab">
-            <!-- 持仓详情 -->
             <div class="card mt-3">
-                <!-- 使用 span 包含标题，以便动态更新 -->
+                <!-- 列表标题 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="positionsCardTitle" class="card-title-with-count">持仓详情</span>
                     <div class="d-flex align-items-center flex-wrap" id="positions-action-controls">
@@ -651,7 +651,22 @@
                         </button>
                     </div>
                 </div>
-                <!-- 持仓表格 -->
+                <!-- 新增一行用于筛选 -->
+                <div class="card-header d-flex justify-content-between align-items-center mt-2">
+                    <div class="d-flex align-items-center flex-wrap" id="positions-filter-controls">
+                        <!-- 筛选条件 -->
+                        <div class="d-flex align-items-center me-3">
+                            <label for="filterPositionsType">证券类型：</label>
+                            <select id="filterPositionsType" class="form-select form-select-sm" style="width:auto">
+                                <option value="">全部</option>
+                                <option value="1">个股</option>
+                                <option value="2">ETF</option>
+                            </select>
+                        </div>
+                        <button id="refreshPositionsButton" class="btn btn-success btn-sm">刷新</button>
+                    </div>
+                </div>
+                <!-- 列表数据 -->
                 <div class="card-body">
                     <div class="table-responsive" id="positionTableContainer">
                         <table class="table table-bordered table-sm" id="positionTable">
@@ -704,7 +719,9 @@
                                 <th onclick="sortPositionsTable('inTopBlock')">IN主线板块<span class="sort-icon"
                                                                                                id="sortInTopBlock"></span>
                                 </th>
-                                <th>主线板块</th>
+                                <th onclick="sortPositionsTable('topBlockList')">主线板块<span class="sort-icon"
+                                                                                               id="sortTopBlockList"></span>
+                                </th>
                                 <th>操作</th>
                             </tr>
                             </thead>
@@ -717,10 +734,10 @@
             </div>
         </div>
 
-        <!-- 当日委托 Tab Content -->
+        <!-- 当日委托 Tab -->
         <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
             <div class="card mt-3">
-                <!-- 使用 span 包含标题，以便动态更新 -->
+                <!-- 列表标题 -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="ordersCardTitle" class="card-title-with-count">当日委托列表</span>
                     <div class="d-flex align-items-center flex-wrap" id="orders-action-controls">
@@ -729,12 +746,13 @@
                         <button id="quickCancelOrdersButton" class="btn btn-danger btn-sm ms-2">一键撤单</button>
                     </div>
                 </div>
-                <div class="card-header d-flex justify-content-between align-items-center mt-2"> <!-- 新增一行用于筛选 -->
+                <!-- 新增一行用于筛选 -->
+                <div class="card-header d-flex justify-content-between align-items-center mt-2">
                     <div class="d-flex align-items-center flex-wrap" id="orders-filter-controls">
                         <!-- 筛选条件 -->
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterStatus">委托状态:</label>
-                            <select id="filterStatus" class="form-select form-select-sm" style="width:auto">
+                            <label for="filterOrdersStatus">委托状态：</label>
+                            <select id="filterOrdersStatus" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 // 已成交 -> 已撤/已成/废单/正报/已报待撤
                                 // 未成交 -> 未报/已报/部成
@@ -751,7 +769,7 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterDirection">委托方向:</label>
+                            <label for="filterDirection">委托方向：</label>
                             <select id="filterDirection" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 <option value="证券买入">证券买入</option>
@@ -769,6 +787,7 @@
                         <button id="refreshOrdersButton" class="btn btn-success btn-sm">刷新</button>
                     </div>
                 </div>
+                <!-- 列表数据 -->
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm" id="ordersTable">
@@ -820,7 +839,7 @@
             </div>
         </div>
 
-        <!-- 新增：主线板块 Tab Content -->
+        <!-- 主线板块(机选) Tab -->
         <div class="tab-pane fade" id="top-blocks" role="tabpanel" aria-labelledby="top-blocks-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -923,7 +942,7 @@
             </div>
         </div>
 
-        <!-- 新增：主线个股 Tab Content -->
+        <!-- 主线个股(机选) Tab -->
         <div class="tab-pane fade" id="top-stocks" role="tabpanel" aria-labelledby="top-stocks-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -1026,7 +1045,7 @@
             </div>
         </div>
 
-        <!-- 新增：主线板块 Tab Content (人选) -->
+        <!-- 主线板块(人选) Tab -->
         <div class="tab-pane fade" id="top-blocks-manual" role="tabpanel" aria-labelledby="top-blocks-manual-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -1132,7 +1151,7 @@
             </div>
         </div>
 
-        <!-- 新增：主线个股 Tab Content (人选) -->
+        <!-- 主线个股(人选) Tab -->
         <div class="tab-pane fade" id="top-stocks-manual" role="tabpanel" aria-labelledby="top-stocks-manual-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -1442,7 +1461,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // 存储排序状态 (持仓)
-    let sortState = {column: 'mktval', order: 'desc'};
+    let positionsSortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
 
     // 存储排序状态 (委托)
@@ -1513,6 +1532,7 @@
         return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
     }
 
+
     // 通用排序
     function sort(sortedList, sortState) {
         sortedList.sort((a, b) => {
@@ -1520,18 +1540,42 @@
             let valB = b[sortState.column];
             if (valA == null) valA = '';
             if (valB == null) valB = '';
+
             // number
             if (typeof valA === 'number') {
-                const numA = parseFloat(valA);
-                const numB = parseFloat(valB);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return sortState.order === 'asc' ? numA - numB : numB - numA;
-                }
+                return sortState.order === 'asc' ? valA - valB : valB - valA;
             }
+
+            // object  ->  jsonString
+            if (typeof valA === 'object') {
+                valA = JSON.stringify(valA);
+                valB = JSON.stringify(valB);
+            }
+
             // string
             const comparison = String(valA).localeCompare(String(valB));
             return sortState.order === 'asc' ? comparison : -comparison;
         });
+    }
+
+
+    // 按钮状态：加载中
+    function buttonIng(buttonId) {
+        const refreshBtn = document.getElementById(buttonId);
+        const originalText = refreshBtn.textContent;
+
+        refreshBtn.textContent = '加载中...';
+        refreshBtn.disabled = true;
+
+        return originalText;
+    }
+
+    // 按钮状态：正常
+    function buttonInit(buttonId, originalText) {
+        const refreshBtn = document.getElementById(buttonId);
+
+        refreshBtn.textContent = originalText;
+        refreshBtn.disabled = false;
     }
 
 
@@ -1833,6 +1877,9 @@
 
     // 加载
     function loadPositions() {
+        let originalText = buttonIng('loadPositionsButton');
+
+
         ApiUtils.fetch('/api/trade/queryCreditNewPosV2')
             .then(res => res.json())
             .then(data => {
@@ -1890,6 +1937,9 @@
             .catch(error => {
                 console.error('接口请求失败:', error);
                 alert('加载数据失败，请检查网络或接口是否正常: ' + error.message);
+            })
+            .finally(() => {
+                buttonInit('loadPositionsButton', originalText);
             });
     }
 
@@ -1901,6 +1951,24 @@
             console.error('未找到 #positionTable tbody');
             return;
         }
+
+
+        // 筛选
+        const typeFilter = document.getElementById('filterPositionsType').value;
+        let filterPositions = positions;
+        if (typeFilter) {
+            filterPositions = filterPositions.filter(position => position.stockType == typeFilter);
+        }
+
+
+        // sort
+        let sortedPositions = [...filterPositions];
+        if (positionsSortState.column) {
+            sort(sortedPositions, positionsSortState);
+        }
+
+
+        // 渲染
         tbody.innerHTML = '';
         if (!positions || positions.length === 0) {
             tbody.innerHTML = '<tr><td colspan="20">暂无持仓记录</td></tr>';
@@ -1910,30 +1978,6 @@
         }
         const holdingStockCount = positions.length;
         document.getElementById('holdingStockCount').value = holdingStockCount.toLocaleString('en-US');
-        let sortedPositions = [...positions];
-        if (sortState.column) {
-            sortedPositions = sortedPositions.sort((a, b) => {
-                const valA = a[sortState.column] ?? 0;
-                const valB = b[sortState.column] ?? 0;
-                // 对于 boolean 类型的 topStock 字段，特殊处理
-                if (sortState.column === 'topStock') {
-                    if (sortState.order === 'asc') {
-                        return (a.topStock ? 1 : 0) - (b.topStock ? 1 : 0);
-                    } else {
-                        return (b.topStock ? 1 : 0) - (a.topStock ? 1 : 0);
-                    }
-                }
-                if (!isNaN(valA) && !isNaN(valB)) {
-                    return sortState.order === 'asc' ? valA - valB : valB - valA;
-                }
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    return sortState.order === 'asc'
-                        ? valA.localeCompare(valB)
-                        : valB.localeCompare(valA);
-                }
-                return 0;
-            });
-        }
         sortedPositions.forEach((item, index) => {
             const marketPrefix = market2Xueqiu(item.market);
             const stockLink = `https://xueqiu.com/S/${marketPrefix}${item.stkcode}`;
@@ -2004,21 +2048,21 @@
 
     // 排序
     function sortPositionsTable(column) {
-        if (sortState.column === column) {
-            sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
+        if (positionsSortState.column === column) {
+            positionsSortState.order = positionsSortState.order === 'asc' ? 'desc' : 'asc';
         } else {
-            sortState.order = 'desc';
-            sortState.column = column;
+            positionsSortState.order = 'desc';
+            positionsSortState.column = column;
         }
         updatePositionsSortIcon();
         displayPositionRecords(positionsData);
     }
 
     function updatePositionsSortIcon() {
-        const iconIdPrefix = `sort${sortState.column.charAt(0).toUpperCase() + sortState.column.slice(1)}`;
+        const iconIdPrefix = `sort${positionsSortState.column.charAt(0).toUpperCase() + positionsSortState.column.slice(1)}`;
         const iconElement = document.getElementById(iconIdPrefix);
         if (iconElement) {
-            iconElement.textContent = sortState.order === 'asc' ? '↑' : '↓';
+            iconElement.textContent = positionsSortState.order === 'asc' ? '↑' : '↓';
         }
         // 清除其他列的排序图标
         const allIcons = document.querySelectorAll('#positionTable th span.sort-icon');
@@ -2031,7 +2075,7 @@
 
     // 初始化 排序图标
     function initializePositionsSortIcons() {
-        if (sortState.column) {
+        if (positionsSortState.column) {
             updatePositionsSortIcon();
         }
     }
@@ -2356,10 +2400,7 @@
 
     // 加载
     function loadOrders() {
-        const refreshBtn = document.getElementById('refreshOrdersButton');
-        const originalText = refreshBtn.textContent;
-        refreshBtn.textContent = '加载中...';
-        refreshBtn.disabled = true;
+        let originalText = buttonIng('refreshOrdersButton');
 
 
         // --- 新增：获取日期范围 ---
@@ -2382,8 +2423,7 @@
         // 验证日期（简单验证）
         if (ordersStartDate && ordersEndDate && ordersStartDate > ordersEndDate) {
             alert('开始日期不能晚于结束日期！');
-            refreshBtn.textContent = originalText;
-            refreshBtn.disabled = false;
+            buttonInit('refreshOrdersButton', originalText);
             return;
         }
 
@@ -2398,25 +2438,10 @@
 
             if (dayDifference > 365) {
                 alert('查询范围不能超过1年！');
-                refreshBtn.textContent = originalText;
-                refreshBtn.disabled = false;
+                buttonInit('refreshOrdersButton', originalText);
                 return;
             }
         }
-
-        // // 如果没有提供日期，则默认查询今天的数据
-        // if (!ordersStartDate || !ordersEndDate) {
-        //     // const today = today; // 格式化为 YYYY-MM-DD
-        //     ordersStartDate = today;
-        //     ordersEndDate = today;
-        //     console.warn("未指定日期范围，默认查询今日数据。");
-        //
-        //     // 如果你想强制用户选择日期，可以取消注释下面的代码
-        //     // alert("请先选择开始日期和结束日期。");
-        //     // refreshBtn.textContent = originalText;
-        //     // refreshBtn.disabled = false;
-        //     // return;
-        // }
 
 
         // ApiUtils.fetch('/api/trade/getOrdersData')
@@ -2448,8 +2473,7 @@
                 }
             })
             .finally(() => {
-                refreshBtn.textContent = originalText;
-                refreshBtn.disabled = false;
+                buttonInit('refreshOrdersButton', originalText);
             });
     }
 
@@ -2464,7 +2488,8 @@
         }
 
 
-        const statusFilter = document.getElementById('filterStatus').value;
+        // 筛选
+        const statusFilter = document.getElementById('filterOrdersStatus').value;
         const directionFilter = document.getElementById('filterDirection').value;
         let filteredOrders = orders;
         if (statusFilter) {
@@ -2482,12 +2507,16 @@
         if (directionFilter) {
             filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
         }
+
+
+        // sort
         let sortedOrders = [...filteredOrders];
         if (ordersSortState.column) {
             sort(sortedOrders, ordersSortState);
         }
 
 
+        // 渲染
         tbody.innerHTML = '';
         if (sortedOrders.length === 0) {
             messageDiv.style.display = 'block';
@@ -2875,6 +2904,9 @@
 
     // 加载
     function loadTopBlocks(date = topBlocksCurrentDate) {
+        let originalText = buttonIng('refreshTopBlocksButton');
+
+
         const tbody = document.querySelector('#topBlocksTable tbody');
         const messageDiv = document.getElementById('topBlocksTableMessage');
         if (!tbody || !messageDiv) {
@@ -2956,6 +2988,9 @@
                 // 注意：colspan 改为 11
                 tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${date}）（0）`;
+            })
+            .finally(() => {
+                buttonInit('refreshTopBlocksButton', originalText);
             });
     }
 
@@ -3119,6 +3154,9 @@
 
     // 加载
     function loadTopStocks(date = topStocksCurrentDate) {
+        let originalText = buttonIng('refreshTopStocksButton');
+
+
         const tbody = document.querySelector('#topStocksTable tbody');
         const messageDiv = document.getElementById('topStocksTableMessage');
         if (!tbody || !messageDiv) {
@@ -3201,6 +3239,9 @@
                 // 注意：colspan 改为 11
                 tbody.innerHTML = '<tr><td colspan="11">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${date}）（0）`;
+            })
+            .finally(() => {
+                buttonInit('refreshTopStocksButton', originalText);
             });
     }
 
@@ -3361,6 +3402,9 @@
 
     // 加载
     function loadTopBlocksManual(date = topBlocksCurrentDateManual) {
+        let originalText = buttonIng('refreshTopBlocksManualButton');
+
+
         const tbody = document.querySelector('#topBlocksTableManual tbody');
         const messageDiv = document.getElementById('topBlocksTableManualMessage');
         if (!tbody || !messageDiv) {
@@ -3433,6 +3477,9 @@
                 console.error('获取主线板块列表(人选)失败:', error);
                 tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
+            })
+            .finally(() => {
+                buttonInit('refreshTopBlocksManualButton', originalText);
             });
     }
 
@@ -3590,6 +3637,9 @@
 
     // 加载
     function loadTopStocksManual(date = topStocksCurrentDateManual) {
+        let originalText = buttonIng('refreshTopStocksManualButton');
+
+
         const tbody = document.querySelector('#topStocksTableManual tbody');
         const messageDiv = document.getElementById('topStocksTableManualMessage');
         if (!tbody || !messageDiv) {
@@ -3662,6 +3712,9 @@
                 console.error('获取主线个股列表(人选)失败:', error);
                 tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
                 document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
+            })
+            .finally(() => {
+                buttonInit('refreshTopStocksManualButton', originalText);
             });
     }
 
@@ -4178,9 +4231,17 @@
         document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
 
 
+        // -------------------------- 我的持仓
+
+
+        document.getElementById('filterPositionsType').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions(this));
+
+
         // -------------------------- 一键同步（持仓->通达信）
 
 
+        document.getElementById('syncPositionsToTdxBtn').addEventListener('click', openSyncToTdxModel);
         document.getElementById('syncPositionsToTdxBtn').addEventListener('click', openSyncToTdxModel);
         document.getElementById('dataSourceSelect').addEventListener('change', syncToTdxChange);
         document.getElementById('confirmSyncBtn').addEventListener('click', syncToTdx);
@@ -4362,7 +4423,7 @@
 
         // --- 当日委托相关元素和事件 ---
         const ordersTab = document.getElementById('orders-tab');
-        const filterStatus = document.getElementById('filterStatus');
+        const filterOrdersStatus = document.getElementById('filterOrdersStatus');
         const filterDirection = document.getElementById('filterDirection');
         const refreshOrdersButton = document.getElementById('refreshOrdersButton');
         const batchCancelOrdersButton = document.getElementById('batchCancelOrdersButton');
@@ -4384,7 +4445,7 @@
         }
 
 
-        if (ordersTab && filterStatus && filterDirection && refreshOrdersButton) {
+        if (ordersTab && filterOrdersStatus && filterDirection && refreshOrdersButton) {
             let hasLoadedOrders = false;
             ordersTab.addEventListener('shown.bs.tab', function (event) {
                 if (!hasLoadedOrders) {
@@ -4393,7 +4454,7 @@
                 }
             });
             refreshOrdersButton.addEventListener('click', loadOrders);
-            filterStatus.addEventListener('change', () => displayOrders(ordersData));
+            filterOrdersStatus.addEventListener('change', () => displayOrders(ordersData));
             filterDirection.addEventListener('change', () => displayOrders(ordersData));
             // --- 现有代码：当日委托按钮事件 ---
             if (batchCancelOrdersButton) {
