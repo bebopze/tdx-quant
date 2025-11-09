@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -111,6 +112,14 @@ public class CcStockInfo implements Serializable {
     // ---------------------------------------------------- 自定义字段 ---------------------------------------------------
 
 
+    // 证券类型：1-股票；2-ETF；
+    private Integer stockType;
+
+    public Integer getStockType() {
+        return StockTypeEnum.getTypeByStockCode(stkcode);
+    }
+
+
     // --------------------------------------------------- 个股 - 涨跌停 价格限制
 
 
@@ -160,12 +169,12 @@ public class CcStockInfo implements Serializable {
     /**
      * 是否   主线个股（板块-月多2）
      */
-    boolean topStock = false;
+    private boolean topStock = false;
 
     /**
      * 是否   IN 主线板块（板块-月多2）
      */
-    boolean inTopBlock;
+    private boolean inTopBlock;
 
 
     /**
