@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主线列表收益率分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <script src="../js/config.js"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .params-section {
+            padding: 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .param-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .param-group label {
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .param-group input, .param-group select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 150px;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .results-section {
+            padding: 20px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-card h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .stat-card .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .stat-card.normal-account {
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-card.margin-account {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            height: 400px;
+        }
+
+        .table-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #e9ecef;
+        }
+
+        /* 排序列高亮 */
+        th.sortable.active {
+            background-color: #d6eaf8;
+            font-weight: bold;
+        }
+
+        th.sortable.active::after {
+            content: ' ▼';
+            font-size: 12px;
+            color: #2980b9;
+        }
+
+        th.sortable.active.desc::after {
+            content: ' ▼';
+        }
+
+        th.sortable.active.asc::after {
+            content: ' ▲';
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 10px;
+            background: #fadbd8;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        /* 折叠/展开样式 */
+        .section-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header:hover {
+            background: #e9ecef;
+        }
+
+        .section-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .toggle-icon {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .section-content {
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        .section-content.collapsed {
+            display: none;
+        }
+
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        .account-type {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .normal-account {
+            color: #3498db;
+        }
+
+        .margin-account {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>主线列表收益率分析</h1>
+    </div>
+
+    <div class="params-section">
+        <div class="param-group">
+            <label>开始日期:</label>
+            <input type="date" id="startDate" value="2025-01-01">
+
+            <label>结束日期:</label>
+            <input type="date" id="endDate" value="2026-01-01">
+
+            <label>主线类型:</label>
+            <select id="topPoolType">
+                <option value="1">板块</option>
+                <option value="2">ETF</option>
+                <option value="3" selected>个股</option>
+            </select>
+
+            <label>列表类型:</label>
+            <select id="type">
+                <option value="1" selected>机选</option>
+                <option value="2">人选</option>
+            </select>
+
+            <button class="btn" onclick="fetchData()">获取数据</button>
+        </div>
+    </div>
+
+    <div class="results-section">
+        <!-- 汇总统计 -->
+        <div class="section-wrapper">
+            <div class="section-header" onclick="toggleSection('summaryStats')">
+                <h3>收益率汇总统计</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="summaryStats">
+                <div class="account-type normal-account">普通账户</div>
+                <div class="summary-stats" id="normalStatsContainer">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="account-type margin-account">融资账户</div>
+                <div class="summary-stats" id="marginStatsContainer">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 净值K线图 -->
+        <div class="section-wrapper">
+            <div class="section-header" onclick="toggleSection('navChartContainer')">
+                <h3>每日净值K线图</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="navChartContainer">
+                <div class="chart-container">
+                    <canvas id="navChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收益率K线图 -->
+        <div class="section-wrapper">
+            <div class="section-header" onclick="toggleSection('returnChartContainer')">
+                <h3>每日收益率K线图</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="returnChartContainer">
+                <div class="chart-container">
+                    <canvas id="returnChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每日持仓记录 -->
+        <div class="section-wrapper">
+            <div class="section-header" onclick="toggleSection('positionTableContainer')">
+                <h3>每日持仓（清仓/买入）记录</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="positionTableContainer">
+                <div class="table-container">
+                    <table id="positionTable">
+                        <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortPositionTable('date')">日期</th>
+                            <th class="sortable" onclick="sortPositionTable('todayCount')">持仓数量</th>
+                            <th class="sortable" onclick="sortPositionTable('oldPosCount')">不变数量</th>
+                            <th class="sortable" onclick="sortPositionTable('oldSellCount')">清仓数量</th>
+                            <th class="sortable" onclick="sortPositionTable('newBuyCount')">新买入数量</th>
+                            <th class="sortable" onclick="sortPositionTable('posReplaceRatio')">调仓换股率（%）</th>
+                            <th class="sortable" onclick="sortPositionTable('nav')">净值(普通)</th>
+                            <th class="sortable" onclick="sortPositionTable('marginNav')">净值(融资)</th>
+                            <th class="sortable" onclick="sortPositionTable('dailyReturn')">收益率%(普通)</th>
+                            <th class="sortable" onclick="sortPositionTable('marginDailyReturn')">收益率%(融资)</th>
+                        </tr>
+                        </thead>
+                        <tbody id="positionTableBody">
+                        <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 上榜次数统计 -->
+        <div class="section-wrapper">
+            <div class="section-header" onclick="toggleSection('countTableContainer')">
+                <h3>上榜次数统计</h3>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="countTableContainer">
+                <div class="table-container">
+                    <table id="countTable">
+                        <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortCountTable('code')">股票代码</th>
+                            <th class="sortable" onclick="sortCountTable('name')">股票名称</th>
+                            <th class="sortable" onclick="sortCountTable('count')">上榜次数</th>
+                            <th class="sortable active desc" onclick="sortCountTable('pct')">上榜涨幅(%)</th>
+                            <th class="sortable" onclick="sortCountTable('avgPct')">平均涨幅(%)</th>
+                        </tr>
+                        </thead>
+                        <tbody id="countTableBody">
+                        <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let navChart = null;
+    let returnChart = null;
+    let positionSort = {field: 'date', order: 'asc'}; // 默认按日期正序
+    let countSort = {field: 'pct', order: 'desc'};    // 默认按上榜涨幅倒序
+
+
+    // 初始化所有模块为展开状态
+    document.addEventListener('DOMContentLoaded', function () {
+        // 默认所有模块都展开，所以不添加 collapsed 类
+        const sections = document.querySelectorAll('.section-content');
+        sections.forEach(section => {
+            section.style.display = 'block';
+        });
+    });
+
+
+    function isNumeric(str) {
+        return Number.isFinite(Number(str));
+    }
+
+
+    // 切换模块显示状态（展开/收起）
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const toggleIcon = event.currentTarget.querySelector('.toggle-icon');
+
+        if (section.classList.contains('collapsed')) {
+            section.classList.remove('collapsed');
+            toggleIcon.classList.remove('rotate-180');
+            section.style.display = 'block';
+        } else {
+            section.classList.add('collapsed');
+            toggleIcon.classList.add('rotate-180');
+            section.style.display = 'none';
+        }
+    }
+
+    async function fetchData() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const topPoolType = document.getElementById('topPoolType').value;
+        const type = document.getElementById('type').value;
+
+        try {
+            const response = await ApiUtils.fetch(
+                `/api/data/analysis/bk-yd2/topList?startDate=${startDate}&endDate=${endDate}&topPoolType=${topPoolType}&type=${type}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.code !== 200) {
+                throw new Error(data.message || 'API返回错误');
+            }
+
+            displayData(data.data);
+        } catch (error) {
+            console.error('获取数据失败:', error);
+            alert('获取数据失败: ' + error.message);
+        }
+    }
+
+    function displayData(data) {
+        // 显示汇总统计
+        displaySummaryStats(data.sumReturnDTO, data.marginSumReturnDTO);
+
+        // 显示图表
+        if (data.dailyReturnDTOList && data.dailyReturnDTOList.length > 0) {
+            displayCharts(data.dailyReturnDTOList);
+            displayPositionTable(data.dailyReturnDTOList);
+        }
+
+        // 显示上榜统计
+        if (data.countDTOList) {
+            displayCountTable(data.countDTOList);
+        }
+
+        // 显示所有容器
+        document.getElementById('summaryStats').style.display = 'block';
+        document.getElementById('navChartContainer').style.display = 'block';
+        document.getElementById('returnChartContainer').style.display = 'block';
+        document.getElementById('positionTableContainer').style.display = 'block';
+        document.getElementById('countTableContainer').style.display = 'block';
+    }
+
+    function displaySummaryStats(normalStats, marginStats) {
+        displaySingleStats(normalStats, 'normalStatsContainer', 'normal');
+        displaySingleStats(marginStats, 'marginStatsContainer', 'margin');
+    }
+
+    function displaySingleStats(stats, containerId, accountType) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        const statItems = [
+            {label: '总收益率(%)', value: stats.totalReturnPct.toFixed(2), color: '#27ae60'},
+            {label: '年化收益率(%)', value: stats.annualReturnPct.toFixed(2), color: '#27ae60'},
+            {label: '夏普比率', value: stats.sharpeRatio.toFixed(4), color: '#27ae60'},
+            {label: '卡玛比率', value: stats.calmarRatio.toFixed(4), color: '#27ae60'},
+            {label: 'Sortino比率', value: stats.sortinoRatio.toFixed(4), color: '#27ae60'},
+            {label: '最大回撤(%)', value: stats.maxDrawdownPct.toFixed(2), color: '#e74c3c'},
+            {label: '胜率%(日级)', value: stats.winDaysPct.toFixed(2), color: '#27ae60'},
+            {label: '盈亏比(日级)', value: stats.dailyLevelProfitFactor.toFixed(4), color: '#27ae60'},
+            {label: '胜率%(笔级)', value: stats.winTradesPct.toFixed(2), color: '#27ae60'},
+            {label: '盈亏比(笔级)', value: stats.tradeLevelProfitFactor.toFixed(4), color: '#27ae60'},
+            {label: '结束净值', value: stats.finalNav.toFixed(4), color: '#27ae60'}
+        ];
+
+        statItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = `stat-card ${accountType}-account`;
+            card.innerHTML = `
+                    <h4>${item.label}</h4>
+                    <div class="value" style="color: ${item.color}">${item.value}</div>
+                `;
+            container.appendChild(card);
+        });
+    }
+
+    function displayCharts(dailyData) {
+        const dates = dailyData.map(item => item.date);
+        const navs = dailyData.map(item => item.nav);
+        const marginNavs = dailyData.map(item => item.marginNav);
+        const returns = dailyData.map(item => item.dailyReturn);
+        const marginReturns = dailyData.map(item => item.marginDailyReturn);
+
+        // 净值图表
+        const navCtx = document.getElementById('navChart').getContext('2d');
+        if (navChart) {
+            navChart.destroy();
+        }
+        navChart = new Chart(navCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: '普通账户净值',
+                        data: navs,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    },
+                    {
+                        label: '融资账户净值',
+                        data: marginNavs,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // 收益率图表
+        const returnCtx = document.getElementById('returnChart').getContext('2d');
+        if (returnChart) {
+            returnChart.destroy();
+        }
+        returnChart = new Chart(returnCtx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: '普通账户日收益率(%)',
+                        data: returns,
+                        backgroundColor: returns.map(r => r >= 0 ? '#3498db' : '#3498db80'),
+                        borderWidth: 1,
+                        borderColor: '#3498db'
+                    },
+                    {
+                        label: '融资账户日收益率(%)',
+                        data: marginReturns,
+                        backgroundColor: marginReturns.map(r => r >= 0 ? '#e74c3c' : '#e74c3c80'),
+                        borderWidth: 1,
+                        borderColor: '#e74c3c'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function displayPositionTable(dailyData) {
+        // 使用默认排序：按日期正序
+        const sortedData = [...dailyData].sort((a, b) => {
+            if (a.date < b.date) return -1;
+            if (a.date > b.date) return 1;
+            return 0;
+        });
+        renderPositionTable(sortedData);
+    }
+
+
+    function sortPositionTable(field) {
+        const order = positionSort.field === field && positionSort.order === 'asc' ? 'desc' : 'asc';
+        positionSort = {field, order};
+
+        // 旧排序列 清除排序类
+        document.querySelectorAll('#positionTable th.sortable').forEach(th => {
+            th.classList.remove('active', 'asc', 'desc');
+        });
+
+        // 新排序列 添加排序类
+        const currentTh = document.querySelector(`#positionTable th[onclick="sortPositionTable('${field}')"]`);
+        currentTh?.classList.add('active', order);
+
+        // 获取当前列的索引
+        const colIndex = Array.from(currentTh.parentNode.children).indexOf(currentTh);
+        if (colIndex === -1) return;
+
+        // 获取当前表格数据
+        const tbody = document.getElementById('positionTableBody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+
+        // 重排序
+        const sortedRows = rows.sort((a, b) => {
+            let valA = a.cells[colIndex]?.textContent.trim() ?? '';
+            let valB = b.cells[colIndex]?.textContent.trim() ?? '';
+
+
+            // 数字类型
+            if (isNumeric(valA) && isNumeric(valB)) {
+                return order === 'asc' ? valA - valB : valB - valA;
+            }
+            // 字符串类型
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+            // 处理类型不一致或为 null/undefined 的情况
+            if (valA == null && valB == null) return 0;
+            else if (valA == null) return order === 'asc' ? -1 : 1;
+            else if (valB == null) return order === 'asc' ? 1 : -1;
+            else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+        });
+
+
+        // 清空并重新添加排序后的行
+        tbody.innerHTML = '';
+        sortedRows.forEach(r => tbody.appendChild(r));
+    }
+
+
+    function renderPositionTable(data) {
+        const tbody = document.getElementById('positionTableBody');
+        tbody.innerHTML = '';
+
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.todayCount}</td>
+                    <td>${item.oldPosCount}</td>
+                    <td>${item.oldSellCount}</td>
+                    <td>${item.newBuyCount}</td>
+                    <td>${(item.posReplaceRatio * 100).toFixed(2)}</td>
+                    <td>${item.nav}</td>
+                    <td>${item.marginNav}</td>
+                    <td>${item.dailyReturn}</td>
+                    <td>${item.marginDailyReturn}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function displayCountTable(countData) {
+        // 使用默认排序：按上榜涨幅倒序
+        const sortedData = [...countData].sort((a, b) => b.pct - a.pct);
+        renderCountTable(sortedData);
+    }
+
+    function sortCountTable(field) {
+        const order = countSort.field === field && countSort.order === 'asc' ? 'desc' : 'asc';
+        countSort = {field, order};
+
+        // 旧排序列 清除排序类
+        document.querySelectorAll('#countTable th.sortable').forEach(th => {
+            th.classList.remove('active', 'asc', 'desc');
+        });
+
+        // 新排序列 添加排序类
+        const currentTh = document.querySelector(`#countTable th[onclick="sortCountTable('${field}')"]`);
+        currentTh.classList.add('active', order);
+
+        // 获取当前列的索引
+        const colIndex = Array.from(currentTh.parentNode.children).indexOf(currentTh);
+        if (colIndex === -1) return;
+
+        // 获取当前表格数据
+        const tbody = document.getElementById('countTableBody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+
+        // 重排序
+        const sortedRows = rows.sort((a, b) => {
+            let valA = a.cells[colIndex]?.textContent.trim() ?? '';
+            let valB = b.cells[colIndex]?.textContent.trim() ?? '';
+
+            // 数字类型
+            if (isNumeric(valA) && isNumeric(valB)) {
+                return order === 'asc' ? valA - valB : valB - valA;
+            }
+            // 字符串类型
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+            // 处理类型不一致或为 null/undefined 的情况
+            if (valA == null && valB == null) return 0;
+            else if (valA == null) return order === 'asc' ? -1 : 1;
+            else if (valB == null) return order === 'asc' ? 1 : -1;
+            else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+        });
+
+
+        // 清空并重新添加排序后的行
+        tbody.innerHTML = '';
+        sortedRows.forEach(row => tbody.appendChild(row));
+    }
+
+    function renderCountTable(data) {
+        const tbody = document.getElementById('countTableBody');
+        tbody.innerHTML = '';
+
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${item.code}</td>
+                    <td>${item.name}</td>
+                    <td>${item.count}</td>
+                    <td>${item.pct}</td>
+                    <td>${item.avgPct}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // 页面加载时自动获取一次数据
+    window.onload = function () {
+        fetchData();
+    };
+</script>
+</body>
+</html>
