@@ -1323,6 +1323,32 @@ public class TdxExtFun {
     }
 
     /**
+     * RPS五线和 - sum value
+     *
+     * @param rps10
+     * @param rps20
+     * @param rps50
+     * @param rps120
+     * @param rps250
+     * @return
+     */
+    public static double[] RPS五线和(double[] rps10,
+                                     double[] rps20,
+                                     double[] rps50,
+                                     double[] rps120,
+                                     double[] rps250) {
+
+        int n = rps50.length;
+
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = rps10[i] + rps20[i] + rps50[i] + NumUtil.NaN_0(rps120[i]) + NumUtil.NaN_0(rps250[i]);
+        }
+
+        return result;
+    }
+
+    /**
      * RPS三线和 - sum value >= RPS
      *
      * @param rps10
