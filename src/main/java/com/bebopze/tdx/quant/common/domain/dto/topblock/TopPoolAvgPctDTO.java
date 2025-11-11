@@ -1,8 +1,11 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
+import com.bebopze.tdx.quant.common.util.MapUtil;
+import com.google.common.collect.Maps;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 
 /**
@@ -54,9 +57,31 @@ public class TopPoolAvgPctDTO {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    private Map<String, Integer> buy_countMap = Maps.newLinkedHashMap();
+    private Map<String, Integer> max_countMap = Maps.newLinkedHashMap();
+    private Map<String, Integer> sell_countMap = Maps.newLinkedHashMap();
+
+
+    public Map<String, Integer> getBuy_countMap() {
+        return MapUtil.reverseSortByValue(buy_countMap);
+    }
+
+    public Map<String, Integer> getMax_countMap() {
+        return MapUtil.reverseSortByValue(max_countMap);
+    }
+
+    public Map<String, Integer> getSell_countMap() {
+        return MapUtil.reverseSortByValue(sell_countMap);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * 类型：1-机选；2-人选；
      */
     private int type = 1;
+
 
 }
