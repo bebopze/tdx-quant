@@ -39,17 +39,12 @@ public class KlineDTO implements Serializable {
     private Double amo;
 
 
-    // 振幅       H/L   x100-100
+    // 振幅（%）       H/L   x100-100
     private Double range_pct;
-
-    // 涨跌幅       C/pre_C   x100-100
+    // 涨跌幅（%）     C/prev_C   x100-100
     private Double change_pct;
-
-    // 涨跌额       C - pre_C
+    // 涨跌额（元）    C - prev_C
     private Double change_price;
-
-    // 换手率
+    // 换手率（%）
     private Double turnover_pct;
-
-
 }
