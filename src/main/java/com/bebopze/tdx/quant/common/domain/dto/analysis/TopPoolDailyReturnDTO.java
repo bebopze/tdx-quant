@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.dto.analysis;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
  * @date: 2025/10/21
  */
 @Data
+@NoArgsConstructor
 public class TopPoolDailyReturnDTO {
 
 
@@ -19,28 +21,40 @@ public class TopPoolDailyReturnDTO {
 
 
     /**
-     * 当日收益率（%）
+     * 普通账户 当日收益率（%）
      */
-    private double daily_return;
+    private double dailyReturn;
+    /**
+     * 融资账户 当日收益率（%）    =     普通账户 当日收益率（%）* 2（普通账户 涨/跌 10%  ->  融资账户 涨/跌 20%）
+     */
+    private double marginDailyReturn;
 
 
     /**
-     * 净值（初始值1.0000）
+     * 普通账户 净值（初始值1.0000）
      */
     private double nav;
+    /**
+     * 融资账户 净值（初始值1.0000）
+     */
+    private double marginNav;
 
 
     /**
-     * 总资金（初始值 100W ）
+     * 普通账户 总资金（初始值 100W ）
      */
     private double capital;
+    /**
+     * 融资账户 总资金（初始值 100W ）
+     */
+    private double marginCapital;
 
 
     // -------------------------------------------------
 
 
     // 昨日持仓数量  =  oldPosCount  +  oldSellCount
-    private int preCount;
+    private int prevCount;
     // 今日持仓数量  =  oldPosCount  +  newBuyCount
     private int todayCount;
 
@@ -55,4 +69,5 @@ public class TopPoolDailyReturnDTO {
      * 日均 调仓换股比例
      */
     private double posReplaceRatio;
+
 }

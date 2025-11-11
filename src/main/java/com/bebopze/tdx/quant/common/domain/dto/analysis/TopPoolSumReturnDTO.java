@@ -120,7 +120,7 @@ public class TopPoolSumReturnDTO {
      */
     private int winDays;
     /**
-     * 盈利天数占比（%） =  盈利天数 / 总天数
+     * 胜率 = 盈利天数占比（%） =  盈利天数 / 总天数
      */
     private double winDaysPct;
 
