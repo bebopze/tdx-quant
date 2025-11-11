@@ -1046,9 +1046,9 @@
                                 <th onclick="sortTopStocksTable('start2Next20_changePct')">上榜至N20涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksStart2Next20_changePct"></span></th>
-                                <th onclick="sortTopStocksTable('posStock')">持仓<span
+                                <th onclick="sortTopStocksTable('posStockFlag')">持仓<span
                                         class="sort-icon"
-                                        id="sortTopStocksPosStock"></span></th>
+                                        id="sortTopStocksPosStockFlag"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -1211,8 +1211,8 @@
                                    style="width: auto;" min="-30" max="30" step="0.5" value="30">
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterTopStocksManual__posStock">持仓：</label>
-                            <select id="filterTopStocksManual__posStock" class="form-select form-select-sm"
+                            <label for="filterTopStocksManual__posStockFlag">持仓：</label>
+                            <select id="filterTopStocksManual__posStockFlag" class="form-select form-select-sm"
                                     style="width:auto">
                                 <option value="">全部</option>
                                 <option value="true">是</option>
@@ -1305,9 +1305,9 @@
                                 <th onclick="sortTopStocksTableManual('start2Next20_changePct')">上榜至N20涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualStart2Next20_changePct"></span></th>
-                                <th onclick="sortTopStocksTableManual('posStock')">持仓<span
+                                <th onclick="sortTopStocksTableManual('posStockFlag')">持仓<span
                                         class="sort-icon"
-                                        id="sortTopStocksManualPosStock"></span></th>
+                                        id="sortTopStocksManualPosStockFlag"></span></th>
                                 <th>操作</th>
                             </tr>
                             </thead>
@@ -2770,7 +2770,7 @@
         // 索引 13: CJSL (成交数量) - 合计列
         sumRow.innerHTML += `<td>${sumValues.cjsl}</td>`;
         // 索引 14: CJJE (成交金额) - 合计列
-        sumRow.innerHTML += `<td>${sumValues.cjje}</td>`;
+        sumRow.innerHTML += `<td>${sumValues.cjje.toFixed(0)}</td>`;
         // 索引 15: 操作 - 非合计列
         sumRow.innerHTML += `<td></td>`;
 
@@ -3322,7 +3322,7 @@
                         stockCode: stock.stockCode,
                         stockName: stock.stockName,
                         xueqiuMarket: stock.xueqiuMarket,
-                        posStock: stock.posStock,
+                        posStockFlag: stock.posStockFlag,
                         topDays: stock.topDays,
                         topBlockSize: stock.topBlockSize,
                         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
@@ -3432,7 +3432,7 @@
                     <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
-                    <td>${stock.posStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+                    <td>${stock.posStockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -3804,7 +3804,7 @@
                         stockCode: stock.stockCode,
                         stockName: stock.stockName,
                         xueqiuMarket: stock.xueqiuMarket,
-                        posStock: stock.posStock,
+                        posStockFlag: stock.posStockFlag,
                         topDays: stock.topDays,
                         topBlockSize: stock.topBlockSize,
                         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
@@ -3867,7 +3867,7 @@
         let todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max').value;
         const today2NextChangePct__min = document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').value;
         let today2NextChangePct__max = document.getElementById('filterTopStocksManualPct__today2NextChangePct__max').value;
-        let posStock = document.getElementById('filterTopStocksManual__posStock').value;
+        let posStockFlag = document.getElementById('filterTopStocksManual__posStockFlag').value;
 
 
         let filteredStocks = stocks;
@@ -3886,9 +3886,9 @@
             filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct < today2NextChangePct__max);
         }
 
-        if (posStock) {
-            posStock = posStock === 'true'; // String 转换为 布尔值
-            filteredStocks = filteredStocks.filter(stock => stock.posStock === posStock);
+        if (posStockFlag) {
+            posStockFlag = posStockFlag === 'true'; // String 转换为 布尔值
+            filteredStocks = filteredStocks.filter(stock => stock.posStockFlag === posStockFlag);
         }
         stocks = [...filteredStocks];
 
@@ -3940,7 +3940,7 @@
                     <td style="color: ${stock.start2Next10_changePct > 0 ? 'red' : stock.start2Next10_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next10_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next15_changePct > 0 ? 'red' : stock.start2Next15_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next15_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Next20_changePct > 0 ? 'red' : stock.start2Next20_changePct < 0 ? 'teal' : 'black'}">${stock.start2Next20_changePct.toFixed(2)}%</td>
-                    <td>${stock.posStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+                    <td>${stock.posStockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
                     <td><button class="btn btn-danger btn-sm btn-stockManual-delete-row" data-stockcode="${stock.stockCode}">删除</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -4536,7 +4536,7 @@
             document.getElementById('filterTopStocksManualPct__todayChangePct__max').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManualPct__today2NextChangePct__max').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
-            document.getElementById('filterTopStocksManual__posStock').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+            document.getElementById('filterTopStocksManual__posStockFlag').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManualPctButton').addEventListener('click', () => displayTopStocksManual(topStocksDataManual));
         }
 
