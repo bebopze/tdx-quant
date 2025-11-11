@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.common.config.BizException;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.*;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -49,11 +51,14 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
 
+    @TotalTime
     @Override
     public TopPoolAnalysisDTO topListAnalysis(LocalDate startDate,
                                               LocalDate endDate,
                                               Integer topPoolType,
                                               Integer type) {
+        Assert.isTrue(!startDate.isAfter(endDate), "开始日期不能晚于结束日期");
+
 
         TopPoolAnalysisDTO dto = new TopPoolAnalysisDTO();
 
@@ -87,13 +92,16 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         TopPoolSumReturnDTO sumReturnDTO = sumReturn_topPool(dailyReturnDTOList, null);
+        TopPoolSumReturnDTO marginSumReturnDTO = sumReturn_topPool_margin(dailyReturnDTOList, null);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         dto.setSumReturnDTO(sumReturnDTO);
+        dto.setMarginSumReturnDTO(marginSumReturnDTO);
         dto.setDailyReturnDTOList(dailyReturnDTOList);
+        dto.setAvgDailyReturnDTO(avgDailyReturn(dailyReturnDTOList));
         dto.setCountDTOList(countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap));
 
 
@@ -122,13 +130,16 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         List<TopPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
-        Set<String> preCodeSet = Sets.newHashSet();
+        Set<String> prevCodeSet = Sets.newHashSet();
 
 
         // ---------------------------------------- 汇总指标
 
-        double nav = 1.0;            // 初始净值
-        double capital = 100_0000;   // 初始资金
+        double nav = 1.0;            // 初始净值（普通账户）
+        double capital = 100_0000;   // 初始资金（普通账户）
+
+        double marginNav = 1.0;            // 初始净值（融资账户）
+        double marginCapital = 100_0000;   // 初始资金（融资账户）
 
 
         LocalDate actualStartDate = null; // 实际开始日期
@@ -163,6 +174,12 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                 topList = entity.getTopStockList(type);
             } else {
                 throw new BizException("主线列表类型异常：" + topPoolType);
+            }
+
+
+            if (null == avgPct) {
+                log.error("date : {} , avgPct is null", date);
+                continue;
             }
 
 
@@ -211,7 +228,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             }
 
 
-            // ------------------------------------------ 每日 收益/净值 ---------------------------------------------
+            // --------------------------------------- 每日 收益/净值（普通账户） ------------------------------------------
 
 
             double rate = 1 + daily_return * 0.01;
@@ -220,29 +237,89 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             capital *= rate;
 
 
+            // --------------------------------------- 每日 收益/净值（融资账户） ------------------------------------------
+
+
+            double marginDailyReturn = daily_return * 2; // 融资账户收益率 = 普通账户收益率 * 2（普通账户 涨/跌 10%  ->  融资账户 涨/跌 20%）
+            double marginRate = 1 + marginDailyReturn * 0.01;
+
+            marginNav *= marginRate;
+            marginCapital *= marginRate;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
             TopPoolDailyReturnDTO dr = new TopPoolDailyReturnDTO();
             dr.setDate(date);
-            dr.setDaily_return(of(daily_return));
+
+            dr.setDailyReturn(of(daily_return));
             dr.setNav(of(nav));
             dr.setCapital(of(capital));
 
+            dr.setMarginDailyReturn(of(marginDailyReturn));
+            dr.setMarginNav(of(marginNav));
+            dr.setMarginCapital(of(marginCapital));
 
-            // ------------------------------------------ 每日 调仓换股 比例 ------------------------------------------
+
+            // ------------------------------------------ 每日 调仓换股 比例 ----------------------------------------------
 
 
             // 当日调仓换股比例
-            posReplaceRatio(dr, preCodeSet, todayCodeSet);
+            posReplaceRatio(dr, prevCodeSet, todayCodeSet);
 
 
             dailyReturnDTOList.add(dr);
 
 
             // -------------------------
-            preCodeSet = todayCodeSet;
+            prevCodeSet = todayCodeSet;
         }
 
 
+        // ------------------------- next_daily_return -------------------------
+
+        // 当前计算 次日 收益/净值   ->   被存储到了 当日 entity中     =>     需要移位（全部 daily_return/nav/capital 往后一位）
+        next_daily_return(dailyReturnDTOList);
+
+
         return dailyReturnDTOList;
+    }
+
+    private TopPoolDailyReturnDTO avgDailyReturn(List<TopPoolDailyReturnDTO> dailyReturnDTOList) {
+        TopPoolDailyReturnDTO avgDTO = new TopPoolDailyReturnDTO();
+
+
+        // avg
+        double dailyReturn = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getDailyReturn).average().orElse(0.0);
+        double marginDailyReturn = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getMarginDailyReturn).average().orElse(0.0);
+        double nav = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getNav).average().orElse(0.0);
+        double marginNav = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getMarginNav).average().orElse(0.0);
+        double capital = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getCapital).average().orElse(0.0);
+        double marginCapital = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getMarginCapital).average().orElse(0.0);
+        double prevCount = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getPrevCount).average().orElse(0.0);
+        double todayCount = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getTodayCount).average().orElse(0.0);
+        double oldPosCount = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getOldPosCount).average().orElse(0.0);
+        double oldSellCount = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getOldSellCount).average().orElse(0.0);
+        double newBuyCount = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getNewBuyCount).average().orElse(0.0);
+        double posReplaceRatio = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getPosReplaceRatio).average().orElse(0.0);
+
+
+        avgDTO.setDailyReturn(of(dailyReturn));
+        avgDTO.setMarginDailyReturn(of(marginDailyReturn));
+        avgDTO.setNav(of(nav));
+        avgDTO.setMarginNav(of(marginNav));
+        avgDTO.setCapital(of(capital));
+        avgDTO.setMarginCapital(of(marginCapital));
+        avgDTO.setPrevCount((int) prevCount);
+        avgDTO.setTodayCount((int) todayCount);
+        avgDTO.setOldPosCount((int) oldPosCount);
+        avgDTO.setOldSellCount((int) oldSellCount);
+        avgDTO.setNewBuyCount((int) newBuyCount);
+        avgDTO.setPosReplaceRatio(of(posReplaceRatio));
+
+
+        return avgDTO;
     }
 
 
@@ -354,6 +431,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
     }
 
 
+    @TotalTime
     @Override
     public TopPoolSumReturnDTO sumReturn(List<BtDailyReturnDO> dailyReturnDOList,
                                          List<BtTradeRecordDO> tradeRecordList,
@@ -375,11 +453,11 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         // 每日收益率列表（%）
-        List<Double> dailyReturnPctList = dailyReturnDTOList.stream().map(e -> e.getDaily_return()).collect(Collectors.toList());
+        List<Double> dailyReturnPctList = dailyReturnDTOList.stream().map(e -> e.getDailyReturn()).collect(Collectors.toList());
 
         // 日期 - 当日收益率（小数）
         Map<LocalDate, Double> date_dailyReturn_Map = dailyReturnDTOList.stream().collect(Collectors.toMap(TopPoolDailyReturnDTO::getDate,
-                                                                                                           e -> e.getDaily_return() * 0.01,
+                                                                                                           e -> e.getDailyReturn() * 0.01,
                                                                                                            (v1, v2) -> v1,
                                                                                                            LinkedHashMap::new)); // 有序
 
@@ -403,29 +481,45 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         }
 
 
-        // ---------------------------- 起始日期
-
-        sumReturnDTO.setStartDate(dailyReturnDTOList.get(0).getDate());
-        sumReturnDTO.setEndDate(last.getDate());
+        return sumReturnDTO;
+    }
 
 
-        // ---------------------------- 总收益
-
-        sumReturnDTO.setFinalNav(last.getNav());
-        sumReturnDTO.setFinalCapital(last.getCapital());
-        sumReturnDTO.setTotalReturnPct(of((last.getNav() - 1) * 100.0));
+    private TopPoolSumReturnDTO sumReturn_topPool_margin(List<TopPoolDailyReturnDTO> dailyReturnDTOList,
+                                                         List<BtTradeRecordDO> tradeRecordList) {
 
 
-//        // ---------------------------- 年化
-//
-//        // 年化收益率（%） = （期末净值 / 初始净值）^(252 / 总天数) - 1          x 100%
-//        double annualReturn = Math.pow(sumReturnDTO.getFinalNav(), 252.0 / sumReturnDTO.getTotalDays()) - 1;
-//        sumReturnDTO.setAnnualReturnPct(of(annualReturn * 100));
+        // 每日收益率列表（%）
+        List<Double> dailyReturnPctList = dailyReturnDTOList.stream().map(e -> e.getMarginDailyReturn()).collect(Collectors.toList());
+
+        // 日期 - 当日收益率（小数）
+        Map<LocalDate, Double> date_dailyReturn_Map = dailyReturnDTOList.stream().collect(Collectors.toMap(TopPoolDailyReturnDTO::getDate,
+                                                                                                           e -> e.getMarginDailyReturn() * 0.01,
+                                                                                                           (v1, v2) -> v1,
+                                                                                                           LinkedHashMap::new)); // 有序
+
+
+        // 日均调仓换股比例
+        double avgPosReplaceRatio = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getPosReplaceRatio).average().orElse(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        TopPoolSumReturnDTO sumReturnDTO = sumReturn(dailyReturnPctList, date_dailyReturn_Map, tradeRecordList, avgPosReplaceRatio);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        TopPoolDailyReturnDTO last = ListUtil.last(dailyReturnDTOList);
+        if (null == last) {
+            return sumReturnDTO;
+        }
 
 
         return sumReturnDTO;
     }
-
 
     private TopPoolSumReturnDTO sumReturn_backtest(List<BtDailyReturnDO> dailyReturnDOList,
                                                    List<BtTradeRecordDO> tradeRecordList,
@@ -459,26 +553,6 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         }
 
 
-        // ---------------------------- 起始日期
-
-        sumReturnDTO.setStartDate(dailyReturnDOList.get(0).getTradeDate());
-        sumReturnDTO.setEndDate(last.getTradeDate());
-
-
-        // ---------------------------- 总收益
-
-        sumReturnDTO.setFinalNav(last.getNav().doubleValue());
-        sumReturnDTO.setFinalCapital(last.getCapital().doubleValue());
-        sumReturnDTO.setTotalReturnPct(of((last.getNav().doubleValue() - 1) * 100.0));
-
-
-//        // ---------------------------- 年化
-//
-//        // 年化收益率（%） = （期末净值 / 初始净值）^(252 / 总天数) - 1          x 100%
-//        double annualReturn = Math.pow(sumReturnDTO.getFinalNav(), 252.0 / sumReturnDTO.getTotalDays()) - 1;
-//        sumReturnDTO.setAnnualReturnPct(of(annualReturn * 100));
-
-
         return sumReturnDTO;
     }
 
@@ -504,11 +578,6 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // ---------------------------- 波峰/波谷/最大回撤
 
 
-//        Map<LocalDate, Double> date_dailyReturn_Map = dailyReturnDOList.stream().collect(Collectors.toMap(BtDailyReturnDO::getTradeDate,
-//                                                                                                          e -> e.getDailyReturn().doubleValue()))
-//                                                                       .sorted(Map.Entry.comparingByKey());
-
-
         TradePairStat.MaxDrawdownDTO maxDrawdownResult = TradePairStat.calcMaxDrawdown(date_dailyReturn_Map);
 
         sumReturnDTO.setMaxDrawdownPct(maxDrawdownResult.maxDrawdownPct);
@@ -521,6 +590,13 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         sumReturnDTO.setMaxNavDate(maxDrawdownResult.maxNavDate);
         sumReturnDTO.setMinNav(maxDrawdownResult.minNav);
         sumReturnDTO.setMinNavDate(maxDrawdownResult.minNavDate);
+
+
+        sumReturnDTO.setStartDate(maxDrawdownResult.startDate);
+        sumReturnDTO.setEndDate(maxDrawdownResult.endDate);
+        sumReturnDTO.setFinalNav(maxDrawdownResult.finalNav);
+        sumReturnDTO.setFinalCapital(maxDrawdownResult.finalCapital);
+        sumReturnDTO.setTotalReturnPct(maxDrawdownResult.totalReturnPct);
 
 
         // ---------------------------- 胜率/盈亏比（笔级）
@@ -543,9 +619,6 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // ---------------------------- 胜率/盈亏比（日级）
 
 
-//        List<Double> dailyReturnPctList = dailyReturnDOList.stream().map(e -> e.getDailyReturn().doubleValue() * 100).collect(Collectors.toList());
-
-
         TradePairStat.TradeStatResult daysStatResult = TradePairStat.calcDayWinPct(dailyReturnPctList);   // 日级交易明细（日收益列表）
 
         sumReturnDTO.setTotalDays(daysStatResult.total);
@@ -561,19 +634,17 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // ---------------------------- 期望/日均调仓比例/日均交易费率
 
 
-        // 日均收益期望 = (胜率×平均盈利) - (败率×平均亏损)               // 日级
+        // 日均收益期望 = (胜率×日均盈利) - (败率×日均亏损)               // 日级
         double expectedDailyReturnRate = sumReturnDTO.getWinDaysPct() * 0.01 * sumReturnDTO.getAvgWinDailyPct() * 0.01 - sumReturnDTO.getLossDaysPct() * 0.01 * sumReturnDTO.getAvgLossDailyPct() * 0.01;
         sumReturnDTO.setExpectedDailyReturnPct(of(expectedDailyReturnRate * 100));
 
 
         // 净值期望 = (1 + 日均盈利)^盈利天数 × (1 - 日均亏损)^亏损天数
         double expectedNav = Math.pow(1 + sumReturnDTO.getAvgWinDailyPct() * 0.01, sumReturnDTO.getWinDays()) * Math.pow(1 - sumReturnDTO.getAvgLossDailyPct() * 0.01, sumReturnDTO.getLossDays());
-        // 净值期望 = 初始净值 × (1 + 期望值) ^ 期数
+        // 净值期望 = 初始净值 × (1 + 日均收益期望) ^ 期数
         double expectedNav2 = Math.pow(1 + expectedDailyReturnRate, sumReturnDTO.getWinDays() + sumReturnDTO.getLossDays());
 
 
-        // 日均调仓换股比例
-//        double avgPosReplaceRatio = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getPosReplaceRatio).average().orElse(0);
         // 日均交易费率（1‰ * N%）  ->   假设：每日 调仓换股率 = 30%（即：每天 S淘汰 30%的 昨日持仓，B买入 30%的 今日新上榜个股）
         double avgFee = 0.001 * avgPosReplaceRatio;
 
@@ -590,70 +661,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         sumReturnDTO.setExpectedNav2_2(of(expectedNav2_2));
 
 
-        // ---------------------------- 波峰/波谷/最大回撤
-
-
-//        // 净值波峰
-//        sumReturnDTO.setPeakNav(of(peakNav));
-//        sumReturnDTO.setPeakDate(peakDate);
-//        // 净值波谷
-//        sumReturnDTO.setTroughNav(of(troughNav));
-//        sumReturnDTO.setTroughDate(troughDate);
-//        // 最大回撤
-//        sumReturnDTO.setMaxDrawdownPct(of(maxDrawdown * -100));
-//
-//        // max/min
-//        sumReturnDTO.setMaxNav(of(maxNav));
-//        sumReturnDTO.setMaxNavDate(maxNavDate);
-//        sumReturnDTO.setMinNav(of(minNav));
-//        sumReturnDTO.setMinNavDate(minNavDate);
-
-
-//        // ---------------------------- 卡玛比率
-//
-//
-//        // 卡玛比率 = 年化收益 / 最大回撤
-//        double calmarRatio = annualReturn / maxDrawdown;
-//        sumReturnDTO.setCalmarRatio(of(calmarRatio));
-//
-//
-//        // ---------------------------- 夏普比率 = 超额收益 / 总波动
-//
-//
-//        // 夏普比率 = 日均收益 / 日收益标准差  *  sqrt(252)
-//
-//
-//        // 日均收益
-//        double mean = dailyReturnDTOList.stream().mapToDouble(TopPoolDailyReturnDTO::getDaily_return).average().orElse(0);
-//        // 日收益标准差  =  sqrt( sum(diff ^2) / size )
-//        double sd = Math.sqrt(dailyReturnDTOList.stream()
-//                                                .mapToDouble(r -> Math.pow(r.getDaily_return() - mean, 2))
-//                                                .sum() / dailyReturnDTOList.size());
-//
-//
-//        // * sqrt(252) 是一个 年化因子，用于将基于 日度数据计算出的风险调整比率 转换成 年度比率，使其与通常以年为单位报告的收益率和风险指标（如年化标准差）在时间尺度上保持一致
-//        // 但请注意，这种方式计算出的分子是 总收益 而非超额收益，因此它不是标准定义下的夏普比率
-//
-//        // 夏普比率 = 日均收益 / 日收益标准差  *  sqrt(252)
-//        double sharpeRatio = mean / sd * Math.sqrt(252);   // 年化因子：N * Math.sqrt(252)          日 -> 年
-//        sumReturnDTO.setSharpeRatio(of(sharpeRatio));      // 忽略 年化无风险利率（2%年利 -> 基本可忽略）
-//
-//
-//        // ---------------
-//
-//
-//        double[] dailyReturns2 = dailyReturnDTOList.stream().mapToDouble(e -> e.getDaily_return() * 0.01).toArray();
-//        // 假设 年化无风险利率 为2%
-//        double riskFreeRate = 0.02;
-//
-//        // 夏普比率 = (年化回报率 - 无风险利率) / 年化标准差
-//        double sharpeRatio2 = SharpeFun.calcSharpeRatio(dailyReturns2, riskFreeRate);
-//
-//        sumReturnDTO.setRiskFreeRate(of(riskFreeRate));
-//        sumReturnDTO.setSharpeRatio2(of(sharpeRatio2));
-
-
-        // ---------------
+        // ---------------------------- 卡玛/夏普/sortino/年化/最大回撤
 
 
         // 假设 年化无风险利率 为2%
@@ -663,8 +671,6 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         List<Double> dailyReturnRateList = dailyReturnPctList.stream().map(e -> e * 0.01).collect(Collectors.toList());
 
         PerformanceMetrics.Result result = PerformanceMetrics.computeAll(dailyReturnRateList, riskFreeRate);
-        // sumReturnDTO.setR(result);
-
 
         sumReturnDTO.setCalmarRatio(of(result.calmar));
         sumReturnDTO.setRiskFreeRate(of(riskFreeRate));
@@ -738,6 +744,12 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             // 主线板块 列表
             e.setTopBlockList(topBlockList);
             e.setTopStockList(topStockList);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            e.setBuySignalList(null);
+            e.setSellSignalList(null);
         });
 
 
@@ -850,7 +862,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         double posReplaceRatio = preCount == 0 ? 0 : (double) oldSellCount / preCount;
 
 
-        dr.setPreCount(preCount);
+        dr.setPrevCount(preCount);
         dr.setTodayCount(todayCount);
         dr.setOldPosCount(oldPosCount);
         dr.setOldSellCount(oldSellCount);
@@ -858,5 +870,45 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         dr.setPosReplaceRatio(NumUtil.of(posReplaceRatio, 5));
     }
 
+
+    /**
+     * 当前计算 次日 收益/净值   ->   被存储到了 当日 entity中     =>     需要移位（全部 daily_return/nav/capital 往后一位）
+     *
+     * @param dailyReturnDTOList
+     */
+    private void next_daily_return(List<TopPoolDailyReturnDTO> dailyReturnDTOList) {
+        // 1. 如果列表为空或只有一个元素，则无需移位
+        if (dailyReturnDTOList == null || dailyReturnDTOList.size() <= 1) {
+            return;
+        }
+
+
+        // 2. 从后往前遍历列表，将指定字段的值往后移一位
+        // 从倒数第二个元素开始，直到第一个元素 (索引 0)
+        for (int i = dailyReturnDTOList.size() - 2; i >= 0; i--) {
+
+            TopPoolDailyReturnDTO curr = dailyReturnDTOList.get(i);
+            TopPoolDailyReturnDTO next = dailyReturnDTOList.get(i + 1); // 下一个元素，即移位后的接收者
+
+
+            // 将当前元素的值复制到下一个元素
+            next.setDailyReturn(curr.getDailyReturn());
+            next.setMarginDailyReturn(curr.getMarginDailyReturn());
+            next.setNav(curr.getNav());
+            next.setMarginNav(curr.getMarginNav());
+            next.setCapital(curr.getCapital());
+            next.setMarginCapital(curr.getMarginCapital());
+        }
+
+
+        // 3. 处理第一个元素（索引 0）的值
+        TopPoolDailyReturnDTO first = dailyReturnDTOList.get(0);
+        first.setDailyReturn(0.0);
+        first.setMarginDailyReturn(0.0);
+        first.setNav(1.0);
+        first.setMarginNav(1.0);
+        first.setCapital(100_0000.0);
+        first.setMarginCapital(100_0000.0);
+    }
 
 }
