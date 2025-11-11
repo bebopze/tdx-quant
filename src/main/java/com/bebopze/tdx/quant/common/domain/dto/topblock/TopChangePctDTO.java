@@ -1,11 +1,13 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 
 /**
@@ -72,18 +74,52 @@ public class TopChangePctDTO {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // B/Max/S信号
+    private Set<String> buySignalSet;
+    private Set<String> maxSignalSet;
+    private Set<String> sellSignalSet;
+
+
+    private ExtDataDTO buySignalExtDataDTO;
+    private ExtDataDTO maxSignalExtDataDTO;
+    private ExtDataDTO sellSignalExtDataDTO;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    // 人选 -> 策略（TOP50）
+
+
+    // 成交额
+    private double amo;
+
+
+    private double RPS三线和;
+    private double RPS五线和;
+
+
+    private double 中期涨幅;
+    private double N3日涨幅;
+    private double N5日涨幅;
+    private double N10日涨幅;
+    private double N20日涨幅;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
-     * 类型：1-机选；2-人选；
+     * 策略类型：1-机选；2-人选；
      */
-    private int type = 1;
+    private int topType = 1;
 
 
     /**
-     * 人选列表 -> 是否删除：0-否；1-是；
+     * 是否属于人选：是/否
      *
      * 机选列表 -> 此字段无效
      */
-    private int isDel = 0;
+    private boolean manualFlag = true;
 
 
     // -----------------------------------------------------------------------------------------------------------------

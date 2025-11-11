@@ -133,9 +133,9 @@ public class QaTopBlockDO implements Serializable {
 
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getType())
-                           // 仅 人选列表   ->   is_del=0
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.getIsDel() == 0))
+                   .filter(e -> typeSet.contains(e.getTopType())
+                           // 仅 人选列表   ->   is_manual = true
+                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
                    .collect(Collectors.toList());
     }
 
@@ -190,9 +190,9 @@ public class QaTopBlockDO implements Serializable {
 
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getType())
-                           // 仅 人选列表   ->   is_del=0
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.getIsDel() == 0))
+                   .filter(e -> typeSet.contains(e.getTopType())
+                           // 仅 人选列表   ->   is_manual = true
+                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
                    .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
@@ -219,9 +219,9 @@ public class QaTopBlockDO implements Serializable {
 
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getType())
-                           // 仅 人选列表   ->   is_del=0
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.getIsDel() == 0))
+                   .filter(e -> typeSet.contains(e.getTopType())
+                           // 仅 人选列表   ->   is_manual = true
+                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
                    // .collect(Collectors.toMap(TopChangePctDTO::getCode, TopChangePctDTO::getName));
                    .collect(Collectors.toMap(TopChangePctDTO::getCode,
                                              e -> e.getName() == null ? "" : e.getName()
