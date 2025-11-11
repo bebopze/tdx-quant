@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.domain.dto.base.BlockNewStockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
+import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.bebopze.tdx.quant.service.BlockNewService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -68,6 +70,12 @@ public class BlockNewServiceImpl implements BlockNewService {
                                                         .collect(Collectors.toList());
 
         return dtoList;
+    }
+
+
+    @Override
+    public void importTdx(String blockNewCode, Set<String> codeSet) {
+        TdxBlockNewReaderWriter.write(blockNewCode, codeSet);
     }
 
 }
