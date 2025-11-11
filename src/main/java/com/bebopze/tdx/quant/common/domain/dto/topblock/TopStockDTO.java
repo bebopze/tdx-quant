@@ -25,6 +25,9 @@ public class TopStockDTO {
     private String stockName;
     private String xueqiuMarket;
 
+    // 是否持仓
+    private boolean posStockFlag;
+
 
     /**
      * 主线个股 上榜天数
