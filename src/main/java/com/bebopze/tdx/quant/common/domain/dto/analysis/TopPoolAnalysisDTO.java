@@ -16,15 +16,23 @@ public class TopPoolAnalysisDTO {
 
 
     /**
-     * 收益率 汇总统计
+     * 收益率 汇总统计（普通账户）
      */
     TopPoolSumReturnDTO sumReturnDTO;
+    /**
+     * 收益率 汇总统计（融资账户）
+     */
+    TopPoolSumReturnDTO marginSumReturnDTO;
 
 
     /**
-     * 每日收益率
+     * 每日收益率（普通账户/融资账户）
      */
     List<TopPoolDailyReturnDTO> dailyReturnDTOList;
+    /**
+     * 平均每日收益率（普通账户/融资账户）
+     */
+    TopPoolDailyReturnDTO avgDailyReturnDTO;
 
 
     /**
