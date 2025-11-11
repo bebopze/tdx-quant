@@ -55,6 +55,11 @@ public class ConvertStock {
             arrDTO.vol[i] = dto.getVol();
             arrDTO.amo[i] = dto.getAmo();
 
+            arrDTO.range_pct[i] = dto.getRange_pct();
+            arrDTO.change_pct[i] = dto.getChange_pct();
+            arrDTO.change_price[i] = dto.getChange_price();
+            arrDTO.turnover_pct[i] = of(dto.getTurnover_pct());
+
 
             arrDTO.dateCloseMap.put(dto.getDate(), dto.getClose());
         }
@@ -104,7 +109,7 @@ public class ConvertStock {
 
             kline___fieldMap.forEach((fieldName, field) -> {
 
-                Object val = null;
+                Object val;
                 try {
                     val = field.get(dto);
                 } catch (IllegalAccessException e) {
@@ -186,7 +191,17 @@ public class ConvertStock {
             arrDTO.SSF[i] = of(dto.getSSF());
 
 
+            arrDTO.RPS三线和[i] = of(dto.getRPS三线和());
+            arrDTO.RPS五线和[i] = of(dto.getRPS五线和());
+
+
             arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
+            arrDTO.N3日涨幅[i] = of(dto.getN3日涨幅());
+            arrDTO.N5日涨幅[i] = of(dto.getN5日涨幅());
+            arrDTO.N10日涨幅[i] = of(dto.getN10日涨幅());
+            arrDTO.N20日涨幅[i] = of(dto.getN20日涨幅());
+
+
             arrDTO.趋势支撑线[i] = of(dto.get趋势支撑线());
             arrDTO.C_SSF_偏离率[i] = of(dto.getC_SSF_偏离率());
 
