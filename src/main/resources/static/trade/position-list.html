@@ -807,6 +807,7 @@
                             <thead>
                             <tr>
                                 <th><input type="checkbox" id="ordersSelectAllCheckboxHeader"><!--勾选--></th>
+                                <th>序号</th>
                                 <th onclick="sortOrdersTable('wtbh')">委托编号<span class="sort-icon"
                                                                                     id="sortWtbh"></span></th>
                                 <th onclick="sortOrdersTable('wtrq')">委托日期<span class="sort-icon"
@@ -875,8 +876,7 @@
                         <table class="table table-bordered table-sm" id="topBlocksTable">
                             <thead>
                             <tr>
-                                <th onclick="sortTopBlocksTable('rank')">序号<span class="sort-icon"
-                                                                                   id="sortTopBlocksRank"></span></th>
+                                <th>序号</th>
                                 <th onclick="sortTopBlocksTable('blockCode')">板块代码<span class="sort-icon"
                                                                                             id="sortTopBlocksBlockCode"></span>
                                 </th>
@@ -978,8 +978,7 @@
                         <table class="table table-bordered table-sm" id="topStocksTable">
                             <thead>
                             <tr>
-                                <th onclick="sortTopStocksTable('rank')">序号<span class="sort-icon"
-                                                                                   id="sortTopStocksRank"></span></th>
+                                <th>序号</th>
                                 <th onclick="sortTopStocksTable('stockCode')">股票代码<span class="sort-icon"
                                                                                             id="sortTopStocksStockCode"></span>
                                 </th>
@@ -1084,9 +1083,7 @@
                         <table class="table table-bordered table-sm" id="topBlocksTableManual">
                             <thead>
                             <tr>
-                                <th onclick="sortTopBlocksTableManual('rank')">序号<span class="sort-icon"
-                                                                                         id="sortTopBlocksManualRank"></span>
-                                </th>
+                                <th>序号</th>
                                 <th onclick="sortTopBlocksTableManual('blockCode')">板块代码<span class="sort-icon"
                                                                                                   id="sortTopBlocksManualBlockCode"></span>
                                 </th>
@@ -1233,9 +1230,7 @@
                                     <input type="checkbox" id="topStocksManualSelectAllCheckboxHeader"
                                            class="select-all-checkbox-top-stocks-manual" title="全选/取消全选">勾选
                                 </th>
-                                <th onclick="sortTopStocksTableManual('rank')">序号<span class="sort-icon"
-                                                                                         id="sortTopStocksManualRank"></span>
-                                </th>
+                                <th>序号</th>
                                 <th onclick="sortTopStocksTableManual('stockCode')">股票代码<span class="sort-icon"
                                                                                                   id="sortTopStocksManualStockCode"></span>
                                 </th>
@@ -2682,6 +2677,7 @@
                 const isBatchCancelable = isCancelable;
                 tr.innerHTML = `
                     <td>${isBatchCancelable ? `<input type="checkbox" class="order-checkbox" data-wtdh="${order.wtbh}" data-date="${order.wtrq}">` : ''}</td>
+                    <td>${index + 1}</td>
                     <td>${order.wtbh}</td>
                     <td>${order.wtrq}</td>
                     <td>${formattedTime}</td>
@@ -2741,37 +2737,39 @@
         // 对应的列索引 (0-based) 需要根据实际HTML调整
         // 索引 0: Checkbox
         sumRow.innerHTML += `<td></td>`; // Checkbox 列，通常为空或用于放置“合计”标签
-        // 索引 1: WTBH (委托编号) - 非合计列
+        // 索引 1: INDEX (序号) - 非合计列
         sumRow.innerHTML += `<td>合计</td>`;
-        // 索引 2: WTRQ (委托日期) - 非合计列
+        // 索引 2: WTBH (委托编号) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 3: WTSJ (委托时间) - 非合计列
+        // 索引 3: WTRQ (委托日期) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 4: ZQDM (证券代码) - 非合计列
+        // 索引 4: WTSJ (委托时间) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 5: ZQMC (证券名称) - 非合计列
+        // 索引 5: ZQDM (证券代码) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 6: MMSM (委托方向) - 非合计列
+        // 索引 6: ZQMC (证券名称) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 6: xyjylbbz (信用交易类别) - 非合计列
+        // 索引 7: MMSM (委托方向) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 7: WTZT (委托状态) - 非合计列
+        // 索引 8: xyjylbbz (信用交易类别) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 8: WTJG (委托价格) - 非合计列 (或可以计算加权平均)
+        // 索引 9: WTZT (委托状态) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 9: WTSJ (委托数量) - 合计列
+        // 索引 10: WTJG (委托价格) - 非合计列 (或可以计算加权平均)
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 11: WTSJ (委托数量) - 合计列
         sumRow.innerHTML += `<td>${sumValues.wtsl}</td>`;
-        // 索引 10: WTJE (委托金额) - 合计列
+        // 索引 12: WTJE (委托金额) - 合计列
         sumRow.innerHTML += `<td>${sumValues.wtje.toFixed(2)}</td>`; // 保留两位小数
-        // 索引 11: POSPCT (仓位占比) - 合计列
+        // 索引 13: POSPCT (仓位占比) - 合计列
         sumRow.innerHTML += `<td>${sumValues.posPct.toFixed(2)}</td>`; // 保留两位小数
-        // 索引 12: CJJG (成交价格) - 非合计列 (或可以计算加权平均)
+        // 索引 14: CJJG (成交价格) - 非合计列 (或可以计算加权平均)
         sumRow.innerHTML += `<td></td>`;
-        // 索引 13: CJSL (成交数量) - 合计列
+        // 索引 15: CJSL (成交数量) - 合计列
         sumRow.innerHTML += `<td>${sumValues.cjsl}</td>`;
-        // 索引 14: CJJE (成交金额) - 合计列
+        // 索引 16: CJJE (成交金额) - 合计列
         sumRow.innerHTML += `<td>${sumValues.cjje.toFixed(0)}</td>`;
-        // 索引 15: 操作 - 非合计列
+        // 索引 17: 操作 - 非合计列
         sumRow.innerHTML += `<td></td>`;
 
         return sumRow;
@@ -3158,10 +3156,10 @@
             document.getElementById('topBlocksCardTitle').textContent = `主线板块列表（${topBlocksCurrentDate}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedBlocks.forEach((block) => {
+            sortedBlocks.forEach((block, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${block.rank}</td>
+                    <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
                     <td>${block.blockName}</td>
                     <td>${block.topDays}</td>
@@ -3405,11 +3403,11 @@
             document.getElementById('topStocksCardTitle').textContent = `主线个股列表（${topStocksCurrentDate}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedStocks.forEach((stock) => {
+            sortedStocks.forEach((stock, index) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${stock.rank}</td>
+                    <td>${index + 1}</td>
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
                     <td>${stock.stockName}</td>
                     <td>${stock.topDays}</td>
@@ -3643,10 +3641,10 @@
             document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedBlocks.forEach((block) => {
+            sortedBlocks.forEach((block, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${block.rank}</td>
+                    <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
                     <td>${block.blockName}</td>
                     <td>${block.topDays}</td>
@@ -3910,14 +3908,14 @@
             document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedStocks.forEach((stock) => {
+            sortedStocks.forEach((stock, index) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
                 // 添加 data-stockcode 属性
                 tr.setAttribute('data-stockcode', stock.stockCode);
                 tr.innerHTML = `
                     <td><input type="checkbox" class="top-stocks-manual-checkbox" data-stockcode="${stock.stockCode}"></td>
-                    <td>${stock.rank}</td>
+                    <td>${index + 1}</td>
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
                     <td>${stock.stockName}</td>
                     <td>${stock.topDays}</td>
