@@ -36,7 +36,26 @@ public class ExtDataDTO implements Serializable {
     private Double SSF;
 
 
+    // ---------------------------------------------------
+
+
+    private Double RPS三线和;
+    private Double RPS五线和;
+
+
+    // ---------------------------------------------------
+
+
     private Double 中期涨幅;
+    private Double N3日涨幅;
+    private Double N5日涨幅;
+    private Double N10日涨幅;
+    private Double N20日涨幅;
+
+
+    // ---------------------------------------------------
+
+
     private Integer 趋势支撑线 = 20;   // 默认支撑线：MA20
     private Double C_SSF_偏离率;
 

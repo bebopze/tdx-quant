@@ -32,7 +32,26 @@ public class ExtDataArrDTO implements Serializable {
     public double[] SSF;
 
 
+    // ---------------------------------------------------
+
+
+    public double[] RPS三线和;
+    public double[] RPS五线和;
+
+
+    // ---------------------------------------------------
+
+
     public double[] 中期涨幅;
+    public double[] N3日涨幅;
+    public double[] N5日涨幅;
+    public double[] N10日涨幅;
+    public double[] N20日涨幅;
+
+
+    // ---------------------------------------------------
+
+
     public int[] 趋势支撑线;
     public double[] C_SSF_偏离率;
 
@@ -101,7 +120,17 @@ public class ExtDataArrDTO implements Serializable {
         this.SSF = new double[size];
 
 
+        this.RPS三线和 = new double[size];
+        this.RPS五线和 = new double[size];
+
+
         this.中期涨幅 = new double[size];
+        this.N3日涨幅 = new double[size];
+        this.N5日涨幅 = new double[size];
+        this.N10日涨幅 = new double[size];
+        this.N20日涨幅 = new double[size];
+
+
         this.趋势支撑线 = new int[size];
         this.C_SSF_偏离率 = new double[size];
 
@@ -142,5 +171,6 @@ public class ExtDataArrDTO implements Serializable {
         this.RPS双线红 = new boolean[size];
         this.RPS三线红 = new boolean[size];
     }
+
 
 }

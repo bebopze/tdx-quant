@@ -432,7 +432,17 @@ public class ExtDataServiceImpl implements ExtDataService {
         double[] SSF = fun.SSF();
 
 
+        double[] RPS三线和 = fun.RPS三线和();
+        double[] RPS五线和 = fun.RPS五线和();
+
+
         double[] 中期涨幅 = fun.中期涨幅N(20);
+        double[] N3日涨幅 = fun.N日涨幅(3);
+        double[] N5日涨幅 = fun.N日涨幅(5);
+        double[] N10日涨幅 = fun.N日涨幅(10);
+        double[] N20日涨幅 = fun.N日涨幅(20);
+
+
         int[] 趋势支撑线 = fun.趋势支撑线();
         double[] C_SSF_偏离率 = fun.C_SSF_偏离率();
 
@@ -491,7 +501,17 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setSSF(of(SSF[i], 3));
 
 
+            dto.setRPS三线和(of(RPS三线和[i], 3));
+            dto.setRPS五线和(of(RPS五线和[i], 3));
+
+
             dto.set中期涨幅(of(中期涨幅[i], 3));
+            dto.setN3日涨幅(of(N3日涨幅[i], 3));
+            dto.setN5日涨幅(of(N5日涨幅[i], 3));
+            dto.setN10日涨幅(of(N10日涨幅[i], 3));
+            dto.setN20日涨幅(of(N20日涨幅[i], 3));
+
+
             dto.set趋势支撑线(趋势支撑线[i]);
             dto.setC_SSF_偏离率(C_SSF_偏离率[i]);
 
