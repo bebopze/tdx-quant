@@ -1169,6 +1169,24 @@
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="topStocksManualCardTitle" class="card-title-with-count">主线个股列表</span>
+
+                    <div class="d-flex align-items-center me-3">
+                        <label for="filterTopStocksManual__topStrategyType">策略类型：</label>
+                        <select id="filterTopStocksManual__topStrategyType" class="form-select form-select-sm"
+                                style="width:auto">
+                            <option value="1">机选</option>
+                            <option value="2">人选</option>
+                            <option value="3">历史新高</option>
+                            <option value="4">极多头</option>
+                            <option value="5">RPS三线红</option>
+                            <option value="6">十亿</option>
+                            <option value="7">首次三线红</option>
+                            <option value="8">口袋支点</option>
+                            <option value="9">T0</option>
+                            <option value="10">涨停（打板）</option>
+                        </select>
+                    </div>
+
                     <!-- 新增：日期选择和刷新按钮区域 -->
                     <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-action-controls">
                         <label for="topStocksManualDateInput" class="me-2">日期:</label>
@@ -3826,16 +3844,22 @@
         let originalText = buttonIng('refreshTopStocksManualButton');
 
 
+        // 策略类型
+        const type = document.getElementById('filterTopStocksManual__topStrategyType').value;
+
+
         const tbody = document.querySelector('#topStocksTableManual tbody');
         const messageDiv = document.getElementById('topStocksTableManualMessage');
         if (!tbody || !messageDiv) {
             console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
             return;
         }
+
         // 清空内容
         tbody.innerHTML = '';
         messageDiv.style.display = 'none';
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=2`)
+
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=${type}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -4499,10 +4523,9 @@
         // 主线板块/个股   日期、刷新 按钮事件
         const topBlocksManualDateInput = document.getElementById('topBlocksManualDateInput');
         const topStocksManualDateInput = document.getElementById('topStocksManualDateInput');
-        const refreshTopBlocksManualButton = document.getElementById('refreshTopBlocksManualButton');
-        const refreshTopStocksManualButton = document.getElementById('refreshTopStocksManualButton');
 
 
+        // 主线板块
         if (topBlocksManualDateInput) {
             topBlocksManualDateInput.max = today;
             topBlocksManualDateInput.value = topBlocksCurrentDateManual;
@@ -4510,11 +4533,11 @@
                 topBlocksCurrentDateManual = this.value;
                 loadTopBlocksManual(topBlocksCurrentDateManual);
             });
-            if (refreshTopBlocksManualButton) {
-                refreshTopBlocksManualButton.addEventListener('click', () => loadTopBlocksManual(topBlocksCurrentDateManual));
-            }
+
+            document.getElementById('refreshTopBlocksManualButton').addEventListener('click', () => loadTopBlocksManual(topBlocksCurrentDateManual));
         }
 
+        // 主线个股
         if (topStocksManualDateInput) {
             topStocksManualDateInput.max = today;
             topStocksManualDateInput.value = topStocksCurrentDateManual;
@@ -4522,9 +4545,9 @@
                 topStocksCurrentDateManual = this.value;
                 loadTopStocksManual(topStocksCurrentDateManual);
             });
-            if (refreshTopStocksManualButton) {
-                refreshTopStocksManualButton.addEventListener('click', () => loadTopStocksManual(topStocksCurrentDateManual));
-            }
+
+            document.getElementById('refreshTopStocksManualButton').addEventListener('click', () => loadTopStocksManual(topStocksCurrentDateManual));
+            document.getElementById('filterTopStocksManual__topStrategyType').addEventListener('change', () => loadTopStocksManual(topBlocksCurrentDateManual));
         }
 
 
