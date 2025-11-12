@@ -259,8 +259,8 @@
                 <option value="3" selected>个股</option>
             </select>
 
-            <label>列表类型:</label>
-            <select id="type">
+            <label>策略类型:</label>
+            <select id="topStrategyType">
                 <option value="1" selected>机选</option>
                 <option value="2">人选</option>
             </select>
@@ -331,10 +331,10 @@
                             <th class="sortable" onclick="sortPositionTable('oldSellCount')">清仓数量</th>
                             <th class="sortable" onclick="sortPositionTable('newBuyCount')">新买入数量</th>
                             <th class="sortable" onclick="sortPositionTable('posReplaceRatio')">调仓换股率（%）</th>
-                            <th class="sortable" onclick="sortPositionTable('nav')">净值(普通)</th>
-                            <th class="sortable" onclick="sortPositionTable('marginNav')">净值(融资)</th>
                             <th class="sortable" onclick="sortPositionTable('dailyReturn')">收益率%(普通)</th>
                             <th class="sortable" onclick="sortPositionTable('marginDailyReturn')">收益率%(融资)</th>
+                            <th class="sortable" onclick="sortPositionTable('nav')">净值(普通)</th>
+                            <th class="sortable" onclick="sortPositionTable('marginNav')">净值(融资)</th>
                         </tr>
                         </thead>
                         <tbody id="positionTableBody">
@@ -415,11 +415,11 @@
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const topPoolType = document.getElementById('topPoolType').value;
-        const type = document.getElementById('type').value;
+        const topStrategyType = document.getElementById('topStrategyType').value;
 
         try {
             const response = await ApiUtils.fetch(
-                `/api/data/analysis/bk-yd2/topList?startDate=${startDate}&endDate=${endDate}&topPoolType=${topPoolType}&type=${type}`,
+                `/api/data/analysis/bk-yd2/topList?startDate=${startDate}&endDate=${endDate}&topPoolType=${topPoolType}&topStrategyType=${topStrategyType}`,
                 {
                     method: 'GET',
                     headers: {
@@ -428,13 +428,9 @@
                 }
             );
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
-            if (data.code !== 200) {
-                throw new Error(data.message || 'API返回错误');
+            if (data.code !== 200 || !data.success) {
+                throw new Error(data.msg || 'API返回错误');
             }
 
             displayData(data.data);
@@ -602,6 +598,11 @@
         const order = positionSort.field === field && positionSort.order === 'asc' ? 'desc' : 'asc';
         positionSort = {field, order};
 
+
+        // 获取平均行
+        const avgRow = document.querySelector('#positionTable tbody tr.avg-row');
+
+
         // 旧排序列 清除排序类
         document.querySelectorAll('#positionTable th.sortable').forEach(th => {
             th.classList.remove('active', 'asc', 'desc');
@@ -617,7 +618,7 @@
 
         // 获取当前表格数据
         const tbody = document.getElementById('positionTableBody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const rows = Array.from(tbody.querySelectorAll('tr:not(.avg-row)'));   // 过滤掉平均行再排序
 
 
         // 重排序
@@ -644,6 +645,7 @@
 
         // 清空并重新添加排序后的行
         tbody.innerHTML = '';
+        tbody.appendChild(avgRow);
         sortedRows.forEach(r => tbody.appendChild(r));
     }
 
@@ -652,6 +654,26 @@
         const tbody = document.getElementById('positionTableBody');
         tbody.innerHTML = '';
 
+
+        // 平均行
+        const avgRow = document.createElement('tr');
+        avgRow.classList.add('avg-row');
+        avgRow.innerHTML = `
+                <th>平均</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.todayCount, 0) / data.length).toFixed(0)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.oldPosCount, 0) / data.length).toFixed(0)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.oldSellCount, 0) / data.length).toFixed(0)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.newBuyCount, 0) / data.length).toFixed(0)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.posReplaceRatio, 0) / data.length * 100).toFixed(2)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.dailyReturn, 0) / data.length).toFixed(2)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.marginDailyReturn, 0) / data.length).toFixed(2)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.nav, 0) / data.length).toFixed(2)}</th>
+                <th>${Number(data.reduce((acc, item) => acc + item.marginNav, 0) / data.length).toFixed(2)}</th>
+        `;
+        tbody.appendChild(avgRow);
+
+
+        // 列表行
         data.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -661,10 +683,10 @@
                     <td>${item.oldSellCount}</td>
                     <td>${item.newBuyCount}</td>
                     <td>${(item.posReplaceRatio * 100).toFixed(2)}</td>
-                    <td>${item.nav}</td>
-                    <td>${item.marginNav}</td>
                     <td>${item.dailyReturn}</td>
                     <td>${item.marginDailyReturn}</td>
+                    <td>${item.nav}</td>
+                    <td>${item.marginNav}</td>
                 `;
             tbody.appendChild(row);
         });
