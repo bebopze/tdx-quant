@@ -246,23 +246,31 @@
 
     <div class="params-section">
         <div class="param-group">
-            <label>开始日期:</label>
+            <label>开始日期：</label>
             <input type="date" id="startDate" value="2025-01-01">
 
-            <label>结束日期:</label>
+            <label>结束日期：</label>
             <input type="date" id="endDate" value="2026-01-01">
 
-            <label>主线类型:</label>
+            <label>主线类型：</label>
             <select id="topPoolType">
                 <option value="1">板块</option>
                 <option value="2">ETF</option>
                 <option value="3" selected>个股</option>
             </select>
 
-            <label>策略类型:</label>
+            <label>策略类型：</label>
             <select id="topStrategyType">
                 <option value="1" selected>机选</option>
                 <option value="2">人选</option>
+                <option value="3">历史新高</option>
+                <option value="4">极多头</option>
+                <option value="5">RPS三线红</option>
+                <option value="6">10亿</option>
+                <option value="7">首次三线红</option>
+                <option value="8">口袋支点</option>
+                <option value="9">T0</option>
+                <option value="10">涨停（打板）</option>
             </select>
 
             <button class="btn" onclick="fetchData()">获取数据</button>
@@ -390,6 +398,7 @@
     });
 
 
+    // 是否 数字类型
     function isNumeric(str) {
         return Number.isFinite(Number(str));
     }
