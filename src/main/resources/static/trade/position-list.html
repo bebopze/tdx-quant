@@ -496,7 +496,7 @@
                         <input type="text" class="form-control" id="netAsset" readonly>
                     </div>
                     <div class="col-md-4">
-                        <label for="totalLiability" class="form-label">总负债</label>
+                        <label for="totalLiability" class="form-label">总负债（融资负债）</label>
                         <input type="text" class="form-control" id="totalLiability" readonly>
                     </div>
                     <div class="col-md-4">
@@ -1501,6 +1501,7 @@
     // 存储排序状态 (持仓)
     let positionsSortState = {column: 'mktval', order: 'desc'};
     let positionsData = [];
+    let netAssetValue = 0;
 
     // 存储排序状态 (委托)
     let ordersSortState = {column: null, order: 'asc'};
@@ -1926,8 +1927,12 @@
                     return;
                 }
 
-                positionsData = data.data.stocks;
+                const responseData = data.data;
+                positionsData = responseData.stocks;
 
+
+                // 展示账户资金
+                displayPositionCapital(responseData);
 
                 // 展示持仓列表
                 displayPositionRecords(positionsData);
@@ -1945,7 +1950,62 @@
     }
 
 
-    // 展示
+    // 展示账户资金
+    function displayPositionCapital(responseData) {
+
+        const setColor = (elementId, value) => {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
+            }
+        };
+        const setColor_rz = (elementId, value) => {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
+                el.style.color = 'teal';
+            }
+        };
+
+
+        // 总资产
+        document.getElementById('totalAsset').value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 总市值
+        document.getElementById('totalMktVal').value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 可取资金
+        document.getElementById('accessMoney').value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 持仓盈亏
+        setColor('profit', responseData.profit);
+        // 当日盈亏
+        setColor('curProfit', responseData.curprofit ?? 0);
+        // 仓位占比
+        document.getElementById('posRatio').value = `${(responseData.posratio * 100).toFixed(2)}%`;
+        // 净资产
+        document.getElementById('netAsset').value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 更新全局变量，使用原始数值
+        netAssetValue = parseFloat(responseData.netasset);
+        // 总负债（融资负债）
+        setColor_rz('totalLiability', responseData.totalliability);
+        // 可用保证金（可融）
+        setColor_rz('marginAvl', responseData.marginavl);
+        // 维持担保比例
+        document.getElementById('marginRates').value = `${(responseData.marginrates * 100).toFixed(2)}%`;
+        // 融资负债
+        setColor_rz('ftotaldebts', responseData.ftotaldebts);
+        // 可用资金（担）
+        setColor('avalmoney', responseData.avalmoney);
+        // 实时担保比例
+        document.getElementById('realrate').value = `${(responseData.realrate * 100).toFixed(2)}%`;
+        // 融券负债
+        document.getElementById('dtotaldebts').value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 剩余额度
+        document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
+        // 持仓个股数量
+        document.getElementById('holdingStockCount').value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
+    }
+
+    // 展示持仓列表
     function displayPositionRecords(positions) {
         const tbody = document.querySelector('#positionTable tbody');
         if (!tbody) {
