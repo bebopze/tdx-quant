@@ -1475,8 +1475,10 @@
                     <label for="dataSourceSelect" class="form-label">请选择要同步的数据源：</label>
                     <select class="form-select" id="dataSourceSelect">
                         <option value="CC">持仓列表</option>
-                        <option value="ZXBK">主线板块列表（机选）</option>
-                        <option value="ZXGG">主线个股列表（机选）</option>
+                        <option value="ZXBK(JX)">主线板块列表（机选）</option>
+                        <option value="ZXGG(JX)">主线个股列表（机选）</option>
+                        <option value="ZXBK(RX)">主线板块列表（人选）</option>
+                        <option value="ZXGG(RX)">主线个股列表（人选）</option>
                     </select>
                 </div>
                 <div id="syncConfirmationMessage" class="alert alert-info" style="display: none;">
@@ -1923,51 +1925,14 @@
                     alert('加载失败：' + data.msg);
                     return;
                 }
-                const responseData = data.data;
-                positionsData = responseData.stocks;
-                const setColor = (elementId, value) => {
-                    const el = document.getElementById(elementId);
-                    if (el) {
-                        el.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
-                        el.style.color = value > 0 ? 'red' : value < 0 ? 'teal' : 'black';
-                    }
-                };
-                const setColor_rz = (elementId, value) => {
-                    const el2 = document.getElementById(elementId);
-                    if (el2) {
-                        el2.value = value.toLocaleString('en-US', {minimumFractionDigits: 2});
-                        el2.style.color = 'teal';
-                    }
-                };
-                const totalAssetEl = document.getElementById('totalAsset');
-                if (totalAssetEl) totalAssetEl.value = responseData.totalasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-                const totalMktValEl = document.getElementById('totalMktVal');
-                if (totalMktValEl) totalMktValEl.value = responseData.totalmkval.toLocaleString('en-US', {minimumFractionDigits: 2});
-                const accessMoneyEl = document.getElementById('accessMoney');
-                if (accessMoneyEl) accessMoneyEl.value = responseData.accessmoney.toLocaleString('en-US', {minimumFractionDigits: 2});
-                setColor('profit', responseData.profit);
-                setColor('curProfit', responseData.curprofit ?? 0);
-                const posRatioEl = document.getElementById('posRatio');
-                if (posRatioEl) posRatioEl.value = `${(responseData.posratio * 100).toFixed(2)}%`;
-                const netAssetEl = document.getElementById('netAsset');
-                if (netAssetEl) netAssetEl.value = responseData.netasset.toLocaleString('en-US', {minimumFractionDigits: 2});
-                // 更新全局变量，使用原始数值
-                netAssetValue = parseFloat(responseData.netasset);
-                setColor_rz('totalLiability', responseData.totalliability);
-                setColor_rz('marginAvl', responseData.marginavl);
-                const marginRatesEl = document.getElementById('marginRates');
-                if (marginRatesEl) marginRatesEl.value = `${(responseData.marginrates * 100).toFixed(2)}%`;
-                setColor_rz('ftotaldebts', responseData.ftotaldebts);
-                setColor('avalmoney', responseData.avalmoney);
-                const realrateEl = document.getElementById('realrate');
-                if (realrateEl) realrateEl.value = `${(responseData.realrate * 100).toFixed(2)}%`;
-                const dtotaldebtsEl = document.getElementById('dtotaldebts');
-                if (dtotaldebtsEl) dtotaldebtsEl.value = responseData.dtotaldebts.toLocaleString('en-US', {minimumFractionDigits: 2});
-                const acreditavlEl = document.getElementById('acreditavl');
-                if (acreditavlEl) acreditavlEl.value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
-                const holdingStockCountEl = document.getElementById('holdingStockCount');
-                if (holdingStockCountEl) holdingStockCountEl.value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
+
+                positionsData = data.data.stocks;
+
+
+                // 展示持仓列表
                 displayPositionRecords(positionsData);
+
+                // 初始化排序图标
                 initializePositionsSortIcons();
             })
             .catch(error => {
@@ -2094,10 +2059,13 @@
             `;
             tbody.appendChild(tr);
         });
-        // --- 新增：更新持仓列表标题数量 ---
-        const count = sortedPositions.length;
-        document.getElementById('positionsCardTitle').textContent = `持仓详情（${count}）`;
-        // --- 结束：更新持仓列表标题数量 ---
+
+
+        // 更新持仓列表标题数量
+        document.getElementById('positionsCardTitle').textContent = `持仓详情（${sortedPositions.length}）`;
+
+
+        // 添加复选框监听器
         attachCheckboxListeners();
     }
 
@@ -2269,7 +2237,7 @@
 
     // 处理数据源选择变化
     function syncToTdxChange() {
-        const selectedCode = document.getElementById('dataSourceSelect').value;
+        let selectedCode = document.getElementById('dataSourceSelect').value;
         let selectedData = null;
         let dataSourceName = '';
 
@@ -2277,12 +2245,22 @@
         if (selectedCode === 'CC') {
             selectedData = positionsData;
             dataSourceName = '持仓列表';
-        } else if (selectedCode === 'ZXBK') {
-            selectedData = topBlocksData; // 机选板块数据
+        } else if (selectedCode === 'ZXBK(JX)') {
+            selectedCode = 'ZXBK';
+            selectedData = topBlocksData;
             dataSourceName = '主线板块列表（机选）';
-        } else if (selectedCode === 'ZXGG') {
-            selectedData = topStocksData; // 机选个股数据
+        } else if (selectedCode === 'ZXGG(JX)') {
+            selectedCode = 'ZXGG';
+            selectedData = topStocksData;
             dataSourceName = '主线个股列表（机选）';
+        } else if (selectedCode === 'ZXBK(RX)') {
+            selectedCode = 'ZXBK';
+            selectedData = topBlocksDataManual;
+            dataSourceName = '主线板块列表（人选）';
+        } else if (selectedCode === 'ZXGG(RX)') {
+            selectedCode = 'ZXGG';
+            selectedData = topStocksDataManual;
+            dataSourceName = '主线个股列表（人选）';
         }
 
         if (selectedData && selectedData.length > 0) {
@@ -2319,7 +2297,7 @@
 
     // confirmSyncBtn   处理确认同步按钮点击事件
     function syncToTdx() {
-        const selectedCode = document.getElementById('dataSourceSelect').value;
+        let selectedCode = document.getElementById('dataSourceSelect').value;
         let selectedData = null;
         let dataSourceName = '';
 
@@ -2327,12 +2305,22 @@
         if (selectedCode === 'CC') {
             selectedData = positionsData;
             dataSourceName = '持仓列表';
-        } else if (selectedCode === 'ZXBK') {
-            selectedData = topBlocksData; // 机选板块数据
+        } else if (selectedCode === 'ZXBK(JX)') {
+            selectedCode = 'ZXBK';
+            selectedData = topBlocksData;
             dataSourceName = '主线板块列表（机选）';
-        } else if (selectedCode === 'ZXGG') {
-            selectedData = topStocksData; // 机选个股数据
+        } else if (selectedCode === 'ZXGG(JX)') {
+            selectedCode = 'ZXGG';
+            selectedData = topStocksData;
             dataSourceName = '主线个股列表（机选）';
+        } else if (selectedCode === 'ZXBK(RX)') {
+            selectedCode = 'ZXBK';
+            selectedData = topBlocksDataManual;
+            dataSourceName = '主线板块列表（人选）';
+        } else if (selectedCode === 'ZXGG(RX)') {
+            selectedCode = 'ZXGG';
+            selectedData = topStocksDataManual;
+            dataSourceName = '主线个股列表（人选）';
         }
 
         if (!selectedData || selectedData.length === 0) {
@@ -4399,7 +4387,6 @@
         // -------------------------- 一键同步（持仓->通达信）
 
 
-        document.getElementById('syncPositionsToTdxBtn').addEventListener('click', openSyncToTdxModel);
         document.getElementById('syncPositionsToTdxBtn').addEventListener('click', openSyncToTdxModel);
         document.getElementById('dataSourceSelect').addEventListener('change', syncToTdxChange);
         document.getElementById('confirmSyncBtn').addEventListener('click', syncToTdx);
