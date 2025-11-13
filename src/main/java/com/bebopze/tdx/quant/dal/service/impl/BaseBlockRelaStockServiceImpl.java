@@ -28,7 +28,6 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
 
     @Override
     public int deleteByBlockId(Long blockId) {
-
         return baseMapper.deleteByBlockId(blockId);
     }
 
@@ -46,28 +45,28 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
 
     @Override
     public List<BaseBlockRelaStockDO> listByBlockCodeList(Collection<String> blockCodeList) {
-        return baseMapper.listByBlockCodeList(blockCodeList);
+        return blockCodeList.isEmpty() ? Collections.emptyList() : baseMapper.listByBlockCodeList(blockCodeList);
     }
 
     @Override
     public List<BaseBlockRelaStockDO> listByStockCodeList(Collection<String> stockCodeList) {
-        return baseMapper.listByStockCodeList(stockCodeList);
+        return stockCodeList.isEmpty() ? Collections.emptyList() : baseMapper.listByStockCodeList(stockCodeList);
     }
 
 
     @Override
     public List<BaseBlockDO> listBlockByStockCode(String stockCode) {
-        return baseMapper.listBlockByStockCode(stockCode);
+        return stockCode.isEmpty() ? Collections.emptyList() : baseMapper.listBlockByStockCode(stockCode);
     }
 
     @Override
     public List<BaseBlockDO> listBlockByStockCodeList(Collection<String> stockCodeList) {
-        return baseMapper.listBlockByStockCodeList(stockCodeList);
+        return stockCodeList.isEmpty() ? Collections.emptyList() : baseMapper.listBlockByStockCodeList(stockCodeList);
     }
 
     @Override
     public List<BaseStockDO> listStockByBlockCodeList(Collection<String> blockCodeList) {
-        return baseMapper.listStockByBlockCodeList(blockCodeList);
+        return blockCodeList.isEmpty() ? Collections.emptyList() : baseMapper.listStockByBlockCodeList(blockCodeList);
     }
 
     @Override
