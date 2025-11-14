@@ -3,8 +3,10 @@
     <meta charset="UTF-8">
     <title>我的持仓</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <!-- 添加全局配置文件 -->
     <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
     <style>
         .sort-icon {
             margin-left: 4px;
@@ -665,6 +667,24 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterPositions_topStockFlag">主线个股：</label>
+                            <select id="filterPositions_topStockFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
+                            <label for="filterPositions_inTopBlockFlag">IN主线板块：</label>
+                            <select id="filterPositions_inTopBlockFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterPositions_curProfitratio__min"
                                    class="me-2">当日盈亏比例(%):</label>
                             <input type="number" id="filterPositions_curProfitratio__min"
@@ -726,11 +746,11 @@
                                                                                          id="sortStkavl"></span></th>
                                 <th onclick="sortPositionsTable('industry')">行业<span class="sort-icon"
                                                                                        id="sortIndustry"></span></th>
-                                <th onclick="sortPositionsTable('topStock')">主线个股<span class="sort-icon"
-                                                                                           id="sortTopStock"></span>
+                                <th onclick="sortPositionsTable('topStockFlag')">主线个股<span class="sort-icon"
+                                                                                               id="sortTopStockFlag"></span>
                                 </th>
-                                <th onclick="sortPositionsTable('inTopBlock')">IN主线板块<span class="sort-icon"
-                                                                                               id="sortInTopBlock"></span>
+                                <th onclick="sortPositionsTable('inTopBlockFlag')">IN主线板块<span class="sort-icon"
+                                                                                                   id="sortInTopBlockFlag"></span>
                                 </th>
                                 <th onclick="sortPositionsTable('topBlockList')">主线板块<span class="sort-icon"
                                                                                                id="sortTopBlockList"></span>
@@ -907,9 +927,18 @@
                                 <th onclick="sortTopBlocksTable('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday_changePct"></span></th>
-                                <th onclick="sortTopBlocksTable('today2Next_changePct')">次日涨幅<span
+                                <th onclick="sortTopBlocksTable('today2Next_changePct')">次日涨幅-CLOSE<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Next_openPct')">次日涨幅-OPEN<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Next_openPct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Next_highPct')">次日涨幅-HIGH<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Next_highPct"></span></th>
+                                <th onclick="sortTopBlocksTable('today2Next_lowPct')">次日涨幅-LOW<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksToday2Next_lowPct"></span></th>
                                 <th onclick="sortTopBlocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday2End_changePct"></span></th>
@@ -1009,9 +1038,18 @@
                                 <th onclick="sortTopStocksTable('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday_changePct"></span></th>
-                                <th onclick="sortTopStocksTable('today2Next_changePct')">次日涨幅<span
+                                <th onclick="sortTopStocksTable('today2Next_changePct')">次日涨幅-CLOSE<span
                                         class="sort-icon"
                                         id="sortTopStocksToday2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Next_openPct')">次日涨幅-OPEN<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Next_openPct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Next_highPct')">次日涨幅-HIGH<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Next_highPct"></span></th>
+                                <th onclick="sortTopStocksTable('today2Next_lowPct')">次日涨幅-LOW<span
+                                        class="sort-icon"
+                                        id="sortTopStocksToday2Next_lowPct"></span></th>
                                 <th onclick="sortTopStocksTable('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday2End_changePct"></span></th>
@@ -1116,9 +1154,18 @@
                                 <th onclick="sortTopBlocksTableManual('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualToday_changePct"></span></th>
-                                <th onclick="sortTopBlocksTableManual('today2Next_changePct')">次日涨幅<span
+                                <th onclick="sortTopBlocksTableManual('today2Next_changePct')">次日涨幅-CLOSE<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualToday2Next_changePct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2Next_openPct')">次日涨幅-OPEN<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2Next_openPct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2Next_highPct')">次日涨幅-HIGH<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2Next_highPct"></span></th>
+                                <th onclick="sortTopBlocksTableManual('today2Next_lowPct')">次日涨幅-LOW<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualToday2Next_lowPct"></span></th>
                                 <th onclick="sortTopBlocksTableManual('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualToday2End_changePct"></span></th>
@@ -1282,9 +1329,18 @@
                                 <th onclick="sortTopStocksTableManual('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualToday_changePct"></span></th>
-                                <th onclick="sortTopStocksTableManual('today2Next_changePct')">次日涨幅<span
+                                <th onclick="sortTopStocksTableManual('today2Next_changePct')">次日涨幅-CLOSE<span
                                         class="sort-icon"
                                         id="sortTopStocksManualToday2Next_changePct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2Next_openPct')">次日涨幅-OPEN<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2Next_openPct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2Next_highPct')">次日涨幅-HIGH<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2Next_highPct"></span></th>
+                                <th onclick="sortTopStocksTableManual('today2Next_lowPct')">次日涨幅-LOW<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualToday2Next_lowPct"></span></th>
                                 <th onclick="sortTopStocksTableManual('today2End_changePct')">今日至跌出涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualToday2End_changePct"></span></th>
@@ -2034,20 +2090,30 @@
 
         // 筛选
         let sotckType = document.getElementById('filterPositions_stockType').value;
+        let topStockFlag = document.getElementById('filterPositions_topStockFlag').value;
+        let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
         let curProfitratio__min = document.getElementById('filterPositions_curProfitratio__min').value;
         let curProfitratio__max = document.getElementById('filterPositions_curProfitratio__max').value;
 
         let filterPositions = positions;
         if (sotckType) {
-            sotckType = Number(sotckType);
+            sotckType = toNumber(sotckType);
             filterPositions = filterPositions.filter(position => position.stockType === sotckType);
         }
+        if (topStockFlag) {
+            topStockFlag = toBoolean(topStockFlag);
+            filterPositions = filterPositions.filter(position => position.topStockFlag === topStockFlag);
+        }
+        if (inTopBlockFlag) {
+            inTopBlockFlag = toBoolean(inTopBlockFlag);
+            filterPositions = filterPositions.filter(position => position.inTopBlockFlag === inTopBlockFlag);
+        }
         if (curProfitratio__min) {
-            curProfitratio__min = Number(curProfitratio__min * 0.01);
+            curProfitratio__min = toNumber(curProfitratio__min) * 0.01;
             filterPositions = filterPositions.filter(position => position.curProfitratio >= curProfitratio__min);
         }
         if (curProfitratio__max) {
-            curProfitratio__max = Number(curProfitratio__max * 0.01) === 30 ? 30.05 * 0.01 : Number(curProfitratio__max * 0.01);
+            curProfitratio__max = toNumber(curProfitratio__max) === 30 ? 30.05 * 0.01 : toNumber(curProfitratio__max) * 0.01;
             filterPositions = filterPositions.filter(position => position.curProfitratio < curProfitratio__max);
         }
 
@@ -2119,8 +2185,8 @@
             })()}
               </td>
               <!-- 主线个股 -->
-              <td>${item.topStock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
-              <td>${item.inTopBlock ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <td>${item.topStockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
+              <td>${item.inTopBlockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
               <!-- 主线板块 -->
               <td class="top-block-list">${topBlockListStr}</td>
               <td>
@@ -3150,6 +3216,9 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
                         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
@@ -3237,6 +3306,9 @@
                     <td>${block.today_close}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_highPct > 0 ? 'red' : block.today2Next_highPct < 0 ? 'teal' : 'black'}">${block.today2Next_highPct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_lowPct > 0 ? 'red' : block.today2Next_lowPct < 0 ? 'teal' : 'black'}">${block.today2Next_lowPct.toFixed(2)}%</td>
                     <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
@@ -3285,6 +3357,15 @@
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_openPct > 0 ? 'red' : avgPct.today2Next_openPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_openPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_highPct > 0 ? 'red' : avgPct.today2Next_highPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_highPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_lowPct > 0 ? 'red' : avgPct.today2Next_lowPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_lowPct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2End_changePct.toFixed(2)}%
@@ -3401,6 +3482,9 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
                         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
@@ -3485,6 +3569,9 @@
                     <td>${stock.today_close}</td>
                     <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_openPct > 0 ? 'red' : stock.today2Next_openPct < 0 ? 'teal' : 'black'}">${stock.today2Next_openPct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_highPct > 0 ? 'red' : stock.today2Next_highPct < 0 ? 'teal' : 'black'}">${stock.today2Next_highPct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_lowPct > 0 ? 'red' : stock.today2Next_lowPct < 0 ? 'teal' : 'black'}">${stock.today2Next_lowPct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
@@ -3534,6 +3621,15 @@
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_openPct > 0 ? 'red' : avgPct.today2Next_openPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_openPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_highPct > 0 ? 'red' : avgPct.today2Next_highPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_highPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_lowPct > 0 ? 'red' : avgPct.today2Next_lowPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_lowPct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2End_changePct.toFixed(2)}%
@@ -3647,6 +3743,9 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
                         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
@@ -3722,6 +3821,9 @@
                     <td>${block.today_close}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_highPct > 0 ? 'red' : block.today2Next_highPct < 0 ? 'teal' : 'black'}">${block.today2Next_highPct.toFixed(2)}%</td>
+                    <td style="color: ${block.today2Next_lowPct > 0 ? 'red' : block.today2Next_lowPct < 0 ? 'teal' : 'black'}">${block.today2Next_lowPct.toFixed(2)}%</td>
                     <td style="color: ${block.today2End_changePct > 0 ? 'red' : block.today2End_changePct < 0 ? 'teal' : 'black'}">${block.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Max_changePct > 0 ? 'red' : block.today2Max_changePct < 0 ? 'teal' : 'black'}">${block.today2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.start2Today_changePct > 0 ? 'red' : block.start2Today_changePct < 0 ? 'teal' : 'black'}">${block.start2Today_changePct.toFixed(2)}%</td>
@@ -3770,6 +3872,15 @@
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_openPct > 0 ? 'red' : avgPct.today2Next_openPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_openPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_highPct > 0 ? 'red' : avgPct.today2Next_highPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_highPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_lowPct > 0 ? 'red' : avgPct.today2Next_lowPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_lowPct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2End_changePct.toFixed(2)}%
@@ -3889,6 +4000,9 @@
                         start2End_changePct: changePctDTO.start2End_changePct || 0,
                         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
                         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
                         today2End_changePct: changePctDTO.today2End_changePct || 0,
                         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
                         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
@@ -3999,6 +4113,9 @@
                     <td>${stock.today_close}</td>
                     <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_openPct > 0 ? 'red' : stock.today2Next_openPct < 0 ? 'teal' : 'black'}">${stock.today2Next_openPct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_highPct > 0 ? 'red' : stock.today2Next_highPct < 0 ? 'teal' : 'black'}">${stock.today2Next_highPct.toFixed(2)}%</td>
+                    <td style="color: ${stock.today2Next_lowPct > 0 ? 'red' : stock.today2Next_lowPct < 0 ? 'teal' : 'black'}">${stock.today2Next_lowPct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2End_changePct > 0 ? 'red' : stock.today2End_changePct < 0 ? 'teal' : 'black'}">${stock.today2End_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Max_changePct > 0 ? 'red' : stock.today2Max_changePct < 0 ? 'teal' : 'black'}">${stock.today2Max_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.start2Today_changePct > 0 ? 'red' : stock.start2Today_changePct < 0 ? 'teal' : 'black'}">${stock.start2Today_changePct.toFixed(2)}%</td>
@@ -4052,6 +4169,15 @@
             </td>
             <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2Next_changePct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_openPct > 0 ? 'red' : avgPct.today2Next_openPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_openPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_highPct > 0 ? 'red' : avgPct.today2Next_highPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_highPct.toFixed(2)}%
+            </td>
+            <td style="color: ${avgPct.today2Next_lowPct > 0 ? 'red' : avgPct.today2Next_lowPct < 0 ? 'teal' : 'black'};">
+                ${avgPct.today2Next_lowPct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2End_changePct.toFixed(2)}%
@@ -4463,6 +4589,8 @@
 
 
         document.getElementById('filterPositions_stockType').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_topStockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_inTopBlockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_curProfitratio__min').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_curProfitratio__max').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions());
