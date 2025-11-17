@@ -409,7 +409,34 @@
         /* ----------------------------- */
 
 
+        /* --- 主线板块/个股（人选）表格优化 --- */
+
+        /* 优化：主线个股 - 超出宽度时强制换行 */
+        .col-topStockList {
+            min-width: 350px; /* 设置最小宽度，防止列被挤压过窄 */
+            max-width: 1000px; /* 设置一个合理的最大宽度，可根据需要调整 */
+            word-break: break-word; /* 强制换行，允许在任意字符间断行 */
+            white-space: normal; /* 允许文本换行 (默认值，可不写) */
+            overflow: visible; /* 确保内容不被隐藏 */
+            line-height: 1.2; /* 调整行高，使换行后的内容间距更舒适 */
+            padding: 4px 6px; /* 确保与表格其他单元格的内边距一致 */
+        }
+
+
+        /* 优化：所属主线板块 - 超出宽度时强制换行 */
+        .col-topBlockList {
+            max-width: 1000px; /* 设置一个合理的最大宽度，可根据需要调整 */
+            min-width: 250px; /* 设置最小宽度，防止列被挤压过窄 */
+            word-break: break-word; /* 强制换行，允许在任意字符间断行 */
+            white-space: normal; /* 允许文本换行 (默认值，可不写) */
+            overflow: visible; /* 确保内容不被隐藏 */
+            line-height: 1.2; /* 调整行高，使换行后的内容间距更舒适 */
+            padding: 4px 6px; /* 确保与表格其他单元格的内边距一致 */
+        }
+
+
         /* === 修复 持仓列表 水平滚动问题 === */
+
 
         /* 1. 强化容器 */
         #positionTableContainer {
@@ -431,7 +458,7 @@
         /* 3. 优化表格 */
         #positionTable th,
         #positionTable td {
-            white-space: nowrap;
+            white-space: nowrap; /* 所有单元格内容「不换行」，即使文字再长也横向撑开，防止换行导致行高错乱、表格变形 */
         }
 
         /* 4. 固定表头 (可选) */
@@ -446,7 +473,7 @@
         /* --- 新增：扩大页面整体宽度 --- */
         .container {
             min-width: 75%;
-            max-width: 85%; /* 全屏宽度的 85% */
+            max-width: 90%; /* 全屏宽度的 85% */
             width: 100%; /* 确保在小于 max-width 时能自适应 */
         }
 
@@ -859,7 +886,8 @@
                                                                                     id="sortCjsl"></span></th>
                                 <th onclick="sortOrdersTable('cjje')">成交金额<span class="sort-icon"
                                                                                     id="sortCjje"></span></th>
-                                <th>操作</th>
+                                <th onclick="sortOrdersTable('wtzt')">操作<span class="sort-icon"
+                                                                                id="sortCz"></span></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -909,8 +937,9 @@
                                 <th onclick="sortTopBlocksTable('topStockSize')">主线个股数量<span class="sort-icon"
                                                                                                    id="sortTopBlocksTopStockSize"></span>
                                 </th>
-                                <th onclick="sortTopBlocksTable('topStockList')">主线个股<span class="sort-icon"
-                                                                                               id="sortTopBlocksTopStockList"></span>
+                                <th class="col-topStockList" onclick="sortTopBlocksTable('topStockList')">主线个股<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksTopStockList"></span>
                                 </th>
                                 <th onclick="sortTopBlocksTable('topStartDate')">首次上榜日期<span class="sort-icon"
                                                                                                    id="sortTopBlocksTopStartDate"></span>
@@ -1015,13 +1044,13 @@
                                                                                             id="sortTopStocksStockName"></span>
                                 </th>
                                 <th onclick="sortTopStocksTable('topDays')">上榜天数<span class="sort-icon"
-                                                                                          id="sortTopStocksDays"></span>
+                                                                                          id="sortTopStocksTopDays"></span>
                                 </th>
                                 <th onclick="sortTopStocksTable('topBlockSize')">所属主线板块数量<span class="sort-icon"
                                                                                                        id="sortTopStocksTopBlockSize"></span>
                                 </th>
-                                <th onclick="sortTopStocksTable('topBlockList')">所属主线板块<span class="sort-icon"
-                                                                                                   id="sortTopStocksTopBlockList"></span>
+                                <th class="col-topBlockList" onclick="sortTopStocksTable('topBlockList')">所属主线板块
+                                    <span class="sort-icon" id="sortTopStocksTopBlockList"></span>
                                 </th>
                                 <th onclick="sortTopStocksTable('topStartDate')">首次上榜日期<span class="sort-icon"
                                                                                                    id="sortTopStocksTopStartDate"></span>
@@ -1135,8 +1164,9 @@
                                         class="sort-icon"
                                         id="sortTopBlocksManualTopStockSize"></span>
                                 </th>
-                                <th onclick="sortTopBlocksTableManual('topStockList')">主线个股<span class="sort-icon"
-                                                                                                     id="sortTopBlocksManualTopStockList"></span>
+                                <th class="col-topStockList" onclick="sortTopBlocksTableManual('topStockList')">主线个股<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualTopStockList"></span>
                                 </th>
                                 <th onclick="sortTopBlocksTableManual('topStartDate')">首次上榜日期<span
                                         class="sort-icon"
@@ -1222,7 +1252,7 @@
                         <select id="filterTopStocksManual__topStrategyType" class="form-select form-select-sm"
                                 style="width:auto">
                             <option value="1">机选</option>
-                            <option value="2">人选</option>
+                            <option value="2" selected>人选</option>
                             <option value="3">历史新高</option>
                             <option value="4">极多头</option>
                             <option value="5">RPS三线红</option>
@@ -1249,6 +1279,15 @@
                     <div class="d-flex align-items-center flex-wrap" id="top-stocks-manual-filter-controls">
                         <!-- 筛选条件 -->
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterTopStocksManual__posStockFlag">持仓：</label>
+                            <select id="filterTopStocksManual__posStockFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterTopStocksManualPct__todayChangePct__min"
                                    class="me-2">今日涨幅范围(%):</label>
                             <input type="number" id="filterTopStocksManualPct__todayChangePct__min"
@@ -1272,15 +1311,6 @@
                                    class="form-control form-control-sm me-2"
                                    style="width: auto;" min="-30" max="30" step="0.5" value="30">
                         </div>
-                        <div class="d-flex align-items-center me-3">
-                            <label for="filterTopStocksManual__posStockFlag">持仓：</label>
-                            <select id="filterTopStocksManual__posStockFlag" class="form-select form-select-sm"
-                                    style="width:auto">
-                                <option value="">全部</option>
-                                <option value="true">是</option>
-                                <option value="false">否</option>
-                            </select>
-                        </div>
                         <button id="filterTopStocksManualPctButton" class="btn btn-success btn-sm">筛选</button>
                     </div>
                 </div>
@@ -1303,13 +1333,13 @@
                                                                                                   id="sortTopStocksManualStockName"></span>
                                 </th>
                                 <th onclick="sortTopStocksTableManual('topDays')">上榜天数<span class="sort-icon"
-                                                                                                id="sortTopStocksManualDays"></span>
+                                                                                                id="sortTopStocksManualTopDays"></span>
                                 </th>
                                 <th onclick="sortTopStocksTableManual('topBlockSize')">所属主线板块数量<span
                                         class="sort-icon"
                                         id="sortTopStocksManualTopBlockSize"></span>
                                 </th>
-                                <th onclick="sortTopStocksTableManual('topBlockList')">所属主线板块<span
+                                <th class="col-topBlockList" onclick="sortTopStocksTableManual('topBlockList')">所属主线板块<span
                                         class="sort-icon"
                                         id="sortTopStocksManualTopBlockList"></span>
                                 </th>
@@ -1615,9 +1645,9 @@
     let topBlockAvgPctDataManual = {};
     let topStockAvgPctDataManual = {};
     // 存储排序状态 (主线板块 人选)
-    let topBlocksSortStateManual = {column: 'topStockSize', order: 'desc'}; // 默认按topStockSize倒序
+    let topBlocksManualSortState = {column: 'topStockSize', order: 'desc'}; // 默认按topStockSize倒序
     // 存储排序状态 (主线个股 人选)
-    let topStocksSortStateManual = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
+    let topStocksManualSortState = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
 
 
     // 使用 toLocaleDateString 获取本地日期字符串，并指定格式
@@ -1643,32 +1673,6 @@
     // 雪球（沪深京）
     function market2Xueqiu(market) {
         return market === "SA" ? "SZ" : market === "HA" ? "SH" : "BJ";
-    }
-
-
-    // 通用排序
-    function sort(sortedList, sortState) {
-        sortedList.sort((a, b) => {
-            let valA = a[sortState.column];
-            let valB = b[sortState.column];
-            if (valA == null) valA = '';
-            if (valB == null) valB = '';
-
-            // number
-            if (typeof valA === 'number') {
-                return sortState.order === 'asc' ? valA - valB : valB - valA;
-            }
-
-            // object  ->  jsonString
-            if (typeof valA === 'object') {
-                valA = JSON.stringify(valA);
-                valB = JSON.stringify(valB);
-            }
-
-            // string
-            const comparison = String(valA).localeCompare(String(valB));
-            return sortState.order === 'asc' ? comparison : -comparison;
-        });
     }
 
 
@@ -3789,24 +3793,30 @@
 
     // 展示
     function displayTopBlocksManual(blocks) {
+
+
+        // 筛选
+        // blocks = filteredTopBlocksManual(blocks);
+
+
         const tbody = document.querySelector('#topBlocksTableManual tbody');
         const messageDiv = document.getElementById('topBlocksTableManualMessage');
         if (!tbody || !messageDiv) {
             console.error('未找到 #topBlocksTableManual tbody 或 #topBlocksTableManualMessage');
             return;
         }
-        let sortedBlocks = [...blocks];
-        if (topBlocksSortStateManual.column) {
-            sort(sortedBlocks, topBlocksSortStateManual);
+        let sortedBlocksManual = [...blocks];
+        if (topBlocksManualSortState.column) {
+            sort(sortedBlocksManual, topBlocksManualSortState);
         }
         tbody.innerHTML = '';
-        if (sortedBlocks.length === 0) {
+        if (sortedBlocksManual.length === 0) {
             messageDiv.style.display = 'block';
             messageDiv.textContent = '暂无数据';
             document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedBlocks.forEach((block, index) => {
+            sortedBlocksManual.forEach((block, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${index + 1}</td>
@@ -3838,7 +3848,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocks.length}）`;
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocksManual.length}）`;
         }
     }
 
@@ -3924,25 +3934,25 @@
 
     // 排序
     function sortTopBlocksTableManual(column) {
-        if (topBlocksSortStateManual.column === column) {
-            topBlocksSortStateManual.order = topBlocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
+        if (topBlocksManualSortState.column === column) {
+            topBlocksManualSortState.order = topBlocksManualSortState.order === 'asc' ? 'desc' : 'asc';
         } else {
-            topBlocksSortStateManual.order = 'desc'; // 默认倒序
-            topBlocksSortStateManual.column = column;
+            topBlocksManualSortState.order = 'desc'; // 默认倒序
+            topBlocksManualSortState.column = column;
         }
         updateTopBlocksSortIconManual();
         displayTopBlocksManual(topBlocksDataManual);
     }
 
     function updateTopBlocksSortIconManual() {
-        const iconIdPrefix = `sortTopBlocksManual${topBlocksSortStateManual.column ? topBlocksSortStateManual.column.charAt(0).toUpperCase() + topBlocksSortStateManual.column.slice(1) : ''}`;
+        const iconIdPrefix = `sortTopBlocksManual${topBlocksManualSortState.column ? topBlocksManualSortState.column.charAt(0).toUpperCase() + topBlocksManualSortState.column.slice(1) : ''}`;
         const iconElement = document.getElementById(iconIdPrefix);
         const allIcons = document.querySelectorAll('#topBlocksTableManual th span.sort-icon');
         allIcons.forEach(icon => {
             icon.textContent = '';
         });
-        if (iconElement && topBlocksSortStateManual.column) {
-            iconElement.textContent = topBlocksSortStateManual.order === 'asc' ? '↑' : '↓';
+        if (iconElement && topBlocksManualSortState.column) {
+            iconElement.textContent = topBlocksManualSortState.order === 'asc' ? '↑' : '↓';
         }
     }
 
@@ -4047,34 +4057,9 @@
     // 展示
     function displayTopStocksManual(stocks) {
 
-        const todayChangePct__min = document.getElementById('filterTopStocksManualPct__todayChangePct__min').value;
-        let todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max').value;
-        const today2NextChangePct__min = document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').value;
-        let today2NextChangePct__max = document.getElementById('filterTopStocksManualPct__today2NextChangePct__max').value;
-        let posStockFlag = document.getElementById('filterTopStocksManual__posStockFlag').value;
 
-
-        let filteredStocks = stocks;
-        if (todayChangePct__min) {
-            filteredStocks = filteredStocks.filter(stock => stock.today_changePct >= todayChangePct__min);
-        }
-        if (todayChangePct__max) {
-            todayChangePct__max = todayChangePct__max === 30 ? 30.05 : todayChangePct__max;
-            filteredStocks = filteredStocks.filter(stock => stock.today_changePct < todayChangePct__max);
-        }
-        if (today2NextChangePct__min) {
-            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct >= today2NextChangePct__min);
-        }
-        if (today2NextChangePct__max) {
-            today2NextChangePct__max = today2NextChangePct__max === 30 ? 30.05 : today2NextChangePct__max;
-            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct < today2NextChangePct__max);
-        }
-
-        if (posStockFlag) {
-            posStockFlag = posStockFlag === 'true'; // String 转换为 布尔值
-            filteredStocks = filteredStocks.filter(stock => stock.posStockFlag === posStockFlag);
-        }
-        stocks = [...filteredStocks];
+        // 筛选
+        stocks = filteredTopStocksManual(stocks);
 
 
         const tbody = document.querySelector('#topStocksTableManual tbody');
@@ -4083,18 +4068,18 @@
             console.error('未找到 #topStocksTableManual tbody 或 #topStocksTableManualMessage');
             return;
         }
-        let sortedStocks = [...stocks];
-        if (topStocksSortStateManual.column) {
-            sort(sortedStocks, topStocksSortStateManual);
+        let sortedStocksManual = [...stocks];
+        if (topStocksManualSortState.column) {
+            sort(sortedStocksManual, topStocksManualSortState);
         }
         tbody.innerHTML = '';
-        if (sortedStocks.length === 0) {
+        if (sortedStocksManual.length === 0) {
             messageDiv.style.display = 'block';
             messageDiv.textContent = '暂无数据';
             document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
-            sortedStocks.forEach((stock, index) => {
+            sortedStocksManual.forEach((stock, index) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
                 // 添加 data-stockcode 属性
@@ -4132,11 +4117,46 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocks.length}）`;
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocksManual.length}）`;
+
 
             // 为新渲染的复选框添加事件监听器
             attachTopStocksManualCheckboxListeners();
         }
+    }
+
+    // 筛选
+    function filteredTopStocksManual(stocks) {
+
+        let posStockFlag = document.getElementById('filterTopStocksManual__posStockFlag').value;
+        const todayChangePct__min = document.getElementById('filterTopStocksManualPct__todayChangePct__min').value;
+        let todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max').value;
+        const today2NextChangePct__min = document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').value;
+        let today2NextChangePct__max = document.getElementById('filterTopStocksManualPct__today2NextChangePct__max').value;
+
+
+        let filteredStocks = stocks;
+        if (posStockFlag) {
+            posStockFlag = toBoolean(posStockFlag);
+            filteredStocks = filteredStocks.filter(stock => stock.posStockFlag === posStockFlag);
+        }
+        if (todayChangePct__min) {
+            filteredStocks = filteredStocks.filter(stock => stock.today_changePct >= todayChangePct__min);
+        }
+        if (todayChangePct__max) {
+            todayChangePct__max = todayChangePct__max === 30 ? 30.05 : todayChangePct__max;
+            filteredStocks = filteredStocks.filter(stock => stock.today_changePct < todayChangePct__max);
+        }
+        if (today2NextChangePct__min) {
+            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct >= today2NextChangePct__min);
+        }
+        if (today2NextChangePct__max) {
+            today2NextChangePct__max = today2NextChangePct__max === 30 ? 30.05 : today2NextChangePct__max;
+            filteredStocks = filteredStocks.filter(stock => stock.today2Next_changePct < today2NextChangePct__max);
+        }
+        // stocks = [...filteredStocks];
+
+        return filteredStocks;
     }
 
     function displayTopStocksAvgRowManual(avgPct) {
@@ -4223,23 +4243,23 @@
 
     // 排序
     function updateTopStocksSortIconManual() {
-        const iconIdPrefix = `sortTopStocksManual${topStocksSortStateManual.column ? topStocksSortStateManual.column.charAt(0).toUpperCase() + topStocksSortStateManual.column.slice(1) : ''}`;
+        const iconIdPrefix = `sortTopStocksManual${topStocksManualSortState.column ? topStocksManualSortState.column.charAt(0).toUpperCase() + topStocksManualSortState.column.slice(1) : ''}`;
         const iconElement = document.getElementById(iconIdPrefix);
         const allIcons = document.querySelectorAll('#topStocksTableManual th span.sort-icon');
         allIcons.forEach(icon => {
             icon.textContent = '';
         });
-        if (iconElement && topStocksSortStateManual.column) {
-            iconElement.textContent = topStocksSortStateManual.order === 'asc' ? '↑' : '↓';
+        if (iconElement && topStocksManualSortState.column) {
+            iconElement.textContent = topStocksManualSortState.order === 'asc' ? '↑' : '↓';
         }
     }
 
     function sortTopStocksTableManual(column) {
-        if (topStocksSortStateManual.column === column) {
-            topStocksSortStateManual.order = topStocksSortStateManual.order === 'asc' ? 'desc' : 'asc';
+        if (topStocksManualSortState.column === column) {
+            topStocksManualSortState.order = topStocksManualSortState.order === 'asc' ? 'desc' : 'asc';
         } else {
-            topStocksSortStateManual.order = 'desc'; // 默认倒序
-            topStocksSortStateManual.column = column;
+            topStocksManualSortState.order = 'desc'; // 默认倒序
+            topStocksManualSortState.column = column;
         }
         updateTopStocksSortIconManual();
         displayTopStocksManual(topStocksDataManual);
