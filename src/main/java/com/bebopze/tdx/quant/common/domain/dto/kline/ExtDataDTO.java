@@ -63,6 +63,10 @@ public class ExtDataDTO implements Serializable {
     public Boolean 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
+    public Boolean 涨停;
+    public Boolean 跌停;
+
+
     // ---------------------------------------------------
 
 

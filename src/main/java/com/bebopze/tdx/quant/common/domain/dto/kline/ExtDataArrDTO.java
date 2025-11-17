@@ -59,6 +59,10 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
+    public boolean[] 涨停;
+    public boolean[] 跌停;
+
+
     // ---------------------------------------------------
 
 
@@ -136,6 +140,10 @@ public class ExtDataArrDTO implements Serializable {
 
 
         this.高位爆量上影大阴 = new boolean[size];
+
+
+        this.涨停 = new boolean[size];
+        this.跌停 = new boolean[size];
 
 
         this.MA20多 = new boolean[size];

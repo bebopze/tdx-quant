@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
+import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -550,6 +551,57 @@ public class TdxExtFun {
 
         return result;
     }
+
+
+    /**
+     * 是否涨停
+     *
+     * @param close
+     * @param changePctLimit
+     * @return
+     */
+    public static boolean[] 涨停(double[] close, Integer changePctLimit) {
+        int len = close.length;
+        boolean[] result = new boolean[len];
+
+
+        // double changeLimit = changePctLimit * 0.995 * 0.01;   // 涨跌停（%）：9.95% / 19.95% / 29.95%
+
+
+        for (int i = 1; i < len; i++) {
+            // result[i] = close[i] >= close[i - 1] * (1 + changeLimit);
+
+
+            double zt_price = close[i - 1] * (1 + changePctLimit);
+            double aStock__zt_price = NumUtil.of(zt_price, 2);   // A股 涨停价格（保留2位小数）
+
+            result[i] = close[i] >= aStock__zt_price;
+        }
+
+        return result;
+    }
+
+    /**
+     * 是否跌停
+     *
+     * @param close
+     * @param changePctLimit
+     * @return
+     */
+    public static boolean[] 跌停(double[] close, Integer changePctLimit) {
+        int len = close.length;
+        boolean[] result = new boolean[len];
+
+
+        double changeLimit = changePctLimit * 0.998 * 0.01;   // 涨跌停（%）：9.98% / 19.98% / 29.98%
+
+        for (int i = 1; i < len; i++) {
+            result[i] = close[i] <= close[i - 1] * (1 - changeLimit);
+        }
+
+        return result;
+    }
+
 
     /**
      * 近N日   最大值
