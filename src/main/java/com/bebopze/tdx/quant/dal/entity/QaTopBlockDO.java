@@ -5,10 +5,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
-import com.google.common.collect.Sets;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -129,13 +127,9 @@ public class QaTopBlockDO implements Serializable {
 
 
     private List<TopChangePctDTO> getTopList(String topCodeSet, int type) {
-        Set<Integer> typeSet = typeSet(type);
-
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getTopType())
-                           // 仅 人选列表   ->   is_manual = true
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
+                   .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toList());
     }
 
@@ -186,13 +180,9 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Set<String> getTopCodeJsonSet(String topCodeSet, int type) {
-        Set<Integer> typeSet = typeSet(type);
-
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getTopType())
-                           // 仅 人选列表   ->   is_manual = true
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
+                   .filter(e -> e.getTopTypeSet().contains(type))
                    .map(TopChangePctDTO::getCode)
                    .collect(Collectors.toSet());
     }
@@ -215,34 +205,12 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Map<String, String> getTopCodeNameMap(String topCodeSet, int type) {
-        Set<Integer> typeSet = typeSet(type);
-
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
-                   .filter(e -> typeSet.contains(e.getTopType())
-                           // 仅 人选列表   ->   is_manual = true
-                           && (!typeSet.contains(TopTypeEnum.MANUAL.type) || e.isManualFlag()))
-                   // .collect(Collectors.toMap(TopChangePctDTO::getCode, TopChangePctDTO::getName));
+                   .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toMap(TopChangePctDTO::getCode,
                                              e -> e.getName() == null ? "" : e.getName()
                    ));
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    private Set<Integer> typeSet(int type) {
-        Set<Integer> typeSet = Sets.newHashSet(type);
-
-        if (type == TopTypeEnum.AUTO.type) {
-            typeSet.add(TopTypeEnum.AUTO.type);
-        } else if (type == TopTypeEnum.MANUAL.type) {
-            typeSet.add(TopTypeEnum.AUTO.type);
-            typeSet.add(TopTypeEnum.MANUAL.type);
-        }
-
-        return typeSet;
     }
 
 

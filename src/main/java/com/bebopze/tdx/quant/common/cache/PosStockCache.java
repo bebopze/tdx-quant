@@ -38,11 +38,11 @@ public class PosStockCache {
 
     @Getter
     @Setter
-    BaseStockDTO baseStockDTO;
+    private BaseStockDTO baseStockDTO;
 
     @Getter
     @Setter
-    StockBlockInfoDTO stockBlockInfoDTO;
+    private StockBlockInfoDTO stockBlockInfoDTO;
 
 
     // -----------------------------------------------------------------------------------------------------------------
