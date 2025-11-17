@@ -448,6 +448,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
+        boolean[] 涨停 = fun.涨停();
+        boolean[] 跌停 = fun.跌停();
 
 
         boolean[] MA20多 = fun.MA多(20);
@@ -517,6 +519,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
+            dto.set涨停(涨停[i]);
+            dto.set跌停(跌停[i]);
 
 
             dto.setMA20多(MA20多[i]);
