@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -565,15 +566,15 @@ public class TdxExtFun {
         boolean[] result = new boolean[len];
 
 
-        // double changeLimit = changePctLimit * 0.995 * 0.01;   // 涨跌停（%）：9.95% / 19.95% / 29.95%
+        // double changeLimit = changePctLimit * 0.98 * 0.01;   // 涨跌停（%）：9.8% / 19.8% / 29.8%
 
 
         for (int i = 1; i < len; i++) {
             // result[i] = close[i] >= close[i - 1] * (1 + changeLimit);
 
 
-            double zt_price = close[i - 1] * (1 + changePctLimit);
-            double aStock__zt_price = NumUtil.of(zt_price, 2);   // A股 涨停价格（保留2位小数）
+            double zt_price = close[i - 1] * (1 + changePctLimit * 0.01);
+            double aStock__zt_price = NumUtil.of(zt_price, 2, RoundingMode.HALF_UP);   // A股 涨停价格（规则：保留2位小数 -> 四舍五入）
 
             result[i] = close[i] >= aStock__zt_price;
         }
