@@ -1,20 +1,27 @@
 package com.bebopze.tdx.quant.task;
 
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.MacUtil;
+import com.bebopze.tdx.quant.common.util.WinUtils;
 import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.*;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
@@ -50,6 +57,9 @@ public class TdxTask {
 
     @Autowired
     private TradeService tradeService;
+
+    @Autowired
+    private BacktestService backtestService;
 
 
     @Autowired
@@ -166,7 +176,7 @@ public class TdxTask {
 
 
                 taskProgressManager.updateProgress(taskId, 50, "主线板块");
-                topBlockService.refreshAll();
+                topBlockService.refreshAll(UpdateTypeEnum.ALL);
 
 
                 taskProgressManager.updateProgress(taskId, 70, "大盘量化");
@@ -179,6 +189,10 @@ public class TdxTask {
 
                 taskProgressManager.completeTask(taskId, "任务执行完成");
                 log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
+
+
+                // TODO   更新 回测任务（今日数据）
+                refreshBacktest();
 
 
             } catch (Exception e) {
@@ -258,7 +272,7 @@ public class TdxTask {
 
                 taskProgressManager.updateProgress(taskId, 50, "主线板块");
                 if (checkBlockLastDay()) {
-                    topBlockService.refreshAll();
+                    topBlockService.refreshAll(UpdateTypeEnum.INCR);
                 }
 
 
@@ -272,6 +286,10 @@ public class TdxTask {
 
                 taskProgressManager.completeTask(taskId, "任务执行完成");
                 log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
+
+
+                // TODO   更新 回测任务（今日数据）
+                refreshBacktest();
 
 
             } catch (Exception e) {
@@ -305,12 +323,21 @@ public class TdxTask {
 
     @Async
     @TotalTime
-    // @Scheduled(cron = "0 0/10 * ? * *", zone = "Asia/Shanghai")
-    public void queryCreditNewPosV2() {
+    @Scheduled(cron = "0 15 0/2 ? * *", zone = "Asia/Shanghai")
+    // @Scheduled(fixedRateString = "PT1H", zone = "Asia/Shanghai")
+    public void refreshEastmoneyCookie() {
 
 
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
-        tradeService.queryCreditNewPosV2(false);
+        // tradeService.queryCreditNewPosV2(false);
+
+
+        String chromeAppName = "Google Chrome";
+        String url = "https://jywg.18.cn/MarginTrade/Buy";
+
+        MacUtil.openChrome(chromeAppName, url);
+
+
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
 
 
@@ -331,9 +358,17 @@ public class TdxTask {
 
         return lastDTO != null
                 // 当日
-                && lastDTO.getTradeDate().equals(LocalDate.now())
+                && lastDTO.getTradeDate().isEqual(LocalDate.now())
                 // 有数据（AMO>500亿）
                 && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
+    }
+
+
+    /**
+     * 更新 回测任务（今日数据）
+     */
+    private void refreshBacktest() {
+        // backtestService.execBacktestUpdate(19, null, LocalDate.now().minusDays(30), LocalDate.now());
     }
 
 
