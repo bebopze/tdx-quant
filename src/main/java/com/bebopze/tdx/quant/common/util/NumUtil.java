@@ -67,10 +67,14 @@ public class NumUtil {
     }
 
     public static double of(Number val, int newScale) {
+        return of(val, newScale, RoundingMode.HALF_UP);
+    }
+
+    public static double of(Number val, int newScale, RoundingMode roundingMode) {
         if (null == val || (val instanceof Double && (Double.isNaN((Double) val) || Double.isInfinite((Double) val)))) {
             return Double.NaN;
         }
-        return new BigDecimal(String.valueOf(val)).setScale(newScale, RoundingMode.HALF_UP).doubleValue();
+        return new BigDecimal(String.valueOf(val)).setScale(newScale, roundingMode).doubleValue();
     }
 
 
