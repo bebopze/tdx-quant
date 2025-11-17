@@ -53,9 +53,9 @@ public class TopPoolDailyReturnDTO {
     // -------------------------------------------------
 
 
-    // 昨日持仓数量  =  oldPosCount  +  oldSellCount
+    // 昨日 持仓数量  =  oldPosCount  +  oldSellCount
     private int prevCount;
-    // 今日持仓数量  =  oldPosCount  +  newBuyCount
+    // 今日 持仓数量  =  oldPosCount  +  newBuyCount
     private int todayCount;
 
     // 今日  不变数量
@@ -69,5 +69,20 @@ public class TopPoolDailyReturnDTO {
      * 日均 调仓换股比例
      */
     private double posReplaceRatio;
+
+
+
+
+
+//    // -------------------------------------------------
+//
+//    // 今日 涨停数量
+//    private int todayZtCount;
+//    // 次日 开盘价涨跌幅（%）
+//    private double todayZt_nextDayOpenPct;
+//    // 次日 开盘价涨跌幅（%）
+//    private double todayZt_nextDayLowPct;
+//    private double todayZt_nextDayAvgPct;
+
 
 }

@@ -1288,6 +1288,15 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterTopStocksManual__ztFlag">涨停：</label>
+                            <select id="filterTopStocksManual__ztFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterTopStocksManualPct__todayChangePct__min"
                                    class="me-2">今日涨幅范围(%):</label>
                             <input type="number" id="filterTopStocksManualPct__todayChangePct__min"
@@ -3472,6 +3481,7 @@
                         stockName: stock.stockName,
                         xueqiuMarket: stock.xueqiuMarket,
                         posStockFlag: stock.posStockFlag,
+                        ztFlag: stock.ztFlag,
                         topDays: stock.topDays,
                         topBlockSize: stock.topBlockSize,
                         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
@@ -3996,6 +4006,7 @@
                         stockName: stock.stockName,
                         xueqiuMarket: stock.xueqiuMarket,
                         posStockFlag: stock.posStockFlag,
+                        ztFlag: stock.ztFlag,
                         topDays: stock.topDays,
                         topBlockSize: stock.topBlockSize,
                         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
@@ -4129,6 +4140,7 @@
     function filteredTopStocksManual(stocks) {
 
         let posStockFlag = document.getElementById('filterTopStocksManual__posStockFlag').value;
+        let ztFlag = document.getElementById('filterTopStocksManual__ztFlag').value;
         const todayChangePct__min = document.getElementById('filterTopStocksManualPct__todayChangePct__min').value;
         let todayChangePct__max = document.getElementById('filterTopStocksManualPct__todayChangePct__max').value;
         const today2NextChangePct__min = document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').value;
@@ -4139,6 +4151,10 @@
         if (posStockFlag) {
             posStockFlag = toBoolean(posStockFlag);
             filteredStocks = filteredStocks.filter(stock => stock.posStockFlag === posStockFlag);
+        }
+        if (ztFlag) {
+            ztFlag = toBoolean(ztFlag);
+            filteredStocks = filteredStocks.filter(stock => stock.ztFlag === ztFlag);
         }
         if (todayChangePct__min) {
             filteredStocks = filteredStocks.filter(stock => stock.today_changePct >= todayChangePct__min);
@@ -4753,6 +4769,7 @@
             document.getElementById('filterTopStocksManualPct__today2NextChangePct__min').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManualPct__today2NextChangePct__max').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManual__posStockFlag').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
+            document.getElementById('filterTopStocksManual__ztFlag').addEventListener('change', () => displayTopStocksManual(topStocksDataManual));
             document.getElementById('filterTopStocksManualPctButton').addEventListener('click', () => displayTopStocksManual(topStocksDataManual));
         }
 

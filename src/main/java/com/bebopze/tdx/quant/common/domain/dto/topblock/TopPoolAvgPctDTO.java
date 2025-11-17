@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.domain.dto.topblock;
 import com.bebopze.tdx.quant.common.util.MapUtil;
 import com.google.common.collect.Maps;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.Map;
  * @date: 2025/10/7
  */
 @Data
+@NoArgsConstructor
 public class TopPoolAvgPctDTO {
 
 
@@ -27,8 +29,11 @@ public class TopPoolAvgPctDTO {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // 昨日收盘价
     private double prev_close;
+    // 今日收盘价
     private double today_close;
+    // 今日涨幅（%）
     private double today_changePct;
 
 
@@ -78,10 +83,33 @@ public class TopPoolAvgPctDTO {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    // 涨停个股 数量
+    private int zt_count;
+
+    // 次日   ->   O/H/L/C 涨跌幅（%）
+    private double today2Next_openPct;
+    private double today2Next_highPct;
+    private double today2Next_lowPct;
+
+
+    // 成交额
+    private double amo;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
-     * 类型：1-机选；2-人选；
+     * 类型：1-机选；2-人选（TOP50）；3-历史新高；4-极多头；5-RPS三线红；6-10亿；7-首次三线红；8-口袋支点；9-T0；10-涨停（打板）；
      */
     private int type = 1;
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public TopPoolAvgPctDTO(int type) {
+        this.type = type;
+    }
 
 }

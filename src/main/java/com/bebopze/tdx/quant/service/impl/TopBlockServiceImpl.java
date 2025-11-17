@@ -565,6 +565,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                                                             topStock.setStockName(topStockInfo.getName());
                                                             topStock.setTopDays(topStock__codeCountMap.get(stockCode));
                                                             topStock.setPosStockFlag(pos__stockCodeSet.contains(stockCode));
+                                                            topStock.setZtFlag(topStockInfo.isZtFlag());
 
 
                                                             // 当前 主线个股  ->  主线板块 列表

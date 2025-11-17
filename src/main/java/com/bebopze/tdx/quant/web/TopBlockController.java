@@ -215,7 +215,7 @@ public class TopBlockController {
     public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-30")
                                                 @RequestParam(required = false) LocalDate date,
 
-                                                @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
+                                                @Schema(description = "策略类型：1-机选；2-人选；", example = "1")
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
         date = date == null ? LocalDate.now() : date;
@@ -230,7 +230,7 @@ public class TopBlockController {
     public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-30")
                                                 @RequestParam(required = false) LocalDate date,
 
-                                                @Schema(description = "列表类型：1-机选；2-人选；", example = "1")
+                                                @Schema(description = "策略类型：1-机选；2-人选；", example = "1")
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
         date = date == null ? LocalDate.now() : date;
@@ -247,12 +247,15 @@ public class TopBlockController {
                                            @RequestParam LocalDate date,
 
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
-                                           @RequestParam String stockCodeList) {
+                                           @RequestParam String stockCodeList,
+
+                                           @Schema(description = "策略类型：1-机选；2-人选；", example = "2")
+                                           @RequestParam(defaultValue = "2") Integer type) {
 
 
         Set<String> stockCodeSet = ConvertUtil.str2Set(stockCodeList);
 
-        return Result.SUC(topBlockService.addTopStockSet(date, stockCodeSet));
+        return Result.SUC(topBlockService.addTopStockSet(date, stockCodeSet, type));
     }
 
     /**
@@ -264,12 +267,15 @@ public class TopBlockController {
                                            @RequestParam LocalDate date,
 
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
-                                           @RequestParam String stockCodeList) {
+                                           @RequestParam String stockCodeList,
+
+                                           @Schema(description = "策略类型：1-机选；2-人选；", example = "2")
+                                           @RequestParam(defaultValue = "2") Integer type) {
 
 
         Set<String> stockCodeSet = ConvertUtil.str2Set(stockCodeList);
 
-        return Result.SUC(topBlockService.delTopStockSet(date, stockCodeSet));
+        return Result.SUC(topBlockService.delTopStockSet(date, stockCodeSet, type));
     }
 
 
