@@ -1,8 +1,10 @@
 package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -90,6 +92,23 @@ public class TopChangePctDTO {
     // 人选 -> 策略（TOP50）
 
 
+//    private ExtDataDTO topSignalExtDataDTO = buySignalExtDataDTO;
+
+
+    // 是否涨停
+    private boolean ztFlag;
+    // 次日   ->   开盘价/最高价/最低价/收盘价 涨跌幅（%）    （当日 涨停后  ->  次日   是否能买进、平均可买进 挂单价格%、平均涨幅、打板成功率）
+    private double today2Next_openPct;
+    private double today2Next_highPct;
+    private double today2Next_lowPct;                         // 次1日 涨跌幅   基准日期/价格：今日收盘价
+
+    // 次2日   ->   开盘价/最高价/最低价/收盘价 涨跌幅（%）         // 次2日 涨跌幅   基准日期/价格：今日收盘价
+    private double today2N2_openPct;
+    private double today2N2_highPct;
+    private double today2N2_lowPct;
+    private double today2N2_closePct;
+
+
     // 成交额
     private double amo;
 
@@ -109,17 +128,11 @@ public class TopChangePctDTO {
 
 
     /**
-     * 策略类型：1-机选；2-人选；
-     */
-    private int topType = 1;
-
-
-    /**
-     * 是否属于人选：是/否
+     * 策略类型：1-机选；2-人选；3-历史新高；4-极多头；5-RPS三线红；6-10亿；7-首次三线红；8-口袋支点；9-T0；10-涨停（打板）；
      *
-     * 机选列表 -> 此字段无效
+     * @see TopTypeEnum
      */
-    private boolean manualFlag = true;
+    private Set<Integer> topTypeSet = Sets.newHashSet(1);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -129,5 +142,6 @@ public class TopChangePctDTO {
         this.code = code;
         this.name = name;
     }
+
 
 }

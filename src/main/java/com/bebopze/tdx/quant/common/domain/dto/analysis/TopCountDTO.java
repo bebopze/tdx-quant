@@ -52,6 +52,16 @@ public class TopCountDTO {
     private List<TopBlockDTO.TopStock> topStockList = Lists.newArrayList();
 
 
+    /**
+     * 买点信号列表
+     */
+    private List<String> buySignalList = Lists.newArrayList();
+    /**
+     * 卖点信号列表
+     */
+    private List<String> sellSignalList = Lists.newArrayList();
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

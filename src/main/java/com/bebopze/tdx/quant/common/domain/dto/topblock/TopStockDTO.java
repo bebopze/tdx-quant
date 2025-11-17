@@ -27,6 +27,8 @@ public class TopStockDTO {
 
     // 是否持仓
     private boolean posStockFlag;
+    // 是否涨停
+    private boolean ztFlag;
 
 
     /**

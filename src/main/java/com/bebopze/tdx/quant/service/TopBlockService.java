@@ -90,20 +90,20 @@ public interface TopBlockService {
     /**
      * 主线板块 列表
      *
-     * @param date 交易日
-     * @param type 类型：1-机选；2-人选；
+     * @param date            交易日
+     * @param topStrategyType 策略类型：1-机选；2-人选；
      * @return
      */
-    TopBlockPoolDTO topBlockList(LocalDate date, Integer type);
+    TopBlockPoolDTO topBlockList(LocalDate date, Integer topStrategyType);
 
     /**
      * 主线个股 列表
      *
-     * @param date 交易日
-     * @param type 类型：1-机选；2-人选；
+     * @param date            交易日
+     * @param topStrategyType 策略类型：1-机选；2-人选；
      * @return
      */
-    TopStockPoolDTO topStockList(LocalDate date, Integer type);
+    TopStockPoolDTO topStockList(LocalDate date, Integer topStrategyType);
 
 
     /**
@@ -113,7 +113,7 @@ public interface TopBlockService {
      * @param stockCodeSet
      * @return
      */
-    int addTopStockSet(LocalDate date, Set<String> stockCodeSet);
+    int addTopStockSet(LocalDate date, Set<String> stockCodeSet, Integer topStrategyType);
 
     /**
      * 主线个股  -  批量 DEL
@@ -122,7 +122,7 @@ public interface TopBlockService {
      * @param stockCodeSet
      * @return
      */
-    int delTopStockSet(LocalDate date, Set<String> stockCodeSet);
+    int delTopStockSet(LocalDate date, Set<String> stockCodeSet, Integer topStrategyType);
 
 
     // double calcChangePct(Set<String> stockCodeSet, LocalDate date, int N);
