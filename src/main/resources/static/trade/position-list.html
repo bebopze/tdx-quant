@@ -4049,8 +4049,8 @@
                     }
                     return;
                 }
-                // 渲染平均值行
-                displayTopStocksAvgRowManual(topStockAvgPctDataManual);
+
+
                 // 根据当前排序状态显示数据
                 displayTopStocksManual(topStocksDataManual);
             })
@@ -4068,9 +4068,12 @@
     // 展示
     function displayTopStocksManual(stocks) {
 
-
         // 筛选
         stocks = filteredTopStocksManual(stocks);
+
+
+        // 渲染平均值行
+        displayTopStocksAvgRowManual(stocks, topStockAvgPctDataManual);
 
 
         const tbody = document.querySelector('#topStocksTableManual tbody');
@@ -4175,7 +4178,8 @@
         return filteredStocks;
     }
 
-    function displayTopStocksAvgRowManual(avgPct) {
+    // 渲染平均值行
+    function displayTopStocksAvgRowManual(stocks, avgPct) {
         const thead = document.querySelector('#topStocksTableManual thead');
         if (!thead) {
             console.error('未找到 #topStocksTableManual thead');
@@ -4191,6 +4195,18 @@
         const avgRow = document.createElement('tr');
         avgRow.className = 'avg-row'; // 添加类名以便样式控制
 
+
+        // 计算平均值
+        const avg = (arr, key) => arr.reduce((s, v) => s + (v[key] || 0), 0) / arr.length;
+
+        let avgValues = {
+            today2Next_changePct: avg(stocks, 'today2Next_changePct'), // 次日涨幅-CLOSE
+            today2Next_openPct: avg(stocks, 'today2Next_openPct'),     // 次日涨幅-OPEN
+            today2Next_highPct: avg(stocks, 'today2Next_highPct'),     // 次日涨幅-HIGH
+            today2Next_lowPct: avg(stocks, 'today2Next_lowPct'),       // 次日涨幅-LOW
+        };
+
+
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
             <td colspan="9" class="text-center avg-label">【指数】平均值</td>
@@ -4203,17 +4219,17 @@
             <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today_changePct.toFixed(2)}%
             </td>
-            <td style="color: ${avgPct.today2Next_changePct > 0 ? 'red' : avgPct.today2Next_changePct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_changePct.toFixed(2)}%
+            <td style="color: ${avgValues.today2Next_changePct > 0 ? 'red' : avgValues.today2Next_changePct < 0 ? 'teal' : 'black'};">
+                ${avgValues.today2Next_changePct.toFixed(2)}%
             </td>
-            <td style="color: ${avgPct.today2Next_openPct > 0 ? 'red' : avgPct.today2Next_openPct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_openPct.toFixed(2)}%
+            <td style="color: ${avgValues.today2Next_openPct > 0 ? 'red' : avgValues.today2Next_openPct < 0 ? 'teal' : 'black'};">
+                ${avgValues.today2Next_openPct.toFixed(2)}%
             </td>
-            <td style="color: ${avgPct.today2Next_highPct > 0 ? 'red' : avgPct.today2Next_highPct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_highPct.toFixed(2)}%
+            <td style="color: ${avgValues.today2Next_highPct > 0 ? 'red' : avgValues.today2Next_highPct < 0 ? 'teal' : 'black'};">
+                ${avgValues.today2Next_highPct.toFixed(2)}%
             </td>
-            <td style="color: ${avgPct.today2Next_lowPct > 0 ? 'red' : avgPct.today2Next_lowPct < 0 ? 'teal' : 'black'};">
-                ${avgPct.today2Next_lowPct.toFixed(2)}%
+            <td style="color: ${avgValues.today2Next_lowPct > 0 ? 'red' : avgValues.today2Next_lowPct < 0 ? 'teal' : 'black'};">
+                ${avgValues.today2Next_lowPct.toFixed(2)}%
             </td>
             <td style="color: ${avgPct.today2End_changePct > 0 ? 'red' : avgPct.today2End_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today2End_changePct.toFixed(2)}%
