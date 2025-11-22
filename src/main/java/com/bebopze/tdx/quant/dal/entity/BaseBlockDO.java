@@ -216,24 +216,55 @@ public class BaseBlockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public String getTypeDesc() {
-        return BlockTypeEnum.getDescByType(type);
-    }
+    @TableField(exist = false)
+    private List<KlineDTO> klineDTOList;
+
+    @TableField(exist = false)
+    private List<ExtDataDTO> extDataDTOList;
 
 
     public List<KlineDTO> getKlineDTOList() {
-        if (klineHis == null) {
-            return Lists.newArrayList();
+        // 手动set过的，直接返回
+        if (klineDTOList != null) {
+            return klineDTOList;
         }
-        return ConvertStockKline.str2DTOList(klineHis);
+
+        synchronized (this) {
+            if (klineHis == null) {
+                return Lists.newArrayList();
+            }
+
+            // 只转换1次
+            klineDTOList = ConvertStockKline.str2DTOList(klineHis);
+            return klineDTOList;
+        }
     }
 
 
     public List<ExtDataDTO> getExtDataDTOList() {
-        if (extDataHis == null) {
-            return Lists.newArrayList();
+        // 手动set过的，直接返回
+        if (extDataDTOList != null) {
+            return extDataDTOList;
         }
-        return ConvertStockExtData.extDataHis2DTOList(extDataHis);
+
+        synchronized (this) {
+
+            if (extDataHis == null) {
+                return Lists.newArrayList();
+            }
+
+            // 只转换1次
+            extDataDTOList = ConvertStockExtData.extDataHis2DTOList(extDataHis);
+            return extDataDTOList;
+        }
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public String getTypeDesc() {
+        return BlockTypeEnum.getDescByType(type);
     }
 
 
