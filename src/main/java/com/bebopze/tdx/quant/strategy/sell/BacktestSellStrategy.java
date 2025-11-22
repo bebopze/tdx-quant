@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.strategy.sell;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
@@ -157,6 +157,9 @@ public class BacktestSellStrategy implements SellStrategy {
             }
 
 
+            ExtDataDTO extDataDTO = fun.getExtDataDTOList().get(idx);
+
+
             // -------------------------------------------
 
 
@@ -219,7 +222,6 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
             // 偏离率 > 25%
-            // double C_SSF_偏离率 = fun.C_SSF_偏离率(idx);
             double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
             int limit = fun.is20CM() ? 30 : 25;
             if (C_SSF_偏离率 > limit) {
@@ -227,6 +229,31 @@ public class BacktestSellStrategy implements SellStrategy {
                 sell_infoMap.put(stockCode, SellStrategyEnum.C_SSF_偏离率);
                 return true;
             }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 偏离率 > 60%
+            double C_中期MA_偏离率 = extDataDTO.getC_中期MA_偏离率();
+
+
+            int changePctLimit = fun.changePctLimit();
+
+            double 偏离率_limit = changePctLimit == 5 ? 45 :
+                    changePctLimit == 10 ? 55 :
+                            changePctLimit == 20 ? 65 :
+                                    changePctLimit == 30 ? 75 : 50;
+
+
+            if (C_中期MA_偏离率 > 偏离率_limit) {
+                // sell_infoMap.put(stockCode, "C_中期MA_偏离率>" + 偏离率_limit + "%" + ",idx-" + idx);
+                sell_infoMap.put(stockCode, SellStrategyEnum.C_中期MA_偏离率);
+                return true;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
 //      } catch (Exception e) {
