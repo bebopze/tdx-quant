@@ -189,6 +189,7 @@ public class ConvertStock {
 
 
             arrDTO.SSF[i] = of(dto.getSSF());
+            arrDTO.SAR[i] = of(dto.getSAR());
 
 
             arrDTO.RPS三线和[i] = of(dto.getRPS三线和());
@@ -202,11 +203,38 @@ public class ConvertStock {
             arrDTO.N20日涨幅[i] = of(dto.getN20日涨幅());
 
 
-            arrDTO.趋势支撑线[i] = of(dto.get趋势支撑线());
+            arrDTO.短期趋势支撑线[i] = of(dto.get短期趋势支撑线());
+            arrDTO.中期趋势支撑线[i] = of(dto.get中期趋势支撑线());
+
+
             arrDTO.C_SSF_偏离率[i] = of(dto.getC_SSF_偏离率());
+            arrDTO.H_SSF_偏离率[i] = of(dto.getH_SSF_偏离率());
+
+            arrDTO.C_MA5_偏离率[i] = of(dto.getC_MA5_偏离率());
+            arrDTO.H_MA5_偏离率[i] = of(dto.getH_MA5_偏离率());
+            arrDTO.C_MA10_偏离率[i] = of(dto.getC_MA10_偏离率());
+            arrDTO.C_MA15_偏离率[i] = of(dto.getC_MA15_偏离率());
+            arrDTO.C_MA20_偏离率[i] = of(dto.getC_MA20_偏离率());
+            arrDTO.H_MA20_偏离率[i] = of(dto.getH_MA20_偏离率());
+            arrDTO.C_MA25_偏离率[i] = of(dto.getC_MA25_偏离率());
+            arrDTO.C_MA30_偏离率[i] = of(dto.getC_MA30_偏离率());
+            arrDTO.C_MA40_偏离率[i] = of(dto.getC_MA40_偏离率());
+            arrDTO.C_MA50_偏离率[i] = of(dto.getC_MA50_偏离率());
+            arrDTO.C_MA60_偏离率[i] = of(dto.getC_MA60_偏离率());
+            arrDTO.C_MA100_偏离率[i] = of(dto.getC_MA100_偏离率());
+            arrDTO.C_MA120_偏离率[i] = of(dto.getC_MA120_偏离率());
+            arrDTO.C_MA150_偏离率[i] = of(dto.getC_MA150_偏离率());
+            arrDTO.C_MA200_偏离率[i] = of(dto.getC_MA200_偏离率());
+            arrDTO.C_MA250_偏离率[i] = of(dto.getC_MA250_偏离率());
 
 
             arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
+            arrDTO.涨停[i] = of(dto.get涨停());
+            arrDTO.跌停[i] = of(dto.get跌停());
+
+
+            arrDTO.XZZB[i] = of(dto.getXZZB());
+            arrDTO.BSQJ[i] = of(dto.getBSQJ());
 
 
             arrDTO.MA20多[i] = of(dto.getMA20多());
@@ -232,6 +260,7 @@ public class ConvertStock {
             arrDTO.月多[i] = of(dto.get月多());
             arrDTO.均线预萌出[i] = of(dto.get均线预萌出());
             arrDTO.均线萌出[i] = of(dto.get均线萌出());
+            arrDTO.小均线多头[i] = of(dto.get小均线多头());
             arrDTO.大均线多头[i] = of(dto.get大均线多头());
             arrDTO.均线大多头[i] = of(dto.get均线大多头());
             arrDTO.均线极多头[i] = of(dto.get均线极多头());
