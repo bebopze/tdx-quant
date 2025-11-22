@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>回测任务列表</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 添加全局配置文件 -->
+    <script src="../js/config.js"></script>
     <style>
         .table-container {
             overflow-x: auto;
@@ -124,6 +126,9 @@
             <div class="col-md-2 form-group">
                 <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelectedTasks()">批量删除</button>
             </div>
+            <div class="col-md-2 form-group">
+                <button type="button" class="btn btn-sm btn-success" onclick="exportToCSV()">导出CSV</button>
+            </div>
         </div>
     </form>
 
@@ -183,6 +188,22 @@
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
                         <span class="sort-order" id="order-topBlockStrategy"></span>
+                    </div>
+                </th>
+                <th data-key="scoreSortN">
+                    scoreSortN
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-scoreSortN"></span>
+                    </div>
+                </th>
+                <th data-key="stockPosPctLimit">
+                    个股仓位限制%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-stockPosPctLimit"></span>
                     </div>
                 </th>
                 <th data-key="startDate">
@@ -343,7 +364,7 @@
     let sortFields = []; // [{key: 'id', dir: 'asc'}, ...]
 
     // 定义字段类型
-    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy'];
+    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'scoreSortN', 'stockPosPctLimit'];
     const numberFields = ['finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
 
     function formatDateTimeLocal(value) {
@@ -358,7 +379,7 @@
         const totalSeconds = Math.floor(timeDifference / 1000);
 
         const days = Math.floor(totalSeconds / (3600 * 24));
-        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const hours = Math.floor((totalSeconds % (3600 * 4)) / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
 
@@ -419,7 +440,7 @@
         const startCreateTime = formatDateTimeLocal(startCreateTimeRaw);
         const endCreateTime = formatDateTimeLocal(endCreateTimeRaw);
 
-        fetch(`/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
+        ApiUtils.fetch(`/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -488,6 +509,8 @@
               <td>${task.buyStrategy}</td>
               <td>${task.sellStrategy}</td>
               <td>${task.topBlockStrategy}</td>
+              <td>${task.extData?.scoreSortN || ''}</td>
+              <td>${task.extData?.stockPosPctLimit || ''}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
               <td>${task.finalCapital}</td>
@@ -670,6 +693,8 @@
             'buyStrategy': 'B策略',
             'sellStrategy': 'S策略',
             'topBlockStrategy': '主线策略',
+            'scoreSortN': 'scoreSortN',
+            'stockPosPctLimit': '个股仓位限制%',
             'startDate': '回测周期',
             'initialCapital': '初始资金',
             'finalCapital': '结束资金',
@@ -713,6 +738,77 @@
                 alert('删除成功');
                 loadTasks();
             });
+    }
+
+    function exportToCSV() {
+        // 获取所有选中的任务ID
+        const selectedTaskIds = Array.from(document.querySelectorAll('.select-task:checked'))
+            .map(checkbox => checkbox.getAttribute('data-task-id'));
+
+        let dataToExport;
+
+        if (selectedTaskIds.length > 0) {
+            // 只导出被选中的任务
+            dataToExport = originalData.filter(task => selectedTaskIds.includes(String(task.id)));
+        } else {
+            // 没有选择时导出全部数据
+            dataToExport = [...originalData];
+        }
+
+        if (dataToExport.length === 0) {
+            alert("没有可导出的数据");
+            return;
+        }
+
+        // 构造 CSV 内容
+        const headers = [
+            "任务ID", "批次号", "B策略", "S策略", "主线策略", "scoreSortN", "个股仓位限制%",
+            "开始日期", "结束日期", "初始资金", "结束资金", "初始净值", "结束净值",
+            "总天数", "交易总笔数", "交易总金额", "总收益率%", "年化%", "胜率%",
+            "盈亏比", "最大回撤%", "盈利天数%", "夏普比率", "创建时间", "结束时间", "耗时"
+        ];
+
+        const rows = dataToExport.map(task => {
+            const timeDiff = calculateTimeDifference(task.gmtCreate, task.gmtModify);
+            return [
+                task.id,
+                task.batchNo,
+                task.buyStrategy,
+                task.sellStrategy,
+                task.topBlockStrategy,
+                task.extData?.scoreSortN ?? '',
+                task.extData?.stockPosPctLimit ?? '',
+                task.startDate,
+                task.endDate,
+                task.initialCapital,
+                task.finalCapital,
+                task.initialNav,
+                task.finalNav,
+                task.totalDay,
+                task.totalTrade,
+                task.totalTradeAmount,
+                task.totalReturnPct,
+                task.annualReturnPct,
+                task.winPct,
+                task.profitFactor,
+                task.maxDrawdownPct,
+                task.profitDayPct,
+                task.sharpeRatio,
+                task.gmtCreate,
+                task.gmtModify,
+                timeDiff
+            ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(",");
+        });
+
+        const csvContent = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "回测任务列表.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // 新增：添加Enter键支持
