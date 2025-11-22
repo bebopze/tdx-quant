@@ -241,6 +241,22 @@
         <h2>回测分析 - 任务ID: <span id="taskName"></span></h2>
         <a href="backtest-list.html" class="btn btn-primary">返回任务列表</a>
     </div>
+    <!-- 新增：日期范围选择 -->
+    <div class="card mb-4">
+        <div class="row mb-3">
+            <div class="col-md-5">
+                <label for="startDateInput" class="form-label">开始日期</label>
+                <input type="date" class="form-control" id="startDateInput">
+            </div>
+            <div class="col-md-5">
+                <label for="endDateInput" class="form-label">结束日期</label>
+                <input type="date" class="form-control" id="endDateInput">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary" id="applyDateRangeBtn">应用</button>
+            </div>
+        </div>
+    </div>
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center"
              data-bs-toggle="collapse"
@@ -675,8 +691,37 @@
         document.getElementById('topBlockStrategyCell').textContent = task.topBlockStrategy || '-';
     }
 
+
+    // 默认日期范围：设置为最近10年
+    function setDefaultDateRange() {
+        const today = new Date();
+        const threeYearsAgo = new Date();
+        threeYearsAgo.setFullYear(today.getFullYear() - 10);
+
+        const formatDate = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+
+        document.getElementById('startDateInput').value = formatDate(threeYearsAgo);
+        document.getElementById('endDateInput').value = formatDate(today);
+    }
+
+    // 应用按钮点击事件
+    document.getElementById('applyDateRangeBtn').addEventListener('click', function () {
+        loadAnalysis(); // 重新加载数据，使用新日期范围
+    });
+
+
     function loadAnalysis() {
-        ApiUtils.fetch(`/api/backtest/analysis?taskId=${taskId}`)
+
+        const taskId = new URLSearchParams(window.location.search).get('taskId');
+        const startDate = document.getElementById('startDateInput').value;
+        const endDate = document.getElementById('endDateInput').value;
+
+        ApiUtils.fetch(`/api/backtest/analysis?taskId=${taskId}&startDate=${startDate}&endDate=${endDate}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -710,7 +755,7 @@
                 const minYAxis = (Math.floor(minNav * 10) / 10 + (minNav * 1000 % 10 >= 5 ? .05 : 0)).toFixed(2);
                 // 收益率 K线图
                 const returnOption = {
-                    title: {text: '收益率'},
+                    // title: {text: '收益率'},
                     tooltip: {
                         trigger: 'axis',
                         formatter: (params) => {
@@ -734,12 +779,12 @@
                     },
                     series: [{name: '收益率', type: 'line', data: returns, itemStyle: {color: '#5470C6'}}],
                     dataZoom: [{type: 'inside', start: 0, end: 100}, {type: 'slider', start: 0, end: 100}],
-                    grid: {right: 10}
+                    grid: {left: 50, right: 10, top: 30}
                 };
                 returnChart.setOption(returnOption);
                 // 净值 K线图
                 const navOption = {
-                    title: {text: '净值'},
+                    // title: {text: '净值', left: '50%', right: '50%'},
                     tooltip: {
                         trigger: 'axis',
                         backgroundColor: '#fff',
@@ -790,7 +835,7 @@
                         {type: 'inside', start: 0, end: 100},
                         {type: 'slider', start: 0, end: 100}
                     ],
-                    grid: {right: 10}
+                    grid: {left: 50, right: 10, top: 30}
                 };
                 navChart.setOption(navOption);
                 // 绑定两个图表的点击事件
@@ -1238,8 +1283,13 @@
         document.getElementById('bsDetailsCard').classList.remove('d-none');
     }
 
+
     // 折叠/展开功能
     document.addEventListener('DOMContentLoaded', function () {
+
+        setDefaultDateRange(); // 设置默认日期范围
+
+
         // 为所有可折叠面板添加事件监听
         const collapses = [
             {id: 'taskInfoCollapse', icon: 'taskInfoCollapse'},
