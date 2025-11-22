@@ -430,6 +430,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         double[] SSF = fun.SSF();
+        double[] SAR = fun.SAR();
 
 
         double[] RPS三线和 = fun.RPS三线和();
@@ -443,13 +444,41 @@ public class ExtDataServiceImpl implements ExtDataService {
         double[] N20日涨幅 = fun.N日涨幅(20);
 
 
-        int[] 趋势支撑线 = fun.趋势支撑线();
+        int[] 短期趋势支撑线 = fun.短期趋势支撑线();
+        int[] 中期趋势支撑线 = fun.中期趋势支撑线(短期趋势支撑线);
+        // TODO   int[] 长期趋势支撑线 = fun.长期趋势支撑线(短期趋势支撑线);
+
+
         double[] C_SSF_偏离率 = fun.C_SSF_偏离率();
+        double[] H_SSF_偏离率 = fun.H_SSF_偏离率();
+
+        double[] C_MA5_偏离率 = fun.C_MA_偏离率(5);   // TODO   DEL C_MA_偏离率
+        double[] H_MA5_偏离率 = fun.H_MA_偏离率(5);   // TODO   保留 H_MA_偏离率（高抛S）
+
+        double[] C_MA10_偏离率 = fun.C_MA_偏离率(10);
+        double[] C_MA15_偏离率 = fun.C_MA_偏离率(15);
+        double[] C_MA20_偏离率 = fun.C_MA_偏离率(20);
+        double[] H_MA20_偏离率 = fun.H_MA_偏离率(20);
+
+        double[] C_MA25_偏离率 = fun.C_MA_偏离率(25);
+        double[] C_MA30_偏离率 = fun.C_MA_偏离率(30);
+        double[] C_MA40_偏离率 = fun.C_MA_偏离率(40);
+        double[] C_MA50_偏离率 = fun.C_MA_偏离率(50);
+        double[] C_MA60_偏离率 = fun.C_MA_偏离率(60);
+        double[] C_MA100_偏离率 = fun.C_MA_偏离率(100);
+        double[] C_MA120_偏离率 = fun.C_MA_偏离率(120);
+        double[] C_MA150_偏离率 = fun.C_MA_偏离率(150);
+        double[] C_MA200_偏离率 = fun.C_MA_偏离率(200);
+        double[] C_MA250_偏离率 = fun.C_MA_偏离率(250);
 
 
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
         boolean[] 涨停 = fun.涨停();
         boolean[] 跌停 = fun.跌停();
+
+
+        boolean[] XZZB = fun.XZZB();
+        boolean[] BSQJ = fun.BSQJ();
 
 
         boolean[] MA20多 = fun.MA多(20);
@@ -475,6 +504,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 月多 = fun.月多();
         boolean[] 均线预萌出 = fun.均线预萌出();
         boolean[] 均线萌出 = fun.均线萌出();
+        boolean[] 小均线多头 = fun.小均线多头();
         boolean[] 大均线多头 = fun.大均线多头();
         boolean[] 均线大多头 = fun.均线大多头();
         boolean[] 均线极多头 = fun.均线极多头();
@@ -501,6 +531,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             dto.setSSF(of(SSF[i], 3));
+            dto.setSAR(of(SAR[i], 3));
 
 
             dto.setRPS三线和(of(RPS三线和[i], 3));
@@ -514,13 +545,38 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setN20日涨幅(of(N20日涨幅[i], 3));
 
 
-            dto.set趋势支撑线(趋势支撑线[i]);
+            dto.set短期趋势支撑线(短期趋势支撑线[i]);
+            dto.set中期趋势支撑线(中期趋势支撑线[i]);
+
+
             dto.setC_SSF_偏离率(C_SSF_偏离率[i]);
+            dto.setH_SSF_偏离率(H_SSF_偏离率[i]);
+
+            dto.setC_MA5_偏离率(C_MA5_偏离率[i]);
+            dto.setH_MA5_偏离率(H_MA5_偏离率[i]);
+            dto.setC_MA10_偏离率(C_MA10_偏离率[i]);
+            dto.setC_MA15_偏离率(C_MA15_偏离率[i]);
+            dto.setC_MA20_偏离率(C_MA20_偏离率[i]);
+            dto.setH_MA20_偏离率(H_MA20_偏离率[i]);
+            dto.setC_MA25_偏离率(C_MA25_偏离率[i]);
+            dto.setC_MA30_偏离率(C_MA30_偏离率[i]);
+            dto.setC_MA40_偏离率(C_MA40_偏离率[i]);
+            dto.setC_MA50_偏离率(C_MA50_偏离率[i]);
+            dto.setC_MA60_偏离率(C_MA60_偏离率[i]);
+            dto.setC_MA100_偏离率(C_MA100_偏离率[i]);
+            dto.setC_MA120_偏离率(C_MA120_偏离率[i]);
+            dto.setC_MA150_偏离率(C_MA150_偏离率[i]);
+            dto.setC_MA200_偏离率(C_MA200_偏离率[i]);
+            dto.setC_MA250_偏离率(C_MA250_偏离率[i]);
 
 
             dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
             dto.set涨停(涨停[i]);
             dto.set跌停(跌停[i]);
+
+
+            dto.setXZZB(XZZB[i]);
+            dto.setBSQJ(BSQJ[i]);
 
 
             dto.setMA20多(MA20多[i]);
@@ -546,6 +602,7 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set月多(月多[i]);
             dto.set均线预萌出(均线预萌出[i]);
             dto.set均线萌出(均线萌出[i]);
+            dto.set小均线多头(小均线多头[i]);
             dto.set大均线多头(大均线多头[i]);
             dto.set均线大多头(均线大多头[i]);
             dto.set均线极多头(均线极多头[i]);
