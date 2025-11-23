@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
 
 /**
@@ -81,6 +82,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @param tradeDate            交易日期
      * @param buy_infoMap          买入个股-交易信号
      * @param posRate              当前 总仓位
+     * @param ztFlag               个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
     @TotalTime
@@ -89,7 +91,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
                               BacktestCache data,
                               LocalDate tradeDate,
                               Map<String, String> buy_infoMap,
-                              double posRate) {
+                              double posRate,
+                              Boolean ztFlag) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -133,7 +136,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // B策略   ->   强势个股
         long start_2 = System.currentTimeMillis();
-        List<String> buy__topStock__codeList = buy__topStock__codeList(buyConList, data, tradeDate, buy_infoMap);
+        List<String> buy__topStock__codeList = buy__topStock__codeList(buyConList, data, tradeDate, buy_infoMap, ztFlag);
         log.info("BacktestBuyStrategyC - buy__topStock__codeList     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
@@ -144,7 +147,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        List<String> inTopBlock__stockCodeList = inTopBlock__stockCodeList(topBlockCodeSet, buy__topStock__codeList, data, tradeDate);
+        List<String> inTopBlock__stockCodeList = inTopBlock__stockCodeList(topBlockCodeSet, buy__topStock__codeList, data, tradeDate, ztFlag);
         log.info("BacktestBuyStrategyC - inTopBlock__stockCodeList     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -168,9 +171,11 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // TODO     按照 规则打分 -> sort
+        // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
-        List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeList, data, tradeDate, 100);
+        // TODO   TEST
+        // List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeList, data, tradeDate, 100);
+        List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategyC - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
@@ -185,13 +190,15 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @param topStock__codeList 强势个股
      * @param data
      * @param tradeDate
+     * @param ztFlag             个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
     public List<String> inTopBlock__stockCodeList(Set<String> topBlockCodeSet,
                                                   List<String> topStock__codeList,
 
                                                   BacktestCache data,
-                                                  LocalDate tradeDate) {
+                                                  LocalDate tradeDate,
+                                                  Boolean ztFlag) {
 
 
         // 强势个股   ->   IN 主线板块
@@ -242,12 +249,14 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @param data
      * @param tradeDate
      * @param buy_infoMap
+     * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
     private List<String> buy__topStock__codeList(List<String> buyConList,
                                                  BacktestCache data,
                                                  LocalDate tradeDate,
-                                                 Map<String, String> buy_infoMap) {
+                                                 Map<String, String> buy_infoMap,
+                                                 Boolean ztFlag) {
 
 
 //        List<String> buy__topStock__CodeList = Collections.synchronizedList(Lists.newArrayList());
@@ -281,7 +290,16 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             }
 
 
-            // -----------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 涨停 -> 无法买入
+            if (ztFlag != null && !Objects.equals(ztFlag, extDataArrDTO.涨停[idx])) {
+                return;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // Map<String, Boolean> conMap = conMap(extDataArrDTO, idx);
@@ -296,7 +314,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             }
 
 
-            // -----------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 是否买入       =>       conList   ->   全为 true
