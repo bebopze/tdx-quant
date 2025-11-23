@@ -16,6 +16,7 @@ import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
@@ -106,6 +107,9 @@ public class BacktestStrategy {
     private BacktestBuyStrategyC backtestBuyStrategyC;
 
     @Autowired
+    private BacktestBuyStrategyD backtestBuyStrategyD;
+
+    @Autowired
     private SellStrategyFactory sellStrategyFactory;
 
 
@@ -167,6 +171,7 @@ public class BacktestStrategy {
         // 数据初始化   ->   加载 全量行情数据
         log.info("--------------------------- " + Thread.currentThread().getName() + "线程 等待🔐     >>>     😴ing");
         long start = System.currentTimeMillis();
+        // TODO   优化：一次只加载 3年数据
         initData(startDate, endDate);
         log.info("--------------------------- " + Thread.currentThread().getName() + "线程 释放🔐     >>>     ✅ 耗时：" + DateTimeUtil.formatNow2Hms(start));
 
@@ -202,6 +207,13 @@ public class BacktestStrategy {
             tradeDate = tradeDateIncr(tradeDate);
             // 备份
             Backup backup = backupThreadLocal();
+
+
+//            // 数据初始化   ->   加载 全量行情数据
+//            // TODO   优化：一次只加载 3年数据
+//            if (DateTimeUtil.diff(tradeDate, data.endDate()) > 10) {
+//                initData(tradeDate, tradeDate.plusYears(3));
+//            }
 
 
             try {
@@ -546,7 +558,8 @@ public class BacktestStrategy {
 
         // 买入策略
         // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap, posRate);
-        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate);
+        // List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, false);
+        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, false);
 
         log.info("B策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
