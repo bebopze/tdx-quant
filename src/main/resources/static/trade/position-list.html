@@ -953,6 +953,9 @@
                                 <th onclick="sortTopBlocksTable('today_close')">今日收盘价<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday_close"></span></th>
+                                <th onclick="sortTopBlocksTable('amo')">成交额（亿）<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksAmo"></span></th>
                                 <th onclick="sortTopBlocksTable('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksToday_changePct"></span></th>
@@ -1064,6 +1067,9 @@
                                 <th onclick="sortTopStocksTable('today_close')">今日收盘价<span
                                         class="sort-icon"
                                         id="sortTopStocksToday_close"></span></th>
+                                <th onclick="sortTopStocksTable('amo')">成交额（亿）<span
+                                        class="sort-icon"
+                                        id="sortTopStocksAmo"></span></th>
                                 <th onclick="sortTopStocksTable('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksToday_changePct"></span></th>
@@ -1181,6 +1187,9 @@
                                 <th onclick="sortTopBlocksTableManual('today_close')">今日收盘价<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualToday_close"></span></th>
+                                <th onclick="sortTopBlocksTableManual('amo')">成交额（亿）<span
+                                        class="sort-icon"
+                                        id="sortTopBlocksManualAmo"></span></th>
                                 <th onclick="sortTopBlocksTableManual('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopBlocksManualToday_changePct"></span></th>
@@ -1247,6 +1256,15 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span id="topStocksManualCardTitle" class="card-title-with-count">主线个股列表</span>
 
+                    <div class="d-flex align-items-center me-3">
+                        <label for="filterTopStocksManual__topPoolType">主线类型：</label>
+                        <select id="filterTopStocksManual__topPoolType" class="form-select form-select-sm"
+                                style="width:auto">
+                            <option value="1">板块</option>
+                            <option value="2">ETF</option>
+                            <option value="3" selected>个股</option>
+                        </select>
+                    </div>
                     <div class="d-flex align-items-center me-3">
                         <label for="filterTopStocksManual__topStrategyType">策略类型：</label>
                         <select id="filterTopStocksManual__topStrategyType" class="form-select form-select-sm"
@@ -1365,6 +1383,9 @@
                                 <th onclick="sortTopStocksTableManual('today_close')">今日收盘价<span
                                         class="sort-icon"
                                         id="sortTopStocksManualToday_close"></span></th>
+                                <th onclick="sortTopStocksTableManual('amo')">成交额（亿）<span
+                                        class="sort-icon"
+                                        id="sortTopStocksManualAmo"></span></th>
                                 <th onclick="sortTopStocksTableManual('today_changePct')">今日涨幅<span
                                         class="sort-icon"
                                         id="sortTopStocksManualToday_changePct"></span></th>
@@ -3207,41 +3228,60 @@
 
                 topBlockAvgPctData = data.data.topBlockAvgPctDTO || {};
 
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
-                    const changePctDTO = block.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        blockCode: block.blockCode,
-                        blockName: block.blockName,
-                        topDays: block.topDays,
-                        topStockSize: block.topStockSize,
-                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        prev_close: changePctDTO.prev_close || 0,
-                        today_close: changePctDTO.today_close || 0,
-                        today_changePct: changePctDTO.today_changePct || 0,
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
+                topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => ({
+                    rank: index + 1, // 添加序号
+                    ...block,        // 先铺 block 自身
+                    topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                        // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                        ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                        : '-',
+                    // 再铺 changePctDTO
+                    ...Object.fromEntries(
+                        Object.entries(block.changePctDTO || {}).map(([k, v]) => [
+                            k,
+                            typeof v === 'number' ? (v || 0) : (v || '-')
+                        ])
+                    )
+                }));
+
+
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                // topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
+                //     const changePctDTO = block.changePctDTO || {};
+                //     return {
+                //         rank: index + 1, // 添加序号
+                //         blockCode: block.blockCode,
+                //         blockName: block.blockName,
+                //         topDays: block.topDays,
+                //         topStockSize: block.topStockSize,
+                //         topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                //             // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                //             ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                //             : '-',
+                //         topStartDate: changePctDTO.topStartDate || '-',
+                //         topEndDate: changePctDTO.topEndDate || '-',
+                //         prev_close: changePctDTO.prev_close || 0,
+                //         today_close: changePctDTO.today_close || 0,
+                //         today_changePct: changePctDTO.today_changePct || 0,
+                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
+                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                //     };
+                // });
 
                 if (!topBlocksData || topBlocksData.length === 0) {
 
@@ -3306,6 +3346,8 @@
             messageDiv.style.display = 'none';
             sortedBlocks.forEach((block, index) => {
                 const tr = document.createElement('tr');
+                // 成交额（亿）
+                const amo = block.amo / 1_0000_0000;
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
@@ -3317,6 +3359,7 @@
                     <td>${block.topEndDate}</td>
                     <td>${block.prev_close}</td>
                     <td>${block.today_close}</td>
+                    <td>${amo.toFixed(2)}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>
@@ -3364,6 +3407,9 @@
             </td>
             <td style="color: ${avgPct.today_close > 3000 ? 'red' : avgPct.today_close < 3000 ? 'teal' : 'black'};">
                 ${avgPct.today_close}
+            </td>
+            <td style="color: ${avgPct.amo / 1_0000_0000 > 1000 ? 'red' : avgPct.amo < 1000 / 1_0000_0000 ? 'teal' : 'black'};">
+                ${(avgPct.amo / 1_0000_0000).toFixed(2)}
             </td>
             <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today_changePct.toFixed(2)}%
@@ -3472,43 +3518,60 @@
 
                 topStockAvgPctData = data.data.topStockAvgPctDTO || {};
 
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
-                    const changePctDTO = stock.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        stockCode: stock.stockCode,
-                        stockName: stock.stockName,
-                        xueqiuMarket: stock.xueqiuMarket,
-                        posStockFlag: stock.posStockFlag,
-                        ztFlag: stock.ztFlag,
-                        topDays: stock.topDays,
-                        topBlockSize: stock.topBlockSize,
-                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        prev_close: changePctDTO.prev_close || 0,
-                        today_close: changePctDTO.today_close || 0,
-                        today_changePct: changePctDTO.today_changePct || 0,
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
-                    };
-                });
+                topStocksData = (data.data.topStockDTOList || []).map((stock, index) => ({
+                    rank: index + 1,
+                    ...stock,
+                    topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                        ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                        : '-',
+                    ...Object.fromEntries(
+                        Object.entries(stock.changePctDTO || {}).map(([k, v]) => [
+                            k,
+                            typeof v === 'number' ? (v || 0) : (v || '-')
+                        ])
+                    )
+                }));
+
+                // // 处理数据，将 changePctDTO 的字段平铺到主对象
+                // topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
+                //     const changePctDTO = stock.changePctDTO || {};
+                //     return {
+                //         rank: index + 1, // 添加序号
+                //         stockCode: stock.stockCode,
+                //         stockName: stock.stockName,
+                //         xueqiuMarket: stock.xueqiuMarket,
+                //         posStockFlag: stock.posStockFlag,
+                //         ztFlag: stock.ztFlag,
+                //         amo: stock.amo,
+                //         topDays: stock.topDays,
+                //         topBlockSize: stock.topBlockSize,
+                //         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                //             ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                //             : '-',
+                //         topStartDate: changePctDTO.topStartDate || '-',
+                //         topEndDate: changePctDTO.topEndDate || '-',
+                //         prev_close: changePctDTO.prev_close || 0,
+                //         today_close: changePctDTO.today_close || 0,
+                //         today_changePct: changePctDTO.today_changePct || 0,
+                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
+                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
+                //     };
+                // });
 
                 if (!topStocksData || topStocksData.length === 0) {
 
@@ -3570,6 +3633,10 @@
             sortedStocks.forEach((stock, index) => {
                 const stockLink = `https://xueqiu.com/S/${stock.xueqiuMarket}${stock.stockCode}`;
                 const tr = document.createElement('tr');
+
+                // 成交额（亿）
+                const amo = stock.amo / 1_0000_0000;
+
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${stock.stockCode}</a></td>
@@ -3581,6 +3648,7 @@
                     <td>${stock.topEndDate}</td>
                     <td>${stock.prev_close}</td>
                     <td>${stock.today_close}</td>
+                    <td>${amo.toFixed(2)}</td>
                     <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_openPct > 0 ? 'red' : stock.today2Next_openPct < 0 ? 'teal' : 'black'}">${stock.today2Next_openPct.toFixed(2)}%</td>
@@ -3629,6 +3697,9 @@
             </td>
             <td style="color: ${avgPct.today_close > 50 ? 'red' : avgPct.today_close < 50 ? 'teal' : 'black'};">
                 ${avgPct.today_close}
+            </td>
+            <td style="color: ${avgPct.amo / 1_0000_0000 > 10 ? 'red' : avgPct.amo / 1_0000_0000 < 10 ? 'teal' : 'black'};">
+                ${(avgPct.amo / 1_0000_0000).toFixed(2)}
             </td>
             <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today_changePct.toFixed(2)}%
@@ -3735,41 +3806,60 @@
                     throw new Error(data.msg || '获取主线板块列表(人选)失败');
                 }
                 topBlockAvgPctDataManual = data.data.topBlockAvgPctDTO;
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => {
-                    const changePctDTO = block.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        blockCode: block.blockCode,
-                        blockName: block.blockName,
-                        topDays: block.topDays,
-                        topStockSize: block.topStockSize,
-                        topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                            // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                            ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        prev_close: changePctDTO.prev_close || 0,
-                        today_close: changePctDTO.today_close || 0,
-                        today_changePct: changePctDTO.today_changePct || 0,
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                    };
-                });
+                topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => ({
+                    rank: index + 1, // 添加序号
+                    ...block,        // 先铺 block 自身
+                    topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                        // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                        ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                        : '-',
+                    // 再铺 changePctDTO
+                    ...Object.fromEntries(
+                        Object.entries(block.changePctDTO || {}).map(([k, v]) => [
+                            k,
+                            typeof v === 'number' ? (v || 0) : (v || '-')
+                        ])
+                    )
+                }));
+
+
+                // 处理数据，将 changePctDTO 的字段平铺到主对象
+                // topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => {
+                //     const changePctDTO = block.changePctDTO || {};
+                //     return {
+                //         rank: index + 1, // 添加序号
+                //         blockCode: block.blockCode,
+                //         blockName: block.blockName,
+                //         topDays: block.topDays,
+                //         topStockSize: block.topStockSize,
+                //         topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
+                //             // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
+                //             ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
+                //             : '-',
+                //         topStartDate: changePctDTO.topStartDate || '-',
+                //         topEndDate: changePctDTO.topEndDate || '-',
+                //         prev_close: changePctDTO.prev_close || 0,
+                //         today_close: changePctDTO.today_close || 0,
+                //         today_changePct: changePctDTO.today_changePct || 0,
+                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
+                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
+                //     };
+                // });
 
                 if (!topBlocksDataManual || topBlocksDataManual.length === 0) {
                     messageDiv.style.display = 'block';
@@ -3828,6 +3918,8 @@
             messageDiv.style.display = 'none';
             sortedBlocksManual.forEach((block, index) => {
                 const tr = document.createElement('tr');
+                // 成交额（亿）
+                const amo = block.amo / 100000000;
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
@@ -3839,6 +3931,7 @@
                     <td>${block.topEndDate}</td>
                     <td>${block.prev_close}</td>
                     <td>${block.today_close}</td>
+                    <td>${amo.toFixed(2)}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>
@@ -3886,6 +3979,9 @@
             </td>
             <td style="color: ${avgPct.today_close > 3000 ? 'red' : avgPct.today_close < 3000 ? 'teal' : 'black'};">
                 ${avgPct.today_close}
+            </td>
+            <td style="color: ${avgPct.amo / 1_0000_0000 > 1000 ? 'red' : avgPct.amo / 1_0000_0000 < 1000 ? 'teal' : 'black'};">
+                ${(avgPct.amo / 1_0000_0000).toFixed(2)}
             </td>
             <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today_changePct.toFixed(2)}%
@@ -3997,43 +4093,63 @@
                     throw new Error(data.msg || '获取主线个股列表(人选)失败');
                 }
                 topStockAvgPctDataManual = data.data.topStockAvgPctDTO;
+
+
                 // 处理数据，将 changePctDTO 的字段平铺到主对象
-                topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => {
-                    const changePctDTO = stock.changePctDTO || {};
-                    return {
-                        rank: index + 1, // 添加序号
-                        stockCode: stock.stockCode,
-                        stockName: stock.stockName,
-                        xueqiuMarket: stock.xueqiuMarket,
-                        posStockFlag: stock.posStockFlag,
-                        ztFlag: stock.ztFlag,
-                        topDays: stock.topDays,
-                        topBlockSize: stock.topBlockSize,
-                        topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                            ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                            : '-',
-                        topStartDate: changePctDTO.topStartDate || '-',
-                        topEndDate: changePctDTO.topEndDate || '-',
-                        prev_close: changePctDTO.prev_close || 0,
-                        today_close: changePctDTO.today_close || 0,
-                        today_changePct: changePctDTO.today_changePct || 0,
-                        start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                        start2End_changePct: changePctDTO.start2End_changePct || 0,
-                        start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                        today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                        today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                        today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                        today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                        today2End_changePct: changePctDTO.today2End_changePct || 0,
-                        today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                        start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                        start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                        start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                        start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                        start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                        start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
-                    };
-                });
+                topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => ({
+                    rank: index + 1,
+                    ...stock,
+                    topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                        ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                        : '-',
+                    ...Object.fromEntries(
+                        Object.entries(stock.changePctDTO || {}).map(([k, v]) => [
+                            k,
+                            typeof v === 'number' ? (v || 0) : typeof v === 'string' ? (v || '-') : v
+                        ])
+                    )
+                }));
+
+
+                // // 处理数据，将 changePctDTO 的字段平铺到主对象
+                // topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => {
+                //     const changePctDTO = stock.changePctDTO || {};
+                //     return {
+                //         rank: index + 1, // 添加序号
+                //         stockCode: stock.stockCode,
+                //         stockName: stock.stockName,
+                //         xueqiuMarket: stock.xueqiuMarket,
+                //         posStockFlag: stock.posStockFlag,
+                //         ztFlag: stock.ztFlag,
+                //         amo: stock.amo,
+                //         topDays: stock.topDays,
+                //         topBlockSize: stock.topBlockSize,
+                //         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
+                //             ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
+                //             : '-',
+                //         topStartDate: changePctDTO.topStartDate || '-',
+                //         topEndDate: changePctDTO.topEndDate || '-',
+                //         prev_close: changePctDTO.prev_close || 0,
+                //         today_close: changePctDTO.today_close || 0,
+                //         today_changePct: changePctDTO.today_changePct || 0,
+                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
+                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
+                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
+                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
+                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
+                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
+                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
+                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
+                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
+                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
+                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
+                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
+                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
+                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
+                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
+                //     };
+                // });
+
 
                 if (!topStocksDataManual || topStocksDataManual.length === 0) {
                     messageDiv.style.display = 'block';
@@ -4098,6 +4214,8 @@
                 const tr = document.createElement('tr');
                 // 添加 data-stockcode 属性
                 tr.setAttribute('data-stockcode', stock.stockCode);
+                // 成交额（亿）
+                const amo = stock.amo / 100000000;
                 tr.innerHTML = `
                     <td><input type="checkbox" class="top-stocks-manual-checkbox" data-stockcode="${stock.stockCode}"></td>
                     <td>${index + 1}</td>
@@ -4110,6 +4228,7 @@
                     <td>${stock.topEndDate}</td>
                     <td>${stock.prev_close}</td>
                     <td>${stock.today_close}</td>
+                    <td>${amo.toFixed(2)}</td>
                     <td style="color: ${stock.today_changePct > 0 ? 'red' : stock.today_changePct < 0 ? 'teal' : 'black'}">${stock.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_changePct > 0 ? 'red' : stock.today2Next_changePct < 0 ? 'teal' : 'black'}">${stock.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${stock.today2Next_openPct > 0 ? 'red' : stock.today2Next_openPct < 0 ? 'teal' : 'black'}">${stock.today2Next_openPct.toFixed(2)}%</td>
@@ -4215,6 +4334,9 @@
             </td>
             <td style="color: ${avgPct.today_close > 50 ? 'red' : avgPct.today_close < 50 ? 'teal' : 'black'};">
                 ${avgPct.today_close}
+            </td>
+            <td style="color: ${avgPct.amo / 1_0000_0000 > 10 ? 'red' : avgPct.amo / 1_0000_0000 < 10 ? 'teal' : 'black'};">
+                ${(avgPct.amo / 1_0000_0000).toFixed(2)}
             </td>
             <td style="color: ${avgPct.today_changePct > 0 ? 'red' : avgPct.today_changePct < 0 ? 'teal' : 'black'};">
                 ${avgPct.today_changePct.toFixed(2)}%
