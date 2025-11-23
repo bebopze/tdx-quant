@@ -29,7 +29,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
-import static com.bebopze.tdx.quant.common.constant.TdxConst.INVALID_BLOCK;
 
 
 /**
@@ -91,6 +90,17 @@ public class InitDataServiceImpl implements InitDataService {
     }
 
 
+    /**
+     * 初始化  全量行情 Cache（全A + 全板块）
+     *
+     * @param startDate 内存16G以下   ->   一次截取3年
+     *                  内存32G以下   ->   一次截取5年
+     *                  内存64G以下   ->   一次截取10年
+     *                  内存128G以下  ->   一次截取20年
+     * @param endDate
+     * @param refresh
+     * @return
+     */
     @TotalTime
     @Synchronized
     @Override
@@ -244,7 +254,7 @@ public class InitDataServiceImpl implements InitDataService {
         log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
-        // ----------------- TODO   待优化
+        // ----------------- TODO   待优化（耗时：1~3 min）
 
 
         long start = System.currentTimeMillis();
@@ -256,7 +266,7 @@ public class InitDataServiceImpl implements InitDataService {
 
             // klineHis
             List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            klineDTOList = klineDTOList.parallelStream()
+            klineDTOList = klineDTOList.stream()
                                        .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
                                                // 过滤  ->  负价格（前复权）
                                                && k.getClose() > 0)
@@ -264,7 +274,8 @@ public class InitDataServiceImpl implements InitDataService {
                                        .collect(Collectors.toList());
 
 
-            e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+            // e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+            e.setKlineDTOList(klineDTOList);
 
 
             // -----------------------------------------------------------------------------
@@ -285,7 +296,8 @@ public class InitDataServiceImpl implements InitDataService {
                                                .sorted(Comparator.comparing(ExtDataDTO::getDate))
                                                .collect(Collectors.toList());
 
-            e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
+            // e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
+            e.setExtDataDTOList(extDataDTOList);
         });
 
 
@@ -418,7 +430,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
             // 无效板块过滤
-            if (null == stockCode || Objects.equals(blockCode, INVALID_BLOCK)) {
+            if (null == stockCode /*|| Objects.equals(blockCode, INVALID_BLOCK)*/) {
                 // null   =>   基金北向 过滤
                 log.debug("loadAllBlockRelaStock - null     >>>     blockCode : [{}-{}] , stockCode : [{}-{}]",
                           blockId, blockCode, stockId, stockCode);
