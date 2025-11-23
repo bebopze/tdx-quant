@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.common.constant;
 
 
 /**
- * 交易账户   -   全局控制 总开关
+ * 交易账户   -   全局控制 总开关（缺省值）
  *
  * @author: bebopze
  * @date: 2025/8/13

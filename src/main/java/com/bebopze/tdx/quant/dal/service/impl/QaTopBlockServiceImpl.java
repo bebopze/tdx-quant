@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.QaTopBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
@@ -41,6 +42,7 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
         return baseMapper.getByDate(date);
     }
 
+    @TotalTime
     @Override
     public List<QaTopBlockDO> listByDate(LocalDate startDate, LocalDate endDate) {
         return baseMapper.listByDate(startDate, endDate);

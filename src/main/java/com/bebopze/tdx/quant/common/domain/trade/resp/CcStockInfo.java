@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.domain.trade.resp;
 
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -160,7 +161,8 @@ public class CcStockInfo implements Serializable {
     // --------------------------------------------------- 个股 - 板块
 
 
-    StockBlockInfoDTO blockInfoDTO;
+    //    private BaseStockDTO baseStockDTO;
+    private StockBlockInfoDTO blockInfoDTO;
 
 
     // --------------------------------------------------- 主线个股 / 主线板块
@@ -169,12 +171,12 @@ public class CcStockInfo implements Serializable {
     /**
      * 是否   主线个股（板块-月多2）
      */
-    private boolean topStock = false;
+    private boolean topStockFlag = false;
 
     /**
      * 是否   IN 主线板块（板块-月多2）
      */
-    private boolean inTopBlock;
+    private boolean inTopBlockFlag;
 
 
     /**
@@ -183,7 +185,7 @@ public class CcStockInfo implements Serializable {
     List<TopStockDTO.TopBlock> topBlockList = Lists.newArrayList();
 
 
-    public boolean isInTopBlock() {
+    public boolean isInTopBlockFlag() {
         return !topBlockList.isEmpty();
     }
 

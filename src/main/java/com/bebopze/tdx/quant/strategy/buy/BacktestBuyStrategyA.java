@@ -365,10 +365,10 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
                 // ETF   ->   最小交易日（上市日期）
                 List<KlineDTO> klineDTOList = e.getKlineDTOList();
-                LocalDate date = klineDTOList.get(0).getDate();
+                LocalDate date = CollectionUtils.isEmpty(klineDTOList) ? null : klineDTOList.get(0).getDate();
 
                 // 当前日期   ->   已上市
-                if (date.isBefore(tradeDate)) {
+                if (date != null && date.isBefore(tradeDate)) {
                     String stockCode = e.getCode();
 
                     inTopBlock__stockCodeList.add(stockCode);

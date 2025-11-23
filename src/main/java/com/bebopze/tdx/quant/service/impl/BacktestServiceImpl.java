@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.service.impl;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
-import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolSumReturnDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.MaxDrawdownPctDTO;
@@ -478,12 +477,6 @@ public class BacktestServiceImpl implements BacktestService {
 
         // 每日对应 -> 最大回撤
         dto.setDailyDrawdownPctList(dailyDrawdownPctList(dto.getDailyReturnList()));   // DEL
-
-
-        // --------------------------------------- debug
-        dto.setPositionRecordList(Lists.newArrayList());
-        dto.setClearPositionRecordList(Lists.newArrayList());
-        dto.setTradeRecordList(Lists.newArrayList());
 
 
         return dto;

@@ -36,9 +36,14 @@ public class HttpUtil {
 
 
     // 默认超时：连接 5s，读取 10s
-    private static final RequestConfig DEFAULT_CONFIG = RequestConfig.custom().setConnectTimeout(5000).setSocketTimeout(10000).build();
+    private static final RequestConfig DEFAULT_CONFIG = RequestConfig.custom()
+                                                                     .setConnectTimeout(5000)
+                                                                     .setSocketTimeout(10000)
+                                                                     .build();
 
-    private static final CloseableHttpClient CLIENT = HttpClients.custom().setDefaultRequestConfig(DEFAULT_CONFIG).build();
+    private static final CloseableHttpClient CLIENT = HttpClients.custom()
+                                                                 .setDefaultRequestConfig(DEFAULT_CONFIG)
+                                                                 .build();
 
 
     /**

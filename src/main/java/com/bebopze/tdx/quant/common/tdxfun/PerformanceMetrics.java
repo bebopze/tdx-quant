@@ -81,7 +81,7 @@ public class PerformanceMetrics {
 
         // 年化收益（这里用几何年化更适合 Calmar，但用于 Sortino/Sharpe 的分子也可以用几何或算术）
         double geomAnnReturn = geometricAnnualReturn(dailyReturnRateList, tradingDays);
-        double annReturnForRatios = geomAnnReturn; // 可换为 meanDaily*tradingDays
+        double annReturnForRatios = geomAnnReturn; // 可换为 meanDaily * tradingDays
 
         // Sortino 用年化超额收益（用 geom 或 算术 均可，但需写明）
         double annExcessForSortino = annReturnForRatios - rfAnnual;

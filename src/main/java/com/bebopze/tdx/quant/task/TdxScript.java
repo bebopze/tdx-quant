@@ -896,10 +896,10 @@ public class TdxScript {
 
 
         // tdx
-        // String appPath = "C:\\soft\\通达信\\v_2024\\跑数据专用\\new_tdx\\tdxw.exe";
-        String appPath = TDX_PATH + "\\tdxw.exe";
+        // String appPath = "C:/soft/通达信/v_2024/跑数据专用/new_tdx/tdxw.exe";
+        String appPath = TDX_PATH + "/tdxw.exe";
         // tdx - 中信证券
-        // String appPath2 = "C:\.933\soft\\通达信\\中信证券\\zd_zxzq_gm\\TdxW.exe";
+        // String appPath2 = "C:/soft/通达信/中信证券/zd_zxzq_gm/TdxW.exe";
 
         WinUtils.openApp(appPath);
     }
@@ -1028,5 +1028,6 @@ public class TdxScript {
     private static void killTdx() {
         WinUtils.killApp("tdxw.exe");
     }
+
 
 }

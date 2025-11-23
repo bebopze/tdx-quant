@@ -142,7 +142,7 @@ public class BacktestCache {
     public static final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(6_000)                                // 内存容量控制（可根据对象大小调整）
                                                                         // .expireAfterWrite(30, TimeUnit.MINUTES)         // 写入后 30分钟过期（TTL）
-                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)    // 最近访问后 5分钟过期（TTI）
+                                                                        .expireAfterAccess(30, TimeUnit.MINUTES)    // 最近访问后 3分钟过期（TTI）
                                                                         .recordStats()                                     // 开启统计（命中率等）
                                                                         .removalListener(createStatsRemovalListener("stockFunCache", () -> BacktestCache.stockFunCache)) // 可选：清理时回调
                                                                         .scheduler(Scheduler.systemScheduler())            // 使用系统调度器（更精准）
@@ -152,7 +152,7 @@ public class BacktestCache {
     public static final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(1_000)
                                                                         // .expireAfterWrite(30, TimeUnit.MINUTES)
-                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                        .expireAfterAccess(30, TimeUnit.MINUTES)
                                                                         .recordStats()
                                                                         .removalListener(createStatsRemovalListener("blockFunCache", () -> BacktestCache.blockFunCache))
                                                                         // .removalListener((key, value, cause) -> log.info("Cache entry {} was removed due to {}     >>>     stats : {}", key, cause, BacktestCache.blockFunCache.stats()))
@@ -170,6 +170,10 @@ public class BacktestCache {
     }
 
     public StockFun getOrCreateStockFun(BaseStockDO stockDO) {
+        long size = stockFunCache.estimatedSize();
+        if (size % 100 == 0) {
+            log.warn("stockFunCache     >>>     size : {} , stats : {}", size, stockFunCache.stats());
+        }
         return stockFunCache.get(stockDO.getCode(), k -> new StockFun(stockDO));
     }
 
@@ -179,6 +183,10 @@ public class BacktestCache {
     }
 
     public BlockFun getOrCreateBlockFun(BaseBlockDO blockDO) {
+        long size = blockFunCache.estimatedSize();
+        if (size % 100 == 0) {
+            log.warn("blockFunCache     >>>     size : {} , stats : {}", size, blockFunCache.stats());
+        }
         return blockFunCache.get(blockDO.getCode(), k -> new BlockFun(k, blockDO));
     }
 
