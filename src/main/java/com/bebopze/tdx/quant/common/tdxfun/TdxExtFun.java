@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
-import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -268,6 +267,22 @@ public class TdxExtFun {
         double[] result = new double[n];
         for (int i = 0; i < n; i++) {
             result[i] = NumUtil.of((close[i] / MA[i] - 1) * 100);
+        }
+
+        return result;
+    }
+
+
+    public static double[] H_MA_偏离率(double[] high, double[] close, int N) {
+        int n = close.length;
+
+
+        double[] MA = MA(close, N);
+
+
+        double[] result = new double[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = NumUtil.of((high[i] / MA[i] - 1) * 100);
         }
 
         return result;
@@ -855,6 +870,77 @@ public class TdxExtFun {
 
 
     /**
+     * 小均线多头       - SmallMABull
+     *
+     *
+     * MA10 :=IF(MA(C, 10)=DRAWNULL, 0, MA(C, 10));
+     * MA20 :=IF(MA(C, 20)=DRAWNULL, 0, MA(C, 20));
+     * MA50 :=IF(MA(C, 50)=DRAWNULL, 0, MA(C, 50));
+     * MA60 :=IF(MA(C, 60)=DRAWNULL, 0, MA(C, 60));
+     * MA100:=IF(MA(C,100)=DRAWNULL, 0, MA(C,100));
+     * MA200:=IF(MA(C,200)=DRAWNULL, 0, MA(C,200));
+     *
+     *
+     *
+     * 小均线多头 :   C>MA10 AND MA10>MA20 AND MA20>MA50     AND     MA10>MA100 AND MA10>MA200
+     * AND       MA10>=REF(MA10,1)  AND  MA20>=REF(MA20,1)
+     * AND   (   MA50>=REF(MA50,1)  ||  MA60>=REF(MA60,1)   )
+     * AND   MA100>=REF(MA100,1)  AND  MA200>=REF(MA200,1)       COLORMAGENTA;
+     *
+     * @param close 收盘价序列
+     * @return 每个周期是否满足小均线多头排列
+     */
+    public static boolean[] 小均线多头(double[] close) {
+        int n = close.length;
+
+
+        // 1. 计算原始各周期移动平均
+        double[] MA10 = MA(close, 10);
+        double[] MA20 = MA(close, 20);
+        double[] MA50 = MA(close, 50);
+        double[] MA60 = MA(close, 60);
+        double[] MA100 = MA(close, 100);
+        double[] MA200 = MA(close, 200);
+
+        // 2. 将 NaN（周期不足）替换为 0
+        MA10 = NaN_2_0(MA10);
+        MA20 = NaN_2_0(MA20);
+        MA50 = NaN_2_0(MA50);
+        MA60 = NaN_2_0(MA60);
+        MA100 = NaN_2_0(MA100);
+        MA200 = NaN_2_0(MA200);
+
+        // 3. 计算上一日同周期均线（REF）
+        double[] MA10_1 = REF(MA10, 1);
+        double[] MA20_1 = REF(MA20, 1);
+        double[] MA50_1 = REF(MA50, 1);
+        double[] MA60_1 = REF(MA60, 1);
+        double[] MA100_1 = REF(MA100, 1);
+        double[] MA200_1 = REF(MA200, 1);
+
+
+        // 4. 遍历逐日判断
+        boolean[] result = new boolean[n];
+
+
+        for (int i = 1; i < n; i++) {
+            result[i] = close[i] > MA10[i]
+                    && MA10[i] > MA20[i]
+                    && MA20[i] > MA50[i]
+                    && MA10[i] >= MA100[i]
+                    && MA10[i] >= MA200[i]
+                    && MA10[i] >= MA10_1[i]
+                    && MA20[i] >= MA20_1[i]
+                    && (MA50[i] >= MA50_1[i] || MA60[i] >= MA60_1[i])
+                    && MA100[i] >= MA100_1[i]
+                    && MA200[i] >= MA200_1[i];
+        }
+
+
+        return result;
+    }
+
+    /**
      * 计算“大均线多头”布尔序列                            - bigMaBull
      *
      *
@@ -1346,6 +1432,221 @@ public class TdxExtFun {
 
 
     /**
+     * XZZB指标
+     *
+     *
+     * // X_1 :=  ( EMA(C, 4) + MA(C, 4*2) + MA(C, 4*4) )  /  3;
+     * // X_2 :=  ( EMA(C, 6) + MA(C, 6*2) + MA(C, 6*4) )  /  3;
+     * // X_3 :=  ( EMA(C, 9) + MA(C, 9*2) + MA(C, 9*4) )  /  3;
+     * // X_4 :=  ( EMA(C,13) + MA(C,13*2) + MA(C,13*4) )  /  3;
+     * //
+     * // X_5 :=  LLV(L,27);
+     * // X_6 :=  HHV(H,34);
+     * // X_7 :=  EMA((C-X_5) / (X_6-X_5)  *4,   4)  *25;
+     *
+     * X_8 :=  HHV(H, 30);
+     * X_9 :=  LLV(L, 30);
+     *
+     * X_10:=  HHV(H, 60);
+     * X_11:=  LLV(L, 60);
+     *
+     * X_12:=  100 * EMA(C,50);
+     * X_13:=  100 * C;
+     *
+     * X_14:=  X_8  - X_9;
+     * X_15:=  X_10 - X_11;
+     *
+     * X_16:=  (C    - X_9 ) / X_14   *10000;
+     * X_17:=  (X_8  - C   ) / X_14   *10000;
+     * X_18:=  (C    - X_11) / X_15   *10000;
+     * X_19:=  (X_10 - C   ) / X_15   *10000;
+     *
+     * X_20:=  EMA(X_16,   2);
+     * X_21:=  EMA(X_17, 250);
+     *
+     *
+     *
+     * XZZB涨 :  X_20>=X_21 AND X_13>=X_12     COLORRED   NODRAW;
+     * XZZB跌 :  NOT(XZZB涨)                   COLORGREEN NODRAW;
+     *
+     * @return
+     */
+    public static boolean[] XZZB(double[] high, double[] low, double[] close) {
+        int n = close.length;
+        boolean[] result = new boolean[n];
+
+
+//        // X_1 :=  ( EMA(C, 4) + MA(C, 4*2) + MA(C, 4*4) )  /  3;
+//        double[] ema_4 = EMA(close, 4);
+//        double[] ma_4_2 = MA(close, 4 * 2);
+//        double[] ma_4_4 = MA(close, 4 * 4);
+//
+//
+//        // X_2 :=  ( EMA(C, 6) + MA(C, 6*2) + MA(C, 6*4) )  /  3;
+//        double[] ema_6 = EMA(close, 6);
+//        double[] ma_6_2 = MA(close, 6 * 2);
+//        double[] ma_6_4 = MA(close, 6 * 4);
+//
+//
+//        // X_3 :=  ( EMA(C, 9) + MA(C, 9*2) + MA(C, 9*4) )  /  3;
+//        double[] ema_9 = EMA(close, 9);
+//        double[] ma_9_2 = MA(close, 9 * 2);
+//        double[] ma_9_4 = MA(close, 9 * 4);
+//
+//
+//        // X_4 :=  ( EMA(C,13) + MA(C,13*2) + MA(C,13*4) )  /  3;
+//        double[] ema_13 = EMA(close, 13);
+//        double[] ma_13_2 = MA(close, 13 * 2);
+//        double[] ma_13_4 = MA(close, 13 * 4);
+//
+//
+//        // X_5 :=  LLV(L,27);
+//        double[] X_5 = LLV(low, 27);
+//
+//
+//        // X_6 :=  HHV(H,34);
+//        double[] X_6 = HHV(high, 34);
+//
+//
+//        // X_7 :=  EMA((C-X_5) / (X_6-X_5)  *4,   4)  *25;
+//        double[] r_7 = new double[close.length];
+//        for (int i = 0; i < close.length; i++) {
+//            r_7[i] = close[i] - X_5[i] / (X_6[i] - X_5[i]) * 4;
+//        }
+//        double[] X_7 = EMA(r_7, 4);
+
+
+        // X_8 :=  HHV(H, 30);
+        double[] X_8 = HHV(high, 30);
+
+        // X_9 :=  LLV(L, 30);
+        double[] X_9 = LLV(low, 30);
+
+        // X_10:=  HHV(H, 60);
+        double[] X_10 = HHV(high, 60);
+
+        // X_11:=  LLV(L, 60);
+        double[] X_11 = LLV(low, 60);
+
+
+        // X_12:=  100 * EMA(C,50);
+        double[] X_12 = EMA(close, 50);
+
+
+        // X_13:=  100 * C;
+        double[] X_13 = close;
+
+
+        // X_14:=  X_8  - X_9;
+        // X_15:=  X_10 - X_11;
+        //
+        // X_16:=  (C    - X_9 ) / X_14   *10000;
+        // X_17:=  (X_8  - C   ) / X_14   *10000;
+        // X_18:=  (C    - X_11) / X_15   *10000;
+        // X_19:=  (X_10 - C   ) / X_15   *10000;
+        //
+
+
+        double[] X_16 = new double[n];
+        double[] X_17 = new double[n];
+        double[] X_18 = new double[n];
+        double[] X_19 = new double[n];
+
+
+        for (int i = 0; i < n; i++) {
+
+//            double x_1 = (ema_4[i] + ma_4_2[i] + ma_4_4[i]) / 3;
+//            double x_2 = (ema_6[i] + ma_6_2[i] + ma_6_4[i]) / 3;
+//            double x_3 = (ema_9[i] + ma_9_2[i] + ma_9_4[i]) / 3;
+//            double x_4 = (ema_13[i] + ma_13_2[i] + ma_13_4[i]) / 3;
+//            double x_5 = X_5[i];
+//            double x_6 = X_6[i];
+//            X_7[i] = X_7[i] * 25;
+            double x_8 = X_8[i];
+            double x_9 = X_9[i];
+            double x_10 = X_10[i];
+            double x_11 = X_11[i];
+
+
+            X_12[i] = X_12[i] * 100;
+            X_13[i] = X_13[i] * 100;
+
+
+            double x_14 = x_8 - x_9;
+            double x_15 = x_10 - x_11;
+
+
+            X_16[i] = (close[i] - x_9) / x_14 * 10000;
+            X_17[i] = (x_8 - close[i]) / x_14 * 10000;
+            X_18[i] = (close[i] - x_11) / x_15 * 10000;
+            X_19[i] = (x_10 - close[i]) / x_15 * 10000;
+        }
+
+
+        // X_20:=  EMA(X_16,   2);
+        double[] X_20 = EMA(X_16, 2);
+
+        // X_21:=  EMA(X_17, 250);
+        double[] X_21 = EMA(X_17, 250);
+
+
+        // XZZB涨 :  X_20>=X_21 AND X_13>=X_12     COLORRED   NODRAW;
+        // XZZB跌 :  NOT(XZZB涨)                   COLORGREEN NODRAW;
+
+
+        for (int i = 0; i < n; i++) {
+            result[i] = X_20[i] >= X_21[i] && X_13[i] >= X_12[i];
+        }
+
+
+        return result;
+    }
+
+
+    /**
+     * BS区间
+     *
+     * @param close
+     * @return
+     */
+    public static boolean[] BSQJ(double[] close) {
+        int n = close.length;
+        boolean[] result = new boolean[n];
+
+
+        // 买线 := EMA(C,2);
+        double[] 买线 = EMA(close, 2);
+
+
+        // 卖线 := EMA(SLOPE(C,21) *20 +C, 42);
+        double[] slope = SLOPE(close, 21);
+        for (int i = 0; i < n; i++) {
+            slope[i] = slope[i] * 20 + close[i];
+        }
+        double[] 卖线 = EMA(slope, 42);
+
+
+        // 指导:=EMA((EMA(CLOSE,4)+EMA(CLOSE,6)+EMA(CLOSE,12)+EMA(CLOSE,24))/4,2);
+        // 界:=MA(CLOSE,27);
+
+
+        // B买:IF(CROSS(指导,界) OR CROSS(买线,卖线),C,DRAWNULL),COLORMAGENTA,NODRAW;
+        // 持仓（含B）:IF(买线>=卖线,C,DRAWNULL),COLORRED,NODRAW;
+        // S卖:IF(CROSS(界,指导) OR CROSS(卖线,买线),C,DRAWNULL),COLORLIGRAY,NODRAW;
+        // 空仓（含S）:IF(买线<卖线,C,DRAWNULL),COLORGREEN,NODRAW;
+
+
+        // 持仓（含B）
+        for (int i = 0; i < n; i++) {
+            result[i] = 买线[i] >= 卖线[i];
+        }
+
+
+        return result;
+    }
+
+
+    /**
      * RPS三线和 - sum value
      *
      * @param rps10
@@ -1681,7 +1982,150 @@ public class TdxExtFun {
 
     }
 
-    public static int[] 趋势支撑线(double[] close, double[] ssf) {
+
+    /**
+     * 趋势支撑线
+     *
+     *
+     *
+     * 小均线多头 :=  小均线多头.小均线多头;
+     * 均线大多头 :=  均线大多头.均线大多头;
+     *
+     *
+     *
+     * { -------------------------------------------------------------------------- }
+     * 支撑线 :
+     *
+     * IF(MA多(  5) AND COUNT(MA多(  5), 10)>= 9   AND   小均线多头,      5,
+     * IF(MA多( 10) AND COUNT(MA多( 10), 15)>=14   AND   均线大多头,     10,
+     * IF(MA多( 20) AND COUNT(MA多( 20), 20)>=19,     20,
+     * IF(MA多( 50) AND COUNT(MA多( 50), 50)>=47,     50,
+     * IF(MA多( 60) AND COUNT(MA多( 60), 50)>=47,     60,
+     * IF(MA多(100) AND COUNT(MA多(100), 70)>=67,    100,
+     * IF(MA多(120) AND COUNT(MA多(120), 70)>=67,    120,
+     * IF(MA多(150) AND COUNT(MA多(150), 75)>=72,    150,
+     * IF(MA多(200) AND COUNT(MA多(200), 90)>=85,    200,
+     * IF(MA多(250) AND COUNT(MA多(250), 90)>=85,    250,
+     *
+     * 0))))))))))       COLORWHITE DOTLINE;
+     *
+     * @param close
+     * @return
+     */
+    public static int[] 短期趋势支撑线(double[] close) {
+        int n = close.length;
+        int[] MA = new int[n];
+
+
+        // 小均线多头 :=  小均线多头.小均线多头;
+        // 均线大多头 :=  均线大多头.均线大多头;
+        boolean[] 小均线多头 = 小均线多头(close);
+        boolean[] 均线大多头 = 均线大多头(close);
+
+
+        // { -------------------------------------------------------------------------- }
+        // 支撑线 :
+        //
+        //   IF(MA多(  5) AND COUNT(MA多(  5), 10)>= 9   AND   小均线多头,      5,
+        //   IF(MA多( 10) AND COUNT(MA多( 10), 15)>=14   AND   均线大多头,     10,
+        //   IF(MA多( 20) AND COUNT(MA多( 20), 20)>=19,     20,
+        //   IF(MA多( 50) AND COUNT(MA多( 50), 50)>=47,     50,
+        //   IF(MA多( 60) AND COUNT(MA多( 60), 50)>=47,     60,
+        //   IF(MA多(100) AND COUNT(MA多(100), 70)>=67,    100,
+        //   IF(MA多(120) AND COUNT(MA多(120), 70)>=67,    120,
+        //   IF(MA多(150) AND COUNT(MA多(150), 75)>=72,    150,
+        //   IF(MA多(200) AND COUNT(MA多(200), 90)>=85,    200,
+        //   IF(MA多(250) AND COUNT(MA多(250), 90)>=85,    250,
+        //
+        //   0))))))))))       COLORWHITE DOTLINE;
+
+
+        boolean[] MA5_多 = MA多(close, 5);
+        boolean[] MA10_多 = MA多(close, 10);
+        boolean[] MA20_多 = MA多(close, 20);
+        boolean[] MA50_多 = MA多(close, 50);
+        boolean[] MA60_多 = MA多(close, 60);
+        boolean[] MA100_多 = MA多(close, 100);
+        boolean[] MA120_多 = MA多(close, 120);
+        boolean[] MA150_多 = MA多(close, 150);
+        boolean[] MA200_多 = MA多(close, 200);
+        boolean[] MA250_多 = MA多(close, 250);
+
+
+        int[] count_MA5_多 = COUNT(MA5_多, 10);
+        int[] count_MA10_多 = COUNT(MA10_多, 15);
+        int[] count_MA20_多 = COUNT(MA20_多, 20);
+        int[] count_MA50_多 = COUNT(MA50_多, 50);
+        int[] count_MA60_多 = COUNT(MA60_多, 50);
+        int[] count_MA100_多 = COUNT(MA100_多, 70);
+        int[] count_MA120_多 = COUNT(MA120_多, 70);
+        int[] count_MA150_多 = COUNT(MA150_多, 75);
+        int[] count_MA200_多 = COUNT(MA200_多, 90);
+        int[] count_MA250_多 = COUNT(MA250_多, 90);
+
+
+        for (int i = 0; i < n; i++) {
+            if (MA5_多[i] && count_MA5_多[i] >= 9 && 小均线多头[i]) {
+                MA[i] = 5;
+            } else if (MA10_多[i] && count_MA10_多[i] >= 14 && 均线大多头[i]) {
+                MA[i] = 10;
+            } else if (MA20_多[i] && count_MA20_多[i] >= 19) {
+                MA[i] = 20;
+            } else if (MA50_多[i] && count_MA50_多[i] >= 47) {
+                MA[i] = 50;
+            } else if (MA60_多[i] && count_MA60_多[i] >= 47) {
+                MA[i] = 60;
+            } else if (MA100_多[i] && count_MA100_多[i] >= 67) {
+                MA[i] = 100;
+            } else if (MA120_多[i] && count_MA120_多[i] >= 67) {
+                MA[i] = 120;
+            } else if (MA150_多[i] && count_MA150_多[i] >= 72) {
+                MA[i] = 150;
+            } else if (MA200_多[i] && count_MA200_多[i] >= 85) {
+                MA[i] = 200;
+            } else if (MA250_多[i] && count_MA250_多[i] >= 85) {
+                MA[i] = 250;
+            } else {
+                // default
+                MA[i] = 200;
+            }
+        }
+
+
+        return MA;
+    }
+
+    /**
+     * 中期趋势支撑线
+     *
+     * @param close
+     * @param 短期趋势支撑线
+     * @return
+     */
+    public static int[] 中期趋势支撑线(double[] close, int[] 短期趋势支撑线) {
+        int[] result = new int[close.length];
+
+
+        boolean[] 下MA20 = 下MA(close, 20);
+        int[] BARSLAST__下MA20 = TdxFun.BARSLAST(下MA20);
+
+
+        for (int i = 0; i < close.length; i++) {
+            // 支撑线 区间起始日期   ->   距今天数
+            int last__下MA20__days = BARSLAST__下MA20[i];
+
+            // 支撑线 区间起始日期   ->   idx
+            int lastIdx = Math.max(i - last__下MA20__days, 0);
+
+
+            result[i] = 短期趋势支撑线[lastIdx];
+        }
+
+
+        return result;
+    }
+
+    public static int[] 趋势支撑线_2(double[] close, double[] ssf) {
         int n = close.length;
         int[] MA = new int[n];
 

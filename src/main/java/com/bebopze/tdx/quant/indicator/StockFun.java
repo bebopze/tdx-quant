@@ -1,30 +1,22 @@
 package com.bebopze.tdx.quant.indicator;
 
-import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
-import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.common.config.FastJson2Config;
-import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
-import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -183,96 +175,6 @@ public class StockFun {
     }
 
 
-    // -------------------------------------------------------------------------------------------------------------
-
-
-    public StockFun(String code) {
-
-        // 个股
-        initData(code, null);
-    }
-
-
-    /**
-     * 加载   个股-行情数据
-     *
-     * @param stockCode 股票code
-     * @param limit     N日
-     */
-    @SneakyThrows
-    public void initData(String stockCode, Integer limit) {
-
-        limit = limit == null ? 500 : limit;
-
-
-        // --------------------------- HTTP 获取   个股行情 data
-
-        // 实时行情 - API
-        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-        SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
-
-
-        // 历史行情 - API
-        StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        // --------------------------- resp -> DTO
-
-
-        String stockName = shszQuoteSnapshotResp.getName();
-
-
-        // 收盘价 - 实时
-        double C = realtimequote.getCurrentPrice().doubleValue();
-
-
-        // 历史行情
-        List<KlineDTO> klineDTOList = ConvertStockKline.klines2DTOList(stockKlineHisResp.getKlines(), limit);
-
-
-        LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
-        double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
-        double[] high_arr = ConvertStockKline.fieldValArr(klineDTOList, "high");
-
-
-        // TODO   RPS（预计算） -> DB获取
-
-
-//        double[] rps50_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 50);
-//        double[] rps120_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 120);
-//        double[] rps250_arr = STOCK_RPS_CACHE.get(stockCode + "-" + 250);
-
-
-        // --------------------------- init data
-
-
-        this.code = stockCode;
-        this.name = stockName;
-
-
-        this.shszQuoteSnapshotResp = shszQuoteSnapshotResp;
-        this.klineDTOList = klineDTOList;
-
-        this.C = C;
-
-        this.date = date_arr;
-        this.close = close_arr;
-        this.high = high_arr;
-
-
-        this.ssf = SSF();
-
-
-        this.rps50 = rps50;
-        this.rps120 = rps120;
-        this.rps250 = rps250;
-
-
-    }
-
-
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -321,6 +223,10 @@ public class StockFun {
         return ssf;
     }
 
+    public double[] SAR() {
+        return TdxFun.TDX_SAR(high, low);
+    }
+
 
     public boolean[] 上SSF() {
         return TdxExtFun.上SSF(close, ssf);
@@ -341,7 +247,7 @@ public class StockFun {
 
 
     public boolean[] SSF多() {
-        return TdxExtFun.SSF多(close, ssf);
+        return TdxExtFun.SSF多(close, ArrayUtils.isEmpty(ssf) ? SSF() : ssf);
     }
 
 
@@ -357,14 +263,32 @@ public class StockFun {
         return TdxExtFun.中期涨幅N(high, low, close, N);
     }
 
+    public double[] N日涨幅(int N) {
+        return TdxExtFun.changePct(close, N);
+    }
+
+
     // 高位-爆量/上影/大阴
     public boolean[] 高位爆量上影大阴() {
         return TdxExtFun.高位爆量上影大阴(high, low, close, amo, is20CM(), date);
     }
 
 
+    public boolean[] 涨停() {
+        return TdxExtFun.涨停(close, changePctLimit());
+    }
+
+    public boolean[] 跌停() {
+        return TdxExtFun.跌停(close, changePctLimit());
+    }
+
+
     public boolean is20CM() {
         return StockLimitEnum.is20CM(code, name);
+    }
+
+    public Integer changePctLimit() {
+        return StockLimitEnum.getChangePctLimit(code, name);
     }
 
 
@@ -386,13 +310,25 @@ public class StockFun {
         return TdxExtFun.C_SSF_偏离率(close, ssf);
     }
 
+    public double[] H_SSF_偏离率() {
+        return TdxExtFun.C_SSF_偏离率(high, ssf);
+    }
+
     public double[] C_MA_偏离率(int N) {
         return TdxExtFun.C_MA_偏离率(close, N);
     }
 
+    public double[] H_MA_偏离率(int N) {
+        return TdxExtFun.H_MA_偏离率(high, close, N);
+    }
 
-    public int[] 趋势支撑线() {
-        return TdxExtFun.趋势支撑线(close, ssf);
+
+    public int[] 短期趋势支撑线() {
+        return TdxExtFun.短期趋势支撑线(close);
+    }
+
+    public int[] 中期趋势支撑线(int[] 短期趋势支撑线) {
+        return TdxExtFun.中期趋势支撑线(close, 短期趋势支撑线);
     }
 
 
@@ -437,6 +373,10 @@ public class StockFun {
     }
 
 
+    public boolean[] 小均线多头() {
+        return TdxExtFun.小均线多头(close);
+    }
+
     public boolean[] 大均线多头() {
         return TdxExtFun.大均线多头(close);
     }
@@ -460,12 +400,25 @@ public class StockFun {
     }
 
 
+    public boolean[] XZZB() {
+        return TdxExtFun.XZZB(high, low, close);
+    }
+
+    public boolean[] BSQJ() {
+        return TdxExtFun.BSQJ(close);
+    }
+
+
     public double[] RPS三线和() {
         return TdxExtFun.RPS三线和(rps10, rps20, rps50, rps120, rps250);
     }
 
     public boolean[] RPS三线和2(double RPS) {
         return TdxExtFun.RPS三线和2(rps10, rps20, rps50, rps120, rps250, RPS);
+    }
+
+    public double[] RPS五线和() {
+        return TdxExtFun.RPS五线和(rps10, rps20, rps50, rps120, rps250);
     }
 
 
@@ -527,9 +480,9 @@ public class StockFun {
 
 
         boolean[] con_3 = new boolean[close.length];
-        double[] N日涨幅 = changePct(close, 3);
-        for (int i = 0; i < N日涨幅.length; i++) {
-            con_3[i] = N日涨幅[i] >= -10;
+        double[] N3日涨幅 = N日涨幅(3);
+        for (int i = 0; i < N3日涨幅.length; i++) {
+            con_3[i] = N3日涨幅[i] >= -10;
         }
 
 
@@ -549,7 +502,7 @@ public class StockFun {
         boolean[] con_B = con_or(con_5, con_6, con_7);
 
 
-        return con_merge(con_A, con_B);
+        return TdxExtFun.con_merge(con_A, con_B);
     }
 
 
@@ -586,18 +539,27 @@ public class StockFun {
 
         // 2、未 大幅回落
 
-        // MA10 支撑线
-        boolean[] con_2 = MA多(10);
+        // MA5 支撑线
+        // boolean[] con_2 = MA多(5);
+
+        boolean[] con_2_1 = MA多(5);
+        boolean[] con_2_2 = con_sumCompare(3, MA多(5), MA多(10), MA多(20), MA多(50));
+        boolean[] con_2 = con_or(con_2_1, con_2_2);
+
+
+        // SSF多
+        boolean[] con_3 = SSF多();
+
 
         // 3日涨跌幅 > -10%
-        boolean[] con_3 = new boolean[close.length];
-        double[] N日涨幅 = changePct(close, 3);
-        for (int i = 0; i < N日涨幅.length; i++) {
-            con_3[i] = N日涨幅[i] >= -10;
+        boolean[] con_4 = new boolean[close.length];
+        double[] N3日涨幅 = N日涨幅(3);
+        for (int i = 0; i < N3日涨幅.length; i++) {
+            con_4[i] = N3日涨幅[i] >= -10;
         }
 
 
-        return con_merge(con_1, con_2, con_3);
+        return con_merge(con_1, con_2, con_3, con_4);
     }
 
 
@@ -607,31 +569,6 @@ public class StockFun {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * 结果合并   -   OR
-     *
-     * @param arr_list
-     * @return
-     */
-    public static boolean[] con_or(boolean[]... arr_list) {
-
-        int len = arr_list[0].length;
-        boolean[] result = new boolean[len];
-
-
-        for (int i = 0; i < len; i++) {
-            boolean acc = false;
-            for (boolean[] arr : arr_list) {
-                acc = acc || arr[i];
-                if (acc) break;
-            }
-            result[i] = acc;
-        }
-
-        return result;
-    }
 
 
     /**
@@ -645,53 +582,4 @@ public class StockFun {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    public static void main(String[] args) {
-        FastJson2Config fastJson2Config = new FastJson2Config();
-
-
-        String stockCode = "688615";
-
-
-        StockFun fun = new StockFun(stockCode);
-
-
-        boolean[] 历史新高 = fun.历史新高();
-
-
-        // 1、下MA50
-        boolean[] 下MA50 = fun.下MA(50);
-
-
-        // 2、MA空(20)
-        boolean[] MA20_空 = fun.MA空(20);
-
-
-        boolean[] 下MA100 = fun.MA空(100);
-
-
-        double[] closeArr = fun.close;
-        // double[] ssf = SSF(closeArr);
-
-
-        LocalDate[] date_arr = fun.date;
-        double[] ssf_arr = fun.ssf;
-        boolean[] booleans = fun.SSF多();
-
-        boolean[] con = con_merge(下MA50, MA20_空, 下MA100);
-
-
-        // 3、RPS三线 < 85
-
-
-        Map<String, BigDecimal> date_ssf_map = Maps.newTreeMap();
-
-        for (int i = 0; i < date_arr.length; i++) {
-            date_ssf_map.put(date_arr[i].toString(), NumUtil.double2Decimal(ssf_arr[i]));
-        }
-
-        System.out.println(JSON.toJSONString(date_ssf_map));
-    }
 }

@@ -83,7 +83,7 @@ public class TdxFunParserCheck {
 
 
         double[] 中期涨幅_arr = fun.中期涨幅N(20);
-        int[] 趋势支撑线_arr = fun.趋势支撑线();
+        int[] 趋势支撑线_arr = fun.短期趋势支撑线();
 
 
         boolean[] 高位爆量上影大阴_arr = fun.高位爆量上影大阴();
@@ -268,7 +268,7 @@ public class TdxFunParserCheck {
 
 
         double[] 中期涨幅_arr = fun.中期涨幅N(20);
-        int[] 趋势支撑线_arr = fun.趋势支撑线();
+        int[] 趋势支撑线_arr = fun.短期趋势支撑线();
 
 
         boolean[] 高位爆量上影大阴_arr = fun.高位爆量上影大阴();
