@@ -4,10 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
+import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
@@ -24,7 +26,6 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
-import com.bebopze.tdx.quant.service.StockService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
@@ -41,10 +42,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -61,9 +59,6 @@ import static com.bebopze.tdx.quant.common.constant.AccountConst.*;
 @Service
 public class TradeServiceImpl implements TradeService {
 
-
-    @Autowired
-    private StockService stockService;
 
     @Autowired
     private PosStockCache posStockCache;
@@ -84,11 +79,9 @@ public class TradeServiceImpl implements TradeService {
         // block info
         if (blockInfo) {
             resp.getStocks().parallelStream().forEach(stock -> {
-                // StockBlockInfoDTO dto = stockService.blockInfo(stock.getStkcode());
-                // stock.setBlockInfoDTO(dto);
-
 
                 PosStockCache dto = posStockCache.get(stock.getStkcode());
+                // BaseStockDTO baseStockDTO = dto.getBaseStockDTO();
                 stock.setBlockInfoDTO(dto.getStockBlockInfoDTO());
                 // stock.setPreClose(dto.getBaseStockDTO().getPreClose().doubleValue());
                 stock.setPrevClose(PosStockCache.getPrevClose(stock.getStkcode()));
@@ -140,14 +133,14 @@ public class TradeServiceImpl implements TradeService {
 
                       // 当前 主线个股  ->  主线板块 列表
                       stock.setTopBlockList(topStockDTO.getTopBlockList());
-                      stock.setTopStock(true);   // 主线个股
+                      stock.setTopStockFlag(true);   // 主线个股
 
                   } else {
 
                       // 当前 非主线个股  ->  主线板块 列表（可能属于 主线板块  ->  但是 个股形态 已走弱  ->  跌出 主线个股）
                       List<TopStockDTO.TopBlock> stock__topBlockList = topBlockCache.getTopBlockList(stockCode, topBlockDataList, topBlock__codeCountMap);
                       stock.setTopBlockList(stock__topBlockList);
-                      stock.setTopStock(false);   // 非主线个股
+                      stock.setTopStockFlag(false);   // 非主线个股
                   }
               });
     }
@@ -156,6 +149,24 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public QueryCreditNewPosResp queryCreditNewPosV2() {
         return queryCreditNewPosV2(false);
+    }
+
+    @Override
+    public Set<String> getPosStockCodeSet(boolean checkLogin) {
+
+        try {
+            return queryCreditNewPosV2().getStocks().stream().map(CcStockInfo::getStkcode).collect(Collectors.toSet());
+
+        } catch (BizException e) {
+
+            // 只有“不需要登录”时才吞掉 NOT_LOGIN，否则继续抛
+            if (!checkLogin && Objects.equals(BaseExEnum.TREAD_EM_COOKIE_EXPIRED.getCode(), e.getCode())) {
+                log.warn("getPosStockCodeSet     >>>     东方财富 - cookie过期，返回空持仓集合");
+                return Collections.emptySet();
+            }
+
+            throw e;
+        }
     }
 
 
@@ -986,8 +997,8 @@ public class TradeServiceImpl implements TradeService {
                                               .reduce(0.0, Double::sum);
 
 
-        Assert.isTrue(total__avlMarketValue > totalmkval * 0.95,
-                      String.format("禁止[极限加仓]     >>>     总可用市值=[%s]  <  总市值=[%s] x 95%%", ofStr(total__avlMarketValue), ofStr(totalmkval)));
+//        Assert.isTrue(total__avlMarketValue > totalmkval * 0.95,
+//                      String.format("禁止[极限加仓]     >>>     总可用市值=[%s]  <  总市值=[%s] x 95%%", ofStr(total__avlMarketValue), ofStr(totalmkval)));
 
 
         // ---------------------------------------------------

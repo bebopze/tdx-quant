@@ -33,6 +33,14 @@ public interface TradeService {
 
     QueryCreditNewPosResp queryCreditNewPosV2();
 
+    /**
+     * 持仓个股 code列表
+     *
+     * @param checkLogin 是否检查登录状态：true/false
+     * @return
+     */
+    Set<String> getPosStockCodeSet(boolean checkLogin);
+
 
     /**
      * 实时行情
