@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolDailyReturnDTO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -223,7 +222,7 @@ public class TradePairStat {
         TradeStatResult result = new TradeStatResult();
         // task维度
         result.setTotal(totalTrades);
-        result.setTotalTradeAmount(totalAmount);
+        result.setTotalTradeAmount(of(totalAmount));
 
         result.setWinTotal(winTrades);
         result.setWinPct(of(winTradesPct));
@@ -369,7 +368,6 @@ public class TradePairStat {
 
 
         List<TopPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
-        Set<String> preCodeSet = Sets.newHashSet();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -383,9 +381,6 @@ public class TradePairStat {
             Double daily_return = entry.getValue();
 
 
-            // Set<String> todayCodeSet = date_positionCodeMap.getOrDefault(date, Sets.newHashSet());
-
-
             // ------------------------------------------ 每日 收益/净值 -------------------------------------------------
 
 
@@ -397,7 +392,7 @@ public class TradePairStat {
 
             TopPoolDailyReturnDTO dr = new TopPoolDailyReturnDTO();
             dr.setDate(date);
-            dr.setDaily_return(of(daily_return));
+            dr.setDailyReturn(of(daily_return));
             dr.setNav(of(nav));
             dr.setCapital(of(capital));
 
@@ -405,14 +400,7 @@ public class TradePairStat {
             // ------------------------------------------ 每日 调仓换股 比例 ----------------------------------------------
 
 
-            // posReplaceRatio(dr, preCodeSet, todayCodeSet);
-
-
             dailyReturnDTOList.add(dr);
-
-
-            // -------------------------
-            // preCodeSet = todayCodeSet;
 
 
             // ------------------------------------------ 波峰/波谷/最大回撤 ----------------------------------------------
@@ -470,6 +458,16 @@ public class TradePairStat {
         result.setMinNavDate(minNavDate);
 
 
+        result.setFinalNav(of(nav));
+        result.setFinalCapital(of(capital));
+        result.setTotalReturnPct(of((nav - 1) * 100.0));
+
+        if (CollectionUtils.isNotEmpty(dailyReturnDTOList)) {
+            result.setStartDate(dailyReturnDTOList.get(0).getDate());
+            result.setEndDate(dailyReturnDTOList.get(dailyReturnDTOList.size() - 1).getDate());
+        }
+
+
         return result;
     }
 
@@ -492,6 +490,13 @@ public class TradePairStat {
         public LocalDate maxNavDate;      // max净值 日期
         public double minNav;             // min净值
         public LocalDate minNavDate;      // min净值 日期
+
+
+        public LocalDate startDate;
+        public LocalDate endDate;
+        public double finalNav;
+        public double finalCapital;
+        public double totalReturnPct;
     }
 
     // 辅助类：股票统计数据
