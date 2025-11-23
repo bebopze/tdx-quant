@@ -182,7 +182,10 @@ public class TradeController {
                                         @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
 
                                         @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
-                                        @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
+                                        @RequestParam(required = false, defaultValue = "0.0") double prevPricePct,
+
+                                        @Schema(description = "", example = "1")
+                                        @RequestParam(required = false, defaultValue = "1") Integer sell) {
 
 
         Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);

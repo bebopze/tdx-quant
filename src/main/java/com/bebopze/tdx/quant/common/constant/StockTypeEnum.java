@@ -8,7 +8,7 @@ import java.util.List;
 
 
 /**
- * 股票类型：1-A股；2-ETF；
+ * 股票类型：1-A股；2-ETF；3-板块；
  *
  * @author: bebopze
  * @date: 2025/7/29
@@ -21,8 +21,8 @@ public enum StockTypeEnum {
     //  北交所   "43", "83", "87"   ->   已废弃（已全部迁移到 92）
 
 
-    //    A_STOCK(1, "A股", Lists.newArrayList("00", "30", "60", "68", "92", "43", "83", "87")),
-    A_STOCK(1, "A股", Lists.newArrayList("0", "3", "6", "9", "4", "8")),
+    //    A_STOCK(1, "A股", Lists.newArrayList("00", "30", "60", "68", "92")),
+    A_STOCK(1, "A股", Lists.newArrayList("0", "3", "6", "9")),
 
 
     //    ETF(2, "ETF", Lists.newArrayList("15", "16", "50", "51", "56", "58")),

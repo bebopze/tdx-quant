@@ -377,7 +377,7 @@ public class WinUtils {
 
         } catch (Exception e) {
 
-            log.error("openApp - fail     >>>     appPath : {}   ，  errMsg : {}   ,   ex : ", appPath, e.getMessage(), e);
+            log.error("openApp - fail     >>>     appPath : {} , errMsg : {}", appPath, e.getMessage(), e);
         }
     }
 

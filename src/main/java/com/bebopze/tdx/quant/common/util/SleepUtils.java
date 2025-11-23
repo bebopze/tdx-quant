@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 
 /**
  * sleep
@@ -19,8 +21,9 @@ public class SleepUtils {
 
         try {
             Thread.sleep(millis);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);   // 让上层线程感知
         }
 
 
@@ -46,7 +49,11 @@ public class SleepUtils {
 
 
     public static void randomSleep(long millis) {
-        long random = (long) (Math.random() * millis);
+        randomSleep(0, millis);
+    }
+
+    public static void randomSleep(long startMillis, long endMillis) {
+        long random = ThreadLocalRandom.current().nextLong(startMillis, endMillis);
         sleep(random);
     }
 

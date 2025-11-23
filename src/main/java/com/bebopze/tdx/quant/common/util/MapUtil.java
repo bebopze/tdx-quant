@@ -16,7 +16,7 @@ public class MapUtil {
 
 
     /**
-     * 根据 value   ->   倒序
+     * 根据 value   ->   倒序（大 -> 小）
      *
      * @param map
      * @param <K>
