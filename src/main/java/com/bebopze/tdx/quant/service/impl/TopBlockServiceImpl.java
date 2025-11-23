@@ -15,10 +15,7 @@ import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.common.util.MapUtil;
-import com.bebopze.tdx.quant.common.util.NumUtil;
-import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
+import com.bebopze.tdx.quant.common.util.*;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.indicator.BlockFun;
@@ -1085,8 +1082,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             // 主线板块、主线个股   列表
-            e.setTopBlockCodeSet(toJSONString(auto___topBlockList));
-            e.setTopStockCodeSet(toJSONString(auto___topStockList));   // TODO   FastJSON序列化异常，使用备用方案（date=2023-02-06）
+            e.setTopBlockCodeSet(JsonUtil.toJSONString(auto___topBlockList));
+            e.setTopStockCodeSet(JsonUtil.toJSONString(auto___topStockList));   // TODO   FastJSON序列化异常，使用备用方案（date=2023-02-06）
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1110,13 +1107,13 @@ public class TopBlockServiceImpl implements TopBlockService {
 //            List<TopPoolAvgPctDTO> topBlockAvgPctList = Lists.newArrayList(topBlockAvgPct_auto);
 //            topBlockAvgPctList.add(topBlockAvgPct_manual);
 //            topBlockAvgPctList.add(topBlockAvgPct_auto);
-            e.setBlockAvgPct(toJSONString(topBlockAvgPctList));
+            e.setBlockAvgPct(JsonUtil.toJSONString(topBlockAvgPctList));
 
 
 //            List<TopPoolAvgPctDTO> topStockAvgPctList = Lists.newArrayList(topStockAvgPct_auto);
 //            topStockAvgPctList.add(topStockAvgPct_manual);
 //            topStockAvgPctList.add(topStockAvgPct_auto);
-            e.setStockAvgPct(toJSONString(topStockAvgPctList));
+            e.setStockAvgPct(JsonUtil.toJSONString(topStockAvgPctList));
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1326,38 +1323,11 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-    /**
-     * 安全的JSON序列化方法，避免FastJSON2的ArrayIndexOutOfBoundsException异常
-     *
-     * @param object 要序列化的对象
-     * @return 序列化后的JSON字符串
-     */
-    private String toJSONString(Object object) {
-        if (object == null) {
-            return null;
-        }
-
-        try {
-            // 首先尝试使用默认方式序列化
-            return JSON.toJSONString(object);
-        } catch (Exception ex) {
-            log.warn("FastJSON序列化异常，使用备用方案     >>>     obj : {} , errMsg : {}", object, ex.getMessage(), ex);
-            try {
-                // 如果失败，尝试使用其他特性
-                return JSON.toJSONString(object, JSONWriter.Feature.WriteMapNullValue);
-            } catch (Exception ex2) {
-                // String json = new Gson().toJson(object);
-                log.error("FastJSON序列化失败     >>>     obj : {} , errMsg : {}", object, ex2.getMessage(), ex2);
-                // 如果都失败了，返回空数组或空对象
-                return object instanceof Collection ? "[]" : "{}";
-            }
-        }
-    }
-
     public TopPoolAvgPctDTO avgPct(List<TopChangePctDTO> topChangePctList, TopTypeEnum topTypeEnum) {
         if (CollectionUtils.isEmpty(topChangePctList)) {
             return new TopPoolAvgPctDTO(topTypeEnum.type);
         }
+        topChangePctList = topChangePctList.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
 
         // 使用 Stream 和 DoubleSummaryStatistics 同时计算多个字段的平均值
@@ -1745,6 +1715,19 @@ public class TopBlockServiceImpl implements TopBlockService {
         topChangePctDTO.setToday2N2_highPct(of(klineArrDTO.high[Math.min(date_idx + 2, max_idx)] / today_close * 100 - 100));
         topChangePctDTO.setToday2N2_lowPct(of(klineArrDTO.low[Math.min(date_idx + 2, max_idx)] / today_close * 100 - 100));
         topChangePctDTO.setToday2N2_closePct(of(klineArrDTO.close[Math.min(date_idx + 2, max_idx)] / today_close * 100 - 100));
+
+
+        // 次日   ->   开盘价/最高价/最低价/收盘价
+        topChangePctDTO.setToday2Next_open(klineArrDTO.open[Math.min(date_idx + 1, max_idx)]);
+        topChangePctDTO.setToday2Next_high(klineArrDTO.high[Math.min(date_idx + 1, max_idx)]);
+        topChangePctDTO.setToday2Next_low(klineArrDTO.low[Math.min(date_idx + 1, max_idx)]);
+        topChangePctDTO.setToday2Next_close(klineArrDTO.close[Math.min(date_idx + 1, max_idx)]);
+
+        // 次2日   ->   开盘价/最高价/最低价/收盘价
+        topChangePctDTO.setToday2N2_open(klineArrDTO.open[Math.min(date_idx + 2, max_idx)]);
+        topChangePctDTO.setToday2N2_high(klineArrDTO.high[Math.min(date_idx + 2, max_idx)]);
+        topChangePctDTO.setToday2N2_low(klineArrDTO.low[Math.min(date_idx + 2, max_idx)]);
+        topChangePctDTO.setToday2N2_close(klineArrDTO.close[Math.min(date_idx + 2, max_idx)]);
 
 
         topChangePctDTO.setAmo(klineArrDTO.amo[date_idx]);

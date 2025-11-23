@@ -77,9 +77,9 @@ public class TopChangePctDTO {
 
 
     // B/Max/S信号
-    private Set<String> buySignalSet;
-    private Set<String> maxSignalSet;
-    private Set<String> sellSignalSet;
+    private Set<String> buySignalSet = Sets.newHashSet();
+    private Set<String> maxSignalSet = Sets.newHashSet();
+    private Set<String> sellSignalSet = Sets.newHashSet();
 
 
     private ExtDataDTO buySignalExtDataDTO;
@@ -97,6 +97,7 @@ public class TopChangePctDTO {
 
     // 是否涨停
     private boolean ztFlag;
+
     // 次日   ->   开盘价/最高价/最低价/收盘价 涨跌幅（%）    （当日 涨停后  ->  次日   是否能买进、平均可买进 挂单价格%、平均涨幅、打板成功率）
     private double today2Next_openPct;
     private double today2Next_highPct;
@@ -107,6 +108,37 @@ public class TopChangePctDTO {
     private double today2N2_highPct;
     private double today2N2_lowPct;
     private double today2N2_closePct;
+
+
+    // 次日   ->   开盘价/最高价/最低价/收盘价
+    private double today2Next_open;
+    private double today2Next_high;
+    private double today2Next_low;
+    private double today2Next_close;
+
+    // 次2日   ->   开盘价/最高价/最低价/收盘价
+    private double today2N2_open;
+    private double today2N2_high;
+    private double today2N2_low;
+    private double today2N2_close;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+//    // 昨日是否持仓
+//    private boolean prev_posFlag = false;
+//    // 今日是否持仓
+//    private boolean posFlag = false;
+//    // 1-买入；2-持仓中；3-空仓；
+//    private int posStatus = 3;
+//    // 首次买入日期
+//    private LocalDate firstBuyDate;
+//    // 卖出日期
+//    private LocalDate sellDate;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     // 成交额
