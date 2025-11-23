@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
     <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
 
     <style>
         body {
@@ -259,10 +260,10 @@
                 <option value="3" selected>个股</option>
             </select>
 
-            <label>策略类型：</label>
+            <label>主线策略：</label>
             <select id="topStrategyType">
                 <option value="1" selected>机选</option>
-                <option value="2">人选</option>
+                <option value="2">精选TOP</option>
                 <option value="3">历史新高</option>
                 <option value="4">极多头</option>
                 <option value="5">RPS三线红</option>
@@ -271,6 +272,29 @@
                 <option value="8">口袋支点</option>
                 <option value="9">T0</option>
                 <option value="10">涨停（打板）</option>
+            </select>
+
+            <label>是否涨停：</label>
+            <select id="ztFlag">
+                <option value="" selected>全部</option>
+                <option value="true">是</option>
+                <option value="false">否</option>
+            </select>
+
+            <label>BS策略：</label>
+            <select id="bsStrategyType">
+                <option value="" selected>全部</option>
+                <option value="1">BS_MA20多</option>
+                <option value="2">BS_上MA20</option>
+                <option value="3">BS_SSF多</option>
+                <option value="4">BS_上SSF</option>
+                <option value="5">BS_上SAR（操盘BS）</option>
+
+                <option value="11">BS_XZZB</option>
+                <option value="12">BS_BS区间</option>
+
+                <option value="21">BS_MA_偏离率</option>
+                <option value="22">BS_MA_偏离率2</option>
             </select>
 
             <button class="btn" onclick="fetchData()">获取数据</button>
@@ -333,6 +357,7 @@
                     <table id="positionTable">
                         <thead>
                         <tr>
+                            <th>序号</th>
                             <th class="sortable" onclick="sortPositionTable('date')">日期</th>
                             <th class="sortable" onclick="sortPositionTable('todayCount')">持仓数量</th>
                             <th class="sortable" onclick="sortPositionTable('oldPosCount')">不变数量</th>
@@ -384,8 +409,8 @@
 <script>
     let navChart = null;
     let returnChart = null;
-    let positionSort = {field: 'date', order: 'asc'}; // 默认按日期正序
-    let countSort = {field: 'pct', order: 'desc'};    // 默认按上榜涨幅倒序
+    let positionSort = {column: 'date', order: 'asc'}; // 默认按日期正序
+    let countSort = {column: 'pct', order: 'desc'};    // 默认按上榜涨幅倒序
 
 
     // 初始化所有模块为展开状态
@@ -396,12 +421,6 @@
             section.style.display = 'block';
         });
     });
-
-
-    // 是否 数字类型
-    function isNumeric(str) {
-        return Number.isFinite(Number(str));
-    }
 
 
     // 切换模块显示状态（展开/收起）
@@ -425,10 +444,11 @@
         const endDate = document.getElementById('endDate').value;
         const topPoolType = document.getElementById('topPoolType').value;
         const topStrategyType = document.getElementById('topStrategyType').value;
+        const ztFlag = document.getElementById('ztFlag').value;
+        const bsStrategyType = document.getElementById('bsStrategyType').value;
 
         try {
-            const response = await ApiUtils.fetch(
-                `/api/data/analysis/bk-yd2/topList?startDate=${startDate}&endDate=${endDate}&topPoolType=${topPoolType}&topStrategyType=${topStrategyType}`,
+            const response = await ApiUtils.fetch(`/api/data/analysis/bk-yd2/topList?startDate=${startDate}&endDate=${endDate}&topPoolType=${topPoolType}&topStrategyType=${topStrategyType}&ztFlag=${ztFlag}&bsStrategyType=${bsStrategyType}`,
                 {
                     method: 'GET',
                     headers: {
@@ -482,17 +502,21 @@
         container.innerHTML = '';
 
         const statItems = [
-            {label: '总收益率(%)', value: stats.totalReturnPct.toFixed(2), color: '#27ae60'},
-            {label: '年化收益率(%)', value: stats.annualReturnPct.toFixed(2), color: '#27ae60'},
-            {label: '夏普比率', value: stats.sharpeRatio.toFixed(4), color: '#27ae60'},
-            {label: '卡玛比率', value: stats.calmarRatio.toFixed(4), color: '#27ae60'},
-            {label: 'Sortino比率', value: stats.sortinoRatio.toFixed(4), color: '#27ae60'},
-            {label: '最大回撤(%)', value: stats.maxDrawdownPct.toFixed(2), color: '#e74c3c'},
-            {label: '胜率%(日级)', value: stats.winDaysPct.toFixed(2), color: '#27ae60'},
-            {label: '盈亏比(日级)', value: stats.dailyLevelProfitFactor.toFixed(4), color: '#27ae60'},
-            {label: '胜率%(笔级)', value: stats.winTradesPct.toFixed(2), color: '#27ae60'},
-            {label: '盈亏比(笔级)', value: stats.tradeLevelProfitFactor.toFixed(4), color: '#27ae60'},
-            {label: '结束净值', value: stats.finalNav.toFixed(4), color: '#27ae60'}
+            {label: '总收益率(%)', value: stats.totalReturnPct.toFixed(2), color: '#e74c3c'},
+            {label: '年化收益率(%)', value: stats.annualReturnPct.toFixed(2), color: '#e74c3c'},
+            {label: '夏普比率', value: stats.sharpeRatio.toFixed(4), color: '#e74c3c'},
+            {label: '卡玛比率', value: stats.calmarRatio.toFixed(4), color: '#e74c3c'},
+            {label: 'Sortino比率', value: stats.sortinoRatio.toFixed(4), color: '#e74c3c'},
+            {label: '最大回撤(%)', value: stats.maxDrawdownPct.toFixed(2), color: '#27ae60'},
+            {label: '胜率%(日级)', value: stats.winDaysPct.toFixed(2), color: '#e74c3c'},
+            {label: '盈亏比(日级)', value: stats.dailyLevelProfitFactor, color: '#e74c3c'},
+            {label: '胜率%(笔级)', value: stats.winTradesPct.toFixed(2), color: '#e74c3c'},
+            {label: '盈亏比(笔级)', value: stats.tradeLevelProfitFactor, color: '#e74c3c'},
+            {label: '波峰', value: stats.peakNav.toFixed(4) + '（' + stats.peakDate + '）', color: '#e74c3c'},
+            {label: '波谷', value: stats.troughNav.toFixed(4) + '（' + stats.troughDate + '）', color: '#27ae60'},
+            {label: '结束净值', value: stats.finalNav.toFixed(4), color: '#e74c3c'},
+            {label: '交易总金额（亿）', value: (stats.totalTradeAmount / 1_0000_0000).toFixed(4), color: '#e74c3c'},
+            {label: '总天数', value: stats.totalDays, color: '#e74c3c'}
         ];
 
         statItems.forEach(item => {
@@ -500,7 +524,7 @@
             card.className = `stat-card ${accountType}-account`;
             card.innerHTML = `
                     <h4>${item.label}</h4>
-                    <div class="value" style="color: ${item.color}">${item.value}</div>
+                    <div class="value" style="color: ${item.color}">${item.value || '-'}</div>
                 `;
             container.appendChild(card);
         });
@@ -603,9 +627,9 @@
     }
 
 
-    function sortPositionTable(field) {
-        const order = positionSort.field === field && positionSort.order === 'asc' ? 'desc' : 'asc';
-        positionSort = {field, order};
+    function sortPositionTable(column) {
+        const order = positionSort.column === column && positionSort.order === 'asc' ? 'desc' : 'asc';
+        positionSort = {column, order};
 
 
         // 获取平均行
@@ -618,7 +642,7 @@
         });
 
         // 新排序列 添加排序类
-        const currentTh = document.querySelector(`#positionTable th[onclick="sortPositionTable('${field}')"]`);
+        const currentTh = document.querySelector(`#positionTable th[onclick="sortPositionTable('${column}')"]`);
         currentTh?.classList.add('active', order);
 
         // 获取当前列的索引
@@ -631,25 +655,7 @@
 
 
         // 重排序
-        const sortedRows = rows.sort((a, b) => {
-            let valA = a.cells[colIndex]?.textContent.trim() ?? '';
-            let valB = b.cells[colIndex]?.textContent.trim() ?? '';
-
-
-            // 数字类型
-            if (isNumeric(valA) && isNumeric(valB)) {
-                return order === 'asc' ? valA - valB : valB - valA;
-            }
-            // 字符串类型
-            if (typeof valA === 'string' && typeof valB === 'string') {
-                return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            }
-            // 处理类型不一致或为 null/undefined 的情况
-            if (valA == null && valB == null) return 0;
-            else if (valA == null) return order === 'asc' ? -1 : 1;
-            else if (valB == null) return order === 'asc' ? 1 : -1;
-            else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
-        });
+        const sortedRows = sortTableByColumn(rows, colIndex, order);
 
 
         // 清空并重新添加排序后的行
@@ -668,6 +674,7 @@
         const avgRow = document.createElement('tr');
         avgRow.classList.add('avg-row');
         avgRow.innerHTML = `
+                <th></th>
                 <th>平均</th>
                 <th>${Number(data.reduce((acc, item) => acc + item.todayCount, 0) / data.length).toFixed(0)}</th>
                 <th>${Number(data.reduce((acc, item) => acc + item.oldPosCount, 0) / data.length).toFixed(0)}</th>
@@ -683,9 +690,10 @@
 
 
         // 列表行
-        data.forEach(item => {
+        data.forEach((item, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
+                    <td>${index + 1}</td>
                     <td>${item.date}</td>
                     <td>${item.todayCount}</td>
                     <td>${item.oldPosCount}</td>
@@ -707,9 +715,9 @@
         renderCountTable(sortedData);
     }
 
-    function sortCountTable(field) {
-        const order = countSort.field === field && countSort.order === 'asc' ? 'desc' : 'asc';
-        countSort = {field, order};
+    function sortCountTable(column) {
+        const order = countSort.column === column && countSort.order === 'asc' ? 'desc' : 'asc';
+        countSort = {column, order};
 
         // 旧排序列 清除排序类
         document.querySelectorAll('#countTable th.sortable').forEach(th => {
@@ -717,7 +725,7 @@
         });
 
         // 新排序列 添加排序类
-        const currentTh = document.querySelector(`#countTable th[onclick="sortCountTable('${field}')"]`);
+        const currentTh = document.querySelector(`#countTable th[onclick="sortCountTable('${column}')"]`);
         currentTh.classList.add('active', order);
 
         // 获取当前列的索引
@@ -730,24 +738,7 @@
 
 
         // 重排序
-        const sortedRows = rows.sort((a, b) => {
-            let valA = a.cells[colIndex]?.textContent.trim() ?? '';
-            let valB = b.cells[colIndex]?.textContent.trim() ?? '';
-
-            // 数字类型
-            if (isNumeric(valA) && isNumeric(valB)) {
-                return order === 'asc' ? valA - valB : valB - valA;
-            }
-            // 字符串类型
-            if (typeof valA === 'string' && typeof valB === 'string') {
-                return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            }
-            // 处理类型不一致或为 null/undefined 的情况
-            if (valA == null && valB == null) return 0;
-            else if (valA == null) return order === 'asc' ? -1 : 1;
-            else if (valB == null) return order === 'asc' ? 1 : -1;
-            else return order === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
-        });
+        const sortedRows = sortTableByColumn(rows, colIndex, order);
 
 
         // 清空并重新添加排序后的行
