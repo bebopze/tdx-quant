@@ -17,9 +17,15 @@ import java.util.List;
 public interface DataAnalysisService {
 
 
-    TopPoolAnalysisDTO topListAnalysis(LocalDate startDate, LocalDate endDate, Integer topPoolType, Integer type);
+    TopPoolAnalysisDTO topListAnalysis(LocalDate startDate,
+                                       LocalDate endDate,
+                                       Integer topPoolType,
+                                       Integer topStrategyType,
+                                       Integer bsStrategyType,
+                                       Boolean ztFlag);
 
-    TopNAnalysisDTO top100(LocalDate startDate, LocalDate endDate, Integer topPoolType, Integer type);
+
+    TopNAnalysisDTO top100(LocalDate startDate, LocalDate endDate, Integer topPoolType, Integer topStrategyType);
 
 
     List<BtDailyReturnDO> calcDailyReturn(List<BtDailyReturnDO> dailyReturnDOList);
@@ -27,4 +33,5 @@ public interface DataAnalysisService {
     TopPoolSumReturnDTO sumReturn(List<BtDailyReturnDO> dailyReturnDOList,
                                   List<BtTradeRecordDO> tradeRecordList,
                                   List<BtPositionRecordDO> positionRecordList);
+
 }

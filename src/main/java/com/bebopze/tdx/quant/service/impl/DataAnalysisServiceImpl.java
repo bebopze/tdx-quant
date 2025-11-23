@@ -1,12 +1,18 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.*;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.common.tdxfun.PerformanceMetrics;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.JsonUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
@@ -14,7 +20,10 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.DataAnalysisService;
+import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.strategy.backtest.TradePairStat;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD;
+import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -29,6 +38,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.convert.ConvertDate.tradeDateIncr;
 import static com.bebopze.tdx.quant.common.util.NumUtil.double2Decimal;
 import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 
@@ -44,11 +54,22 @@ import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
+    private static final BacktestCache data = InitDataServiceImpl.data;
+
+
+    @Autowired
+    private InitDataService initDataService;
+
     @Autowired
     private IQaTopBlockService qaTopBlockService;
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
+
+    @Autowired
+    private BacktestBuyStrategyD backtestBuyStrategyD;
+    @Autowired
+    private SellStrategyFactory sellStrategyFactory;
 
 
     @TotalTime
@@ -56,7 +77,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
     public TopPoolAnalysisDTO topListAnalysis(LocalDate startDate,
                                               LocalDate endDate,
                                               Integer topPoolType,
-                                              Integer type) {
+                                              Integer topStrategyType,
+                                              Integer bsStrategyType,
+                                              Boolean ztFlag) {
         Assert.isTrue(!startDate.isAfter(endDate), "开始日期不能晚于结束日期");
 
 
@@ -73,24 +96,41 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // --------------------------------------------------
+
+
+        if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
+            bs__zt_reCalc(list, topPoolType, topStrategyType, bsStrategyType, ztFlag);
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率2.type, bsStrategyType)) {
+            bs__zt_reCalc_2(list, topPoolType, topStrategyType, bsStrategyType, ztFlag);
+            // list = bs__zt_reCalc_3(topPoolType, topStrategyType, bsStrategyType, ztFlag, startDate, endDate);
+        } else {
+            zt_reCalc(list, topPoolType, topStrategyType, bsStrategyType, ztFlag);
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // ---------------------------------------- count 指标
 
         Map<String, TopCountDTO> code_countMap = Maps.newHashMap();
 
-        Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
         Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
+        Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 每日收益率列表
-        List<TopPoolDailyReturnDTO> dailyReturnDTOList = dailyReturnDTOList(list, topPoolType, type, code_countMap, topStock__codeCountMap, topBlock__codeCountMap);
+        List<TopPoolDailyReturnDTO> dailyReturnDTOList = dailyReturnDTOList(list, topPoolType, topStrategyType, code_countMap, topBlock__codeCountMap, topStock__codeCountMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 汇总统计
         TopPoolSumReturnDTO sumReturnDTO = sumReturn_topPool(dailyReturnDTOList, null);
         TopPoolSumReturnDTO marginSumReturnDTO = sumReturn_topPool_margin(dailyReturnDTOList, null);
 
@@ -113,20 +153,1045 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
     /**
-     * 每日收益率列表
+     * 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
      *
      * @param list
      * @param topPoolType
      * @param type
-     * @param code_countMap
-     * @param topStock__codeCountMap
-     * @param topBlock__codeCountMap
+     * @param bsStrategyType
+     * @param ztFlag
+     */
+    private void zt_reCalc(List<QaTopBlockDO> list,
+                           Integer topPoolType,
+                           Integer type,
+                           Integer bsStrategyType,
+                           Boolean ztFlag) {
+//        if (ztFlag == null && !(Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3)) {
+//            return;
+//        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 逐日遍历 -> 计算
+        for (QaTopBlockDO entity : list) {
+            LocalDate date = entity.getDate();
+
+
+            TopPoolAvgPctDTO avgPct;
+            Set<String> todayCodeSet;
+            Map<String, String> codeNameMap;
+            List<TopChangePctDTO> topList;
+            if (topPoolType == 1) {
+                avgPct = entity.getTopBlockAvgPct(type);
+                codeNameMap = entity.getTopBlockCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopBlockList(type);
+            } else if (topPoolType == 2) {
+                avgPct = entity.getTopEtfAvgPct(type);
+                codeNameMap = entity.getTopEtfCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopEtfList(type);
+            } else if (topPoolType == 3) {
+                avgPct = entity.getTopStockAvgPct(type);
+                codeNameMap = entity.getTopStockCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopStockList(type);
+            } else {
+                throw new BizException("主线列表类型异常：" + topPoolType);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   topList
+            topList = topList.stream()
+                             // 是否涨停
+                             .filter(e -> ztFlag == null || Objects.equals(ztFlag, e.isZtFlag()))
+                             .map(e -> {
+
+
+                                 // ---------------------------------- bsStrategyType ----------------------------------
+
+
+                                 // BS策略
+                                 // boolean isMatch = bsStrategyType(e, bsStrategyType);
+                                 // boolean isMatch = bsStrategyType_2(e, bsStrategyType);
+                                 boolean isMatch = bsStrategyType_3(e, bsStrategyType);
+                                 // boolean isMatch = bsStrategyType_4(e, bsStrategyType);
+                                 if (!isMatch) {
+                                     return null;
+                                 }
+
+
+                                 // ------------------------------------------------------------------------------------
+
+
+//                                 // 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+//                                 if (Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) {
+//                                     // 非涨停 -> 忽略
+//                                     if (!e.isZtFlag()) {
+//                                         return null;
+//                                     }
+//
+//
+//                                     double today_closePct = e.getToday_changePct();   // 当日涨停
+//                                     double ztPct = today_closePct;
+//
+//
+//                                     // 次日
+//                                     double today2Next_openPct = e.getToday2Next_openPct();
+//                                     double today2Next_closePct = e.getToday2Next_changePct();
+//                                     // 次2日
+//                                     double today2N2_closePct = e.getToday2N2_closePct();
+//                                     double today2N2_openPct = e.getToday2N2_openPct();
+//                                     double today2N2_highPct = e.getToday2N2_highPct();
+//
+//
+//                                     // 假设买不进去（次1日 开盘价买入   ->   次2日 开盘价卖出）
+//                                     // double today2Next_changePct = (100 + today2N2_closePct) / (100 + today2Next_openPct) * 100 - 100;     // 1500%
+//
+//                                     // double today2Next_changePct = (100 + today2N2_openPct) / (100 + today2Next_openPct) * 100 - 100;     // -99%
+//
+//
+//                                     // 次2日 盘中价格（H） >  涨停幅度x0.7     ->     直接S
+//                                     // 次2日 盘中价格（H） <  涨停幅度x0.7     ->     收盘价 S
+//                                     double zt_70_percent = (100 + today2Next_closePct) * (1 + 0.01 * ztPct * 0.7) - 100;
+//                                     double s_pct = today2N2_highPct > zt_70_percent ? zt_70_percent : today2N2_closePct;
+//
+//
+//                                     double today2Next_changePct = (100 + s_pct) / (100 + today2Next_openPct) * 100 - 100;     // 30000%
+//
+//
+//                                     // 收益率（%）
+//                                     e.setToday2Next_changePct(today2Next_changePct);
+//                                 }
+
+
+                                 // 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+                                 if (Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) {
+                                     // 非涨停 -> 忽略
+                                     if (!e.isZtFlag()) {
+                                         return null;
+                                     }
+
+
+                                     double today_closePct = e.getToday_changePct();   // 当日涨停
+                                     double ztPct = today_closePct;
+
+
+                                     // 次日
+                                     double today2N1_open = e.getToday2Next_open();
+                                     double today2N1_close = e.getToday2Next_close();
+                                     // 次2日
+                                     double today2N2_open = e.getToday2N2_open();
+                                     double today2N2_high = e.getToday2N2_high();
+                                     double today2N2_close = e.getToday2N2_close();
+
+
+                                     // 假设买不进去（次1日 开盘价买入   ->   次2日 收盘价卖出）
+                                     double today2Next_changePct = today2N2_close / today2N1_open * 100 - 100;     // 1500%
+
+                                     // 假设买不进去（次1日 开盘价买入   ->   次2日 开盘价卖出）
+                                     // double today2Next_changePct = today2N2_open / today2N1_open * 100 - 100;      // -99%
+
+
+//                                     // 次2日 盘中价格（H） >  涨停幅度x0.7     ->     直接S
+//                                     // 次2日 盘中价格（H） <  涨停幅度x0.7     ->     收盘价 S
+//                                     double zt_70_percent = today2N1_close * (1 + 0.01 * ztPct * 0.7);
+//                                     double N2_s_price = today2N2_high > zt_70_percent ? zt_70_percent : today2N2_close;
+//
+//                                     // 假设买不进去（次1日 开盘价买入   ->   次2日  涨停价*0.7/收盘价  卖出）
+//                                     double today2Next_changePct = N2_s_price / today2N1_open * 100 - 100;     // 30000%
+
+
+                                     // 收益率（%）
+                                     e.setToday2Next_changePct(today2Next_changePct);
+                                 }
+
+
+//                                 // 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+//                                 if (Objects.equals(TopTypeEnum.涨停_次2日.type, type) && topPoolType == 3) {
+//                                     // 非涨停 -> 忽略
+//                                     if (!e.isZtFlag()) {
+//                                         return null;
+//                                     }
+//
+//
+//                                     // 次日
+//                                     double today2Next_openPct = e.getToday2Next_openPct();
+//                                     double today2Next_closePct = e.getToday2Next_changePct();
+//                                     // 次2日
+//                                     double today2N2_closePct = e.getToday2N2_closePct();
+//                                     double today2N2_openPct = e.getToday2N2_openPct();
+//
+//
+//                                     // 假设买不进去（次1日 开盘价买入   ->   次2日 收盘价卖出）
+//                                     double today2Next_changePct = (100 + today2N2_closePct) / (100 + today2Next_openPct) * 100 - 100;   // 简化（实际应该   次2日 收盘价 / 次1日 开盘价）
+//
+//
+//                                     // 收益率（%）
+//                                     e.setToday2Next_changePct(today2Next_changePct);
+//                                 }
+
+
+                                 // ------------------------------------------------------------------------------------
+
+                                 return e;
+                             })
+                             .filter(Objects::nonNull)
+                             .collect(Collectors.toList());
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 不足10只股票  ->  空列表（空仓）
+            if (topList.size() < 20 && !(Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) && (ztFlag == null || !ztFlag)) {
+                topList = Collections.emptyList();
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+//            // 每只个股 最大仓位 ->   1%
+//            double pos_pct = topList.size() < 100 ? 1 : 100 / topList.size();
+//
+//
+//            if (topList.size() > 100) {
+//
+//                topList.forEach(e -> {
+//                    double pct = e.getToday2Next_changePct();
+//                    e.setToday2Next_changePct(pct);
+//                });
+//            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   avgPct
+            avgPct = new TopBlockServiceImpl().avgPct(topList, TopTypeEnum.getByType(type));
+
+
+            entity.setTopStockCodeSet(JsonUtil.toJSONString(topList));
+            entity.setStockAvgPct(JsonUtil.toJSONString(Lists.newArrayList(avgPct)));
+        }
+    }
+
+
+    /**
+     * 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+     *
+     * @param list
+     * @param topPoolType
+     * @param type
+     * @param bsStrategyType
+     * @param ztFlag
+     */
+    private void bs__zt_reCalc(List<QaTopBlockDO> list,
+                               Integer topPoolType,
+                               Integer type,
+                               Integer bsStrategyType,
+                               Boolean ztFlag) {
+
+
+        initDataService.initData();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalDate prevDate = null;
+        List<TopChangePctDTO> prev_topList = Lists.newArrayList();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 逐日遍历 -> 计算
+        for (QaTopBlockDO entity : list) {
+            LocalDate date = entity.getDate();
+
+
+            TopPoolAvgPctDTO avgPct;
+            Set<String> todayCodeSet;
+            Map<String, String> codeNameMap;
+            List<TopChangePctDTO> topList;
+            if (topPoolType == 1) {
+                avgPct = entity.getTopBlockAvgPct(type);
+                codeNameMap = entity.getTopBlockCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopBlockList(type);
+            } else if (topPoolType == 2) {
+                avgPct = entity.getTopEtfAvgPct(type);
+                codeNameMap = entity.getTopEtfCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopEtfList(type);
+            } else if (topPoolType == 3) {
+                avgPct = entity.getTopStockAvgPct(type);
+                codeNameMap = entity.getTopStockCodeNameMap(type);
+                todayCodeSet = codeNameMap.keySet();
+                topList = entity.getTopStockList(type);
+            } else {
+                throw new BizException("主线列表类型异常：" + topPoolType);
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            Set<String> today_buyCodeSet = Sets.newHashSet();
+            Set<String> today_sellCodeSet = Sets.newHashSet();
+
+            List<TopChangePctDTO> today_posTopList = Lists.newArrayList();
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   topList
+            topList.stream()
+                   // 是否涨停
+                   .filter(e -> ztFlag == null || Objects.equals(ztFlag, e.isZtFlag()))
+                   .forEach(e -> {
+
+
+                       String stockCode = e.getCode();
+
+
+                       // ---------------------------------- bsStrategyType --------------------------------------------
+
+
+                       // BS策略
+                       int bsStatus = bsStrategyType__bsStatus(e.getCode(), bsStrategyType, date);
+
+
+                       // B
+                       if (bsStatus == 1) {
+                           today_buyCodeSet.add(stockCode);
+                           today_posTopList.add(e);
+                       }
+                       // S
+                       else if (bsStatus == 2) {
+                           today_sellCodeSet.add(stockCode);
+                       }
+                   });
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            if (prevDate != null) {
+                // 昨日持仓列表
+                prev_topList.stream()
+                            // 昨日持仓中 -> 今日未S     =>     今日继续持仓中
+                            .filter(e -> !today_sellCodeSet.contains(e.getCode()) && !today_buyCodeSet.contains(e.getCode()))
+                            .forEach(e -> {
+                                TopChangePctDTO pos_dto = convertPrevPos2TodayPos(e.getCode(), date);
+                                if (null != pos_dto) {
+                                    today_posTopList.add(pos_dto);
+                                }
+                            });
+            }
+
+
+            topList = today_posTopList;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+//            // 不足10只股票  ->  空列表（空仓）
+//            if (topList.size() < 20 && !(Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) && (ztFlag == null || !ztFlag)) {
+//                topList = Collections.emptyList();
+//            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   avgPct
+            avgPct = new TopBlockServiceImpl().avgPct(topList, TopTypeEnum.getByType(type));
+
+
+            entity.setTopStockCodeSet(JsonUtil.toJSONString(topList));
+            entity.setStockAvgPct(JsonUtil.toJSONString(Lists.newArrayList(avgPct)));
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            prevDate = date;
+            prev_topList = today_posTopList;
+            // ---------------------------------------------------------------------------------------------------------
+        }
+    }
+
+
+    /**
+     * 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+     *
+     * @param list
+     * @param topPoolType
+     * @param type
+     * @param bsStrategyType
+     * @param ztFlag
+     */
+    @Deprecated
+    private void bs__zt_reCalc_2(List<QaTopBlockDO> list,
+                                 Integer topPoolType,
+                                 Integer type,
+                                 Integer bsStrategyType,
+                                 Boolean ztFlag) {
+
+
+        initDataService.initData();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalDate prevDate = null;
+        List<TopChangePctDTO> prev_topList = Lists.newArrayList();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 逐日遍历 -> 计算
+        for (int i = 0; i < list.size(); i++) {
+            QaTopBlockDO entity = list.get(i);
+            LocalDate date = entity.getDate();
+
+
+            // 前后10日内 主线列表（QaTopBlockDO -> 板块/ETF/股票）
+            // 使用 subList 获取指定范围的视图，然后复制到新列表（subList 返回的是 原列表的视图，修改它会影响原列表，如果不需要修改，可以考虑直接使用 subList 的视图）
+            List<QaTopBlockDO> today__bf10_af10__topEntityList = list.subList(Math.max(0, i - 10), Math.min(list.size(), i + 11));
+
+
+            // 前后10日内 主线个股列表（TopChangePctDTO -> 股票）
+            List<TopChangePctDTO> bf10_topList = Lists.newArrayList();
+            for (QaTopBlockDO bf10_entity : today__bf10_af10__topEntityList) {
+
+                if (topPoolType == 1) {
+                    bf10_topList.addAll(bf10_entity.getTopBlockList(type));
+                } else if (topPoolType == 2) {
+                    bf10_topList.addAll(bf10_entity.getTopEtfList(type));
+                } else if (topPoolType == 3) {
+                    bf10_topList.addAll(bf10_entity.getTopStockList(type));
+                } else {
+                    throw new BizException("主线列表类型异常：" + topPoolType);
+                }
+            }
+            Set<String> topCodeSet = bf10_topList.stream().map(TopChangePctDTO::getCode).collect(Collectors.toSet());
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            Set<String> today_buyCodeSet = Sets.newHashSet();
+            Set<String> today_sellCodeSet = Sets.newHashSet();
+
+            List<TopChangePctDTO> today_posTopList = Lists.newArrayList();
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   topList
+            topCodeSet.stream()
+                      // 是否涨停
+//                   .filter(e -> ztFlag == null || Objects.equals(ztFlag, e.isZtFlag()))
+                      .forEach(stockCode -> {
+
+
+                          // ---------------------------------- bsStrategyType --------------------------------------------
+
+
+                          // BS策略
+                          int bsStatus = bsStrategyType__bsStatus(stockCode, bsStrategyType, date);
+
+
+                          // B
+                          if (bsStatus == 1) {
+                              today_buyCodeSet.add(stockCode);
+
+                              TopChangePctDTO pos_dto = convertPrevPos2TodayPos(stockCode, date);
+                              if (null != pos_dto) {
+                                  today_posTopList.add(pos_dto);
+                              }
+                          }
+                          // S
+                          else if (bsStatus == 2) {
+                              today_sellCodeSet.add(stockCode);
+                          }
+                      });
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            if (prevDate != null) {
+                // 昨日持仓列表
+                prev_topList.stream()
+                            // 昨日持仓中 -> 今日未S     =>     今日继续持仓中
+                            .filter(e -> !today_sellCodeSet.contains(e.getCode()) && !today_buyCodeSet.contains(e.getCode()))
+                            .forEach(e -> {
+                                TopChangePctDTO pos_dto = convertPrevPos2TodayPos(e.getCode(), date);
+                                if (null != pos_dto) {
+                                    today_posTopList.add(pos_dto);
+                                }
+                            });
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+//            // 不足10只股票  ->  空列表（空仓）
+//            if (topList.size() < 20 && !(Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) && (ztFlag == null || !ztFlag)) {
+//                topList = Collections.emptyList();
+//            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   avgPct
+            TopPoolAvgPctDTO avgPct = new TopBlockServiceImpl().avgPct(today_posTopList, TopTypeEnum.getByType(type));
+
+
+            entity.setTopStockCodeSet(JsonUtil.toJSONString(today_posTopList));
+            entity.setStockAvgPct(JsonUtil.toJSONString(Lists.newArrayList(avgPct)));
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            prevDate = date;
+            prev_topList = today_posTopList;
+            // ---------------------------------------------------------------------------------------------------------
+        }
+    }
+
+
+    /**
+     * 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
+     *
+     * @param topPoolType
+     * @param type
+     * @param bsStrategyType
+     * @param ztFlag
+     */
+    @Deprecated   // 和 跑回测 时间一样长   ->  30min 起步
+    private List<QaTopBlockDO> bs__zt_reCalc_3(Integer topPoolType,
+                                               Integer type,
+                                               Integer bsStrategyType,
+                                               Boolean ztFlag,
+                                               LocalDate startDate,
+                                               LocalDate endDate) {
+
+
+        initDataService.initData();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        List<QaTopBlockDO> list = Lists.newArrayList();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalDate prevDate = null;
+        List<String> prev_posList = Lists.newArrayList();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        //                                            回测-task   按日 循环执行
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        TopBlockStrategyEnum topBlockStrategyEnum = TopBlockStrategyEnum.LV3;
+
+        List<String> buyConList = Lists.newArrayList("月多", "SSF多");
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        LocalDate tradeDate = startDate;
+        endDate = DateTimeUtil.min(endDate, data.endDate());
+
+
+        while (tradeDate.isBefore(endDate)) {
+            tradeDate = tradeDateIncr(tradeDate);
+
+
+            Map<String, String> buy_infoMap = Maps.newConcurrentMap();
+            // 当前仓位
+            double posRate = 0;
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            List<TopChangePctDTO> today_posTopList = Lists.newArrayList();
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            S策略
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
+
+
+            // 卖出策略
+            Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, prev_posList, sell_infoMap);
+
+            log.info("S策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
+                     tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            //                                            B策略
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // BS策略
+            List<String> today__buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, ztFlag);
+
+            log.info("B策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
+                     tradeDate, topBlockStrategyEnum, today__buy__stockCodeList.size(), JSON.toJSONString(today__buy__stockCodeList), JSON.toJSONString(buy_infoMap));
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            if (prevDate != null) {
+                LocalDate finalTradeDate = tradeDate;
+
+                // 昨日持仓列表
+                prev_posList.stream()
+                            // 昨日持仓中 -> 今日未S     =>     今日继续持仓中
+                            .filter(stockCode -> !sell__stockCodeSet.contains(stockCode) && !today__buy__stockCodeList.contains(stockCode))
+                            .forEach(stockCode -> {
+                                TopChangePctDTO pos_dto = convertPrevPos2TodayPos(stockCode, finalTradeDate);
+                                if (null != pos_dto) {
+                                    today_posTopList.add(pos_dto);
+                                }
+                            });
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 重计算   ->   avgPct
+            TopPoolAvgPctDTO avgPct = new TopBlockServiceImpl().avgPct(today_posTopList, TopTypeEnum.getByType(type));
+
+
+            QaTopBlockDO entity = new QaTopBlockDO();
+            entity.setDate(tradeDate);
+            entity.setTopStockCodeSet(JsonUtil.toJSONString(today_posTopList));
+            entity.setStockAvgPct(JsonUtil.toJSONString(Lists.newArrayList(avgPct)));
+            list.add(entity);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            prevDate = tradeDate;
+            prev_posList = today_posTopList.stream().map(TopChangePctDTO::getCode).collect(Collectors.toList());
+            // ---------------------------------------------------------------------------------------------------------
+        }
+
+
+        return list;
+    }
+
+
+    private TopChangePctDTO convertPrevPos2TodayPos(String stockCode, LocalDate today) {
+        TopChangePctDTO dto = new TopChangePctDTO(stockCode, null);
+
+
+        StockFun fun = data.getFun(stockCode);
+        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+        Integer idx = dateIndexMap.get(today);
+        // 停牌  /  当前date -> 非交易日
+        if (idx == null) {
+            return null;
+        }
+
+
+        List<KlineDTO> klineDTOList = fun.getKlineDTOList();
+        int maxIdx = klineDTOList.size() - 1;
+
+
+        KlineDTO today_klineDTO = klineDTOList.get(idx);
+        KlineDTO next_klineDTO = klineDTOList.get(Math.min(idx + 1, maxIdx));
+        ExtDataDTO today_extDataDTO = fun.getExtDataDTOList().get(idx);
+
+
+        dto.setName(fun.getName());
+        dto.setToday2Next_changePct(next_klineDTO.getChange_pct());
+        dto.setBuySignalExtDataDTO(today_extDataDTO);
+
+
+        dto.setAmo(today_klineDTO.getAmo());
+
+
+        return dto;
+    }
+
+
+    /**
+     * BS策略
+     *
+     * @param e
+     * @param bsStrategyType
      * @return
      */
-    private List<TopPoolDailyReturnDTO> dailyReturnDTOList(List<QaTopBlockDO> list, Integer topPoolType, Integer type,
+    private boolean bsStrategyType(TopChangePctDTO e, Integer bsStrategyType) {
+        // 全部
+        if (bsStrategyType == null) {
+            return true;
+        }
+
+
+        ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
+
+        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        boolean _5CM = changePctLimit == 5;
+        boolean _10CM = changePctLimit == 10;
+        boolean _20CM = changePctLimit == 20;
+        boolean _30CM = changePctLimit == 30;
+
+
+        if (bsStrategyType == 1) {
+
+            double C_SSF_偏离率 = buySignal.getC_SSF_偏离率();
+            double H_SSF_偏离率 = buySignal.getH_SSF_偏离率();
+            double C_MA5_偏离率 = buySignal.getC_MA5_偏离率();
+            double H_MA5_偏离率 = buySignal.getH_MA5_偏离率();
+            boolean 高位爆量上影大阴 = buySignal.get高位爆量上影大阴();
+
+
+            // B   ->   C_SSF_偏离率   ∈   [-0.3%, 3%]
+            if (NumUtil.between(C_SSF_偏离率, -0.3, 3)) {
+                return true;
+            }
+
+            // S   ->   C_SSF_偏离率   >=   20
+            if (C_SSF_偏离率 >= 20) {
+                return false;
+            }
+
+
+            // 1-B；
+            boolean B_1_1 = _10CM && NumUtil.between(C_SSF_偏离率, 0, 7);    // 天赐材料（2025-09 ~ 2025-11）
+            boolean B_1_2 = _20CM && NumUtil.between(C_SSF_偏离率, 0, 10);   // 天华新能（2025-09 ~ 2025-11）
+            boolean B_1_3 = _30CM && NumUtil.between(C_SSF_偏离率, 0, 13);
+
+
+            // 2-持有；
+
+
+            // 3-S；
+            boolean S_1 = 高位爆量上影大阴;
+
+
+            boolean S_2_1 = _10CM && C_SSF_偏离率 > 20 && C_MA5_偏离率 > 16;   // 天赐材料（2025-09 ~ 2025-11）
+            boolean S_2_2 = _20CM && C_SSF_偏离率 > 20 && C_MA5_偏离率 > 21;   // 天华新能（2025-09 ~ 2025-11）
+
+            boolean S_3_1 = _10CM && H_SSF_偏离率 > 23 && H_MA5_偏离率 > 23;   // 天赐材料（2025-09 ~ 2025-11）
+            boolean S_3_2 = _20CM && H_SSF_偏离率 > 23 && H_MA5_偏离率 > 23;   // 天华新能（2025-09 ~ 2025-11）
+
+
+        } else if (bsStrategyType == 2) {
+            double C_MA10_偏离率 = buySignal.getC_MA10_偏离率();
+
+            // B   ->   C_MA10_偏离率   ∈   [-0.3%, 3%]
+            if (NumUtil.between(C_MA10_偏离率, -0.3, 3)) {
+                return true;
+            }
+
+            // S   ->   C_MA10_偏离率   >=   20
+            if (C_MA10_偏离率 >= 20) {
+                return false;
+            }
+        }
+
+
+        return false;
+    }
+
+
+    /**
+     * BS策略
+     *
+     * @param e
+     * @param bsStrategyType
+     * @return
+     */
+    private boolean bsStrategyType_2(TopChangePctDTO e, Integer bsStrategyType) {
+        // 全部
+        if (bsStrategyType == null) {
+            return true;
+        }
+
+
+        ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
+
+        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        boolean _5CM = changePctLimit == 5;
+        boolean _10CM = changePctLimit == 10;
+        boolean _20CM = changePctLimit == 20;
+        boolean _30CM = changePctLimit == 30;
+
+
+        LocalDate date = buySignal.getDate();
+        double today_close = e.getToday_close();
+
+
+        if (Objects.equals(BSStrategyTypeEnum.BS_MA20多.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getMA20多();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上MA20.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.get上MA20();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_SSF多.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getSSF多();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上SSF.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.get上SSF();
+
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上SAR.type, bsStrategyType)) {
+
+            double SAR = buySignal.getSAR();
+
+            // B/持有（上SAR     =>     今日收盘价 > SAR）
+            return today_close > SAR;
+
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_XZZB.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getXZZB();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getBSQJ();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
+
+
+        }
+
+
+        return false;
+    }
+
+    /**
+     * BS策略（持仓策略）
+     *
+     * @param e
+     * @param bsStrategyType
+     * @return
+     */
+    private boolean bsStrategyType_3(TopChangePctDTO e, Integer bsStrategyType) {
+        // 全部
+        if (bsStrategyType == null) {
+            return true;
+        }
+
+
+        ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
+
+        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        boolean _5CM = changePctLimit == 5;
+        boolean _10CM = changePctLimit == 10;
+        boolean _20CM = changePctLimit == 20;
+        boolean _30CM = changePctLimit == 30;
+
+
+        LocalDate date = buySignal.getDate();
+        double today_close = e.getToday_close();
+
+
+        if (Objects.equals(BSStrategyTypeEnum.BS_MA20多.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getMA20多();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上MA20.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.get上MA20();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_SSF多.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getSSF多();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上SSF.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.get上SSF();
+
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_上SAR.type, bsStrategyType)) {
+
+            double SAR = buySignal.getSAR();
+
+            // B/持有（上SAR     =>     今日收盘价 > SAR）
+            return today_close > SAR;
+
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_XZZB.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getXZZB();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
+
+            // B/持仓
+            return buySignal.getBSQJ();
+
+        } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
+
+        }
+
+
+        return false;
+    }
+
+
+    /**
+     * BS策略（持仓策略）
+     *
+     * @param code
+     * @param bsStrategyType
+     * @param date
+     * @return
+     */
+    private int bsStrategyType__bsStatus(String code, Integer bsStrategyType, LocalDate date) {
+        int bsStatus = 0;
+
+
+        StockFun fun = data.getFun(code);
+
+//        ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
+
+        Integer changePctLimit = fun.changePctLimit();
+//        Integer changePctLimit = StockLimitEnum.getChangePctLimit(code, name);
+        boolean _5CM = changePctLimit == 5;
+        boolean _10CM = changePctLimit == 10;
+        boolean _20CM = changePctLimit == 20;
+        boolean _30CM = changePctLimit == 30;
+
+
+//        LocalDate date = buySignal.getDate();
+
+
+        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+        Integer idx = dateIndexMap.get(date);
+        if (idx == null) {
+            return bsStatus;
+        }
+
+
+        ExtDataDTO buySignal = fun.getExtDataDTOList().get(idx);
+
+
+        if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
+
+
+            Integer 短期趋势支撑线 = buySignal.get短期趋势支撑线();
+            Integer 中期趋势支撑线 = buySignal.get中期趋势支撑线();
+
+            double min = 短期趋势支撑线 == 5 ? 0.25
+                    : 短期趋势支撑线 == 10 ? -0.5
+                    : 短期趋势支撑线 == 20 ? -0.5 : -0.5;
+
+            double max = 短期趋势支撑线 == 5 ? 0.5
+                    : 短期趋势支撑线 == 10 ? 1.0
+                    : 短期趋势支撑线 == 20 ? 3.5 : 3.0;
+
+
+            double C_短期MA_偏离率 = buySignal.getC_短期MA_偏离率();
+            double C_中期MA_偏离率 = buySignal.getC_中期MA_偏离率();
+
+
+            // B
+            if (NumUtil.between(C_短期MA_偏离率, min, max)) {
+                bsStatus = 1;
+
+//                e.setPosStatus(1);
+//
+//                // 已持仓
+//                if (e.isPrev_posFlag()) {
+//
+//                } else {
+//                    // 首次买入
+//                    e.setFirstBuyDate(date);
+//                }
+//                e.setPosFlag(true);
+            }
+
+
+            // S
+            if (C_中期MA_偏离率 > 50) {
+                bsStatus = 2;
+            }
+        }
+
+
+        return bsStatus;
+    }
+
+
+    /**
+     * 每日收益率列表
+     *
+     * @param list                   时间段 -> 主线列表
+     * @param topPoolType            主线类型：1-板块；2-ETF；3-个股；
+     * @param type                   主线策略：1-机选；2-精选（TOP50）；3-历史新高；4-极多头；5-RPS三线红；6-10亿；7-首次三线红；8-口袋支点；9-T0；10-涨停（打板）；     // TopTypeEnum
+     * @param code_countMap
+     * @param topBlock__codeCountMap
+     * @param topStock__codeCountMap
+     * @return
+     */
+    private List<TopPoolDailyReturnDTO> dailyReturnDTOList(List<QaTopBlockDO> list,
+                                                           Integer topPoolType,
+                                                           Integer type,
                                                            Map<String, TopCountDTO> code_countMap,
-                                                           Map<String, Integer> topStock__codeCountMap,
-                                                           Map<String, Integer> topBlock__codeCountMap) {
+                                                           Map<String, Integer> topBlock__codeCountMap,
+                                                           Map<String, Integer> topStock__codeCountMap) {
 
 
         List<TopPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
@@ -206,13 +1271,13 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             todayCodeSet.forEach(code -> {
 
                 String name = codeNameMap.get(code);
-                double today2NextChangePct = topMap.get(code).getToday2Next_changePct() * 0.01;
+                double today2Next_changePct = topMap.get(code).getToday2Next_changePct() * 0.01;
 
 
-                code_countMap.merge(code, new TopCountDTO(code, name, 1, today2NextChangePct, date), (old, newVal) -> {
+                code_countMap.merge(code, new TopCountDTO(code, name, 1, today2Next_changePct, date), (old, newVal) -> {
                     old.setCount(old.getCount() + newVal.getCount());
                     old.setPct((1 + old.getPct()) * (1 + newVal.getPct()) - 1);
-                    old.getPctList().add(of(today2NextChangePct * 100));
+                    old.getPctList().add(of(today2Next_changePct * 100));
                     old.getDateList().add(date);
 
                     return old;
@@ -228,10 +1293,17 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             }
 
 
+            // --------------------------------------- 涨停个股（特殊处理） -----------------------------------------------
+
+
             // --------------------------------------- 每日 收益/净值（普通账户） ------------------------------------------
 
 
-            double rate = 1 + daily_return * 0.01;
+            // 交易手续费（0.15%     万15 ~ 7万【万一免五】）
+            double treadFeeFactor = 0.15 * 0.01;
+
+
+            double rate = 1 + (daily_return - treadFeeFactor) * 0.01;
 
             nav *= rate;
             capital *= rate;
@@ -240,7 +1312,14 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             // --------------------------------------- 每日 收益/净值（融资账户） ------------------------------------------
 
 
-            double marginDailyReturn = daily_return * 2; // 融资账户收益率 = 普通账户收益率 * 2（普通账户 涨/跌 10%  ->  融资账户 涨/跌 20%）
+            // 融资保证金比例系数（折算率：0.85 ~ 1.15）
+            double marginFactor = 0.95;   // 0.85   ->   9成仓
+
+            // 融资费率（年化6%  ->  6%/365 = 0.017%）
+            double rzFeeFactor = 6.0 / 365 * 0.01;
+
+
+            double marginDailyReturn = (daily_return - treadFeeFactor - rzFeeFactor) * (1 + marginFactor);   // 融资账户收益率 = 普通账户收益率 * 2（普通账户 涨/跌 10%  ->  融资账户 涨/跌 20%）
             double marginRate = 1 + marginDailyReturn * 0.01;
 
             marginNav *= marginRate;
@@ -324,9 +1403,12 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
     @Override
-    public TopNAnalysisDTO top100(LocalDate startDate, LocalDate endDate, Integer topPoolType, Integer type) {
+    public TopNAnalysisDTO top100(LocalDate startDate,
+                                  LocalDate endDate,
+                                  Integer topPoolType,
+                                  Integer topStrategyType) {
 
-        TopPoolAnalysisDTO dto = topListAnalysis(startDate, endDate, topPoolType, type);
+        TopPoolAnalysisDTO dto = topListAnalysis(startDate, endDate, topPoolType, topStrategyType, null, null);
 
         List<TopCountDTO> top100List = dto.getCountDTOList().stream()
                                           .sorted(Comparator.comparing(TopCountDTO::getCount).reversed())
@@ -688,21 +1770,25 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                                            Map<String, Integer> topStock__codeCountMap) {
 
 
-        Map<String, Set<BaseBlockRelaStockDO>> blockCode_stockDOList_Map = baseBlockRelaStockService.listByBlockCodeList(topBlock__codeCountMap.keySet()).stream().
-                                                                                                    collect(Collectors.toMap(BaseBlockRelaStockDO::getBlockCode,
-                                                                                                                             Sets::newHashSet,
-                                                                                                                             (v1, v2) -> {
-                                                                                                                                 v1.addAll(v2);
-                                                                                                                                 return v1;
-                                                                                                                             }));
+        // blockCodeList  ->  relaList（多对多）      =>       blockCode - relaList（stockList）    Map
+        Map<String, Set<BaseBlockRelaStockDO>> blockCode_stockDOList_Map = baseBlockRelaStockService.listByBlockCodeList(topBlock__codeCountMap.keySet()) // 1. 获取数据
+                                                                                                    .stream()                                             // 2. 转换为 Stream     // 3. 使用 groupingBy 收集
+                                                                                                    .collect(Collectors.groupingBy(
+                                                                                                            BaseBlockRelaStockDO::getBlockCode, // 作为Map的key
+                                                                                                            Collectors.toSet()                  // 作为Map的value，将相同key的元素收集到Set中
+                                                                                                    ));
 
-        Map<String, Set<BaseBlockRelaStockDO>> stockCode_blockDOList_Map = baseBlockRelaStockService.listByStockCodeList(topStock__codeCountMap.keySet()).stream()
-                                                                                                    .collect(Collectors.toMap(BaseBlockRelaStockDO::getStockCode,
-                                                                                                                              Sets::newHashSet,
-                                                                                                                              (v1, v2) -> {
-                                                                                                                                  v1.addAll(v2);
-                                                                                                                                  return v1;
-                                                                                                                              }));
+
+        // stockCodeList  ->  relaList（多对多）      =>       stockCode - relaList（blockList）    Map
+        Map<String, Set<BaseBlockRelaStockDO>> stockCode_blockDOList_Map = baseBlockRelaStockService.listByStockCodeList(topStock__codeCountMap.keySet())
+                                                                                                    .stream()
+                                                                                                    .collect(Collectors.toMap(
+                                                                                                            BaseBlockRelaStockDO::getStockCode, // 作为Map的key
+                                                                                                            Sets::newHashSet,                   // 作为Map的value（为每个元素创建一个包含该元素的Set）
+                                                                                                            (v1, v2) -> {                       // 合并函数：当key重复时，将v2的元素添加到v1中
+                                                                                                                v1.addAll(v2);
+                                                                                                                return v1;
+                                                                                                            }));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -910,5 +1996,6 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         first.setCapital(100_0000.0);
         first.setMarginCapital(100_0000.0);
     }
+
 
 }
