@@ -52,12 +52,12 @@ public class StockTradingRateLimiter {
 
 
     // 监管规则配置
-    private static final int MAX_REQUESTS_PER_SECOND_PER_STOCK = 4;  // 每秒单股票最大请求数（留有余量）
+    private static final int MAX_REQUESTS_PER_SECOND_PER_STOCK = 2;  // 每秒单股票最大请求数（留有余量）
     private static final int MAX_REQUESTS_PER_MINUTE_PER_STOCK = 15; // 每分钟单股票最大请求数
 
 
-    private static final int MAX_REQUESTS_PER_SECOND_GLOBAL = 20;    // 每秒全局最大请求数
-    private static final int MAX_REQUESTS_PER_MINUTE_GLOBAL = 1000;  // 每分钟全局最大请求数
+    private static final int MAX_REQUESTS_PER_SECOND_GLOBAL = 8;     // 每秒全局最大请求数
+    private static final int MAX_REQUESTS_PER_MINUTE_GLOBAL = 500;   // 每分钟全局最大请求数
 
 
     // 时间窗口配置
