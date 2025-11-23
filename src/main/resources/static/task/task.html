@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>任务列表 - 实时进度</title>
+    <!-- 添加全局配置文件 -->
+    <script src="../js/config.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -311,8 +313,8 @@
         <div class="form-group">
             <label for="cacheRefresh">refresh:</label>
             <select id="cacheRefresh" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="true" selected>true</option>
-                <option value="false">false</option>
+                <option value="true">true</option>
+                <option value="false" selected>false</option>
             </select>
         </div>
         <button class="btn-info" onclick="refreshInitDataCache()">🔄 刷新回测缓存</button>
@@ -362,7 +364,8 @@
             ws.close();
         }
 
-        ws = new WebSocket('ws://' + window.location.host + '/ws/task-progress');
+        // ws = new WebSocket('ws://' + window.location.host + '/ws/task-progress');
+        ws = new WebSocket('ws://' + ApiUtils.API_HOST + '/ws/task-progress');
 
         ws.onopen = function () {
             console.log('WebSocket连接已建立');
@@ -396,7 +399,7 @@
     }
 
     function startTask(apiPath, taskName) {
-        fetch(apiPath, {method: 'GET'})
+        ApiUtils.fetch(apiPath, {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -427,7 +430,7 @@
     }
 
     function loadActiveTasks() {
-        fetch('/api/task/activeTasks', {method: 'GET'})
+        ApiUtils.fetch('/api/task/activeTasks', {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -446,7 +449,7 @@
     }
 
     function loadTaskHistory() {
-        fetch('/api/task/taskHistory', {method: 'GET'})
+        ApiUtils.fetch('/api/task/taskHistory', {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -459,7 +462,7 @@
     }
 
     function loadDataInfo() {
-        fetch('/api/task/dataInfo', {method: 'GET'})
+        ApiUtils.fetch('/api/task/dataInfo', {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -483,7 +486,7 @@
         }
 
         const params = new URLSearchParams({validatekey: validatekey, cookie: cookie});
-        fetch('/api/task/eastmoney/refreshSession?' + params.toString(), {method: 'GET'})
+        ApiUtils.fetch('/api/task/eastmoney/refreshSession?' + params.toString(), {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -501,7 +504,7 @@
         const refresh = document.getElementById('cacheRefresh').value;
         const refreshType = refresh === 'true' ? '强制' : '增量';
 
-        fetch(`/api/task/initData/refresh?refresh=${refresh}`, {method: 'GET'})
+        ApiUtils.fetch(`/api/task/initData/refresh?refresh=${refresh}`, {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
