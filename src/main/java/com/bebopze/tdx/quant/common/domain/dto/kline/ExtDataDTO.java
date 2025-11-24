@@ -116,7 +116,7 @@ public class ExtDataDTO implements Serializable {
     // ------- 多空
 
     private Boolean XZZB;
-    private Boolean BSQJ;
+//    private Boolean BSQJ;
 
 
     private Boolean MA5多;
