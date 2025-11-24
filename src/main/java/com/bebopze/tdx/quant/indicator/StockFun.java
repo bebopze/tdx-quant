@@ -44,7 +44,6 @@ public class StockFun {
     // 实时行情  -  买5/卖5
     SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
 
-    // 实时行情
     // private KlineDTO lastKlineDTO;
 
 
@@ -63,7 +62,7 @@ public class StockFun {
     // ------------------------------------
 
 
-    double C;
+    // double C;
 
 
     Map<LocalDate, Integer> dateIndexMap;
@@ -115,11 +114,11 @@ public class StockFun {
 
 
         // last
-        KlineDTO klineDTO = klineDTOList.get(klineDTOList.size() - 1);
+        // lastKlineDTO = ListUtil.last(klineDTOList);
 
 
         // 收盘价 - 实时
-        C = klineDTO.getClose();
+        // C = stockDO.getClose();
 
 
         // -----------------------------------------------
@@ -205,6 +204,10 @@ public class StockFun {
     }
 
 
+    public double[] MA(int N) {
+        return TdxFun.MA(close, N);
+    }
+
     public boolean[] MA多(int N) {
         return TdxExtFun.MA多(close, N);
     }
@@ -275,11 +278,11 @@ public class StockFun {
 
 
     public boolean[] 涨停() {
-        return TdxExtFun.涨停(close, changePctLimit());
+        return TdxExtFun.涨停(close, chgPctLimit());
     }
 
     public boolean[] 跌停() {
-        return TdxExtFun.跌停(close, changePctLimit());
+        return TdxExtFun.跌停(close, chgPctLimit());
     }
 
 
@@ -287,8 +290,8 @@ public class StockFun {
         return StockLimitEnum.is20CM(code, name);
     }
 
-    public Integer changePctLimit() {
-        return StockLimitEnum.getChangePctLimit(code, name);
+    public Integer chgPctLimit() {
+        return StockLimitEnum.getChgPctLimit(code, name);
     }
 
 
@@ -329,6 +332,10 @@ public class StockFun {
 
     public int[] 中期趋势支撑线(int[] 短期趋势支撑线) {
         return TdxExtFun.中期趋势支撑线(close, 短期趋势支撑线);
+    }
+
+    public int[] 长期趋势支撑线(int[] 中期趋势支撑线) {
+        return TdxExtFun.中期趋势支撑线(close, 中期趋势支撑线);
     }
 
 
@@ -387,6 +394,11 @@ public class StockFun {
 
     public boolean[] 均线极多头() {
         return TdxExtFun.均线极多头(close);
+    }
+
+
+    public int[] klineType() {
+        return TdxExtFun.klineType(close);
     }
 
 
@@ -489,7 +501,7 @@ public class StockFun {
         boolean[] con_4 = con_sumCompare(3, MA多(5), MA多(10), MA多(20), MA多(50));
 
 
-        boolean[] con_A = con_merge(con_1, con_2, con_3, con_4);
+        boolean[] con_A = con_and(con_1, con_2, con_3, con_4);
 
 
         // --------------------------------------------------------------- RPS / 均线形态
@@ -502,7 +514,7 @@ public class StockFun {
         boolean[] con_B = con_or(con_5, con_6, con_7);
 
 
-        return TdxExtFun.con_merge(con_A, con_B);
+        return TdxExtFun.con_and(con_A, con_B);
     }
 
 
@@ -530,36 +542,44 @@ public class StockFun {
         // CON_1 AND CON_2 AND CON_3     AND     (CON_4 || CON_5);
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 3日 最大跌幅
+        Integer chgPctLimit = chgPctLimit();
+        double N3_df_pctLimit = chgPctLimit == 5 ? -7 : chgPctLimit == 10 ? -10 : chgPctLimit == 20 ? -12 : chgPctLimit == 30 ? -15 : -10;
+
+
         // --------------------------------------------------------------- N日新高[近5日] / SSF多 / N日涨幅[非-妖顶]
 
 
         // 1、近5日内 创百日新高
-        boolean[] con_1 = int2Bool(COUNT(N日新高(N), 5));
+        boolean[] con_1 = int2Bool(COUNT(N日新高(N), 7)); // 近7日
 
 
         // 2、未 大幅回落
 
         // MA5 支撑线
-        // boolean[] con_2 = MA多(5);
-
         boolean[] con_2_1 = MA多(5);
+        // MA形态（小均线多头）
         boolean[] con_2_2 = con_sumCompare(3, MA多(5), MA多(10), MA多(20), MA多(50));
         boolean[] con_2 = con_or(con_2_1, con_2_2);
-
 
         // SSF多
         boolean[] con_3 = SSF多();
 
+        // 禁止跌停（排除：高位妖股）
+        boolean[] con_4 = negated(跌停());   // 跌停 -> 取反
 
-        // 3日涨跌幅 > -10%
-        boolean[] con_4 = new boolean[close.length];
+        // 窄幅波动（3日涨跌幅 > -10%）
+        boolean[] con_5 = new boolean[close.length];
         double[] N3日涨幅 = N日涨幅(3);
         for (int i = 0; i < N3日涨幅.length; i++) {
-            con_4[i] = N3日涨幅[i] >= -10;
+            con_5[i] = N3日涨幅[i] >= N3_df_pctLimit;
         }
 
 
-        return con_merge(con_1, con_2, con_3, con_4);
+        return con_and(con_1, con_2, con_3, con_4, con_5);
     }
 
 
