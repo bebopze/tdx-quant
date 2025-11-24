@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.service.impl;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.domain.dto.analysis.TopCountDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.MaxDrawdownPctDTO;
@@ -23,6 +24,7 @@ import com.bebopze.tdx.quant.service.DataAnalysisService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +36,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 
 
 /**
@@ -74,7 +79,8 @@ public class BacktestServiceImpl implements BacktestService {
                              BacktestCompareDTO btCompareDTO) {
 
 
-        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
+        // List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
+        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(1);
         // List<List<String>> sell_conCombinerList = SellStrategy__ConCombiner.generateCombinations();
 
 
@@ -451,29 +457,37 @@ public class BacktestServiceImpl implements BacktestService {
     @Override
     public BacktestAnalysisDTO analysis(Long taskId, LocalDate startDate, LocalDate endDate) {
 
-
         // task
         BtTaskDO taskDO = btTaskService.getById(taskId);
         Assert.notNull(taskDO, String.format("task不存在：%s", taskId));
 
 
         BacktestAnalysisDTO dto = new BacktestAnalysisDTO();
-
         dto.setTask(taskDO);
+
 
         // 交易记录
         dto.setTradeRecordList(btTradeRecordService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate));
+
 
         // 持仓/清仓记录
         List<BtPositionRecordDO> allPositionRecordDOList = btPositionRecordService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate);
         dto.setPositionRecordList(allPositionRecordDOList.stream().filter(e -> e.getPositionType() == 1).collect(Collectors.toList()));
         dto.setClearPositionRecordList(allPositionRecordDOList.stream().filter(e -> e.getPositionType() == 2).collect(Collectors.toList()));
 
+
         // 每日收益记录（根据 startDate -> 重新等比计算 nav、capital、...）
         dto.setDailyReturnList(dataAnalysisService.calcDailyReturn(btDailyReturnService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate)));
 
+
         // 汇总结果（胜率/盈亏比、最大回撤、夏普比率、年化收益率、...）
-        dto.setSumReturnDTO(dataAnalysisService.sumReturn(dto.getDailyReturnList(), dto.getTradeRecordList(), dto.getPositionRecordList()));
+        dto.setSumReturnDTO(dataAnalysisService.sumReturn(dto.getDailyReturnList(), dto.getTradeRecordList(), dto.getPositionRecordList(), false));
+        dto.setMarginSumReturnDTO(dataAnalysisService.sumReturn(dto.getDailyReturnList(), dto.getTradeRecordList(), dto.getPositionRecordList(), true));
+
+
+        // 上榜 次数/涨幅 统计
+        dto.setCountDTOList(dataAnalysisService.countDTOList(dto.getTradeRecordList(), dto.getPositionRecordList()));
+
 
         // 每日对应 -> 最大回撤
         dto.setDailyDrawdownPctList(dailyDrawdownPctList(dto.getDailyReturnList()));   // DEL
