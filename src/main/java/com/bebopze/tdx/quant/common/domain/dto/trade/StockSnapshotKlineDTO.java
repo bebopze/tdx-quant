@@ -49,17 +49,17 @@ public class StockSnapshotKlineDTO extends KlineDTO {
      *
      * @return
      */
-    public int getChangePctLimit() {
-        return StockLimitEnum.getChangePctLimit(stockCode, stockName);
+    public int getChgPctLimit() {
+        return StockLimitEnum.getChgPctLimit(stockCode, stockName);
     }
 
 
     public double getZtPrice() {
-        return NumUtil.of(prevClose * (1 + getChangePctLimit() * 0.01), 3);
+        return NumUtil.of(prevClose * (1 + getChgPctLimit() * 0.01), 3);
     }
 
     public double getDtPrice() {
-        return NumUtil.of(prevClose * (1 - getChangePctLimit() * 0.01), 3);
+        return NumUtil.of(prevClose * (1 - getChgPctLimit() * 0.01), 3);
     }
 
 

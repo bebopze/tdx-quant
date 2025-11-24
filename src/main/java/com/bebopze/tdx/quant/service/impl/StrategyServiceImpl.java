@@ -595,7 +595,7 @@ public class StrategyServiceImpl implements StrategyService {
         // ------------------------------------------- 特殊处理 ---------------------------------------------------------
 
 
-        Integer changePctLimit = StockLimitEnum.getChangePctLimit(stockCode, data.stock__codeNameMap.get(stockCode));
+        Integer changePctLimit = StockLimitEnum.getChgPctLimit(stockCode, data.stock__codeNameMap.get(stockCode));
 
         // 涨停/近停   ->   挂 更低的价格（91% -> 1个跌停板） 买入
         if (changePctLimit == 10 && pct >= changePctLimit * 0.9) {

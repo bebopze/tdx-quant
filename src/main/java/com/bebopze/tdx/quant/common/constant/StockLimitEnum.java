@@ -51,7 +51,7 @@ public enum StockLimitEnum {
      * 涨跌幅 限制：5、10、20、30
      */
     @Getter
-    private Integer changePctLimit;
+    private Integer chgPctLimit;
 
 
     /**
@@ -103,11 +103,18 @@ public enum StockLimitEnum {
     }
 
 
-    public static Integer getChangePctLimit(String stockCode, String stockName) {
+    /**
+     * 获取 涨跌幅限制
+     *
+     * @param stockCode
+     * @param stockName
+     * @return
+     */
+    public static Integer getChgPctLimit(String stockCode, String stockName) {
         if (is20CM_ETF(stockCode, stockName)) return LIMIT_20;
 
         StockLimitEnum stockLimitEnum = getByStockCode(stockCode);
-        return stockLimitEnum == null ? DEFAULT_LIMIT : stockLimitEnum.getChangePctLimit();
+        return stockLimitEnum == null ? DEFAULT_LIMIT : stockLimitEnum.getChgPctLimit();
     }
 
 
@@ -121,8 +128,8 @@ public enum StockLimitEnum {
      * @return
      */
     public static boolean is20CM(String stockCode, String stockName) {
-        Integer changePctLimit = getChangePctLimit(stockCode, stockName);
-        return changePctLimit >= 20;
+        Integer chgPctLimit = getChgPctLimit(stockCode, stockName);
+        return chgPctLimit >= 20;
     }
 
 
@@ -133,8 +140,8 @@ public enum StockLimitEnum {
      * @return
      */
     public static boolean is30CM(String stockCode, String stockName) {
-        Integer changePctLimit = getChangePctLimit(stockCode, stockName);
-        return changePctLimit >= 30;
+        Integer chgPctLimit = getChgPctLimit(stockCode, stockName);
+        return chgPctLimit >= 30;
     }
 
 
@@ -145,8 +152,8 @@ public enum StockLimitEnum {
      * @return
      */
     public static boolean is10CM(String stockCode, String stockName) {
-        Integer changePctLimit = getChangePctLimit(stockCode, stockName);
-        return changePctLimit <= 10 && !isST(stockName);
+        Integer chgPctLimit = getChgPctLimit(stockCode, stockName);
+        return chgPctLimit <= 10 && !isST(stockName);
     }
 
 
@@ -163,8 +170,8 @@ public enum StockLimitEnum {
         //  ST     主板 5%，创业板/科创板 20%，北交所 30%
         // *ST     主板 5%，创业板/科创板 20%，北交所 30%
 
-        Integer changePctLimit = getChangePctLimit(stockCode, stockName);
-        return changePctLimit <= 10 && isST(stockName);
+        Integer chgPctLimit = getChgPctLimit(stockCode, stockName);
+        return chgPctLimit <= 10 && isST(stockName);
     }
 
 

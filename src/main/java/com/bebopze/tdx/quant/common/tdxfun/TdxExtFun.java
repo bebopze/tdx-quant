@@ -52,103 +52,89 @@ public class TdxExtFun {
 
     public static boolean[] 上MA(double[] close, int N) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         // MA20
-        double[] MA20_arr = MA(close, N);
+        double[] MA20 = MA(close, N);
 
 
         for (int i = 0; i < len; i++) {
-            double MA20 = MA20_arr[i];
-            double C = close[i];
-
-            arr[i] = C >= MA20;
+            result[i] = close[i] >= MA20[i];
         }
 
-        return arr;
+
+        return result;
     }
 
     public static boolean[] 下MA(double[] close, int N) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         // MA20
-        double[] MA20_arr = MA(close, N);
+        double[] MA20 = MA(close, N);
 
 
         for (int i = 0; i < len; i++) {
-            double MA20 = MA20_arr[i];
-            double C = close[i];
-
-            arr[i] = C < MA20;
+            result[i] = close[i] < MA20[i];
         }
 
-        return arr;
+
+        return result;
     }
 
 
     public static boolean[] MA向上(double[] close, int N) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         // MA20
-        double[] MA20_arr = MA(close, N);
+        double[] MA20 = MA(close, N);
 
 
         for (int i = 0; i < len; i++) {
-
             if (i == 0) {
-                arr[i] = false;
-
+                result[i] = false;
             } else {
-                double MA20 = MA20_arr[i];
-                double MA20_pre = MA20_arr[i - 1];
-
-                arr[i] = MA20 >= MA20_pre;
+                result[i] = MA20[i] >= MA20[i - 1];
             }
         }
 
-        return arr;
+
+        return result;
     }
 
 
     public static boolean[] MA向下(double[] close, int N) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         // MA20
-        double[] MA20_arr = MA(close, N);
+        double[] MA20 = MA(close, N);
 
 
         for (int i = 0; i < len; i++) {
-
-
             if (i == 0) {
-                arr[i] = false;
-
+                result[i] = false;
             } else {
-                double MA20 = MA20_arr[i];
-                double MA20_pre = MA20_arr[i - 1];
-
-                arr[i] = MA20 < MA20_pre;
+                result[i] = MA20[i] < MA20[i - 1];
             }
         }
 
-        return arr;
+        return result;
     }
 
 
     public static boolean[] MA多(double[] close, int N) {
-        return con_merge(上MA(close, N), MA向上(close, N));
+        return con_and(上MA(close, N), MA向上(close, N));
     }
 
 
     public static boolean[] MA空(double[] close, int N) {
-        return con_merge(下MA(close, N), MA向下(close, N));
+        return con_and(下MA(close, N), MA向下(close, N));
     }
 
 
@@ -159,131 +145,103 @@ public class TdxExtFun {
 
     public static boolean[] 上SSF(double[] close, double[] ssf) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
-        try {
-            for (int i = 0; i < len; i++) {
-                double SSF = ssf[i];
-                double C = close[i];
-
-                arr[i] = C >= SSF;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        for (int i = 0; i < len; i++) {
+            result[i] = close[i] >= ssf[i];
         }
 
 
-        return arr;
+        return result;
     }
 
     public static boolean[] 下SSF(double[] close, double[] ssf) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         for (int i = 0; i < len; i++) {
-            double SSF = ssf[i];
-            double C = close[i];
-
-            arr[i] = C < SSF;
+            result[i] = close[i] < ssf[i];
         }
 
-        return arr;
+        return result;
     }
 
 
     public static boolean[] SSF向上(double[] close, double[] ssf) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         for (int i = 0; i < len; i++) {
-
             if (i == 0) {
-                arr[i] = false;
-
+                result[i] = false;
             } else {
-                double SSF = ssf[i];
-                double SSF_pre = ssf[i - 1];
-
-                arr[i] = SSF >= SSF_pre;
+                result[i] = ssf[i] >= ssf[i - 1];
             }
         }
 
-        return arr;
+        return result;
     }
 
     public static boolean[] SSF向下(double[] close, double[] ssf) {
         int len = close.length;
-        boolean[] arr = new boolean[len];
+        boolean[] result = new boolean[len];
 
 
         for (int i = 0; i < len; i++) {
-
             if (i == 0) {
-                arr[i] = false;
-
+                result[i] = false;
             } else {
-                double SSF = ssf[i];
-                double SSF_pre = ssf[i - 1];
-
-                arr[i] = SSF < SSF_pre;
+                result[i] = ssf[i] < ssf[i - 1];
             }
         }
 
-        return arr;
+        return result;
     }
 
 
     public static boolean[] SSF多(double[] close, double[] ssf) {
-        return con_merge(上SSF(close, ssf), SSF向上(close, ssf));
+        return con_and(上SSF(close, ssf), SSF向上(close, ssf));
     }
 
 
     public static boolean[] SSF空(double[] close, double[] ssf) {
-        return con_merge(下SSF(close, ssf), SSF向下(close, ssf));
+        return con_and(下SSF(close, ssf), SSF向下(close, ssf));
     }
 
 
     public static double[] C_SSF_偏离率(double[] close, double[] ssf) {
         int n = close.length;
-
         double[] result = new double[n];
+
+
         for (int i = 0; i < n; i++) {
             result[i] = NumUtil.of((close[i] / ssf[i] - 1) * 100);
         }
+
 
         return result;
     }
 
     public static double[] C_MA_偏离率(double[] close, int N) {
-        int n = close.length;
-
-
-        double[] MA = MA(close, N);
-
-
-        double[] result = new double[n];
-        for (int i = 0; i < n; i++) {
-            result[i] = NumUtil.of((close[i] / MA[i] - 1) * 100);
-        }
-
-        return result;
+        return H_MA_偏离率(close, close, N);
     }
 
 
     public static double[] H_MA_偏离率(double[] high, double[] close, int N) {
         int n = close.length;
+        double[] result = new double[n];
 
 
         double[] MA = MA(close, N);
 
 
-        double[] result = new double[n];
         for (int i = 0; i < n; i++) {
             result[i] = NumUtil.of((high[i] / MA[i] - 1) * 100);
         }
+
 
         return result;
     }
@@ -298,8 +256,7 @@ public class TdxExtFun {
      * @param arr_list
      * @return
      */
-    public static boolean[] con_merge(boolean[]... arr_list) {
-
+    public static boolean[] con_and(boolean[]... arr_list) {
         int len = arr_list[0].length;
         boolean[] result = new boolean[len];
 
@@ -307,11 +264,12 @@ public class TdxExtFun {
         for (int i = 0; i < len; i++) {
             boolean acc = true;
             for (boolean[] arr : arr_list) {
-                acc &= arr[i];
+                acc = arr[i];
                 if (!acc) break;
             }
             result[i] = acc;
         }
+
 
         return result;
     }
@@ -323,7 +281,6 @@ public class TdxExtFun {
      * @return
      */
     public static boolean[] con_or(boolean[]... arr_list) {
-
         int len = arr_list[0].length;
         boolean[] result = new boolean[len];
 
@@ -336,6 +293,7 @@ public class TdxExtFun {
             }
             result[i] = acc;
         }
+
 
         return result;
     }
@@ -1395,6 +1353,20 @@ public class TdxExtFun {
             result[i] = i > 0 &&
                     close[i] < MA10[i] && MA10[i] < MA20[i] && MA20[i] < MA50[i] && MA50[i] < MA100[i] && MA100[i] < MA200[i]
                     && MA10[i] < MA10[i - 1] && MA20[i] < MA20[i - 1] && MA50[i] < MA50[i - 1] && MA100[i] < MA100[i - 1] && MA200[i] < MA200[i - 1];
+        }
+
+
+        return result;
+    }
+
+
+    public static int[] klineType(double[] close) {
+        int n = close.length;
+        int[] result = new int[n];
+
+
+        for (int i = 0; i < n; i++) {
+
         }
 
 

@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.indicator;
 
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
-import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -46,11 +45,11 @@ public class BlockFun extends StockFun {
 
 
         // last
-        KlineDTO klineDTO = klineDTOList.get(klineDTOList.size() - 1);
+        // lastKlineDTO = ListUtil.last(klineDTOList);
 
 
         // 收盘价 - 实时
-        C = klineDTO.getClose();
+        // C = blockDO.getClose();
 
 
         // -----------------------------------------------
