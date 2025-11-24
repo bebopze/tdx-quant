@@ -147,7 +147,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        List<String> inTopBlock__stockCodeList = inTopBlock__stockCodeList(topBlockCodeSet, buy__topStock__codeList, data, tradeDate, ztFlag);
+        List<String> inTopBlock__stockCodeList = inTopBlock__stockCodeList(topBlockCodeSet, buy__topStock__codeList, data, tradeDate);
         log.info("BacktestBuyStrategyC - inTopBlock__stockCodeList     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -184,21 +184,19 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
     /**
-     * 强势个股   ->   IN 主线板块
+     * 强势个股   ->   IN 主线板块                  // 通用方法
      *
      * @param topBlockCodeSet    主线板块
      * @param topStock__codeList 强势个股
      * @param data
      * @param tradeDate
-     * @param ztFlag             个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
     public List<String> inTopBlock__stockCodeList(Set<String> topBlockCodeSet,
                                                   List<String> topStock__codeList,
 
                                                   BacktestCache data,
-                                                  LocalDate tradeDate,
-                                                  Boolean ztFlag) {
+                                                  LocalDate tradeDate) {
 
 
         // 强势个股   ->   IN 主线板块

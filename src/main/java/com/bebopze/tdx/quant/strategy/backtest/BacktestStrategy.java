@@ -757,8 +757,8 @@ public class BacktestStrategy {
 
             sell_tradeRecordDO.setTradeDate(tradeDate);
             // 大盘仓位限制->等比减仓
-            sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S21.getType());
-            sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S21.getDesc());
+            sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S31.getType());
+            sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S31.getDesc());
 
 
             double closePrice = getClosePrice(stockCode, tradeDate);
@@ -919,10 +919,25 @@ public class BacktestStrategy {
             tradeRecordDO.setFee(BigDecimal.ZERO);
 
 
+            // ---------------------------------------------------------------------------------------------------------
+
+
             // 买入0股（     amount -> (0,1)     ）
             if (qty < 1) {
+                log.warn("createAndSave__BUY_TradeRecord  -  买入数量<1股     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
+                         taskId, tradeDate, stockCode, close, amount, qty);
                 continue;
             }
+
+            if (close.doubleValue() <= 0.0) {
+                log.error("createAndSave__BUY_TradeRecord  -  买入价格<=0     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
+                          taskId, tradeDate, stockCode, close, amount, qty);
+
+                throw new BizException("买入价格<=0");
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             buy__tradeRecordDO__List.add(tradeRecordDO);
