@@ -1009,7 +1009,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getBSQJ();
+            // return buySignal.getBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
@@ -1084,7 +1084,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getBSQJ();
+            // return buySignal.getBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
