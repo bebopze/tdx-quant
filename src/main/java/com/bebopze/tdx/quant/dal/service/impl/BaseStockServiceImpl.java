@@ -249,6 +249,8 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
         while (true) {
+            long start_1 = System.currentTimeMillis();
+
 
             List<BaseStockDO> pageList = baseMapper.listByCursor(lastId, pageSize);
             if (pageList.isEmpty()) {
@@ -257,6 +259,10 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
             list.addAll(pageList);
             lastId = pageList.get(pageList.size() - 1).getId();
+
+
+            log.info("listByCursor - page=[{}]     >>>     time : {} , totalTime : {}",
+                     list.size() / pageSize + 1, DateTimeUtil.formatNow2Hms(start_1), DateTimeUtil.formatNow2Hms(start));
         }
 
 
