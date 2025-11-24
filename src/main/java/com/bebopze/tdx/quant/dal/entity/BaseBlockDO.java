@@ -184,17 +184,19 @@ public class BaseBlockDO implements Serializable {
      * 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @JsonIgnore
-    @TableField(value = "kline_his", select = false)
+    @TableField(value = "kline_his"/*, typeHandler = KlineListTypeHandler.class*/)
     @Schema(description = "历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
+    // private List<KlineDTO> klineHis;
 
     /**
      * 扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）
      */
     @JsonIgnore
-    @TableField(value = "ext_data_his", select = false)
+    @TableField(value = "ext_data_his"/*, typeHandler = ExtDataListTypeHandler.class*/)
     @Schema(description = "扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）")
     private String extDataHis;
+    // private List<ExtDataDTO> extDataHis;
 
     /**
      * 创建时间
@@ -236,6 +238,9 @@ public class BaseBlockDO implements Serializable {
 
             // 只转换1次
             klineDTOList = ConvertStockKline.str2DTOList(klineHis);
+            // Str -> null（否则，会同时存在2份【klineHis + klineDTOList】 ->  OOM）
+            klineHis = null;
+
             return klineDTOList;
         }
     }
@@ -255,6 +260,9 @@ public class BaseBlockDO implements Serializable {
 
             // 只转换1次
             extDataDTOList = ConvertStockExtData.extDataHis2DTOList(extDataHis);
+            // Str -> null（否则，会同时存在2份【extDataHis + extDataDTOList】 ->  OOM）
+            extDataHis = null;
+
             return extDataDTOList;
         }
     }
