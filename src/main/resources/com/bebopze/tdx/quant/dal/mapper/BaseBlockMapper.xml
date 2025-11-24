@@ -3,6 +3,38 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper">
 
 
+    <!-- 定义 ResultMap -->
+    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        <!-- 基本字段映射 -->
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="tradeDate" column="trade_date"/>
+        <result property="open" column="open"/>
+        <result property="high" column="high"/>
+        <result property="low" column="low"/>
+        <result property="close" column="close"/>
+        <result property="prevClose" column="prev_close"/>
+        <result property="volume" column="volume"/>
+        <result property="amount" column="amount"/>
+        <result property="changePct" column="change_pct"/>
+        <result property="rangePct" column="range_pct"/>
+        <result property="turnoverPct" column="turnover_pct"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModify" column="gmt_modify"/>
+
+
+        <!-- 关键：显式指定 typeHandler -->
+        <result property="klineHis" column="kline_his"/>
+        <result property="extDataHis" column="ext_data_his"/>
+        <!--
+        <result property="klineHis" column="kline_his" typeHandler="com.bebopze.tdx.quant.common.config.convert.KlineListTypeHandler"/>
+        <result property="extDataHis" column="ext_data_his" typeHandler="com.bebopze.tdx.quant.common.config.convert.ExtDataListTypeHandler"/>
+        -->
+    </resultMap>
+
+
     <select id="getIdByCode" resultType="long">
         SELECT id
         FROM base_block
@@ -10,14 +42,14 @@
     </select>
 
 
-    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="getByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT *
         FROM base_block
         WHERE code = #{code}
     </select>
 
 
-    <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="getSimpleByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT id,
                code,
                name,
@@ -33,7 +65,7 @@
     </select>
 
 
-    <select id="getSimpleById" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="getSimpleById" resultMap="BaseResultMap">
         SELECT id,
                code,
                name,
@@ -49,7 +81,7 @@
     </select>
 
 
-    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="listAllSimple" resultMap="BaseResultMap">
         SELECT id,
                code,
                name,
@@ -64,14 +96,14 @@
     </select>
 
 
-    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="listAllKline" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_block
     </select>
 
 
-    <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="listAllRpsKline" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_block
@@ -81,7 +113,7 @@
     </select>
 
 
-    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
 
         SELECT
 

@@ -3,6 +3,39 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseStockMapper">
 
 
+    <!-- 定义 ResultMap -->
+    <resultMap id="BaseResultMap" type="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        <!-- 基本字段映射 -->
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="tdxMarketType" column="tdx_market_type"/>
+        <result property="tradeDate" column="trade_date"/>
+        <result property="open" column="open"/>
+        <result property="high" column="high"/>
+        <result property="low" column="low"/>
+        <result property="close" column="close"/>
+        <result property="prevClose" column="prev_close"/>
+        <result property="volume" column="volume"/>
+        <result property="amount" column="amount"/>
+        <result property="changePct" column="change_pct"/>
+        <result property="rangePct" column="range_pct"/>
+        <result property="turnoverPct" column="turnover_pct"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModify" column="gmt_modify"/>
+
+
+        <!-- 关键：显式指定 typeHandler -->
+        <result property="klineHis" column="kline_his"/>
+        <result property="extDataHis" column="ext_data_his"/>
+        <!--
+        <result property="klineHis" column="kline_his" typeHandler="com.bebopze.tdx.quant.common.config.convert.KlineListTypeHandler"/>
+        <result property="extDataHis" column="ext_data_his" typeHandler="com.bebopze.tdx.quant.common.config.convert.ExtDataListTypeHandler"/>
+        -->
+    </resultMap>
+
+
     <select id="getIdByCode" parameterType="java.lang.String" resultType="long">
         SELECT id
 
@@ -11,7 +44,7 @@
         WHERE code = #{code}
     </select>
 
-    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="getByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_stock
@@ -20,7 +53,7 @@
     </select>
 
 
-    <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="getSimpleByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
@@ -29,20 +62,20 @@
     </select>
 
 
-    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listAllSimple" resultMap="BaseResultMap">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
     </select>
 
 
-    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listAllKline" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_stock
     </select>
 
-    <select id="listAllETFKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listAllETFKline" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_stock
@@ -50,7 +83,7 @@
         WHERE type = 2
     </select>
 
-    <select id="listByCursor" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listByCursor" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_stock
@@ -63,7 +96,7 @@
     </select>
 
 
-    <select id="listByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT *
 
         FROM base_stock
@@ -77,7 +110,7 @@
     </select>
 
 
-    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
@@ -91,7 +124,7 @@
     </select>
 
 
-    <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listBaseByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
