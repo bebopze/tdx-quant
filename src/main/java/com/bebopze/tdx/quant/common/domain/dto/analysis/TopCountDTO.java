@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.common.domain.dto.analysis;
 
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
-import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -70,7 +69,7 @@ public class TopCountDTO {
         this.name = name;
         this.count = count;
         this.pct = pct;
-        this.pctList.add(NumUtil.of(pct * 100));
+        this.pctList.add(pct);
         this.dateList.add(date);
     }
 

@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.dto.backtest;
 
+import com.bebopze.tdx.quant.common.domain.dto.analysis.TopCountDTO;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolSumReturnDTO;
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
@@ -48,9 +49,19 @@ public class BacktestAnalysisDTO {
 
 
     /**
-     * 收益汇总结果（胜率/盈亏比、最大回撤、夏普比率、年化收益率、...）
+     * 收益汇总结果（胜率/盈亏比、最大回撤、夏普比率、年化收益率、...）               - 普通账户
      */
     private TopPoolSumReturnDTO sumReturnDTO;
+    /**
+     * 收益汇总结果（胜率/盈亏比、最大回撤、夏普比率、年化收益率、...）               - 融资账户
+     */
+    private TopPoolSumReturnDTO marginSumReturnDTO;
+
+
+    /**
+     * 上榜 次数/涨幅 统计
+     */
+    private List<TopCountDTO> countDTOList;
 
 
     // ------------------------------------------------------------------- 回撤记录
@@ -66,6 +77,5 @@ public class BacktestAnalysisDTO {
 
 
     private List<PositionTopBlockDTO> positionTopBlockList;
-
 
 }
