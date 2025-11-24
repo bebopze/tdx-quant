@@ -188,6 +188,19 @@ public class ConvertStock {
             arrDTO.rps250[i] = dto.getRps250();
 
 
+            arrDTO.MA5[i] = of(dto.getMA5());
+            arrDTO.MA10[i] = of(dto.getMA10());
+            arrDTO.MA20[i] = of(dto.getMA20());
+            arrDTO.MA30[i] = of(dto.getMA30());
+            arrDTO.MA50[i] = of(dto.getMA50());
+            arrDTO.MA60[i] = of(dto.getMA60());
+            arrDTO.MA100[i] = of(dto.getMA100());
+            arrDTO.MA120[i] = of(dto.getMA120());
+            arrDTO.MA150[i] = of(dto.getMA150());
+            arrDTO.MA200[i] = of(dto.getMA200());
+            arrDTO.MA250[i] = of(dto.getMA250());
+
+
             arrDTO.SSF[i] = of(dto.getSSF());
             arrDTO.SAR[i] = of(dto.getSAR());
 
@@ -203,8 +216,9 @@ public class ConvertStock {
             arrDTO.N20日涨幅[i] = of(dto.getN20日涨幅());
 
 
-            arrDTO.短期趋势支撑线[i] = of(dto.get短期趋势支撑线());
-            arrDTO.中期趋势支撑线[i] = of(dto.get中期趋势支撑线());
+            arrDTO.短期支撑线[i] = of(dto.get短期支撑线());
+            arrDTO.中期支撑线[i] = of(dto.get中期支撑线());
+            arrDTO.长期支撑线[i] = of(dto.get长期支撑线());
 
 
             arrDTO.C_SSF_偏离率[i] = of(dto.getC_SSF_偏离率());
@@ -237,6 +251,10 @@ public class ConvertStock {
             arrDTO.BSQJ[i] = of(dto.getBSQJ());
 
 
+            arrDTO.MA5多[i] = of(dto.getMA5多());
+            arrDTO.MA5空[i] = of(dto.getMA5空());
+            arrDTO.MA10多[i] = of(dto.getMA10多());
+            arrDTO.MA10空[i] = of(dto.getMA10空());
             arrDTO.MA20多[i] = of(dto.getMA20多());
             arrDTO.MA20空[i] = of(dto.getMA20空());
             arrDTO.SSF多[i] = of(dto.getSSF多());
@@ -270,6 +288,9 @@ public class ConvertStock {
             arrDTO.RPS一线红[i] = of(dto.getRPS一线红());
             arrDTO.RPS双线红[i] = of(dto.getRPS双线红());
             arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
+
+
+            arrDTO.klineType[i] = of(dto.getKlineType());
         }
 
 

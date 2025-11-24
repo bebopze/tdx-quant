@@ -29,6 +29,22 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    public double[] MA5;
+    public double[] MA10;
+    public double[] MA20;
+    public double[] MA30;
+    public double[] MA50;
+    public double[] MA60;
+    public double[] MA100;
+    public double[] MA120;
+    public double[] MA150;
+    public double[] MA200;
+    public double[] MA250;
+
+
+    // ---------------------------------------------------
+
+
     public double[] SSF;
     public double[] SAR;
 
@@ -53,8 +69,9 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
-    public int[] 短期趋势支撑线;
-    public int[] 中期趋势支撑线;
+    public int[] 短期支撑线;
+    public int[] 中期支撑线;
+    public int[] 长期支撑线;
 
 
     public double[] C_SSF_偏离率;
@@ -92,6 +109,10 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] BSQJ;
 
 
+    public boolean[] MA5多;
+    public boolean[] MA5空;
+    public boolean[] MA10多;
+    public boolean[] MA10空;
     public boolean[] MA20多;
     public boolean[] MA20空;
     public boolean[] SSF多;
@@ -126,6 +147,9 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] RPS三线红;
 
 
+    public int[] klineType;
+
+
     // ---------------------------------------------------
 
 
@@ -148,6 +172,19 @@ public class ExtDataArrDTO implements Serializable {
         this.rps250 = new double[size];
 
 
+        this.MA5 = new double[size];
+        this.MA10 = new double[size];
+        this.MA20 = new double[size];
+        this.MA30 = new double[size];
+        this.MA50 = new double[size];
+        this.MA60 = new double[size];
+        this.MA100 = new double[size];
+        this.MA120 = new double[size];
+        this.MA150 = new double[size];
+        this.MA200 = new double[size];
+        this.MA250 = new double[size];
+
+
         this.SSF = new double[size];
         this.SAR = new double[size];
 
@@ -163,8 +200,9 @@ public class ExtDataArrDTO implements Serializable {
         this.N20日涨幅 = new double[size];
 
 
-        this.短期趋势支撑线 = new int[size];
-        this.中期趋势支撑线 = new int[size];
+        this.短期支撑线 = new int[size];
+        this.中期支撑线 = new int[size];
+        this.长期支撑线 = new int[size];
 
 
         this.C_SSF_偏离率 = new double[size];
@@ -199,6 +237,10 @@ public class ExtDataArrDTO implements Serializable {
         this.BSQJ = new boolean[size];
 
 
+        this.MA5多 = new boolean[size];
+        this.MA5空 = new boolean[size];
+        this.MA10多 = new boolean[size];
+        this.MA10空 = new boolean[size];
         this.MA20多 = new boolean[size];
         this.MA20空 = new boolean[size];
         this.SSF多 = new boolean[size];
@@ -232,7 +274,9 @@ public class ExtDataArrDTO implements Serializable {
         this.RPS一线红 = new boolean[size];
         this.RPS双线红 = new boolean[size];
         this.RPS三线红 = new boolean[size];
-    }
 
+
+        this.klineType = new int[size];
+    }
 
 }
