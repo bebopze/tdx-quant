@@ -48,4 +48,20 @@ public class BoolUtil {
         return result;
     }
 
+
+    /**
+     * 取反
+     *
+     * @param src 序列
+     * @return
+     */
+    public static boolean[] negated(boolean[] src) {
+        boolean[] dst = new boolean[src.length];
+        for (int i = 0; i < src.length; i++) {
+            dst[i] = !src[i];
+        }
+        return dst;
+    }
+
+
 }
