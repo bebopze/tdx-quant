@@ -35,18 +35,17 @@ public class ExtDataDTO implements Serializable {
     // ---------------------------------------------------
 
 
-//    private Double MA5;
-//    private Double MA10;
-//    private Double MA20;
-//    private Double MA25;
-//    private Double MA30;
-//    private Double MA50;
-//    private Double MA60;
-//    private Double MA100;
-//    private Double MA120;
-//    private Double MA150;
-//    private Double MA200;
-//    private Double MA250;
+    private Double MA5;
+    private Double MA10;
+    private Double MA20;
+    private Double MA30;
+    private Double MA50;
+    private Double MA60;
+    private Double MA100;
+    private Double MA120;
+    private Double MA150;
+    private Double MA200;
+    private Double MA250;
 
 
     // ---------------------------------------------------
@@ -76,9 +75,9 @@ public class ExtDataDTO implements Serializable {
     // ---------------------------------------------------
 
 
-    private Integer 短期趋势支撑线 = 20;   // 默认支撑线：MA20
-    private Integer 中期趋势支撑线 = 50;
-    // TODO   private Integer 长期趋势支撑线 = 100;
+    private Integer 短期支撑线 = 20;   // 默认支撑线：MA20
+    private Integer 中期支撑线 = 50;
+    private Integer 长期支撑线 = 100;
 
 
     private Double C_SSF_偏离率;
@@ -120,6 +119,10 @@ public class ExtDataDTO implements Serializable {
     private Boolean BSQJ;
 
 
+    private Boolean MA5多;
+    private Boolean MA5空;
+    private Boolean MA10多;
+    private Boolean MA10空;
     private Boolean MA20多;
     private Boolean MA20空;
     private Boolean SSF多;
@@ -161,16 +164,21 @@ public class ExtDataDTO implements Serializable {
     private Boolean RPS三线红;
 
 
+    // ------- K线形态
+
+    private int klineType;   // K线形态（1-慢牛股；2-趋势股；3-动量股；4-妖股；）
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
-     * 获取 C_MA偏离率 （短期）    ->     B（低吸）
+     * 获取 C_MA偏离率 （短期）    ->     B（低吸/高抛）
      *
      * @return
      */
     public double getC_短期MA_偏离率() {
-        return getC_MA_偏离率(短期趋势支撑线);
+        return getC_MA_偏离率(短期支撑线);
     }
 
     /**
@@ -179,7 +187,16 @@ public class ExtDataDTO implements Serializable {
      * @return
      */
     public double getC_中期MA_偏离率() {
-        return getC_MA_偏离率(中期趋势支撑线);
+        return getC_MA_偏离率(中期支撑线);
+    }
+
+    /**
+     * 获取 C_MA偏离率 （长期）    ->     S（高抛）
+     *
+     * @return
+     */
+    public double getC_长期MA_偏离率() {
+        return getC_MA_偏离率(长期支撑线);
     }
 
 

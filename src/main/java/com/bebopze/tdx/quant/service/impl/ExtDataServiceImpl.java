@@ -429,6 +429,19 @@ public class ExtDataServiceImpl implements ExtDataService {
         // StockFun fun = new StockFun(stockDO.getCode(), stockDO);
 
 
+        double[] MA5 = fun.MA(5);
+        double[] MA10 = fun.MA(10);
+        double[] MA20 = fun.MA(20);
+        double[] MA30 = fun.MA(30);
+        double[] MA50 = fun.MA(50);
+        double[] MA60 = fun.MA(60);
+        double[] MA100 = fun.MA(100);
+        double[] MA120 = fun.MA(120);
+        double[] MA150 = fun.MA(150);
+        double[] MA200 = fun.MA(200);
+        double[] MA250 = fun.MA(250);
+
+
         double[] SSF = fun.SSF();
         double[] SAR = fun.SAR();
 
@@ -446,7 +459,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         int[] 短期趋势支撑线 = fun.短期趋势支撑线();
         int[] 中期趋势支撑线 = fun.中期趋势支撑线(短期趋势支撑线);
-        // TODO   int[] 长期趋势支撑线 = fun.长期趋势支撑线(短期趋势支撑线);
+        int[] 长期趋势支撑线 = fun.长期趋势支撑线(中期趋势支撑线);
 
 
         double[] C_SSF_偏离率 = fun.C_SSF_偏离率();
@@ -481,6 +494,10 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] BSQJ = fun.BSQJ();
 
 
+        boolean[] MA5多 = fun.MA多(5);
+        boolean[] MA5空 = fun.MA空(5);
+        boolean[] MA10多 = fun.MA多(10);
+        boolean[] MA10空 = fun.MA空(10);
         boolean[] MA20多 = fun.MA多(20);
         boolean[] MA20空 = fun.MA空(20);
         boolean[] SSF多 = fun.SSF多();
@@ -523,11 +540,27 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] RPS三线红 = fun.RPS三线红(RPS);
 
 
+        int[] klineType = fun.klineType();
+
+
         // ---------------------------- 2、convert（序列   ->   列表）
 
 
         for (int i = 0; i < extDataDTOList.size(); i++) {
             ExtDataDTO dto = extDataDTOList.get(i);
+
+
+            dto.setMA5(of(MA5[i], 3));
+            dto.setMA10(of(MA10[i], 3));
+            dto.setMA20(of(MA20[i], 3));
+            dto.setMA30(of(MA30[i], 3));
+            dto.setMA50(of(MA50[i], 3));
+            dto.setMA60(of(MA60[i], 3));
+            dto.setMA100(of(MA100[i], 3));
+            dto.setMA120(of(MA120[i], 3));
+            dto.setMA150(of(MA150[i], 3));
+            dto.setMA200(of(MA200[i], 3));
+            dto.setMA250(of(MA250[i], 3));
 
 
             dto.setSSF(of(SSF[i], 3));
@@ -545,8 +578,9 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setN20日涨幅(of(N20日涨幅[i], 3));
 
 
-            dto.set短期趋势支撑线(短期趋势支撑线[i]);
-            dto.set中期趋势支撑线(中期趋势支撑线[i]);
+            dto.set短期支撑线(短期趋势支撑线[i]);
+            dto.set中期支撑线(中期趋势支撑线[i]);
+            dto.set长期支撑线(长期趋势支撑线[i]);
 
 
             dto.setC_SSF_偏离率(C_SSF_偏离率[i]);
@@ -571,6 +605,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
+
+
             dto.set涨停(涨停[i]);
             dto.set跌停(跌停[i]);
 
@@ -579,6 +615,10 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setBSQJ(BSQJ[i]);
 
 
+            dto.setMA5多(MA5多[i]);
+            dto.setMA5空(MA5空[i]);
+            dto.setMA10多(MA10多[i]);
+            dto.setMA10空(MA10空[i]);
             dto.setMA20多(MA20多[i]);
             dto.setMA20空(MA20空[i]);
             dto.setSSF多(SSF多[i]);
@@ -612,6 +652,9 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setRPS一线红(RPS一线红[i]);
             dto.setRPS双线红(RPS双线红[i]);
             dto.setRPS三线红(RPS三线红[i]);
+
+
+            dto.setKlineType(klineType[i]);
         }
     }
 
