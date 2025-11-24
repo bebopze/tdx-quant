@@ -18,26 +18,26 @@ public class TopPoolAnalysisDTO {
     /**
      * 收益率 汇总统计（普通账户）
      */
-    TopPoolSumReturnDTO sumReturnDTO;
+    private TopPoolSumReturnDTO sumReturnDTO;
     /**
      * 收益率 汇总统计（融资账户）
      */
-    TopPoolSumReturnDTO marginSumReturnDTO;
+    private TopPoolSumReturnDTO marginSumReturnDTO;
 
 
     /**
      * 每日收益率（普通账户/融资账户）
      */
-    List<TopPoolDailyReturnDTO> dailyReturnDTOList;
+    private List<TopPoolDailyReturnDTO> dailyReturnDTOList;
     /**
      * 平均每日收益率（普通账户/融资账户）
      */
-    TopPoolDailyReturnDTO avgDailyReturnDTO;
+    private TopPoolDailyReturnDTO avgDailyReturnDTO;
 
 
     /**
      * 上榜 次数/涨幅 统计
      */
-    List<TopCountDTO> countDTOList;
+    private List<TopCountDTO> countDTOList;
 
 }

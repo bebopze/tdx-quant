@@ -241,7 +241,7 @@ public class BaseStockDO implements Serializable {
      * @return
      */
     public int getChangePctLimit() {
-        return StockLimitEnum.getChangePctLimit(code, name);
+        return StockLimitEnum.getChgPctLimit(code, name);
     }
 
     /**

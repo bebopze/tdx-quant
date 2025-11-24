@@ -173,7 +173,7 @@ public class BacktestSellStrategy implements SellStrategy {
             if (S_topBlock) {
                 // log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , S_topBlock : {}", tradeDate, stockCode, S_topBlock);
                 // sell_infoMap.put(stockCode, "板块S" + ",idx-" + idx);
-                sell_infoMap.put(stockCode, SellStrategyEnum.S12);
+                sell_infoMap.put(stockCode, SellStrategyEnum.S22);
                 return true;
             }
 
@@ -191,14 +191,18 @@ public class BacktestSellStrategy implements SellStrategy {
             // -------------------------------------------
 
 
-//      try {
             // 月空
-            boolean 月多 = extDataArrDTO.月多[idx];
+            boolean 月空 = !extDataArrDTO.月多[idx];
             boolean MA20空 = extDataArrDTO.MA20空[idx];
-            if (!月多 && MA20空) {
-                // sell_infoMap.put(stockCode, "月空" + ",idx-" + idx);
-                // sell_infoMap.put(stockCode, "MA20空" + ",idx-" + idx);
+            if (月空 && MA20空) {
                 sell_infoMap.put(stockCode, SellStrategyEnum.月空_MA20空);
+                return true;
+            }
+
+
+            // MA20空
+            if (MA20空) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.MA20空);
                 return true;
             }
 
@@ -206,8 +210,17 @@ public class BacktestSellStrategy implements SellStrategy {
             // SSF空
             boolean SSF空 = extDataArrDTO.SSF空[idx];
             if (SSF空) {
-                // sell_infoMap.put(stockCode, "SSF空" + ",idx-" + idx);
                 sell_infoMap.put(stockCode, SellStrategyEnum.SSF空);
+                return true;
+            }
+
+
+            // 跌停
+            boolean 跌停 = extDataArrDTO.跌停[idx];
+            boolean MA5空 = extDataArrDTO.MA5空[idx];
+            boolean MA10空 = extDataArrDTO.MA10空[idx];
+            if (跌停 && MA5空 && MA10空) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.跌停_MA5空_MA10空);
                 return true;
             }
 
@@ -215,7 +228,6 @@ public class BacktestSellStrategy implements SellStrategy {
             // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
             boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
             if (高位爆量上影大阴) {
-                // sell_infoMap.put(stockCode, "高位爆量上影大阴" + ",idx-" + idx);
                 sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
                 return true;
             }
@@ -225,7 +237,6 @@ public class BacktestSellStrategy implements SellStrategy {
             double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
             int limit = fun.is20CM() ? 30 : 25;
             if (C_SSF_偏离率 > limit) {
-                // sell_infoMap.put(stockCode, "C_SSF_偏离率>" + limit + "%" + ",idx-" + idx);
                 sell_infoMap.put(stockCode, SellStrategyEnum.C_SSF_偏离率);
                 return true;
             }
@@ -235,30 +246,31 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
             // 偏离率 > 60%
+            double C_短期MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
             double C_中期MA_偏离率 = extDataDTO.getC_中期MA_偏离率();
+            double C_长期MA_偏离率 = extDataDTO.getC_长期MA_偏离率();
 
 
-            int changePctLimit = fun.changePctLimit();
-
-            double 偏离率_limit = changePctLimit == 5 ? 45 :
-                    changePctLimit == 10 ? 55 :
-                            changePctLimit == 20 ? 65 :
-                                    changePctLimit == 30 ? 75 : 50;
+            C_MA_Ratio c_ma_ratio = c_ma_ratio(extDataDTO.getKlineType(), fun.chgPctLimit());
 
 
-            if (C_中期MA_偏离率 > 偏离率_limit) {
-                // sell_infoMap.put(stockCode, "C_中期MA_偏离率>" + 偏离率_limit + "%" + ",idx-" + idx);
+            if (C_短期MA_偏离率 > c_ma_ratio.short_MA_Ratio) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.C_短期MA_偏离率);
+                return true;
+            }
+
+            if (C_中期MA_偏离率 > c_ma_ratio.medium_MA_Ratio) {
                 sell_infoMap.put(stockCode, SellStrategyEnum.C_中期MA_偏离率);
+                return true;
+            }
+
+            if (C_长期MA_偏离率 > c_ma_ratio.long_MA_Ratio) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.C_长期MA_偏离率);
                 return true;
             }
 
 
             // ---------------------------------------------------------------------------------------------------------
-
-
-//      } catch (Exception e) {
-//          log.error(e.getMessage(), e);
-//      }
 
 
             // TODO     最大 亏损线  ->  -7% 止损
@@ -270,6 +282,98 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         return sell__stockCodeSet;
+    }
+
+    private C_MA_Ratio c_ma_ratio(int klineType, Integer chgPctLimit) {
+        C_MA_Ratio cMaRatio = new C_MA_Ratio();
+
+
+        // 慢牛股
+        if (klineType == 1) {
+
+            cMaRatio.short_MA_Ratio = chgPctLimit == 5 ? 7 :
+                    chgPctLimit == 10 ? 10 :
+                            chgPctLimit == 20 ? 20 :
+                                    chgPctLimit == 30 ? 30 : 50;
+
+
+            cMaRatio.medium_MA_Ratio = chgPctLimit == 5 ? 12 :
+                    chgPctLimit == 10 ? 15 :
+                            chgPctLimit == 20 ? 25 :
+                                    chgPctLimit == 30 ? 35 : 50;
+
+            cMaRatio.long_MA_Ratio = chgPctLimit == 5 ? 20 :
+                    chgPctLimit == 10 ? 25 :
+                            chgPctLimit == 20 ? 35 :
+                                    chgPctLimit == 30 ? 45 : 50;
+
+        }
+        // 趋势股
+        else if (klineType == 2) {
+
+
+            // 天齐锂业（2025-11）        MA5-MA20-MA50
+
+            cMaRatio.short_MA_Ratio = chgPctLimit == 5 ? 7 :
+                    chgPctLimit == 10 ? 10 :
+                            chgPctLimit == 20 ? 20 :
+                                    chgPctLimit == 30 ? 30 : 50;
+
+
+            cMaRatio.medium_MA_Ratio = chgPctLimit == 5 ? 12 :
+                    chgPctLimit == 10 ? 15 :
+                            chgPctLimit == 20 ? 25 :
+                                    chgPctLimit == 30 ? 35 : 50;
+
+            cMaRatio.long_MA_Ratio = chgPctLimit == 5 ? 20 :
+                    chgPctLimit == 10 ? 25 :
+                            chgPctLimit == 20 ? 35 :
+                                    chgPctLimit == 30 ? 45 : 50;
+
+        }
+
+        // 动量股
+        else if (klineType == 3) {
+
+            cMaRatio.short_MA_Ratio = chgPctLimit == 5 ? 7 :
+                    chgPctLimit == 10 ? 10 :
+                            chgPctLimit == 20 ? 20 :
+                                    chgPctLimit == 30 ? 30 : 50;
+
+
+            cMaRatio.medium_MA_Ratio = chgPctLimit == 5 ? 12 :
+                    chgPctLimit == 10 ? 15 :
+                            chgPctLimit == 20 ? 25 :
+                                    chgPctLimit == 30 ? 35 : 50;
+
+            cMaRatio.long_MA_Ratio = chgPctLimit == 5 ? 20 :
+                    chgPctLimit == 10 ? 25 :
+                            chgPctLimit == 20 ? 35 :
+                                    chgPctLimit == 30 ? 45 : 50;
+
+        }
+        // 妖股
+        else if (klineType == 4) {
+
+            cMaRatio.short_MA_Ratio = chgPctLimit == 5 ? 7 :
+                    chgPctLimit == 10 ? 10 :
+                            chgPctLimit == 20 ? 20 :
+                                    chgPctLimit == 30 ? 30 : 50;
+
+
+            cMaRatio.medium_MA_Ratio = chgPctLimit == 5 ? 12 :
+                    chgPctLimit == 10 ? 15 :
+                            chgPctLimit == 20 ? 25 :
+                                    chgPctLimit == 30 ? 35 : 50;
+
+            cMaRatio.long_MA_Ratio = chgPctLimit == 5 ? 20 :
+                    chgPctLimit == 10 ? 25 :
+                            chgPctLimit == 20 ? 35 :
+                                    chgPctLimit == 30 ? 45 : 50;
+        }
+
+
+        return cMaRatio;
     }
 
 
@@ -320,7 +424,7 @@ public class BacktestSellStrategy implements SellStrategy {
             // 排除ETF（无板块关联）
             if (!Objects.equals(StockTypeEnum.getByStockCode(stockCode), StockTypeEnum.ETF)) {
                 sell__stockCodeSet.add(stockCode);
-                sell_infoMap.put(stockCode, SellStrategyEnum.S11);
+                sell_infoMap.put(stockCode, SellStrategyEnum.S21);
             }
         }
     }
