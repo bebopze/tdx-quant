@@ -38,19 +38,54 @@ public class ConvertStockKline {
      */
     @SneakyThrows
     public static Object[] dto2Arr(KlineDTO dto) {
-        List<Object> result = new ArrayList<>();
 
-        Field[] fields = dto.getClass().getDeclaredFields();
 
-        for (Field field : fields) {
-            // 设置字段可访问（如果字段是 private）
-            field.setAccessible(true);
+        // ----------------------------------------- 反射 ---------------------------------------------------------------
 
-            Object value = field.get(dto);
-            result.add(value);
+
+//        List<Object> result = Lists.newArrayList();
+//
+//
+//        Field[] fields = dto.getClass().getDeclaredFields();
+//
+//        for (Field field : fields) {
+//            // 设置字段可访问（如果字段是 private）
+//            field.setAccessible(true);
+//
+//            Object value = field.get(dto);
+//            result.add(value);
+//        }
+//
+//
+//        return result.toArray();
+
+
+        // ----------------------------------------- 无反射（高性能） -----------------------------------------------------
+
+
+        if (dto == null) {
+            return new Object[0];
         }
 
-        return result.toArray();
+
+        // 按照 KlineDTO 类中字段的声明顺序，显式调用 getter 方法获取值
+        // 请根据 KlineDTO 实际的字段和 getter 方法名称进行调整
+        Object[] result = new Object[]{
+                dto.getDate(),
+                dto.getOpen(),
+                dto.getHigh(),
+                dto.getLow(),
+                dto.getClose(),
+                dto.getVol(),
+                dto.getAmo(),
+                dto.getRange_pct(),
+                dto.getChange_pct(),
+                dto.getChange_price(),
+                dto.getTurnover_pct()
+        };
+
+
+        return result;
     }
 
 
@@ -65,49 +100,48 @@ public class ConvertStockKline {
 
 
         KlineDTO dto = new KlineDTO();
-        Field[] fields = dto.getClass().getDeclaredFields();
 
 
-        for (int i = 0; i < klineArr.length; i++) {
-            String valStr = klineArr[i];
+        // ----------------------------------------- 反射 ---------------------------------------------------------------
 
 
-            Field field = fields[i];
-            field.setAccessible(true);
+//        Field[] fields = dto.getClass().getDeclaredFields();
+//
+//
+//        for (int i = 0; i < klineArr.length; i++) {
+//            String valStr = klineArr[i];
+//
+//
+//            Field field = fields[i];
+//            field.setAccessible(true);
+//
+//
+//            Object typeVal = TypeConverter.convert(valStr, field.getType());
+//            field.set(dto, typeVal);
+//        }
 
 
-            Object typeVal = TypeConverter.convert(valStr, field.getType());
-            field.set(dto, typeVal);
-        }
+        // ----------------------------------------- 无反射（高性能） -----------------------------------------------------
 
 
-//        // ---------------------------------------- check
-//
-//
-//        KlineDTO dto2 = new KlineDTO();
-//
-//        dto2.setDate(ofDate(klineArr[0]));
-//
-//        dto2.setOpen(of(klineArr[1]));
-//        dto2.setHigh(of(klineArr[2]));
-//        dto2.setLow(of(klineArr[3]));
-//        dto2.setClose(of(klineArr[4]));
-//
-//
-//        dto2.setVol(Long.valueOf(klineArr[5]));
-//        dto2.setAmo(of(klineArr[6]));
-//
-//        dto2.setRange_pct(of(klineArr[7]));
-//        dto2.setChange_pct(of(klineArr[8]));
-//        dto2.setChange_price(of(klineArr[9]));
-//        dto2.setTurnover_pct(of(klineArr[10]));
-//
-//
-//        Assert.isTrue(Objects.equals(JSON.toJSONString(dto), JSON.toJSONString(dto2)),
-//                      String.format("dot : %s , dot2 : %s ", JSON.toJSONString(dto), JSON.toJSONString(dto2)));
-//
-//
-//        // ----------------------------------------
+        int i = 0;
+
+
+        dto.setDate(ofDate(klineArr[i++]));
+
+        dto.setOpen(of(klineArr[i++]));
+        dto.setHigh(of(klineArr[i++]));
+        dto.setLow(of(klineArr[i++]));
+        dto.setClose(of(klineArr[i++]));
+
+
+        dto.setVol(Long.valueOf(klineArr[i++]));
+        dto.setAmo(of(klineArr[i++]));
+
+        dto.setRange_pct(of(klineArr[i++]));
+        dto.setChange_pct(of(klineArr[i++]));
+        dto.setChange_price(of(klineArr[i++]));
+        dto.setTurnover_pct(of(klineArr[i++]));
 
 
         return dto;
@@ -117,7 +151,7 @@ public class ConvertStockKline {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    private static LocalDate ofDate(String valStr) {
+    public static LocalDate ofDate(String valStr) {
         if (valStr == null || valStr.isEmpty()) {
             return null;
         }
