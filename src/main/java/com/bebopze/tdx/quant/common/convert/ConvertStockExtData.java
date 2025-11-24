@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.convert;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.util.BoolUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
@@ -12,6 +13,8 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.common.convert.ConvertStockKline.ofDate;
 
 
 /**
@@ -35,7 +38,13 @@ public class ConvertStockExtData {
      */
     @SneakyThrows
     public static Object[] dto2Arr(ExtDataDTO dto) {
-        List<Object> result = new ArrayList<>();
+
+
+        // ----------------------------------------- 反射 ---------------------------------------------------------------
+
+
+        List<Object> result = Lists.newArrayList();
+
 
         Field[] fields = dto.getClass().getDeclaredFields();
 
@@ -47,7 +56,95 @@ public class ConvertStockExtData {
             result.add(value);
         }
 
+
         return result.toArray();
+
+
+        // ----------------------------------------- 无反射（高性能） -----------------------------------------------------
+
+
+//        if (dto == null) {
+//            return new Object[0];
+//        }
+//
+//
+//        // 按照 ExtDataDTO 类中字段的声明顺序，显式调用 getter 方法获取值
+//        // 请根据 ExtDataDTO 实际的字段和 getter 方法名称进行调整
+//        Object[] result = {
+//                dto.getDate(),
+//                dto.getRps10(),
+//                dto.getRps20(),
+//                dto.getRps50(),
+//                dto.getRps120(),
+//                dto.getRps250(),
+//                dto.getMA5(),
+//                dto.getMA10(),
+//                dto.getMA20(),
+//                dto.getMA30(),
+//                dto.getMA50(),
+//                dto.getMA60(),
+//                dto.getMA100(),
+//                dto.getMA120(),
+//                dto.getMA150(),
+//                dto.getMA200(),
+//                dto.getMA250(),
+//                dto.getC_SSF_偏离率(),
+//                dto.getH_SSF_偏离率(),
+//                dto.getC_MA5_偏离率(),
+//                dto.getC_MA15_偏离率(),
+//                dto.getC_MA20_偏离率(),
+//                dto.getH_MA20_偏离率(),
+//                dto.getC_MA25_偏离率(),
+//                dto.getC_MA30_偏离率(),
+//                dto.getC_MA40_偏离率(),
+//                dto.getC_MA50_偏离率(),
+//                dto.getMA60(),
+//                dto.getMA100(),
+//                dto.getMA120(),
+//                dto.getMA150(),
+//                dto.getMA200(),
+//                dto.getMA250(),
+//                dto.getC_MA60_偏离率(),
+//                dto.getC_MA100_偏离率(),
+//                dto.getC_MA120_偏离率(),
+//                dto.getC_MA150_偏离率(),
+//                dto.getC_MA200_偏离率(),
+//                dto.get高位爆量上影大阴(),
+//                dto.get涨停(),
+//                dto.get跌停(),
+//                dto.getXZZB(),
+//                dto.getMA5多(),
+//                dto.getMA5空(),
+//                dto.getMA10多(),
+//                dto.getMA10空(),
+//                dto.getMA20多(),
+//                dto.getMA20空(),
+//                dto.getSSF多(),
+//                dto.getSSF空(),
+//                dto.get上MA20(),
+//                dto.get下MA20(),
+//                dto.get上SSF(),
+//                dto.get下SSF(),
+//                dto.getN60日新高(),
+//                dto.getN100日新高(),
+//                dto.get历史新高(),
+//                dto.get百日新高(),
+//                dto.get月多(),
+//                dto.get均线预萌出(),
+//                dto.get均线萌出(),
+//                dto.get小均线多头(),
+//                dto.get大均线多头(),
+//                dto.get均线大多头(),
+//                dto.get均线极多头(),
+//                dto.getRPS红(),
+//                dto.getRPS一线红(),
+//                dto.getRPS双线红(),
+//                dto.getRPS三线红(),
+//                dto.getKlineType()
+//        };
+//
+//
+//        return result;
     }
 
 
@@ -61,6 +158,11 @@ public class ConvertStockExtData {
 
 
         ExtDataDTO dto = new ExtDataDTO();
+
+
+        // ----------------------------------------- 反射 ---------------------------------------------------------------
+
+
         Field[] fields = dto.getClass().getDeclaredFields();
 
 
@@ -78,6 +180,86 @@ public class ConvertStockExtData {
 
 
         return dto;
+
+
+        // ----------------------------------------- 无反射（高性能） -----------------------------------------------------
+
+
+//        int i = 0;
+//
+//
+//        dto.setDate(ofDate(extDataArr[i++]));
+//        dto.setRps10(of(extDataArr[i++]));
+//        dto.setRps20(of(extDataArr[i++]));
+//        dto.setRps50(of(extDataArr[i++]));
+//        dto.setRps120(of(extDataArr[i++]));
+//        dto.setRps250(of(extDataArr[i++]));
+//        dto.setMA5(of(extDataArr[i++]));
+//        dto.setMA10(of(extDataArr[i++]));
+//        dto.setMA20(of(extDataArr[i++]));
+//        dto.setMA30(of(extDataArr[i++]));
+//        dto.setMA50(of(extDataArr[i++]));
+//        dto.setMA60(of(extDataArr[i++]));
+//        dto.setMA100(of(extDataArr[i++]));
+//        dto.setMA120(of(extDataArr[i++]));
+//        dto.setMA150(of(extDataArr[i++]));
+//        dto.setMA200(of(extDataArr[i++]));
+//        dto.setMA250(of(extDataArr[i++]));
+//        dto.setC_SSF_偏离率(of(extDataArr[i++]));
+//        dto.setH_SSF_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA5_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA15_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA20_偏离率(of(extDataArr[i++]));
+//        dto.setH_MA20_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA25_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA30_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA40_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA50_偏离率(of(extDataArr[i++]));
+//        dto.setMA60(of(extDataArr[i++]));
+//        dto.setMA100(of(extDataArr[i++]));
+//        dto.setMA120(of(extDataArr[i++]));
+//        dto.setMA150(of(extDataArr[i++]));
+//        dto.setMA200(of(extDataArr[i++]));
+//        dto.setMA250(of(extDataArr[i++]));
+//        dto.setC_MA60_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA100_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA120_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA150_偏离率(of(extDataArr[i++]));
+//        dto.setC_MA200_偏离率(of(extDataArr[i++]));
+//        dto.set高位爆量上影大阴(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set涨停(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set跌停(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setXZZB(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA5多(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA5空(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA10多(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA10空(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA20多(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setMA20空(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setSSF多(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setSSF空(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set上MA20(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set下MA20(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set上SSF(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set下SSF(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setN60日新高(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setN100日新高(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set历史新高(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set百日新高(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set月多(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set均线预萌出(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set均线萌出(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set小均线多头(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set大均线多头(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set均线大多头(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.set均线极多头(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setRPS红(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setRPS一线红(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setRPS双线红(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setRPS三线红(BoolUtil.intStr2Bool(extDataArr[i++]));
+//        dto.setKlineType(Integer.parseInt(extDataArr[i++]));
+//
+//        return dto;
     }
 
 
