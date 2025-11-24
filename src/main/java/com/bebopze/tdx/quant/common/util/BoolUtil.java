@@ -10,6 +10,17 @@ public class BoolUtil {
 
 
     /**
+     * str -> bool
+     *
+     * @param str
+     * @return
+     */
+    public static boolean intStr2Bool(String str) {
+        return "1".equals(str);
+    }
+
+
+    /**
      * bool -> int
      *
      * @param bool
