@@ -29,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -68,6 +69,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
     @Autowired
     private BacktestBuyStrategyD backtestBuyStrategyD;
+
     @Autowired
     private SellStrategyFactory sellStrategyFactory;
 
@@ -119,6 +121,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
         Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
 
+        Map<String, Map<String, Integer>> topStock__code_buySignalCountMap = Maps.newHashMap();
+        Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap = Maps.newHashMap();
+
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -142,7 +147,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         dto.setMarginSumReturnDTO(marginSumReturnDTO);
         dto.setDailyReturnDTOList(dailyReturnDTOList);
         dto.setAvgDailyReturnDTO(avgDailyReturn(dailyReturnDTOList));
-        dto.setCountDTOList(countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap));
+        dto.setCountDTOList(countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -874,7 +879,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
         ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
 
-        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        Integer changePctLimit = StockLimitEnum.getChgPctLimit(e.getCode(), e.getName());
         boolean _5CM = changePctLimit == 5;
         boolean _10CM = changePctLimit == 10;
         boolean _20CM = changePctLimit == 20;
@@ -956,7 +961,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
         ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
 
-        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        Integer changePctLimit = StockLimitEnum.getChgPctLimit(e.getCode(), e.getName());
         boolean _5CM = changePctLimit == 5;
         boolean _10CM = changePctLimit == 10;
         boolean _20CM = changePctLimit == 20;
@@ -1031,7 +1036,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
         ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
 
-        Integer changePctLimit = StockLimitEnum.getChangePctLimit(e.getCode(), e.getName());
+        Integer changePctLimit = StockLimitEnum.getChgPctLimit(e.getCode(), e.getName());
         boolean _5CM = changePctLimit == 5;
         boolean _10CM = changePctLimit == 10;
         boolean _20CM = changePctLimit == 20;
@@ -1106,7 +1111,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 //        ExtDataDTO buySignal = e.getBuySignalExtDataDTO();
 
-        Integer changePctLimit = fun.changePctLimit();
+        Integer changePctLimit = fun.chgPctLimit();
 //        Integer changePctLimit = StockLimitEnum.getChangePctLimit(code, name);
         boolean _5CM = changePctLimit == 5;
         boolean _10CM = changePctLimit == 10;
@@ -1131,8 +1136,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
 
-            Integer 短期趋势支撑线 = buySignal.get短期趋势支撑线();
-            Integer 中期趋势支撑线 = buySignal.get中期趋势支撑线();
+            Integer 短期趋势支撑线 = buySignal.get短期支撑线();
+            Integer 中期趋势支撑线 = buySignal.get中期支撑线();
 
             double min = 短期趋势支撑线 == 5 ? 0.25
                     : 短期趋势支撑线 == 10 ? -0.5
@@ -1271,13 +1276,13 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             todayCodeSet.forEach(code -> {
 
                 String name = codeNameMap.get(code);
-                double today2Next_changePct = topMap.get(code).getToday2Next_changePct() * 0.01;
+                double today2Next_changePct = topMap.get(code).getToday2Next_changePct();
 
 
                 code_countMap.merge(code, new TopCountDTO(code, name, 1, today2Next_changePct, date), (old, newVal) -> {
                     old.setCount(old.getCount() + newVal.getCount());
-                    old.setPct((1 + old.getPct()) * (1 + newVal.getPct()) - 1);
-                    old.getPctList().add(of(today2Next_changePct * 100));
+                    old.setPct(of((1 + old.getPct() * 0.01) * (1 + newVal.getPct() * 0.01) * 100 - 100));
+                    old.getPctList().add(today2Next_changePct);
                     old.getDateList().add(date);
 
                     return old;
@@ -1517,13 +1522,101 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
     @Override
     public TopPoolSumReturnDTO sumReturn(List<BtDailyReturnDO> dailyReturnDOList,
                                          List<BtTradeRecordDO> tradeRecordList,
-                                         List<BtPositionRecordDO> positionRecordList) {
+                                         List<BtPositionRecordDO> positionRecordList,
+                                         boolean isMargin) {
 
 
-        TopPoolSumReturnDTO sumReturnDTO = sumReturn_backtest(dailyReturnDOList, tradeRecordList, positionRecordList);
+        TopPoolSumReturnDTO sumReturnDTO = sumReturn_backtest(dailyReturnDOList, tradeRecordList, positionRecordList, isMargin);
 
 
         return sumReturnDTO;
+    }
+
+    @Override
+    public List<TopCountDTO> countDTOList(List<BtTradeRecordDO> tradeRecordList,
+                                          List<BtPositionRecordDO> positionRecordList) {
+
+
+        // ---------------------------------------- count 指标
+
+        Map<String, TopCountDTO> code_countMap = Maps.newHashMap();
+
+        Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
+        Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
+
+        Map<String, Map<String, Integer>> topStock__code_buySignalCountMap = Maps.newHashMap();
+        Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap = Maps.newHashMap();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        tradeRecordList.stream()
+                       // 买入   ->   买入信号（主线板块/买入信号/idx）
+                       // .filter(e -> Objects.equals(e.getTradeType(), BtTradeTypeEnum.BUY.getTradeType()))
+                       .forEach(e -> {
+                           // 880465-交通设施,881441-交通运输|,C_MA_偏离率<3,C_MA_偏离率<7,百日新高,C_MA_偏离率<5,N60日新高,SSF多,MA20多,均线预萌出,大均线多头,月多,均线萌出,|idx-302
+                           String[] tradeSignalDescArr = e.getTradeSignalDesc().split("\\|", -1);
+
+
+                           // 主线板块（88开头）
+                           String[] blockStrArr = tradeSignalDescArr[0].split(",");
+                           Arrays.stream(blockStrArr).filter(s -> s.startsWith("88")).forEach(blockStr -> {
+                               String blockCode = blockStr.split("-")[0];
+                               topBlock__codeCountMap.merge(blockCode, 1, Integer::sum);
+                           });
+
+
+                           // --------- B/S信号
+
+
+                           // B
+                           if (Objects.equals(e.getTradeType(), BtTradeTypeEnum.BUY.getTradeType())) {
+                               if (tradeSignalDescArr.length < 3) { // 大盘极限底->ETF策略
+                                   return;
+                               }
+                               // B/S信号
+                               String[] bsSignalStrArr = tradeSignalDescArr[1].split(",");
+                               Arrays.stream(bsSignalStrArr).filter(StringUtils::isNotBlank).forEach(buySignal -> {
+                                   // B信号
+                                   topStock__code_buySignalCountMap.computeIfAbsent(e.getStockCode(), k -> Maps.newHashMap())
+                                                                   .merge(buySignal, 1, Integer::sum);
+                               });
+                           }
+                           // S
+                           else if (Objects.equals(e.getTradeType(), BtTradeTypeEnum.SELL.getTradeType())) {
+                               String sellSignal = tradeSignalDescArr[0];
+                               topStock__code_sellSignalCountMap.computeIfAbsent(e.getStockCode(), k -> Maps.newHashMap())
+                                                                .merge(sellSignal, 1, Integer::sum);
+                           }
+                       });
+
+
+        positionRecordList.forEach(e -> {
+            String stockCode = e.getStockCode();
+            String stockName = e.getStockName();
+            LocalDate date = e.getTradeDate();
+            double changePct = e.getChangePct().doubleValue();
+
+
+            code_countMap.merge(stockCode, new TopCountDTO(stockCode, stockName, 1, changePct, date), (old, newVal) -> {
+                old.setCount(old.getCount() + newVal.getCount());
+                old.setPct(of((1 + old.getPct() * 0.01) * (1 + newVal.getPct() * 0.01) * 100 - 100));
+                old.getPctList().add(changePct);
+                old.getDateList().add(date);
+
+                return old;
+            });
+
+
+            topStock__codeCountMap.merge(stockCode, 1, Integer::sum);
+        });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        return countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap);
     }
 
 
@@ -1605,13 +1698,21 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
     private TopPoolSumReturnDTO sumReturn_backtest(List<BtDailyReturnDO> dailyReturnDOList,
                                                    List<BtTradeRecordDO> tradeRecordList,
-                                                   List<BtPositionRecordDO> positionRecordList) {
+                                                   List<BtPositionRecordDO> positionRecordList,
+                                                   boolean isMargin) {
 
 
-        List<Double> dailyReturnPctList = dailyReturnDOList.stream().map(e -> e.getDailyReturn().doubleValue() * 100).collect(Collectors.toList());
+        // 仓位保证金比例（融资账户 = 普通账户 x 2）
+        double marginRatio = isMargin ? 1.85 : 1.0;   // 实际范围：1.7 ~ 2.15
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        List<Double> dailyReturnPctList = dailyReturnDOList.stream().map(e -> e.getDailyReturn().doubleValue() * 100 * marginRatio).collect(Collectors.toList());
 
         Map<LocalDate, Double> date_dailyReturn_Map = dailyReturnDOList.stream().collect(Collectors.toMap(BtDailyReturnDO::getTradeDate,
-                                                                                                          e -> e.getDailyReturn().doubleValue(),
+                                                                                                          e -> e.getDailyReturn().doubleValue() * marginRatio,
                                                                                                           (v1, v2) -> v1,
                                                                                                           LinkedHashMap::new)); // 有序
 
@@ -1767,7 +1868,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
     private List<TopCountDTO> countDTOList(Map<String, TopCountDTO> code_countMap,
                                            Map<String, Integer> topBlock__codeCountMap,
-                                           Map<String, Integer> topStock__codeCountMap) {
+                                           Map<String, Integer> topStock__codeCountMap,
+                                           Map<String, Map<String, Integer>> topStock__code_buySignalCountMap,
+                                           Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap) {
 
 
         // blockCodeList  ->  relaList（多对多）      =>       blockCode - relaList（stockList）    Map
@@ -1796,9 +1899,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
         code_countMap.values().parallelStream().forEach(e -> {
             // 平均涨跌幅
-            double avgPct = Math.pow(1 + e.getPct(), 1.0 / e.getCount()) - 1;
-            e.setAvgPct(of(avgPct * 100));
-            e.setPct(of(e.getPct() * 100));
+            double avgPct = Math.pow(1 + e.getPct() * 0.01, 1.0 / e.getCount()) * 100 - 100;
+            e.setAvgPct(of(avgPct));
 
 
             String code = e.getCode();
@@ -1834,8 +1936,17 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
             // ---------------------------------------------------------------------------------------------------------
 
-            e.setBuySignalList(null);
-            e.setSellSignalList(null);
+            e.setBuySignalList(topStock__code_buySignalCountMap.getOrDefault(code, null) == null ? null :
+                                       topStock__code_buySignalCountMap.get(code).entrySet().stream()
+                                                                       .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                                                                       .map(x -> x.getKey() + "=" + x.getValue())
+                                                                       .collect(Collectors.toList()));
+
+            e.setSellSignalList(topStock__code_sellSignalCountMap.get(code) == null ? null :
+                                        topStock__code_sellSignalCountMap.get(code).entrySet().stream()
+                                                                         .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                                                                         .map(x -> x.getKey() + "=" + x.getValue())
+                                                                         .collect(Collectors.toList()));
         });
 
 

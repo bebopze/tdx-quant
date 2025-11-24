@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.domain.dto.analysis.TopCountDTO;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopNAnalysisDTO;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolAnalysisDTO;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolSumReturnDTO;
@@ -9,6 +10,7 @@ import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 
 import java.time.LocalDate;
 import java.util.List;
+
 
 /**
  * @author: bebopze
@@ -32,6 +34,8 @@ public interface DataAnalysisService {
 
     TopPoolSumReturnDTO sumReturn(List<BtDailyReturnDO> dailyReturnDOList,
                                   List<BtTradeRecordDO> tradeRecordList,
-                                  List<BtPositionRecordDO> positionRecordList);
+                                  List<BtPositionRecordDO> positionRecordList,
+                                  boolean isMargin);
 
+    List<TopCountDTO> countDTOList(List<BtTradeRecordDO> tradeRecordList, List<BtPositionRecordDO> positionRecordList);
 }
