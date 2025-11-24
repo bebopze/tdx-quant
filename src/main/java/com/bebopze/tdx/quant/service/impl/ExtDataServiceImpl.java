@@ -409,7 +409,15 @@ public class ExtDataServiceImpl implements ExtDataService {
         entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
 
 
+        // 更新 -> DB
         baseStockService.updateById(entity);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // OOM -> 缓存清理
+        clearCodeCache(data, code);
     }
 
     /**
@@ -491,7 +499,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         boolean[] XZZB = fun.XZZB();
-        boolean[] BSQJ = fun.BSQJ();
+//        boolean[] BSQJ = fun.BSQJ();
 
 
         boolean[] MA5多 = fun.MA多(5);
@@ -612,7 +620,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             dto.setXZZB(XZZB[i]);
-            dto.setBSQJ(BSQJ[i]);
+//            dto.setBSQJ(BSQJ[i]);
 
 
             dto.setMA5多(MA5多[i]);
@@ -825,7 +833,16 @@ public class ExtDataServiceImpl implements ExtDataService {
             entity.setId(data.codeIdMap.get(code));
             entity.setExtDataHis(JSON.toJSONString(extDataList));
 
+
+            // 更新 -> DB
             baseBlockService.updateById(entity);
+
+
+            // -------------------------------------------------------------------------------------------------------------
+
+
+            // OOM -> 缓存清理
+            clearCodeCache(data, code);
         });
     }
 
@@ -863,20 +880,6 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
 
-    private static double of(Number val, int setScale) {
-        if (Double.isNaN(val.doubleValue())) {
-            return Double.NaN;
-        }
-        return new BigDecimal(String.valueOf(val)).setScale(setScale, RoundingMode.HALF_UP).doubleValue();
-    }
-
-
-    private static double of(BigDecimal val) {
-        if (null == val) return Double.NaN;
-        return val.setScale(3, RoundingMode.HALF_UP).doubleValue();
-    }
-
-
     private static double of(double val) {
         return of(val, 2);
     }
@@ -900,8 +903,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         Map<String, List<ExtDataDTO>> extDataMap = Maps.newConcurrentMap();
 
 
-        List<BaseStockDO> stockDOList = Lists.newArrayList();
-        List<BaseBlockDO> blockDOList = Lists.newArrayList();
+        List<BaseStockDO> stockDOList = Collections.synchronizedList(Lists.newArrayList());
+        List<BaseBlockDO> blockDOList = Collections.synchronizedList(Lists.newArrayList());
 
 
         Map<String, TreeMap<LocalDate, Double>> codePriceMap = Maps.newConcurrentMap();
@@ -915,7 +918,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // code - id
         Map<String, Long> codeIdMap = Maps.newConcurrentMap();
-        Map<String, BaseBlockDO> codeEntityMap = Maps.newConcurrentMap();
 
 
         // -----------------------------------------------------------------
@@ -932,9 +934,28 @@ public class ExtDataServiceImpl implements ExtDataService {
                     ", codeDateMap=" + codeDateMap.size() +
                     ", codeCloseMap=" + codeCloseMap.size() +
                     ", codeIdMap=" + codeIdMap.size() +
-                    ", codeEntityMap=" + codeEntityMap.size() +
                     '}';
         }
+    }
+
+
+    /**
+     * 清理缓存（OOM）       // 内存 < 64GB     =>     手动GC
+     *
+     * 注意：本方法会修改 data 对象内的集合，外部若只读请先做防御性拷贝
+     *
+     * @param data 全局数据容器
+     * @param code 待移除的 股票/板块code
+     */
+    private static void clearCodeCache(DataDTO data, String code) {
+        data.extDataMap.remove(code);
+        data.codePriceMap.remove(code);
+        data.codeDateMap.remove(code);
+        data.codeCloseMap.remove(code);
+        data.codeIdMap.remove(code);
+
+        data.stockDOList.removeIf(e -> e != null && Objects.equals(e.getCode(), code));
+        data.blockDOList.removeIf(e -> e != null && Objects.equals(e.getCode(), code));
     }
 
 
