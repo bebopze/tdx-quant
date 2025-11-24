@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -225,7 +226,7 @@ public class InitDataServiceImpl implements InitDataService {
         log.info("loadAllStockKline     >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
-        // -----------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // DB 数据加载
@@ -255,7 +256,7 @@ public class InitDataServiceImpl implements InitDataService {
         log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
-        // ----------------- TODO   待优化（耗时：1~3 min）
+        // ----------------- TODO   待优化（耗时：1~5 min）
 
 
         long start = System.currentTimeMillis();
@@ -310,10 +311,11 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 空行情 过滤（时间段内 -> 未上市）
-        data.stockDOList = data.stockDOList.stream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
+        // data.stockDOList = data.stockDOList.stream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
-        // -----------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
 
 
         data.stockDOList.parallelStream().forEach(e -> {
