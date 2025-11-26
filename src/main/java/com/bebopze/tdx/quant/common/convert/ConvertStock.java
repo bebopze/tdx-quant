@@ -248,7 +248,7 @@ public class ConvertStock {
 
 
             arrDTO.XZZB[i] = of(dto.getXZZB());
-            arrDTO.BSQJ[i] = of(dto.getBSQJ());
+//            arrDTO.BSQJ[i] = of(dto.getBSQJ());
 
 
             arrDTO.MA5多[i] = of(dto.getMA5多());

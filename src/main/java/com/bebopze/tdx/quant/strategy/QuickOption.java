@@ -259,7 +259,7 @@ public class QuickOption {
 //            SHSZQuoteSnapshotResp shszQuoteSnapshotResp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
 //            String stockName = shszQuoteSnapshotResp.getName();
 //
-//            // 历史行情
+//            // K线数据
 //            StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 //            List<String> klines = stockKlineHisResp.getKlines();
 //            double[] close = ConvertStockKline.fieldValArr(ConvertStockKline.klines2DTOList(klines), "close");

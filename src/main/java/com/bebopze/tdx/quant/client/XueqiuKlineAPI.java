@@ -36,7 +36,7 @@ public class XueqiuKlineAPI {
 
 
     /**
-     * 个股/板块 - 历史行情
+     * 个股/板块 - K线数据
      *
      *
      *
@@ -65,7 +65,7 @@ public class XueqiuKlineAPI {
         // StockKlineHisResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineHisResp.class);
 
 
-        // ----------------------------- 历史行情
+        // ----------------------------- K线数据
         // List<String> klines = resp.getKlines();
 
 

@@ -1109,7 +1109,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         baseBlockDO.setCode(blockCode);
 
 
-        // 板块 - 历史行情
+        // 板块 - K线数据
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
 
 
@@ -1118,14 +1118,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         ldayDTOList.forEach(x -> {
 
 
-            // 历史行情-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+            // K线数据-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
             // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
 
 
             // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
             // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-            // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
             List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
                                                     x.getRangePct(), x.getChangePct(), x.getChangePrice(), null);
 
@@ -1367,14 +1367,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         entity.setId(stockId);
         entity.setName(stockName);
 
-        // 历史行情
-        entity.setKlineHis(JSON.toJSONString(klines));
+        // K线数据
+        entity.setKlineHisStr(JSON.toJSONString(klines));
 
 
         // 昨日
         if (klines.size() >= 2) {
-            KlineDTO preKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
-            entity.setPrevClose(of(preKlineDTO.getClose()));
+            KlineDTO prevKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
+            entity.setPrevClose(of(prevKlineDTO.getClose()));
         }
 
 
@@ -1436,7 +1436,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             if (updateType == 1) {
 
-                // 全量更新     =>     全量 历史行情
+                // 全量更新     =>     全量 K线数据
                 StockKlineHisResp resp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
                 klines = resp.getKlines();
 
@@ -1593,7 +1593,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     private List<String> klinesFromTdx(String stockCode) {
 
-        // 个股 - 历史行情
+        // 个股 - K线数据
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
 
 
@@ -1604,7 +1604,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
             // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-            // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
 
             List<Object> kline = Lists.newArrayList(String.valueOf(e.getTradeDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(),
                                                     e.getRangePct(), e.getChangePct(), e.getChangePrice(), null);

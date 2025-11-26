@@ -49,7 +49,7 @@ public class StockFun {
 
     // ------------------------------------
 
-    // 历史行情
+    // K线数据
     List<KlineDTO> klineDTOList;
     // 扩展数据（预计算 指标）
     List<ExtDataDTO> extDataDTOList;
@@ -107,7 +107,7 @@ public class StockFun {
         String stockName = stockDO.getName();
 
 
-        // 历史行情
+        // K线数据
         klineDTOList = stockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
         extDataDTOList = stockDO.getExtDataDTOList();

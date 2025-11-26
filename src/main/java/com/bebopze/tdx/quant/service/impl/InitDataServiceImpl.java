@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -232,7 +231,7 @@ public class InitDataServiceImpl implements InitDataService {
         // DB 数据加载
         data.stockDOList = baseStockService.listAllKline(refresh);
         // 空数据 过滤
-        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && StringUtils.isNotBlank(e.getKlineHis())
+        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && null != e.getKlineHis()
                 // TODO   基金北向
                 && e.getAmount().doubleValue() > 0.1 * 1_0000_0000).collect(Collectors.toList());
 
