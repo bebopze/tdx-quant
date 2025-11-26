@@ -67,15 +67,46 @@ public class DateTimeUtil {
     }
 
 
-    public static String formatNow2Hms(long start) {
-        return format2Hms(System.currentTimeMillis() - start);
+    /**
+     * 将 ns 自动格式化为 可读性强的时间字符串（如：1h 30m, 45s, 123ms, 123.4μs, 123ns）
+     *
+     * @param startNs 开始时间戳（纳秒）
+     * @return 格式化后的时间字符串
+     */
+    public static String format2μs(long startNs) {
+        long ns = System.nanoTime() - startNs;
+
+
+        if (ns < 1000) {
+            return ns + "ns";
+        }
+
+        // 转为微秒
+        long μs = ns / 1000;
+        if (μs < 1000) {
+            return μs + "μs";
+        }
+
+
+        // 转为毫秒
+        return format2Hms(μs / 1000);
     }
 
 
     /**
+     * 计算当前时间与指定时间之间的时间间隔（如：1h 30m, 45s, 123ms）
+     *
+     * @param startMillis 开始时间戳（毫秒）
+     * @return 格式化后的时间字符串
+     */
+    public static String formatNow2Hms(long startMillis) {
+        return format2Hms(System.currentTimeMillis() - startMillis);
+    }
+
+    /**
      * 将 ms 自动格式化为 可读性强的时间字符串（如：1h 30m, 45s, 123ms）
      *
-     * @param millis 毫秒数
+     * @param millis 时间差（毫秒）
      * @return 格式化后的时间字符串
      */
     public static String format2Hms(long millis) {
