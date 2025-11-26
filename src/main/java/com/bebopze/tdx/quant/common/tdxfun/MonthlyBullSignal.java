@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -493,7 +492,7 @@ public class MonthlyBullSignal {
         BaseStockDO stockDO = mapper.getByCode(stockCode);
 
 
-        List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(stockDO.getKlineHis(), 5000);
+        List<KlineDTO> klineDTOList = stockDO.getKlineDTOList();
 
 
         // 从 DB 读取

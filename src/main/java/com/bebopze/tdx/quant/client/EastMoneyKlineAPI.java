@@ -336,7 +336,7 @@ public class EastMoneyKlineAPI {
 
 
     /**
-     * 个股/板块 - 全量 历史行情
+     * 个股/板块 - 全量 K线数据
      *
      * @param stockCode
      * @param klineTypeEnum
@@ -348,7 +348,7 @@ public class EastMoneyKlineAPI {
 
 
     /**
-     * 个股/板块 - 全量 历史行情
+     * 个股/板块 - 全量 K线数据
      * -
      * - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&beg=0&end=20500101&rtntype=6&secid=0.300059&klt=101&fqt=1
      * -
@@ -383,7 +383,7 @@ public class EastMoneyKlineAPI {
         StockKlineHisResp resp = resultJson.getJSONObject("data").toJavaObject(StockKlineHisResp.class);
 
 
-        // ----------------------------- 历史行情
+        // ----------------------------- K线数据
         // List<String> klines = resp.getKlines();
 
 
@@ -410,7 +410,7 @@ public class EastMoneyKlineAPI {
         // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
         // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
 
-        // 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+        // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
 
 
         List<Object> kline = Lists.newArrayList(String.valueOf(e.getDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getCurrentPrice(), e.getVolume(), e.getAmount(),

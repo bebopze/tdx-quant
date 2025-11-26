@@ -32,7 +32,7 @@ public class TdxFunTest {
         SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = resp.getRealtimequote();
 
 
-        // 历史行情 - API
+        // K线数据 - API
         StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
 
@@ -40,10 +40,10 @@ public class TdxFunTest {
 
 
         // 收盘价 - 实时
-        double C = realtimequote.getCurrentPrice().doubleValue();
+        double C = realtimequote.getCurrentPrice();
 
 
-        // 历史行情
+        // K线数据
         List<KlineDTO> klineDTOList = ConvertStockKline.klines2DTOList(stockKlineHisResp.getKlines(), 5000);
 
 

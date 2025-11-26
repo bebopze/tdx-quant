@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * 个股 - 历史行情          日/周/月/季/半年/年
+ * 个股 - K线数据          日/周/月/季/半年/年
  *
  * @author: bebopze
  * @date: 2025/5/14

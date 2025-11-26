@@ -1,17 +1,24 @@
 package com.bebopze.tdx.quant.common.util;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONB;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.github.luben.zstd.Zstd;
+import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 import org.apache.commons.io.FileUtils;
+import org.springframework.util.Assert;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -30,6 +37,9 @@ public final class CompressUtil {
 
     /**
      * LZ4压缩
+     *
+     * @param src 待压缩数据
+     * @return 压缩后数据
      */
     public static byte[] lz4Compress(byte[] src) {
         if (src == null || src.length == 0) {
@@ -46,9 +56,13 @@ public final class CompressUtil {
 
     /**
      * LZ4解压缩
+     *
+     * @param compressed         压缩数据
+     * @param decompressedLength 解压后数据长度
+     * @return 解压后数据
      */
-    public static byte[] lz4Decompress(byte[] compressed, int decompressedLength) {
-        if (compressed == null || compressed.length == 0) {
+    public static byte[] lz4Decompress(byte[] compressed, Integer decompressedLength) {
+        if (compressed == null || compressed.length == 0 || decompressedLength == null) {
             return compressed;
         }
 
@@ -63,6 +77,12 @@ public final class CompressUtil {
     }
 
 
+    /**
+     * ZSTD压缩
+     *
+     * @param src 待压缩数据
+     * @return 压缩后数据
+     */
     public static byte[] zstdCompress(byte[] src) {
         return zstdCompress(src, 1);
     }
@@ -85,9 +105,13 @@ public final class CompressUtil {
 
     /**
      * ZSTD解压缩
+     *
+     * @param compressed   压缩数据
+     * @param originalSize 解压后数据长度
+     * @return 解压后数据
      */
-    public static byte[] zstdDecompress(byte[] compressed, int originalSize) {
-        if (compressed == null || compressed.length == 0) {
+    public static byte[] zstdDecompress(byte[] compressed, Integer originalSize) {
+        if (compressed == null || compressed.length == 0 || originalSize == null) {
             return compressed;
         }
 
@@ -97,6 +121,9 @@ public final class CompressUtil {
 
     /**
      * GZIP压缩
+     *
+     * @param src 待压缩数据
+     * @return 压缩后数据
      */
     @SneakyThrows
     public static byte[] gzipCompress(byte[] src) {
@@ -114,6 +141,9 @@ public final class CompressUtil {
 
     /**
      * GZIP解压缩
+     *
+     * @param compressed 压缩数据
+     * @return 解压后数据
      */
     @SneakyThrows
     public static byte[] gzipDecompress(byte[] compressed) {
@@ -147,8 +177,53 @@ public final class CompressUtil {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * fastjson压缩            ❌❌❌（不能用，有 JSONB 有重大bug）
+     *
+     * -                      经测试：JSONB 不支持   含中文字段（JSONB 会直接忽略 中文字段   ->   导致 数据丢失、且字段顺序错乱）
+     *
+     * @param dtoList 待压缩数据
+     * @return 压缩后数据
+     */
+    @Deprecated
+    private static byte[] fastjsonCompress(List<ExtDataDTO> dtoList) {
+        if (dtoList == null || dtoList.isEmpty()) {
+            return new byte[0];
+        }
+
+
+        // return JSON.toJSONBytes(dtoList);
+        return JSONB.toBytes(dtoList);
+    }
+
+    /**
+     * fastjson解压缩             ❌❌❌（不能用，有 JSONB 有重大bug）
+     *
+     * -                         经测试：JSONB 不支持   含中文字段（JSONB 会直接忽略 中文字段   ->   导致 数据丢失、且字段顺序错乱）
+     *
+     * @param compressed 压缩数据
+     * @return 解压后数据
+     */
+    @Deprecated
+    private static List<ExtDataDTO> fastjsonDecompress(byte[] compressed) {
+        if (compressed == null || compressed.length == 0) {
+            return Lists.newArrayList();
+        }
+
+
+        // return JSON.parseArray(compressed, ExtDataDTO.class);
+        return JSONB.parseArray(compressed, ExtDataDTO.class);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @SneakyThrows
     public static void main(String[] args) {
+
+
+        byte[] decompressed = CompressUtil.zstdDecompress(null, null);
 
 
 //        String filePath = System.getProperty("user.dir") + "/wiki/DB/000001__kline.json";
@@ -161,10 +236,16 @@ public final class CompressUtil {
         System.out.printf("--------------------------------------------------------------------%n%n%n");
 
 
+        List<ExtDataDTO> dtoList = ConvertStockExtData.extDataHis2DTOList(klineHis);
+
+
         for (int i = 0; i < 50; i++) {
             test_lz4(klineHis);
             test_zstd(klineHis);
             test_gzip(klineHis);
+
+
+            test_fastjson(klineHis, dtoList);
 
 
             System.out.printf("---------------------------------------------------%n%n");
@@ -185,6 +266,27 @@ public final class CompressUtil {
         //   gzip压缩耗时: 46ms
         //   gzip解压耗时: 2ms
         //   压缩后大小 = 279.2 KB , 压缩率 = 34.41%
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        //   JSONB 压缩（DTO -> JSONB 字节数组）：
+        //
+        //   fastjson压缩耗时: 5ms
+        //   fastjson解压耗时: 4ms
+        //   压缩后大小 = 2902.4 KB , 压缩率 = 357.80%
+        //
+        //
+        //   JSON 压缩（JSONB 字节数组 -> DTO）：
+        //
+        //   fastjson压缩耗时: 12ms
+        //   fastjson解压耗时: 10ms
+        //   压缩后大小 = 3275.1 KB , 压缩率 = 403.74%
+
+
+        // 经测试：JSONB 不支持   含中文字段（JSONB 会直接忽略 中文字段   ->   导致 数据丢失、且字段顺序错乱）
+        // 经测试：JSON   支持   含中文字段（JSON  不识别NaN           ->   会被压缩为 null）
     }
 
 
@@ -192,14 +294,17 @@ public final class CompressUtil {
 
         long zip_start = System.nanoTime();
         byte[] bytes = klineHis == null ? null : klineHis.getBytes(StandardCharsets.UTF_8);
-        byte[] zipBytes = CompressUtil.lz4Compress(bytes);
+        byte[] zipBytes = lz4Compress(bytes);
         System.out.println("lz4压缩耗时: " + DateTimeUtil.format2μs(zip_start));
 
 
         long unzip_start = System.nanoTime();
-        byte[] unzipBytes = CompressUtil.lz4Decompress(zipBytes, klineHis.length());
+        byte[] unzipBytes = lz4Decompress(zipBytes, bytes.length);
         String unzip_klineHis = new String(unzipBytes, StandardCharsets.UTF_8);
         System.out.println("lz4解压耗时: " + DateTimeUtil.format2μs(unzip_start));
+
+
+        Assert.isTrue(klineHis.equals(unzip_klineHis), "lz4压缩前后 字符串不相等");
 
 
         double kb = zipBytes.length / 1024.0;
@@ -214,14 +319,17 @@ public final class CompressUtil {
 
         long zip_start = System.nanoTime();
         byte[] bytes = klineHis == null ? null : klineHis.getBytes(StandardCharsets.UTF_8);
-        byte[] zipBytes = CompressUtil.zstdCompress(bytes);
+        byte[] zipBytes = zstdCompress(bytes);
         System.out.println("zstd压缩耗时: " + DateTimeUtil.format2μs(zip_start));
 
 
         long unzip_start = System.nanoTime();
-        byte[] unzipBytes = CompressUtil.zstdDecompress(zipBytes, klineHis.length());
+        byte[] unzipBytes = zstdDecompress(zipBytes, bytes.length);
         String unzip_klineHis = new String(unzipBytes, StandardCharsets.UTF_8);
         System.out.println("zstd解压耗时: " + DateTimeUtil.format2μs(unzip_start));
+
+
+        Assert.isTrue(klineHis.equals(unzip_klineHis), "zstd压缩前后 字符串不相等");
 
 
         double kb = zipBytes.length / 1024.0;
@@ -236,18 +344,51 @@ public final class CompressUtil {
 
         long zip_start = System.nanoTime();
         byte[] bytes = klineHis == null ? null : klineHis.getBytes(StandardCharsets.UTF_8);
-        byte[] zipBytes = CompressUtil.gzipCompress(bytes);
+        byte[] zipBytes = gzipCompress(bytes);
         System.out.println("gzip压缩耗时: " + DateTimeUtil.format2μs(zip_start));
 
 
         long unzip_start = System.nanoTime();
-        byte[] unzipBytes = CompressUtil.gzipDecompress(zipBytes);
+        byte[] unzipBytes = gzipDecompress(zipBytes);
         String unzip_klineHis = new String(unzipBytes, StandardCharsets.UTF_8);
         System.out.println("gzip解压耗时: " + DateTimeUtil.format2μs(unzip_start));
 
 
+        Assert.isTrue(klineHis.equals(unzip_klineHis), "gzip压缩前后 字符串不相等");
+
+
         double kb = zipBytes.length / 1024.0;
         System.out.printf("压缩后大小 = %.1f KB , 压缩率 = %.2f%% %n", kb, (double) zipBytes.length / bytes.length * 100);
+
+
+        // System.out.println(unzip_klineHis);
+        System.out.println();
+    }
+
+
+    private static void test_fastjson(String klineHis, List<ExtDataDTO> dtoList) {
+
+        long zip_start = System.nanoTime();
+        byte[] zipBytes = fastjsonCompress(dtoList);
+        System.out.println("fastjson压缩耗时: " + DateTimeUtil.format2μs(zip_start));
+
+
+        long unzip_start = System.nanoTime();
+        List<ExtDataDTO> dtoList2 = fastjsonDecompress(zipBytes);
+        System.out.println("fastjson解压耗时: " + DateTimeUtil.format2μs(unzip_start));
+
+
+        // Assert.isTrue(JSON.toJSONString(dtoList).equals(JSON.toJSONString(dtoList2)), "fastjson压缩前后 列表不相等");
+
+
+        double kb = zipBytes.length / 1024.0;
+        // 反向 压缩   ->   压缩后大小 = 2902.4 KB , 压缩率 = 357.80%     ❌❌❌
+        int srcLength = klineHis.getBytes(StandardCharsets.UTF_8).length;   // DTOList -> 包含 K-V  （会远大于  arr -> 仅包含值）
+        System.out.printf("压缩后大小 = %.1f KB , 压缩率 = %.2f%% %n", kb, (double) zipBytes.length / srcLength * 100);
+
+
+        // 经测试：JSONB 不支持   含中文字段（JSONB 会直接忽略 中文字段   ->   导致 数据丢失、且字段顺序错乱）    ❌❌❌
+        System.out.println("JSONB 压缩前后 字符串长度 是否相等: " + (klineHis.length() == JSON.toJSONString(dtoList).length())); // false     ❌❌❌
 
 
         // System.out.println(unzip_klineHis);

@@ -38,7 +38,7 @@ public class BlockFun extends StockFun {
         String blockName = blockDO.getName();
 
 
-        // 历史行情
+        // K线数据
         klineDTOList = blockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
         extDataDTOList = blockDO.getExtDataDTOList();

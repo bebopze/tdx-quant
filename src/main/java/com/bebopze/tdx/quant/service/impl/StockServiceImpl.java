@@ -42,7 +42,7 @@ public class StockServiceImpl implements StockService {
         BaseStockDTO dto = new BaseStockDTO();
         if (entity != null) {
 
-            dto.setKlineHis(entity.getKlineHis());
+            // dto.setKlineHis(entity.getKlineHis());
             BeanUtils.copyProperties(entity, dto);
 
 

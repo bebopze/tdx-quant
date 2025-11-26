@@ -24,6 +24,8 @@
         <result property="turnoverPct" column="turnover_pct"/>
         <result property="gmtCreate" column="gmt_create"/>
         <result property="gmtModify" column="gmt_modify"/>
+        <result property="klineHisRawLen" column="kline_his_raw_len"/>
+        <result property="extDataHisRawLen" column="ext_data_his_raw_len"/>
 
 
         <!-- 关键：显式指定 typeHandler -->

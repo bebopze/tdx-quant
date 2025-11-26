@@ -181,11 +181,11 @@ public class BaseBlockDO implements Serializable {
     private BigDecimal turnoverPct;
 
     /**
-     * 历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+     * K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @JsonIgnore
     @TableField(value = "kline_his"/*, typeHandler = KlineListTypeHandler.class*/)
-    @Schema(description = "历史行情-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
+    @Schema(description = "K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private String klineHis;
     // private List<KlineDTO> klineHis;
 

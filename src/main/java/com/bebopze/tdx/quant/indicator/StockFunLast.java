@@ -40,7 +40,7 @@ public class StockFunLast {
     private SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
 
 
-    // 历史行情
+    // K线数据
     private List<KlineDTO> klineDTOList;
     // 实时行情
     // private KlineDTO lastKlineDTO;
@@ -85,7 +85,7 @@ public class StockFunLast {
         SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequote = shszQuoteSnapshotResp.getRealtimequote();
 
 
-        // 历史行情 - API
+        // K线数据 - API
         StockKlineHisResp stockKlineHisResp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
 
 
@@ -102,7 +102,7 @@ public class StockFunLast {
         double C = realtimequote.getCurrentPrice();
 
 
-        // 历史行情
+        // K线数据
         List<KlineDTO> klineDTOList = ConvertStockKline.klines2DTOList(stockKlineHisResp.getKlines(), limit);
 
 
