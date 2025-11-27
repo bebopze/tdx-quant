@@ -1,5 +1,7 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -31,9 +33,9 @@ public interface TdxDataParserService {
     /**
      * 行情（kline_his）  ->   板块 + 个股
      *
-     * @param updateType 1-全量更新；2-增量更新；
+     * @param updateTypeEnum 1-全量更新；2-增量更新；
      */
-    void refreshKlineAll(int updateType);
+    void refreshKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
     void fillBlockKline(String blockCode);
@@ -41,9 +43,9 @@ public interface TdxDataParserService {
     void fillBlockKlineAll();
 
 
-    void fillStockKline(String stockCode, Integer apiType, int updateType);
+    void fillStockKline(String stockCode, Integer apiType, UpdateTypeEnum updateTypeEnum);
 
-    void fillStockKlineAll(int updateType);
+    void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
     // ----------------------------------------------------------------

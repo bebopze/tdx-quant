@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,7 +97,7 @@ public class ParserController {
     public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
                                         @RequestParam(required = false, defaultValue = "1") int updateType) {
 
-        tdxDataParserService.refreshKlineAll(updateType);
+        tdxDataParserService.refreshKlineAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -126,7 +127,7 @@ public class ParserController {
                                        @Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
                                        @RequestParam(required = false, defaultValue = "1") int updateType) {
 
-        tdxDataParserService.fillStockKline(stockCode, apiType, updateType);
+        tdxDataParserService.fillStockKline(stockCode, apiType, UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -135,7 +136,7 @@ public class ParserController {
     public Result<Void> fillStockKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
                                           @RequestParam(required = false, defaultValue = "1") int updateType) {
 
-        tdxDataParserService.fillStockKlineAll(updateType);
+        tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 

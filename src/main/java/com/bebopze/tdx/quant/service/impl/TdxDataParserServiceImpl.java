@@ -4,10 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
-import com.bebopze.tdx.quant.common.constant.KlineTypeEnum;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
@@ -1076,7 +1073,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @TotalTime
     @SneakyThrows
     @Override
-    public void refreshKlineAll(int updateType) {
+    public void refreshKlineAll(UpdateTypeEnum updateTypeEnum) {
 
         // 行情-板块
         Future<?> task1 = Executors.newCachedThreadPool().submit(() -> {
@@ -1088,7 +1085,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // 行情-个股
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
             // refresh  ->  stock kline
-            fillStockKlineAll(updateType);
+            fillStockKlineAll(updateTypeEnum);
         });
 
 
@@ -1218,27 +1215,27 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @TotalTime
     @Override
-    public void fillStockKline(String stockCode, Integer apiType, int updateType) {
-        fillStockKline(stockCode, null, apiType, updateType);
+    public void fillStockKline(String stockCode, Integer apiType, UpdateTypeEnum updateTypeEnum) {
+        fillStockKline(stockCode, null, apiType, updateTypeEnum);
         log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
     }
 
     @TotalTime
     @Override
-    public void fillStockKlineAll(int updateType) {
+    public void fillStockKlineAll(UpdateTypeEnum updateTypeEnum) {
 
 
         Map<String, Long> codeIdMap = baseStockService.codeIdMap();
 
 
         // 1-全量更新
-        if (updateType == 1) {
-            fullUpdate__fillStockKlineAll(codeIdMap, updateType);
+        if (updateTypeEnum == UpdateTypeEnum.ALL) {
+            fullUpdate__fillStockKlineAll(codeIdMap, updateTypeEnum);
         }
 
         // 2-增量更新
-        else if (updateType == 2) {
-            incrUpdate__fillStockKlineAll(codeIdMap, updateType);
+        else if (updateTypeEnum == UpdateTypeEnum.INCR) {
+            incrUpdate__fillStockKlineAll(codeIdMap, updateTypeEnum);
         }
 
 
@@ -1250,9 +1247,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      * 1-全量更新
      *
      * @param codeIdMap
-     * @param updateType
+     * @param updateTypeEnum
      */
-    private void fullUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, int updateType) {
+    private void fullUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
         AtomicInteger count = new AtomicInteger(0);
 
@@ -1264,10 +1261,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // -------------------------------------------
 
 
-            int apiType = apiType(null, updateType);
+            int apiType = apiType(null, updateTypeEnum);
 
 
-            fillStockKline(stockCode, stockId, apiType, updateType);
+            fillStockKline(stockCode, stockId, apiType, updateTypeEnum);
 
 
             // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
@@ -1289,7 +1286,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             // ----------------------
 
-            if (updateType == 2) {
+            if (updateTypeEnum == UpdateTypeEnum.INCR) {
                 SleepUtils.randomSleep(100);
             }
         });
@@ -1299,9 +1296,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      * 2-增量更新
      *
      * @param codeIdMap
-     * @param updateType
+     * @param updateTypeEnum
      */
-    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, int updateType) {
+    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
 
 
         // 东方财富   ->   批量拉取  全A（ETF） 实时行情
@@ -1338,7 +1335,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(klineDTO));
-            klines = klineHis__updateType(stockId, klines, updateType);
+            klines = klineHis__updateType(stockId, klines, UpdateTypeEnum.INCR);
 
 
             // --------------------- entity -> 实时行情
@@ -1404,12 +1401,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      * @param stockCode
      * @param stockId
      * @param apiType
-     * @param updateType
+     * @param updateTypeEnum
      */
-    private void fillStockKline(String stockCode, Long stockId, Integer apiType, int updateType) {
+    private void fillStockKline(String stockCode, Long stockId, Integer apiType, UpdateTypeEnum updateTypeEnum) {
 
 
-        apiType = apiType(apiType, updateType);
+        apiType = apiType(apiType, updateTypeEnum);
 
 
         // --------------------- ID
@@ -1434,7 +1431,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // 2、东方财富 API
         else if (apiType == 2) {
 
-            if (updateType == 1) {
+            if (updateTypeEnum == UpdateTypeEnum.ALL) {
 
                 // 全量更新     =>     全量 K线数据
                 StockKlineHisResp resp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
@@ -1457,7 +1454,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // klineHis   ->   全量更新 / 增量更新
-        klines = klineHis__updateType(stockId, klines, updateType);
+        klines = klineHis__updateType(stockId, klines, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1499,7 +1496,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private int apiType(Integer apiType, int updateType) {
+    private int apiType(Integer apiType, UpdateTypeEnum updateTypeEnum) {
 
         if (apiType != null && apiType == 1) {
             return apiType;
@@ -1507,12 +1504,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 1-全量更新   ->   1-本地TDX
-        if (updateType == 1) {
+        if (updateTypeEnum == UpdateTypeEnum.ALL) {
             apiType = 1;
         }
 
         // 2-增量更新   ->   2-券商API
-        else if (updateType == 2) {
+        else if (updateTypeEnum == UpdateTypeEnum.INCR) {
             apiType = 2;
         }
 
@@ -1525,13 +1522,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      *
      * @param stockId
      * @param new_klines
-     * @param updateType 1-全量更新；2-增量更新；
+     * @param updateTypeEnum 1-全量更新；2-增量更新；
      * @return
      */
-    private List<String> klineHis__updateType(Long stockId, List<String> new_klines, int updateType) {
+    private List<String> klineHis__updateType(Long stockId, List<String> new_klines, UpdateTypeEnum updateTypeEnum) {
 
         // 1-全量更新
-        if (updateType == 1) {
+        if (updateTypeEnum == UpdateTypeEnum.ALL) {
             return new_klines;
         }
 
