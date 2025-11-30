@@ -44,6 +44,42 @@ public class TopCountDTO {
     private double avgPct;
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 上榜 贡献交易总金额
+     */
+    private double tradeAmount;
+    /**
+     * 上榜 贡献交易总金额（%）
+     */
+    private double tradeAmountPct;
+
+    /**
+     * 上榜 贡献盈亏总金额
+     */
+    private double profitAmount;
+    /**
+     * 上榜 贡献盈亏总金额（%）
+     */
+    private double profitAmountPct;
+
+
+    /**
+     * 上榜 贡献总收益率（%） =  pct ？？？
+     */
+//    private double totalReturnPct;
+
+    /**
+     * 上榜 贡献总净值
+     */
+//    private double nav;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     private List<LocalDate> dateList = Lists.newArrayList();
     private List<Double> pctList = Lists.newArrayList();
     private Set<String> blockCodeSet = Sets.newHashSet();

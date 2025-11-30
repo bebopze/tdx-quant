@@ -37,5 +37,6 @@ public interface DataAnalysisService {
                                   List<BtPositionRecordDO> positionRecordList,
                                   boolean isMargin);
 
-    List<TopCountDTO> countDTOList(List<BtTradeRecordDO> tradeRecordList, List<BtPositionRecordDO> positionRecordList);
+    List<TopCountDTO> countDTOList(List<BtTradeRecordDO> tradeRecordList,
+                                   List<BtPositionRecordDO> allPositionRecordDOList);
 }

@@ -1271,6 +1271,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             Map<String, TopChangePctDTO> topMap = topList.stream().collect(Collectors.toMap(TopChangePctDTO::getCode, Function.identity()));
+            // 个股 昨日持仓市值（等份买入）
+            double marketVal = CollectionUtils.isEmpty(topList) ? 0 : capital / topList.size();
 
 
             todayCodeSet.forEach(code -> {
@@ -1284,6 +1286,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                     old.setPct(of((1 + old.getPct() * 0.01) * (1 + newVal.getPct() * 0.01) * 100 - 100));
                     old.getPctList().add(today2Next_changePct);
                     old.getDateList().add(date);
+                    old.setProfitAmount(of(old.getProfitAmount() + marketVal * newVal.getPct() * 0.01));
 
                     return old;
                 });
@@ -1534,7 +1537,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
     @Override
     public List<TopCountDTO> countDTOList(List<BtTradeRecordDO> tradeRecordList,
-                                          List<BtPositionRecordDO> positionRecordList) {
+                                          List<BtPositionRecordDO> allPositionRecordDOList) {
 
 
         // ---------------------------------------- count 指标
@@ -1547,6 +1550,11 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         Map<String, Map<String, Integer>> topStock__code_buySignalCountMap = Maps.newHashMap();
         Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap = Maps.newHashMap();
 
+        // 交易金额
+        Map<String, Double> topStock__code_amountMap = Maps.newHashMap();
+        // 盈亏金额
+        Map<String, Double> topStock__code_profitMap = Maps.newHashMap();
+
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -1555,6 +1563,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                        // 买入   ->   买入信号（主线板块/买入信号/idx）
                        // .filter(e -> Objects.equals(e.getTradeType(), BtTradeTypeEnum.BUY.getTradeType()))
                        .forEach(e -> {
+                           String stockCode = e.getStockCode();
+
+
                            // 880465-交通设施,881441-交通运输|,C_MA_偏离率<3,C_MA_偏离率<7,百日新高,C_MA_偏离率<5,N60日新高,SSF多,MA20多,均线预萌出,大均线多头,月多,均线萌出,|idx-302
                            String[] tradeSignalDescArr = e.getTradeSignalDesc().split("\\|", -1);
 
@@ -1572,6 +1583,11 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
                            // B
                            if (Objects.equals(e.getTradeType(), BtTradeTypeEnum.BUY.getTradeType())) {
+
+                               // 每日成交金额 累加
+                               topStock__code_amountMap.merge(stockCode, e.getAmount().doubleValue(), Double::sum);
+
+
                                if (tradeSignalDescArr.length < 3) { // 大盘极限底->ETF策略
                                    return;
                                }
@@ -1579,24 +1595,36 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                                String[] bsSignalStrArr = tradeSignalDescArr[1].split(",");
                                Arrays.stream(bsSignalStrArr).filter(StringUtils::isNotBlank).forEach(buySignal -> {
                                    // B信号
-                                   topStock__code_buySignalCountMap.computeIfAbsent(e.getStockCode(), k -> Maps.newHashMap())
+                                   topStock__code_buySignalCountMap.computeIfAbsent(stockCode, k -> Maps.newHashMap())
                                                                    .merge(buySignal, 1, Integer::sum);
                                });
                            }
                            // S
                            else if (Objects.equals(e.getTradeType(), BtTradeTypeEnum.SELL.getTradeType())) {
                                String sellSignal = tradeSignalDescArr[0];
-                               topStock__code_sellSignalCountMap.computeIfAbsent(e.getStockCode(), k -> Maps.newHashMap())
+                               topStock__code_sellSignalCountMap.computeIfAbsent(stockCode, k -> Maps.newHashMap())
                                                                 .merge(sellSignal, 1, Integer::sum);
                            }
                        });
 
 
-        positionRecordList.forEach(e -> {
+        // 持仓列表（含 清仓列表）
+        allPositionRecordDOList.forEach(e -> {
+            // 持仓天数
+            if (e.getHoldingDays() < 1) {
+                return;
+            }
+
             String stockCode = e.getStockCode();
             String stockName = e.getStockName();
             LocalDate date = e.getTradeDate();
             double changePct = e.getChangePct().doubleValue();
+
+
+            // 清仓   ->   累计盈亏金额 累加
+            if (e.getPositionType() == 2) {
+                topStock__code_profitMap.merge(stockCode, e.getCapTotalPnl().doubleValue(), Double::sum);
+            }
 
 
             code_countMap.merge(stockCode, new TopCountDTO(stockCode, stockName, 1, changePct, date), (old, newVal) -> {
@@ -1604,6 +1632,11 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                 old.setPct(of((1 + old.getPct() * 0.01) * (1 + newVal.getPct() * 0.01) * 100 - 100));
                 old.getPctList().add(changePct);
                 old.getDateList().add(date);
+
+
+                old.setTradeAmount(of(topStock__code_amountMap.getOrDefault(stockCode, 0.0)));
+                old.setProfitAmount(of(topStock__code_profitMap.getOrDefault(stockCode, 0.0)));
+
 
                 return old;
             });
@@ -1897,6 +1930,15 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 总交易金额
+        double totalTradeAmount = code_countMap.values().stream().mapToDouble(TopCountDTO::getTradeAmount).sum();
+        // 总盈亏金额
+        double totalProfitAmount = code_countMap.values().stream().mapToDouble(TopCountDTO::getProfitAmount).sum();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         code_countMap.values().parallelStream().forEach(e -> {
             // 平均涨跌幅
             double avgPct = Math.pow(1 + e.getPct() * 0.01, 1.0 / e.getCount()) * 100 - 100;
@@ -1933,21 +1975,31 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             e.setTopBlockList(topBlockList);
             e.setTopStockList(topStockList);
 
+            // 占比
+            e.setTradeAmountPct(of(e.getTradeAmount() / totalTradeAmount * 100));
+            e.setProfitAmountPct(of(e.getProfitAmount() / totalProfitAmount * 100));
+
 
             // ---------------------------------------------------------------------------------------------------------
 
-            e.setBuySignalList(topStock__code_buySignalCountMap.getOrDefault(code, null) == null ? null :
+
+            // 买点信号列表
+            e.setBuySignalList(topStock__code_buySignalCountMap.get(code) == null ? null :
                                        topStock__code_buySignalCountMap.get(code).entrySet().stream()
                                                                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                                                                        .map(x -> x.getKey() + "=" + x.getValue())
                                                                        .collect(Collectors.toList()));
 
+            // 卖点信号列表
             e.setSellSignalList(topStock__code_sellSignalCountMap.get(code) == null ? null :
                                         topStock__code_sellSignalCountMap.get(code).entrySet().stream()
                                                                          .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                                                                          .map(x -> x.getKey() + "=" + x.getValue())
                                                                          .collect(Collectors.toList()));
         });
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // sort
