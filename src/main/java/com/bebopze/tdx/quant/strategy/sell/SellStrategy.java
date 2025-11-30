@@ -29,7 +29,7 @@ public interface SellStrategy {
 
 
     /**
-     * 根据 S策略     筛选出   ->   待卖出 的 stockCodeList
+     * 根据 S策略     筛选出   ->   待卖出 的 stockCodeSet
      *
      * @param topBlockStrategyEnum
      * @param data

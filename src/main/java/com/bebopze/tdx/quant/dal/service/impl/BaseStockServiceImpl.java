@@ -88,7 +88,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
                                String tdxMarketType = e.getTdxMarketType().toString();
                                String code_prefix = e.getCode().substring(0, N);
 
-                               market_stockCodePrefixList_map.computeIfAbsent(tdxMarketType, k -> Sets.newHashSet(code_prefix)).add(code_prefix);
+                               market_stockCodePrefixList_map.computeIfAbsent(tdxMarketType, k -> Sets.newHashSet()).add(code_prefix);
                            });
         }
 
@@ -223,7 +223,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
             // write Cache
-            JsonFileWriterAndReader.writeLargeListToFile___stock_listAllKline(list);
+//  TODO   先注释掉，等后面再开启           JsonFileWriterAndReader.writeLargeListToFile___stock_listAllKline(list);
         }
 
 
@@ -261,8 +261,8 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             lastId = pageList.get(pageList.size() - 1).getId();
 
 
-            log.info("listByCursor - page=[{}]     >>>     time : {} , totalTime : {}",
-                     list.size() / pageSize + 1, DateTimeUtil.formatNow2Hms(start_1), DateTimeUtil.formatNow2Hms(start));
+            log.info("listByCursor - page=[{}]     >>>     pageTime : {} , totalTime : {}",
+                     list.size() / pageSize, DateTimeUtil.formatNow2Hms(start_1), DateTimeUtil.formatNow2Hms(start));
         }
 
 

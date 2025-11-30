@@ -32,8 +32,9 @@ public class FastJson2Config {
 
 
         JSON.config(JSONWriter.Feature.WriteNullNumberAsZero,   // Long等Number类型值为空序列化为0
-                    JSONWriter.Feature.WriteNullBooleanAsFalse, // Boolean类型值为空序列化为false
+//                    JSONWriter.Feature.WriteNullBooleanAsFalse, // Boolean类型值为空序列化为false（❌严禁❌ 会导致严重bug：Boolean = null -> false）
                     JSONWriter.Feature.WriteLongAsString,       // Long类型序列化为字符串
+                    JSONWriter.Feature.WriteMapNullValue,       // Map类型值为空序列化为{}
                     JSONWriter.Feature.WriteNullListAsEmpty,    // List类型值为空序列化为[]
                     JSONWriter.Feature.WriteBigDecimalAsPlain,  // BigDecimal类型序列化为非科学计数法
                     JSONWriter.Feature.WriteNonStringValueAsString, // 4.58890016E8   ->   458890016

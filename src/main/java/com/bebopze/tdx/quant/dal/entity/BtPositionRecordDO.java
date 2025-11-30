@@ -190,10 +190,10 @@ public class BtPositionRecordDO implements Serializable {
     private LocalDate buyDate;
 
     /**
-     * 首次-买入日期
+     * 首次-买入价格
      */
     @TableField("buy_price")
-    @Schema(description = "首次-买入日期")
+    @Schema(description = "首次-买入价格")
     private BigDecimal buyPrice;
 
     /**

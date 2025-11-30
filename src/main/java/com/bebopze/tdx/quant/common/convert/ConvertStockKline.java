@@ -4,14 +4,15 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -159,10 +160,7 @@ public class ConvertStockKline {
     }
 
     private static Double of(String valStr) {
-        if (valStr == null || valStr.isEmpty()) {
-            return null;
-        }
-        return BigDecimal.valueOf(new Double(valStr)).doubleValue();
+        return StringUtils.isBlank(valStr) ? Double.NaN : NumUtil.of(new Double(valStr));
     }
 
 
