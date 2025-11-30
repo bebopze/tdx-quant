@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONWriter;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
@@ -756,7 +755,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String blockCode = blockDO.getCode();
-                    BlockFun fun = data.getOrCreateBlockFun(blockDO);
+                    // BlockFun fun = data.getOrCreateBlockFun(blockDO);
+                    BlockFun fun = new BlockFun(blockCode, blockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -823,7 +823,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -1466,12 +1466,14 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             chunk.forEach(stockDO -> {
+                long start_2 = System.currentTimeMillis();
 
 
                 try {
                     String code = stockDO instanceof BaseStockDO ? ((BaseStockDO) stockDO).getCode() : ((BaseBlockDO) stockDO).getCode();
                     String name = stockDO instanceof BaseStockDO ? ((BaseStockDO) stockDO).getName() : ((BaseBlockDO) stockDO).getName();
-                    StockFun fun = stockDO instanceof BaseStockDO ? data.getOrCreateStockFun((BaseStockDO) stockDO) : data.getOrCreateBlockFun((BaseBlockDO) stockDO);
+                    // StockFun fun = stockDO instanceof BaseStockDO ? data.getOrCreateStockFun((BaseStockDO) stockDO) : data.getOrCreateBlockFun((BaseBlockDO) stockDO);
+                    StockFun fun = stockDO instanceof BaseStockDO ? new StockFun((BaseStockDO) stockDO) : new BlockFun((BaseBlockDO) stockDO);
 
 
                     KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
@@ -1488,7 +1490,8 @@ public class TopBlockServiceImpl implements TopBlockService {
                     // -------------------------------------------------------------------------------------------------
 
 
-                    log.info("calcTopInfoTask     >>>     count : {} , time : {} , code : {}", COUNT.incrementAndGet(), DateTimeUtil.formatNow2Hms(startTime), code);
+//                    log.info("calcTopInfoTask     >>>     [{}-{}] , count : {} , time : {} , totalTime : {}",
+//                             code, name, COUNT.incrementAndGet(), DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(startTime));
 
 
                     // -------------------------------------------------------------------------------------------------
@@ -1669,6 +1672,16 @@ public class TopBlockServiceImpl implements TopBlockService {
                         // 上榜涨幅
                         calcTopChangePct(close, date_idx, minIdx, maxIdx, next__下SSF_MA20__days, fun, dateIndexMap, extDataArrDTO, topChangePctDTO);
                     });
+
+
+                    // -------------------------------------------------------------------------------------------------
+
+
+                    log.info("calcTopInfoTask     >>>     [{}-{}] , count : {} , time : {} , totalTime : {}",
+                             code, name, COUNT.incrementAndGet(), DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(startTime));
+
+
+                    // -------------------------------------------------------------------------------------------------
 
 
                 } catch (Exception e) {
@@ -2211,7 +2224,8 @@ public class TopBlockServiceImpl implements TopBlockService {
                 BaseStockDO stockDO = data.codeStockMap.getOrDefault(stockCode, baseStockService.getByCode(stockCode));
 
 
-                StockFun fun = data.getOrCreateStockFun(stockDO);
+                // StockFun fun = data.getOrCreateStockFun(stockDO);
+                StockFun fun = new StockFun(stockDO);
                 Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
@@ -2282,7 +2296,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
     private void initCache(UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
-            initDataService.incrUpdateInitData();
+            data = initDataService.incrUpdateInitData();
         } else {
             data = initDataService.initData();
         }
@@ -2372,7 +2386,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                 try {
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
                     Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
 
@@ -2475,6 +2489,8 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     private void calcNDayHigh(UpdateTypeEnum updateTypeEnum, int N) {
+        long start = System.currentTimeMillis();
+        AtomicInteger count = new AtomicInteger();
 
 
         // --------------------------------------------------- 日期 - 百日新高（个股code 列表）
@@ -2490,11 +2506,13 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             chunk.forEach(stockDO -> {
+                long start_2 = System.currentTimeMillis();
+
 
                 try {
-
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    // StockFun fun = data.getOrCreateStockFun(stockDO);  // TODO   一次性使用   ->   无需缓存（反而 -> OOM）!!!
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // N日新高
@@ -2515,6 +2533,8 @@ public class TopBlockServiceImpl implements TopBlockService {
                     });
 
 
+                    log.info("calcNDayHigh suc     >>>     stockCode : {} , count : {} , time : {} , totalTime : {}",
+                             stockCode, count.incrementAndGet(), DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(start));
                 } catch (Exception e) {
                     log.error("处理股票 {} 失败", stockDO.getCode(), e);
                 }
@@ -2572,7 +2592,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // N日涨幅
@@ -2637,7 +2657,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // RPS红（ RPS一线红(95) || RPS双线红(90) || RPS三线红(85) ）
@@ -2699,7 +2719,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // 二阶段
@@ -2761,7 +2781,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // 大均线多头
@@ -2823,7 +2843,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // 均线大多头
@@ -2885,7 +2905,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String stockCode = stockDO.getCode();
-                    StockFun fun = data.getOrCreateStockFun(stockDO);
+                    StockFun fun = new StockFun(stockDO);   // 一次性使用   ->   无需缓存（反而 -> OOM）!!!（加载耗时：10ms）
 
 
                     // 均线极多头
@@ -2961,6 +2981,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                     String blockCode = blockDO.getCode();
 
 
+                    // 这里必须要 Cache!!!
                     BlockFun fun = data.getOrCreateBlockFun(blockDO);
 
 
@@ -3081,7 +3102,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 try {
                     String blockCode = blockDO.getCode();
-                    BlockFun fun = data.getOrCreateBlockFun(blockDO);
+                    BlockFun fun = new BlockFun(blockDO);
 
 
                     ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
@@ -3475,7 +3496,8 @@ public class TopBlockServiceImpl implements TopBlockService {
      */
     private boolean block_SSF多(String blockCode, LocalDate date) {
 
-        BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? data.getOrCreateBlockFun(blockCode) : data.getOrCreateBlockFun(baseBlockService.getByCode(blockCode));
+        // BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? data.getOrCreateBlockFun(blockCode) : data.getOrCreateBlockFun(baseBlockService.getByCode(blockCode));
+        BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? new BlockFun(data.codeBlockMap.get(blockCode)) : new BlockFun(baseBlockService.getByCode(blockCode));
 
 
         ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();

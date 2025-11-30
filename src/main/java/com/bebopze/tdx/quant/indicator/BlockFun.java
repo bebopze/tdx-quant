@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.indicator;
 
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +26,14 @@ public class BlockFun extends StockFun {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public BlockFun(BaseBlockDO blockDO) {
+        this(blockDO == null ? null : blockDO.getCode(), blockDO);
+    }
+
+
     public BlockFun(String code, BaseBlockDO blockDO) {
         Assert.notNull(blockDO, String.format("blockDO:[%s] is null  ->  请检查 dataCache 是否为null", code));
+        long start = System.currentTimeMillis();
 
 
         // super(null);
@@ -42,14 +49,6 @@ public class BlockFun extends StockFun {
         klineDTOList = blockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
         extDataDTOList = blockDO.getExtDataDTOList();
-
-
-        // last
-        // lastKlineDTO = ListUtil.last(klineDTOList);
-
-
-        // 收盘价 - 实时
-        // C = blockDO.getClose();
 
 
         // -----------------------------------------------
@@ -90,6 +89,8 @@ public class BlockFun extends StockFun {
             dateIndexMap.put(date[i], i);
         }
 
+        maxIdx = Math.max(0, date.length - 1);
+
 
         // --------------------------- init data
 
@@ -102,6 +103,10 @@ public class BlockFun extends StockFun {
 
 
         ssf = extDataArrDTO.SSF;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        log.info("BlockFun - init     >>>     [{}-{}] , time : {}", code, name, DateTimeUtil.formatNow2Hms(start));
     }
 
 

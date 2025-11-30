@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.google.common.collect.Maps;
 import lombok.Data;
@@ -44,8 +45,6 @@ public class StockFun {
     // 实时行情  -  买5/卖5
     SHSZQuoteSnapshotResp shszQuoteSnapshotResp;
 
-    // private KlineDTO lastKlineDTO;
-
 
     // ------------------------------------
 
@@ -62,10 +61,8 @@ public class StockFun {
     // ------------------------------------
 
 
-    // double C;
-
-
     Map<LocalDate, Integer> dateIndexMap;
+    int maxIdx;
 
 
     LocalDate[] date;
@@ -102,6 +99,7 @@ public class StockFun {
 
     public StockFun(String code, BaseStockDO stockDO) {
         Assert.notNull(stockDO, String.format("stockDO:[%s] is null  ->  请检查 dataCache 是否为null", code));
+        long start = System.currentTimeMillis();
 
 
         String stockName = stockDO.getName();
@@ -111,14 +109,6 @@ public class StockFun {
         klineDTOList = stockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
         extDataDTOList = stockDO.getExtDataDTOList();
-
-
-        // last
-        // lastKlineDTO = ListUtil.last(klineDTOList);
-
-
-        // 收盘价 - 实时
-        // C = stockDO.getClose();
 
 
         // -----------------------------------------------
@@ -159,6 +149,8 @@ public class StockFun {
             dateIndexMap.put(date[i], i);
         }
 
+        maxIdx = Math.max(0, date.length - 1);
+
 
         // --------------------------- init data
 
@@ -171,6 +163,10 @@ public class StockFun {
 
 
         ssf = extDataArrDTO.SSF;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        log.info("StockFun - init     >>>     [{}-{}] , time : {}", code, name, DateTimeUtil.formatNow2Hms(start));
     }
 
 

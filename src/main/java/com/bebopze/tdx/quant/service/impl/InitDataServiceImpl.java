@@ -249,7 +249,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 行情起点（往前倒推 250日 -> 1年）
-        LocalDate dateLine_start = startDate.minusMonths(15);
+        LocalDate dateLine_start = startDate.minusDays(270);
         LocalDate dateLine_end = endDate;
 
         log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
@@ -266,13 +266,12 @@ public class InitDataServiceImpl implements InitDataService {
 
 
             // klineHis
-            List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            klineDTOList = klineDTOList.stream()
-                                       .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
-                                               // 过滤  ->  负价格（前复权）
-                                               && k.getClose() > 0)
-                                       .sorted(Comparator.comparing(KlineDTO::getDate))
-                                       .collect(Collectors.toList());
+            List<KlineDTO> klineDTOList = e.getKlineDTOList().stream()
+                                           .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
+                                                   // 过滤  ->  负价格（前复权）
+                                                   && k.getClose() > 0)
+                                           .sorted(Comparator.comparing(KlineDTO::getDate))
+                                           .collect(Collectors.toList());
 
 
             // e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
