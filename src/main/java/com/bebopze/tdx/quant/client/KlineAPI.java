@@ -8,6 +8,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
@@ -45,6 +46,12 @@ public class KlineAPI {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 获取  指定个股/ETF  行情快照
+     *
+     * @param stockCode 股票code
+     * @return
+     */
     public static StockSnapshotKlineDTO kline(String stockCode) {
         StockSnapshotKlineDTO klineDTO = null;
 
@@ -80,11 +87,110 @@ public class KlineAPI {
     }
 
 
+    /**
+     * 拉取  所有股票（A股） 行情快照
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> pullAllStockSnapshotKline() {
+        List<StockSnapshotKlineDTO> klineDTOList = null;
+
+
+//        // 东方财富
+//        try {
+//            klineDTOList = EastMoneyKlineAPI.pullAllStockSnapshotKline();
+//        } catch (Exception e) {
+//            log.error(e.getMessage(), e);
+//        }
+
+
+        // 新浪财经
+        if (klineDTOList == null) {
+            log.info("pullAllStockSnapshotKline     >>>     使用 新浪财经 API");
+            klineDTOList = SinaKlineAPI.pullAllStockSnapshotKline();
+        }
+
+
+        // 雪球
+        if (klineDTOList == null) {
+            log.info("pullAllStockSnapshotKline     >>>     使用 雪球 API");
+        }
+
+
+        // ...
+        if (klineDTOList == null) {
+            log.info("pullAllStockSnapshotKline     >>>     使用 xxx API");
+
+        }
+
+
+        return klineDTOList;
+    }
+
+    /**
+     * 拉取  所有ETF  行情快照
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> pullAllETFSnapshotKline() {
+        List<StockSnapshotKlineDTO> klineDTOList = null;
+
+
+        // 东方财富
+        try {
+            klineDTOList = EastMoneyKlineAPI.pullAllETFSnapshotKline();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+
+
+        // 新浪财经
+        if (klineDTOList == null) {
+            log.info("pullAllETFSnapshotKline     >>>     使用 新浪财经 API");
+            klineDTOList = SinaKlineAPI.pullAllETFSnapshotKline();
+        }
+
+
+        // 雪球
+        if (klineDTOList == null) {
+
+            log.info("pullAllETFSnapshotKline     >>>     使用 雪球 API");
+        }
+
+
+        // ...
+        if (klineDTOList == null) {
+            log.info("pullAllETFSnapshotKline     >>>     使用 xxx API");
+
+        }
+
+
+        return klineDTOList;
+    }
+
+
+    /**
+     * 拉取  所有股票/ETF  行情快照
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> pullAllStockETFSnapshotKline() {
+
+        List<StockSnapshotKlineDTO> stockDTOList = pullAllStockSnapshotKline();
+        // List<StockSnapshotKlineDTO> etfDTOList = pullAllETFSnapshotKline();
+
+        // stockDTOList.addAll(etfDTOList);
+
+
+        return stockDTOList;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
-     * 东方财富
+     * 行情快照（东方财富） ->  行情DTO
      *
      * @param r
      * @return
