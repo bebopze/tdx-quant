@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -1302,7 +1303,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 东方财富   ->   批量拉取  全A（ETF） 实时行情
-        List<StockSnapshotKlineDTO> stockSnapshotList = EastMoneyKlineAPI.pullAllStockETFSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotList = KlineAPI.pullAllStockETFSnapshotKline();
         log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
 
 
@@ -1346,6 +1347,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             // 实时行情
             BaseStockDO entity = convertStockDO(stockId, stockName, klines, e);
+            entity.setPrevClose(BigDecimal.valueOf(e.getPrevClose()));
 
 
             // --------------------- DB
