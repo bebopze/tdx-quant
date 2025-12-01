@@ -122,11 +122,13 @@ public class BacktestStrategy {
 
     @TotalTime
     public Long backtest(Integer batchNo,
-                         TopBlockStrategyEnum topBlockStrategyEnum, List<String> buyConList, List<String> sellConList,
-                         LocalDate startDate, LocalDate endDate, BacktestCompareDTO btCompareDTO) {
+                         TopBlockStrategyEnum topBlockStrategyEnum,
+                         List<String> buyConList, List<String> sellConList,
+                         LocalDate startDate, LocalDate endDate,
+                         BacktestCompareDTO btCompareDTO) {
 
 
-        // TODO   回测-对照组 可变参数
+        // 回测-对照组 可变参数
         BacktestStrategy.btCompareDTO.set(btCompareDTO);
 
 
@@ -156,8 +158,9 @@ public class BacktestStrategy {
                               LocalDate startDate,
                               LocalDate endDate) {
 
-        log.info("execBacktest start     >>>     batchNo : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , startDate : {} , endDate : {}",
-                 batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
+
+        log.info("execBacktest start     >>>     batchNo : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , startDate : {} , endDate : {} , btCompareDTO : {}",
+                 batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate, JSON.toJSONString(btCompareDTO.get()));
 
 
         endDate = DateTimeUtil.min(endDate, LocalDate.now());
@@ -432,15 +435,8 @@ public class BacktestStrategy {
         taskDO.setInitialNav(BigDecimal.valueOf(1.0000));
 
 
-        // -------------------------------------------------------------------------------------------------------------
-
-
         // extData
-        Map<String, Object> extData = Maps.newHashMap();
-        BacktestCompareDTO dto = btCompareDTO.get();
-        extData.put("scoreSortN", dto.getScoreSortN());
-        extData.put("stockPosPctLimit", dto.getStockPosPctLimit());
-        taskDO.setExtData(JSON.toJSONString(extData));
+        taskDO.setExtData(JSON.toJSONString(btCompareDTO.get()));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -468,7 +464,7 @@ public class BacktestStrategy {
 
 
         x.get().avlCapital = x.get().prevAvlCapital;
-        // 总资金     =>     今日 计算前 -> 先取 昨日总资金
+        // 总资金     =>     今日 计算前 -> 先取 昨日总资金（ = 昨日市值 + 昨日可用资金）
         x.get().capital = x.get().prevCapital;
 
 
@@ -558,8 +554,8 @@ public class BacktestStrategy {
 
         // 买入策略
         // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap, posRate);
-        // List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, false);
-        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, false);
+        // List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
 
         log.info("B策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
@@ -854,14 +850,16 @@ public class BacktestStrategy {
 
         // 等比买入
         BigDecimal avg_amount = of(x.get().actAvlCapital / size_B);
-        // 单一个股   单次最大买入  剩余资金 x 10%
-        // double STOCK_POS__LIMIT = 0.1;
-        double STOCK_POS__LIMIT = btCompareDTO.get().getStockPosPctLimit() * 0.01;
-        avg_amount = avg_amount.min(of(x.get().actAvlCapital * STOCK_POS__LIMIT));       // 可用资金 * 10%
 
 
-        // 单一个股   最大仓位限制  =  总资金 x 10%
-        double amount_limit = x.get().capital * STOCK_POS__LIMIT;      // 总资金 * 10%
+        // 单一个股 单次买入上限  <=  剩余资金 x 10%
+        double STOCK_BUY__LIMIT = btCompareDTO.get().getSingleStockMaxBuyPct() * 0.01;
+        avg_amount = avg_amount.min(of(x.get().actAvlCapital * STOCK_BUY__LIMIT));     // 实际 可用资金 * 10%
+
+
+        // 单一个股 总持仓上限  <=  账户总资金 x 5%
+        double STOCK_POS__LIMIT = btCompareDTO.get().getSingleStockMaxPosPct() * 0.01;
+        double amount_limit = x.get().capital * STOCK_POS__LIMIT;     // 总资金 * 5%
 
 
         // ------------------------------------------
@@ -897,7 +895,6 @@ public class BacktestStrategy {
             tradeRecordDO.setStockCode(stockCode);
             tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
             tradeRecordDO.setTradeDate(tradeDate);
-            // tradeRecordDO.setTradeSignal(buy_infoMap.get(stockCode));
             tradeRecordDO.setTradeSignalType(1);
             tradeRecordDO.setTradeSignalDesc(buy_infoMap.get(stockCode));
 
@@ -910,10 +907,14 @@ public class BacktestStrategy {
             tradeRecordDO.setQuantity((int) qty);
 
             // 成交额 = 价格 x 数量
-            tradeRecordDO.setAmount(of(amount));
+            // 不能用 amount（double qty  ->  int qty  =>  会少买1股）  ->   必须用 price x qty           // 如果 price = 100， amount -> 100 x 1 = 100   =>   bug：B金额 -> 凭空 多计入 100 ❗❗❗
+            double act_amount = tradeRecordDO.getPrice().doubleValue() * tradeRecordDO.getQuantity(); // BUG：每天  100多只个股   =>   每天 B金额 -> 凭空 多计入 1000 ~ 10000 ❗❗❗
+            tradeRecordDO.setAmount(of(act_amount));     // BUG：导致  实际市值（持仓个股 【price x qty ↓】 累加） <  计算市值（持仓个股 【amount ↑】 累加）
+            //                                              BUG：导致  实际可用资金（+S -B【price x qty ↓ 累加】）>  计算可用资金（+S -B【amount ↑ 累加】）  =>   计算可用资金（甚至会 出现负数）❗❗❗
+
 
             // 仓位占比 = 持仓市值 / 总资金
-            double positionPct = amount / x.get().capital * 100;
+            double positionPct = act_amount / x.get().capital * 100;
             tradeRecordDO.setPositionPct(of(positionPct));
 
             tradeRecordDO.setFee(BigDecimal.ZERO);
@@ -977,7 +978,7 @@ public class BacktestStrategy {
     private void sell_before___statData___step1__init() {
 
 
-        // 获取 -> 持仓列表
+        // 获取 -> 持仓列表（今日收盘时刻 持仓个股 涨跌变化列表  =>  今日 [市值变化] -> 今日 [账户总资金变化]）
         List<BtPositionRecordDO> positionRecordDOList = getDailyPositions(x.get().taskId, x.get().tradeDate);
 
 
@@ -992,15 +993,15 @@ public class BacktestStrategy {
 
 
         x.get().positionRecordDOList = positionRecordDOList;
-        x.get().positionStockCodeList = calcStat.getPositionStockCodeList();
-        x.get().stockCode_positionDO_Map = calcStat.getStockCode_positionDO_Map();
+        x.get().positionStockCodeList = calcStat.positionStockCodeList;
+        x.get().stockCode_positionDO_Map = calcStat.stockCode_positionDO_Map;
 
 
         // ------------------------------------------------------------------------
 
 
         // 当前 总市值   =   S前 总市值
-        x.get().marketValue = calcStat.getMarketValue();
+        x.get().marketValue = calcStat.marketValue;
 
         // S前 可用资金   =   昨日 可用资金
         x.get().avlCapital = x.get().prevAvlCapital;
@@ -1024,6 +1025,11 @@ public class BacktestStrategy {
 
         // 当前 实际可用资金（策略 -> 仓位限制）  =   仓位总金额_上限   -   持仓总市值
         x.get().actAvlCapital = x.get().positionLimitAmount - x.get().marketValue;
+
+
+        Stat stat = x.get();
+        log.debug("sell_before___statData___step1__init   -   [{}] [{}]     >>>     x : {}",
+                  x.get().taskId, x.get().tradeDate, JSON.toJSONString(stat));
     }
 
 
@@ -1044,6 +1050,7 @@ public class BacktestStrategy {
         CalcStat calcStat = new CalcStat(positionRecordDOList, tradeRecordDOList);
         // copy覆盖
         BeanUtils.copyProperties(calcStat, x.get());
+//        copyBean(calcStat, x.get());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1061,6 +1068,8 @@ public class BacktestStrategy {
      * prev 赋值
      */
     private void refresh_statData__prev() {
+        Stat stat = x.get();
+
 
         Stat x_copy = new Stat();
         BeanUtils.copyProperties(x.get(), x_copy);
@@ -1068,9 +1077,11 @@ public class BacktestStrategy {
 
         // 1、清空
         x.remove();
+        stat = x.get();
+        log.debug("clear statData   -   {}", JSON.toJSONString(stat));
 
 
-        // 2、today -> pre
+        // 2、today -> prev
         x.get().prevCapital = x_copy.capital;
         x.get().prevAvlCapital = x_copy.avlCapital;
         // x.get().prevPositionRecordDOList = x_copy.positionRecordDOList;
@@ -1078,6 +1089,9 @@ public class BacktestStrategy {
 
 
         x.get().taskId = x_copy.taskId;
+
+
+        log.debug("clear statData   -   {}", JSON.toJSONString(stat));
     }
 
 
@@ -1150,6 +1164,7 @@ public class BacktestStrategy {
                                                      .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (!TdxFunCheck.equals(marketValue, x.get().marketValue)) {
+            double entity_marketValue = x.get().marketValue;
             log.warn("calcDailyReturn - err     >>>     [{}] [{}] , marketValue : {} , x.marketValue : {}",
                      taskId, tradeDate, marketValue, x.get().marketValue);
         }
@@ -1158,15 +1173,10 @@ public class BacktestStrategy {
         // 总资金  =  持仓市值 + 可用资金
         BigDecimal capital = marketValue.add(of(avlCapital));
 
-        if (!TdxFunCheck.equals(capital, x.get().capital)) {
+        if (!TdxFunCheck.equals(capital, x.get().capital) || capital.doubleValue() < 0) {
+            double entity_capital = x.get().capital;
             log.warn("calcDailyReturn - err     >>>     [{}] [{}] , capital : {} , x.capital : {}",
                      taskId, tradeDate, capital, x.get().capital);
-        }
-
-
-        if (!TdxFunCheck.equals(avlCapital, x.get().avlCapital)) {
-            log.warn("calcDailyReturn - err     >>>     [{}] [{}] , avlCapital : {} , x.avlCapital : {}",
-                     taskId, tradeDate, avlCapital, x.get().avlCapital);
         }
 
 
@@ -2511,7 +2521,23 @@ public class BacktestStrategy {
 
 
         // 当前 总资金（B/S 任意变换   ->   capital 不变）   =   持仓总市值（跟随BS 变动） +  可用资金（跟随BS 变动）
-        double capital;
+
+        // 当前 账户总资金   =   当前市值 + 当前可用资金    // 账户总资金  ->  仅与 今日市值/可用资金  相关❗❗❗
+        double capital;   // 仅与 持仓个股 今日涨跌相关   =>   至[收盘时刻]   ->   个股 涨跌 已固定不变  ->  账户总资金 也不再变❗❗❗
+        //
+        // [收盘价BS]  =>  [收盘时刻]  ->  个股 涨跌[收盘价] 已固定不变  =>  S前  ->  账户总资金 已全程固定 不再变化
+        //                                                         =>  S前  ->  持仓市值  =  S前_持仓市值（持仓个股 市值累加 -> [今日收盘价] x 持仓数量  累加）
+        //                                                         =>  S前  ->  可用资金  =  prev_可用资金（昨日可用资金）
+        //
+        //
+        //                                                      （S->B）阶段：
+        //                                                        =>  变化的仅仅是  调仓换股（持仓市值 ⇋ 可用资金     互相 腾挪变换）
+        //
+        //                                                        =>  S后  ->  持仓市值  =  S前_持仓市值   -  S金额
+        //                                                        =>  S后  ->  可用资金  =  prev_可用资金  +  S金额
+        //
+        //                                                        =>  B后  ->  持仓市值  =  S后_持仓市值  +  B金额
+        //                                                        =>  B后  ->  可用资金  =  S后_可用资金  -  B金额
 
 
         // ------------------------------------------------------------
@@ -2530,8 +2556,9 @@ public class BacktestStrategy {
         double marketValue;
 
 
-        // 当前 可用资金   =   总资金 - 持仓总市值
-        double avlCapital;
+        // 当前 可用资金   =   总资金 - 持仓总市值（✅ ->  随着个股涨跌 => 市值变化 -> 账户总资金 变化）
+        // 当前 可用资金   =   昨日可用资金 + 卖出金额 - 买入金额（✅）    // 可用资金  ->  仅与 今日卖出/买入  相关❗❗❗
+        double avlCapital;   // 以上计算方式 等价（若结果不一致  ->  BUG）
 
         // 当前 实际可用资金（大盘 -> 仓位限制）  =   仓位总金额 上限   -   持仓总市值
         double actAvlCapital;
@@ -2569,8 +2596,8 @@ public class BacktestStrategy {
             // 今日 B/S记录
             this.tradeRecordDOList = tradeRecordDOList;
 
-            this.sellCapital = getSellCapital();
-            this.buyCapital = getBuyCapital();
+            this.sellCapital = calc_sellCapital();
+            this.buyCapital = calc_buyCapital();
 
 
             // ------------------------------------------ 可变（持仓列表 -> 实时计算）
@@ -2578,13 +2605,13 @@ public class BacktestStrategy {
 
             // 当前 持仓列表
             this.positionRecordDOList = positionRecordDOList;
-            this.positionStockCodeList = getPositionStockCodeList();
-            this.stockCode_positionDO_Map = getStockCode_positionDO_Map();
+            this.positionStockCodeList = calc_positionStockCodeList();
+            this.stockCode_positionDO_Map = calc_stockCode_positionDO_Map();
 
 
-            this.marketValue = getMarketValue();
-            this.avlCapital = getAvlCapital();
-            this.actAvlCapital = getActAvlCapital();
+            this.marketValue = calc_marketValue();
+            this.avlCapital = calc_avlCapital();
+            this.actAvlCapital = calc_actAvlCapital();
 
 
             // ------------------------------------------
@@ -2600,16 +2627,17 @@ public class BacktestStrategy {
             // 总资金  =  总市值 + 可用资金
             double capital_2 = marketValue + avlCapital;
             if (!TdxFunCheck.equals(capital, capital_2)) {
-                log.warn("check err     >>>     [{}] [{}] , capital : {} , capital_2 : {}",
+                log.warn("check err - capital     >>>     [{}] [{}] , capital : {} , capital_2 : {}",
                          x.get().taskId, x.get().tradeDate, capital, capital_2);
             }
 
-            // 可用资金  =  prev_可用资金 + 卖出 - 买入
-            double avlCapital_2 = x.get().prevAvlCapital + sellCapital - buyCapital;
-            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital, avlCapital_2, x.get().capital * 0.001 /*1000*/, 0.01)) {
-                log.warn("check err     >>>     [{}] [{}] , avlCapital : {} , avlCapital_2 : {}",
-                         x.get().taskId, x.get().tradeDate, avlCapital, avlCapital_2);
-            }
+//            // 可用资金  =  prev_可用资金 + 卖出 - 买入
+//            double avlCapital_2 = x.get().prevAvlCapital + sellCapital - buyCapital;
+//            // 前置init阶段 -> 不校验 （今日收盘capital -> 还未计算）
+//            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital, avlCapital_2, /*x.get().capital * 0.001*/ 1, 0.01)) {
+//                log.warn("check err - avlCapital     >>>     [{}] [{}] , avlCapital : {} , avlCapital_2 : {}",
+//                         x.get().taskId, x.get().tradeDate, avlCapital, avlCapital_2);
+//            }
         }
 
 
@@ -2619,19 +2647,19 @@ public class BacktestStrategy {
         // -------------------------- 持仓
 
 
-        public List<String> getPositionStockCodeList() {
+        private List<String> calc_positionStockCodeList() {
             // 持仓 code列表
             this.positionStockCodeList = positionRecordDOList.stream().map(BtPositionRecordDO::getStockCode).collect(Collectors.toList());
             return this.positionStockCodeList;
         }
 
 
-        public Map<String, BtPositionRecordDO> getStockCode_positionDO_Map() {
+        private Map<String, BtPositionRecordDO> calc_stockCode_positionDO_Map() {
             positionRecordDOList.forEach(e -> stockCode_positionDO_Map.put(e.getStockCode(), e));
             return stockCode_positionDO_Map;
         }
 
-        public double getMarketValue() {
+        private double calc_marketValue() {
             if (CollectionUtils.isEmpty(positionRecordDOList)) {
                 return 0;
             }
@@ -2642,27 +2670,41 @@ public class BacktestStrategy {
                                        .doubleValue();
         }
 
-        public double getAvlCapital() {
+        private double calc_avlCapital() {
             double avlCapital_1 = capital - marketValue;
-            double avlCapital_2 = x.get().prevAvlCapital + sellCapital - buyCapital;
 
-            // 前置init阶段 -> 不校验 （capital -> 还未计算）
-            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital_1, avlCapital_2, 1000, 0.01)) {
+            // 可用资金 = 昨日可用资金 + 今日卖出 - 今日买入
+            double avlCapital_2 = x.get().prevAvlCapital + sellCapital - buyCapital; // 可用资金 仅与 今日卖出/买入 相关（可用资金 = 昨日可用资金 + 卖出 - 买入）
+
+
+            // 前置init阶段 -> 不校验 （今日收盘capital -> 还未计算）
+            if (tradeRecordDOList != null && !TdxFunCheck.equals(avlCapital_1, avlCapital_2, /*1000*/ 10, 0.01)) {
                 log.warn("getAvlCapital err     >>>     [{}] [{}] , {} , {}", x.get().taskId, x.get().tradeDate, avlCapital_1, avlCapital_2);
             }
+
+
+            if (tradeRecordDOList != null) {
+                if (avlCapital_1 < -0.1) {
+                    log.error("getAvlCapital err     >>>     [{}] [{}] , {} , {}", x.get().taskId, x.get().tradeDate, avlCapital_1, avlCapital_2);
+                }
+                if (avlCapital_2 < -0.1) {
+                    log.error("getAvlCapital err     >>>     [{}] [{}] , {} , {}", x.get().taskId, x.get().tradeDate, avlCapital_1, avlCapital_2);
+                }
+            }
+
 
             return avlCapital_1;
         }
 
-        public double getActAvlCapital() {
-            return actAvlCapital = positionLimitAmount - marketValue;
+        private double calc_actAvlCapital() {
+            return positionLimitAmount - marketValue;
         }
 
 
         // -------------------------- B/S
 
 
-        public double getSellCapital() {
+        private double calc_sellCapital() {
             if (CollectionUtils.isEmpty(tradeRecordDOList)) {
                 return 0;
             }
@@ -2674,7 +2716,7 @@ public class BacktestStrategy {
                                     .doubleValue();
         }
 
-        public double getBuyCapital() {
+        private double calc_buyCapital() {
             if (CollectionUtils.isEmpty(tradeRecordDOList)) {
                 return 0;
             }
@@ -2770,6 +2812,40 @@ public class BacktestStrategy {
 
         double sellCapital;
         double buyCapital;
+    }
+
+
+    private void copyBean(CalcStat stat, Stat x) {
+
+//            x.prevCapital = stat.prevCapital;
+//            x.prevAvlCapital = stat.prevAvlCapital;
+//            x.prev__stockCode_positionDO_Map = stat.prev__stockCode_positionDO_Map;
+
+//            x.taskId = stat.taskId;
+//            x.tradeDate = stat.tradeDate;
+
+
+        x.positionLimitRate = stat.positionLimitRate;
+        x.positionLimitAmount = stat.positionLimitAmount;
+
+
+        x.capital = stat.capital;
+
+
+        x.positionRecordDOList = stat.positionRecordDOList;
+        x.positionStockCodeList = stat.positionStockCodeList;
+        x.stockCode_positionDO_Map = stat.stockCode_positionDO_Map;
+
+
+//            x.clearPositionRecordDOList = stat.clearPositionRecordDOList;
+
+
+        x.marketValue = stat.marketValue;
+        x.avlCapital = stat.avlCapital;
+        x.actAvlCapital = stat.actAvlCapital;
+
+        x.sellCapital = stat.sellCapital;
+        x.buyCapital = stat.buyCapital;
     }
 
 
