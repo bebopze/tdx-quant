@@ -30,7 +30,10 @@ public interface BacktestService {
      * @param btCompareDTO
      * @return
      */
-    void execBacktest(LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo,
+    void execBacktest(LocalDate startDate,
+                      LocalDate endDate,
+                      boolean resume,
+                      Integer batchNo,
                       BacktestCompareDTO btCompareDTO);
 
 
@@ -46,10 +49,20 @@ public interface BacktestService {
 
 
     Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
-                   List<String> buyConList, LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
+                   List<String> buyConList,
+                   LocalDate startDate,
+                   LocalDate endDate,
+                   boolean resume,
+                   Integer batchNo,
+                   BacktestCompareDTO btCompareDTO);
+
 
     Long backtestTrade(TopBlockStrategyEnum topBlockStrategyEnum,
-                       LocalDate startDate, LocalDate endDate, boolean resume, Integer batchNo);
+                       LocalDate startDate,
+                       LocalDate endDate,
+                       boolean resume,
+                       Integer batchNo,
+                       BacktestCompareDTO btCompareDTO);
 
     void checkBacktest(Long taskId);
 

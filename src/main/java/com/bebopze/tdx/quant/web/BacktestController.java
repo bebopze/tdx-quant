@@ -50,7 +50,7 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -82,7 +82,7 @@ public class BacktestController {
 
 
     @Operation(summary = "回测", description = "回测task")
-    @GetMapping("/exec2")
+    @PostMapping("/exec2")
     public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
                                   @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
 
@@ -99,12 +99,16 @@ public class BacktestController {
                                   @RequestParam(defaultValue = "true") boolean resume,
 
                                   @Schema(description = "任务批次号（resume=true 生效）", example = "0")
-                                  @RequestParam(required = false) Integer batchNo) {
+                                  @RequestParam(required = false) Integer batchNo,
+
+
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
+                                  @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
         List<String> _buyConList = ConvertUtil.str2List(buyConList);
 
-        return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate, resume, batchNo));
+        return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate, resume, batchNo, btCompareDTO));
     }
 
 
@@ -117,10 +121,14 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
 
                                       @Schema(description = "回测-结束时间", example = "2100-12-31")
-                                      @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
+                                      @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-        return Result.SUC(backTestService.backtestTrade(topBlockStrategyEnum, startDate, endDate, false, 0));
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
+                                      @RequestBody BacktestCompareDTO btCompareDTO) {
+
+
+        return Result.SUC(backTestService.backtestTrade(topBlockStrategyEnum, startDate, endDate, false, 0, btCompareDTO));
     }
 
 
