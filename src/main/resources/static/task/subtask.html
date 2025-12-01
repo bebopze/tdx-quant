@@ -517,7 +517,7 @@
     }
 
     function fillStockKlineAll() {
-        const updateType = document.getElementById('stockUpdateType').value;
+        const updateType = document.getElementById('updateType').value;
         callApi(`/api/parser/tdxdata/fill/stockKlineAll?updateType=${updateType}`,
             `全部个股行情更新(${updateType === '1' ? '全量' : '增量'})`);
     }
