@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
@@ -157,131 +158,200 @@ public class BacktestSellStrategy implements SellStrategy {
             }
 
 
-            ExtDataDTO extDataDTO = fun.getExtDataDTOList().get(idx);
-
-
-            // -------------------------------------------
-
-
-            // 个股   B-signal     ->     主线板块     ->     月空/SSF空/MA20空       =>       个股  ->  S / 减半仓
-
-            //        ==>       走弱的   前期 【主线板块】 加速出清     =>     清理  掉出【主线板块】 -  对应的个股     ->     加快 自动 【主线板块 切换】
-
-
-            boolean S_topBlock = S_topBlock(stockCode, topBlockStrategyEnum, data, tradeDate);
-
-            if (S_topBlock) {
-                // log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , S_topBlock : {}", tradeDate, stockCode, S_topBlock);
-                // sell_infoMap.put(stockCode, "板块S" + ",idx-" + idx);
-                sell_infoMap.put(stockCode, SellStrategyEnum.S22);
-                return true;
-            }
-
-
-            // -------------------------------------------
-
-
-            // -------------------------------------------
-
-
-            // 是否淘汰
-            // boolean flag_S = false;
-
-
-            // -------------------------------------------
-
-
-            // 月空
-            boolean 月空 = !extDataArrDTO.月多[idx];
-            boolean MA20空 = extDataArrDTO.MA20空[idx];
-            if (月空 && MA20空) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.月空_MA20空);
-                return true;
-            }
-
-
-            // MA20空
-            if (MA20空) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.MA20空);
-                return true;
-            }
-
-
-            // SSF空
-            boolean SSF空 = extDataArrDTO.SSF空[idx];
-            if (SSF空) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.SSF空);
-                return true;
-            }
-
-
-            // 跌停
-            boolean 跌停 = extDataArrDTO.跌停[idx];
-            boolean MA5空 = extDataArrDTO.MA5空[idx];
-            boolean MA10空 = extDataArrDTO.MA10空[idx];
-            if (跌停 && MA5空 && MA10空) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.跌停_MA5空_MA10空);
-                return true;
-            }
-
-
-            // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
-            boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
-            if (高位爆量上影大阴) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
-                return true;
-            }
-
-
-            // 偏离率 > 25%
-            double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
-            int limit = fun.is20CM() ? 30 : 25;
-            if (C_SSF_偏离率 > limit) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.C_SSF_偏离率);
-                return true;
-            }
-
-
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // 偏离率 > 60%
-            double C_短期MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
-            double C_中期MA_偏离率 = extDataDTO.getC_中期MA_偏离率();
-            double C_长期MA_偏离率 = extDataDTO.getC_长期MA_偏离率();
+            boolean signal_S = signal_S(stockCode, topBlockStrategyEnum, data, tradeDate, sell_infoMap, extDataArrDTO, idx, fun);
 
 
-            C_MA_Ratio c_ma_ratio = c_ma_ratio(extDataDTO.getKlineType(), fun.chgPctLimit());
+            if (signal_S) {
 
 
-            if (C_短期MA_偏离率 > c_ma_ratio.short_MA_Ratio) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.C_短期MA_偏离率);
-                return true;
+//                // ------------------------------- S + 跌停  ->  无法卖出（特殊处理【最简化处理】）❌❌❌---------------------
+//
+//
+//                // 当日跌停 -> 无法卖出
+//                boolean today_跌停 = extDataArrDTO.跌停[idx];
+//
+//
+//                if (today_跌停 && idx < fun.getMaxIdx()) {
+//                    KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+//
+//                    double today_close = klineArrDTO.close[idx];
+//                    double next_open = klineArrDTO.open[idx + 1];
+//
+//
+//                    // today_close = next_open   ❌❌❌
+//                    data.stock__dateCloseMap.get(stockCode).put(tradeDate, next_open);
+//                    // BUG：S->B阶段 改价     =>     S前阶段 用于计算 [总资金/S前_持仓市值] 的 close   与   SB阶段 的 close（next_open）前后不一致❗❗❗
+//                    //                  today_close  >  next_open       =>       S前_总资金（全程不变）  >   SB_持仓市值  +  SB_可用资金
+//                    //                  today_close  <  next_open       =>       S前_总资金（全程不变）  <   SB_持仓市值  +  SB_可用资金
+//
+//
+//                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [today_close]=[next_open]     >>>     [{}-{}] , {} , today_close : {} , next_open : {}",
+//                             stockCode, stockDO.getName(), tradeDate, today_close, next_open);
+//                }
             }
 
-            if (C_中期MA_偏离率 > c_ma_ratio.medium_MA_Ratio) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.C_中期MA_偏离率);
-                return true;
-            }
 
-            if (C_长期MA_偏离率 > c_ma_ratio.long_MA_Ratio) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.C_长期MA_偏离率);
-                return true;
-            }
+            return signal_S;
 
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // TODO     最大 亏损线  ->  -7% 止损
-
-
-            return false;
 
         }).collect(Collectors.toSet());
 
 
         return sell__stockCodeSet;
+    }
+
+    private boolean signal_S(String stockCode,
+                             TopBlockStrategyEnum topBlockStrategyEnum,
+                             BacktestCache data,
+                             LocalDate tradeDate,
+                             Map<String, SellStrategyEnum> sell_infoMap,
+                             ExtDataArrDTO extDataArrDTO,
+                             Integer idx,
+                             StockFun fun) {
+
+
+//        ExtDataDTO extDataDTO = fun.getExtDataDTOList().get(idx);
+
+
+        // ---------------------------------------------------------------------------------------------------------
+
+
+        // -------------------------------------------
+
+
+        // 个股   B-signal     ->     主线板块     ->     月空/SSF空/MA20空       =>       个股  ->  S / 减半仓
+
+        //        ==>       走弱的   前期 【主线板块】 加速出清     =>     清理  掉出【主线板块】 -  对应的个股     ->     加快 自动 【主线板块 切换】
+
+
+        boolean S_topBlock = S_topBlock(stockCode, topBlockStrategyEnum, data, tradeDate);
+
+        if (S_topBlock) {
+            // log.info("rule - S_topBlock     >>>     [{}] , stockCode : {} , S_topBlock : {}", tradeDate, stockCode, S_topBlock);
+            // sell_infoMap.put(stockCode, "板块S" + ",idx-" + idx);
+            sell_infoMap.put(stockCode, SellStrategyEnum.S22);
+            return true;
+        }
+
+
+        // -------------------------------------------
+
+
+        // -------------------------------------------
+
+
+        // 是否淘汰
+        // boolean flag_S = false;
+
+
+        // ------------------------------------------- 破位 ---------------------------------------------------------
+
+
+        // 月空
+        boolean 月空 = !extDataArrDTO.月多[idx];
+        boolean MA20空 = extDataArrDTO.MA20空[idx];
+        if (月空 && MA20空) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.月空_MA20空);
+            return true;
+        }
+
+
+        // MA20空
+        if (MA20空) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.MA20空);
+            return true;
+        }
+
+
+        // SSF空
+        boolean SSF空 = extDataArrDTO.SSF空[idx];
+        if (SSF空) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.SSF空);
+            return true;
+        }
+
+
+        // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
+        boolean 高位爆量上影大阴 = extDataArrDTO.高位爆量上影大阴[idx];
+        if (高位爆量上影大阴) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
+            return true;
+        }
+
+
+        // ------------------------------------------- 破位 + 跌停 --------------------------------------------------
+
+
+        boolean 跌停 = extDataArrDTO.跌停[idx];
+        boolean MA5空 = extDataArrDTO.MA5空[idx];
+        boolean MA10空 = extDataArrDTO.MA10空[idx];
+        if (跌停 && MA5空 && MA10空) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.跌停_MA5空_MA10空); // TODO   跌停 是否必要？？？   ->   MA5空_MA10空
+            return true;
+        }
+
+
+        // ------------------------------------------- 高抛 ---------------------------------------------------------
+
+
+        // 偏离率 > 25%
+        double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
+        int limit_C_SSF_偏离率 = fun.is20CM() ? 35 : 30;   // 300346（2021-07-30）
+        if (C_SSF_偏离率 > limit_C_SSF_偏离率) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.C_SSF_偏离率);
+            return true;
+        }
+
+
+        double H_SSF_偏离率 = extDataArrDTO.H_SSF_偏离率[idx];
+        int limit_H_SSF_偏离率 = fun.is20CM() ? 40 : 35;   // 300346（2021-07-30）
+        if (H_SSF_偏离率 > limit_H_SSF_偏离率) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.H_SSF_偏离率);
+            return true;
+        }
+
+
+        // ---------------------------------------------------------------------------------------------------------
+
+
+//            // 偏离率 > 60%
+//            double C_短期MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
+//            double C_中期MA_偏离率 = extDataDTO.getC_中期MA_偏离率();
+//            double C_长期MA_偏离率 = extDataDTO.getC_长期MA_偏离率();
+//
+//
+//            C_MA_Ratio c_ma_ratio = c_ma_ratio(extDataDTO.getKlineType(), fun.chgPctLimit());
+//            if (c_ma_ratio == null) {
+//                return false;
+//            }
+//
+//
+//            if (C_短期MA_偏离率 > c_ma_ratio.short_MA_Ratio) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.C_短期MA_偏离率);
+//                return true;
+//            }
+//
+//            if (C_中期MA_偏离率 > c_ma_ratio.medium_MA_Ratio) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.C_中期MA_偏离率);
+//                return true;
+//            }
+//
+//            if (C_长期MA_偏离率 > c_ma_ratio.long_MA_Ratio) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.C_长期MA_偏离率);
+//                return true;
+//            }
+
+
+        // ---------------------------------------------------------------------------------------------------------
+
+
+        // TODO     最大 亏损线  ->  -7% 止损
+
+
+        return false;
     }
 
     private C_MA_Ratio c_ma_ratio(int klineType, Integer chgPctLimit) {
@@ -370,6 +440,8 @@ public class BacktestSellStrategy implements SellStrategy {
                     chgPctLimit == 10 ? 25 :
                             chgPctLimit == 20 ? 35 :
                                     chgPctLimit == 30 ? 45 : 50;
+        } else {
+            return null;
         }
 
 
