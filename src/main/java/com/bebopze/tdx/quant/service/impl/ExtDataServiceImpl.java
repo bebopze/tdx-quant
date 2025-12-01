@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
-import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -149,7 +148,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         data.stockDOList = baseStockService.listAllKline();
-        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHis()) /*&& e.getType() == 1*/).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHisStr()) /*&& e.getType() == 1*/).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -165,7 +164,8 @@ public class ExtDataServiceImpl implements ExtDataService {
                 // klineHis   ->   最后N条
                 List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N);
 
-                e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+                // e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+                e.setKlineDTOList(klineDTOList);
 
 
                 // -----------------------------------------------------------------------------
@@ -186,7 +186,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 空行情 过滤（时间段内 -> 未上市）
-        // data.stockDOList = data.stockDOList.parallelStream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
+        // // data.stockDOList = data.stockDOList.parallelStream().filter(e -> !Objects.equals("[]", e.getKlineHisStr())).collect(Collectors.toList());
+        // data.stockDOList = data.stockDOList.parallelStream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
         // -----------------------------------------------------------------------------
@@ -309,7 +310,7 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250 = RPS250.get(code);
 
 
-            List<ExtDataDTO> dtoList = new ArrayList<>(length);
+            List<ExtDataDTO> new_dtoList = new ArrayList<>(length);
             for (int i = 0; i < length; i++) {
 
                 ExtDataDTO dto = new ExtDataDTO();
@@ -320,11 +321,11 @@ public class ExtDataServiceImpl implements ExtDataService {
                 dto.setRps120(of(rps120[i]));
                 dto.setRps250(of(rps250[i]));
 
-                dtoList.add(dto);
+                new_dtoList.add(dto);
             }
 
 
-            data.extDataMap.put(code, dtoList);
+            data.extDataMap.put(code, new_dtoList);
         });
     }
 
@@ -376,7 +377,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // fill -> new_RPS（后续计算 RPS相关指标）
-        stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
+        // stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
+        stockDO.setExtDataDTOList(new_extDataDTOList);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -405,9 +407,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         BaseStockDO entity = new BaseStockDO();
         entity.setId(data.codeIdMap.get(code));
 
-        // entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList))); // 覆盖更新
-        entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
-
+        // entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList))); // 覆盖更新
+        entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
 
         // 更新 -> DB
         baseStockService.updateById(entity);
@@ -805,12 +806,19 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         data.blockDOList.parallelStream().forEach(blockDO -> {
 
+            if (blockDO == null) {
+                log.warn("Found null element in data.blockDOList, skipping...");
+                return;
+            }
+
+
             String code = blockDO.getCode();
-            List<ExtDataDTO> dtoList = data.extDataMap.get(code);
+            List<ExtDataDTO> new_dtoList = data.extDataMap.get(code);   // 此时 -> 仅计算了 RPS
 
 
             // fill -> RPS
-            blockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
+            // blockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
+            blockDO.setExtDataDTOList(new_dtoList);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -818,7 +826,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-            calcExtData(new BlockFun(code, blockDO), dtoList, 87);
+            calcExtData(new BlockFun(code, blockDO), new_dtoList, 87);
 
 
             log.info("blockFun 指标计算 - 板块 suc     >>>     code : {} , count : {} , blockTime : {} , totalTime : {}",
@@ -826,7 +834,7 @@ public class ExtDataServiceImpl implements ExtDataService {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            List<String> extDataList = ConvertStockExtData.dtoList2StrList(dtoList);
+            List<String> extDataList = ConvertStockExtData.dtoList2StrList(new_dtoList);
 
 
             BaseBlockDO entity = new BaseBlockDO();
@@ -903,8 +911,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         Map<String, List<ExtDataDTO>> extDataMap = Maps.newConcurrentMap();
 
 
-        List<BaseStockDO> stockDOList = Collections.synchronizedList(Lists.newArrayList());
-        List<BaseBlockDO> blockDOList = Collections.synchronizedList(Lists.newArrayList());
+        List<BaseStockDO> stockDOList = Lists.newArrayList();
+        List<BaseBlockDO> blockDOList = Lists.newArrayList();
 
 
         Map<String, TreeMap<LocalDate, Double>> codePriceMap = Maps.newConcurrentMap();
@@ -953,9 +961,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         data.codeDateMap.remove(code);
         data.codeCloseMap.remove(code);
         data.codeIdMap.remove(code);
-
-        data.stockDOList.removeIf(e -> e != null && Objects.equals(e.getCode(), code));
-        data.blockDOList.removeIf(e -> e != null && Objects.equals(e.getCode(), code));
     }
 
 
