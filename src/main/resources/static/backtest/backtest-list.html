@@ -206,6 +206,14 @@
                         <span class="sort-order" id="order-stockPosPctLimit"></span>
                     </div>
                 </th>
+                <th data-key="ztFlag">
+                    涨停
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-ztFlag"></span>
+                    </div>
+                </th>
                 <th data-key="startDate">
                     回测周期
                     <div class="sort-controls">
@@ -364,7 +372,7 @@
     let sortFields = []; // [{key: 'id', dir: 'asc'}, ...]
 
     // 定义字段类型
-    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'scoreSortN', 'stockPosPctLimit'];
+    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'scoreSortN', 'stockPosPctLimit', 'ztFlag'];
     const numberFields = ['finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
 
     function formatDateTimeLocal(value) {
@@ -511,6 +519,7 @@
               <td>${task.topBlockStrategy}</td>
               <td>${task.extData?.scoreSortN || ''}</td>
               <td>${task.extData?.stockPosPctLimit || ''}</td>
+              <td>${task.extData?.ztFlag || '全部'}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
               <td>${task.finalCapital}</td>
@@ -695,6 +704,7 @@
             'topBlockStrategy': '主线策略',
             'scoreSortN': 'scoreSortN',
             'stockPosPctLimit': '个股仓位限制%',
+            'ztFlag': '涨停',
             'startDate': '回测周期',
             'initialCapital': '初始资金',
             'finalCapital': '结束资金',
@@ -728,7 +738,7 @@
 
         if (!confirm('确定要删除这些任务吗？')) return;
 
-        fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.join(',')}`, {method: 'GET'})
+        ApiUtils.fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.join(',')}`, {method: 'GET'})
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -762,7 +772,8 @@
 
         // 构造 CSV 内容
         const headers = [
-            "任务ID", "批次号", "B策略", "S策略", "主线策略", "scoreSortN", "个股仓位限制%",
+            "任务ID", "批次号", "B策略", "S策略", "主线策略",
+            "scoreSortN", "个股仓位限制%", "涨停",
             "开始日期", "结束日期", "初始资金", "结束资金", "初始净值", "结束净值",
             "总天数", "交易总笔数", "交易总金额", "总收益率%", "年化%", "胜率%",
             "盈亏比", "最大回撤%", "盈利天数%", "夏普比率", "创建时间", "结束时间", "耗时"
@@ -778,6 +789,7 @@
                 task.topBlockStrategy,
                 task.extData?.scoreSortN ?? '',
                 task.extData?.stockPosPctLimit ?? '',
+                task.extData?.ztFlag ?? '全部',
                 task.startDate,
                 task.endDate,
                 task.initialCapital,
