@@ -10,10 +10,7 @@ import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineListResp;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineTrendResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.common.util.EventStreamUtil;
-import com.bebopze.tdx.quant.common.util.HttpUtil;
-import com.bebopze.tdx.quant.common.util.SleepUtils;
+import com.bebopze.tdx.quant.common.util.*;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -69,19 +66,23 @@ public class EastMoneyKlineAPI {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * 东方财富   ->   批量拉取  全A（ETF） 实时行情
+     * 东方财富   ->   批量拉取  全A（ETF） 实时行情          // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
+     *
+     *
+     * 无法使用：封IP
      *
      * @return
      */
+    @Deprecated
     public static List<StockSnapshotKlineDTO> pullAllStockETFSnapshotKline() {
 
-        // 全A
+        // 全A         TODO     优化点：后续改为（KlineAPI  -> 多API【东财/同花顺/雪球】 调用     ->     防止 IP封禁）
         List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllStockSnapshotKline();
-        // 全部ETF
-        List<StockSnapshotKlineDTO> ETFSnapshotKlineDTOS = pullAllETFSnapshotKline();
+        // 全部ETF     TODO    后续改为 ETF 指定code 拉取（暂时 先下架 ETF行情 拉取）
+        // List<StockSnapshotKlineDTO> ETFSnapshotKlineDTOS = pullAllETFSnapshotKline();
 
 
-        stockSnapshotKlineDTOS.addAll(ETFSnapshotKlineDTOS);
+        // stockSnapshotKlineDTOS.addAll(ETFSnapshotKlineDTOS);
 
 
         Assert.notEmpty(stockSnapshotKlineDTOS, String.format("pullAllStockETFSnapshotKline - err     >>>     东方财富 -> 批量拉取 全A（ETF）实时行情 异常 , size : %s",
@@ -96,10 +97,14 @@ public class EastMoneyKlineAPI {
 
 
     /**
-     * 东方财富  ->  批量拉取 全A 实时行情
+     * 东方财富  ->  批量拉取 全A 实时行情               // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
+     *
+     *
+     * 无法使用：封IP
      *
      * @return
      */
+    @Deprecated
     public static List<StockSnapshotKlineDTO> pullAllStockSnapshotKline() {
 
 
@@ -120,7 +125,9 @@ public class EastMoneyKlineAPI {
 
             String url = allStockKlineUrl(pageNum++, pageSize);
 
-            String result = HttpUtil.doGet(url, null);
+            // String result = HttpUtil.doGet(url, null);
+            // String result = OptimizedHttpUtil.doGet(url);
+            String result = HttpUtil.doGet2(url, null);
 
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
@@ -163,8 +170,8 @@ public class EastMoneyKlineAPI {
             }
 
 
-            // 间隔 0.15s ~ 0.3s
-            SleepUtils.randomSleep(150, 300);
+            // 间隔 500ms ~ 1s
+            SleepUtils.randomSleep(1000, 3000);
         }
 
 
@@ -253,8 +260,8 @@ public class EastMoneyKlineAPI {
             }
 
 
-            // 间隔 0.15s ~ 0.3s
-            SleepUtils.randomSleep(150, 300);
+            // 间隔 500ms ~ 1s
+            SleepUtils.randomSleep(500, 1000);
         }
 
 
@@ -267,7 +274,7 @@ public class EastMoneyKlineAPI {
      *
      * @return
      */
-    private static LocalDate lastTradeDate() {
+    static LocalDate lastTradeDate() {
         SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot("300059");
         return resp.getRealtimequote().getDate();
     }

@@ -93,6 +93,10 @@ public class PropsUtil {
         return getProperty("eastmoney.cookie");
     }
 
+    public static String getCookie2() {
+        return getProperty("eastmoney.cookie2");
+    }
+
 
     public static void refreshEastmoneySession(String validatekey, String cookie) {
         props.setProperty("eastmoney.validatekey", validatekey);

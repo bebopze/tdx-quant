@@ -21,6 +21,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,84 @@ public class HttpUtil {
     private static final CloseableHttpClient CLIENT = HttpClients.custom()
                                                                  .setDefaultRequestConfig(DEFAULT_CONFIG)
                                                                  .build();
+
+
+    /**
+     * 发送 GET 请求
+     *
+     * @param url     完整请求 URL
+     * @param headers 可选请求头
+     * @return 响应体字符串
+     */
+    @SneakyThrows
+    public static String doGet2(String url, Map<String, String> headers) {
+
+        HttpGet httpGet = new HttpGet(url);
+
+
+        httpGet.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+//        httpGet.setHeader("Accept-Encoding", "gzip, deflate, br, zstd");
+        httpGet.setHeader("Accept-Encoding", "gzip");
+        httpGet.setHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7");
+        httpGet.setHeader("Cache-Control", "max-age=0");
+        httpGet.setHeader("Connection", "keep-alive");
+        httpGet.setHeader("Host", "push2.eastmoney.com");
+        httpGet.setHeader("Sec-Fetch-Dest", "document");
+        httpGet.setHeader("Sec-Fetch-Mode", "navigate");
+        httpGet.setHeader("Sec-Fetch-Site", "none");
+        httpGet.setHeader("Sec-Fetch-User", "?1");
+        httpGet.setHeader("Upgrade-Insecure-Requests", "1");
+        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36");
+        httpGet.setHeader("sec-ch-ua", "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"");
+        httpGet.setHeader("sec-ch-ua-mobile", "?0");
+        httpGet.setHeader("sec-ch-ua-platform", "\"macOS\"");
+
+
+        httpGet.setHeader("Cookie", PropsUtil.getCookie2());
+
+
+        // 无痕模式
+//        httpGet.setHeader("Accept-Language", "zh-CN,zh;q=0.9");
+//        httpGet.setHeader("Cache-Control", "max-age=0");
+        // httpGet.removeHeaders("Cookie");
+
+
+        // httpGet.setHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36");
+
+        if (MapUtils.isNotEmpty(headers)) {
+            headers.forEach(httpGet::setHeader);
+        }
+
+
+        int[] status = {0};
+        ResponseHandler<String> handler = response -> {
+            status[0] = response.getStatusLine().getStatusCode();
+            HttpEntity entity = response.getEntity();
+            return entity != null ? EntityUtils.toString(entity, "UTF-8") : null;
+        };
+
+
+        String result = "";
+        try {
+            result = CLIENT.execute(httpGet, handler);
+        } catch (Exception ex) {
+            log.error("doGet - err     >>>     url : {} , result : {} , errMsg : {}", url, result, ex.getMessage(), ex);
+            throw ex;
+        }
+
+
+        log.info("status : {}", status[0]);
+
+        if (result.contains("<!DOCTYPE HTML PUBLIC")) {
+            log.error("doGet     cookie过期，请重新登录！   >>>     url : {}, result : {}", url, result);
+            throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
+        } else {
+            log.info("doGet     >>>     url : {} , result : {}", url, result);
+        }
+
+
+        return result;
+    }
 
 
     /**
