@@ -564,8 +564,20 @@
                             <th onclick="sortTable('pct', 'count')">上榜涨幅(%)<span class="sort-icon"
                                                                                      id="sortPctCount"></span>
                             </th>
-                            <th onclick="sortTable('avgPct', 'count')">平均涨幅(%)<span class="sort-icon"
+                            <th onclick="sortTable('avgPct', 'count')">日均涨幅(%)<span class="sort-icon"
                                                                                         id="sortAvgPctCount"></span>
+                            </th>
+                            <th onclick="sortTable('tradeAmount', 'count')">上榜交易总金额<span class="sort-icon"
+                                                                                                id="sortTradeAmountCount"></span>
+                            </th>
+                            <th onclick="sortTable('tradeAmountPct', 'count')">上榜交易总金额占比(%)
+                                <span class="sort-icon" id="sortTradeAmountPctCount"></span>
+                            </th>
+                            <th onclick="sortTable('profitAmount', 'count')">上榜盈亏总金额<span class="sort-icon"
+                                                                                                 id="sortProfitAmountCount"></span>
+                            </th>
+                            <th onclick="sortTable('profitAmountPct', 'count')">上榜盈亏总金额占比(%)
+                                <span class="sort-icon" id="sortProfitAmountPctCount"></span>
                             </th>
                             <th onclick="sortTable('buySignalList', 'count')">B信号<span class="sort-icon"
                                                                                          id="sortBuySignalListCount"></span>
@@ -1151,8 +1163,8 @@
         }
         // 1. 过滤出当前日期的记录 (数据已经是预排序状态)
         let filtered = analysis.countDTOList;
-        // 2. 如果用户有点击排序，则对当前日期的记录进行排序 (保持原有逻辑)
-        if (column && (column !== 'pct' || order !== 'desc')) { // 如果不是默认排序，则重新排序
+        // 2. 排序
+        if (column && order) {
             sort(filtered, state);
         }
         // 3. 渲染表格
@@ -1177,6 +1189,10 @@
                 <td>${item.count}</td>
                 <td>${item.pct}</td>
                 <td>${item.avgPct}</td>
+                <td>${item.tradeAmount}</td>
+                <td>${item.tradeAmountPct}</td>
+                <td>${item.profitAmount}</td>
+                <td>${item.profitAmountPct}</td>
                 <td class="trade-signal-cell">${formattedBuySignal}</td>
                 <td class="trade-signal-cell">${formattedSellSignal}</td>
             `;
