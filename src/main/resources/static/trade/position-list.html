@@ -712,6 +712,15 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterPositions_inTopBlockFlag">持仓状态：</label>
+                            <select id="filterPositions_posFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">持仓</option>
+                                <option value="false">清仓</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterPositions_curProfitratio__min"
                                    class="me-2">当日盈亏比例(%):</label>
                             <input type="number" id="filterPositions_curProfitratio__min"
@@ -2126,6 +2135,7 @@
         let sotckType = document.getElementById('filterPositions_stockType').value;
         let topStockFlag = document.getElementById('filterPositions_topStockFlag').value;
         let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
+        let posFlag = document.getElementById('filterPositions_posFlag').value;
         let curProfitratio__min = document.getElementById('filterPositions_curProfitratio__min').value;
         let curProfitratio__max = document.getElementById('filterPositions_curProfitratio__max').value;
 
@@ -2141,6 +2151,10 @@
         if (inTopBlockFlag) {
             inTopBlockFlag = toBoolean(inTopBlockFlag);
             filterPositions = filterPositions.filter(position => position.inTopBlockFlag === inTopBlockFlag);
+        }
+        if (posFlag) {
+            posFlag = toBoolean(posFlag);
+            filterPositions = filterPositions.filter(position => position.posFlag === posFlag);
         }
         if (curProfitratio__min) {
             curProfitratio__min = toNumber(curProfitratio__min) * 0.01;
@@ -4765,6 +4779,7 @@
         document.getElementById('filterPositions_stockType').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_topStockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_inTopBlockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_posFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_curProfitratio__min').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_curProfitratio__max').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions());
