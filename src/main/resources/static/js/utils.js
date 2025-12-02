@@ -53,6 +53,30 @@ function toBoolean(strOrBool) {
 
 
 /**
+ * 股票代码 对应的 雪球（沪深京）市场前缀
+ *
+ * @param code 股票代码
+ * @returns {string}  市场前缀
+ */
+function xueqiuMarket(code) {
+    // 修复：处理 null、undefined 等边缘情况
+    if (code === null || code === undefined || code === '') {
+        console.warn('xueqiuMarket: 接收到无效的股票代码', code);
+        return 'SH';
+    }
+
+    // 6/5
+    return code.startsWith("6") || code.startsWith("5") ? "SH" :
+        // 0/3/1
+        code.startsWith("0") || code.startsWith("3") || code.startsWith("1") ? "SZ" :
+            // 9
+            code.startsWith("9") ? "BJ" :
+                // 默认 SH
+                "SH";
+}
+
+
+/**
  * 通用排序（通过 指定列字段名 和 排序顺序）
  *
  * @param sortedList 要排序的列表

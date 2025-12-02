@@ -144,6 +144,13 @@
         }
 
 
+        /* --- 新增：移除证券代码链接下划线 (使用类名) --- */
+        /* 移除持仓列表和当日委托列表中证券代码链接的下划线 */
+        .stock-code-link {
+            text-decoration: none;
+        }
+
+
         /* --- 限制表格容器高度，防止卡片被撑开 --- */
         /* 为包含表格的 card-body 设置最大高度和滚动条 */
         /* 针对特定的卡片内容区域 */
@@ -1003,9 +1010,10 @@
         filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
+            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td> <!-- 序号列 -->
-                <td>${item.stockCode}</td>
+                <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stockCode}</a></td>
                 <td>${item.tradeDate}</td>
                 <td>${item.stockName}</td>
                 <td>${item.blockNamePath}</td>
@@ -1063,9 +1071,10 @@
         filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
+            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td> <!-- 序号列 -->
-                <td>${item.stockCode}</td>
+                <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stockCode}</a></td>
                 <td>${item.tradeDate}</td>
                 <td>${item.stockName}</td>
                 <td>${item.blockNamePath}</td>
@@ -1126,12 +1135,13 @@
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
             // 格式化交易信号
             const formattedSignal = formatTradeSignalDesc(item.tradeSignalDesc);
+            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td>${item.tradeDate}</td>
                 <td>${item.tradeType === 1 ? '买入' : '卖出'}</td>
                 <td class="trade-signal-cell">${formattedSignal}</td>
-                <td>${item.stockCode}</td>
+                <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stockCode}</a></td>
                 <td>${item.stockName}</td>
                 <td>${item.price}</td>
                 <td>${item.quantity}</td>
@@ -1182,9 +1192,11 @@
             const formattedBuySignal = item.buySignalList?.length ? item.buySignalList.join('<br>') : '<span style="color: gray;">无信号</span>';
             const formattedSellSignal = item.sellSignalList?.length ? item.sellSignalList.join('<br>') : '<span style="color: gray;">无信号</span>';
 
+            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
+
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td>
-                <td>${item.code}</td>
+                <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.code}</a></td>
                 <td>${item.name}</td>
                 <td>${item.count}</td>
                 <td>${item.pct}</td>
