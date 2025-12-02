@@ -1618,6 +1618,7 @@
                     <label for="dataSourceSelect" class="form-label">请选择要同步的数据源：</label>
                     <select class="form-select" id="dataSourceSelect">
                         <option value="CC">持仓列表</option>
+                        <option value="QC">清仓列表</option>
                         <option value="ZXBK(JX)">主线板块列表（机选）</option>
                         <option value="ZXGG(JX)">主线个股列表（机选）</option>
                         <option value="ZXBK(RX)">主线板块列表（人选）</option>
@@ -2435,8 +2436,11 @@
 
         // 根据选择的 code 确定对应的数据源
         if (selectedCode === 'CC') {
-            selectedData = positionsData;
+            selectedData = positionsData.filter(position => position.posFlag === true);
             dataSourceName = '持仓列表';
+        } else if (selectedCode === 'QC') {
+            selectedData = positionsData.filter(position => position.posFlag === false);
+            dataSourceName = '清仓列表';
         } else if (selectedCode === 'ZXBK(JX)') {
             selectedCode = 'ZXBK';
             selectedData = topBlocksData;
@@ -2461,6 +2465,9 @@
             const codeList = selectedData.map(item => {
                 // 根据不同数据源结构，获取正确的股票/板块代码字段
                 if (selectedCode === 'CC') {
+                    return item.stkcode;
+                }
+                if (selectedCode === 'QC') {
                     return item.stkcode;
                 } else if (selectedCode === 'ZXBK') {
                     return item.blockCode;
@@ -2495,8 +2502,11 @@
 
         // 再次确认选中的数据源
         if (selectedCode === 'CC') {
-            selectedData = positionsData;
+            selectedData = positionsData.filter(position => position.posFlag === true);
             dataSourceName = '持仓列表';
+        } else if (selectedCode === 'QC') {
+            selectedData = positionsData.filter(position => position.posFlag === false);
+            dataSourceName = '清仓列表';
         } else if (selectedCode === 'ZXBK(JX)') {
             selectedCode = 'ZXBK';
             selectedData = topBlocksData;
@@ -2523,6 +2533,8 @@
         // 提取对应数据源的代码列表
         let codeList = [];
         if (selectedCode === 'CC') {
+            codeList = selectedData.map(item => item.stkcode);
+        } else if (selectedCode === 'QC') {
             codeList = selectedData.map(item => item.stkcode);
         } else if (selectedCode === 'ZXBK') {
             codeList = selectedData.map(item => item.blockCode);
