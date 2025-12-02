@@ -1,14 +1,15 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
+import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -55,6 +56,9 @@ public class CcStockInfo implements Serializable {
     //     stktype: "股票",
     //     stktype_ex: "0"
     //  }
+
+
+    // -------------------------------------------------- 东方财富API ----------------------------------------------------
 
 
     // 成本价
@@ -110,7 +114,7 @@ public class CcStockInfo implements Serializable {
     private String stktype_ex;
 
 
-    // ---------------------------------------------------- 自定义字段 ---------------------------------------------------
+    // --------------------------------------------- 自定义字段（扩展） ---------------------------------------------------
 
 
     // 证券类型：1-股票；2-ETF；
@@ -172,11 +176,10 @@ public class CcStockInfo implements Serializable {
      * 是否   主线个股（板块-月多2）
      */
     private boolean topStockFlag = false;
-
     /**
      * 是否   IN 主线板块（板块-月多2）
      */
-    private boolean inTopBlockFlag;
+    private boolean inTopBlockFlag = false;
 
 
     /**
@@ -187,6 +190,19 @@ public class CcStockInfo implements Serializable {
 
     public boolean isInTopBlockFlag() {
         return !topBlockList.isEmpty();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 是否有 持仓（持仓数量 > 0）
+     */
+    private boolean posFlag = true;
+
+    public boolean isPosFlag() {
+        return stkbal > 0;
     }
 
 
