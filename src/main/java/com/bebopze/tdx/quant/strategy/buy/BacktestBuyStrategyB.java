@@ -327,7 +327,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
         // 个股   ->   IN 主线板块
-        List<String> filter__stockCodeList2 = filter__stockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
+        Set<String> filter__stockCodeSet2 = filter__stockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
             Set<String> blockCodeList = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
 
 
@@ -346,7 +346,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
             return block_B;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -354,14 +354,14 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
-        backtestBuyStrategyA.buyStrategy_ETF(filter__stockCodeList2, data, tradeDate, buy_infoMap, posRate);
+        backtestBuyStrategyA.buyStrategy_ETF(filter__stockCodeSet2, data, tradeDate, buy_infoMap, posRate);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // TODO     按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = scoreSort(filter__stockCodeList2, data, tradeDate, 20);
+        List<String> filterSort__stockCodeList = scoreSort(filter__stockCodeSet2, data, tradeDate, 20);
 
 
         return filterSort__stockCodeList;

@@ -147,8 +147,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        List<String> inTopBlock__stockCodeList = inTopBlock__stockCodeList(topBlockCodeSet, buy__topStock__codeList, data, tradeDate);
-        log.info("BacktestBuyStrategyC - inTopBlock__stockCodeList     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+        Set<String> inTopBlock__stockCodeSet = inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeList, data, tradeDate);
+        log.info("BacktestBuyStrategyC - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
         long start_4 = System.currentTimeMillis();
-        backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeList, data, tradeDate, buy_infoMap, posRate);
+        backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
         log.info("BacktestBuyStrategyC - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
 
@@ -174,8 +174,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
         // TODO   TEST
-        // List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeList, data, tradeDate, 100);
-        List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        // List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeSet, data, tradeDate, 100);
+        List<String> sort__stockCodeList = scoreSort(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategyC - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
@@ -192,15 +192,15 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @param tradeDate
      * @return
      */
-    public List<String> inTopBlock__stockCodeList(Set<String> topBlockCodeSet,
-                                                  List<String> topStock__codeList,
+    public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
+                                                List<String> topStock__codeList,
 
-                                                  BacktestCache data,
-                                                  LocalDate tradeDate) {
+                                                BacktestCache data,
+                                                LocalDate tradeDate) {
 
 
         // 强势个股   ->   IN 主线板块
-        List<String> inTopBlock__stockCodeList = topStock__codeList
+        Set<String> inTopBlock__stockCodeSet = topStock__codeList
                 .stream()
                 .filter(stockCode -> {
 
@@ -233,10 +233,10 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
                     return false;
-                }).collect(Collectors.toList());
+                }).collect(Collectors.toSet());
 
 
-        return inTopBlock__stockCodeList;
+        return inTopBlock__stockCodeSet;
     }
 
 
@@ -320,14 +320,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
             if (signal_B) {
-
                 buy__topStock__codeList.add(stockCode);
-
-
-                // ----------------------------------------------------- buySingleInfo
-
-
-                buySingleInfo(buy_infoMap, stockCode, data, idx, conMap);
+                buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
             }
         });
 
@@ -743,7 +737,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
     /**
-     * buySingleInfo
+     * buySignalInfo
      *
      * @param buy_infoMap
      * @param stockCode
@@ -751,7 +745,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @param idx
      * @param conMap
      */
-    private void buySingleInfo(Map<String, String> buy_infoMap,
+    private void buySignalInfo(Map<String, String> buy_infoMap,
                                String stockCode,
                                BacktestCache data,
                                Integer idx,
@@ -759,7 +753,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
         // 动态收集所有为 true 的信号名称，按固定顺序拼接
-        List<String> singleInfoList = Lists.newArrayList();
+        List<String> signalInfoList = Lists.newArrayList();
 
 
         // ---------------------------------------------------------------------------
@@ -768,8 +762,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // 行业板块
         String pthyLv2 = data.getPthyLv2(stockCode);
         String getYjhyLv1 = data.getYjhyLv1(stockCode);
-        singleInfoList.add(pthyLv2);
-        singleInfoList.add(getYjhyLv1 + "|");
+        signalInfoList.add(pthyLv2);
+        signalInfoList.add(getYjhyLv1 + "|");
 
 
         // ---------------------------------------------------------------------------
@@ -780,7 +774,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             // "N60日新高" - true/false
 
             if (v) {
-                singleInfoList.add(k);
+                signalInfoList.add(k);
             }
         });
 
@@ -788,14 +782,14 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // ---------------------------------------------------------------------------
 
 
-        singleInfoList.add("|idx-" + idx);
+        signalInfoList.add("|idx-" + idx);
 
 
         // ---------------------------------------------------------------------------
 
 
         // stockCode - infoList
-        buy_infoMap.put(stockCode, String.join(",", singleInfoList));
+        buy_infoMap.put(stockCode, String.join(",", signalInfoList));
     }
 
 
