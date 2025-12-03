@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,6 +37,7 @@ public interface SellStrategy {
      * @param tradeDate
      * @param positionStockCodeList
      * @param sell_infoMap
+     * @param btCompareDTO
      * @return
      */
     @TotalTime
@@ -45,6 +47,7 @@ public interface SellStrategy {
                      LocalDate tradeDate,
                      List<String> positionStockCodeList,
 
-                     Map<String, SellStrategyEnum> sell_infoMap);
+                     Map<String, SellStrategyEnum> sell_infoMap,
+                     BacktestCompareDTO btCompareDTO);
 
 }
