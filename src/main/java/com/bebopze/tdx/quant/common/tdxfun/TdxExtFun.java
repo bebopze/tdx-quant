@@ -1506,7 +1506,8 @@ public class TdxExtFun {
 
 
         // X_13:=  100 * C;
-        double[] X_13 = close;
+        double[] X_13 = new double[n];  // ✅ 分配新数组
+        // double[] X_13 = close;       // ❌❌❌bug：这会导致 close 数组的数据 被永久污染 扩大100倍（close = X_13  =>  X_13 *100）！！！❌❌❌
 
 
         // X_14:=  X_8  - X_9;
@@ -1541,7 +1542,7 @@ public class TdxExtFun {
 
 
             X_12[i] = X_12[i] * 100;
-            X_13[i] = X_13[i] * 100;
+            X_13[i] = close[i] * 100;   // ✅ 复制并放大
 
 
             double x_14 = x_8 - x_9;
