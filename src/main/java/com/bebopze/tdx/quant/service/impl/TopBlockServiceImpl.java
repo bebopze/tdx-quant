@@ -587,7 +587,11 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // today
-        todayInfo(date, dto);
+        try {
+            todayInfo(date, dto);
+        } catch (Exception e) {
+            log.error("todayInfo error: {}", e.getMessage(), e);
+        }
 
 
         // -------------------------------------------------------------------------------------------------------------
