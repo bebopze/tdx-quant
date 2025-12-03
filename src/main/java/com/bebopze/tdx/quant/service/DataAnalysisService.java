@@ -30,7 +30,7 @@ public interface DataAnalysisService {
     TopNAnalysisDTO top100(LocalDate startDate, LocalDate endDate, Integer topPoolType, Integer topStrategyType);
 
 
-    List<BtDailyReturnDO> calcDailyReturn(List<BtDailyReturnDO> dailyReturnDOList);
+    List<BtDailyReturnDO> calcDailyReturn(List<BtDailyReturnDO> dailyReturnDOList, boolean isMargin);
 
     TopPoolSumReturnDTO sumReturn(List<BtDailyReturnDO> dailyReturnDOList,
                                   List<BtTradeRecordDO> tradeRecordList,

@@ -43,9 +43,13 @@ public class BacktestAnalysisDTO {
     private List<BtPositionRecordDO> clearPositionRecordList;
 
     /**
-     * 收益记录
+     * 收益记录（普通账户）
      */
     private List<BtDailyReturnDO> dailyReturnList;
+    /**
+     * 收益记录（融资账户）
+     */
+    private List<BtDailyReturnDO> marginDailyReturnList;
 
 
     /**
@@ -62,6 +66,13 @@ public class BacktestAnalysisDTO {
      * 上榜 次数/涨幅 统计
      */
     private List<TopCountDTO> countDTOList;
+
+
+    // ------------------------------------------------------------------- TODO     单次 B-S TOP分析（单次BS TOP排名）
+
+
+
+
 
 
     // ------------------------------------------------------------------- 回撤记录
