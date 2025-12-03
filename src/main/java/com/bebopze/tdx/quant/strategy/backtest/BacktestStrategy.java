@@ -128,8 +128,18 @@ public class BacktestStrategy {
                          BacktestCompareDTO btCompareDTO) {
 
 
+        BacktestCompareDTO copy_btCompareDTO = new BacktestCompareDTO();
+        BeanUtils.copyProperties(btCompareDTO, copy_btCompareDTO);
+        copy_btCompareDTO.setBatchNo(batchNo);
+        copy_btCompareDTO.setTopBlockStrategyEnum(topBlockStrategyEnum);
+        copy_btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
+        copy_btCompareDTO.setSellConSet(Sets.newHashSet(sellConList));
+        copy_btCompareDTO.setStartDate(startDate);
+        copy_btCompareDTO.setEndDate(endDate);
+
+
         // 回测-对照组 可变参数
-        BacktestStrategy.btCompareDTO.set(btCompareDTO);
+        BacktestStrategy.btCompareDTO.set(copy_btCompareDTO);
 
 
         try {
@@ -498,7 +508,7 @@ public class BacktestStrategy {
 
 
         // 卖出策略
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, x.get().positionStockCodeList, sell_infoMap);
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, x.get().positionStockCodeList, sell_infoMap, btCompareDTO.get());
 
         log.info("S策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -806,7 +816,7 @@ public class BacktestStrategy {
 
 
         // 当前 buyList   ->   是否 与 S策略 相互冲突       =>       过滤出 冲突个股（sellList）
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, sell_infoMap);
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, sell_infoMap, btCompareDTO.get());
 
 
         // buyList   ->   remove  冲突个股（sellList）

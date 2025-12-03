@@ -1,7 +1,13 @@
 package com.bebopze.tdx.quant.common.domain.dto.backtest;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import java.time.LocalDate;
+import java.util.Set;
 
 
 /**
@@ -40,4 +46,33 @@ public class BacktestCompareDTO {
      */
     @Schema(description = "是否涨停：true-涨停（涨停个股Close 根本买不进去）；false-未涨停（Close 可正常买入）；null-不限；", example = "false")
     private Boolean ztFlag = false;
+
+
+    // -------------------------------------- 全局参数 上下文传递（不参与序列化）---------------------------------------------
+
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private Integer batchNo;
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private TopBlockStrategyEnum topBlockStrategyEnum;
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private Set<String> buyConSet;
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private Set<String> sellConSet;
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private LocalDate startDate;
+
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private LocalDate endDate;
+
 }
