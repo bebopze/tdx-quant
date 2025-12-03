@@ -362,9 +362,7 @@ public class BacktestServiceImpl implements BacktestService {
             Arrays.stream(TopBlockStrategyEnum.values())
                   // 暂无 LV1 主线策略
                   .filter(e -> !e.equals(TopBlockStrategyEnum.LV1))
-                  // TODO   TEST
-                  // .filter(e -> e.equals(TopBlockStrategyEnum.LV3))
-                  // TODO   TEST
+                  .filter(e -> e.equals(TopBlockStrategyEnum.LV3))
                   .filter(e -> !finishSet.contains(getKey(finalBatchNo, e.getDesc(), buyConList, sellConList)))
                   .forEach(topBlockStrategyEnum -> {
 
@@ -481,7 +479,8 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 每日收益记录（根据 startDate -> 重新等比计算 nav、capital、...）
-        dto.setDailyReturnList(dataAnalysisService.calcDailyReturn(btDailyReturnService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate)));
+        dto.setDailyReturnList(dataAnalysisService.calcDailyReturn(btDailyReturnService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate), false));
+        dto.setMarginDailyReturnList(dataAnalysisService.calcDailyReturn(btDailyReturnService.listByTaskIdAndTradeDateRange(taskId, startDate, endDate), true));
 
 
         // 汇总结果（胜率/盈亏比、最大回撤、夏普比率、年化收益率、...）

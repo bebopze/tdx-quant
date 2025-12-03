@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import static com.bebopze.tdx.quant.common.convert.ConvertDate.tradeDateIncr;
 import static com.bebopze.tdx.quant.common.util.NumUtil.double2Decimal;
 import static com.bebopze.tdx.quant.common.util.NumUtil.of;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
 
 /**
@@ -766,7 +767,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             // 卖出策略
-            Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, prev_posList, sell_infoMap);
+            Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, prev_posList, sell_infoMap, btCompareDTO.get());
 
             log.info("S策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                      tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -1474,7 +1475,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
     @Override
-    public List<BtDailyReturnDO> calcDailyReturn(List<BtDailyReturnDO> dailyReturnDOList) {
+    public List<BtDailyReturnDO> calcDailyReturn(List<BtDailyReturnDO> dailyReturnDOList, boolean isMargin) {
         double nav = 1.0;
         double capital = 100_0000;
         double dailyReturn = 0.0;
@@ -1486,12 +1487,16 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         double sellCapital = 0.0;
 
 
+        // 仓位保证金比例（融资账户 = 普通账户 x 2）
+        double marginRatio = isMargin ? 1.85 : 1.0;   // 实际范围：1.7 ~ 2.15
+
+
         for (int i = 0; i < dailyReturnDOList.size(); i++) {
             BtDailyReturnDO e = dailyReturnDOList.get(i);
 
 
             if (i > 0) {
-                dailyReturn = e.getDailyReturn().doubleValue();
+                dailyReturn = e.getDailyReturn().doubleValue() * marginRatio;
 
                 nav *= (1 + dailyReturn);
                 capital *= (1 + dailyReturn);
