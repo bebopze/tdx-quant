@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.common.domain.dto.trade;
 
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.common.util.StockUtil;
 import lombok.Data;
 
 
@@ -55,11 +55,11 @@ public class StockSnapshotKlineDTO extends KlineDTO {
 
 
     public double getZtPrice() {
-        return NumUtil.of(prevClose * (1 + getChgPctLimit() * 0.01), 3);
+        return StockUtil.ztPrice(prevClose, stockCode, stockName);
     }
 
     public double getDtPrice() {
-        return NumUtil.of(prevClose * (1 - getChgPctLimit() * 0.01), 3);
+        return StockUtil.dtPrice(prevClose, stockCode, stockName);
     }
 
 
