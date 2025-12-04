@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.util;
 
+import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,7 +23,7 @@ public class StockUtil {
      * @return
      */
     public static Integer N(Integer N) {
-        return N == null ? Integer.MAX_VALUE : Math.max(N, 300);
+        return N == null || N <= 0 ? Integer.MAX_VALUE : N;
     }
 
 
@@ -224,6 +225,38 @@ public class StockUtil {
      */
     public static int tradeDays2NatureDays(int tradeDays) {
         return tradeDays * 7 / 5;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 涨停价
+     *
+     * @param prevClosePrice 昨日收盘价
+     * @param stockCode      股票代码
+     * @param stockName      股票名称
+     * @return
+     */
+    public static double ztPrice(double prevClosePrice, String stockCode, String stockName) {
+        Integer chgPctLimit = StockLimitEnum.getChgPctLimit(stockCode, stockName);
+        int priceScale = priceScale(stockCode);
+        return NumUtil.of(prevClosePrice * (1 + chgPctLimit * 0.01), priceScale);
+    }
+
+    /**
+     * 跌停价
+     *
+     * @param prevClosePrice 昨日收盘价
+     * @param stockCode      股票代码
+     * @param stockName      股票名称
+     * @return
+     */
+    public static double dtPrice(double prevClosePrice, String stockCode, String stockName) {
+        Integer chgPctLimit = StockLimitEnum.getChgPctLimit(stockCode, stockName);
+        int priceScale = priceScale(stockCode);
+        return NumUtil.of(prevClosePrice * (1 - chgPctLimit * 0.01), priceScale);
     }
 
 
