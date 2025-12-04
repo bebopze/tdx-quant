@@ -61,10 +61,10 @@ public class BacktestController {
 
     @Operation(summary = "回测task  ->  批量更新   指定时间段  回测数据", description = "回测task  ->  批量（by batchNo/taskIdList）更新   指定时间段  回测数据")
     @GetMapping("/update")
-    public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号", example = "1")
+    public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号（更新整个批次，[batchNo]和[taskIdList] 只能2选1），batchNo优先级 高于 taskIdList", example = "null")
                                            @RequestParam(required = false) Integer batchNo,
 
-                                           @Schema(description = "任务ID列表", example = "1,2,3")
+                                           @Schema(description = "任务ID列表（更新指定任务，[batchNo]和[taskIdList] 只能2选1），batchNo优先级 高于 taskIdList", example = "1,2,3")
                                            @RequestParam(required = false, defaultValue = "-1") String taskIdList,
 
                                            @Schema(description = "更新-开始时间", example = "2025-01-01")

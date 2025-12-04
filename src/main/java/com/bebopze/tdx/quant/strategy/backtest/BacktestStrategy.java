@@ -331,6 +331,19 @@ public class BacktestStrategy {
         restoreThreadLocal__update(taskId, tradeDate, last_dailyReturnDO);
 
 
+        // 回测-对照组 可变参数
+        BacktestCompareDTO btCompareDTO = JSON.parseObject(taskDO.getExtData(), BacktestCompareDTO.class);
+
+        btCompareDTO.setBatchNo(taskDO.getBatchNo());
+        btCompareDTO.setTopBlockStrategyEnum(topBlockStrategyEnum);
+        btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
+        btCompareDTO.setSellConSet(Sets.newHashSet(sellConList));
+        btCompareDTO.setStartDate(taskDO.getStartDate());
+        btCompareDTO.setEndDate(taskDO.getEndDate());
+
+        BacktestStrategy.btCompareDTO.set(btCompareDTO);
+
+
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -763,8 +776,8 @@ public class BacktestStrategy {
 
             sell_tradeRecordDO.setTradeDate(tradeDate);
             // 大盘仓位限制->等比减仓
-            sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S31.getType());
-            sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S31.getDesc());
+            sell_tradeRecordDO.setTradeSignalType(SellStrategyEnum.S91.getType());
+            sell_tradeRecordDO.setTradeSignalDesc(SellStrategyEnum.S91.getDesc());
 
 
             double closePrice = getClosePrice(stockCode, tradeDate);
@@ -1078,8 +1091,6 @@ public class BacktestStrategy {
      * prev 赋值
      */
     private void refresh_statData__prev() {
-        Stat stat = x.get();
-
 
         Stat x_copy = new Stat();
         BeanUtils.copyProperties(x.get(), x_copy);
@@ -1087,8 +1098,6 @@ public class BacktestStrategy {
 
         // 1、清空
         x.remove();
-        stat = x.get();
-        log.debug("clear statData   -   {}", JSON.toJSONString(stat));
 
 
         // 2、today -> prev
@@ -1099,9 +1108,6 @@ public class BacktestStrategy {
 
 
         x.get().taskId = x_copy.taskId;
-
-
-        log.debug("clear statData   -   {}", JSON.toJSONString(stat));
     }
 
 
@@ -2486,20 +2492,21 @@ public class BacktestStrategy {
                                                                                        ));
 
 
-        // ---------------------------
+        // --------------------------- refresh_statData__prev()
 
 
         // 1、清空
         x.remove();
 
 
-        // 2、today -> pre
+        // 2、today -> prev
         x.get().prevCapital = last_dailyReturnDO.getCapital().doubleValue();
         x.get().prevAvlCapital = last_dailyReturnDO.getAvlCapital().doubleValue();
         x.get().prev__stockCode_positionDO_Map = stockCode_positionDO_Map;
 
 
         x.get().taskId = taskId;
+//        x.get().tradeDate = tradeDate;
 
 
         // ------------------------------------ tradeRecord
