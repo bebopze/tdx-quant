@@ -17,6 +17,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -38,6 +39,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class BacktestSellStrategy implements SellStrategy {
+
+
+    /**
+     * 涨停S策略        KEY：S策略 + next_date
+     * -              VAL：涨停 + S_signal   ->   stockCode 列表
+     */
+    private static final Map<String, Set<String>> sellConSet_nextDate__dtStockCodeSet__Map = Maps.newConcurrentMap();
 
 
     @Autowired
@@ -259,17 +267,38 @@ public class BacktestSellStrategy implements SellStrategy {
         if (btCompareDTO.getZtFlag()) {
 
 
-            boolean 跌停 = extDataArrDTO.跌停[idx];
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // prev_跌停__S_signal   ->   S策略 + next_date + 跌停stockCode
+            boolean prev_跌停__S_signal = sellConSet_nextDate__dtStockCodeSet__Map
+                    .getOrDefault(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), tradeDate), Sets.newHashSet())
+                    .contains(stockCode);
+
+
+            // 昨日（S + 跌停）  ->   可卖出（今日[open]  ->  直接卖出）
+            if (prev_跌停__S_signal) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
+                return true;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            boolean today_跌停 = extDataArrDTO.跌停[idx];
+            boolean 下SSF = klineArrDTO.close[idx] < extDataArrDTO.SSF[idx];
             boolean 下MA5 = klineArrDTO.close[idx] < extDataArrDTO.MA5[idx];
             boolean 下MA10 = klineArrDTO.close[idx] < extDataArrDTO.MA10[idx];
 
 
-            if (跌停) {
+            if (today_跌停) {
                 if (idx < fun.getMaxIdx()) {
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
                     double today_close = klineArrDTO.close[idx];
                     double next_open = klineArrDTO.open[idx + 1];
+
 
                     // S + 跌停  ->  无法卖出（最简化处理：[today_close] = [next_open]，次日开盘 直接卖出）
                     data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
@@ -278,12 +307,27 @@ public class BacktestSellStrategy implements SellStrategy {
                              stockCode, fun.getName(), tradeDate, next_date, today_close, next_open);
 
 
-                    sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
-                    return true;
+                    // -------------------------------------------------------------------------------------------------
+
+
+                    // 传递 prev_跌停__S_signal
+                    sellConSet_nextDate__dtStockCodeSet__Map.computeIfAbsent(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), next_date), k -> Sets.newHashSet()).add(stockCode);
+                    sellConSet_nextDate__dtStockCodeSet__Map.remove(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), klineArrDTO.date[idx - 1])); // 清空 prev_date
+
+
+                    // -------------------------------------------------------------------------------------------------
+
+
+                    // 跌停  ->  无法卖出
+                    return false;
                 }
             }
 
 
+            if (下SSF) {
+                sell_infoMap.put(stockCode, SellStrategyEnum.下SSF);
+                return true;
+            }
             if (下MA5) {
                 sell_infoMap.put(stockCode, SellStrategyEnum.下MA5);
                 return true;
@@ -345,7 +389,7 @@ public class BacktestSellStrategy implements SellStrategy {
         Set<String> buyConSet = btCompareDTO.getBuyConSet();
         Set<String> buyConSet_2 = BacktestStrategy.btCompareDTO.get().getBuyConSet();
 
-        if (!buyConSet.equals(buyConSet_2)) {
+        if (!Objects.equals(buyConSet, buyConSet_2)) {
             log.error("signal_S     >>>     buyConSet={}  !=  buyConSet_2={}", buyConSet, buyConSet_2);
         }
 
@@ -478,6 +522,13 @@ public class BacktestSellStrategy implements SellStrategy {
 
         return false;
     }
+
+
+    private String getKey(Set<String> sellConSet, Boolean ztFlag, LocalDate next_date) {
+        // S策略 + ztFlag + next_date
+        return sellConSet + "-" + ztFlag + "-" + next_date;
+    }
+
 
     private C_MA_Ratio c_ma_ratio(int klineType, Integer chgPctLimit) {
         C_MA_Ratio cMaRatio = new C_MA_Ratio();
