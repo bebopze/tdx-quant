@@ -26,7 +26,7 @@
         FROM qa_market_mid_cycle
 
 
-        ORDER BY id DESC
+        ORDER BY date DESC
 
         LIMIT 1
     </select>
