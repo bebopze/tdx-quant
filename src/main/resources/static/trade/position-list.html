@@ -2856,8 +2856,13 @@
 
             // 列表行
             sortedOrders.forEach((order, index) => {
+
+                // 个股行情（雪球）
                 const marketPrefix = market2Xueqiu(order.market);
                 const stockLink = `https://xueqiu.com/S/${marketPrefix}${order.zqdm}`;
+                // 担保买（东方财富）
+                const buyUrl = `https://jywg.18.cn/MarginTrade/Buy?code=${order.zqdm}&name=${encodeURIComponent(order.zqmc)}&zqlx=${order.stktype_ex}&mt=${order.market === 'HA' ? 1 : order.market === 'SA' ? 2 : 'B'}&market=${order.market}`;
+
                 const tr = document.createElement('tr');
                 let formattedTime = order.wtsj;
                 if (order.wtsj && order.wtsj.length === 6) {
@@ -2867,6 +2872,7 @@
                 const isCancelable = (order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
                 // 确定是否允许批量勾选 (状态为 未报/已报/部成)
                 const isBatchCancelable = isCancelable;
+
                 tr.innerHTML = `
                     <td>${isBatchCancelable ? `<input type="checkbox" class="order-checkbox" data-wtdh="${order.wtbh}" data-date="${order.wtrq}">` : ''}</td>
                     <td>${index + 1}</td>
@@ -2874,7 +2880,7 @@
                     <td>${order.wtrq}</td>
                     <td>${formattedTime}</td>
                     <td><a href="${stockLink}" target="_blank" class="stock-code-link">${order.zqdm}</a></td>
-                    <td>${order.zqmc}</td>
+                    <td><a href="${buyUrl}" target="_blank" class="stock-code-link">${order.zqmc}</a></td>
                     <td>${order.mmsm}</td>
                     <td>${order.xyjylbbz}</td>
                     <td class="order-status-${order.wtzt}">${order.wtzt}</td>
@@ -3273,42 +3279,6 @@
                 }));
 
 
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                // topBlocksData = (data.data.topBlockDTOList || []).map((block, index) => {
-                //     const changePctDTO = block.changePctDTO || {};
-                //     return {
-                //         rank: index + 1, // 添加序号
-                //         blockCode: block.blockCode,
-                //         blockName: block.blockName,
-                //         topDays: block.topDays,
-                //         topStockSize: block.topStockSize,
-                //         topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                //             // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                //             ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                //             : '-',
-                //         topStartDate: changePctDTO.topStartDate || '-',
-                //         topEndDate: changePctDTO.topEndDate || '-',
-                //         prev_close: changePctDTO.prev_close || 0,
-                //         today_close: changePctDTO.today_close || 0,
-                //         today_changePct: changePctDTO.today_changePct || 0,
-                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
-                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
-                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                //     };
-                // });
-
                 if (!topBlocksData || topBlocksData.length === 0) {
 
                     messageDiv.style.display = 'block';
@@ -3560,44 +3530,6 @@
                     )
                 }));
 
-                // // 处理数据，将 changePctDTO 的字段平铺到主对象
-                // topStocksData = (data.data.topStockDTOList || []).map((stock, index) => {
-                //     const changePctDTO = stock.changePctDTO || {};
-                //     return {
-                //         rank: index + 1, // 添加序号
-                //         stockCode: stock.stockCode,
-                //         stockName: stock.stockName,
-                //         xueqiuMarket: stock.xueqiuMarket,
-                //         posStockFlag: stock.posStockFlag,
-                //         ztFlag: stock.ztFlag,
-                //         amo: stock.amo,
-                //         topDays: stock.topDays,
-                //         topBlockSize: stock.topBlockSize,
-                //         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                //             ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                //             : '-',
-                //         topStartDate: changePctDTO.topStartDate || '-',
-                //         topEndDate: changePctDTO.topEndDate || '-',
-                //         prev_close: changePctDTO.prev_close || 0,
-                //         today_close: changePctDTO.today_close || 0,
-                //         today_changePct: changePctDTO.today_changePct || 0,
-                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
-                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
-                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
-                //     };
-                // });
 
                 if (!topStocksData || topStocksData.length === 0) {
 
@@ -3851,42 +3783,6 @@
                 }));
 
 
-                // 处理数据，将 changePctDTO 的字段平铺到主对象
-                // topBlocksDataManual = (data.data.topBlockDTOList || []).map((block, index) => {
-                //     const changePctDTO = block.changePctDTO || {};
-                //     return {
-                //         rank: index + 1, // 添加序号
-                //         blockCode: block.blockCode,
-                //         blockName: block.blockName,
-                //         topDays: block.topDays,
-                //         topStockSize: block.topStockSize,
-                //         topStockList: Array.isArray(block.topStockList) && block.topStockList.length > 0
-                //             // ? block.topStockList.map(s => `${s.stockName} (${s.topDays}天)`).join(', ')
-                //             ? block.topStockList.map(s => stockLink(s.xueqiuMarket, s.stockCode, s.stockName, s.topDays)).join(', ')
-                //             : '-',
-                //         topStartDate: changePctDTO.topStartDate || '-',
-                //         topEndDate: changePctDTO.topEndDate || '-',
-                //         prev_close: changePctDTO.prev_close || 0,
-                //         today_close: changePctDTO.today_close || 0,
-                //         today_changePct: changePctDTO.today_changePct || 0,
-                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
-                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
-                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0,
-                //     };
-                // });
-
                 if (!topBlocksDataManual || topBlocksDataManual.length === 0) {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
@@ -4135,46 +4031,6 @@
                         ])
                     )
                 }));
-
-
-                // // 处理数据，将 changePctDTO 的字段平铺到主对象
-                // topStocksDataManual = (data.data.topStockDTOList || []).map((stock, index) => {
-                //     const changePctDTO = stock.changePctDTO || {};
-                //     return {
-                //         rank: index + 1, // 添加序号
-                //         stockCode: stock.stockCode,
-                //         stockName: stock.stockName,
-                //         xueqiuMarket: stock.xueqiuMarket,
-                //         posStockFlag: stock.posStockFlag,
-                //         ztFlag: stock.ztFlag,
-                //         amo: stock.amo,
-                //         topDays: stock.topDays,
-                //         topBlockSize: stock.topBlockSize,
-                //         topBlockList: Array.isArray(stock.topBlockList) && stock.topBlockList.length > 0
-                //             ? stock.topBlockList.map(b => `${b.blockName} (${b.topDays}天)`).join(', ')
-                //             : '-',
-                //         topStartDate: changePctDTO.topStartDate || '-',
-                //         topEndDate: changePctDTO.topEndDate || '-',
-                //         prev_close: changePctDTO.prev_close || 0,
-                //         today_close: changePctDTO.today_close || 0,
-                //         today_changePct: changePctDTO.today_changePct || 0,
-                //         start2Today_changePct: changePctDTO.start2Today_changePct || 0,
-                //         start2End_changePct: changePctDTO.start2End_changePct || 0,
-                //         start2Max_changePct: changePctDTO.start2Max_changePct || 0,
-                //         today2Next_changePct: changePctDTO.today2Next_changePct || 0,
-                //         today2Next_openPct: changePctDTO.today2Next_openPct || 0,
-                //         today2Next_highPct: changePctDTO.today2Next_highPct || 0,
-                //         today2Next_lowPct: changePctDTO.today2Next_lowPct || 0,
-                //         today2End_changePct: changePctDTO.today2End_changePct || 0,
-                //         today2Max_changePct: changePctDTO.today2Max_changePct || 0,
-                //         start2Next_changePct: changePctDTO.start2Next_changePct || 0,
-                //         start2Next3_changePct: changePctDTO.start2Next3_changePct || 0,
-                //         start2Next5_changePct: changePctDTO.start2Next5_changePct || 0,
-                //         start2Next10_changePct: changePctDTO.start2Next10_changePct || 0,
-                //         start2Next15_changePct: changePctDTO.start2Next15_changePct || 0,
-                //         start2Next20_changePct: changePctDTO.start2Next20_changePct || 0
-                //     };
-                // });
 
 
                 if (!topStocksDataManual || topStocksDataManual.length === 0) {
@@ -5070,9 +4926,6 @@
         // 查询配置
         loadCfgAccount();
     });
-
-
-    // window.addEventListener('load', loadPositions);
 
 
 </script>
