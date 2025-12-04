@@ -1,7 +1,9 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
+import com.bebopze.tdx.quant.common.util.StockUtil;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -158,6 +160,57 @@ public class GetOrdersDataResp implements Serializable {
      */
     public double getWtje() {
         return NumUtil.of(Wtjg * Wtsl);
+    }
+
+
+    // ----------------------------------------------------- 自定义 -----------------------------------------------------
+
+
+    // 昨日收盘价
+    private double prevClosePrice;
+    // 今日涨停价
+    private double ztPrice;
+    // 今日跌停价
+    private double dtPrice;
+
+
+    // 当前收盘价
+    private double closePrice;
+    // 下一个交易日 涨停价
+    private double nextDateZtPrice;
+    // 下一个交易日 跌停价
+    private double nextDateDtPrice;
+
+
+    // 东方财富 交易所（SA / HA / B）
+    private String market;
+    // 东方财富 证券类型 - 代码（ 0-股票 / E-ETF / R-创业板 / W-科创板 / J-北交所 / ... ）
+    private String stktype_ex;
+
+
+    public double getZtPrice() {
+        return StockUtil.ztPrice(prevClosePrice, Zqdm, Zqmc);
+    }
+
+    public double getDtPrice() {
+        return StockUtil.dtPrice(prevClosePrice, Zqdm, Zqmc);
+    }
+
+    public double getNextDateZtPrice() {
+        return StockUtil.ztPrice(closePrice, Zqdm, Zqmc);
+    }
+
+    public double getNextDateDtPrice() {
+        return StockUtil.dtPrice(closePrice, Zqdm, Zqmc);
+    }
+
+
+    public String getMarket() {
+        return StockMarketEnum.getEastMoneyMarketByStockCode(Zqdm);
+    }
+
+    public String getStktype_ex() {
+        return StockUtil.stktype_ex(Zqdm, Zqmc);
     }
 
 
