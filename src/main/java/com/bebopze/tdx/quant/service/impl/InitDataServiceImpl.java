@@ -255,7 +255,7 @@ public class InitDataServiceImpl implements InitDataService {
         log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
 
 
-        // ----------------- TODO   待优化（耗时：1~5 min）
+        // ----------------- TODO   待优化（耗时：1~3 min）
 
 
         long start = System.currentTimeMillis();
@@ -270,7 +270,7 @@ public class InitDataServiceImpl implements InitDataService {
                                            .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
                                                    // 过滤  ->  负价格（前复权）
                                                    && k.getClose() > 0)
-                                           .sorted(Comparator.comparing(KlineDTO::getDate))
+                                           // .sorted(Comparator.comparing(KlineDTO::getDate))   // 本来就是有序的
                                            .collect(Collectors.toList());
 
 
@@ -293,7 +293,7 @@ public class InitDataServiceImpl implements InitDataService {
             // 同步对齐 dateSet   ->   扩展数据
             List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
                                                .filter(k -> dateSet.contains(k.getDate()))
-                                               .sorted(Comparator.comparing(ExtDataDTO::getDate))
+                                               // .sorted(Comparator.comparing(ExtDataDTO::getDate))   // 本来就是有序的
                                                .collect(Collectors.toList());
 
             // e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
