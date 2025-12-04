@@ -53,7 +53,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
      * 涨停B策略        KEY：B策略 + next_date
      * -              VAL：涨停 + B_signal   ->   stockCode 列表
      */
-    private Map<String, Set<String>> buyConSet_nextDate__ztStockCodeSet__Map = Maps.newConcurrentMap();
+    private static final Map<String, Set<String>> buyConSet_nextDate__ztStockCodeSet__Map = Maps.newConcurrentMap();
 
 
     @Autowired
