@@ -359,8 +359,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
             // B + 涨停  ->  无法买入（最简化处理：[next_close] = [next_open]，次日开盘 直接买入）
             if (signal_B && today_涨停) {
-                // ------------------------------- B + 涨停  ->  无法买入（特殊处理【最简化处理】）❌❌❌---------------------
-
 
                 if (idx < fun.getMaxIdx()) {
                     KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
@@ -373,11 +371,12 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     // 次日S  ->  不能改价格
                     Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, next_date, Lists.newArrayList(stockCode), Maps.newHashMap(), btCompareDTO.get());
                     boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
-                    if (next_date_S) {
+                    if (next_date_S /*|| nextDate__大盘仓位限制->等比减仓*/) {
                         return;
                     }
 
 
+                    // [next_close] = [next_open]
                     data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
 
                     log.info("今日B + [涨停]   ->   无法买入 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
@@ -392,9 +391,9 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     buyConSet_nextDate__ztStockCodeSet__Map.remove(getKey(buyConList, klineArrDTO.date[idx - 1])); // 清空 prev_date
 
 
-                    // -------------------------------------------------------------------------------------------------
-
-
+//                    // ------------------------------- B + 涨停  ->  无法买入（特殊处理【最简化处理】）❌❌❌-----------------
+//
+//
 //                    // today_close = next_open   ❌❌❌
 //                    data.stock__dateCloseMap.get(stockCode).put(tradeDate, next_open);
 //                    // BUG：S->B阶段 改价     =>     S前阶段 用于计算 [总资金/S前_持仓市值] 的 close   与   SB阶段 的 close（next_open）前后不一致❗❗❗
