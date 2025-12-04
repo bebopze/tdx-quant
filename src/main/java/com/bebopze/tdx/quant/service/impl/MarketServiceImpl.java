@@ -53,6 +53,14 @@ public class MarketServiceImpl implements MarketService {
     @Override
     public QaMarketMidCycleDO marketInfo(LocalDate date) {
         QaMarketMidCycleDO entity = qaMarketMidCycleService.getByDate(date);
+
+
+        // TODO  简单处理：  无数据  ->  取最后一条
+        if (null == entity) {
+            entity = qaMarketMidCycleService.last();
+        }
+
+
         return entity;
     }
 
