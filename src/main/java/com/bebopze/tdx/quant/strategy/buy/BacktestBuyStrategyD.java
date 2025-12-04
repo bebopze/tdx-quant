@@ -18,6 +18,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.QuickOption;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
+import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -67,6 +68,9 @@ public class BacktestBuyStrategyD implements BuyStrategy {
     @Lazy
     @Autowired
     private BacktestStrategy backtestStrategy;
+
+    @Autowired
+    private BacktestSellStrategy backtestSellStrategy;
 
 
     @Override
@@ -346,7 +350,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             }
 
 
-            // B + 未涨停  ->  可买入（今日[close]  ->直接买入）
+            // B + 未涨停  ->  可买入（今日[close]  ->  直接买入）
             if (signal_B && !today_涨停) {
                 buy__topStock__codeSet.add(stockCode);
                 buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
@@ -358,12 +362,20 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                 // ------------------------------- B + 涨停  ->  无法买入（特殊处理【最简化处理】）❌❌❌---------------------
 
 
-                if (today_涨停 && fun.getMaxIdx() < idx) {
+                if (idx < fun.getMaxIdx()) {
                     KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
                     double next_close = klineArrDTO.close[idx + 1];
                     double next_open = klineArrDTO.open[idx + 1];
+
+
+                    // 次日S  ->  不能改价格
+                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, next_date, Lists.newArrayList(stockCode), Maps.newHashMap(), btCompareDTO.get());
+                    boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
+                    if (next_date_S) {
+                        return;
+                    }
 
 
                     data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
