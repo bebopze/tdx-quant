@@ -2,8 +2,10 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.KlineAPI;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockPoolDTO;
@@ -19,7 +21,7 @@ import com.bebopze.tdx.quant.service.StrategyService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
-import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -59,7 +61,7 @@ public class StrategyServiceImpl implements StrategyService {
     private TradeService tradeService;
 
     @Autowired
-    private BacktestBuyStrategyC backtestBuyStrategyC;
+    private BacktestBuyStrategyD backtestBuyStrategyD;
 
     @Autowired
     private BacktestStrategy backtestStrategy;
@@ -71,11 +73,16 @@ public class StrategyServiceImpl implements StrategyService {
     private TopBlockService topBlockService;
 
 
+    @TotalTime
     @Override
     public BSStrategyInfoDTO bsTrade(TopBlockStrategyEnum topBlockStrategyEnum,
                                      List<String> buyConList,
                                      List<String> sellConList,
                                      LocalDate tradeDate) {
+
+        log.info("---------------------------- 策略交易[bsTrade]   start   >>>     topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , tradeDate : {}",
+                 topBlockStrategyEnum.getDesc(), buyConList, sellConList, tradeDate);
+
 
         tradeDate = tradeDate == null ? LocalDate.now() : tradeDate;
 
@@ -93,8 +100,15 @@ public class StrategyServiceImpl implements StrategyService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        BacktestCompareDTO btCompareDTO = new BacktestCompareDTO();
+        btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false);
-        // data = initDataService.initData();
+//        initDataService.initData();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -116,7 +130,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // 卖出策略
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, positionStockCodeList, sell_infoMap);
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, positionStockCodeList, sell_infoMap, btCompareDTO);
 
         log.info("S策略     >>>     date : {} , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                  tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -125,15 +139,17 @@ public class StrategyServiceImpl implements StrategyService {
         // ---------------
 
 
-        // 一键卖出   ->   指定 个股列表
-        // TODO     前期   ->   策略Test阶段     =>     先导出到TDX -> 人工2次审核 -> 再一键BS
-        // tradeService.quickSellPosition(sell__stockCodeSet);
+        // 一键清仓   ->   指定 个股列表
+        tradeService.quickClearPosition(sell__stockCodeSet);
 
 
         // ---------------
         // S策略（SCL）
-        // TODO     前期   ->   策略Test阶段     =>     先导出到TDX -> 人工2次审核 -> 再一键BS
-        TdxBlockNewReaderWriter.write("SCL", sell__stockCodeSet);
+        try {
+            TdxBlockNewReaderWriter.write("SCL", sell__stockCodeSet);
+        } catch (Exception e) {
+            log.error("S策略（SCL）    >>>     write   ->   TDX（策略-等比买入）    errMsg : {}", e.getMessage());
+        }
 
 
         // ---------------
@@ -154,7 +170,7 @@ public class StrategyServiceImpl implements StrategyService {
         Map<String, String> buy_infoMap = Maps.newHashMap();
 
 
-        List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, false);
+        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, false);
 
 
         // ---------------------------------------------------------
@@ -190,16 +206,18 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
-        // TODO     前期   ->   策略Test阶段     =>     先导出到TDX -> 人工2次审核 -> 再一键BS
-        // tradeService.quickBuyPosition(newPositionList);
+        tradeService.quickBuyPosition(newPositionList);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // B策略（BCL）
-        // TODO     前期   ->   策略Test阶段     =>     先导出到TDX -> 人工2次审核 -> 再一键BS
-        TdxBlockNewReaderWriter.write("BCL", buy__stockCodeList);
+        try {
+            TdxBlockNewReaderWriter.write("BCL", buy__stockCodeList);
+        } catch (Exception e) {
+            log.error("B策略（BCL）    >>>     write   ->   TDX（策略-等比买入）    errMsg : {}", e.getMessage());
+        }
 
 
         return dto;
