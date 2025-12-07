@@ -39,8 +39,8 @@ public class StrategyController {
     public Result<BSStrategyInfoDTO> bsTrade(@Schema(description = "主线策略", example = "LV3（板块-月多2 -> 月多 + RPS红 + SSF多）")
                                              @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
 
-                                             @Schema(description = "B策略", example = "N100日新高,月多,RPS一线红")
-                                             @RequestParam(defaultValue = "N100日新高,月多,RPS一线红") String buyConList,
+                                             @Schema(description = "B策略", example = "SSF多,月多")
+                                             @RequestParam(defaultValue = "SSF多,月多") String buyConList,
 
                                              @Schema(description = "S策略", example = "月空_MA20空,SSF空,高位爆量上影大阴,C_SSF_偏离率>25%")
                                              @RequestParam(required = false, defaultValue = "月空_MA20空,SSF空,高位爆量上影大阴,C_SSF_偏离率>25%")
@@ -52,7 +52,7 @@ public class StrategyController {
 
         // 主线策略： LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
 
-        // B策略：   N100日新高,月多
+        // B策略：   SSF多,月多
         // S策略：   个股S,板块S,主线S
 
 
