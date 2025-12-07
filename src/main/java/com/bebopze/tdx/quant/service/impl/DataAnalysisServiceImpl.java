@@ -277,7 +277,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
                                  // 涨停（打板）  ->   重计算（涨停 -> 买不进去       =>       daily_return = close / prev_close 规则失效）
-                                 if (Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) {
+                                 if (Objects.equals(TopTypeEnum.涨停_SSF多_月多.type, type) && topPoolType == 3) {
                                      // 非涨停 -> 忽略
                                      if (!e.isZtFlag()) {
                                          return null;
@@ -355,7 +355,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             // 不足10只股票  ->  空列表（空仓）
-            if (topList.size() < 20 && !(Objects.equals(TopTypeEnum.涨停.type, type) && topPoolType == 3) && (ztFlag == null || !ztFlag)) {
+            if (topList.size() < 20 && !(Objects.equals(TopTypeEnum.涨停_SSF多_月多.type, type) && topPoolType == 3) && (ztFlag == null || !ztFlag)) {
                 topList = Collections.emptyList();
             }
 
@@ -2037,7 +2037,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         List<TopPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
-        Set<String> preCodeSet = Sets.newHashSet();
+        Set<String> prevCodeSet = Sets.newHashSet();
 
 
         for (Map.Entry<LocalDate, Set<String>> entry : date_positionCodeMap.entrySet()) {
@@ -2065,14 +2065,14 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             // 当日调仓换股比例
-            posReplaceRatio(dr, preCodeSet, todayCodeSet);
+            posReplaceRatio(dr, prevCodeSet, todayCodeSet);
 
 
             dailyReturnDTOList.add(dr);
 
 
             // -------------------------
-            preCodeSet = todayCodeSet;
+            prevCodeSet = todayCodeSet;
         }
 
 
@@ -2091,25 +2091,25 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
      * 当日调仓换股比例
      *
      * @param dr
-     * @param preCodeSet
+     * @param prevCodeSet
      * @param todayCodeSet
      */
-    private void posReplaceRatio(TopPoolDailyReturnDTO dr, Set<String> preCodeSet, Set<String> todayCodeSet) {
+    private void posReplaceRatio(TopPoolDailyReturnDTO dr, Set<String> prevCodeSet, Set<String> todayCodeSet) {
 
-        int preCount = preCodeSet.size();
+        int preCount = prevCodeSet.size();
         int todayCount = todayCodeSet.size();
 
 
         // 交集（继续 持有中）
-        Collection<String> intersection = CollectionUtils.intersection(preCodeSet, todayCodeSet);
-        // 今日S  =  pre - 交集
-        preCodeSet.removeAll(intersection);
+        Collection<String> intersection = CollectionUtils.intersection(prevCodeSet, todayCodeSet);
+        // 今日S  =  prev - 交集
+        prevCodeSet.removeAll(intersection);
         // 今日B  =  today - 交集
         Set<String> todayCodeSet_copy = Sets.newHashSet(todayCodeSet);
         todayCodeSet_copy.removeAll(intersection);
 
         int oldPosCount = intersection.size();
-        int oldSellCount = preCodeSet.size();
+        int oldSellCount = prevCodeSet.size();
         int newBuyCount = todayCodeSet_copy.size();
 
         // 简化算法  =>  调仓比例 = 今日S / 昨日持有数
