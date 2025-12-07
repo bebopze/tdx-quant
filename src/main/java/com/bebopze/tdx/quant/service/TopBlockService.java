@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
@@ -17,6 +18,16 @@ import java.util.Set;
  * @date: 2025/7/13
  */
 public interface TopBlockService {
+
+
+    /**
+     * 实时计算 -> 主线个股列表（指定日期）
+     *
+     * @param date        指定日期
+     * @param topTypeEnum 主线个股 - 策略类型
+     * @return
+     */
+    List<TopStockDTO> realTimeTopStockList(LocalDate date, TopTypeEnum topTypeEnum);
 
 
     /**

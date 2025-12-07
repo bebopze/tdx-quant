@@ -102,10 +102,149 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 实时计算 -> 主线个股列表（指定日期）
+     *
+     * @param date 指定日期
+     * @return
+     */
+    @TotalTime
+    @Override
+    public List<TopStockDTO> realTimeTopStockList(LocalDate date, TopTypeEnum topTypeEnum) {
+
+
+        // 1. 加载数据
+        initCache(UpdateTypeEnum.ALL);
+
+
+        // 2. 并行计算主线板块代码（线程安全）
+        Set<String> topBlockCodeSet = Sets.newConcurrentHashSet();
+        data.blockDOList.parallelStream().forEach(blockDO -> {
+            blockDO.getExtDataDTOList().stream()
+                   .forEach(e -> {
+
+                       // 指定日期
+                       if (!e.getDate().isEqual(date)) {
+                           return;
+                       }
+
+
+                       // --------------------- 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多
+                       boolean 月多 = e.get月多();
+                       boolean RPS红 = e.getRPS红();
+                       boolean SSF多 = e.getSSF多();
+
+                       if (月多 && RPS红 && SSF多) {
+                           topBlockCodeSet.add(blockDO.getCode());
+                       }
+                   });
+        });
+
+
+        // 3. 并行计算符合条件的股票（线程安全收集）
+        List<BaseStockDO> topStockDOList = Collections.synchronizedList(Lists.newArrayList());
+        Map<String, Boolean> ztFlag_map = Maps.newConcurrentMap();
+        Map<String, ExtDataDTO> stock_extData_map = Maps.newConcurrentMap();
+        Map<String, Set<String>> stock_topBlockCodeSet_map = Maps.newConcurrentMap();
+
+        data.stockDOList.parallelStream().forEach(stockDO -> {
+            String stockCode = stockDO.getCode();
+            stockDO.getExtDataDTOList()
+                   .forEach(e -> {
+
+                       // 指定日期
+                       if (!e.getDate().isEqual(date)) {
+                           return;
+                       }
+
+
+                       Set<String> stock_blockSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
+
+
+                       // IN主线（个股板块 与 主线板块   ->   存在交集）
+                       Collection<String> intersection = CollectionUtils.intersection(stock_blockSet, topBlockCodeSet);
+                       boolean IN主线 = !intersection.isEmpty();
+
+                       if (!IN主线) {
+                           return;
+                       }
+
+
+                       if (Objects.equals(topTypeEnum, TopTypeEnum.AUTO)) {
+                           // TODO
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.MANUAL)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.历史新高)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.极多头)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.RPS三线红)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.十亿)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.首次三线红)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.口袋支点)) {
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.T0)) {
+
+
+                       } else if (Objects.equals(topTypeEnum, TopTypeEnum.涨停_SSF多_月多)) {
+
+                           // --------------------- 涨停 + SSF多 + 月多 + IN主线
+                           // 涨停（打板）- 次1日（开盘价[open] -> 直接买入）
+                           boolean 涨停 = e.get涨停();
+                           boolean SSF多 = e.getSSF多();
+                           boolean 月多 = e.get月多();
+
+
+                           if (涨停 && SSF多 && 月多) {
+                               stock_extData_map.put(stockCode, e);
+                               stock_topBlockCodeSet_map.put(stockCode, Sets.newHashSet(intersection));
+
+                               topStockDOList.add(stockDO);
+                           }
+                       }
+                   });
+        });
+
+
+        List<TopStockDTO> topStockDTOList = Lists.newArrayList();
+        for (BaseStockDO stockDO : topStockDOList) {
+            String stockCode = stockDO.getCode();
+
+            TopStockDTO topStockDTO = new TopStockDTO();
+            topStockDTO.setDate(date);
+            topStockDTO.setStockCode(stockCode);
+            topStockDTO.setStockName(stockDO.getName());
+            topStockDTO.setZtFlag(stock_extData_map.get(stockCode).涨停);
+            topStockDTO.setMediumChangePct(stock_extData_map.get(stockCode).get中期涨幅());
+            topStockDTO.setTopBlockList(Lists.newArrayList());
+
+
+            Set<String> stock_topBlockCodeSet = stock_topBlockCodeSet_map.getOrDefault(stockCode, Sets.newHashSet());
+            for (String topBlockCode : stock_topBlockCodeSet) {
+                TopStockDTO.TopBlock topBlock = new TopStockDTO.TopBlock();
+                topBlock.setBlockCode(topBlockCode);
+                topBlock.setBlockName(data.block__codeNameMap.get(topBlockCode));
+                topStockDTO.getTopBlockList().add(topBlock);
+            }
+
+
+            topStockDTOList.add(topStockDTO);
+        }
+
+
+        return topStockDTOList;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @TotalTime
     @Override
     public void refreshAll(UpdateTypeEnum updateTypeEnum) {
-        log.info("-------------------------------- TopBlock - refreshAll     >>>     start");
 
 
         bkyd2Task(updateTypeEnum);
@@ -143,9 +282,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // GC
         data.clear();
-
-
-        log.info("-------------------------------- TopBlock - refreshAll     >>>     end");
     }
 
 
@@ -844,6 +980,11 @@ public class TopBlockServiceImpl implements TopBlockService {
                         boolean 月多 = extDataArrDTO.月多[idx];
 
 
+                        // 主线个股2【妖股（打板）】  ->   最强TOP（涨停 + SSF多 + 月多 + IN主线）
+                        boolean 涨停 = extDataArrDTO.涨停[idx];
+                        boolean SSF多 = extDataArrDTO.SSF多[idx];
+
+
                         // ---------------------------------------------------------------------------------------------
 
 
@@ -861,7 +1002,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                         // ---------------------------------------------------------------------------------------------
 
 
-                        if (百日新高 && 月多 && IN主线) {
+                        if ((百日新高 && 月多 && IN主线) || (涨停 && SSF多 && 月多 && IN主线)) {
                             date_topStockCodeSet__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
                         }
                     });
@@ -1135,7 +1276,8 @@ public class TopBlockServiceImpl implements TopBlockService {
      * @return
      */
 
-    private Map<TopTypeEnum, Map<LocalDate, List<TopChangePctDTO>>> topType___date_topList_Map(Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map) {
+    private Map<TopTypeEnum, Map<LocalDate, List<TopChangePctDTO>>> topType___date_topList_Map
+    (Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map) {
 
         Map<TopTypeEnum, Map<LocalDate, List<TopChangePctDTO>>> topType___date_topList_Map = Maps.newHashMap();
 
@@ -1237,8 +1379,9 @@ public class TopBlockServiceImpl implements TopBlockService {
      * @param N                       TOP 数量
      * @return 人选 TOP50 数据
      */
-    private Map<LocalDate, List<TopChangePctDTO>> manual___date_topList_Map(Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map,
-                                                                            int N) {
+    private Map<LocalDate, List<TopChangePctDTO>> manual___date_topList_Map
+    (Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map,
+     int N) {
 
         Map<LocalDate, List<TopChangePctDTO>> manual___date_topList_Map = Maps.newHashMap();
 
@@ -1268,8 +1411,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         return manual___date_topList_Map;
     }
 
-    private Map<LocalDate, List<TopChangePctDTO>> topType___date_topList_Map(Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map,
-                                                                             TopTypeEnum topTypeEnum) {
+    private Map<LocalDate, List<TopChangePctDTO>> topType___date_topList_Map
+            (Map<LocalDate, List<TopChangePctDTO>> auto___date_topList_Map,
+             TopTypeEnum topTypeEnum) {
 
 
         if (Objects.equals(TopTypeEnum.MANUAL, topTypeEnum) && !auto___date_topList_Map.isEmpty()) {
@@ -1310,8 +1454,14 @@ public class TopBlockServiceImpl implements TopBlockService {
                     rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get口袋支点()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.T0, topTypeEnum)) {
                     rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().getT0()).collect(Collectors.toSet());
-                }*/ else if (Objects.equals(TopTypeEnum.涨停, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get涨停()).collect(Collectors.toSet());
+                }*/ else if (Objects.equals(TopTypeEnum.涨停_SSF多_月多, topTypeEnum)) {
+                    rule_set = topList.stream()
+                                      // 涨停（打板）- 次1日（开盘价[open] -> 直接买入）
+                                      // 涨停 + SSF多 + 月多 + IN主线
+                                      .filter(e -> e.getBuySignalExtDataDTO().get涨停()
+                                              && e.getBuySignalExtDataDTO().getSSF多()
+                                              && e.getBuySignalExtDataDTO().get月多())
+                                      .collect(Collectors.toSet());
                 }
 
             } catch (Exception ex) {
@@ -1489,13 +1639,6 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                     int minIdx = 0;
                     int maxIdx = dateIndexMap.size() - 1;
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-//                    log.info("calcTopInfoTask     >>>     [{}-{}] , count : {} , time : {} , totalTime : {}",
-//                             code, name, COUNT.incrementAndGet(), DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(startTime));
 
 
                     // -------------------------------------------------------------------------------------------------
