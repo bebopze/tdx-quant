@@ -2,18 +2,17 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.cache.PosStockCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.config.BizException;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
-import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
+import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.BaseExEnum;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopBlockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopChangePctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
@@ -88,8 +87,8 @@ public class TradeServiceImpl implements TradeService {
             });
 
 
-            // 主线板块
-            topBlockInfo(resp.getStocks());
+            // 是否主线（S信号）
+            fillTopBlockInfo(resp.getStocks());
         }
 
 
@@ -97,7 +96,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    private void topBlockInfo(List<CcStockInfo> stocks) {
+    private void fillTopBlockInfo(List<CcStockInfo> stocks) {
 
 
         LocalDate today = LocalDate.now();
@@ -142,6 +141,13 @@ public class TradeServiceImpl implements TradeService {
                       stock.setTopBlockList(stock__topBlockList);
                       stock.setTopStockFlag(false);   // 非主线个股
                   }
+
+
+//                  // S信号
+//                  List<SellStrategyEnum> strategyEnums = Lists.newArrayList();
+//                  strategyEnums.add(SellStrategyEnum.SSF空);
+//                  strategyEnums.add(SellStrategyEnum.MA20空);
+//                  stock.setSellSignalList(strategyEnums);
               });
     }
 
@@ -197,6 +203,16 @@ public class TradeServiceImpl implements TradeService {
         // -------------------- 仓位占比
         double netAsset = queryCreditNewPosV2().getNetasset().doubleValue();
         respList.forEach(e -> e.setNetAsset(netAsset));
+
+
+        // -------------------- 实时行情 / 涨跌停价格（自动计算）
+        respList.parallelStream().forEach(e -> {
+            // 实时行情
+            StockSnapshotKlineDTO klineDTO = KlineAPI.kline(e.getZqdm());
+
+            e.setPrevClosePrice(klineDTO.getPrevClose());
+            e.setClosePrice(klineDTO.getClose());
+        });
 
 
         return respList;
@@ -300,10 +316,10 @@ public class TradeServiceImpl implements TradeService {
 
 
         List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
-        for (int j = 0; j < size; ) {
+        for (int i = 0; i < size; ) {
 
             // 1次 N单
-            List<TradeRevokeOrdersParam> subParamList = paramList.subList(j, Math.min(j += N, size));
+            List<TradeRevokeOrdersParam> subParamList = paramList.subList(i, Math.min(i += N, size));
 
 
             // 批量撤单
