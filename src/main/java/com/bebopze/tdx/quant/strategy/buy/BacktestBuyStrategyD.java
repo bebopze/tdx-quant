@@ -34,6 +34,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.constant.BuyStrategyEnum.涨停_SSF多_月多;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
@@ -344,7 +345,8 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             // 昨日（B + 涨停）  ->   可买入（今日[open]  ->  直接买入）
             if (prev_涨停__B_signal) {
                 buy__topStock__codeSet.add(stockCode);
-                conMap.put("昨日B_涨停", true);
+                // conMap.put("prev_B_涨停__今日_开盘B", true);
+                conMap.put(涨停_SSF多_月多.getDesc(), true);
                 buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
             }
 
