@@ -296,15 +296,15 @@ public class BacktestSellStrategy implements SellStrategy {
                 if (idx < fun.getMaxIdx()) {
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
-                    double today_close = klineArrDTO.close[idx];
+                    double next_close = klineArrDTO.close[idx + 1];
                     double next_open = klineArrDTO.open[idx + 1];
 
 
-                    // S + 跌停  ->  无法卖出（最简化处理：[today_close] = [next_open]，次日开盘 直接卖出）
+                    // S + 跌停  ->  无法卖出（最简化处理：[next_close] = [next_open]，次日开盘 直接卖出）
                     data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
 
-                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [today_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , today_close : {} , next_open : {}",
-                             stockCode, fun.getName(), tradeDate, next_date, today_close, next_open);
+                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
+                             stockCode, fun.getName(), tradeDate, next_date, next_close, next_open);
 
 
                     // -------------------------------------------------------------------------------------------------
