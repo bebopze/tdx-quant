@@ -36,7 +36,7 @@ public class BacktestController {
     private BacktestService backTestService;
 
 
-    @Async
+    @Async("taskExecutor")
     @Operation(summary = "创建 -> 执行回测", description = "创建 -> 执行   回测task")
     @PostMapping("/exec")
     public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2022-01-01")
@@ -61,7 +61,7 @@ public class BacktestController {
     }
 
 
-    @Async
+    @Async("taskExecutor")
     @Operation(summary = "回测task  ->  批量更新   指定时间段  回测数据", description = "回测task  ->  批量（by batchNo/taskIdList）更新   指定时间段  回测数据")
     @GetMapping("/update")
     public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号（更新整个批次，[batchNo]和[taskIdList] 只能2选1），batchNo优先级 高于 taskIdList", example = "null")
@@ -84,7 +84,7 @@ public class BacktestController {
     }
 
 
-    @Async
+    @Async("taskExecutor")
     @Operation(summary = "回测", description = "回测task")
     @PostMapping("/exec2")
     public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
