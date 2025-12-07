@@ -48,6 +48,13 @@ public class BacktestCompareDTO {
     private Boolean ztFlag = false;
 
 
+    /**
+     * 是否开启 大盘持仓限制：true/false
+     */
+    @Schema(description = "是否开启 大盘持仓限制", example = "true")
+    private boolean marketPosLimitFlag = true;
+
+
     // -------------------------------------- 全局参数 上下文传递（不参与序列化）---------------------------------------------
 
 
