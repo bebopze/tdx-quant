@@ -53,6 +53,18 @@ function toBoolean(strOrBool) {
 
 
 /**
+ * 获取当前日期：YYYY-MM-DD
+ *
+ * @returns {string}  今日日期，格式为 "YYYY-MM-DD"
+ */
+function todayStr() {
+    // 获取当前日期：YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    return today;
+}
+
+
+/**
  * 股票代码 对应的 雪球（沪深京）市场前缀
  *
  * @param code 股票代码
