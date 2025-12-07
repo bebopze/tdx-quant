@@ -9,8 +9,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_STOCK;
 
 
 /**
@@ -41,6 +44,21 @@ public class KlineAPI {
     public static StockSnapshotKlineDTO klineWait(String stockCode) {
         SleepUtils.randomSleep(1, 20);
         return kline(stockCode);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 获取  最新交易日
+     *
+     * @return
+     */
+    public static LocalDate lastTradeDate() {
+        LocalDate date = EastMoneyTradeAPI.SHSZQuoteSnapshot(INDEX_STOCK).getRealtimequote().getDate();
+        log.info("lastTradeDate     >>>     {}", date);
+        return date;
     }
 
 
