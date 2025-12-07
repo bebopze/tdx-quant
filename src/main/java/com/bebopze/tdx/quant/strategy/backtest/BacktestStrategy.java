@@ -982,6 +982,16 @@ public class BacktestStrategy {
      */
     private void market__position_limit(LocalDate tradeDate) {
 
+
+        // 是否开启 大盘持仓限制：true/false
+        boolean marketPosFlag = btCompareDTO.get().isMarketPosLimitFlag();
+        if (!marketPosFlag) {
+            // 否  ->  100% 仓位上限
+            x.get().positionLimitRate = 1.0;
+            return;
+        }
+
+
         QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
         Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
 
