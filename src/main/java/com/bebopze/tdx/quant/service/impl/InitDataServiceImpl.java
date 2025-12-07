@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
@@ -259,10 +260,12 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         long start = System.currentTimeMillis();
+        AtomicInteger count = new AtomicInteger(0);
 
 
         // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
         data.stockDOList.parallelStream().forEach(e -> {
+            long start_2 = System.currentTimeMillis();
 
 
             // klineHis
@@ -273,8 +276,6 @@ public class InitDataServiceImpl implements InitDataService {
                                            // .sorted(Comparator.comparing(KlineDTO::getDate))   // 本来就是有序的
                                            .collect(Collectors.toList());
 
-
-            // e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
             e.setKlineDTOList(klineDTOList);
 
 
@@ -296,8 +297,12 @@ public class InitDataServiceImpl implements InitDataService {
                                                // .sorted(Comparator.comparing(ExtDataDTO::getDate))   // 本来就是有序的
                                                .collect(Collectors.toList());
 
-            // e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
             e.setExtDataDTOList(extDataDTOList);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+            log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     count : {} , [{}-{}] , [{} ~ {}] , stockTime : {} , totalTime : {}",
+                     count.incrementAndGet(), e.getCode(), e.getName(), dateLine_start, dateLine_end, DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(start));
         });
 
 
@@ -309,7 +314,6 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 空行情 过滤（时间段内 -> 未上市）
-        // data.stockDOList = data.stockDOList.stream().filter(e -> !Objects.equals("[]", e.getKlineHis())).collect(Collectors.toList());
         data.stockDOList = data.stockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
