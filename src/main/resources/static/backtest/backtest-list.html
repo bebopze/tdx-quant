@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>回测任务列表</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css  " rel="stylesheet">
     <!-- 添加全局配置文件 -->
     <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
     <style>
         .table-container {
             overflow-x: auto;
@@ -100,11 +101,112 @@
             font-size: 12px;
             padding: 2px 8px;
         }
+
+        /* 样式化过滤行 */
+        .filter-row input, .filter-row select {
+            font-size: 12px;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .filter-row th {
+            padding: 0.25rem 0.25rem;
+            border-bottom: 2px solid #dee2e6; /* 与表头分隔 */
+        }
     </style>
 </head>
 <body>
 <div class="container-fluid mt-4">
     <h4>回测任务列表</h4>
+
+    <!-- 新增过滤行 -->
+    <form id="filterRowForm" class="mb-3">
+        <div class="row">
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterBuyStrategy" placeholder="B策略">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterSellStrategy" placeholder="S策略">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterTopBlockStrategy"
+                       placeholder="主线策略">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="date" class="form-control form-control-sm" id="filterStartDate" value="2019-01-01"
+                       placeholder="回测开始日期">
+                <input type="date" class="form-control form-control-sm" id="filterEndDate"
+                       placeholder="回测结束日期">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterSingleStockMaxPosPct"
+                       placeholder="个股仓位限制%">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterMarketPosLimitFlag"
+                       placeholder="大盘持仓限制">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="text" class="form-control form-control-sm" id="filterZtFlag" placeholder="涨停">
+            </div>
+            <div class="col-md-1 form-group">
+                <label for="filterFinalNav">净值:</label>
+                <select id="filterFinalNav" class="form-select w-auto">
+                    <option value="">全部</option>
+                    <option value="null">NULL</option>
+                    <option value="已完成">已完成</option>
+                </select>
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterFinalNavMin"
+                       placeholder="结束净值最小">
+                <input type="number" class="form-control form-control-sm" id="filterFinalNavMax"
+                       placeholder="结束净值最大">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterWinPctMin" placeholder="胜率最小"
+                       step="0.01">
+                <input type="number" class="form-control form-control-sm" id="filterWinPctMax" placeholder="胜率最大"
+                       step="0.01">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterProfitFactorMin"
+                       placeholder="盈亏比最小" step="0.01">
+                <input type="number" class="form-control form-control-sm" id="filterProfitFactorMax"
+                       placeholder="盈亏比最大" step="0.01">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterMaxDrawdownPctMin"
+                       placeholder="最大回撤最小" step="0.01">
+                <input type="number" class="form-control form-control-sm" id="filterMaxDrawdownPctMax"
+                       placeholder="最大回撤最大" step="0.01">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterProfitDayPctMin"
+                       placeholder="盈利天数最小" step="0.01">
+                <input type="number" class="form-control form-control-sm" id="filterProfitDayPctMax"
+                       placeholder="盈利天数最大" step="0.01">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="number" class="form-control form-control-sm" id="filterSharpeRatioMin"
+                       placeholder="夏普比率最小" step="0.01">
+                <input type="number" class="form-control form-control-sm" id="filterSharpeRatioMax"
+                       placeholder="夏普比率最大" step="0.01">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="datetime-local" class="form-control form-control-sm" id="filterGmtCreateStart"
+                       placeholder="创建时间开始">
+                <input type="datetime-local" class="form-control form-control-sm" id="filterGmtCreateEnd"
+                       placeholder="创建时间结束">
+            </div>
+            <div class="col-md-1 form-group">
+                <input type="datetime-local" class="form-control form-control-sm" id="filterGmtModifyStart"
+                       placeholder="结束时间开始">
+                <input type="datetime-local" class="form-control form-control-sm" id="filterGmtModifyEnd"
+                       placeholder="结束时间结束">
+            </div>
+        </div>
+    </form>
 
     <form id="filterForm">
         <div class="row mb-3">
@@ -198,12 +300,20 @@
                         <span class="sort-order" id="order-scoreSortN"></span>
                     </div>
                 </th>
-                <th data-key="stockPosPctLimit">
+                <th data-key="singleStockMaxPosPct">
                     个股仓位限制%
                     <div class="sort-controls">
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
-                        <span class="sort-order" id="order-stockPosPctLimit"></span>
+                        <span class="sort-order" id="order-singleStockMaxPosPct"></span>
+                    </div>
+                </th>
+                <th data-key="marketPosLimitFlag">
+                    开启大盘持仓限制
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-marketPosLimitFlag"></span>
                     </div>
                 </th>
                 <th data-key="ztFlag">
@@ -371,9 +481,13 @@
     let originalData = [];
     let sortFields = []; // [{key: 'id', dir: 'asc'}, ...]
 
+
+    let today = todayStr();
+
+
     // 定义字段类型
-    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'scoreSortN', 'stockPosPctLimit', 'ztFlag'];
-    const numberFields = ['finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
+    const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'marketPosLimitFlag', 'ztFlag'];
+    const numberFields = ['scoreSortN', 'singleStockMaxPosPct', 'finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
 
     function formatDateTimeLocal(value) {
         if (!value) return '';
@@ -439,6 +553,99 @@
         return result;
     }
 
+    // 新增：过滤函数
+    function applyFiltersAndRender() {
+        let filteredData = [...originalData];
+
+        const filters = {
+            buyStrategy: document.getElementById('filterBuyStrategy').value.toLowerCase(),
+            sellStrategy: document.getElementById('filterSellStrategy').value.toLowerCase(),
+            topBlockStrategy: document.getElementById('filterTopBlockStrategy').value.toLowerCase(),
+            filterStartDate: document.getElementById('filterStartDate').value,
+            filterEndDate: document.getElementById('filterEndDate').value,
+            singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
+            ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
+            marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+            filterFinalNav: document.getElementById('filterFinalNav').value,
+            finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
+            finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
+            winPctMin: parseFloat(document.getElementById('filterWinPctMin').value),
+            winPctMax: parseFloat(document.getElementById('filterWinPctMax').value),
+            profitFactorMin: parseFloat(document.getElementById('filterProfitFactorMin').value),
+            profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
+            maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
+            maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
+            profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
+            profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+            sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
+            sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
+            gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
+            gmtCreateEnd: formatDateTimeLocal(document.getElementById('filterGmtCreateEnd').value),
+            gmtModifyStart: formatDateTimeLocal(document.getElementById('filterGmtModifyStart').value),
+            gmtModifyEnd: formatDateTimeLocal(document.getElementById('filterGmtModifyEnd').value),
+        };
+
+        filteredData = filteredData.filter(task => {
+            // 字符串字段过滤 (包含匹配)
+            if (filters.buyStrategy && !task.buyStrategy.toLowerCase().includes(filters.buyStrategy)) return false;
+            if (filters.sellStrategy && !task.sellStrategy.toLowerCase().includes(filters.sellStrategy)) return false;
+            if (filters.topBlockStrategy && !task.topBlockStrategy.toLowerCase().includes(filters.topBlockStrategy)) return false;
+            if (filters.singleStockMaxPosPct && !String(task.extData?.singleStockMaxPosPct || '').toLowerCase().includes(filters.singleStockMaxPosPct)) return false;
+            if (filters.ztFlag && !String(task.extData?.ztFlag || '').toLowerCase().includes(filters.ztFlag)) return false;
+            if (filters.marketPosLimitFlag && !String(task.extData?.marketPosLimitFlag || '').toLowerCase().includes(filters.marketPosLimitFlag)) return false;
+
+            // 日期字段过滤 (日期范围)
+            if (filters.filterStartDate && task.startDate < filters.filterStartDate) return false;
+            if (filters.filterEndDate && task.endDate > filters.filterEndDate) return false;
+
+            // 数值字段过滤 (范围)
+            const finalNav = parseFloat(task.finalNav);
+
+
+            if (filters.filterFinalNav !== '') {
+                if (filters.filterFinalNav === 'null') {
+                    return isNaN(finalNav);
+                } else {
+                    return !isNaN(finalNav);
+                }
+            }
+
+            if (!isNaN(filters.finalNavMin) && finalNav < filters.finalNavMin) return false;
+            if (!isNaN(filters.finalNavMax) && finalNav > filters.finalNavMax) return false;
+
+            const winPct = parseFloat(task.winPct);
+            if (!isNaN(filters.winPctMin) && winPct < filters.winPctMin) return false;
+            if (!isNaN(filters.winPctMax) && winPct > filters.winPctMax) return false;
+
+            const profitFactor = parseFloat(task.profitFactor);
+            if (!isNaN(filters.profitFactorMin) && profitFactor < filters.profitFactorMin) return false;
+            if (!isNaN(filters.profitFactorMax) && profitFactor > filters.profitFactorMax) return false;
+
+            const maxDrawdownPct = parseFloat(task.maxDrawdownPct);
+            if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
+            if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
+
+            const profitDayPct = parseFloat(task.profitDayPct);
+            if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
+            if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+
+            const sharpeRatio = parseFloat(task.sharpeRatio);
+            if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
+            if (!isNaN(filters.sharpeRatioMax) && sharpeRatio > filters.sharpeRatioMax) return false;
+
+            // 时间字段过滤 (时间范围)
+            if (filters.gmtCreateStart && task.gmtCreate < filters.gmtCreateStart) return false;
+            if (filters.gmtCreateEnd && task.gmtCreate > filters.gmtCreateEnd) return false;
+            if (filters.gmtModifyStart && task.gmtModify < filters.gmtModifyStart) return false;
+            if (filters.gmtModifyEnd && task.gmtModify > filters.gmtModifyEnd) return false;
+
+            return true;
+        });
+
+        applySortingAndRender(filteredData); // 将过滤后的数据传递给排序和渲染函数
+    }
+
+
     function loadTasks() {
         const taskId = document.getElementById('taskId').value;
         const batchNoList = document.getElementById('batchNoList').value;
@@ -448,7 +655,12 @@
         const startCreateTime = formatDateTimeLocal(startCreateTimeRaw);
         const endCreateTime = formatDateTimeLocal(endCreateTimeRaw);
 
-        ApiUtils.fetch(`/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`)
+        // 在API请求URL中添加过滤参数
+        let apiUrl = `/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`;
+        // 可以在这里添加更多通过API查询的过滤参数，如果后端支持的话
+        // 例如: apiUrl += `&buyStrategy=${filters.buyStrategy}`;
+
+        ApiUtils.fetch(apiUrl)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
@@ -456,12 +668,12 @@
                     return;
                 }
                 originalData = data.data;
-                applySortingAndRender();
+                applyFiltersAndRender(); // 加载数据后先过滤再排序渲染
             });
     }
 
-    function applySortingAndRender() {
-        let sortedData = [...originalData];
+    function applySortingAndRender(dataToUse = null) {
+        let sortedData = dataToUse ? [...dataToUse] : [...originalData]; // 如果提供了数据，则使用它，否则使用原始数据（可能已过滤）
 
         if (sortFields.length === 0) {
             renderTable(sortedData);
@@ -518,7 +730,8 @@
               <td>${task.sellStrategy}</td>
               <td>${task.topBlockStrategy}</td>
               <td>${task.extData?.scoreSortN || ''}</td>
-              <td>${task.extData?.stockPosPctLimit || ''}</td>
+              <td>${task.extData?.singleStockMaxPosPct || ''}</td>
+              <td>${task.extData?.marketPosLimitFlag || 'true'}</td>
               <td>${task.extData?.ztFlag || '全部'}</td>
               <td>${task.startDate} ~ ${task.endDate}</td>
               <td>${task.initialCapital}</td>
@@ -562,7 +775,7 @@
                     {key, dir: 'asc'},
                     {key: numericField, dir: numericDir}
                 ];
-                applySortingAndRender();
+                applyFiltersAndRender(); // 重新应用过滤和排序
                 return;
             } else {
                 // 没有数值字段，按普通字段排序处理（默认倒序）
@@ -581,7 +794,7 @@
                         sortFields.splice(index, 1);
                     }
                 }
-                applySortingAndRender();
+                applyFiltersAndRender(); // 重新应用过滤和排序
                 return;
             }
         }
@@ -603,7 +816,7 @@
                     sortFields.splice(index, 1);
                 }
             }
-            applySortingAndRender();
+            applyFiltersAndRender(); // 重新应用过滤和排序
             return;
         }
 
@@ -624,20 +837,20 @@
             }
         }
 
-        applySortingAndRender();
+        applyFiltersAndRender(); // 重新应用过滤和排序
     }
 
     function removeSortField(key) {
         const index = sortFields.findIndex(f => f.key === key);
         if (index !== -1) {
             sortFields.splice(index, 1);
-            applySortingAndRender();
+            applyFiltersAndRender(); // 重新应用过滤和排序
         }
     }
 
     function clearAllSorts() {
         sortFields = [];
-        applySortingAndRender();
+        applyFiltersAndRender(); // 重新应用过滤和排序
     }
 
     function updateSortIcons() {
@@ -703,8 +916,9 @@
             'sellStrategy': 'S策略',
             'topBlockStrategy': '主线策略',
             'scoreSortN': 'scoreSortN',
-            'stockPosPctLimit': '个股仓位限制%',
+            'singleStockMaxPosPct': '个股仓位限制%',
             'ztFlag': '涨停',
+            'marketPosLimitFlag': '开启大盘持仓限制',
             'startDate': '回测周期',
             'initialCapital': '初始资金',
             'finalCapital': '结束资金',
@@ -751,18 +965,215 @@
     }
 
     function exportToCSV() {
+        // 获取当前显示的数据，即经过过滤和排序的数据
+        let dataToExport;
+        // 这里需要获取当前渲染的数据，可以通过 applyFiltersAndRender 后的最终状态获取
+        // 或者，如果 originalData 是最新的，重新应用过滤和排序来获取当前视图数据
+        let currentViewData = [...originalData];
+        if (sortFields.length > 0) {
+            // 重新应用排序逻辑
+            currentViewData = [...currentViewData]; // 避免修改 originalData
+            applySortingAndRender(currentViewData); // 这个函数内部会渲染，但我们可以传入数据
+            // 为了导出，我们获取排序后的数据，而不是直接渲染
+            // 重构 applySortingAndRender 来返回数据可能更好
+            // 简单起见，我们再次调用 applyFiltersAndRender 并获取结果
+            // 更好的方法是重构函数使其返回数据
+            // 这里我们假设 applyFiltersAndRender 已经应用了过滤，然后应用排序到 originalData 的副本上
+            // 我们需要一个函数来获取当前视图数据
+            // 为简化，我们假设在 loadTasks -> applyFiltersAndRender -> applySortingAndRender 流程后，
+            // 原始数据不变，但显示已更新。
+            // 为了导出，我们再次执行过滤和排序步骤，但这次是为了获取数据而不是渲染。
+            // 我们可以创建一个辅助函数
+            const getFilteredSortedData = () => {
+                let data = [...originalData];
+                // Apply Filters
+                const filters = {
+                    buyStrategy: document.getElementById('filterBuyStrategy').value.toLowerCase(),
+                    sellStrategy: document.getElementById('filterSellStrategy').value.toLowerCase(),
+                    topBlockStrategy: document.getElementById('filterTopBlockStrategy').value.toLowerCase(),
+                    filterStartDate: document.getElementById('filterStartDate').value,
+                    filterEndDate: document.getElementById('filterEndDate').value,
+                    singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
+                    ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
+                    marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+                    filterFinalNav: document.getElementById('filterFinalNav').value,
+                    finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
+                    finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
+                    winPctMin: parseFloat(document.getElementById('filterWinPctMin').value),
+                    winPctMax: parseFloat(document.getElementById('filterWinPctMax').value),
+                    profitFactorMin: parseFloat(document.getElementById('filterProfitFactorMin').value),
+                    profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
+                    maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
+                    maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
+                    profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
+                    profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+                    sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
+                    sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
+                    gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
+                    gmtCreateEnd: formatDateTimeLocal(document.getElementById('filterGmtCreateEnd').value),
+                    gmtModifyStart: formatDateTimeLocal(document.getElementById('filterGmtModifyStart').value),
+                    gmtModifyEnd: formatDateTimeLocal(document.getElementById('filterGmtModifyEnd').value),
+                };
+                data = data.filter(task => {
+                    if (filters.buyStrategy && !task.buyStrategy.toLowerCase().includes(filters.buyStrategy)) return false;
+                    if (filters.sellStrategy && !task.sellStrategy.toLowerCase().includes(filters.sellStrategy)) return false;
+                    if (filters.topBlockStrategy && !task.topBlockStrategy.toLowerCase().includes(filters.topBlockStrategy)) return false;
+                    if (filters.singleStockMaxPosPct && !String(task.extData?.singleStockMaxPosPct || '').toLowerCase().includes(filters.singleStockMaxPosPct)) return false;
+                    if (filters.ztFlag && !String(task.extData?.ztFlag || '').toLowerCase().includes(filters.ztFlag)) return false;
+                    if (filters.marketPosLimitFlag && !String(task.extData?.marketPosLimitFlag || '').toLowerCase().includes(filters.marketPosLimitFlag)) return false;
+                    if (filters.filterStartDate && task.startDate < filters.filterStartDate) return false;
+                    if (filters.filterEndDate && task.endDate > filters.filterEndDate) return false;
+                    const finalNav = parseFloat(task.finalNav);
+
+
+                    if (filters.filterFinalNav !== '') {
+                        if (filters.filterFinalNav === 'null') {
+                            return isNaN(finalNav);
+                        } else {
+                            return !isNaN(finalNav);
+                        }
+                    }
+                    if (!isNaN(filters.finalNavMin) && finalNav < filters.finalNavMin) return false;
+                    if (!isNaN(filters.finalNavMax) && finalNav > filters.finalNavMax) return false;
+                    const winPct = parseFloat(task.winPct);
+                    if (!isNaN(filters.winPctMin) && winPct < filters.winPctMin) return false;
+                    if (!isNaN(filters.winPctMax) && winPct > filters.winPctMax) return false;
+                    const profitFactor = parseFloat(task.profitFactor);
+                    if (!isNaN(filters.profitFactorMin) && profitFactor < filters.profitFactorMin) return false;
+                    if (!isNaN(filters.profitFactorMax) && profitFactor > filters.profitFactorMax) return false;
+                    const maxDrawdownPct = parseFloat(task.maxDrawdownPct);
+                    if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
+                    if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
+                    const profitDayPct = parseFloat(task.profitDayPct);
+                    if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
+                    if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+                    const sharpeRatio = parseFloat(task.sharpeRatio);
+                    if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
+                    if (!isNaN(filters.sharpeRatioMax) && sharpeRatio > filters.sharpeRatioMax) return false;
+                    if (filters.gmtCreateStart && task.gmtCreate < filters.gmtCreateStart) return false;
+                    if (filters.gmtCreateEnd && task.gmtCreate > filters.gmtCreateEnd) return false;
+                    if (filters.gmtModifyStart && task.gmtModify < filters.gmtModifyStart) return false;
+                    if (filters.gmtModifyEnd && task.gmtModify > filters.gmtModifyEnd) return false;
+                    return true;
+                });
+
+                // Apply Sorts
+                if (sortFields.length === 0) {
+                    return data;
+                }
+
+                const stringField = sortFields.find(f => stringFields.includes(f.key));
+                const numericField = sortFields.find(f => numberFields.includes(f.key));
+
+                if (stringField && numericField) {
+                    data = sortByGroupThenValue(data, stringField.key, numericField.key, numericField.dir);
+                } else {
+                    data.sort((a, b) => {
+                        for (let sort of sortFields) {
+                            const key = sort.key;
+                            const dir = sort.dir;
+                            let valA = a[key] || '';
+                            let valB = b[key] || '';
+                            if (!isNaN(valA) && !isNaN(valB)) {
+                                valA = Number(valA);
+                                valB = Number(valB);
+                            }
+                            if (valA < valB) return dir === 'asc' ? -1 : 1;
+                            if (valA > valB) return dir === 'asc' ? 1 : -1;
+                        }
+                        return 0;
+                    });
+                }
+                return data;
+            };
+            dataToExport = getFilteredSortedData();
+
+        } else {
+            // 如果没有排序，只需应用过滤
+            const getFilteredData = () => {
+                let data = [...originalData];
+                const filters = {
+                    buyStrategy: document.getElementById('filterBuyStrategy').value.toLowerCase(),
+                    sellStrategy: document.getElementById('filterSellStrategy').value.toLowerCase(),
+                    topBlockStrategy: document.getElementById('filterTopBlockStrategy').value.toLowerCase(),
+                    filterStartDate: document.getElementById('filterStartDate').value,
+                    filterEndDate: document.getElementById('filterEndDate').value,
+                    singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
+                    ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
+                    marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+                    filterFinalNav: document.getElementById('filterFinalNav').value,
+                    finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
+                    finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
+                    winPctMin: parseFloat(document.getElementById('filterWinPctMin').value),
+                    winPctMax: parseFloat(document.getElementById('filterWinPctMax').value),
+                    profitFactorMin: parseFloat(document.getElementById('filterProfitFactorMin').value),
+                    profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
+                    maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
+                    maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
+                    profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
+                    profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+                    sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
+                    sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
+                    gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
+                    gmtCreateEnd: formatDateTimeLocal(document.getElementById('filterGmtCreateEnd').value),
+                    gmtModifyStart: formatDateTimeLocal(document.getElementById('filterGmtModifyStart').value),
+                    gmtModifyEnd: formatDateTimeLocal(document.getElementById('filterGmtModifyEnd').value),
+                };
+                data = data.filter(task => {
+                    if (filters.buyStrategy && !task.buyStrategy.toLowerCase().includes(filters.buyStrategy)) return false;
+                    if (filters.sellStrategy && !task.sellStrategy.toLowerCase().includes(filters.sellStrategy)) return false;
+                    if (filters.topBlockStrategy && !task.topBlockStrategy.toLowerCase().includes(filters.topBlockStrategy)) return false;
+                    if (filters.singleStockMaxPosPct && !String(task.extData?.singleStockMaxPosPct || '').toLowerCase().includes(filters.singleStockMaxPosPct)) return false;
+                    if (filters.ztFlag && !String(task.extData?.ztFlag || '').toLowerCase().includes(filters.ztFlag)) return false;
+                    if (filters.marketPosLimitFlag && !String(task.extData?.marketPosLimitFlag || '').toLowerCase().includes(filters.marketPosLimitFlag)) return false;
+                    if (filters.filterStartDate && task.startDate < filters.filterStartDate) return false;
+                    if (filters.filterEndDate && task.endDate > filters.filterEndDate) return false;
+
+                    const finalNav = parseFloat(task.finalNav);
+
+                    if (filters.filterFinalNav !== '') {
+                        if (filters.filterFinalNav === 'null') {
+                            return isNaN(finalNav);
+                        } else {
+                            return !isNaN(finalNav);
+                        }
+                    }
+                    if (!isNaN(filters.finalNavMin) && finalNav < filters.finalNavMin) return false;
+                    if (!isNaN(filters.finalNavMax) && finalNav > filters.finalNavMax) return false;
+                    const winPct = parseFloat(task.winPct);
+                    if (!isNaN(filters.winPctMin) && winPct < filters.winPctMin) return false;
+                    if (!isNaN(filters.winPctMax) && winPct > filters.winPctMax) return false;
+                    const profitFactor = parseFloat(task.profitFactor);
+                    if (!isNaN(filters.profitFactorMin) && profitFactor < filters.profitFactorMin) return false;
+                    if (!isNaN(filters.profitFactorMax) && profitFactor > filters.profitFactorMax) return false;
+                    const maxDrawdownPct = parseFloat(task.maxDrawdownPct);
+                    if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
+                    if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
+                    const profitDayPct = parseFloat(task.profitDayPct);
+                    if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
+                    if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+                    const sharpeRatio = parseFloat(task.sharpeRatio);
+                    if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
+                    if (!isNaN(filters.sharpeRatioMax) && sharpeRatio > filters.sharpeRatioMax) return false;
+                    if (filters.gmtCreateStart && task.gmtCreate < filters.gmtCreateStart) return false;
+                    if (filters.gmtCreateEnd && task.gmtCreate > filters.gmtCreateEnd) return false;
+                    if (filters.gmtModifyStart && task.gmtModify < filters.gmtModifyStart) return false;
+                    if (filters.gmtModifyEnd && task.gmtModify > filters.gmtModifyEnd) return false;
+                    return true;
+                });
+                return data;
+            };
+            dataToExport = getFilteredData();
+        }
+
+
         // 获取所有选中的任务ID
         const selectedTaskIds = Array.from(document.querySelectorAll('.select-task:checked'))
             .map(checkbox => checkbox.getAttribute('data-task-id'));
 
-        let dataToExport;
-
         if (selectedTaskIds.length > 0) {
             // 只导出被选中的任务
-            dataToExport = originalData.filter(task => selectedTaskIds.includes(String(task.id)));
-        } else {
-            // 没有选择时导出全部数据
-            dataToExport = [...originalData];
+            dataToExport = dataToExport.filter(task => selectedTaskIds.includes(String(task.id)));
         }
 
         if (dataToExport.length === 0) {
@@ -788,7 +1199,8 @@
                 task.sellStrategy,
                 task.topBlockStrategy,
                 task.extData?.scoreSortN ?? '',
-                task.extData?.stockPosPctLimit ?? '',
+                task.extData?.singleStockMaxPosPct ?? '',
+                task.extData?.marketPosLimitFlag || 'true',
                 task.extData?.ztFlag ?? '全部',
                 task.startDate,
                 task.endDate,
@@ -831,7 +1243,21 @@
         }
     }
 
+    // 新增：为过滤行添加Enter键支持
+    function handleFilterEnterKey(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 防止表单默认提交
+            applyFiltersAndRender();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+
+
+        // 默认值
+        document.getElementById("filterEndDate").value = today;
+
+
         document.getElementById('selectAll').addEventListener('change', event => {
             const isChecked = event.target.checked;
             document.querySelectorAll('.select-task').forEach(checkbox => checkbox.checked = isChecked);
@@ -843,12 +1269,42 @@
             });
         });
 
-        // 为所有输入框添加Enter键监听
+        // 为所有查询输入框添加Enter键监听
         const inputFields = ['taskId', 'batchNoList', 'startCreateTime', 'endCreateTime'];
         inputFields.forEach(fieldId => {
             const element = document.getElementById(fieldId);
             if (element) {
                 element.addEventListener('keypress', handleEnterKey);
+            }
+        });
+
+        // 为所有过滤行输入框添加Enter键监听
+        const filterFields = [
+                'filterBuyStrategy', 'filterSellStrategy', 'filterTopBlockStrategy',
+                'filterStartDate', 'filterEndDate', 'filterSingleStockMaxPosPct',
+                'filterZtFlag', 'filterMarketPosLimitFlag',
+                'filterFinalNav', 'filterFinalNavMin', 'filterFinalNavMax',
+                'filterWinPctMin', 'filterWinPctMax',
+                'filterProfitFactorMin', 'filterProfitFactorMax',
+                'filterMaxDrawdownPctMin', 'filterMaxDrawdownPctMax',
+                'filterProfitDayPctMin', 'filterProfitDayPctMax',
+                'filterSharpeRatioMin', 'filterSharpeRatioMax',
+                'filterGmtCreateStart', 'filterGmtCreateEnd',
+                'filterGmtModifyStart', 'filterGmtModifyEnd'
+            ]
+        ;
+        filterFields.forEach(fieldId => {
+            const element = document.getElementById(fieldId);
+            if (element) {
+                element.addEventListener('keypress', handleFilterEnterKey);
+            }
+        });
+
+        // 为过滤行输入框添加失焦事件监听，以触发过滤
+        filterFields.forEach(fieldId => {
+            const element = document.getElementById(fieldId);
+            if (element) {
+                element.addEventListener('blur', applyFiltersAndRender);
             }
         });
 
