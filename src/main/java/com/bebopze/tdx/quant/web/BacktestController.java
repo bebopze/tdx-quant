@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class BacktestController {
     private BacktestService backTestService;
 
 
+    @Async
     @Operation(summary = "创建 -> 执行回测", description = "创建 -> 执行   回测task")
     @PostMapping("/exec")
     public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2022-01-01")
@@ -50,7 +52,7 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -59,6 +61,7 @@ public class BacktestController {
     }
 
 
+    @Async
     @Operation(summary = "回测task  ->  批量更新   指定时间段  回测数据", description = "回测task  ->  批量（by batchNo/taskIdList）更新   指定时间段  回测数据")
     @GetMapping("/update")
     public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号（更新整个批次，[batchNo]和[taskIdList] 只能2选1），batchNo优先级 高于 taskIdList", example = "null")
@@ -81,13 +84,14 @@ public class BacktestController {
     }
 
 
+    @Async
     @Operation(summary = "回测", description = "回测task")
     @PostMapping("/exec2")
     public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
                                   @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
 
-                                  @Schema(description = "回测-B策略", example = "N100日新高,月多")
-                                  @RequestParam(defaultValue = "N100日新高,月多") String buyConList,
+                                  @Schema(description = "回测-B策略", example = "SSF多,月多")
+                                  @RequestParam(defaultValue = "SSF多,月多") String buyConList,
 
                                   @Schema(description = "回测-开始时间", example = "2025-01-01")
                                   @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,
@@ -102,7 +106,7 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -124,7 +128,7 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
