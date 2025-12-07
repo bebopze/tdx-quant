@@ -2,10 +2,14 @@ package com.bebopze.tdx.quant.common.config;
 
 import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateConverter;
 import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateTimeConverter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.web.filter.RequestContextFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import javax.servlet.Filter;
 
 
 /**
@@ -44,6 +48,18 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addConverter(new StringToLocalDateConverter("yyyy-MM-dd"));
         // web参数   时间格式
         registry.addConverter(new StringToLocalDateTimeConverter("yyyy-MM-dd HH:mm:ss"));
+    }
+
+
+    /**
+     * 处理需要在 异步线程 中访问 请求上下文 的标准方法
+     *
+     * @return
+     */
+    @Bean
+    public Filter confRequestContextFilter() { // confRequestContextFilter 使用一个不与自动配置冲突的名称
+        // 返回类型可以是 Filter 或 RequestContextFilter
+        return new RequestContextFilter();
     }
 
 
