@@ -139,9 +139,18 @@
 
 
     <select id="listAll" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO">
-        SELECT *
+        SELECT DISTINCT r.*,
 
-        FROM base_block_rela_stock
+                        s.code AS stockCode,
+                        s.name AS stockName,
+
+                        b.code AS blockCode,
+                        b.name AS blockName
+
+
+        FROM base_block_rela_stock r
+                 LEFT JOIN base_stock s ON r.stock_id = s.id
+                 LEFT JOIN base_block b ON r.block_id = b.id
     </select>
 
 
