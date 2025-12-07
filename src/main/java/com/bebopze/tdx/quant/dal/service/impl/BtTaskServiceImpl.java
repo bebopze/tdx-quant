@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.mapper.BtTaskMapper;
@@ -9,7 +8,6 @@ import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.bebopze.tdx.quant.dal.service.IBtTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
-import com.google.common.collect.Lists;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,13 +16,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -120,48 +116,11 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
         // -------------------------------------------------------------------------------------------------------------
 
 
-        int delTotal = 0;
-
-
-        // 分批处理   ->   1次 N个
-        int N = 10;
-        int size = errTaskIdList.size();
-
-
         // 获取当前类SpringBean，用于正确触发事务
         IBtTaskService taskService = applicationContext.getBean(IBtTaskService.class);
 
 
-//        // del
-//        for (int i = 0; i < size; ) {
-//
-//            List<Long> subList = errTaskIdList.subList(i, Math.min(i += N, size));
-//
-//
-//            try {
-//                delTotal += taskService.delErrTaskByTaskIds(subList);
-//                log.info("delErrTaskByTaskIds suc     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {}", size, i, delTotal, subList);
-//
-//            } catch (Exception e) {
-//                log.error("delErrTaskByTaskIds fail     >>>     size : {} , i : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, i, delTotal, subList, e.getMessage(), e);
-//            }
-//        }
-
-
-        AtomicInteger del_total = new AtomicInteger();
-        errTaskIdList.parallelStream().forEach(taskId -> {
-            try {
-                int count = taskService.delErrTaskByTaskIds(Lists.newArrayList(taskId));
-                del_total.addAndGet(count);
-                log.info("delErrTaskByTaskIds suc     >>>     size : {} , delTotal : {} , taskIdList : {}", size, del_total.get(), taskId);
-
-            } catch (Exception e) {
-                log.info("delErrTaskByTaskIds fail     >>>     size : {} , delTotal : {} , taskIdList : {} , errMsg : {}", size, del_total.get(), taskId, e.getMessage(), e);
-            }
-        });
-
-
-        return del_total.get();
+        return taskService.delErrTaskByTaskIds(errTaskIdList);
     }
 
 
@@ -171,13 +130,29 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
     public int delErrTaskByTaskIds(List<Long> taskIdList) {
 
 
-        // del
-        tradeRecordService.deleteByTaskIds(taskIdList);
-        positionRecordService.deleteByTaskIds(taskIdList);
-        dailyReturnService.deleteByTaskIds(taskIdList);
+        // 总数
+        int size = taskIdList.size();
+        // 1次 N个
+        int N = 10;
 
 
-        return baseMapper.deleteByIds(taskIdList);
+        for (int i = 0; i < size; ) {
+
+            // 1次 N个
+            List<Long> subList = taskIdList.subList(i, Math.min(i += N, size));
+
+
+            // del
+            tradeRecordService.deleteByTaskIds(subList);
+            positionRecordService.deleteByTaskIds(subList);
+            dailyReturnService.deleteByTaskIds(subList);
+
+
+            baseMapper.deleteByIds(subList);
+        }
+
+
+        return size;
     }
 
 
