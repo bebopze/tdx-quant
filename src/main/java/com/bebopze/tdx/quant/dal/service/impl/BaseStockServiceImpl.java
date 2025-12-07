@@ -80,7 +80,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
         // 1-股票；2-ETF；
         if (type == 1 || type == 2) {
-            List<BaseStockDO> baseStockDOList = baseMapper.listAllSimple();
+            List<BaseStockDO> baseStockDOList = listAllSimple();
             baseStockDOList.stream()
                            .filter(e -> Objects.equals(type, e.getType()))
                            .forEach(e -> {
@@ -188,7 +188,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Override
     public Map<String, Long> codeIdMap() {
 
-        List<BaseStockDO> entityList = baseMapper.listAllSimple();
+        List<BaseStockDO> entityList = listAllSimple();
 
 
         Map<String, Long> code_id_map = entityList.stream()
