@@ -158,7 +158,7 @@
         #clearPositionCollapse .card-body,
         #tradeCollapse .card-body,
         #countCollapse .card-body,
-        #stockChartCollapse .card-body,
+            /*#stockChartCollapse .card-body,*/
         #bsDetailsCollapse .card-body {
             max-height: 500px; /* 设置你希望的最大高度 */
             overflow-y: auto; /* 超出时显示滚动条 */
@@ -817,6 +817,7 @@
                 document.getElementById('taskName').textContent = `${taskId}`;
                 // ✅ 修复：确保 tradeDate 一致
                 const dailyReturns = analysis.dailyReturnList;
+                // const dailyReturns = analysis.marginDailyReturnList;
                 const tradeDates = dailyReturns.map(item => item.tradeDate);
                 // ✅ 过滤 tradeRecordList 和 positionRecordList，只保留与 dailyReturnList 中 tradeDate 匹配的数据
                 analysis.tradeRecordList = analysis.tradeRecordList.filter(item => tradeDates.includes(item.tradeDate));
@@ -1192,7 +1193,7 @@
             const formattedBuySignal = item.buySignalList?.length ? item.buySignalList.join('<br>') : '<span style="color: gray;">无信号</span>';
             const formattedSellSignal = item.sellSignalList?.length ? item.sellSignalList.join('<br>') : '<span style="color: gray;">无信号</span>';
 
-            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
+            const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.code)}${item.code}`;
 
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td>
@@ -1234,8 +1235,11 @@
     // 展示个股K线图
     function displayStockChart(klines, stockCode, stockName) {
 
+        const stockLink = `https://xueqiu.com/S/${xueqiuMarket(stockCode)}${stockCode}`;
+
         // 个股K线图 - stockName（stockCode）
-        document.getElementById('stock_kline').textContent = `${stockAnalysis.name}（${stockCode}）`;
+        let stockLink_a = `<a href="${stockLink}" target="_blank" class="stock-code-link">${stockCode}</a>`;
+        document.getElementById('stock_kline').innerHTML = `${stockAnalysis.name}（${stockLink_a}）`;
 
         // 1. 显示容器
         const card = document.getElementById('stockChartCard');
@@ -1318,9 +1322,15 @@
 
     // 展示B/S详情
     function displayBSDetails(stockCode) {
+
+        const stockLink = `https://xueqiu.com/S/${xueqiuMarket(stockCode)}${stockCode}`;
+
         // B/S详情 - stockName（stockCode）
-        document.getElementById('kline_bs_record').textContent = `${stockAnalysis.name}（${stockCode}）`;
-        // 修复：正确获取 tbody 元素
+        let stockLink_a = `<a href="${stockLink}" target="_blank" class="stock-code-link">${stockCode}</a>`;
+        document.getElementById('kline_bs_record').innerHTML = `${stockAnalysis.name}（${stockLink_a}）`;
+
+
+        // 获取 tbody 元素
         const tbody = document.querySelector('#bsDetailsCollapse #bsDetailsTable tbody');
         const countElement = document.getElementById('bsDetailsRecordCount'); // 获取计数元素
         if (!tbody) {
