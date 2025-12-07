@@ -5,6 +5,8 @@
     <title>任务列表 - 实时进度</title>
     <!-- 添加全局配置文件 -->
     <script src="../js/config.js"></script>
+    <!-- 添加工具函数 -->
+    <script src="../js/utils.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -311,6 +313,13 @@
     <div class="task-section">
         <h2 class="section-title">💾 缓存管理</h2>
         <div class="form-group">
+            <label for="cacheStartDate">开始时间:</label>
+            <input type="date" id="cacheStartDate"
+                   style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;"
+                   value="2019-01-01">
+            <label for="cacheEndDate">结束时间:</label>
+            <input type="date" id="cacheEndDate"
+                   style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
             <label for="cacheRefresh">refresh:</label>
             <select id="cacheRefresh" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="true">true</option>
@@ -337,6 +346,7 @@
 <script>
     let ws = null;
     let subscribedTasks = new Set();
+
 
     // 页面加载时初始化
     window.onload = function () {
@@ -501,10 +511,12 @@
     }
 
     function refreshInitDataCache() {
+        const startDate = document.getElementById('cacheStartDate').value;
+        const endDate = document.getElementById('cacheEndDate').value;
         const refresh = document.getElementById('cacheRefresh').value;
         const refreshType = refresh === 'true' ? '强制' : '增量';
 
-        ApiUtils.fetch(`/api/task/initData/refresh?refresh=${refresh}`, {method: 'GET'})
+        ApiUtils.fetch(`/api/task/initData/refresh?startDate=${startDate}&endDate=${endDate}&refresh=${refresh}`, {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
@@ -813,6 +825,19 @@
             }
         }, 3000);
     }
+
+
+    // ----------------------------------------- 按钮事件 ---------------------------------------------------------------
+
+
+    // 将所有页面 初始化相关的事件监听器 和 数据加载   都放入 DOMContentLoaded 内
+    document.addEventListener('DOMContentLoaded', function () {
+
+
+        document.getElementById('cacheEndDate').value = todayStr();
+    });
+
+
 </script>
 
 </body>
