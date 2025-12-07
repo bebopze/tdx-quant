@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.client;
 
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -175,12 +176,16 @@ public class KlineAPI {
      * @return
      */
     public static List<StockSnapshotKlineDTO> pullAllStockETFSnapshotKline() {
+        long start = System.currentTimeMillis();
+
 
         List<StockSnapshotKlineDTO> stockDTOList = pullAllStockSnapshotKline();
         // List<StockSnapshotKlineDTO> etfDTOList = pullAllETFSnapshotKline();
 
         // stockDTOList.addAll(etfDTOList);
 
+
+        log.info("pullAllStockETFSnapshotKline     >>>     size : {} , time : {}", stockDTOList.size(), DateTimeUtil.formatNow2Hms(start));
 
         return stockDTOList;
     }
