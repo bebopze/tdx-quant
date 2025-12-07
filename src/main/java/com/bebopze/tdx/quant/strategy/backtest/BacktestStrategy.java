@@ -40,6 +40,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.constant.BuyStrategyEnum.涨停_SSF多_月多;
+
 
 /**
  * B/S策略 - 回测                    //     B/S策略 本质       =>       模式成功  🟰 大盘(70) ➕ 主线(25) ➕ 买点(5)
@@ -593,7 +595,7 @@ public class BacktestStrategy {
 
 
         // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
-        buy_sell__signalConflict(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList);
+        buy_sell__signalConflict(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, buy_infoMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -817,12 +819,14 @@ public class BacktestStrategy {
      * @param data
      * @param tradeDate
      * @param buy__stockCodeList
+     * @param buy_infoMap
      */
     @TotalTime
     public void buy_sell__signalConflict(TopBlockStrategyEnum topBlockStrategyEnum,
                                          BacktestCache data,
                                          LocalDate tradeDate,
-                                         List<String> buy__stockCodeList) {
+                                         List<String> buy__stockCodeList,
+                                         Map<String, String> buy_infoMap) {
 
 
         Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
@@ -832,7 +836,17 @@ public class BacktestStrategy {
         Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, sell_infoMap, btCompareDTO.get());
 
 
-        // buyList   ->   remove  冲突个股（sellList）
+        // 今日开盘买入[涨停_SSF多_月多]   ->   今日无法卖出     =>     不参与 BS冲突过滤
+        if (CollectionUtils.isNotEmpty(sell__stockCodeSet)) {
+            buy_infoMap.forEach((stockCode, strategyInfo) -> {
+                if (strategyInfo.contains(涨停_SSF多_月多.getDesc())) {
+                    sell__stockCodeSet.remove(stockCode);
+                }
+            });
+        }
+
+
+        // buyList   ->   remove  冲突个股（sellSet）
         buy__stockCodeList.removeAll(sell__stockCodeSet);
 
 
