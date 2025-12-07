@@ -65,7 +65,24 @@
 
 
     <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT id, code, name, type, tdx_market_type
+        SELECT id,
+               code,
+               name,
+               type,
+               tdx_market_type,
+               trade_date,
+               open,
+               high,
+               low,
+               close,
+               prev_close,
+               volume,
+               amount,
+               change_pct,
+               range_pct,
+               turnover_pct,
+               gmt_create,
+               gmt_modify
 
         FROM base_stock
     </select>
