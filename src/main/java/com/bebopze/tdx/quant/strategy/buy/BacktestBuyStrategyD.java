@@ -278,12 +278,11 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         Set<String> buy__topStock__codeSet = Sets.newHashSet();
         data.stockDOList.forEach(stockDO -> {
 
-
             String stockCode = stockDO.getCode();
-
-
             StockFun fun = data.getOrCreateStockFun(stockDO);
 
+
+            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
             ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
 
@@ -321,7 +320,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
             Map<String, Boolean> conMap = Maps.newHashMap();
             try {
-                conMap = conMap(extDataArrDTO, extDataDTO, idx);
+                conMap = conMap(klineArrDTO, extDataArrDTO, extDataDTO, idx);
             } catch (Exception ex) {
                 log.error("conMap - err     >>>     stockCode : {} , tradeDate : {} , errMsg : {}", stockCode, tradeDate, ex.getMessage(), ex);
             }
@@ -361,7 +360,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             if (signal_B && today_涨停) {
 
                 if (idx < fun.getMaxIdx()) {
-                    KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
                     double next_close = klineArrDTO.close[idx + 1];
@@ -752,7 +750,10 @@ public class BacktestBuyStrategyD implements BuyStrategy {
     }
 
 
-    private Map<String, Boolean> conMap(ExtDataArrDTO extDataArrDTO, ExtDataDTO extDataDTO, Integer idx) {
+    private Map<String, Boolean> conMap(KlineArrDTO klineArrDTO,
+                                        ExtDataArrDTO extDataArrDTO,
+                                        ExtDataDTO extDataDTO,
+                                        Integer idx) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -844,6 +845,30 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         conMap.put("RPS一线红", RPS一线红);
         conMap.put("RPS双线红", RPS双线红);
         conMap.put("RPS三线红", RPS三线红);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // MA200多  =  C>MA200  &&  MA200>prev_MA200
+        boolean MA200多 = klineArrDTO.close[idx] >= extDataArrDTO.MA200[idx]
+                && extDataArrDTO.MA200[idx] >= extDataArrDTO.MA200[idx - 1];
+
+        boolean MA250多 = klineArrDTO.close[idx] >= extDataArrDTO.MA250[idx]
+                && extDataArrDTO.MA250[idx] >= extDataArrDTO.MA250[idx - 1];
+
+
+        boolean 上MA200 = klineArrDTO.close[idx] >= extDataArrDTO.MA200[idx];
+        boolean 上MA250 = klineArrDTO.close[idx] >= extDataArrDTO.MA250[idx];
+
+
+        conMap.put("MA200多", MA200多);
+        conMap.put("MA250多", MA250多);
+        conMap.put("上MA200", 上MA200);
+        conMap.put("上MA250", 上MA250);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // ------------------------------------------- 低吸 -------------------------------------------------------------
