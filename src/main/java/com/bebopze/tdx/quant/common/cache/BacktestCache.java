@@ -141,8 +141,8 @@ public class BacktestCache {
 
     public static final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(6_000)                                // 内存容量控制（可根据对象大小调整）
-                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)         // 写入后 30分钟过期（TTL）
-                                                                        .expireAfterAccess(30, TimeUnit.MINUTES)    // 最近访问后 3分钟过期（TTI）
+                                                                        .expireAfterWrite(30, TimeUnit.MINUTES)    // 写入后 30分钟过期（TTL）
+                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)    // 最近访问后 5分钟过期（TTI）
                                                                         .recordStats()                                     // 开启统计（命中率等）
                                                                         .removalListener(createStatsRemovalListener("stockFunCache", () -> BacktestCache.stockFunCache)) // 可选：清理时回调
                                                                         .scheduler(Scheduler.systemScheduler())            // 使用系统调度器（更精准）
@@ -151,8 +151,8 @@ public class BacktestCache {
 
     public static final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(1_000)
-                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)
-                                                                        .expireAfterAccess(30, TimeUnit.MINUTES)
+                                                                        .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                                        .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                         .recordStats()
                                                                         .removalListener(createStatsRemovalListener("blockFunCache", () -> BacktestCache.blockFunCache))
                                                                         // .removalListener((key, value, cause) -> log.info("Cache entry {} was removed due to {}     >>>     stats : {}", key, cause, BacktestCache.blockFunCache.stats()))
@@ -211,7 +211,7 @@ public class BacktestCache {
      */
     public static final Cache<LocalDate, QaMarketMidCycleDO> marketCache = Caffeine.newBuilder()
                                                                                    .maximumSize(2_000)
-                                                                                   // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                   .expireAfterWrite(10, TimeUnit.MINUTES)
                                                                                    .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                                    .recordStats()
                                                                                    .removalListener(createStatsRemovalListener("marketCache", () -> BacktestCache.marketCache))
@@ -229,7 +229,7 @@ public class BacktestCache {
      */
     public static final Cache<LocalDate, Map<TopBlockStrategyEnum, Set<String>>> topBlockCache = Caffeine.newBuilder()
                                                                                                          .maximumSize(1_000)
-                                                                                                         // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                                         .expireAfterWrite(10, TimeUnit.MINUTES)
                                                                                                          .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                                                          .recordStats()
                                                                                                          .removalListener(createStatsRemovalListener("topBlockCache", () -> BacktestCache.topBlockCache))
