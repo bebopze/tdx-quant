@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
+import com.bebopze.tdx.quant.common.constant.TopTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.*;
@@ -35,6 +36,24 @@ public class TopBlockController {
 
     @Autowired
     private TopBlockService topBlockService;
+
+
+    /**
+     * realTime -> topStockList
+     *
+     * @return
+     */
+    @Operation(summary = "实时计算 -> 主线个股列表（指定日期）", description = "实时计算 -> 主线个股列表（指定日期）")
+    @GetMapping(value = "/realTime/topStockList")
+    public Result<List<TopStockDTO>> realTimeTopStockList(@Schema(description = "指定日期（默认：当前日期）", example = "2026-01-01")
+                                                          @RequestParam(required = false) LocalDate date,
+
+                                                          @Schema(description = "主线个股 - 策略类型", example = "涨停_SSF多_月多", implementation = TopTypeEnum.class)
+                                                          @RequestParam(defaultValue = "涨停_SSF多_月多") TopTypeEnum topTypeEnum) {
+
+        date = date == null ? LocalDate.now() : date;
+        return Result.SUC(topBlockService.realTimeTopStockList(date, topTypeEnum));
+    }
 
 
     /**
