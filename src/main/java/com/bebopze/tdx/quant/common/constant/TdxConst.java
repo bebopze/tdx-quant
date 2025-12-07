@@ -24,4 +24,14 @@ public class TdxConst {
      */
     public static final String INDEX_BLOCK = "880515";
 
+
+    /**
+     * 沪深300ETF（数据 起始日期   2012-5-28）                    // 宽基指数ETF   ->   不会停牌
+     *
+     *
+     * 基准个股（代替 -> 大盘指数）   =>     交易日 基准
+     */
+    public static final String INDEX_STOCK = "510300";
+
+
 }
