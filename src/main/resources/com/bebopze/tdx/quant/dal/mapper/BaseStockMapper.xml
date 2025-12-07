@@ -46,7 +46,7 @@
         WHERE code = #{code}
     </select>
 
-    <select id="getByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
         FROM base_stock
@@ -55,7 +55,7 @@
     </select>
 
 
-    <select id="getSimpleByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
@@ -64,20 +64,20 @@
     </select>
 
 
-    <select id="listAllSimple" resultMap="BaseResultMap">
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
     </select>
 
 
-    <select id="listAllKline" resultMap="BaseResultMap">
+    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
         FROM base_stock
     </select>
 
-    <select id="listAllETFKline" resultMap="BaseResultMap">
+    <select id="listAllETFKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
         FROM base_stock
@@ -85,7 +85,7 @@
         WHERE type = 2
     </select>
 
-    <select id="listByCursor" resultMap="BaseResultMap">
+    <select id="listByCursor" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
         FROM base_stock
@@ -98,7 +98,7 @@
     </select>
 
 
-    <select id="listByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="listByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
 
         FROM base_stock
@@ -112,7 +112,7 @@
     </select>
 
 
-    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
@@ -126,7 +126,7 @@
     </select>
 
 
-    <select id="listBaseByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="listBaseByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT id, code, name, type, tdx_market_type
 
         FROM base_stock
