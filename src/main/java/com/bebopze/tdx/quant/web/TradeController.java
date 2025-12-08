@@ -175,8 +175,11 @@ public class TradeController {
     public Result<Void> keepExistBuyNew(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
                                         @RequestParam String buyStockCodeList,
 
-                                        @Schema(description = "买入 持仓比例%（账户总仓位 相对比例，融资账户 范围：0~200%）", example = "100.0")
+                                        @Schema(description = "买入 持仓比例%（ = 买入总市值 / 净资产）    ->     普通账户：0~100% / 融资账户：0~200%", example = "100.0")
                                         @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+
+                                        @Schema(description = "单只个股 最大仓位比例%（ = 个股持仓市值 / 净资产）    ->     5~20%", example = "10.0")
+                                        @RequestParam(required = false, defaultValue = "10.0") double singleStockMaxPosPct,
 
                                         @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
                                         @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
@@ -190,7 +193,7 @@ public class TradeController {
 
         Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
 
-        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, currPricePct, prevPricePct);
+        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, singleStockMaxPosPct, currPricePct, prevPricePct);
         return Result.SUC();
     }
 

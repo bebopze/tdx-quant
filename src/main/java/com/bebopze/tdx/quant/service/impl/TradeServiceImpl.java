@@ -495,6 +495,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public void keepExistBuyNew(Set<String> buyStockCodeSet,
                                 double buyPosPct,
+                                double singleStockMaxPosPct,
                                 double currPricePct,
                                 double prevPricePct) {
 
@@ -502,7 +503,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 拉取 实时行情（全A/ETF）    ->     B参数 补全：name、price、...
-        List<QuickBuyPositionParam> newPositionList = StrategyServiceImpl.convert__newPositionList(buyStockCodeSet, currPricePct, prevPricePct);
+        List<QuickBuyPositionParam> newPositionList = StrategyServiceImpl.convert__newPositionList(buyStockCodeSet, singleStockMaxPosPct, currPricePct, prevPricePct);
 
 
         // 等比（buyPosPct  ->  指定 买入总仓位比例  ∈  0~200%）
@@ -2140,15 +2141,18 @@ public class TradeServiceImpl implements TradeService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 可用总资金（融资上限） 计算
-        double maxBuyCap = maxBuyCap(old_posResp, clearPosition);
+        // 可用总资金（融资上限） 计算   ❌❌❌❌❌
+//        double maxBuyCap = maxBuyCap(old_posResp, clearPosition);
+
+        // 净资产   ->   所有的仓位%  都是针对 [净资产] 进行计算的❗❗❗
+        double netasset = old_posResp.getNetasset().doubleValue();
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 持仓数量 计算
-        newPosQuantity(newPositionList, maxBuyCap);
+        newPosQuantity(newPositionList, netasset);
     }
 
 
@@ -2252,7 +2256,7 @@ public class TradeServiceImpl implements TradeService {
 
             // ------------------------------------ 当前个股 -> 已持有仓位
 
-            // 当前个股 -> 新买入仓位
+            // 当前个股 -> 已持有仓位
             double old_posPct = 0;
 
             CcStockInfo stockInfo = oldPosMap.get(e.getStockCode());
@@ -2333,9 +2337,9 @@ public class TradeServiceImpl implements TradeService {
      * 持仓数量 计算
      *
      * @param newPositionList
-     * @param maxBuyCap
+     * @param netasset        净资产   ->   所有的仓位%  都是针对 [净资产] 进行计算的❗❗❗
      */
-    private void newPosQuantity(List<QuickBuyPositionParam> newPositionList, double maxBuyCap) {
+    private void newPosQuantity(List<QuickBuyPositionParam> newPositionList, double netasset) {
 
 
         // qty = 0
@@ -2349,8 +2353,10 @@ public class TradeServiceImpl implements TradeService {
             // 价格
             double price = e.getPrice();
 
-            // 数量 = 可用总资金 * 仓位占比 / 价格
-            int qty = (int) (maxBuyCap * e.getPosRate() / price);
+            // 数量 = 可用总资金 * 仓位占比 / 价格   ❌❌❌
+
+            // 数量 = 净资产 * 仓位占比 / 价格   ✅✅✅   ->   所有的仓位%  都是针对 [净资产] 进行计算的❗❗❗
+            int qty = (int) (netasset * e.getPosRate() / price);
 
 
             // qty 规则计算
@@ -2378,14 +2384,14 @@ public class TradeServiceImpl implements TradeService {
                      qty0_newPositionList.size(), JSON.toJSONString(qty0_newPositionList));
 
 
-            // --------------------------------------------------------- TODO   DEL
-
-
-            // TODO   B策略 -> 买入失败（qty=0）      ->       写回TDX（B策略-qty0）
-            TdxBlockNewReaderWriter.write("BCL-QTY0", qty0_newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
-
-            // TODO   B策略 -> 买入成功（qty>0）      ->       写回TDX（B策略-SUC）
-            TdxBlockNewReaderWriter.write("BCL-SUC", newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
+//            // --------------------------------------------------------- TODO   DEL
+//
+//
+//            // TODO   B策略 -> 买入失败（qty=0）      ->       写回TDX（B策略-qty0）
+//            TdxBlockNewReaderWriter.write("BCL-QTY0", qty0_newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
+//
+//            // TODO   B策略 -> 买入成功（qty>0）      ->       写回TDX（B策略-SUC）
+//            TdxBlockNewReaderWriter.write("BCL-SUC", newPositionList.stream().map(QuickBuyPositionParam::getStockCode).collect(Collectors.toList()));
         }
     }
 
