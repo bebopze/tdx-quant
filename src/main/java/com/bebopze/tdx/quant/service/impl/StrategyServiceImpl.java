@@ -13,7 +13,6 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
-import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.bebopze.tdx.quant.service.InitDataService;
@@ -32,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,9 +49,6 @@ import static com.bebopze.tdx.quant.service.impl.TradeServiceImpl.of;
 @Slf4j
 @Service
 public class StrategyServiceImpl implements StrategyService {
-
-
-    // private static final BacktestCache data = InitDataServiceImpl.data;
 
 
     @Autowired
@@ -177,7 +174,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
-        backtestStrategy.buy_sell__signalConflict(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList);
+        backtestStrategy.buy_sell__signalConflict(topBlockStrategyEnum, data, tradeDate, buy__stockCodeList, buy_infoMap);
 
         log.info("B策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                  tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
@@ -410,10 +407,11 @@ public class StrategyServiceImpl implements StrategyService {
      * @return
      */
     public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList) {
-        return convert__newPositionList(buy__stockCodeList, 0.0, 0.0);
+        return convert__newPositionList(buy__stockCodeList, STOCK__POS_PCT_LIMIT, 0.0, 0.0);
     }
 
     public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList,
+                                                                       double singleStockMaxPosPct,
                                                                        double currPricePct,
                                                                        double prevPricePct) {
 
@@ -433,13 +431,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
                                      // 单只个股 仓位   ->   最大5%
-                                     newPosition.setPosPct(STOCK__POS_PCT_LIMIT);
-
-
-//                                     // 价格
-//                                     double price = data.rt_stock__codePriceMap.computeIfAbsent(stockCode,
-//                                                                                                // 买5/卖5     ->     卖5价（最高价 -> 一键买入）
-//                                                                                                k -> NumUtil.of(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getFivequote().getSale5()));
+                                     newPosition.setPosPct(singleStockMaxPosPct > 0 ? singleStockMaxPosPct : STOCK__POS_PCT_LIMIT);
 
 
                                      // 价格
@@ -447,8 +439,8 @@ public class StrategyServiceImpl implements StrategyService {
                                                                                                 k -> {
                                                                                                     // 拉取实时行情
                                                                                                     pullStockSnapshotPrice(Sets.newHashSet(stockCode));
-                                                                                                    // 买5/卖5     ->     卖5价（最高价 -> 一键买入）
-                                                                                                    return data.rt_stock__codePriceMap.get(stockCode) * 1.001;
+                                                                                                    // 买5/卖5     ->     卖5价（最高价 -> 一键买入）    // 这里不要乱改价！！！
+                                                                                                    return data.rt_stock__codePriceMap.get(stockCode) /** 1.001*/;
                                                                                                 });
 
 
@@ -459,14 +451,14 @@ public class StrategyServiceImpl implements StrategyService {
                                      }
 
 
-                                     // -----------------------------------------------------------------
+                                     // --------------------------------- B价格策略 -------------------------------------
 
 
                                      // B价格策略
                                      price = buyPriceStrategyPct(stockCode, currPricePct, prevPricePct);
 
 
-                                     // -----------------------------------------------------------------
+                                     // ---------------------------------
 
 
                                      newPosition.setPrice(price);
@@ -475,12 +467,12 @@ public class StrategyServiceImpl implements StrategyService {
                                      newPosition.setQuantity(100);
 
 
-                                     // --------------------------------------------------------------------------------
+                                     // --------------------------------- 过滤 ------------------------------------------
 
 
                                      // ST（暂未进入退市）、*ST（退市中）
                                      if (stockName.contains("*ST")) {
-                                         log.warn("买入[{} {}]   -   [退市中] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                         log.warn("买入[{}-{}]   -   [退市中] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
                                                   stockCode, stockName, of(price), data.rt_stock__codePctMap.get(stockCode));
 
                                          // 限制买入 -> 极少仓位
@@ -493,7 +485,7 @@ public class StrategyServiceImpl implements StrategyService {
 
                                      // 小账户 -> 禁止买入 百元股
                                      if (price > 300 || (stockCode.startsWith("68") && price > 200)) {
-                                         log.warn("买入[{} {}]   -   [高价股] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                         log.warn("买入[{}-{}]   -   [高价股] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
                                                   stockCode, stockName, of(price), data.rt_stock__codePctMap.get(stockCode));
                                          return null;
                                      }
@@ -504,8 +496,9 @@ public class StrategyServiceImpl implements StrategyService {
                                                                                                       // 买5/卖5     ->     涨/跌停价
                                                                                                       k -> KlineAPI.kline(stockCode).getZtPrice());
 
-                                     if (price >= zt_price) {
-                                         log.warn("买入[{} {}]   -   [已涨停] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
+                                     // 盘中（不含 集合竞价时间） ->  过滤 涨停股（无法买入）
+                                     if (isTradingTime() && price >= zt_price) {
+                                         log.warn("[盘中]买入[{}-{}]   -   [已涨停] -> 略过     >>>     close : {} , 涨跌幅 : {}%",
                                                   stockCode, stockName, of(price), data.rt_stock__codePctMap.get(stockCode));
                                          return null;
                                      }
@@ -527,45 +520,7 @@ public class StrategyServiceImpl implements StrategyService {
     private static void pullStockSnapshotPrice(Collection<String> buy__stockCodeList) {
 
 
-//        try {
-//            List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = EastMoneyKlineAPI.pullAllStockETFSnapshotKline();
-//
-//
-//            stockSnapshotKlineDTOS.forEach(e -> {
-//                String stockCode = e.getStockCode();
-//
-//
-//                data.stock__codeNameMap.put(stockCode, e.getStockName());
-//                data.rt_stock__codePctMap.put(stockCode, e.getChange_pct());
-//
-//
-//                data.rt_stock__codePriceMap.put(stockCode, NumUtil.of(e.getClose() * 1.003, 5));   // 略有延迟（20s） ->  保险起见：price x 1.003
-//                data.rt_stock_zt__codePriceMap.put(stockCode, NumUtil.of(e.getZtPrice(), 5));
-//                data.rt_stock_dt__codePriceMap.put(stockCode, NumUtil.of(e.getDtPrice(), 5));
-//            });
-//
-//        } catch (Exception e) {
-//
-//            // 封禁IP
-//            log.error(e.getMessage(), e);
-//        }
-
-
-        // ------------------------------------
-
-
         buy__stockCodeList.forEach(stockCode -> {
-
-
-//            SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-//            SleepUtils.randomSleep(50, 100);
-//
-//
-//            String stockName = resp.getName();
-//            double change_pct = resp.getRealtimequote().getZdf();
-//            double currPrice = resp.getRealtimequote().getCurrentPrice();
-//            double ztPrice = resp.getTopprice();
-//            double dtPrice = resp.getBottomprice();
 
 
             StockSnapshotKlineDTO dto = KlineAPI.kline(stockCode);
@@ -583,7 +538,8 @@ public class StrategyServiceImpl implements StrategyService {
             data.rt_stock__codePctMap.put(stockCode, change_pct);
 
 
-            data.rt_stock__codePriceMap.put(stockCode, NumUtil.of(currPrice * 1.001, 5));   // 略有延迟（1s） ->  保险起见：price x 1.001
+//            data.rt_stock__codePriceMap.put(stockCode, NumUtil.of(currPrice * 1.001, 5));   // 略有延迟（1s） ->  保险起见：price x 1.001
+            data.rt_stock__codePriceMap.put(stockCode, currPrice);   // 这里不要乱改价！！！
             data.rt_stock_zt__codePriceMap.put(stockCode, ztPrice);
             data.rt_stock_dt__codePriceMap.put(stockCode, dtPrice);
         });
@@ -591,7 +547,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
     /**
-     * B价格策略
+     * B价格策略（适配  盘中/盘后~盘前）
      *
      * @param stockCode
      * @param currPricePct 按当前价格涨跌幅%
@@ -607,24 +563,59 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // 昨日收盘价 = 当前实时价格 / (1 + 涨跌幅)
-        double preClose = price / (1 + pct * 0.01);
+        double prevClose = price / (1 + pct * 0.01);
 
 
-        // ------------------------------------------- 特殊处理 ---------------------------------------------------------
+        // ------------------------------------------- 特殊处理（盘中） ---------------------------------------------------
 
 
-        Integer changePctLimit = StockLimitEnum.getChgPctLimit(stockCode, data.stock__codeNameMap.get(stockCode));
+        LocalTime time = LocalTime.now();
 
-        // 涨停/近停   ->   挂 更低的价格（91% -> 1个跌停板） 买入
-        if (changePctLimit == 10 && pct >= changePctLimit * 0.9) {
-            price *= 0.97;
-            preClose *= 0.97;
-        } else if (changePctLimit == 20 && pct >= changePctLimit * 0.75) {
-            price *= 0.95;
-            preClose *= 0.95;
-        } else if (changePctLimit == 30 && pct >= changePctLimit * 0.7) {
-            price *= 0.93;
-            preClose *= 0.93;
+
+        // 盘中（9:15-15:00）
+        if (time.isAfter(LocalTime.of(9, 15)) && time.isBefore(LocalTime.of(15, 0))) {
+
+
+            Integer changePctLimit = StockLimitEnum.getChgPctLimit(stockCode, data.stock__codeNameMap.get(stockCode));
+
+            // 涨停/近停   ->   挂 更低的价格（91% -> 1个跌停板） 买入
+            if (changePctLimit == 10 && pct >= changePctLimit * 0.9) {
+                price *= 0.97;
+                prevClose *= 0.97;
+            } else if (changePctLimit == 20 && pct >= changePctLimit * 0.75) {
+                price *= 0.95;
+                prevClose *= 0.95;
+            } else if (changePctLimit == 30 && pct >= changePctLimit * 0.7) {
+                price *= 0.93;
+                prevClose *= 0.93;
+            }
+        }
+
+
+        // ------------------------------ 盘后~盘前（15:00-9:15）  ->   更新prevClose -------------------------------------
+
+
+        // 9:15        可向系统提交             ->   买卖委托
+        // 9:15-9:25   只接受申报，不成交
+
+        // 9:25        撮合[成交]时刻（按 [成交量] 最大原则   ->   确定当日 [开盘价]）
+
+        // 9:25-9:30   静默期（提交的买卖委托    ->   暂存在系统，不处理）
+        // 9:30        开盘  =>  竞价期间 订单  ->   按连续竞价规则处理
+
+
+        // 盘后~盘前（15:00-9:15）
+        if (time.isAfter(LocalTime.of(15, 0)) || time.isBefore(LocalTime.of(9, 15))) {
+
+
+            // 盘前 提前挂单（盘后 无法挂单）  ->   打板（涨停_SSF多_月多）
+            prevClose = price;   // 盘前 昨日收盘价（prevClose）  ->   当前最后一个交易日 收盘价（price）
+            //                      否则，prevClose             ->   实际为 前2日的 收盘价（prev_2_Close）
+            //                      因为，盘前挂单               ->   实际挂的是  次日的单
+
+
+            // close = close
+            // price  = price;
         }
 
 
@@ -633,10 +624,21 @@ public class StrategyServiceImpl implements StrategyService {
 
         // 按昨日收盘价涨跌幅%
         if (prevPricePct != 0) {
-            return preClose * (1 + prevPricePct * 0.01);
+            return prevClose * (1 + prevPricePct * 0.01);
         }
         // 按当前价格涨跌幅%
         return price * (1 + currPricePct * 0.01);
+    }
+
+
+    /**
+     * 是否 交易时间（盘中[不含 集合竞价时间]：9:30-15:00）
+     *
+     * @return
+     */
+    private static boolean isTradingTime() {
+        LocalTime time = LocalTime.now();
+        return time.isAfter(LocalTime.of(9, 30)) && time.isBefore(LocalTime.of(15, 0));
     }
 
 
