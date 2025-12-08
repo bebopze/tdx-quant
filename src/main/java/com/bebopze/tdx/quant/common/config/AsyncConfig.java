@@ -42,18 +42,30 @@ public class AsyncConfig {
         @Override
         public Runnable decorate(Runnable runnable) {
 
-            // 在装饰时（即提交任务时），获取当前线程的请求上下文
-            RequestAttributes context = RequestContextHolder.currentRequestAttributes();
+
+            // 在装饰时（即提交任务时），尝试获取当前线程的请求上下文
+            // 使用 currentRequestAttributes() 会失败，如果当前没有上下文
+            // 改用 getRequestAttributes()，它在没有上下文时返回 null
+            RequestAttributes context = RequestContextHolder.getRequestAttributes();
+
 
             return () -> {
-                try {
-                    // 在新线程中设置获取到的请求上下文
-                    RequestContextHolder.setRequestAttributes(context);
-                    // 执行原任务
+
+                if (context != null) {
+                    // 存在上下文时才设置它
+                    try {
+                        // 在新线程中设置获取到的请求上下文
+                        RequestContextHolder.setRequestAttributes(context);
+                        // 执行原任务
+                        runnable.run();
+                    } finally {
+                        // 清理，防止内存泄漏
+                        RequestContextHolder.resetRequestAttributes();
+                    }
+
+                } else {
+                    // 如果没有上下文，则直接运行任务
                     runnable.run();
-                } finally {
-                    // 清理，防止内存泄漏
-                    RequestContextHolder.resetRequestAttributes();
                 }
             };
         }
