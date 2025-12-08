@@ -153,11 +153,16 @@ public interface TradeService {
      * 一键 等比买入（调仓换股）    =>     降低手续费（保留exist  ->  买入new）
      *
      * @param buyStockCodeSet
-     * @param buyPosPct       买入 持仓比例%（账户总仓位 相对比例，融资账户 范围：0~200%）
+     * @param buyPosPct            买入 持仓比例%（ = 买入总市值 / 净资产）    ->     普通账户：0~100% / 融资账户：0~200%
+     * @param singleStockMaxPosPct 单只个股 最大仓位比例%（ = 个股持仓市值 / 净资产）    ->     5~20%
      * @param currPricePct
      * @param prevPricePct
      */
-    void keepExistBuyNew(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double prevPricePct);
+    void keepExistBuyNew(Set<String> buyStockCodeSet,
+                         double buyPosPct,
+                         double singleStockMaxPosPct,
+                         double currPricePct,
+                         double prevPricePct);
 
 
     /**
