@@ -27,6 +27,7 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -54,6 +55,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Autowired
     InitDataService initDataService;
 
+    @Lazy
     @Autowired
     private TradeService tradeService;
 
@@ -350,6 +352,25 @@ public class StrategyServiceImpl implements StrategyService {
 
         // 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
         tradeService.quickBuyPosition(convert__newPositionList(buyStockCodeSet));
+    }
+
+
+    @Override
+    public List<String> sellCodeList() {
+        // 持仓S
+        List<String> sellCodeList = TdxBlockNewReaderWriter.read("CCS");
+        return sellCodeList;
+    }
+
+    @Override
+    public List<StockSnapshotKlineDTO> sellList() {
+
+        // 持仓S
+        List<String> sellCodeList = sellCodeList();
+
+        // kline
+        List<StockSnapshotKlineDTO> klineList = KlineAPI.kline(sellCodeList);
+        return klineList;
     }
 
 

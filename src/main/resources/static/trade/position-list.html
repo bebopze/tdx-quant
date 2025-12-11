@@ -694,6 +694,15 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterPositions_sellSignalFlag">S信号：</label>
+                            <select id="filterPositions_sellSignalFlag" class="form-select form-select-sm"
+                                    style="width:auto">
+                                <option value="">全部</option>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterPositions_topStockFlag">主线个股：</label>
                             <select id="filterPositions_topStockFlag" class="form-select form-select-sm"
                                     style="width:auto">
@@ -712,7 +721,7 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterPositions_inTopBlockFlag">持仓状态：</label>
+                            <label for="filterPositions_posFlag">持仓状态：</label>
                             <select id="filterPositions_posFlag" class="form-select form-select-sm"
                                     style="width:auto">
                                 <option value="">全部</option>
@@ -782,6 +791,9 @@
                                                                                          id="sortStkavl"></span></th>
                                 <th onclick="sortPositionsTable('industry')">行业<span class="sort-icon"
                                                                                        id="sortIndustry"></span></th>
+                                <th onclick="sortPositionsTable('sellSignalFlag')">S信号<span class="sort-icon"
+                                                                                              id="sortSellSignalFlag"></span>
+                                </th>
                                 <th onclick="sortPositionsTable('topStockFlag')">主线个股<span class="sort-icon"
                                                                                                id="sortTopStockFlag"></span>
                                 </th>
@@ -2137,6 +2149,7 @@
         let topStockFlag = document.getElementById('filterPositions_topStockFlag').value;
         let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
         let posFlag = document.getElementById('filterPositions_posFlag').value;
+        let sellSignalFlag = document.getElementById('filterPositions_sellSignalFlag').value;
         let curProfitratio__min = document.getElementById('filterPositions_curProfitratio__min').value;
         let curProfitratio__max = document.getElementById('filterPositions_curProfitratio__max').value;
 
@@ -2156,6 +2169,10 @@
         if (posFlag) {
             posFlag = toBoolean(posFlag);
             filterPositions = filterPositions.filter(position => position.posFlag === posFlag);
+        }
+        if (sellSignalFlag) {
+            sellSignalFlag = toBoolean(sellSignalFlag);
+            filterPositions = filterPositions.filter(position => position.sellSignalFlag === sellSignalFlag);
         }
         if (curProfitratio__min) {
             curProfitratio__min = toNumber(curProfitratio__min) * 0.01;
@@ -2233,6 +2250,7 @@
                 return industryStr;
             })()}
               </td>
+              <td>${item.sellSignalFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
               <!-- 主线个股 -->
               <td>${item.topStockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
               <td>${item.inTopBlockFlag ? '<span class="top-stock-indicator">是</span>' : '-'}</td>
@@ -4645,6 +4663,7 @@
 
 
         document.getElementById('filterPositions_stockType').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_sellSignalFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_topStockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_inTopBlockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_posFlag').addEventListener('change', () => displayPositionRecords(positionsData));
