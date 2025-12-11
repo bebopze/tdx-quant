@@ -2,9 +2,11 @@ package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 
 import java.time.LocalDate;
 import java.util.List;
+
 
 /**
  * @author: bebopze
@@ -13,9 +15,16 @@ import java.util.List;
 public interface StrategyService {
 
     BSStrategyInfoDTO bsTrade(TopBlockStrategyEnum topBlockStrategyEnum,
-                              List<String> buyConList, List<String> sellConList, LocalDate tradeDate);
+                              List<String> buyConList,
+                              List<String> sellConList,
+                              LocalDate tradeDate);
 
     BSStrategyInfoDTO bsTradeRead();
 
     void bsTopStockList();
+
+
+    List<String> sellCodeList();
+
+    List<StockSnapshotKlineDTO> sellList();
 }

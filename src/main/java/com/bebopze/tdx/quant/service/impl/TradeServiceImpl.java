@@ -25,6 +25,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
+import com.bebopze.tdx.quant.service.StrategyService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.TradeService;
 import com.google.common.collect.Lists;
@@ -68,6 +69,9 @@ public class TradeServiceImpl implements TradeService {
     @Autowired
     private TopBlockCache topBlockCache;
 
+    @Autowired
+    private StrategyService strategyService;
+
 
     @Override
     public QueryCreditNewPosResp queryCreditNewPosV2(boolean blockInfo) {
@@ -77,13 +81,29 @@ public class TradeServiceImpl implements TradeService {
 
         // block info
         if (blockInfo) {
-            resp.getStocks().parallelStream().forEach(stock -> {
 
-                PosStockCache dto = posStockCache.get(stock.getStkcode());
+
+            // 卖出列表（当日一键卖出）
+            List<String> sellCodeList = strategyService.sellCodeList();
+
+
+            resp.getStocks().parallelStream().forEach(stock -> {
+                String stockCode = stock.getStkcode();
+
+
+                // 卖出信号
+                if (sellCodeList.contains(stockCode)) {
+                    stock.setSellSignalFlag(true);
+                    stock.setSellSignalList(Lists.newArrayList(SellStrategyEnum.下MA5));
+                }
+
+
+                // 板块信息
+                PosStockCache dto = posStockCache.get(stockCode);
                 // BaseStockDTO baseStockDTO = dto.getBaseStockDTO();
                 stock.setBlockInfoDTO(dto.getStockBlockInfoDTO());
                 // stock.setPreClose(dto.getBaseStockDTO().getPreClose().doubleValue());
-                stock.setPrevClose(PosStockCache.getPrevClose(stock.getStkcode()));
+                stock.setPrevClose(PosStockCache.getPrevClose(stockCode));
             });
 
 
@@ -1630,7 +1650,6 @@ public class TradeServiceImpl implements TradeService {
 
             // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
             BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
-            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(0.95)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
             // 数量（B数量 = S数量 -> 可用数量）
@@ -1763,7 +1782,6 @@ public class TradeServiceImpl implements TradeService {
 
             // B价格 -> 最高价（卖5价 -> 确保100%成交）  =>   C x 100.5%
             BigDecimal price = e.getLastprice().multiply(BigDecimal.valueOf(1.005)).setScale(scale, RoundingMode.HALF_UP);
-            // BigDecimal test_price = e.getLastprice().multiply(BigDecimal.valueOf(0.9)).setScale(scale, RoundingMode.HALF_UP);
             param.setPrice(price);
 
             // 数量（B数量 = S数量 -> 可用数量）
@@ -2302,35 +2320,35 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-    /**
-     * 可用总资金
-     *
-     * @param old_posResp   （old）已买入 持仓详情
-     * @param clearPosition 是否清仓
-     * @return
-     */
-    private double maxBuyCap(QueryCreditNewPosResp old_posResp, boolean clearPosition) {
-
-        // 可用总资金
-        double maxBuyCap;
-
-
-        if (clearPosition) {
-
-            // （清仓）总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
-            // maxBuyCap = old_posResp.getNetasset().doubleValue() * MAX_RZ_RATE;
-            maxBuyCap = old_posResp.getMax_TotalCap();
-
-        } else {
-
-            // （当前）总资金  =  可用保证金（可融）  +   可用资金（担）
-            // maxBuyCap = old_posResp.getMarginavl().doubleValue() + old_posResp.getAvalmoney().doubleValue();
-            maxBuyCap = old_posResp.getMax_buyCap();
-        }
-
-
-        return maxBuyCap;
-    }
+//    /**
+//     * 可用总资金
+//     *
+//     * @param old_posResp   （old）已买入 持仓详情
+//     * @param clearPosition 是否清仓
+//     * @return
+//     */
+//    private double maxBuyCap(QueryCreditNewPosResp old_posResp, boolean clearPosition) {
+//
+//        // 可用总资金
+//        double maxBuyCap;
+//
+//
+//        if (clearPosition) {
+//
+//            // （清仓）总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
+//            // maxBuyCap = old_posResp.getNetasset().doubleValue() * MAX_RZ_RATE;
+//            maxBuyCap = old_posResp.getMax_TotalCap();
+//
+//        } else {
+//
+//            // （当前）总资金  =  可用保证金（可融）  +   可用资金（担）
+//            // maxBuyCap = old_posResp.getMarginavl().doubleValue() + old_posResp.getAvalmoney().doubleValue();
+//            maxBuyCap = old_posResp.getMax_buyCap();
+//        }
+//
+//
+//        return maxBuyCap;
+//    }
 
 
     /**
