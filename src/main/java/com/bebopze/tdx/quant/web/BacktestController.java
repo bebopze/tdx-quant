@@ -45,14 +45,14 @@ public class BacktestController {
                                      @Schema(description = "回测-结束时间", example = "2100-12-31")
                                      @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
-                                     @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局【batchNo+1】 ）", example = "true")
-                                     @RequestParam(defaultValue = "true") boolean resume,
+                                     @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局【batchNo+1】 ）", example = "false")
+                                     @RequestParam(defaultValue = "false") boolean resume,
 
                                      @Schema(description = "任务批次号（resume=true 生效）", example = "1")
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -71,10 +71,10 @@ public class BacktestController {
                                            @RequestParam(required = false, defaultValue = "-1") String taskIdList,
 
                                            @Schema(description = "更新-开始时间", example = "2025-01-01")
-                                           @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
+                                           @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,
 
                                            @Schema(description = "更新-结束时间", example = "2100-12-31")
-                                           @RequestParam(defaultValue = "2025-07-01") LocalDate endDate) {
+                                           @RequestParam(defaultValue = "2100-12-31") LocalDate endDate) {
 
 
         List<Long> _taskIdList = ConvertUtil.str2LongList(taskIdList);
@@ -106,7 +106,7 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -128,7 +128,7 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":5,\"singleStockMaxBuyPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 

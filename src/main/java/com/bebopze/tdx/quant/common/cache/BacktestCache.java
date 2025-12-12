@@ -65,6 +65,7 @@ public class BacktestCache {
     public Map<String, Long> stock__codeIdMap = Maps.newConcurrentMap();
     public Map<String, String> stock__codeNameMap = Maps.newConcurrentMap();
     public Map<String, Map<LocalDate, Double>> stock__dateCloseMap = Maps.newConcurrentMap();
+    public Map<String, Map<LocalDate, Double>> stock__dateOpenMap = Maps.newConcurrentMap();
 
 
     public Map<String, Double> rt_stock_zt__codePriceMap = Maps.newHashMap(); // 涨停价     ->  东财API

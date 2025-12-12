@@ -32,7 +32,6 @@ import org.springframework.util.Assert;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -432,13 +431,13 @@ public class BacktestServiceImpl implements BacktestService {
 
         while (tradeDate.isBefore(endDate)) {
 
-            LocalDate preTradeDate = tradeDate;
+            LocalDate prevTradeDate = tradeDate;
             tradeDate = backTestStrategy.tradeDateIncr(tradeDate);
 
 
             try {
                 // 每日 - 回测（B/S）  check
-                execCheckBacktestDaily(preTradeDate, tradeDate, taskDO);
+                execCheckBacktestDaily(prevTradeDate, tradeDate, taskDO);
             } catch (Exception e) {
                 log.error("execCheckBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
             }
@@ -516,10 +515,10 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
 
-    private void execCheckBacktestDaily(LocalDate preTradeDate, LocalDate tradeDate, BtTaskDO taskDO) {
+    private void execCheckBacktestDaily(LocalDate prevTradeDate, LocalDate tradeDate, BtTaskDO taskDO) {
 
         // 首日
-        if (preTradeDate.isBefore(taskDO.getStartDate())) {
+        if (prevTradeDate.isBefore(taskDO.getStartDate())) {
             return;
         }
 
@@ -610,40 +609,41 @@ public class BacktestServiceImpl implements BacktestService {
         double nav = dailyReturnDO.getNav().doubleValue();
 
 
-        // ---------------------------------- pre
+        // ---------------------------------- prev
 
 
-        BtDailyReturnDO pre_dailyReturnDO = btDailyReturnService.getByTaskIdAndTradeDate(taskId, preTradeDate);
+        BtDailyReturnDO prev_dailyReturnDO = btDailyReturnService.getByTaskIdAndTradeDate(taskId, prevTradeDate);
 
 
-        double pre_marketValue = pre_dailyReturnDO.getMarketValue().doubleValue();
-        double pre_capital = pre_dailyReturnDO.getCapital().doubleValue();
+        double prev_marketValue = prev_dailyReturnDO.getMarketValue().doubleValue();
+        double prev_capital = prev_dailyReturnDO.getCapital().doubleValue();
 
-        double pre_avlCapital = pre_dailyReturnDO.getAvlCapital().doubleValue();
+        double prev_avlCapital = prev_dailyReturnDO.getAvlCapital().doubleValue();
 
-        double pre_buyCapital = pre_dailyReturnDO.getBuyCapital().doubleValue();
-        double pre_sellCapital = pre_dailyReturnDO.getSellCapital().doubleValue();
+        double prev_buyCapital = prev_dailyReturnDO.getBuyCapital().doubleValue();
+        double prev_sellCapital = prev_dailyReturnDO.getSellCapital().doubleValue();
 
 
-        double pre_profitLossAmount = pre_dailyReturnDO.getProfitLossAmount().doubleValue();
-        double pre_dailyReturn = pre_dailyReturnDO.getDailyReturn().doubleValue();
-        double pre_nav = pre_dailyReturnDO.getNav().doubleValue();
+        double prev_profitLossAmount = prev_dailyReturnDO.getProfitLossAmount().doubleValue();
+        double prev_dailyReturn = prev_dailyReturnDO.getDailyReturn().doubleValue();
+        double prev_nav = prev_dailyReturnDO.getNav().doubleValue();
 
 
         // ---------------------------------- 汇总
 
 
         // 今日可用  =  昨日可用 + 今日卖出 - 今日买入
-        double avlCapital_check = pre_avlCapital + sellCapital_check - buyCapital_check;
+        double avlCapital_check = prev_avlCapital + sellCapital_check - buyCapital_check;
+
 
         // 今日总资金  =  总市值 + 今日可用
         double capital_check = totalMarketValue_check + avlCapital_check;
 
 
         // 当日盈亏额 = 当日总资金 - 昨日总资金
-        double profitLossAmount_check = capital_check - pre_capital;
+        double profitLossAmount_check = capital_check - prev_capital;
         // 当日收益率 = 当日盈亏额 / 昨日总资金
-        double dailyReturn_check = profitLossAmount_check / pre_capital;
+        double dailyReturn_check = profitLossAmount_check / prev_capital;
         // 当日净值 = 今日总资金 / 本金
         double nav_check = capital_check / taskDO.getInitialCapital().doubleValue();
 
