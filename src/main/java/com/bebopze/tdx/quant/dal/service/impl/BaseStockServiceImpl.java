@@ -22,6 +22,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -315,8 +316,9 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Retryable(
             value = {Exception.class},
             maxAttempts = 5,   // 重试次数
-            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 90000),   // 最大90秒延迟
-            exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            exclude = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public boolean updateById(BaseStockDO entity) {
