@@ -10,8 +10,10 @@ import com.github.benmanes.caffeine.cache.Scheduler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_STOCK;
 
@@ -59,6 +61,19 @@ public class KlineAPI {
         LocalDate date = EastMoneyTradeAPI.SHSZQuoteSnapshot(INDEX_STOCK).getRealtimequote().getDate();
         log.info("lastTradeDate     >>>     {}", date);
         return date;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * 获取  多个股票/ETF  行情快照
+     *
+     * @param stockCodeList 股票code列表
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> kline(Collection<String> stockCodeList) {
+        return stockCodeList.parallelStream().map(stockCode -> kline(stockCode)).collect(Collectors.toList());
     }
 
 
