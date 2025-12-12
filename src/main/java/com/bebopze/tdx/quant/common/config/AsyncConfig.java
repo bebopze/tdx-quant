@@ -25,8 +25,8 @@ public class AsyncConfig {
     @Bean(name = "taskExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
+        executor.setCorePoolSize(50);
+        executor.setMaxPoolSize(75);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("task-");
         // 设置 TaskDecorator 以复制上下文
