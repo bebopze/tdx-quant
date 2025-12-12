@@ -111,6 +111,35 @@
         }
 
 
+        /* 合计行、平均值行 */
+
+        .sum-row,
+        .avg-row {
+            background-color: #dee2e6;
+            font-weight: bold;
+            font-style: italic;
+            border-top: 2px solid #dee2e6;
+        }
+
+        /* 针对平均值行中所有单元格的样式 */
+        .sum-row td,
+        .avg-row td {
+            background-color: #dee2e6;
+            border: 1px solid #adb5bd; /* 显式设置一个比背景色深的边框颜色，确保列分隔线可见 */
+            padding: 4px 6px;
+        }
+
+        /* 针对平均值行中合并列的标签单元格样式 */
+        .sum-row .avg-label,
+        .avg-row .avg-label {
+            background-color: #dee2e6;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            text-align: center;
+            border: 1px solid #adb5bd;
+        }
+
+
         /*!* --- 新增：为交易信号列添加特定样式 --- *!
         !* 目标：让 '交易信号' 列的内容左对齐，并允许自动换行 *!
         .table td:nth-child(4), !* 针对 '交易信号' 列（第4列） *!
@@ -390,6 +419,9 @@
                         <th onclick="sortTable('capTodayPnlPct', 'position')">当日盈亏率(%)<span class="sort-icon"
                                                                                                  id="sortCapTodayPnlPctPosition"></span>
                         </th>
+                        <th onclick="sortTable('changePct', 'position')">当日涨跌(%)<span class="sort-icon"
+                                                                                          id="sortChangePctPosition"></span>
+                        </th>
                         <th onclick="sortTable('buyDate', 'position')">买入日期<span class="sort-icon"
                                                                                      id="sortBuyDatePosition"></span>
                         </th>
@@ -465,7 +497,9 @@
                         <th onclick="sortTable('capTodayPnlPct', 'clearPosition')">当日盈亏率(%)<span class="sort-icon"
                                                                                                       id="sortCapTodayPnlPctClearPosition"></span>
                         </th>
-                        <!-- 修复结束 -->
+                        <th onclick="sortTable('changePct', 'clearPosition')">当日涨跌(%)<span class="sort-icon"
+                                                                                               id="sortChangePctClearPosition"></span>
+                        </th>
                         <th onclick="sortTable('buyDate', 'clearPosition')">买入日期<span class="sort-icon"
                                                                                           id="sortBuyDateClearPosition"></span>
                         </th>
@@ -845,7 +879,7 @@
                             return `
                                 <div>
                                   <p><strong>日期:</strong> ${item.tradeDate}</p>
-                                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</p>
+                                  <p>当日收益率: ${(item.dailyReturn * 100).toFixed(3)}%</p>
                                   <p>净值: ${item.nav.toFixed(4)}</p>
                                 </div>`;
                         }
@@ -882,7 +916,7 @@
                                 <div style="line-height: 1.4;">
                                   <div><strong style="font-weight: bold;">${item.tradeDate}</strong></div>
                                   <div>净值: <span style="color: #FF6F61; font-weight: bold">${item.nav.toFixed(4)}</span></div>
-                                  <div>日收益率: ${(item.dailyReturn * 100).toFixed(2)}%</div>
+                                  <div>日收益率: ${(item.dailyReturn * 100).toFixed(3)}%</div>
                                   <div>盈亏额: ${item.profitLossAmount}</div>
                                   <div>总资金: ${item.capital}</div>
                                   <div>市值: ${item.marketValue}</div>
@@ -989,6 +1023,8 @@
         const state = sortState.position;
         const column = state.column;
         const order = state.order;
+
+
         tbody.innerHTML = '';
         if (!analysis || !analysis.positionRecordList) {
             tbody.innerHTML = '<tr><td colspan="17">暂无持仓记录</td></tr>'; // 更新 colspan
@@ -1008,6 +1044,13 @@
             return;
         }
         if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+
+
+        // 合计行
+        const sumRow = createPositionsSumRow(filtered);
+        tbody.appendChild(sumRow); // 将合计行添加到 tbody 的开头（紧跟在清空之后，但在列表行之前）
+
+
         filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
@@ -1032,6 +1075,8 @@
                 <td${getProfitColorStyle(item.capTodayPnl)}>${item.capTodayPnl}</td>
                 <!-- 当日盈亏率(%) -->
                 <td${getProfitColorStyle(item.capTodayPnlPct)}>${item.capTodayPnlPct}</td>
+                <!-- 当日涨跌(%) -->
+                <td${getProfitColorStyle(item.changePct)}>${item.changePct}</td>
                 <td>${item.buyDate}</td>
                 <td>${item.holdingDays}</td>
             `;
@@ -1069,6 +1114,13 @@
             return;
         }
         if (countElement) countElement.textContent = `(${filtered.length})`; // 更新计数
+
+
+        // 合计行
+        const sumRow = createPositionsSumRow(filtered);
+        tbody.appendChild(sumRow); // 将合计行添加到 tbody 的开头（紧跟在清空之后，但在列表行之前）
+
+
         filtered.forEach((item, index) => { // 添加 index 参数
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
@@ -1093,12 +1145,95 @@
                 <td${getProfitColorStyle(item.capTodayPnl)}>${item.capTodayPnl}</td>
                 <!-- 当日盈亏率(%) -->
                 <td${getProfitColorStyle(item.capTodayPnlPct)}>${item.capTodayPnlPct}</td>
+                <!-- 当日涨跌幅(%) -->
+                <td${getProfitColorStyle(item.changePct)}>${item.changePct}</td>
                 <td>${item.buyDate}</td>
                 <td>${item.holdingDays}</td>
             `;
             tbody.appendChild(tr);
         });
     }
+
+
+    // 持仓列表 -> 合计行
+    function createPositionsSumRow(sortedPositions) {
+
+        let sumValues = {
+            marketValue: 0,         // 市值
+            positionPct: 0,         // 仓位占比（%）
+            capTodayPnl: 0,         // 当日浮动盈亏
+            capTodayPnlPct: 0,      // 当日盈亏率（%）
+            capTotalPnl: 0,         // 累计浮动盈亏
+            capTotalPnlPct: 0,      // 累计盈亏率（%）
+            changePct: 0,           // 当日涨跌幅（%）
+            buyDate: null,          // 首次买入日期
+            holdingDays: 0,         // 持仓天数
+        };
+
+
+        sortedPositions.reduce((acc, cur) => {
+            sumValues.marketValue += cur.marketValue;
+            sumValues.positionPct += cur.positionPct;
+            sumValues.capTodayPnl += cur.capTodayPnl;
+            sumValues.capTodayPnlPct += cur.capTodayPnlPct;
+            sumValues.capTotalPnl += cur.capTotalPnl;
+            sumValues.capTotalPnlPct += cur.capTotalPnlPct;
+            sumValues.changePct += cur.changePct;
+            sumValues.buyDate = sumValues.buyDate < cur.buyDate ? sumValues.buyDate : cur.buyDate;
+            sumValues.holdingDays += cur.holdingDays;
+        }, sumValues);
+
+
+        // 创建并插入合计行
+        const sumRow = document.createElement('tr');
+        sumRow.classList.add('sum-row'); // 添加特定类名用于样式
+
+        // 根据表头结构填充合计行，非数字列可填充提示文字或空
+        // 假设表头顺序是: 序号	股票代码	 交易日	股票名称	普通行业（LV2）	成本	收盘价	持仓数量	可用数量	市值	仓位占比(%)	累计盈亏	累计盈亏率(%)	当日盈亏	当日盈亏率(%)	当日涨跌(%)	买入日期	持仓天数
+        // 对应的列索引 (0-based) 需要根据实际HTML调整
+        // 索引 0: Checkbox
+        sumRow.innerHTML += `<td></td>`; // Checkbox 列，通常为空或用于放置“合计”标签
+        // 索引 1:  (序号) - 非合计列
+        sumRow.innerHTML += `<td>合计</td>`;
+        // 索引 2:  (股票代码) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 3:  (股票名称) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 4:  (普通行业（LV2）) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 5:  (成本) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 6:  (收盘价) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 7:  (持仓数量) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 8:  (可用数量) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+
+
+        // 索引 9: marketValue (市值) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.marketValue.toFixed(0)}</td>`;
+        // 索引 10: positionPct (仓位占比(%) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.positionPct.toFixed(2)}%</td>`;
+        // 索引 11: capTotalPnl (累计盈亏) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.capTotalPnl.toFixed(0)}</td>`;
+        // 索引 12: capTotalPnlPct (累计盈亏率(%)) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.capTotalPnlPct.toFixed(2)}%</td>`;
+        // 索引 13: capTodayPnl (当日盈亏) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.capTodayPnl.toFixed(2)}</td>`;
+        // 索引 14: capTodayPnlPct (当日盈亏率(%)) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.capTodayPnlPct.toFixed(2)}%</td>`;
+        // 索引 15: changePct (当日涨跌(%)) - 合计列
+        sumRow.innerHTML += `<td>${(sumValues.changePct / sortedPositions.length).toFixed(2)}%</td>`;
+        // 索引 16: buyDate (买入日期) - 合计列
+        sumRow.innerHTML += `<td>${sumValues.buyDate}</td>`;
+        // 索引 17: holdingDays (持仓天数) - 合计列
+        sumRow.innerHTML += `<td>${(sumValues.holdingDays / sortedPositions.length).toFixed(0)}</td>`;
+
+
+        return sumRow;
+    }
+
 
     // 显示交易记录
     function showTradeRecords(date) {
@@ -1155,6 +1290,7 @@
     }
 
 
+    // 显示上榜记录
     function showCountRecords() {
         // 修复：正确获取 tbody 元素
         const tbody = document.querySelector('#countCollapse #countTable tbody');
