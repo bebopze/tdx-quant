@@ -29,6 +29,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
+
 
 /**
  * 回测 - S策略
@@ -270,17 +272,17 @@ public class BacktestSellStrategy implements SellStrategy {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // prev_跌停__S_signal   ->   S策略 + next_date + 跌停stockCode
-            boolean prev_跌停__S_signal = sellConSet_nextDate__dtStockCodeSet__Map
-                    .getOrDefault(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), tradeDate), Sets.newHashSet())
-                    .contains(stockCode);
-
-
-            // 昨日（S + 跌停）  ->   可卖出（今日[open]  ->  直接卖出）
-            if (prev_跌停__S_signal) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
-                return true;
-            }
+//            // prev_跌停__S_signal   ->   S策略 + next_date + 跌停stockCode
+//            boolean prev_跌停__S_signal = sellConSet_nextDate__dtStockCodeSet__Map
+//                    .getOrDefault(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), tradeDate), Sets.newHashSet())
+//                    .contains(stockCode);
+//
+//
+//            // 昨日（S + 跌停）  ->   可卖出（今日[open]  ->  直接卖出）
+//            if (prev_跌停__S_signal) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
+//                return true;
+//            }
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -300,11 +302,26 @@ public class BacktestSellStrategy implements SellStrategy {
                     double next_open = klineArrDTO.open[idx + 1];
 
 
-                    // S + 跌停  ->  无法卖出（最简化处理：[next_close] = [next_open]，次日开盘 直接卖出）
-                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
+                    // -------------------------------------------------------------------------------------------------
 
-                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
-                             stockCode, fun.getName(), tradeDate, next_date, next_close, next_open);
+
+                    // 今日S + 跌停     =>     次日 -> 开盘S
+                    btOpenBSDTO.get().today_date = tradeDate;
+                    btOpenBSDTO.get().next_date = next_date;
+//                    btOpenBSDTO.get().open_S___stockCode_name_Map.put(stockCode, stockDO.getName());
+                    btOpenBSDTO.get().open_S___stockCode_open_Map.put(stockCode, next_open);
+                    btOpenBSDTO.get().open_S___stockCode_close_Map.put(stockCode, next_close);
+                    btOpenBSDTO.get().open_S___sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
+
+
+                    // -------------------------------------------------------------------------------------------------
+
+
+//                    // S + 跌停  ->  无法卖出（最简化处理：[next_close] = [next_open]，次日开盘 直接卖出）
+//                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
+//
+//                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
+//                             stockCode, fun.getName(), tradeDate, next_date, next_close, next_open);
 
 
                     // -------------------------------------------------------------------------------------------------

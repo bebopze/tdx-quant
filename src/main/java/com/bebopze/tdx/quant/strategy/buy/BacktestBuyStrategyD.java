@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static com.bebopze.tdx.quant.common.constant.BuyStrategyEnum.涨停_SSF多_月多;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
 
 
 /**
@@ -342,13 +343,13 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // 昨日（B + 涨停）  ->   可买入（今日[open]  ->  直接买入）
-            if (prev_涨停__B_signal) {
-                buy__topStock__codeSet.add(stockCode);
-                // conMap.put("prev_B_涨停__今日_开盘B", true);
-                conMap.put(涨停_SSF多_月多.getDesc(), true);
-                buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
-            }
+//            // 昨日（B + 涨停）  ->   可买入（今日[open]  ->  直接买入）
+//            if (prev_涨停__B_signal) {
+//                buy__topStock__codeSet.add(stockCode);
+//                // conMap.put("prev_B_涨停__今日_开盘B", true);
+//                conMap.put(涨停_SSF多_月多.getDesc(), true);
+//                buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
+//            }
 
 
             // B + 未涨停  ->  可买入（今日[close]  ->  直接买入）
@@ -368,19 +369,36 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     double next_open = klineArrDTO.open[idx + 1];
 
 
-                    // 次日S  ->  不能改价格
-                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, next_date, Lists.newArrayList(stockCode), Maps.newHashMap(), btCompareDTO.get());
+                    // 次日S  ->  不能B（提前预知 -> 次日收盘价？？？❌❌❌）
+
+                    // 今日B + 涨停     =>     今日S  ->  次日不能B
+                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, tradeDate, Lists.newArrayList(stockCode), Maps.newHashMap(), btCompareDTO.get());
                     boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
                     if (next_date_S /*|| nextDate__大盘仓位限制->等比减仓*/) {
                         return;
                     }
 
 
-                    // [next_close] = [next_open]
-                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
+                    // -------------------------------------------------------------------------------------------------
 
-                    log.info("今日B + [涨停]   ->   无法买入 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
-                             stockCode, stockDO.getName(), tradeDate, next_date, next_close, next_open);
+
+                    // 今日B + 涨停     =>     次日 -> 开盘B
+                    btOpenBSDTO.get().today_date = tradeDate;
+                    btOpenBSDTO.get().next_date = next_date;
+                    btOpenBSDTO.get().open_B___stockCode_name_Map.put(stockCode, stockDO.getName());
+                    btOpenBSDTO.get().open_B___stockCode_open_Map.put(stockCode, next_open);
+                    btOpenBSDTO.get().open_B___stockCode_close_Map.put(stockCode, next_close);
+                    btOpenBSDTO.get().open_B___buy_infoMap.put(stockCode, 涨停_SSF多_月多.getDesc());
+
+
+                    // -------------------------------------------------------------------------------------------------
+
+
+//                    // [next_close] = [next_open]
+//                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
+//
+//                    log.info("今日B + [涨停]   ->   无法买入 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
+//                             stockCode, stockDO.getName(), tradeDate, next_date, next_close, next_open);
 
 
                     // -------------------------------------------------------------------------------------------------
@@ -916,6 +934,17 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         conMap.put("C_MA50_偏离率<5", C_MA50_偏离率 < 5);
         conMap.put("C_MA60_偏离率<5", C_MA60_偏离率 < 5);
         conMap.put("C_MA100_偏离率<5", C_MA100_偏离率 < 5);
+
+
+        // ------------------------------------------- 限高 -------------------------------------------------------------
+
+
+        double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
+
+
+        conMap.put("中期涨幅<35", 中期涨幅 < 35);
+        conMap.put("中期涨幅<50", 中期涨幅 < 50);
+        conMap.put("中期涨幅<100", 中期涨幅 < 100);
 
 
         // -------------------------------------------------------------------------------------------------------------
