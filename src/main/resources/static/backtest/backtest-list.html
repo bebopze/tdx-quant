@@ -182,9 +182,9 @@
                        placeholder="最大回撤最大" step="0.01">
             </div>
             <div class="col-md-1 form-group">
-                <input type="number" class="form-control form-control-sm" id="filterProfitDayPctMin"
+                <input type="number" class="form-control form-control-sm" id="filterProfitDaysPctMin"
                        placeholder="盈利天数最小" step="0.01">
-                <input type="number" class="form-control form-control-sm" id="filterProfitDayPctMax"
+                <input type="number" class="form-control form-control-sm" id="filterProfitDaysPctMax"
                        placeholder="盈利天数最大" step="0.01">
             </div>
             <div class="col-md-1 form-group">
@@ -364,20 +364,20 @@
                         <span class="sort-order" id="order-finalNav"></span>
                     </div>
                 </th>
-                <th data-key="totalDay">
+                <th data-key="totalDays">
                     总天数
                     <div class="sort-controls">
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
-                        <span class="sort-order" id="order-totalDay"></span>
+                        <span class="sort-order" id="order-totalDays"></span>
                     </div>
                 </th>
-                <th data-key="totalTrade">
+                <th data-key="totalTrades">
                     交易总笔数
                     <div class="sort-controls">
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
-                        <span class="sort-order" id="order-totalTrade"></span>
+                        <span class="sort-order" id="order-totalTrades"></span>
                     </div>
                 </th>
                 <th data-key="totalTradeAmount">
@@ -428,14 +428,79 @@
                         <span class="sort-order" id="order-maxDrawdownPct"></span>
                     </div>
                 </th>
-                <th data-key="profitDayPct">
+                <th data-key="profitDaysPct">
                     盈利天数%
                     <div class="sort-controls">
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
-                        <span class="sort-order" id="order-profitDayPct"></span>
+                        <span class="sort-order" id="order-profitDaysPct"></span>
                     </div>
                 </th>
+                <th data-key="drawDaysPct">
+                    平局天数%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-drawDaysPct"></span>
+                    </div>
+                </th>
+                <th data-key="lossDaysPct">
+                    亏损天数%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-lossDaysPct"></span>
+                    </div>
+                </th>
+                <th data-key="holdPosDaysPct">
+                    持仓天数%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-holdPosDaysPct"></span>
+                    </div>
+                </th>
+                <th data-key="clearPosDaysPct">
+                    空仓天数%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-clearPosDaysPct"></span>
+                    </div>
+                </th>
+                <th data-key="avgPosWhenHoldPct">
+                    持仓平均仓位%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-avgPosWhenHoldPct"></span>
+                    </div>
+                </th>
+                <th data-key="avgPosPct">
+                    总平均仓位%
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-avgPosPct"></span>
+                    </div>
+                </th>
+                <th data-key="avgPosWhenHoldCount">
+                    持仓日均持股数量
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-avgPosWhenHoldCount"></span>
+                    </div>
+                </th>
+                <th data-key="avgPosCount">
+                    总日均持股数量
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-avgPosCount"></span>
+                    </div>
+                </th>
+
                 <th data-key="sharpeRatio">
                     夏普比率
                     <div class="sort-controls">
@@ -445,7 +510,7 @@
                     </div>
                 </th>
                 <th data-key="gmtCreate">
-                    创建时间
+                    开始时间
                     <div class="sort-controls">
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
@@ -487,7 +552,7 @@
 
     // 定义字段类型
     const stringFields = ['buyStrategy', 'sellStrategy', 'topBlockStrategy', 'marketPosLimitFlag', 'ztFlag'];
-    const numberFields = ['scoreSortN', 'singleStockMaxPosPct', 'finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrade', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDayPct', 'sharpeRatio'];
+    const numberFields = ['scoreSortN', 'singleStockMaxPosPct', 'finalNav', 'totalReturnPct', 'annualReturnPct', 'totalTrades', 'totalTradeAmount', 'winPct', 'profitFactor', 'maxDrawdownPct', 'profitDaysPct', 'sharpeRatio'];
 
     function formatDateTimeLocal(value) {
         if (!value) return '';
@@ -575,8 +640,8 @@
             profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
             maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
             maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
-            profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
-            profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+            profitDaysPctMin: parseFloat(document.getElementById('filterProfitDaysPctMin').value),
+            profitDaysPctMax: parseFloat(document.getElementById('filterProfitDaysPctMax').value),
             sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
             sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
             gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
@@ -625,9 +690,9 @@
             if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
             if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
 
-            const profitDayPct = parseFloat(task.profitDayPct);
-            if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
-            if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+            const profitDaysPct = parseFloat(task.profitDaysPct);
+            if (!isNaN(filters.profitDaysPctMin) && profitDaysPct < filters.profitDaysPctMin) return false;
+            if (!isNaN(filters.profitDaysPctMax) && profitDaysPct > filters.profitDaysPctMax) return false;
 
             const sharpeRatio = parseFloat(task.sharpeRatio);
             if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
@@ -738,15 +803,23 @@
               <td>${task.finalCapital}</td>
               <td>${task.initialNav}</td>
               <td>${task.finalNav}</td>
-              <td>${task.totalDay}</td>
-              <td>${task.totalTrade}</td>
+              <td>${task.totalDays}</td>
+              <td>${task.totalTrades}</td>
               <td>${task.totalTradeAmount}</td>
               <td>${task.totalReturnPct}</td>
               <td>${task.annualReturnPct}</td>
               <td>${task.winPct}</td>
               <td>${task.profitFactor}</td>
               <td>${task.maxDrawdownPct}</td>
-              <td>${task.profitDayPct}</td>
+              <td>${task.profitDaysPct}</td>
+              <td>${task.drawDaysPct}</td>
+              <td>${task.lossDaysPct}</td>
+              <td>${task.holdPosDaysPct}</td>
+              <td>${task.clearPosDaysPct}</td>
+              <td>${task.avgPosWhenHoldPct}</td>
+              <td>${task.avgPosPct}</td>
+              <td>${task.avgPosWhenHoldCount}</td>
+              <td>${task.avgPosCount}</td>
               <td>${task.sharpeRatio}</td>
               <td>${task.gmtCreate}</td>
               <td>${task.gmtModify}</td>
@@ -924,15 +997,23 @@
             'finalCapital': '结束资金',
             'initialNav': '初始净值',
             'finalNav': '结束净值',
-            'totalDay': '总天数',
-            'totalTrade': '交易总笔数',
+            'totalDays': '总天数',
+            'totalTrades': '交易总笔数',
             'totalTradeAmount': '交易总金额',
             'totalReturnPct': '总收益率%',
             'annualReturnPct': '年化收益率%',
             'winPct': '胜率%',
             'profitFactor': '盈亏比',
             'maxDrawdownPct': '最大回撤%',
-            'profitDayPct': '盈利天数%',
+            'profitDaysPct': '盈利天数%',
+            'drawDaysPct': '平局天数%',
+            'lossDaysPct': '亏损天数%',
+            'holdPosDaysPct': '持仓天数%',
+            'clearPosDaysPct': '空仓天数%',
+            'avgPosWhenHoldPct': '持仓平均仓位%',
+            'avgPosPct': '总平均仓位%',
+            'avgPosWhenHoldCount': '持仓日均持股数量',
+            'avgPosCount': '总日均持股数量',
             'sharpeRatio': '夏普比率',
             'gmtCreate': '创建时间',
             'gmtModify': '结束时间',
@@ -1005,8 +1086,8 @@
                     profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
                     maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
                     maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
-                    profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
-                    profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+                    profitDaysPctMin: parseFloat(document.getElementById('filterProfitDaysPctMin').value),
+                    profitDaysPctMax: parseFloat(document.getElementById('filterProfitDaysPctMax').value),
                     sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
                     sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
                     gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
@@ -1044,9 +1125,9 @@
                     const maxDrawdownPct = parseFloat(task.maxDrawdownPct);
                     if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
                     if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
-                    const profitDayPct = parseFloat(task.profitDayPct);
-                    if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
-                    if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+                    const profitDaysPct = parseFloat(task.profitDaysPct);
+                    if (!isNaN(filters.profitDaysPctMin) && profitDaysPct < filters.profitDaysPctMin) return false;
+                    if (!isNaN(filters.profitDaysPctMax) && profitDaysPct > filters.profitDaysPctMax) return false;
                     const sharpeRatio = parseFloat(task.sharpeRatio);
                     if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
                     if (!isNaN(filters.sharpeRatioMax) && sharpeRatio > filters.sharpeRatioMax) return false;
@@ -1110,8 +1191,8 @@
                     profitFactorMax: parseFloat(document.getElementById('filterProfitFactorMax').value),
                     maxDrawdownPctMin: parseFloat(document.getElementById('filterMaxDrawdownPctMin').value),
                     maxDrawdownPctMax: parseFloat(document.getElementById('filterMaxDrawdownPctMax').value),
-                    profitDayPctMin: parseFloat(document.getElementById('filterProfitDayPctMin').value),
-                    profitDayPctMax: parseFloat(document.getElementById('filterProfitDayPctMax').value),
+                    profitDaysPctMin: parseFloat(document.getElementById('filterProfitDaysPctMin').value),
+                    profitDaysPctMax: parseFloat(document.getElementById('filterProfitDaysPctMax').value),
                     sharpeRatioMin: parseFloat(document.getElementById('filterSharpeRatioMin').value),
                     sharpeRatioMax: parseFloat(document.getElementById('filterSharpeRatioMax').value),
                     gmtCreateStart: formatDateTimeLocal(document.getElementById('filterGmtCreateStart').value),
@@ -1149,9 +1230,9 @@
                     const maxDrawdownPct = parseFloat(task.maxDrawdownPct);
                     if (!isNaN(filters.maxDrawdownPctMin) && maxDrawdownPct < filters.maxDrawdownPctMin) return false;
                     if (!isNaN(filters.maxDrawdownPctMax) && maxDrawdownPct > filters.maxDrawdownPctMax) return false;
-                    const profitDayPct = parseFloat(task.profitDayPct);
-                    if (!isNaN(filters.profitDayPctMin) && profitDayPct < filters.profitDayPctMin) return false;
-                    if (!isNaN(filters.profitDayPctMax) && profitDayPct > filters.profitDayPctMax) return false;
+                    const profitDaysPct = parseFloat(task.profitDaysPct);
+                    if (!isNaN(filters.profitDaysPctMin) && profitDaysPct < filters.profitDaysPctMin) return false;
+                    if (!isNaN(filters.profitDaysPctMax) && profitDaysPct > filters.profitDaysPctMax) return false;
                     const sharpeRatio = parseFloat(task.sharpeRatio);
                     if (!isNaN(filters.sharpeRatioMin) && sharpeRatio < filters.sharpeRatioMin) return false;
                     if (!isNaN(filters.sharpeRatioMax) && sharpeRatio > filters.sharpeRatioMax) return false;
@@ -1184,10 +1265,13 @@
         // 构造 CSV 内容
         const headers = [
             "任务ID", "批次号", "B策略", "S策略", "主线策略",
-            "scoreSortN", "个股仓位限制%", "涨停",
+            "scoreSortN", "个股仓位限制%", "开启大盘仓位限制", "涨停",
             "开始日期", "结束日期", "初始资金", "结束资金", "初始净值", "结束净值",
-            "总天数", "交易总笔数", "交易总金额", "总收益率%", "年化%", "胜率%",
-            "盈亏比", "最大回撤%", "盈利天数%", "夏普比率", "创建时间", "结束时间", "耗时"
+            "总天数", "交易总笔数", "交易总金额", "总收益率%", "年化%", "胜率%", "盈亏比", "最大回撤%",
+            "盈利天数%", "平局天数%", "亏损天数%", "持仓天数%", "空仓天数%",
+            "持仓平均仓位%", "总平均仓位%", "持仓日均持股数量", "总日均持股数量",
+            "夏普比率",
+            "创建时间", "结束时间", "耗时"
         ];
 
         const rows = dataToExport.map(task => {
@@ -1208,15 +1292,17 @@
                 task.finalCapital,
                 task.initialNav,
                 task.finalNav,
-                task.totalDay,
-                task.totalTrade,
+                task.totalDays,
+                task.totalTrades,
                 task.totalTradeAmount,
                 task.totalReturnPct,
                 task.annualReturnPct,
                 task.winPct,
                 task.profitFactor,
                 task.maxDrawdownPct,
-                task.profitDayPct,
+                task.profitDaysPct,
+                task.drawDaysPct,
+                task.lossDaysPct,
                 task.sharpeRatio,
                 task.gmtCreate,
                 task.gmtModify,
@@ -1287,7 +1373,7 @@
                 'filterWinPctMin', 'filterWinPctMax',
                 'filterProfitFactorMin', 'filterProfitFactorMax',
                 'filterMaxDrawdownPctMin', 'filterMaxDrawdownPctMax',
-                'filterProfitDayPctMin', 'filterProfitDayPctMax',
+                'filterProfitDaysPctMin', 'filterProfitDaysPctMax',
                 'filterSharpeRatioMin', 'filterSharpeRatioMax',
                 'filterGmtCreateStart', 'filterGmtCreateEnd',
                 'filterGmtModifyStart', 'filterGmtModifyEnd'
