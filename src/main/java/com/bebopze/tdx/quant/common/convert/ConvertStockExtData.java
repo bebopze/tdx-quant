@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.util.BoolUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -260,6 +261,36 @@ public class ConvertStockExtData {
 //        dto.setKlineType(Integer.parseInt(extDataArr[i++]));
 //
 //        return dto;
+    }
+
+
+    @SneakyThrows
+    public static Map<String, Boolean> toBooleanMap(ExtDataDTO dto) {
+
+        Map<String, Boolean> map = Maps.newHashMap();
+        if (dto == null) {
+            return map;
+        }
+
+
+        Class<?> clazz = dto.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+
+            // 只处理 Boolean 类型（注意不是 boolean）
+            if (field.getType() != Boolean.class) {
+                continue;
+            }
+
+            field.setAccessible(true);
+            Boolean value = (Boolean) field.get(dto);
+
+            map.put(field.getName(), value == null ? false : value);
+        }
+
+
+        return map;
     }
 
 

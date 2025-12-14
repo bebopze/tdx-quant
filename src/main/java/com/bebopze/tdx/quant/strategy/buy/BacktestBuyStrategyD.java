@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
+import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
@@ -49,13 +50,6 @@ import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSD
 @Slf4j
 @Component
 public class BacktestBuyStrategyD implements BuyStrategy {
-
-
-    /**
-     * 涨停B策略        KEY：B策略 + next_date
-     * -              VAL：涨停 + B_signal   ->   stockCode 列表
-     */
-    private static final Map<String, Set<String>> buyConSet_nextDate__ztStockCodeSet__Map = Maps.newConcurrentMap();
 
 
     @Autowired
@@ -271,12 +265,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                                                Boolean ztFlag) {
 
 
-//        List<String> buy__topStock__codeList = Collections.synchronizedList(Lists.newArrayList());
-
-//        ParallelCalcUtil.forEach(data.stockDOList,
-//                                 stockDO -> {
-
-
         Set<String> buy__topStock__codeSet = Sets.newHashSet();
         data.stockDOList.forEach(stockDO -> {
 
@@ -335,21 +323,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             boolean signal_B = BuyStrategy__ConCombiner.calcCon(buyConList, conMap);
 
 
-            // prev_涨停__B_signal   ->   B策略 + next_date + 涨停stockCode
-            boolean prev_涨停__B_signal = buyConSet_nextDate__ztStockCodeSet__Map.getOrDefault(getKey(buyConList, tradeDate), Sets.newHashSet())
-                                                                                 .contains(stockCode);
-
-
             // ---------------------------------------------------------------------------------------------------------
-
-
-//            // 昨日（B + 涨停）  ->   可买入（今日[open]  ->  直接买入）
-//            if (prev_涨停__B_signal) {
-//                buy__topStock__codeSet.add(stockCode);
-//                // conMap.put("prev_B_涨停__今日_开盘B", true);
-//                conMap.put(涨停_SSF多_月多.getDesc(), true);
-//                buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
-//            }
 
 
             // B + 未涨停  ->  可买入（今日[close]  ->  直接买入）
@@ -365,8 +339,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                 if (idx < fun.getMaxIdx()) {
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
-                    double next_close = klineArrDTO.close[idx + 1];
-                    double next_open = klineArrDTO.open[idx + 1];
 
 
                     // 次日S  ->  不能B（提前预知 -> 次日收盘价？？？❌❌❌）
@@ -385,57 +357,14 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     // 今日B + 涨停     =>     次日 -> 开盘B
                     btOpenBSDTO.get().today_date = tradeDate;
                     btOpenBSDTO.get().next_date = next_date;
-                    btOpenBSDTO.get().open_B___stockCode_name_Map.put(stockCode, stockDO.getName());
-                    btOpenBSDTO.get().open_B___stockCode_open_Map.put(stockCode, next_open);
-                    btOpenBSDTO.get().open_B___stockCode_close_Map.put(stockCode, next_close);
+                    btOpenBSDTO.get().open_B___stockCodeSet.add(stockCode);
                     btOpenBSDTO.get().open_B___buy_infoMap.put(stockCode, 涨停_SSF多_月多.getDesc());
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-//                    // [next_close] = [next_open]
-//                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
-//
-//                    log.info("今日B + [涨停]   ->   无法买入 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
-//                             stockCode, stockDO.getName(), tradeDate, next_date, next_close, next_open);
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-                    // 传递 prev_涨停__B_signal
-                    buyConSet_nextDate__ztStockCodeSet__Map.computeIfAbsent(getKey(buyConList, next_date), k -> Sets.newHashSet()).add(stockCode);
-                    buyConSet_nextDate__ztStockCodeSet__Map.remove(getKey(buyConList, klineArrDTO.date[idx - 1])); // 清空 prev_date
-
-
-//                    // ------------------------------- B + 涨停  ->  无法买入（特殊处理【最简化处理】）❌❌❌-----------------
-//
-//
-//                    // today_close = next_open   ❌❌❌
-//                    data.stock__dateCloseMap.get(stockCode).put(tradeDate, next_open);
-//                    // BUG：S->B阶段 改价     =>     S前阶段 用于计算 [总资金/S前_持仓市值] 的 close   与   SB阶段 的 close（next_open）前后不一致❗❗❗
-//                    //                  today_close  >  next_open       =>       S前_总资金（全程不变）  >   SB_持仓市值  +  SB_可用资金
-//                    //                  today_close  <  next_open       =>       S前_总资金（全程不变）  <   SB_持仓市值  +  SB_可用资金
-//
-//
-//                    log.info("今日B + [涨停]   ->   无法买入 - 最简化处理   =>   [today_close]=[next_open]     >>>     [{}-{}] , {} , today_close : {} , next_open : {}",
-//                             stockCode, stockDO.getName(), tradeDate, today_close, next_open);
                 }
             }
         });
 
 
-//                                 },
-//                                 ThreadPoolType.CPU_INTENSIVE);
-
-
         return buy__topStock__codeSet;
-    }
-
-    private String getKey(List<String> buyConList, LocalDate next_date) {
-        // B策略 + next_date
-        return buyConList + "-" + next_date;
     }
 
 
@@ -488,9 +417,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         String lv2_topBlockCode = lv2_topBlockCode(tradeDate);
 
 
-        // TdxBlockNewWriter.write("ZXBK-LV2", Sets.newHashSet(lv2_topBlockCode));
-
-
         // -------------------------------------------------------------------------------------------------------------
         //                                      3、主线板块（LV3 -> 概念 + 细分）
         // -------------------------------------------------------------------------------------------------------------
@@ -498,9 +424,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
         // 主线板块（N个）    ->     LV3（概念 + 细分）
         Set<String> lv3_topBlockCodeSet = lv3_topBlockCodeSet(data, tradeDate);
-
-
-        // TdxBlockNewWriter.write("ZXBK-LV3", lv3_topBlockCodeSet);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -789,82 +712,94 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        boolean SSF多 = extDataArrDTO.SSF多[idx];
-        boolean MA20多 = extDataArrDTO.MA20多[idx];
+        Map<String, Boolean> conMap = ConvertStockExtData.toBooleanMap(extDataDTO);
 
 
-        boolean N60日新高 = extDataArrDTO.N60日新高[idx];
-        boolean N100日新高 = extDataArrDTO.N100日新高[idx];
-        boolean 历史新高 = extDataArrDTO.历史新高[idx];
+        // -------------------------------------------------------------------------------------------------------------
 
 
+//        boolean XZZB = extDataArrDTO.XZZB[idx];
+//
+//
+//        boolean SSF多 = extDataArrDTO.SSF多[idx];
+//        boolean MA20多 = extDataArrDTO.MA20多[idx];
+//
+//
+//        boolean N60日新高 = extDataArrDTO.N60日新高[idx];
+//        boolean N100日新高 = extDataArrDTO.N100日新高[idx];
+//        boolean 历史新高 = extDataArrDTO.历史新高[idx];
+//
+//
 //        boolean 百日新高 = extDataArrDTO.百日新高[idx];
-
-
-        boolean 月多 = extDataArrDTO.月多[idx];
-        boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
-        boolean 均线萌出 = extDataArrDTO.均线萌出[idx];
-        boolean 小均线多头 = extDataArrDTO.小均线多头[idx];
-        boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
-        boolean 均线大多头 = extDataArrDTO.均线大多头[idx];
-        boolean 均线极多头 = extDataArrDTO.均线极多头[idx];
-
-
-        boolean RPS红 = extDataArrDTO.RPS红[idx];
-        boolean RPS一线红 = extDataArrDTO.RPS一线红[idx];
-        boolean RPS双线红 = extDataArrDTO.RPS双线红[idx];
-        boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        boolean 百日新高 = false;
-        for (int i = 0; i < 10; i++) {
-            int n_Idx = idx - i;
-            if (n_Idx < 0) {
-                break;
-            }
-
-            boolean _N100日新高 = extDataArrDTO.N100日新高[n_Idx];   // 近10日内 N100日新高
-            if (_N100日新高 && (SSF多 || MA20多)) {
-                百日新高 = true;
-                break;
-            }
-        }
+//
+//
+//        boolean 月多 = extDataArrDTO.月多[idx];
+//        boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
+//        boolean 均线萌出 = extDataArrDTO.均线萌出[idx];
+//        boolean 小均线多头 = extDataArrDTO.小均线多头[idx];
+//        boolean 大均线多头 = extDataArrDTO.大均线多头[idx];
+//        boolean 均线大多头 = extDataArrDTO.均线大多头[idx];
+//        boolean 均线极多头 = extDataArrDTO.均线极多头[idx];
+//
+//
+//        boolean RPS红 = extDataArrDTO.RPS红[idx];
+//        boolean RPS一线红 = extDataArrDTO.RPS一线红[idx];
+//        boolean RPS双线红 = extDataArrDTO.RPS双线红[idx];
+//        boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, Boolean> conMap = Maps.newHashMap();
+//        boolean 百日新高 = false;
+//        for (int i = 0; i < 10; i++) {
+//            int n_Idx = idx - i;
+//            if (n_Idx < 0) {
+//                break;
+//            }
+//
+//            boolean _N100日新高 = extDataArrDTO.N100日新高[n_Idx];   // 近10日内 N100日新高
+//            if (_N100日新高 && (SSF多 || MA20多)) {
+//                百日新高 = true;
+//                break;
+//            }
+//        }
 
 
-        conMap.put("SSF多", SSF多);
-        conMap.put("MA20多", MA20多);
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        conMap.put("N60日新高", N60日新高);
-        conMap.put("N100日新高", N100日新高);
-        conMap.put("历史新高", 历史新高);
-
-
-        conMap.put("百日新高", 百日新高);
-
-
-        conMap.put("月多", 月多);
-        conMap.put("均线预萌出", 均线预萌出);
-        conMap.put("均线萌出", 均线萌出);
-        conMap.put("小均线多头", 小均线多头);
-        conMap.put("大均线多头", 大均线多头);
-        conMap.put("均线大多头", 均线大多头);
-        conMap.put("均线极多头", 均线极多头);
-
-
-        conMap.put("RPS红", RPS红);
-        conMap.put("RPS一线红", RPS一线红);
-        conMap.put("RPS双线红", RPS双线红);
-        conMap.put("RPS三线红", RPS三线红);
+//        Map<String, Boolean> conMap = Maps.newHashMap();
+//
+//
+//        conMap.put("XZZB", XZZB);
+//
+//
+//        conMap.put("SSF多", SSF多);
+//        conMap.put("MA20多", MA20多);
+//
+//
+//        conMap.put("N60日新高", N60日新高);
+//        conMap.put("N100日新高", N100日新高);
+//        conMap.put("历史新高", 历史新高);
+//
+//
+//        conMap.put("百日新高", 百日新高);
+//
+//
+//        conMap.put("月多", 月多);
+//        conMap.put("均线预萌出", 均线预萌出);
+//        conMap.put("均线萌出", 均线萌出);
+//        conMap.put("小均线多头", 小均线多头);
+//        conMap.put("大均线多头", 大均线多头);
+//        conMap.put("均线大多头", 均线大多头);
+//        conMap.put("均线极多头", 均线极多头);
+//
+//
+//        conMap.put("RPS红", RPS红);
+//        conMap.put("RPS一线红", RPS一线红);
+//        conMap.put("RPS双线红", RPS双线红);
+//        conMap.put("RPS三线红", RPS三线红);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -902,10 +837,12 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
 
 //        double C_MA_偏离率 = extDataDTO.getC_MA5_偏离率();
-//        // double C_MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
-//        conMap.put("C_MA_偏离率<3", C_MA_偏离率 < 3);
-//        conMap.put("C_MA_偏离率<5", C_MA_偏离率 < 5);
-//        conMap.put("C_MA_偏离率<7", C_MA_偏离率 < 7);
+        double C_MA_短期偏离率 = extDataDTO.getC_短期MA_偏离率();
+//        double C_MA_中期偏离率 = extDataDTO.getC_中期MA_偏离率();
+//        double C_MA_长期偏离率 = extDataDTO.getC_长期MA_偏离率();
+        conMap.put("C_MA_偏离率<3", C_MA_短期偏离率 < 3);
+        conMap.put("C_MA_偏离率<5", C_MA_短期偏离率 < 5);
+        conMap.put("C_MA_偏离率<7", C_MA_短期偏离率 < 7);
 
 
 //        int 短期趋势支撑线 = extDataDTO.get短期支撑线();
@@ -1073,6 +1010,16 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
             Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
             Integer idx = dateIndexMap.get(tradeDate);
+
+
+            // 停牌（159915 创业板ETF   2021-02-08）
+            if (idx == null) {
+                log.warn("scoreSort - idx is null     >>>     [{}-{}] , tradeDate : {} , idx : {}", stockCode, stockName, tradeDate, idx);
+                continue;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             double[] amoArr = klineArrDTO.amo;

@@ -17,7 +17,6 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -41,13 +40,6 @@ import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSD
 @Slf4j
 @Component
 public class BacktestSellStrategy implements SellStrategy {
-
-
-    /**
-     * 涨停S策略        KEY：S策略 + next_date
-     * -              VAL：涨停 + S_signal   ->   stockCode 列表
-     */
-    private static final Map<String, Set<String>> sellConSet_nextDate__dtStockCodeSet__Map = Maps.newConcurrentMap();
 
 
     @Autowired
@@ -228,8 +220,6 @@ public class BacktestSellStrategy implements SellStrategy {
                              BacktestCompareDTO btCompareDTO) {
 
 
-//        ExtDataDTO extDataDTO = fun.getExtDataDTOList().get(idx);
-
         KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
 
 
@@ -255,34 +245,11 @@ public class BacktestSellStrategy implements SellStrategy {
         // -------------------------------------------
 
 
-        // -------------------------------------------
-
-
-        // 是否淘汰
-        // boolean flag_S = false;
-
-
         // ------------------------------------------- TODO   涨停（打板） ---------------------------------------------------------
 
 
         // if (buyConSet.equals(Sets.newHashSet("月多", "涨停"))) {
-        if (btCompareDTO.getZtFlag()) {
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-//            // prev_跌停__S_signal   ->   S策略 + next_date + 跌停stockCode
-//            boolean prev_跌停__S_signal = sellConSet_nextDate__dtStockCodeSet__Map
-//                    .getOrDefault(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), tradeDate), Sets.newHashSet())
-//                    .contains(stockCode);
-//
-//
-//            // 昨日（S + 跌停）  ->   可卖出（今日[open]  ->  直接卖出）
-//            if (prev_跌停__S_signal) {
-//                sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
-//                return true;
-//            }
+        if (null != btCompareDTO.getZtFlag() && btCompareDTO.getZtFlag()) {
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -298,8 +265,6 @@ public class BacktestSellStrategy implements SellStrategy {
                 if (idx < fun.getMaxIdx()) {
 
                     LocalDate next_date = klineArrDTO.date[idx + 1];
-                    double next_close = klineArrDTO.close[idx + 1];
-                    double next_open = klineArrDTO.open[idx + 1];
 
 
                     // -------------------------------------------------------------------------------------------------
@@ -308,28 +273,8 @@ public class BacktestSellStrategy implements SellStrategy {
                     // 今日S + 跌停     =>     次日 -> 开盘S
                     btOpenBSDTO.get().today_date = tradeDate;
                     btOpenBSDTO.get().next_date = next_date;
-//                    btOpenBSDTO.get().open_S___stockCode_name_Map.put(stockCode, stockDO.getName());
-                    btOpenBSDTO.get().open_S___stockCode_open_Map.put(stockCode, next_open);
-                    btOpenBSDTO.get().open_S___stockCode_close_Map.put(stockCode, next_close);
+                    btOpenBSDTO.get().open_S___stockCodeSet.add(stockCode);
                     btOpenBSDTO.get().open_S___sell_infoMap.put(stockCode, SellStrategyEnum.跌停);
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-//                    // S + 跌停  ->  无法卖出（最简化处理：[next_close] = [next_open]，次日开盘 直接卖出）
-//                    data.stock__dateCloseMap.get(stockCode).put(next_date, next_open);
-//
-//                    log.info("今日S + [跌停]   ->   无法卖出 - 最简化处理   =>   [next_close]=[next_open]     >>>     [{}-{}] , today_date : {} , next_date : {} , next_close : {} , next_open : {}",
-//                             stockCode, fun.getName(), tradeDate, next_date, next_close, next_open);
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-                    // 传递 prev_跌停__S_signal
-                    sellConSet_nextDate__dtStockCodeSet__Map.computeIfAbsent(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), next_date), k -> Sets.newHashSet()).add(stockCode);
-                    sellConSet_nextDate__dtStockCodeSet__Map.remove(getKey(btCompareDTO.getSellConSet(), btCompareDTO.getZtFlag(), klineArrDTO.date[idx - 1])); // 清空 prev_date
 
 
                     // -------------------------------------------------------------------------------------------------

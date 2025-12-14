@@ -2,10 +2,12 @@ package com.bebopze.tdx.quant.common.domain.dto.backtest;
 
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -24,16 +26,12 @@ public class BacktestOpenBSDTO {
 
 
     // 开盘B
-    public Map<String, String> open_B___stockCode_name_Map = Maps.newHashMap();
-    public Map<String, Double> open_B___stockCode_open_Map = Maps.newHashMap();
-    public Map<String, Double> open_B___stockCode_close_Map = Maps.newHashMap();
+    public Set<String> open_B___stockCodeSet = Sets.newHashSet();
     public Map<String, String> open_B___buy_infoMap = Maps.newHashMap();
 
 
     // 开盘S
-    public Map<String, String> open_S___stockCode_name_Map = Maps.newHashMap();
-    public Map<String, Double> open_S___stockCode_open_Map = Maps.newHashMap();
-    public Map<String, Double> open_S___stockCode_close_Map = Maps.newHashMap();
+    public Set<String> open_S___stockCodeSet = Sets.newHashSet();
     public Map<String, SellStrategyEnum> open_S___sell_infoMap = Maps.newHashMap();
 
 }
