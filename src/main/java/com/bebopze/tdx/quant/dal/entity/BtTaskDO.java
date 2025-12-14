@@ -1,7 +1,5 @@
 package com.bebopze.tdx.quant.dal.entity;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -109,9 +107,9 @@ public class BtTaskDO implements Serializable {
     /**
      * 交易总笔数
      */
-    @TableField("total_trade")
+    @TableField("total_trades")
     @Schema(description = "交易总笔数")
-    private Integer totalTrade;
+    private Integer totalTrades;
 
     /**
      * 交易总金额
@@ -137,9 +135,9 @@ public class BtTaskDO implements Serializable {
     /**
      * 总天数
      */
-    @TableField("total_day")
+    @TableField("total_days")
     @Schema(description = "总天数")
-    private Integer totalDay;
+    private Integer totalDays;
 
     /**
      * 总收益率（%）
@@ -179,9 +177,73 @@ public class BtTaskDO implements Serializable {
     /**
      * 盈利天数 占比  =  盈利天数 / 总天数
      */
-    @TableField("profit_day_pct")
+    @TableField("profit_days_pct")
     @Schema(description = "盈利天数-占比")
-    private BigDecimal profitDayPct;
+    private BigDecimal profitDaysPct;
+
+    /**
+     * 平局天数 占比  =  平局天数 / 总天数
+     */
+    @TableField("draw_days_pct")
+    @Schema(description = "平局天数-占比")
+    private BigDecimal drawDaysPct;
+
+    /**
+     * 亏损天数 占比  =  亏损天数 / 总天数
+     */
+    @TableField("loss_days_pct")
+    @Schema(description = "亏损天数-占比")
+    private BigDecimal lossDaysPct;
+
+    /**
+     * 持仓天数 占比  =  持仓天数 / 总天数
+     */
+    @TableField("hold_pos_days_pct")
+    @Schema(description = "持仓天数-占比")
+    private BigDecimal holdPosDaysPct;
+
+    /**
+     * 空仓天数 占比  =  空仓天数 / 总天数
+     */
+    @TableField("clear_pos_days_pct")
+    @Schema(description = "空仓天数-占比")
+    private BigDecimal clearPosDaysPct;
+
+    /**
+     * 持仓平均仓位（%） =  仓位之和 / 持仓天数
+     *
+     * 仅统计 有持仓时 的平均仓位
+     */
+    @TableField("avg_pos_when_hold_pct")
+    @Schema(description = "持仓平均仓位（%）")
+    private BigDecimal avgPosWhenHoldPct;
+
+    /**
+     * 总平均仓位（%） =  仓位之和 / 总天数               // 平均资金利用率（%）
+     *
+     * 统计 全部天数 的平均仓位
+     */
+    @TableField("avg_pos_pct")
+    @Schema(description = "总平均仓位（%）")
+    private BigDecimal avgPosPct;
+
+    /**
+     * 持仓日均持股数量  =  持仓总持股数量 / 持仓天数
+     *
+     * 仅统计 有持仓时 的平均持股数量
+     */
+    @TableField("avg_pos_when_hold_count")
+    @Schema(description = "持仓日均持股数量")
+    private BigDecimal avgPosWhenHoldCount;
+
+    /**
+     * 总日均持股数量  =  持仓总持股数量 / 总天数
+     *
+     * 统计 全部天数 的平均持股数量
+     */
+    @TableField("avg_pos_count")
+    @Schema(description = "总日均持股数量")
+    private BigDecimal avgPosCount;
 
     /**
      * 夏普比率

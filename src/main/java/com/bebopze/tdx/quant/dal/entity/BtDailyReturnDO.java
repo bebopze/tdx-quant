@@ -54,7 +54,7 @@ public class BtDailyReturnDO implements Serializable {
     private LocalDate tradeDate;
 
     /**
-     * 当日收益率
+     * 当日收益率（比率）
      */
     @TableField("daily_return")
     @Schema(description = "当日收益率")
@@ -87,6 +87,13 @@ public class BtDailyReturnDO implements Serializable {
     @TableField("market_value")
     @Schema(description = "持仓市值")
     private BigDecimal marketValue;
+
+    /**
+     * 持仓数量
+     */
+    @TableField("pos_count")
+    @Schema(description = "持仓数量")
+    private int posCount;
 
     /**
      * 仓位占比（%）

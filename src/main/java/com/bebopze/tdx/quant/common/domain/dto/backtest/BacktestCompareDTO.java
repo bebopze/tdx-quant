@@ -82,4 +82,14 @@ public class BacktestCompareDTO {
     @JSONField(serialize = false)
     private LocalDate endDate;
 
+
+    // -------------------------------------- 控制参数 ------------------------------------------------------------------
+
+
+    /**
+     * 是否检查 交易记录：true-检查；false-不检查；
+     */
+    @JsonIgnore
+    @JSONField(serialize = false)
+    private boolean checkTradeFlag = false;
 }

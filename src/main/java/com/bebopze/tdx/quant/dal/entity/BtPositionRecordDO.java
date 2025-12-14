@@ -92,10 +92,10 @@ public class BtPositionRecordDO implements Serializable {
     private BigDecimal avgCostPrice;
 
     /**
-     * 当前交易日 - 收盘价
+     * 当前交易日 - 收盘价（实时价格   =>   开盘BS -> 开盘价 / 收盘BS -> 收盘价）
      */
     @TableField("close_price")
-    @Schema(description = "当前交易日 - 收盘价")
+    @Schema(description = "当前交易日 - 收盘价（最新价）")
     private BigDecimal closePrice;
 
     /**
@@ -244,5 +244,14 @@ public class BtPositionRecordDO implements Serializable {
                        .orElse(null);
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 收盘价（真实）    ->     仅check 回测用
+     */
+    @TableField(exist = false)
+    private double act_closePrice;
 
 }
