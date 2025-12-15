@@ -866,9 +866,6 @@
                 }
                 // 任务ID
                 document.getElementById('taskName').textContent = `${taskId}`;
-                // ✅ 修复：确保 tradeDate 一致
-                // const dailyReturns = analysis.dailyReturnList;
-                // const dailyReturns = analysis.marginDailyReturnList;
 
                 // ✅ 修改：获取普通账户和融资账户的数据
                 const dailyReturns = analysis.dailyReturnList || []; // 普通账户
@@ -883,20 +880,79 @@
                 const dates = tradeDates;
 
                 // 提取数据
-                const returns = dailyReturns.map(item => item.dailyReturn * 100); // 将 dailyReturn 转换为百分比
-                const marginReturns = marginDailyReturns.map(item => item.dailyReturn * 100); // 将 dailyReturn 转换为百分比
-
                 const navs = dailyReturns.map(item => item.nav);
                 const marginNavs = marginDailyReturns.map(item => item.nav);
 
+                const returns = dailyReturns.map(item => item.dailyReturn * 100); // 将 dailyReturn 转换为百分比
+                const marginReturns = marginDailyReturns.map(item => item.dailyReturn * 100); // 将 dailyReturn 转换为百分比
+
+
                 // 初始化图表
-                const returnChart = echarts.init(returnChartDom);
                 const navChart = echarts.init(navChartDom);
+                const returnChart = echarts.init(returnChartDom);
+
+
                 // 计算净值图表的 Y 轴最小值
                 const minNav = Math.min(...navs);
                 // const minYAxis = minNav > 0.9 ? 1 : Math.max(minNav - 0.1, 0); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 // const minYAxis = Math.max(minNav - 0.1, 0).toFixed(2); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 const minYAxis = (Math.floor(minNav * 10) / 10 + (minNav * 1000 % 10 >= 5 ? .05 : 0)).toFixed(2);
+
+
+                // 净值 K线图 - 修改 series 部分
+                const navOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: '#fff',
+                        borderColor: '#ccc',
+                        borderWidth: 1,
+                        textStyle: {fontSize: 11, color: '#333'},
+                        // 修改 formatter 以显示两个账户的信息并应用颜色
+                        formatter: (params) => {
+                            const index = params[0].dataIndex;
+                            const item = dailyReturns[index]; // 普通账户数据
+                            const marginItem = marginDailyReturns[index]; // 融资账户数据
+                            let result = `<div style="line-height: 1.4;">
+                                          <div><strong style="font-weight: bold;">${item?.tradeDate || 'N/A'}</strong></div>`;
+
+                            params.forEach(param => {
+                                if (param.seriesName === '普通账户净值') {
+                                    result += `<div class="tooltip-detail-line">${param.marker} 普通账户净值: <span style="color: ${param.color}; font-weight: bold">${param.value != null ? param.value.toFixed(4) : 'N/A'}</span></div>`;
+                                } else if (param.seriesName === '融资账户净值') {
+                                    result += `<div class="tooltip-detail-line">${param.marker} 融资账户净值: <span style="color: ${param.color}; font-weight: bold">${param.value != null ? param.value.toFixed(4) : 'N/A'}</span></div>`;
+                                }
+                            });
+
+                            if (item || marginItem) {
+                                result += `<div> - </div>`;
+                                // 使用公共 CSS 类为 普通/融资账户 信息添加颜色
+                                result += `<div>日收益率: <span class="tooltip-detail-line tooltip-normal-account">${(parseFloat(item.dailyReturn || 0) * 100).toFixed(3)}%</span> / <span class="tooltip-detail-line tooltip-margin-account">${(parseFloat(marginItem.dailyReturn || 0) * 100).toFixed(3)}%</span></div>`;
+                                result += `<div>盈亏额: <span class="tooltip-detail-line tooltip-normal-account">${item.profitLossAmount.toFixed(2)}</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.profitLossAmount.toFixed(2)}</span></div>`;
+                                result += `<div>总资金: <span class="tooltip-detail-line tooltip-normal-account">${item.capital.toFixed(2)}</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.capital.toFixed(2)}</span></div>`;
+                                result += `<div>市值: <span class="tooltip-detail-line tooltip-normal-account">${item.marketValue.toFixed(2)}</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.marketValue.toFixed(2)}</span></div>`;
+                                result += `<div>仓位: <span class="tooltip-detail-line tooltip-normal-account">${item.positionPct.toFixed(2)}%</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.positionPct.toFixed(2)}%</span></div>`;
+                                result += `<div>上限: <span class="tooltip-detail-line tooltip-normal-account">${item.positionLimitPct.toFixed(2)}%</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.positionLimitPct.toFixed(2)}%</span></div>`;
+                                result += `<div>可用: <span class="tooltip-detail-line tooltip-normal-account">${item.avlCapital.toFixed(2)}</span> / <span class="tooltip-detail-line tooltip-margin-account">${marginItem.avlCapital.toFixed(2)}</span></div>`;
+                                result += `<div class="tooltip-detail-line tooltip-normal-account">买入: ${item.buyCapital.toFixed(2)} / 卖出: ${item.sellCapital.toFixed(2)}</div>`;
+                                result += `<div class="tooltip-detail-line tooltip-margin-account">买入: ${marginItem.buyCapital.toFixed(2)} / 卖出: ${marginItem.sellCapital.toFixed(2)}</div>`;
+                            }
+                            result += `</div>`;
+                            return result;
+                        }
+                    },
+                    xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
+                    yAxis: {type: 'value', min: minYAxis, name: '净值'},
+                    legend: { // 添加图例
+                        data: ['普通账户净值', '融资账户净值']
+                    },
+                    series: [
+                        {name: '普通账户净值', type: 'line', data: navs, itemStyle: {color: '#EE6666'}},
+                        {name: '融资账户净值', type: 'line', data: marginNavs, itemStyle: {color: '#5470C6'}} // 使用不同颜色
+                    ],
+                    dataZoom: [{type: 'inside', start: 0, end: 100}, {type: 'slider', start: 0, end: 100}],
+                    grid: {left: 50, right: 10, top: 30}
+                };
+                navChart.setOption(navOption);
 
 
                 // 收益率 K线图 - 修改 series 部分
@@ -908,8 +964,9 @@
                             const index = params[0].dataIndex;
                             const item = dailyReturns[index]; // 普通账户数据作为基准
                             const marginItem = marginDailyReturns[index]; // 融资账户数据
-                            let result = `
-                            <div><p><strong>日期:</strong> ${item?.tradeDate || 'N/A'}</p>`;
+
+                            let result = `<div><p><strong>日期:</strong> ${item?.tradeDate || 'N/A'}</p>`;
+
                             params.forEach(param => {
                                 if (param.seriesName === '普通账户收益率') {
                                     result += `<p class="tooltip-detail-line">${param.marker} ${param.seriesName}: <span class="tooltip-normal-account">${param.value != null ? param.value.toFixed(3) : 'N/A'}%</span></p>`;
@@ -917,12 +974,14 @@
                                     result += `<p class="tooltip-detail-line">${param.marker} ${param.seriesName}: <span class="tooltip-margin-account">${param.value != null ? param.value.toFixed(3) : 'N/A'}%</span></p>`;
                                 }
                             });
+
                             if (item) {
                                 result += `<p class="tooltip-detail-line tooltip-normal-account">普通账户净值: ${(item.nav || 0).toFixed(4)}</p>`;
                             }
                             if (marginItem) {
                                 result += `<p class="tooltip-detail-line tooltip-margin-account">融资账户净值: ${(marginItem.nav || 0).toFixed(4)}</p>`; // 如果使用 marginNav，则替换 item.nav
                             }
+
                             result += `</div>`;
                             return result;
                         }
@@ -944,65 +1003,6 @@
                     grid: {left: 50, right: 10, top: 30}
                 };
                 returnChart.setOption(returnOption);
-
-
-                // 净值 K线图 - 修改 series 部分
-                const navOption = {
-                    tooltip: {
-                        trigger: 'axis',
-                        backgroundColor: '#fff',
-                        borderColor: '#ccc',
-                        borderWidth: 1,
-                        textStyle: {fontSize: 11, color: '#333'},
-                        // 修改 formatter 以显示两个账户的信息并应用颜色
-                        formatter: (params) => {
-                            const index = params[0].dataIndex;
-                            const item = dailyReturns[index]; // 普通账户数据
-                            const marginItem = marginDailyReturns[index]; // 融资账户数据
-                            let result = `<div style="line-height: 1.4;">
-                          <div><strong style="font-weight: bold;">${item?.tradeDate || 'N/A'}</strong></div>`;
-
-                            params.forEach(param => {
-                                if (param.seriesName === '普通账户净值') {
-                                    result += `<div class="tooltip-detail-line">${param.marker} 普通账户净值: <span style="color: ${param.color}; font-weight: bold">${param.value != null ? param.value.toFixed(4) : 'N/A'}</span></div>`;
-                                } else if (param.seriesName === '融资账户净值') {
-                                    result += `<div class="tooltip-detail-line">${param.marker} 融资账户净值: <span style="color: ${param.color}; font-weight: bold">${param.value != null ? param.value.toFixed(4) : 'N/A'}</span></div>`;
-                                }
-                            });
-
-                            if (item) {
-                                // 使用公共 CSS 类为普通账户信息添加颜色
-                                result += `<div class="tooltip-detail-line tooltip-normal-account">普通账户日收益率: ${(parseFloat(item.dailyReturn || 0) * 100).toFixed(3)}%</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-normal-account">普通账户盈亏额: ${item.profitLossAmount}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-normal-account">普通账户总资金: ${item.capital}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-normal-account">普通账户市值: ${item.marketValue}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-normal-account">普通账户仓位: ${item.positionPct}%</div>`;
-                            }
-                            if (marginItem) {
-                                // 使用公共 CSS 类为融资账户信息添加颜色
-                                result += `<div class="tooltip-detail-line tooltip-margin-account">融资账户日收益率: ${(parseFloat(marginItem.dailyReturn || 0) * 100).toFixed(3)}%</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-margin-account">融资账户盈亏额: ${marginItem.profitLossAmount}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-margin-account">融资账户总资金: ${marginItem.capital}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-margin-account">融资账户市值: ${marginItem.marketValue}</div>`;
-                                result += `<div class="tooltip-detail-line tooltip-margin-account">融资账户仓位: ${marginItem.positionPct}%</div>`;
-                            }
-                            result += `</div>`;
-                            return result;
-                        }
-                    },
-                    xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
-                    yAxis: {type: 'value', min: minYAxis, name: '净值'},
-                    legend: { // 添加图例
-                        data: ['普通账户净值', '融资账户净值']
-                    },
-                    series: [
-                        {name: '普通账户收益率', type: 'line', data: navs, itemStyle: {color: '#EE6666'}},
-                        {name: '融资账户收益率', type: 'line', data: marginNavs, itemStyle: {color: '#5470C6'}} // 使用不同颜色
-                    ],
-                    dataZoom: [{type: 'inside', start: 0, end: 100}, {type: 'slider', start: 0, end: 100}],
-                    grid: {left: 50, right: 10, top: 30}
-                };
-                navChart.setOption(navOption);
 
 
                 // 绑定两个图表的点击事件
