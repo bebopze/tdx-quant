@@ -69,13 +69,22 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    public double[] 中期调整幅度;
+    public double[] 中期调整天数;
+    public double[] 中期调整幅度2;
+    public double[] 中期调整天数2;
+
+
+    // ---------------------------------------------------
+
+
     public int[] 短期支撑线;
     public int[] 中期支撑线;
     public int[] 长期支撑线;
 
 
-    public double[] C_SSF_偏离率;
-    public double[] H_SSF_偏离率;
+    public double[] C_SSF_偏离率;   // TODO   B -> C_SSF（+ L_SSF）
+    public double[] H_SSF_偏离率;   //        S -> H_SSF
 
     public double[] C_MA5_偏离率;
     public double[] H_MA5_偏离率;
@@ -95,6 +104,10 @@ public class ExtDataArrDTO implements Serializable {
     public double[] C_MA250_偏离率;
 
 
+    // ---------------------------------------------------
+
+
+    public boolean[] 上影大阴;
     public boolean[] 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
@@ -106,7 +119,7 @@ public class ExtDataArrDTO implements Serializable {
 
 
     public boolean[] XZZB;
-    public boolean[] BSQJ;
+//    public boolean[] BSQJ;
 
 
     public boolean[] MA5多;
@@ -145,6 +158,16 @@ public class ExtDataArrDTO implements Serializable {
     public boolean[] RPS一线红;
     public boolean[] RPS双线红;
     public boolean[] RPS三线红;
+
+
+    // --------------------------------------------------- 经典买点
+
+
+    public boolean[] 首次三线红;
+    public boolean[] 口袋支点;
+
+
+    // ---------------------------------------------------
 
 
     public int[] klineType;
@@ -200,6 +223,12 @@ public class ExtDataArrDTO implements Serializable {
         this.N20日涨幅 = new double[size];
 
 
+        this.中期调整幅度 = new double[size];
+        this.中期调整天数 = new double[size];
+        this.中期调整幅度2 = new double[size];
+        this.中期调整天数2 = new double[size];
+
+
         this.短期支撑线 = new int[size];
         this.中期支撑线 = new int[size];
         this.长期支撑线 = new int[size];
@@ -226,6 +255,7 @@ public class ExtDataArrDTO implements Serializable {
         this.C_MA250_偏离率 = new double[size];
 
 
+        this.上影大阴 = new boolean[size];
         this.高位爆量上影大阴 = new boolean[size];
 
 
@@ -234,7 +264,7 @@ public class ExtDataArrDTO implements Serializable {
 
 
         this.XZZB = new boolean[size];
-        this.BSQJ = new boolean[size];
+//        this.BSQJ = new boolean[size];
 
 
         this.MA5多 = new boolean[size];
@@ -274,6 +304,10 @@ public class ExtDataArrDTO implements Serializable {
         this.RPS一线红 = new boolean[size];
         this.RPS双线红 = new boolean[size];
         this.RPS三线红 = new boolean[size];
+
+
+        this.首次三线红 = new boolean[size];
+        this.口袋支点 = new boolean[size];
 
 
         this.klineType = new int[size];
