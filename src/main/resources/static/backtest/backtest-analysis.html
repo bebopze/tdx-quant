@@ -893,7 +893,9 @@
 
 
                 // 计算净值图表的 Y 轴最小值
-                const minNav = Math.min(...navs);
+                let minNav = Math.min(...navs);
+                const minMarginNav = Math.min(...marginNavs);
+                minNav = Math.min(minNav, minMarginNav);
                 // const minYAxis = minNav > 0.9 ? 1 : Math.max(minNav - 0.1, 0); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 // const minYAxis = Math.max(minNav - 0.1, 0).toFixed(2); // 如果最低净值大于 0.9，则 Y 轴从 1 开始，否则根据最低净值设定
                 const minYAxis = (Math.floor(minNav * 10) / 10 + (minNav * 1000 % 10 >= 5 ? .05 : 0)).toFixed(2);
@@ -941,7 +943,11 @@
                         }
                     },
                     xAxis: {type: 'category', data: dates, axisLabel: {interval: 0, rotate: 45}},
-                    yAxis: {type: 'value', min: minYAxis, name: '净值'},
+                    yAxis: {
+                        type: 'value',
+                        name: '净值',
+                        min: minYAxis
+                    },
                     legend: { // 添加图例
                         data: ['普通账户净值', '融资账户净值']
                     },
@@ -979,7 +985,7 @@
                                 result += `<p class="tooltip-detail-line tooltip-normal-account">普通账户净值: ${(item.nav || 0).toFixed(4)}</p>`;
                             }
                             if (marginItem) {
-                                result += `<p class="tooltip-detail-line tooltip-margin-account">融资账户净值: ${(marginItem.nav || 0).toFixed(4)}</p>`; // 如果使用 marginNav，则替换 item.nav
+                                result += `<p class="tooltip-detail-line tooltip-margin-account">融资账户净值: ${(marginItem.nav || 0).toFixed(4)}</p>`;
                             }
 
                             result += `</div>`;
@@ -1014,16 +1020,21 @@
                     const date = dates[params.dataIndex];
                     loadAndShowRecordsForDate(date); // 使用新函数
                 });
+
+
                 // --- 在展示数据前，先进行预排序 ---
                 preSortRecords('position');
                 preSortRecords('clearPosition');
                 preSortRecords('trade');
+
+
                 // --- ---
                 // 页面加载时展示 最新一条记录
                 if (dates.length > 0) {
                     currentDate = dates[dates.length - 1];
                     loadAndShowRecordsForDate(currentDate); // 使用新函数
                 }
+
                 // 初始化排序图标 (在数据加载和预排序后)
                 initializeSortIconsAfterLoad();
             })
