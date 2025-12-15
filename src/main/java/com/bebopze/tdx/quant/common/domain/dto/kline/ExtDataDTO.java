@@ -74,6 +74,14 @@ public class ExtDataDTO implements Serializable {
 
     // ---------------------------------------------------
 
+    private Double 中期调整幅度;
+    private Double 中期调整天数;
+    private Double 中期调整幅度2;
+    private Double 中期调整天数2;
+
+
+    // ---------------------------------------------------
+
 
     private Integer 短期支撑线 = 20;   // 默认支撑线：MA20
     private Integer 中期支撑线 = 50;
@@ -103,6 +111,10 @@ public class ExtDataDTO implements Serializable {
     private Double C_MA250_偏离率;
 
 
+    // ---------------------------------------------------
+
+
+    public Boolean 上影大阴;
     public Boolean 高位爆量上影大阴;   // 高位-爆量/上影/大阴
 
 
@@ -162,6 +174,12 @@ public class ExtDataDTO implements Serializable {
     private Boolean RPS一线红;
     private Boolean RPS双线红;
     private Boolean RPS三线红;
+
+
+    // ------- 经典买点
+
+    private Boolean 首次三线红;
+    private Boolean 口袋支点;
 
 
     // ------- K线形态

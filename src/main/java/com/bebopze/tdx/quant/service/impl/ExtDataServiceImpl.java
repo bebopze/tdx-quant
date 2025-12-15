@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
+import com.bebopze.tdx.quant.common.domain.dto.fun.MidAdjustResult;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -27,6 +28,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
  * @author: bebopze
  * @date: 2025/5/24
  */
+@Primary
 @Slf4j
 @Service
 public class ExtDataServiceImpl implements ExtDataService {
@@ -61,7 +64,7 @@ public class ExtDataServiceImpl implements ExtDataService {
     @TotalTime
     @Override
     public void refreshExtDataAll(Integer N) {
-        calcBlockExtData(null);
+        calcBlockExtData(N);
         calcStockExtData(N);
     }
 
@@ -88,7 +91,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // RPS
-        stockTask__RPS(data);
+        stockTask__RPS(data, N);
 
         // 扩展数据
         stockTask__extData(data, N);
@@ -236,9 +239,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         data.blockDOList = baseBlockService.listAllRpsKline();
         data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
 
-        // 行业ETF
-        // data.stockDOList = baseStockService.listAllETFKline();
-
 
         data.blockDOList.parallelStream().forEach(e -> {
 
@@ -275,17 +275,18 @@ public class ExtDataServiceImpl implements ExtDataService {
      * 个股 - RPS计算
      *
      * @param data
+     * @param lastDays 仅计算最后 lastDays 天的数据（<=0 时计算全部）
      */
-    private void stockTask__RPS(DataDTO data) {
+    private void stockTask__RPS(DataDTO data, int lastDays) {
         long start = System.currentTimeMillis();
 
 
         // 计算 -> RPS
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50);
-        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 120); // 120 -> 100
-        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250); // 250 -> 200
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10, lastDays);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20, lastDays);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50, lastDays);
+        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 120, lastDays); // 120 -> 100
+        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250, lastDays); // 250 -> 200
 
 
         log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
@@ -348,18 +349,6 @@ public class ExtDataServiceImpl implements ExtDataService {
                                  stockDO -> execCalcStockExtData(data, N, stockDO, count, start),
                                  ThreadPoolType.CPU_INTENSIVE_2
         );
-
-
-//        data.stockDOList.parallelStream().forEach(stockDO -> {
-//            try {
-//
-//                execCalcStockExtData(data, N, stockDO, count, start);
-//
-//            } catch (Exception ex) {
-//                log.error("execCalcStockExtData - err     >>>     stockCode : {} , stockDO : {} , errMsg : {}",
-//                          stockDO.getCode(), JSON.toJSONString(stockDO), ex.getMessage(), ex);
-//            }
-//        });
     }
 
     private void execCalcStockExtData(DataDTO data, Integer N, BaseStockDO stockDO, AtomicInteger count, long start) {
@@ -377,7 +366,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // fill -> new_RPS（后续计算 RPS相关指标）
-        // stockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
+        // stockDO.setExtDataHisStr(ConvertStockExtData.dtoList2JsonStr(new_extDataDTOList));
         stockDO.setExtDataDTOList(new_extDataDTOList);
 
 
@@ -466,6 +455,21 @@ public class ExtDataServiceImpl implements ExtDataService {
         double[] N20日涨幅 = fun.N日涨幅(20);
 
 
+        // --------------------------------------------------
+
+
+        MidAdjustResult 中期调整 = fun.中期调整();
+
+        double[] 中期调整幅度 = 中期调整.adjustPct1;
+        int[] 中期调整天数 = 中期调整.adjustDays1;
+
+        double[] 中期调整幅度2 = 中期调整.adjustPct2;
+        int[] 中期调整天数2 = 中期调整.adjustDays2;
+
+
+        // --------------------------------------------------
+
+
         int[] 短期趋势支撑线 = fun.短期趋势支撑线();
         int[] 中期趋势支撑线 = fun.中期趋势支撑线(短期趋势支撑线);
         int[] 长期趋势支撑线 = fun.长期趋势支撑线(中期趋势支撑线);
@@ -494,9 +498,18 @@ public class ExtDataServiceImpl implements ExtDataService {
         double[] C_MA250_偏离率 = fun.C_MA_偏离率(250);
 
 
+        // --------------------------------------------------
+
+
+        boolean[] 上影大阴 = fun.上影大阴();
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();
+
+
         boolean[] 涨停 = fun.涨停();
         boolean[] 跌停 = fun.跌停();
+
+
+        // --------------------------------------------------
 
 
         boolean[] XZZB = fun.XZZB();
@@ -549,6 +562,10 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] RPS三线红 = fun.RPS三线红(RPS);
 
 
+        boolean[] 首次三线红 = fun.首次三线红(RPS);
+        boolean[] 口袋支点 = fun.口袋支点(MA10, MA20, MA50, MA100, MA120, MA200, MA250, 中期调整, RPS一线红, 均线预萌出, N60日新高, 中期涨幅, 上影大阴);
+
+
         int[] klineType = fun.klineType();
 
 
@@ -559,32 +576,38 @@ public class ExtDataServiceImpl implements ExtDataService {
             ExtDataDTO dto = extDataDTOList.get(i);
 
 
-            dto.setMA5(of(MA5[i], 3));
-            dto.setMA10(of(MA10[i], 3));
-            dto.setMA20(of(MA20[i], 3));
-            dto.setMA30(of(MA30[i], 3));
-            dto.setMA50(of(MA50[i], 3));
-            dto.setMA60(of(MA60[i], 3));
-            dto.setMA100(of(MA100[i], 3));
-            dto.setMA120(of(MA120[i], 3));
-            dto.setMA150(of(MA150[i], 3));
-            dto.setMA200(of(MA200[i], 3));
-            dto.setMA250(of(MA250[i], 3));
+            dto.setMA5(of(MA5[i]));
+            dto.setMA10(of(MA10[i]));
+            dto.setMA20(of(MA20[i]));
+            dto.setMA30(of(MA30[i]));
+            dto.setMA50(of(MA50[i]));
+            dto.setMA60(of(MA60[i]));
+            dto.setMA100(of(MA100[i]));
+            dto.setMA120(of(MA120[i]));
+            dto.setMA150(of(MA150[i]));
+            dto.setMA200(of(MA200[i]));
+            dto.setMA250(of(MA250[i]));
 
 
-            dto.setSSF(of(SSF[i], 3));
-            dto.setSAR(of(SAR[i], 3));
+            dto.setSSF(of(SSF[i]));
+            dto.setSAR(of(SAR[i]));
 
 
-            dto.setRPS三线和(of(RPS三线和[i], 3));
-            dto.setRPS五线和(of(RPS五线和[i], 3));
+            dto.setRPS三线和(of(RPS三线和[i]));
+            dto.setRPS五线和(of(RPS五线和[i]));
 
 
-            dto.set中期涨幅(of(中期涨幅[i], 3));
-            dto.setN3日涨幅(of(N3日涨幅[i], 3));
-            dto.setN5日涨幅(of(N5日涨幅[i], 3));
-            dto.setN10日涨幅(of(N10日涨幅[i], 3));
-            dto.setN20日涨幅(of(N20日涨幅[i], 3));
+            dto.set中期涨幅(of(中期涨幅[i]));
+            dto.setN3日涨幅(of(N3日涨幅[i]));
+            dto.setN5日涨幅(of(N5日涨幅[i]));
+            dto.setN10日涨幅(of(N10日涨幅[i]));
+            dto.setN20日涨幅(of(N20日涨幅[i]));
+
+
+            dto.set中期调整幅度(of(中期调整幅度[i]));
+            dto.set中期调整天数(of(中期调整天数[i]));
+            dto.set中期调整幅度2(of(中期调整幅度2[i]));
+            dto.set中期调整天数2(of(中期调整天数2[i]));
 
 
             dto.set短期支撑线(短期趋势支撑线[i]);
@@ -613,6 +636,7 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setC_MA250_偏离率(C_MA250_偏离率[i]);
 
 
+            dto.set上影大阴(上影大阴[i]);
             dto.set高位爆量上影大阴(高位爆量上影大阴[i]);
 
 
@@ -661,6 +685,10 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setRPS一线红(RPS一线红[i]);
             dto.setRPS双线红(RPS双线红[i]);
             dto.setRPS三线红(RPS三线红[i]);
+
+
+            dto.set首次三线红(首次三线红[i]);
+            dto.set口袋支点(口袋支点[i]);
 
 
             dto.setKlineType(klineType[i]);
@@ -889,7 +917,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
     private static double of(double val) {
-        return of(val, 2);
+        return of(val, 3);
     }
 
     private static double of(double val, int setScale) {
