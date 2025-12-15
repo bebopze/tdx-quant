@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.indicator;
 
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
+import com.bebopze.tdx.quant.common.domain.dto.fun.MidAdjustResult;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.COUNT;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MACD;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.*;
 
 
@@ -266,6 +268,15 @@ public class StockFun {
         return TdxExtFun.changePct(close, N);
     }
 
+    public MidAdjustResult 中期调整() {
+        return TdxExtFun.中期调整(high, low, close);
+    }
+
+
+    // 高位-爆量/上影/大阴
+    public boolean[] 上影大阴() {
+        return TdxExtFun.上影大阴(high, low, close, is20CM());
+    }
 
     // 高位-爆量/上影/大阴
     public boolean[] 高位爆量上影大阴() {
@@ -407,6 +418,24 @@ public class StockFun {
         return TdxExtFun.月多(date, open, high, low, close);
     }
 
+    public boolean[] 口袋支点(double[] MA10,
+                              double[] MA20,
+                              double[] MA50,
+                              double[] MA100,
+                              double[] MA120,
+                              double[] MA200,
+                              double[] MA250,
+                              MidAdjustResult 中期调整,
+                              boolean[] RPS一线红,
+                              boolean[] 均线预萌出,
+                              boolean[] N60日新高,
+                              double[] 中期涨幅,
+                              boolean[] 上影大阴) {
+
+
+        return TdxExtFun.口袋支点(open, high, low, close, amo, MA10, MA20, MA50, MA100, MA120, MA200, MA250, 中期调整, RPS一线红, 均线预萌出, N60日新高, 中期涨幅, 上影大阴);
+    }
+
 
     public boolean[] XZZB() {
         return TdxExtFun.XZZB(high, low, close);
@@ -440,6 +469,10 @@ public class StockFun {
 
     public boolean[] RPS三线红(double RPS) {
         return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
+    }
+
+    public boolean[] 首次三线红(double RPS) {
+        return TdxExtFun.首次三线红(rps10, rps20, rps50, rps120, rps250, RPS);
     }
 
 

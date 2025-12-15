@@ -1522,12 +1522,405 @@ public class TdxExtFun {
     }
 
 
-    public static boolean[] 口袋支点(double[] close, boolean[] 均线预萌出, boolean[] n60日新高, double[] 中期涨幅) {
-        // return MonthlyBullSignal2.compute口袋支点(dailyKlines);
+    public static boolean[] 口袋支点(double[] open,
+                                     double[] high,
+                                     double[] low,
+                                     double[] close,
+                                     double[] amo,
+                                     double[] MA10,
+                                     double[] MA20,
+                                     double[] MA50,
+                                     double[] MA100,
+                                     double[] MA120,
+                                     double[] MA200,
+                                     double[] MA250,
+                                     MidAdjustResult 中期调整,
+                                     boolean[] RPS一线红,
+                                     boolean[] 均线预萌出,
+                                     boolean[] N60日新高,
+                                     double[] 中期涨幅,
+                                     boolean[] 上影大阴) {
 
 
         int n = close.length;
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        double[] C_H10 = HHV(close, 10);
+
+        double[] AMO_H10 = HHV(amo, 10);
+        double[] AMO_MA10 = MA(amo, 10);
+
+
+        double[][] MACD_arr = MACD(close);
+        double[] DIF = MACD_arr[0];
+        double[] DEA = MACD_arr[1];
+        double[] MACD = MACD_arr[2];
+
+        double[] MACD_H5 = HHV(MACD, 5);
+        double[] MACD_H10 = HHV(MACD, 10);
+
+
+        double[] SAR = SAR(high, low);
+
+
+        // ---------------
+
+        int[] 中期调整天数 = 中期调整.adjustDays1;
+        int[] 中期调整天数2 = 中期调整.adjustDays2;
+
+
+        boolean[] result__中期天数_大于10 = new boolean[n];
+        boolean[] result__中期天数2_大于20 = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            result__中期天数_大于10[i] = 中期调整天数[i] > 10;
+            result__中期天数2_大于20[i] = 中期调整天数2[i] > 20;
+        }
+
+        int[] BARSLAST__中期天数_大于10 = BARSLAST(result__中期天数_大于10);
+        int[] BARSLAST__中期天数2_大于20 = BARSLAST(result__中期天数2_大于20);
+
+
+        // ---------------
+        boolean[] result__C_大于MA250 = new boolean[n];
+        boolean[] result__C_大于MA200 = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            result__C_大于MA250[i] = close[i] > MA250[i];
+            result__C_大于MA200[i] = close[i] > MA200[i];
+        }
+
+        int[] COUNT__C_大于MA250 = COUNT(result__C_大于MA250, 30);
+        int[] COUNT__C_大于MA200 = COUNT(result__C_大于MA200, 30);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         boolean[] result = new boolean[n];
+
+
+        for (int i = 1; i < n; i++) {
+
+
+            // MA5  :=MA(C, 5);
+            // MA10 :=MA(C,10);
+            // MA20 :=MA(C,20);
+            // MA50 :=IF(MA(C, 50)=DRAWNULL, 0, MA(C, 50));
+            // MA100:=IF(MA(C,100)=DRAWNULL, 0, MA(C,100));
+            // MA120:=IF(MA(C,120)=DRAWNULL, 0, MA(C,120));
+            // MA150:=IF(MA(C,150)=DRAWNULL, 0, MA(C,150));
+            // MA200:=IF(MA(C,200)=DRAWNULL, 0, MA(C,200));
+            // MA250:=IF(MA(C,250)=DRAWNULL, 0, MA(C,250));
+            //
+            //
+            // RPS10 := TOOLS_RPS.RPS10;
+            // RPS20 := TOOLS_RPS.RPS20;
+            // RPS50 := TOOLS_RPS.RPS50;
+            // RPS120:= TOOLS_RPS.RPS120;
+            // RPS250:= TOOLS_RPS.RPS250;
+            //
+            //
+            // 中期调整幅度  :=  中期调整幅度 ;
+            // 中期调整天数  :=  中期调整天数 ;
+            // 中期调整天数2 :=  中期调整天数2;
+            //
+            //
+            // 中期涨幅_MA20 :=  中期涨幅N(20);
+            //
+            //
+            // 均线预萌出    :=  均线预萌出.均线预萌出;
+            //
+            //
+            // C_60日新高     :=  C=HHV(C,60);
+            //
+            //
+            //
+            //
+            //
+            // { ----------------------------------- 6、口袋支点 ------------------------------------- }
+            //
+            //
+            // {口袋支点公式的基本要素一：50日、120日和250日的RPS，至少有一条是红的}
+            //
+            //
+            //
+            // {RPS > 85 }
+            // A1 :=  RPS50 >=RPS;
+            // A2 :=  RPS120>=RPS;
+            // A3 :=  RPS250>=RPS;
+
+
+            //
+            //
+            // { 上市一年内的票  -  无RPS要求 }
+            // A_DAY:= BARSCOUNT(C); {上市天数}
+            // A4 :=  50 <= A_DAY AND A_DAY <= 150        AND     (RPS10>=RPS || RPS20>=RPS);     { - DEL   主动放弃 一些计划外的机会 }
+            //
+            // { 无RPS}
+            // A5 :=  (RPS250=DRAWNULL  ||  RPS250=0)     AND     (RPS10>=RPS || RPS20>=RPS);     { - DEL }
+            //
+            //
+            // KD1 :   A1 || A2 || A3 || A4 || A5       NODRAW;
+
+
+            boolean KD1 = RPS一线红[i];
+
+
+            //
+            //
+            //
+            //
+            // {阶段最大调整幅度的限制 - 完美中期调整}
+            //
+            // {个人经验，10倍牛股的第一波调整幅度 有可能偏大到达-40%左右（一般超过-50%的就不建议跟踪了），但后期的中期调整以-25%左右的居多}
+            // {
+            // B_H_120     :=  HHV(H,120);                        {120日内的 最高点
+            // B_H_120_DAY :=  HHVBARS(H,120);   				   {120日内的 最高点  距今天的天数
+            // B_L_120     :=  LLV(L, B_H_120_DAY + 1);           {120日内的 最低点  ->   120日内 最高点~至今，这个区间内的最低点
+            //
+            // B_1 :=  LLV(L,40) / HHV(H,120) > 0.5;              {40日内最低价  >  120日内最高价 的一半
+            // B_2 :=  B_L_120   / B_H_120    > 0.48;             {120日内       最低点 / 最高点 >  48%   -   阶段最大下跌幅度不超过-52%
+            //
+            //
+            // KD2 :   B_1 AND B_2       NODRAW;
+            // }
+            //
+            // KD2 :   中期调整幅度> -52       NODRAW;
+            double[] 中期调整幅度 = 中期调整.adjustPct1;
+
+            boolean KD2 = 中期调整幅度[i] > -52;
+
+
+            //
+            //
+            //
+            //
+            //
+            //
+            //{均线粘合 OR 多头趋势}
+            //
+            //
+            //
+            // {二阶段 - 均线多头排列}
+            // C_1 :=  MA50  > MA100;
+            // C_2 :=  MA100 > MA200;
+            // KD3_1 :=  C_1 || C_2   ||   A4;
+            //
+            // KD3_2 :=  均线预萌出   AND   C_60日新高;
+            //
+            //
+            // KD3 :   KD3_1 || KD3_2       NODRAW;
+
+
+            boolean KD3_1 = MA50[i] > MA100[i] || MA100[i] > MA200[i];
+            boolean KD3_2 = 均线预萌出[i] && N60日新高[i];
+            boolean KD3 = KD3_1 || KD3_2;
+
+
+            //
+            //
+            //
+            //
+            //
+            //
+            //
+            // {均线2}
+            //
+            // {50日均线}
+            // D_50_1 :=  C > MA50;                      { 收盘价     站上50日均线线 }
+            // D_50_2 :=  MA50 > REF(MA50,5);            { 50日均线   呈上升趋势        -  当日 50日均线    >  5日前的 50日均线   }
+            // D_50   :=  D_50_1 AND D_50_2;
+            //
+            //
+            // {120日均线}
+            // D_120_1 :=  C > MA120;                    { 收盘价     站上120日均线线 }
+            // D_120_2 :=  MA120 > REF(MA120,5);         { 120日均线  呈上升趋势        -  当日 120日均线   >  5日前的 120日均线  }
+            // D_120   :=  D_120_1 AND D_120_2;
+            //
+            //
+            // {250日均线}
+            // D_250_1 :=  C > MA250;                    { 收盘价      站上250日均线线 }
+            // D_250_2 :=  MA250 > REF(MA250,5);         { 250日均线   呈上升趋势       -   当日 250日均线  >  5日前的 250日均线  }
+            // D_250   :=  D_250_1 AND D_250_2;
+            //
+            //
+            //
+            // KD4 :   D_50   ||   D_120   ||   D_250       NODRAW;
+
+            boolean D_50 = close[i] > MA50[i] && MA50[i] > MA50[Math.max(0, i - 5)];
+            boolean D_120 = close[i] > MA120[i] && MA120[i] > MA120[Math.max(0, i - 5)];
+            boolean D_250 = close[i] > MA250[i] && MA250[i] > MA250[Math.max(0, i - 5)];
+
+            boolean KD4 = D_50 || D_120 || D_250;
+
+
+            //
+            //
+            //
+            //
+            //
+            // { 量价突破 }
+            //
+            // E_1 :=  AMO = HHV(AMO,10);   		                 { 成交额 - 创10日新高 }
+            // E_2 :=  C / REF(C,1) >= 1.098   AND   C=H;            { 涨停   - 狗屎脑残 社会主义     涨跌停机制  BUG }
+            // E_3 :=  AMO / REF(MA(AMO,10), 1) >= 1.5;              { 当日成交金额 比 10日内平均成交额  多1倍以上     -    当日成交额 / 10日平均成交额 >= 2 }
+            //
+            // KD5 :   E_1 OR E_2 OR E_3       NODRAW;               { 成交额创10日新高  ||  涨停（一字板） ||  当日成交金额 比 10日内平均成交额  多1倍以上 }
+
+            boolean E_1 = amo[i] == AMO_H10[i];
+            boolean E_2 = close[i] / close[i - 1] >= 1.098 && close[i] == high[i];
+            boolean E_3 = amo[i] / AMO_MA10[i - 1] >= 1.5;
+
+            boolean KD5 = E_1 || E_2 || E_3;
+
+
+            // {买点}
+            //
+            // {买点1  收盘价 > 20日线}
+            // G_1 :=  C >= MA20;
+            //
+            //
+            // MACD :=  MACD.MACD;
+            // {买点2_1    MACD金叉多头   -  MACD值(=DIF-DEA) > 0   || MACD,DIF(快) > MACD,DEA(慢)    }
+            // G_2_1 :=  MACD >= 0;
+            //
+            // {买点2_2    MACD 接近金叉多头   -  当前MACD值 为 最近10日最大值    }
+            // G_2_2 :=  MACD < 0   AND   MACD = HHV(MACD, 10);
+            //
+            // {买点2_3  MACD站上0轴    -  MACD,DIF(快) > 0   AND   MACD,DEA(慢) > 0        AND   MACD接近金叉       }
+            // G_2_3 :=  MACD.DIF>=0  AND  MACD.DEA>=0     AND     MACD = HHV(MACD, 5) AND ( MACD>= -0.15   ||   (MACD>= -0.5 AND C_60日新高) );
+            //
+            // G_2 :=  G_2_1 || G_2_2 || G_2_3;
+            //
+            //
+            // {买点3    SAR多头（红色） -  C > SAR }
+            // G_3_1:=   C >= SAR.SAR;
+            // {买点3_2  收盘价 与 SAR 差值在5%以内 }
+            // G_3_2_VAL:= ABS(C/SAR.SAR  -1) * 100;
+            // G_3_2:=     G_3_2_VAL <= 5 ;
+            //
+            // G_3 :=  G_3_1 || G_3_2;
+            //
+            //
+            // KD6 :   G_1 AND G_2 AND G_3       NODRAW;
+
+
+            boolean G_1 = close[i] >= MA20[i];
+
+
+            boolean G_2_1 = MACD[i] >= 0;
+            boolean G_2_2 = MACD[i] < 0 && MACD[i] == MACD_H10[i];
+            boolean G_2_3 = DIF[i] >= 0 && DEA[i] >= 0 && MACD[i] == MACD_H5[i] && (MACD[i] >= -0.15 || (MACD[i] >= -0.5 && N60日新高[i]));
+            boolean G_2 = G_2_1 || G_2_2 || G_2_3;
+
+
+            boolean G_3_1 = close[i] >= SAR[i];
+            boolean G_3_2 = Math.abs(close[i] / SAR[i] - 1) * 100 <= 5;
+            boolean G_3 = G_3_1 || G_3_2;
+
+
+            boolean KD6 = G_1 && G_2 && G_3;
+
+
+            // { 昨天的最低价 偏离50日线的幅度小于24%，或者 昨天的最低价 偏离10日线的幅度小于3% }
+            // KD7 :   REF(L,1) <= REF(MA50,1)*1.24     ||     REF(L,1) <= REF(MA10,1)*1.03       NODRAW;
+
+            boolean KD7 = low[i - 1] <= MA50[i - 1] * 1.24 || low[i - 1] <= MA10[i - 1] * 1.03;
+
+
+            //
+            //
+            //
+            // { 收阳收红 }
+            // KD8 :   C>REF(C,1)   AND   C>=O       NODRAW;
+            boolean KD8 = close[i] > close[i - 1] && close[i] >= open[i];
+
+
+            //
+            //
+            //
+            //
+            //
+            // { NOT 长上影线/大阴线 }
+            // KD9 :   NOT(上影大阴.上影大阴)       NODRAW;
+            boolean KD9 = !上影大阴[i];
+
+
+            //
+            //
+            //
+            //
+            //
+            // { 收盘价 - 10/60日新高 }
+            // KD10 :   C=HHV(C,10)       NODRAW;
+            boolean KD10 = close[i] == C_H10[i];
+
+            //
+            //
+            //
+            //
+            //
+            // { 涨幅限制 }
+            // KD11_1 :=  中期涨幅_MA20 <= 55       ||              中期调整天数>10          ||              中期调整天数2>20             NODRAW;       { 中期调整     ->  不下MA20 （中期涨幅  -改用->  中期调整天数 ） }
+            // KD11_2 :=  中期涨幅_MA20 <= 70       AND   (BARSLAST(中期调整天数>10) < 5     ||     BARSLAST(中期调整天数2>20) < 5)       NODRAW;       { 中期突破     ->  突破初期 }
+            //
+            // KD11   :   KD11_1 || KD11_2       NODRAW;
+
+
+            boolean KD11_1 = 中期涨幅[i] <= 55 || 中期调整天数[i] > 10 || 中期调整天数2[i] > 20;
+            boolean KD11_2 = 中期涨幅[i] <= 70 && (BARSLAST__中期天数_大于10[i] < 5 || BARSLAST__中期天数2_大于20[i] < 5);
+            boolean KD11 = KD11_1 || KD11_2;
+
+            //
+            //
+            //
+            //
+            //
+            // { 近30天  上MA200/MA250 的天数限制 }
+            // CON_12_1 :=  COUNT(C>MA250,30)>=27;       { 过去30天  收盘价 高于MA250  的天数   大于等于29天 （最多只允许 1天 收盘 低于MA250）}
+            // CON_12_2 :=  COUNT(C>MA200,30)>=24;       { 过去30天  收盘价 高于MA200  的天数   大于等于24天 （即占 80% 以上的日子）          }
+            // CON_12_3 :=  均线预萌出;
+            //
+            // CON_12_4 :=  C>MA200   AND   C_60日新高;
+            //
+            // KD12 :   CON_12_1 || CON_12_2 || CON_12_3 || CON_12_4       NODRAW;
+
+
+            boolean CON_12_1 = COUNT__C_大于MA250[i] >= 27;
+            boolean CON_12_2 = COUNT__C_大于MA200[i] >= 24;
+            boolean CON_12_3 = 均线预萌出[i];
+            boolean CON_12_4 = close[i] > MA200[i] && N60日新高[i];
+            boolean KD12 = CON_12_1 || CON_12_2 || CON_12_3 || CON_12_4;
+
+
+            //
+            //
+            //
+            //
+            //
+            //
+            //
+            // 口袋支点 :   KD1 AND KD2 AND KD3 AND KD4 AND KD5 AND KD6 AND KD7 AND KD8 AND KD9 AND KD10 AND KD11 AND KD12       COLOR0080FF NODRAW;
+
+            result[i] = KD1 && KD2 && KD3 && KD4 && KD5 && KD6 && KD7 && KD8 && KD9 && KD10 && KD11 && KD12;
+
+
+            //
+            //
+            //
+            //
+            //
+            // { ----------------------------------------------------------------- }
+            // MA20向上 :=  MA向上(20);
+            //
+            //
+            //
+            // 口袋支点     AND     NOT(MA20向上)       COLOR0080FF DOTLINE;
+            // 口袋支点     AND         MA20向上        COLOR0080FF;
+        }
+
 
         return result;
     }
