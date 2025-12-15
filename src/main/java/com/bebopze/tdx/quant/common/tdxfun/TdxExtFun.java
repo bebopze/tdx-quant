@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.tdxfun;
 
+import com.bebopze.tdx.quant.common.domain.dto.fun.MidAdjustResult;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -443,6 +444,117 @@ public class TdxExtFun {
 
 
     /**
+     * 中期调整 指标计算
+     *
+     *
+     * ————————————————————————————————————————————————————————
+     * N : IF(MA多(100),   100,   200)       NODRAW;
+     *
+     * _H    : HHV(H, N);
+     * H_DAY : HHVBARS(H, N) + 1;
+     *
+     * _L    : LLV(L, H_DAY);
+     * L_DAY : LLVBARS(L, H_DAY) + 1;
+     *
+     * 调整幅度  : _L / _H * 100 - 100;
+     * 调整天数  : H_DAY - L_DAY;
+     *
+     * 调整幅度2 : L / _H * 100 - 100;
+     * 调整天数2 : H_DAY - 1;
+     * ————————————————————————————————————————————————————————
+     *
+     * @param high  最高价 H
+     * @param low   最低价 L
+     * @param close 收盘价（用于 MA多）
+     */
+    public static MidAdjustResult 中期调整(double[] high, double[] low, double[] close) {
+
+        int len = close.length;
+
+
+        // ================= 1. 计算 N =================
+        boolean[] MA多100 = MA多(close, 100);
+
+
+        // N仅有2个值：100/200
+        int[] N = new int[len];
+        for (int i = 0; i < len; i++) {
+            N[i] = MA多100[i] ? 100 : 200;
+        }
+
+
+        // ================= 2. _H / H_DAY =================
+        double[] _H = HHV(high, N);
+
+
+        // H_DAY : HHVBARS(H, N) + 1;
+        int[] H_DAY_N100 = HHVBARS(high, 100);
+        int[] H_DAY_N200 = HHVBARS(high, 200);
+
+        int[] H_DAY = new int[len];
+        for (int i = 0; i < len; i++) {
+            int n = N[i];
+            if (n == 100) {
+                H_DAY[i] = H_DAY_N100[i] + 1;
+            } else if (n == 200) {
+                H_DAY[i] = H_DAY_N200[i] + 1;
+            }
+        }
+
+
+        // ================= 3. _L / L_DAY =================
+        double[] _L = LLV(low, H_DAY);
+
+        // L_DAY : LLVBARS(L, H_DAY) + 1;
+        int[] L_DAY = LLVBARS(low, H_DAY);
+        for (int i = 0; i < len; i++) {
+            L_DAY[i] += 1;
+        }
+
+
+        // ================= 4. 调整幅度 / 天数 =================
+        double[] adjustPct1 = new double[len];
+        int[] adjustDays1 = new int[len];
+
+        double[] adjustPct2 = new double[len];
+        int[] adjustDays2 = new int[len];
+
+        Arrays.fill(adjustPct1, Double.NaN);
+        Arrays.fill(adjustPct2, Double.NaN);
+
+        for (int i = 0; i < len; i++) {
+
+            if (!Double.isNaN(_H[i]) && !Double.isNaN(_L[i]) && _H[i] != 0) {
+                adjustPct1[i] = _L[i] / _H[i] * 100 - 100;
+            }
+
+            adjustDays1[i] = H_DAY[i] - L_DAY[i];
+
+            if (!Double.isNaN(_H[i]) && _H[i] != 0) {
+                adjustPct2[i] = low[i] / _H[i] * 100 - 100;
+            }
+
+            adjustDays2[i] = H_DAY[i] - 1;
+        }
+
+
+        // ================= 5. 封装结果 =================
+        MidAdjustResult r = new MidAdjustResult();
+        r.H = _H;
+        r.H_DAY = H_DAY;
+        r.L = _L;
+        r.L_DAY = L_DAY;
+        r.adjustPct1 = adjustPct1;
+        r.adjustDays1 = adjustDays1;
+        r.adjustPct2 = adjustPct2;
+        r.adjustDays2 = adjustDays2;
+
+
+        return r;
+    }
+
+
+    /**
      * 高位 - 爆量/上影/大阴
      *
      * @param high
@@ -547,7 +659,7 @@ public class TdxExtFun {
 
 
             double zt_price = close[i - 1] * (1 + changePctLimit * 0.01);
-            double aStock__zt_price = NumUtil.of(zt_price, 2, RoundingMode.HALF_UP);   // A股 涨停价格（规则：保留2位小数 -> 四舍五入）
+            double aStock__zt_price = NumUtil.of(zt_price, 2, RoundingMode.HALF_UP);   // A股 涨跌停价格（规则：保留2位小数 -> 四舍五入）
 
             result[i] = close[i] >= aStock__zt_price;
         }
@@ -567,10 +679,17 @@ public class TdxExtFun {
         boolean[] result = new boolean[len];
 
 
-        double changeLimit = changePctLimit * 0.998 * 0.01;   // 涨跌停（%）：9.98% / 19.98% / 29.98%
+        // double changeLimit = changePctLimit * 0.998 * 0.01;   // 涨跌停（%）：9.98% / 19.98% / 29.98%
+
 
         for (int i = 1; i < len; i++) {
-            result[i] = close[i] <= close[i - 1] * (1 - changeLimit);
+            // result[i] = close[i] <= close[i - 1] * (1 - changeLimit);
+
+
+            double dt_price = close[i - 1] * (1 - changePctLimit * 0.01);
+            double aStock__dt_price = NumUtil.of(dt_price, 2, RoundingMode.HALF_UP);   // A股 涨跌停价格（规则：保留2位小数 -> 四舍五入）
+
+            result[i] = close[i] <= aStock__dt_price;
         }
 
         return result;
@@ -1403,6 +1522,17 @@ public class TdxExtFun {
     }
 
 
+    public static boolean[] 口袋支点(double[] close, boolean[] 均线预萌出, boolean[] n60日新高, double[] 中期涨幅) {
+        // return MonthlyBullSignal2.compute口袋支点(dailyKlines);
+
+
+        int n = close.length;
+        boolean[] result = new boolean[n];
+
+        return result;
+    }
+
+
     /**
      * XZZB指标
      *
@@ -1747,6 +1877,83 @@ public class TdxExtFun {
 
             result[i] = RPS一线红 || RPS双线红 || RPS三线红;
         }
+
+        return result;
+    }
+
+
+    /**
+     * RPS 首次三线翻红
+     *
+     * 完全等价于原始公式：
+     *
+     * RPS_3H_1 := BARSSINCEN(RPS250>=RPS AND RPS120>=RPS AND RPS50>=RPS ,20)=0;
+     * RPS_3H_2 := BARSSINCEN(RPS250>=RPS AND RPS120>=RPS AND RPS20>=RPS ,20)=0;
+     * RPS_3H_3 := BARSSINCEN(RPS250>=RPS AND RPS50 >=RPS AND RPS20>=RPS ,20)=0;
+     * RPS_3H_4 := BARSSINCEN(RPS120>=RPS AND RPS50 >=RPS AND RPS20>=RPS ,20)=0;
+     * RPS_3H_5 := BARSSINCEN(RPS50 >=RPS AND RPS20>=RPS AND RPS10>=RPS ,50)=0;
+     */
+    public static boolean[] 首次三线红(double[] rps10,
+                                       double[] rps20,
+                                       double[] rps50,
+                                       double[] rps120,
+                                       double[] rps250,
+                                       double RPS) {
+
+        int len = rps10.length;
+        boolean[] result = new boolean[len];
+
+
+        // ---------------- 1. 单线是否翻红 ----------------
+        boolean[] RPS_H_1 = new boolean[len]; // 250
+        boolean[] RPS_H_2 = new boolean[len]; // 120
+        boolean[] RPS_H_3 = new boolean[len]; // 50
+        boolean[] RPS_H_4 = new boolean[len]; // 20
+        boolean[] RPS_H_5 = new boolean[len]; // 10
+
+
+        for (int i = 0; i < len; i++) {
+            RPS_H_1[i] = !Double.isNaN(rps250[i]) && rps250[i] >= RPS;
+            RPS_H_2[i] = !Double.isNaN(rps120[i]) && rps120[i] >= RPS;
+            RPS_H_3[i] = !Double.isNaN(rps50[i]) && rps50[i] >= RPS;
+            RPS_H_4[i] = !Double.isNaN(rps20[i]) && rps20[i] >= RPS;
+            RPS_H_5[i] = !Double.isNaN(rps10[i]) && rps10[i] >= RPS;
+        }
+
+
+        // ---------------- 2. 三线同时翻红 ----------------
+        boolean[] C1 = new boolean[len]; // 250 + 120 + 50
+        boolean[] C2 = new boolean[len]; // 250 + 120 + 20
+        boolean[] C3 = new boolean[len]; // 250 + 50  + 20
+        boolean[] C4 = new boolean[len]; // 120 + 50  + 20
+        boolean[] C5 = new boolean[len]; // 50  + 20  + 10
+
+
+        for (int i = 0; i < len; i++) {
+            C1[i] = RPS_H_1[i] && RPS_H_2[i] && RPS_H_3[i];
+            C2[i] = RPS_H_1[i] && RPS_H_2[i] && RPS_H_4[i];
+            C3[i] = RPS_H_1[i] && RPS_H_3[i] && RPS_H_4[i];
+            C4[i] = RPS_H_2[i] && RPS_H_3[i] && RPS_H_4[i];
+            C5[i] = RPS_H_3[i] && RPS_H_4[i] && RPS_H_5[i];
+        }
+
+
+        // ---------------- 3. BARSSINCEN 判定“首次” ----------------
+        int N = 20;
+        int[] B1 = BARSSINCEN(C1, N);
+        int[] B2 = BARSSINCEN(C2, N);
+        int[] B3 = BARSSINCEN(C3, N);
+        int[] B4 = BARSSINCEN(C4, N);
+
+        // 50  + 20  + 10
+        int[] B5 = BARSSINCEN(C5, 50);
+
+
+        // ---------------- 4. 最终信号 ----------------
+        for (int i = 0; i < len; i++) {
+            result[i] = B1[i] == 0 || B2[i] == 0 || B3[i] == 0 || B4[i] == 0 || B5[i] == 0;
+        }
+
 
         return result;
     }

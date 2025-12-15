@@ -189,6 +189,108 @@ public class TdxFun {
 
 
     /**
+     * 可变窗口 HHVBARS：返回最近最高点到当前的周期数
+     * 语义与可变 LLVBARS 对称：
+     * - N[i] == 0 -> 从 0 到 i
+     * - N[i] > 0  -> 最近 N[i] 根
+     * - 遇到相等最高值时取最近的那个（j 越大越优先）
+     */
+    public static int[] HHVBARS(double[] S, int[] N) {
+
+        int len = S.length;
+        if (N.length != len) {
+            throw new IllegalArgumentException("N length must equal S length");
+        }
+
+
+        int[] r = new int[len];
+        Arrays.fill(r, 0);
+
+
+        for (int i = 0; i < len; i++) {
+            int window = N[i];
+            int start;
+            if (window == 0) {
+                start = 0;
+            } else if (window > 0) {
+                if (i + 1 < window) continue; // leave r[i] = 0 表示无效
+                start = i + 1 - window;
+            } else {
+                continue;
+            }
+
+            double max = Double.NEGATIVE_INFINITY;
+            int idx = 0;
+            for (int j = start; j <= i; j++) {
+                if (!Double.isNaN(S[j])) {
+                    // 注意：遇到相等也要更新 idx，这样保证“最近的最高点”
+                    if (S[j] > max || S[j] == max) {
+                        max = S[j];
+                        idx = i - j;
+                    }
+                }
+            }
+            r[i] = idx;
+        }
+
+
+        return r;
+    }
+
+    /**
+     * LLVBARS 可变窗口版本
+     *
+     * @param S 输入序列
+     * @param N 窗口长度序列（N.length == S.length）
+     * @return 到最近最低点的周期数
+     */
+    public static int[] LLVBARS(double[] S, int[] N) {
+
+        int len = S.length;
+        if (N.length != len) {
+            throw new IllegalArgumentException("N length must equal S length");
+        }
+
+
+        int[] r = new int[len];
+        Arrays.fill(r, 0);
+
+
+        for (int i = 0; i < len; i++) {
+
+            int window = N[i];
+            int start;
+
+            if (window == 0) {
+                start = 0;
+            } else if (window > 0) {
+                if (i + 1 < window) continue;
+                start = i + 1 - window;
+            } else {
+                continue;
+            }
+
+
+            double min = Double.POSITIVE_INFINITY;
+            int idx = 0;
+
+            for (int j = start; j <= i; j++) {
+                if (!Double.isNaN(S[j])) {
+                    if (S[j] < min || S[j] == min) {
+                        min = S[j];
+                        idx = i - j;   // 最近最低点
+                    }
+                }
+            }
+            r[i] = idx;
+        }
+
+
+        return r;
+    }
+
+
+    /**
      * MA                          ->   已验证 ✅
      *
      * @param S
