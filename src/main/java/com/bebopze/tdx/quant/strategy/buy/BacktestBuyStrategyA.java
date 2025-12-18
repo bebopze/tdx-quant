@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.strategy.buy;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
+import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -62,7 +63,13 @@ public class BacktestBuyStrategyA implements BuyStrategy {
      * @return
      */
     @Override
-    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap, double posRate) {
+    public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
+                             List<String> buyConList,
+                             BacktestCache data,
+                             LocalDate tradeDate,
+                             Map<String, String> buy_infoMap,
+                             double posRate,
+                             Boolean ztFlag) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -119,7 +126,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 Integer idx = dateIndexMap.get(tradeDate);
 
                 // 过滤 停牌/新股
-                if (idx == null || idx < 50) {
+                if (idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
                     return;
                 }
 
@@ -447,7 +454,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
             double[] rps250_arr = extDataArrDTO.rps250;
 
 
-            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
+            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅N20;
 
 
             boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;

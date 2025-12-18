@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
+import org.springframework.scheduling.annotation.Async;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public interface BacktestService {
      * @param btCompareDTO
      * @return
      */
+    @Async("taskExecutor")
     void execBacktest(LocalDate startDate,
                       LocalDate endDate,
                       boolean resume,
@@ -45,9 +47,11 @@ public interface BacktestService {
      * @param startDate  更新-开始日期
      * @param endDate    更新-结束日期
      */
+    @Async("taskExecutor")
     void execBacktestUpdate(Integer batchNo, List<Long> taskIdList, LocalDate startDate, LocalDate endDate);
 
 
+    @Async("taskExecutor")
     Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
                    List<String> buyConList,
                    LocalDate startDate,

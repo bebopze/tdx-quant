@@ -22,6 +22,7 @@ import com.bebopze.tdx.quant.service.BacktestService;
 import com.bebopze.tdx.quant.service.DataAnalysisService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
+import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner_ZT;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -76,7 +77,13 @@ public class BacktestServiceImpl implements BacktestService {
                              BacktestCompareDTO btCompareDTO) {
 
 
-        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(2);
+        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(3);
+        // 涨停策略（打板）
+        if (btCompareDTO.ztFlag_true()) {
+            buy_conCombinerList = BuyStrategy__ConCombiner_ZT.generateCombinations(2);
+        }
+
+
 //        List<List<String>> buy_conCombinerList = Lists.newArrayList();
 //        buy_conCombinerList.add(Lists.newArrayList("N100日新高", "月多", "RPS红"));
 
@@ -241,10 +248,6 @@ public class BacktestServiceImpl implements BacktestService {
         Assert.isTrue(batchNo <= lastBatchNo, String.format(" [任务批次号=%s]非法，当前[最大任务批次号=%s]", batchNo, lastBatchNo));
 
 
-        BtTaskDO batchNoEntity = btTaskService.getBatchNoEntityByBatchNo(batchNo);
-        Assert.notNull(batchNoEntity, String.format(" [任务批次号=%s]不存在，当前[最大任务批次号=%s]", batchNo, lastBatchNo));
-
-
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -260,6 +263,13 @@ public class BacktestServiceImpl implements BacktestService {
 
             return new_batchNoEntity;
         }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        BtTaskDO batchNoEntity = btTaskService.getBatchNoEntityByBatchNo(batchNo);
+        Assert.notNull(batchNoEntity, String.format(" [任务批次号=%s]不存在，当前[最大任务批次号=%s]", batchNo, lastBatchNo));
 
 
         // -------------------------------------------------------------------------------------------------------------

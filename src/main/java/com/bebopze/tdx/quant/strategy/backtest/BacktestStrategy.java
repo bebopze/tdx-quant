@@ -20,6 +20,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyE;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
@@ -80,7 +81,7 @@ public class BacktestStrategy {
     private static final ThreadLocal<List<BtTradeRecordDO>> tradeRecordList__cache = ThreadLocal.withInitial(ArrayList::new);
 
 
-    private static final ThreadLocal<BtDailyReturnDO> prev_dailyReturnDO__cache = ThreadLocal.withInitial(BtDailyReturnDO::new);
+    private static final ThreadLocal<BtDailyReturnDO> prev_dailyReturnDO__cache = new ThreadLocal<>(); // 首日为null
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -123,6 +124,10 @@ public class BacktestStrategy {
 
     @Autowired
     private BacktestBuyStrategyD backtestBuyStrategyD;
+
+    @Autowired
+    private BacktestBuyStrategyE backtestBuyStrategyE;
+
 
     @Autowired
     private SellStrategyFactory sellStrategyFactory;
@@ -232,15 +237,18 @@ public class BacktestStrategy {
 
         while (tradeDate.isBefore(endDate)) {
 
-            tradeDate = tradeDateIncr(tradeDate);
-//            // 备份
-//            Backup backup = backupThreadLocal();
-
 
             // ------------------ fast-fail（BS策略 快速淘汰）
             if (fastFail(taskDO, tradeDate)) {
+                taskDO.setFastFailFlag(1);
+                taskDO.setEndDate(tradeDate);
                 break;
             }
+
+
+            tradeDate = tradeDateIncr(tradeDate);
+//            // 备份
+//            Backup backup = backupThreadLocal();
 
 
 //            // 数据初始化   ->   加载 全量行情数据
@@ -644,8 +652,10 @@ public class BacktestStrategy {
 
         // 买入策略
         // List<String> buy__stockCodeList = buyStrategyFactory.get("A").rule(data, tradeDate, buy_infoMap, posRate);
-        // List<String> buy__stockCodeList = backtestBuyStrategyC.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
-        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        // List<String> buy__stockCodeList = backtestBuyStrategyC.rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        // List<String> buy__stockCodeList = backtestBuyStrategyD.rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        // List<String> buy__stockCodeList = backtestBuyStrategyE.rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        List<String> buy__stockCodeList = buyStrategyFactory.get(btCompareDTO.get().getBuyStrategyKey()).rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
 
         log.info("B策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));
@@ -720,6 +730,11 @@ public class BacktestStrategy {
      * @return
      */
     private boolean fastFail(BtTaskDO taskDO, LocalDate tradeDate) {
+        if (!btCompareDTO.get().isFastFailFlag()) {
+            return false;
+        }
+
+
         LocalDate startDate = taskDO.getStartDate();
         LocalDate endDate = taskDO.getEndDate();
 
@@ -731,12 +746,31 @@ public class BacktestStrategy {
             BtDailyReturnDO prev_dailyReturnDO = prev_dailyReturnDO__cache.get();
             if (prev_dailyReturnDO != null) {
 
-                // BS策略 快速淘汰：1年净值<1.35
+                // BS策略 快速淘汰：1年净值<1.45
                 double nav = prev_dailyReturnDO.getNav().doubleValue();
-                if (nav < 1.35) {
+                if (diff > 365 * 1 && nav < 1.5) {
                     log.warn("fastFail     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
-
+                    return true;
+                }
+                if (diff > 365 * 2 && nav < 2.0) {
+                    log.warn("fastFail     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
+                             taskDO.getId(), startDate, endDate, tradeDate, nav);
+                    return true;
+                }
+                if (diff > 365 * 3 && nav < 3.0) {
+                    log.warn("fastFail     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
+                             taskDO.getId(), startDate, endDate, tradeDate, nav);
+                    return true;
+                }
+                if (diff > 365 * 4 && nav < 4.0) {
+                    log.warn("fastFail     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
+                             taskDO.getId(), startDate, endDate, tradeDate, nav);
+                    return true;
+                }
+                if (diff > 365 * 5 && nav < 5.0) {
+                    log.warn("fastFail     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
+                             taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
             }
@@ -1317,8 +1351,7 @@ public class BacktestStrategy {
                                                 Map<String, String> buy_infoMap) {
 
 
-        int size_B = buy__stockCodeList.size();
-        if (size_B == 0) {
+        if (CollectionUtils.isEmpty(buy__stockCodeList)) {
             return;
         }
 
@@ -1331,12 +1364,30 @@ public class BacktestStrategy {
 
 
         // 等比买入
-        BigDecimal avg_amount = of(x.get().actAvlCapital / size_B);
+        double avg_amount = x.get().actAvlCapital / buy__stockCodeList.size();
+
+
+        // 单一个股 单次买入下限  >=  账户总资金 x 0.5%
+        double STOCK_BUY__LIMIT_min = btCompareDTO.get().getSingleStockMinBuyPosPct() * 0.01;
+        double min_buy_amount = x.get().capital * STOCK_BUY__LIMIT_min;                      // 账户总资金 x 0.5%
+
+
+        while (avg_amount < min_buy_amount && buy__stockCodeList.size() >= 2) {
+            // buy__stockCodeList   ->   减半（自动淘汰 排名后50%）
+            buy__stockCodeList = buy__stockCodeList.subList(0, buy__stockCodeList.size() / 2);
+
+
+            // 等比买入
+            avg_amount = x.get().actAvlCapital / buy__stockCodeList.size();
+        }
+
+
+        // ------------------------------------------
 
 
         // 单一个股 单次买入上限  <=  剩余资金 x 10%
-        double STOCK_BUY__LIMIT = btCompareDTO.get().getSingleStockMaxBuyPct() * 0.01;
-        avg_amount = avg_amount.min(of(x.get().actAvlCapital * STOCK_BUY__LIMIT));     // 实际 可用资金 * 10%
+        double STOCK_BUY__LIMIT_max = btCompareDTO.get().getSingleStockMaxBuyAvlPct() * 0.01;
+        avg_amount = Math.min(avg_amount, x.get().actAvlCapital * STOCK_BUY__LIMIT_max);     // 实际 可用资金 * 10%
 
 
         // 单一个股 总持仓上限  <=  账户总资金 x 5%
@@ -1360,10 +1411,10 @@ public class BacktestStrategy {
 
             // 可买仓位  =  最大仓位限制 - 个股市值
             double amount = amount_limit - marketValue;
-            if (amount <= 0) {
+            if (amount <= 0 || avg_amount <= 0) {
                 continue;
             } else {
-                amount = Math.min(amount, avg_amount.doubleValue());
+                amount = Math.min(amount, avg_amount);
             }
 
 
@@ -1742,16 +1793,10 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        if (btCompareDTO.get().isCheckTradeFlag()) {
-            // LocalDate prev_date = tradeDateDecr(tradeDate);
-            // BtDailyReturnDO prev_dailyReturnDO = btDailyReturnService.getByTaskIdAndTradeDate(taskId, prev_date);
-
-            BtDailyReturnDO prev_dailyReturnDO = prev_dailyReturnDO__cache.get();
-            if (prev_dailyReturnDO != null) {
-
-                double db__prev_capital = prev_dailyReturnDO.getCapital().doubleValue();
-                Assert.isTrue(TdxFunCheck.equals(prevCapital, db__prev_capital, 0.01, 0.001), String.format("[%s] [%s] , x.prevCapital[%s] != db__prev_capital[%s]", taskId, tradeDate, prevCapital, db__prev_capital));
-            }
+        BtDailyReturnDO prev_dailyReturnDO = prev_dailyReturnDO__cache.get();
+        if (prev_dailyReturnDO != null) {
+            double db__prev_capital = prev_dailyReturnDO.getCapital().doubleValue();
+            Assert.isTrue(TdxFunCheck.equals(prevCapital, db__prev_capital, 0.01, 0.001), String.format("[%s] [%s] , x.prevCapital[%s] != db__prev_capital[%s]", taskId, tradeDate, prevCapital, db__prev_capital));
         }
 
 
@@ -3236,7 +3281,7 @@ public class BacktestStrategy {
 
 
         // 全量行情
-        data = initDataService.initData(startDate, endDate, false);
+        data = initDataService.initData(startDate, endDate, false, 0);
         // initDataService.initData(startDate, endDate, false);   // 等价 data = 全局Cache;       data -本身就已全局指向-> 全局Cache
 
 
@@ -3285,11 +3330,13 @@ public class BacktestStrategy {
      */
     private void clearThreadLocal() {
         x.remove();
+
         tradeRecord___idSet__cache.remove();
         tradeRecordList__cache.remove();
-
+        prev_dailyReturnDO__cache.remove();
 
         btCompareDTO.remove();
+        btOpenBSDTO.remove();
     }
 
 

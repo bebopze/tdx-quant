@@ -67,12 +67,6 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     }
 
 
-    @Override
-    public List<String> rule(BacktestCache data, LocalDate tradeDate, Map<String, String> buy_infoMap, double posRate) {
-        return Lists.newArrayList();
-    }
-
-
     /**
      * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
      *
@@ -86,13 +80,14 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * @return
      */
     @TotalTime
-    public List<String> rule2(TopBlockStrategyEnum topBlockStrategyEnum,
-                              List<String> buyConList,
-                              BacktestCache data,
-                              LocalDate tradeDate,
-                              Map<String, String> buy_infoMap,
-                              double posRate,
-                              Boolean ztFlag) {
+    @Override
+    public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
+                             List<String> buyConList,
+                             BacktestCache data,
+                             LocalDate tradeDate,
+                             Map<String, String> buy_infoMap,
+                             double posRate,
+                             Boolean ztFlag) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -282,7 +277,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             Integer idx = dateIndexMap.get(tradeDate);
 
             // 过滤 停牌/新股       // TODO 个股行情指标 异常数据bug   688692（达梦数据）     kline 301条   extData 300条（首日 2024-06-12 扩展数据 缺失）
-            if (idx == null || idx < 50 || fun.getKlineDTOList().size() != fun.getExtDataDTOList().size()) {
+            if (idx == null || Double.isNaN(extDataArrDTO.rps50[idx]) || fun.getKlineDTOList().size() != fun.getExtDataDTOList().size()) {
                 return;
             }
 
@@ -634,7 +629,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             Integer idx = dateIndexMap.get(tradeDate);
 
             // 过滤当日  ->  未上市/新板块、非LV3
-            if (blockDO.getEndLevel() != 1 || extDataArrDTO.date.length == 0 || idx == null || idx < 50) {
+            if (blockDO.getEndLevel() != 1 || extDataArrDTO.date.length == 0 || idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
                 return;
             }
 
@@ -646,11 +641,12 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
             boolean 月多 = extDataArrDTO.月多[idx];
+            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
             boolean RPS红 = extDataArrDTO.RPS红[idx];
             boolean SSF多 = extDataArrDTO.SSF多[idx];
 
 
-            if (月多 && RPS红 && SSF多) {
+            if ((月多 || 均线预萌出) && RPS红 && SSF多) {
                 lv3_topBlockCodeSet.add(blockCode);
             }
         });
@@ -670,7 +666,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // double 中期涨幅 = extDataArrDTO.中期涨幅[idx];
+        // double 中期涨幅 = extDataArrDTO.中期涨幅N20[idx];
         // int 趋势支撑线 = extDataArrDTO.趋势支撑线[idx];
 
 
@@ -890,7 +886,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
             double[] rps250_arr = extDataArrDTO.rps250;
 
 
-            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅;
+            double[] 中期涨幅_arr = extDataArrDTO.中期涨幅N20;
 
 
             boolean[] 大均线多头_arr = extDataArrDTO.大均线多头;

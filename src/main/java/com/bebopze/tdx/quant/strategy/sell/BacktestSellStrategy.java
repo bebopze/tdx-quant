@@ -249,7 +249,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // if (buyConSet.equals(Sets.newHashSet("月多", "涨停"))) {
-        if (null != btCompareDTO.getZtFlag() && btCompareDTO.getZtFlag()) {
+        if (btCompareDTO.ztFlag_true()) {
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -717,7 +717,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
         Integer idx = dateIndexMap.get(tradeDate);
         // 过滤当日  ->  未上市/新板块、非LV3
-        if (/*blockDO.getEndLevel() != 1 || */extDataArrDTO.date.length == 0 || idx == null /*|| idx < 50*/) {
+        if (/*blockDO.getEndLevel() != 1 || */extDataArrDTO.date.length == 0 || idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
             return false;
         }
 
