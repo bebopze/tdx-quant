@@ -1491,12 +1491,21 @@
                     data: klines.map(item => [item.open, item.close, item.low, item.high]),
                     itemStyle: {color: '#ec0000', color0: '#00da3c'}
                 },
-                ...getBuySellPoints(stockCode).map(point => ({
+                ...getBuySellPoints(stockCode).filter(point => point.type === '买入').map(point => ({
                     name: point.type,
                     type: 'scatter',
                     symbolSize: 10,
                     label: {show: true, formatter: '{@[0]}'},
-                    data: [[point.date, point.price]]
+                    data: [[point.date, point.price]],
+                    itemStyle: {color: '#ed03f6'}
+                })),
+                ...getBuySellPoints(stockCode).filter(point => point.type === '卖出').map(point => ({
+                    name: point.type,
+                    type: 'scatter',
+                    symbolSize: 10,
+                    label: {show: true, formatter: '{@[1]}'},
+                    data: [[point.date, point.price]],
+                    itemStyle: {color: '#00da3c'}
                 }))
             ]
         };
@@ -1518,6 +1527,7 @@
         });
         return points;
     }
+
 
     // 展示B/S详情
     function displayBSDetails(stockCode) {
