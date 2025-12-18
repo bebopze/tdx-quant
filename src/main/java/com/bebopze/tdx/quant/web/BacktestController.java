@@ -8,11 +8,12 @@ import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.dal.entity.BtTaskDO;
 import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.bebopze.tdx.quant.service.BacktestService;
+import com.bebopze.tdx.quant.service.DataService;
+import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -35,15 +36,17 @@ public class BacktestController {
     @Autowired
     private BacktestService backTestService;
 
+    @Autowired
+    private DataService dataService;
 
-    @Async("taskExecutor")
+
     @Operation(summary = "创建 -> 执行回测", description = "创建 -> 执行   回测task")
     @PostMapping("/exec")
-    public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2022-01-01")
-                                     @RequestParam(defaultValue = "2022-01-01") LocalDate startDate,
+    public Result<Void> execBacktest(@Schema(description = "回测-开始时间", example = "2025-01-01")
+                                     @RequestParam(defaultValue = "2025-01-01") LocalDate startDate,
 
                                      @Schema(description = "回测-结束时间", example = "2100-12-31")
-                                     @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
+                                     @RequestParam(defaultValue = "2100-12-31") LocalDate endDate,
 
                                      @Schema(description = "回测-是否支持 中断恢复（true：接着上次处理进度，继续执行； false：重开一局【batchNo+1】 ）", example = "false")
                                      @RequestParam(defaultValue = "false") boolean resume,
@@ -52,16 +55,15 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
-        backTestService.execBacktest(startDate, endDate, resume, batchNo, btCompareDTO);
+        backTestService.execBacktest(startDate, endDate(endDate), resume, batchNo, btCompareDTO);
         return Result.SUC();
     }
 
 
-    @Async("taskExecutor")
     @Operation(summary = "回测task  ->  批量更新   指定时间段  回测数据", description = "回测task  ->  批量（by batchNo/taskIdList）更新   指定时间段  回测数据")
     @GetMapping("/update")
     public Result<Void> execBacktestUpdate(@Schema(description = "任务批次号（更新整个批次，[batchNo]和[taskIdList] 只能2选1），batchNo优先级 高于 taskIdList", example = "null")
@@ -84,7 +86,6 @@ public class BacktestController {
     }
 
 
-    @Async("taskExecutor")
     @Operation(summary = "回测", description = "回测task")
     @PostMapping("/exec2")
     public Result<Long> backtest2(@Schema(description = "主线策略", example = "LV3")
@@ -106,13 +107,38 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
         List<String> _buyConList = ConvertUtil.str2List(buyConList);
 
-        return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate, resume, batchNo, btCompareDTO));
+
+        if (btCompareDTO.isTaskListFlag()) {
+
+            Lists.newArrayList(null, true, false).forEach(ztFlag -> {
+                Lists.newArrayList(true, false).forEach(marketPosLimitFlag -> {
+                    Lists.newArrayList(5, 10, 15, 20, 25, 30).forEach(posPct -> {
+
+
+                        btCompareDTO.setZtFlag(ztFlag);
+                        btCompareDTO.setMarketPosLimitFlag(marketPosLimitFlag);
+                        btCompareDTO.setSingleStockMaxPosPct(posPct);
+
+
+                        backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
+                    });
+                });
+            });
+
+
+        } else {
+            backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
+        }
+
+
+        // return Result.SUC(backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate(endDate), resume, batchNo, btCompareDTO));
+        return Result.SUC();
     }
 
 
@@ -128,11 +154,11 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMaxBuyPct\":10,\"ztFlag\":true,\"marketPosLimitFlag\":false}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
-        return Result.SUC(backTestService.backtestTrade(topBlockStrategyEnum, startDate, endDate, false, 0, btCompareDTO));
+        return Result.SUC(backTestService.backtestTrade(topBlockStrategyEnum, startDate, endDate(endDate), false, 0, btCompareDTO));
     }
 
 
@@ -200,6 +226,12 @@ public class BacktestController {
                                                               @RequestParam(defaultValue = "300587") String stockCode) {
 
         return Result.SUC(backTestService.stockTradeRecordList(taskId, stockCode));
+    }
+
+
+    private LocalDate endDate(LocalDate endDate) {
+        LocalDate dataDate = dataService.dataInfo().getBlock_extDataDTO().getDate();
+        return dataDate.isBefore(endDate) ? dataDate : endDate;
     }
 
 

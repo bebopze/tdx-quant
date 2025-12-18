@@ -125,7 +125,7 @@ public class BacktestCache {
 
     // 凡事涉及 Java大对象     ->     1、JVM启动参数 调优     8G -> 16G   ✅✅✅
     //
-    //                                                   -Xms8g
+    //                                                   -Xms16g
     //                                                   -Xmx16g
     //                                                   -XX:+UseG1GC
     //                                                   -XX:MaxGCPauseMillis=100
@@ -142,7 +142,7 @@ public class BacktestCache {
 
     public static final Cache<String, StockFun> stockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(6_000)                                // 内存容量控制（可根据对象大小调整）
-                                                                        .expireAfterWrite(30, TimeUnit.MINUTES)    // 写入后 30分钟过期（TTL）
+                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)    // 写入后 30分钟过期（TTL）
                                                                         .expireAfterAccess(5, TimeUnit.MINUTES)    // 最近访问后 5分钟过期（TTI）
                                                                         .recordStats()                                     // 开启统计（命中率等）
                                                                         .removalListener(createStatsRemovalListener("stockFunCache", () -> BacktestCache.stockFunCache)) // 可选：清理时回调
@@ -152,7 +152,7 @@ public class BacktestCache {
 
     public static final Cache<String, BlockFun> blockFunCache = Caffeine.newBuilder()
                                                                         .maximumSize(1_000)
-                                                                        .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                                        // .expireAfterWrite(30, TimeUnit.MINUTES)
                                                                         .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                         .recordStats()
                                                                         .removalListener(createStatsRemovalListener("blockFunCache", () -> BacktestCache.blockFunCache))
@@ -212,7 +212,7 @@ public class BacktestCache {
      */
     public static final Cache<LocalDate, QaMarketMidCycleDO> marketCache = Caffeine.newBuilder()
                                                                                    .maximumSize(2_000)
-                                                                                   .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                   // .expireAfterWrite(10, TimeUnit.MINUTES)
                                                                                    .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                                    .recordStats()
                                                                                    .removalListener(createStatsRemovalListener("marketCache", () -> BacktestCache.marketCache))
@@ -230,7 +230,7 @@ public class BacktestCache {
      */
     public static final Cache<LocalDate, Map<TopBlockStrategyEnum, Set<String>>> topBlockCache = Caffeine.newBuilder()
                                                                                                          .maximumSize(1_000)
-                                                                                                         .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                                         // .expireAfterWrite(10, TimeUnit.MINUTES)
                                                                                                          .expireAfterAccess(5, TimeUnit.MINUTES)
                                                                                                          .recordStats()
                                                                                                          .removalListener(createStatsRemovalListener("topBlockCache", () -> BacktestCache.topBlockCache))

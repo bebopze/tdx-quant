@@ -169,7 +169,7 @@ public class StrategyServiceImpl implements StrategyService {
         Map<String, String> buy_infoMap = Maps.newHashMap();
 
 
-        List<String> buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, false);
+        List<String> buy__stockCodeList = backtestBuyStrategyD.rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, false);
 
 
         // ---------------------------------------------------------
