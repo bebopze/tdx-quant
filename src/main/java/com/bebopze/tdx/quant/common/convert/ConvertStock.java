@@ -178,7 +178,13 @@ public class ConvertStock {
             ExtDataDTO dto = dtoList.get(i);
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.date[i] = dto.getDate();
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.rps10[i] = dto.getRps10();
@@ -186,6 +192,9 @@ public class ConvertStock {
             arrDTO.rps50[i] = dto.getRps50();
             arrDTO.rps120[i] = dto.getRps120();
             arrDTO.rps250[i] = dto.getRps250();
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.MA5[i] = of(dto.getMA5());
@@ -201,19 +210,63 @@ public class ConvertStock {
             arrDTO.MA250[i] = of(dto.getMA250());
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.SSF[i] = of(dto.getSSF());
             arrDTO.SAR[i] = of(dto.getSAR());
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.RPS三线和[i] = of(dto.getRPS三线和());
             arrDTO.RPS五线和[i] = of(dto.getRPS五线和());
 
 
-            arrDTO.中期涨幅[i] = of(dto.get中期涨幅());
+            // ---------------------------------------------------
+
+
+            arrDTO.中期涨幅N5[i] = of(dto.get中期涨幅N5());
+            arrDTO.中期涨幅N10[i] = of(dto.get中期涨幅N10());
+            arrDTO.中期涨幅N20[i] = of(dto.get中期涨幅N20());
+            arrDTO.中期涨幅N30[i] = of(dto.get中期涨幅N30());
+            arrDTO.中期涨幅N50[i] = of(dto.get中期涨幅N50());
+            arrDTO.中期涨幅N60[i] = of(dto.get中期涨幅N60());
+            arrDTO.中期涨幅N100[i] = of(dto.get中期涨幅N100());
+            arrDTO.中期涨幅N120[i] = of(dto.get中期涨幅N120());
+            arrDTO.中期涨幅N150[i] = of(dto.get中期涨幅N150());
+            arrDTO.中期涨幅N200[i] = of(dto.get中期涨幅N200());
+            arrDTO.中期涨幅N250[i] = of(dto.get中期涨幅N250());
+
+
+            // ---------------------------------------------------
+
+
             arrDTO.N3日涨幅[i] = of(dto.getN3日涨幅());
             arrDTO.N5日涨幅[i] = of(dto.getN5日涨幅());
             arrDTO.N10日涨幅[i] = of(dto.getN10日涨幅());
             arrDTO.N20日涨幅[i] = of(dto.getN20日涨幅());
+            arrDTO.N30日涨幅[i] = of(dto.getN30日涨幅());
+            arrDTO.N50日涨幅[i] = of(dto.getN50日涨幅());
+            arrDTO.N60日涨幅[i] = of(dto.getN60日涨幅());
+            arrDTO.N100日涨幅[i] = of(dto.getN100日涨幅());
+            arrDTO.N120日涨幅[i] = of(dto.getN120日涨幅());
+            arrDTO.N150日涨幅[i] = of(dto.getN150日涨幅());
+            arrDTO.N200日涨幅[i] = of(dto.getN200日涨幅());
+            arrDTO.N250日涨幅[i] = of(dto.getN250日涨幅());
+
+
+            // ---------------------------------------------------
+
+
+            arrDTO.中期调整幅度[i] = of(dto.get中期调整幅度());
+            arrDTO.中期调整天数[i] = of(dto.get中期调整天数());
+            arrDTO.中期调整幅度2[i] = of(dto.get中期调整幅度2());
+            arrDTO.中期调整天数2[i] = of(dto.get中期调整天数2());
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.短期支撑线[i] = of(dto.get短期支撑线());
@@ -221,34 +274,69 @@ public class ConvertStock {
             arrDTO.长期支撑线[i] = of(dto.get长期支撑线());
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.C_SSF_偏离率[i] = of(dto.getC_SSF_偏离率());
             arrDTO.H_SSF_偏离率[i] = of(dto.getH_SSF_偏离率());
 
+
+            // ---------------------------------------------------
+
+
             arrDTO.C_MA5_偏离率[i] = of(dto.getC_MA5_偏离率());
             arrDTO.H_MA5_偏离率[i] = of(dto.getH_MA5_偏离率());
+
             arrDTO.C_MA10_偏离率[i] = of(dto.getC_MA10_偏离率());
-            arrDTO.C_MA15_偏离率[i] = of(dto.getC_MA15_偏离率());
+            arrDTO.H_MA10_偏离率[i] = of(dto.getH_MA10_偏离率());
+
             arrDTO.C_MA20_偏离率[i] = of(dto.getC_MA20_偏离率());
             arrDTO.H_MA20_偏离率[i] = of(dto.getH_MA20_偏离率());
-            arrDTO.C_MA25_偏离率[i] = of(dto.getC_MA25_偏离率());
+
             arrDTO.C_MA30_偏离率[i] = of(dto.getC_MA30_偏离率());
-            arrDTO.C_MA40_偏离率[i] = of(dto.getC_MA40_偏离率());
+            arrDTO.H_MA30_偏离率[i] = of(dto.getH_MA30_偏离率());
+
             arrDTO.C_MA50_偏离率[i] = of(dto.getC_MA50_偏离率());
+            arrDTO.H_MA50_偏离率[i] = of(dto.getH_MA50_偏离率());
+
             arrDTO.C_MA60_偏离率[i] = of(dto.getC_MA60_偏离率());
+            arrDTO.H_MA60_偏离率[i] = of(dto.getH_MA60_偏离率());
+
             arrDTO.C_MA100_偏离率[i] = of(dto.getC_MA100_偏离率());
+            arrDTO.H_MA100_偏离率[i] = of(dto.getH_MA100_偏离率());
+
             arrDTO.C_MA120_偏离率[i] = of(dto.getC_MA120_偏离率());
+            arrDTO.H_MA120_偏离率[i] = of(dto.getH_MA120_偏离率());
+
             arrDTO.C_MA150_偏离率[i] = of(dto.getC_MA150_偏离率());
+            arrDTO.H_MA150_偏离率[i] = of(dto.getH_MA150_偏离率());
+
             arrDTO.C_MA200_偏离率[i] = of(dto.getC_MA200_偏离率());
+            arrDTO.H_MA200_偏离率[i] = of(dto.getH_MA200_偏离率());
+
             arrDTO.C_MA250_偏离率[i] = of(dto.getC_MA250_偏离率());
+            arrDTO.H_MA250_偏离率[i] = of(dto.getH_MA250_偏离率());
 
 
+            // ---------------------------------------------------
+
+
+            arrDTO.上影大阴[i] = of(dto.get上影大阴());
             arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
+
+
             arrDTO.涨停[i] = of(dto.get涨停());
             arrDTO.跌停[i] = of(dto.get跌停());
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.XZZB[i] = of(dto.getXZZB());
-//            arrDTO.BSQJ[i] = of(dto.getBSQJ());
+            arrDTO.BSQJ[i] = of(dto.getBSQJ());
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.MA5多[i] = of(dto.getMA5多());
@@ -267,12 +355,18 @@ public class ConvertStock {
             arrDTO.下SSF[i] = of(dto.get下SSF());
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.N60日新高[i] = of(dto.getN60日新高());
             arrDTO.N100日新高[i] = of(dto.getN100日新高());
             arrDTO.历史新高[i] = of(dto.get历史新高());
 
 
             arrDTO.百日新高[i] = of(dto.get百日新高());
+
+
+            // ---------------------------------------------------
 
 
             arrDTO.月多[i] = of(dto.get月多());
@@ -284,13 +378,29 @@ public class ConvertStock {
             arrDTO.均线极多头[i] = of(dto.get均线极多头());
 
 
+            // ---------------------------------------------------
+
+
             arrDTO.RPS红[i] = of(dto.getRPS红());
             arrDTO.RPS一线红[i] = of(dto.getRPS一线红());
             arrDTO.RPS双线红[i] = of(dto.getRPS双线红());
             arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
 
 
+            // ---------------------------------------------------
+
+
+            arrDTO.首次三线红[i] = of(dto.get首次三线红());
+            arrDTO.口袋支点[i] = of(dto.get口袋支点());
+
+
+            // ---------------------------------------------------
+
+
             arrDTO.klineType[i] = of(dto.getKlineType());
+
+
+            // ---------------------------------------------------
         }
 
 
