@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
@@ -223,6 +224,12 @@ public class ExtDataServiceImpl implements ExtDataService {
         });
 
 
+        for (int i = 0; i < data.stockDOList.size(); i++) {
+            BaseStockDO stockDO = data.stockDOList.get(i);
+            data.codeIdxMap.put(stockDO.getCode(), i);
+        }
+
+
         return data;
     }
 
@@ -265,6 +272,12 @@ public class ExtDataServiceImpl implements ExtDataService {
 
             data.codePriceMap.put(code, dateCloseMap);
         });
+
+
+        for (int i = 0; i < data.blockDOList.size(); i++) {
+            BaseBlockDO blockDO = data.blockDOList.get(i);
+            data.codeIdxMap.put(blockDO.getCode(), i);
+        }
 
 
         return data;
@@ -417,7 +430,7 @@ public class ExtDataServiceImpl implements ExtDataService {
      * @param extDataDTOList
      * @param RPS            个股-85/90/95          板块-87/92/97
      */
-    private void calcExtData(StockFun fun, List<ExtDataDTO> extDataDTOList, int RPS) {
+    public static void calcExtData(StockFun fun, List<ExtDataDTO> extDataDTOList, int RPS) {
 
 
         // ---------------------------- 1、计算ExtData（序列值）
@@ -425,6 +438,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // 计算 -> 指标
         // StockFun fun = new StockFun(stockDO.getCode(), stockDO);
+
+
+        // ---------------------------------------------------
 
 
         double[] MA5 = fun.MA(5);
@@ -440,22 +456,54 @@ public class ExtDataServiceImpl implements ExtDataService {
         double[] MA250 = fun.MA(250);
 
 
+        // ---------------------------------------------------
+
+
         double[] SSF = fun.SSF();
         double[] SAR = fun.SAR();
+
+
+        // ---------------------------------------------------
 
 
         double[] RPS三线和 = fun.RPS三线和();
         double[] RPS五线和 = fun.RPS五线和();
 
 
-        double[] 中期涨幅 = fun.中期涨幅N(20);
+        // ---------------------------------------------------
+
+
+        double[] 中期涨幅N5 = fun.中期涨幅N(5);
+        double[] 中期涨幅N10 = fun.中期涨幅N(10);
+        double[] 中期涨幅N20 = fun.中期涨幅N(20);
+        double[] 中期涨幅N30 = fun.中期涨幅N(30);
+        double[] 中期涨幅N50 = fun.中期涨幅N(50);
+        double[] 中期涨幅N60 = fun.中期涨幅N(60);
+        double[] 中期涨幅N100 = fun.中期涨幅N(100);
+        double[] 中期涨幅N120 = fun.中期涨幅N(120);
+        double[] 中期涨幅N150 = fun.中期涨幅N(150);
+        double[] 中期涨幅N200 = fun.中期涨幅N(200);
+        double[] 中期涨幅N250 = fun.中期涨幅N(250);
+
+
+        // ---------------------------------------------------
+
+
         double[] N3日涨幅 = fun.N日涨幅(3);
         double[] N5日涨幅 = fun.N日涨幅(5);
         double[] N10日涨幅 = fun.N日涨幅(10);
         double[] N20日涨幅 = fun.N日涨幅(20);
+        double[] N30日涨幅 = fun.N日涨幅(30);
+        double[] N50日涨幅 = fun.N日涨幅(50);
+        double[] N60日涨幅 = fun.N日涨幅(60);
+        double[] N100日涨幅 = fun.N日涨幅(100);
+        double[] N120日涨幅 = fun.N日涨幅(120);
+        double[] N150日涨幅 = fun.N日涨幅(150);
+        double[] N200日涨幅 = fun.N日涨幅(200);
+        double[] N250日涨幅 = fun.N日涨幅(250);
 
 
-        // --------------------------------------------------
+        // ---------------------------------------------------
 
 
         MidAdjustResult 中期调整 = fun.中期调整();
@@ -467,7 +515,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         int[] 中期调整天数2 = 中期调整.adjustDays2;
 
 
-        // --------------------------------------------------
+        // ---------------------------------------------------
 
 
         int[] 短期趋势支撑线 = fun.短期趋势支撑线();
@@ -475,27 +523,48 @@ public class ExtDataServiceImpl implements ExtDataService {
         int[] 长期趋势支撑线 = fun.长期趋势支撑线(中期趋势支撑线);
 
 
+        // ---------------------------------------------------
+
+
         double[] C_SSF_偏离率 = fun.C_SSF_偏离率();
         double[] H_SSF_偏离率 = fun.H_SSF_偏离率();
 
-        double[] C_MA5_偏离率 = fun.C_MA_偏离率(5);   // TODO   DEL C_MA_偏离率
-        double[] H_MA5_偏离率 = fun.H_MA_偏离率(5);   // TODO   保留 H_MA_偏离率（高抛S）
+
+        // --------------------------------------------------
+
+
+        double[] C_MA5_偏离率 = fun.C_MA_偏离率(5);
+        double[] H_MA5_偏离率 = fun.H_MA_偏离率(5);
 
         double[] C_MA10_偏离率 = fun.C_MA_偏离率(10);
-        double[] C_MA15_偏离率 = fun.C_MA_偏离率(15);
+        double[] H_MA10_偏离率 = fun.H_MA_偏离率(10);
+
         double[] C_MA20_偏离率 = fun.C_MA_偏离率(20);
         double[] H_MA20_偏离率 = fun.H_MA_偏离率(20);
 
-        double[] C_MA25_偏离率 = fun.C_MA_偏离率(25);
         double[] C_MA30_偏离率 = fun.C_MA_偏离率(30);
-        double[] C_MA40_偏离率 = fun.C_MA_偏离率(40);
+        double[] H_MA30_偏离率 = fun.H_MA_偏离率(30);
+
         double[] C_MA50_偏离率 = fun.C_MA_偏离率(50);
+        double[] H_MA50_偏离率 = fun.H_MA_偏离率(50);
+
         double[] C_MA60_偏离率 = fun.C_MA_偏离率(60);
+        double[] H_MA60_偏离率 = fun.H_MA_偏离率(60);
+
         double[] C_MA100_偏离率 = fun.C_MA_偏离率(100);
+        double[] H_MA100_偏离率 = fun.H_MA_偏离率(100);
+
         double[] C_MA120_偏离率 = fun.C_MA_偏离率(120);
+        double[] H_MA120_偏离率 = fun.H_MA_偏离率(120);
+
         double[] C_MA150_偏离率 = fun.C_MA_偏离率(150);
+        double[] H_MA150_偏离率 = fun.H_MA_偏离率(150);
+
         double[] C_MA200_偏离率 = fun.C_MA_偏离率(200);
+        double[] H_MA200_偏离率 = fun.H_MA_偏离率(200);
+
         double[] C_MA250_偏离率 = fun.C_MA_偏离率(250);
+        double[] H_MA250_偏离率 = fun.H_MA_偏离率(250);
 
 
         // --------------------------------------------------
@@ -509,11 +578,14 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 跌停 = fun.跌停();
 
 
-        // --------------------------------------------------
+        // ---------------------------------------------------
 
 
         boolean[] XZZB = fun.XZZB();
-//        boolean[] BSQJ = fun.BSQJ();
+        boolean[] BSQJ = fun.BSQJ();
+
+
+        // ---------------------------------------------------
 
 
         boolean[] MA5多 = fun.MA多(5);
@@ -532,12 +604,18 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 下SSF = fun.下SSF();
 
 
+        // ---------------------------------------------------
+
+
         boolean[] N60日新高 = fun.N日新高(60);
         boolean[] N100日新高 = fun.N日新高(100);
         boolean[] 历史新高 = fun.历史新高();
 
 
         boolean[] 百日新高 = fun.百日新高(100);
+
+
+        // ---------------------------------------------------
 
 
         boolean[] 月多 = fun.月多();
@@ -549,10 +627,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] 均线极多头 = fun.均线极多头();
 
 
-//        boolean[] RPS红 = fun.RPS红(85);
-//        boolean[] RPS一线红 = fun.RPS一线红(95);
-//        boolean[] RPS双线红 = fun.RPS双线红(90);
-//        boolean[] RPS三线红 = fun.RPS三线红(85);
+        // ---------------------------------------------------
 
 
         // 个股-85/90/95          板块-87/92/97
@@ -562,11 +637,20 @@ public class ExtDataServiceImpl implements ExtDataService {
         boolean[] RPS三线红 = fun.RPS三线红(RPS);
 
 
+        // ---------------------------------------------------
+
+
         boolean[] 首次三线红 = fun.首次三线红(RPS);
-        boolean[] 口袋支点 = fun.口袋支点(MA10, MA20, MA50, MA100, MA120, MA200, MA250, 中期调整, RPS一线红, 均线预萌出, N60日新高, 中期涨幅, 上影大阴);
+        boolean[] 口袋支点 = fun.口袋支点(MA10, MA20, MA50, MA100, MA120, MA200, MA250, SAR, 中期调整, RPS红, 均线预萌出, N60日新高, 中期涨幅N20, 上影大阴);
+
+
+        // ---------------------------------------------------
 
 
         int[] klineType = fun.klineType();
+
+
+        // ---------------------------------------------------
 
 
         // ---------------------------- 2、convert（序列   ->   列表）
@@ -574,6 +658,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         for (int i = 0; i < extDataDTOList.size(); i++) {
             ExtDataDTO dto = extDataDTOList.get(i);
+
+
+            // ---------------------------------------------------
 
 
             dto.setMA5(of(MA5[i]));
@@ -589,19 +676,54 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.setMA250(of(MA250[i]));
 
 
+            // ---------------------------------------------------
+
+
             dto.setSSF(of(SSF[i]));
             dto.setSAR(of(SAR[i]));
+
+
+            // ---------------------------------------------------
 
 
             dto.setRPS三线和(of(RPS三线和[i]));
             dto.setRPS五线和(of(RPS五线和[i]));
 
 
-            dto.set中期涨幅(of(中期涨幅[i]));
+            // ---------------------------------------------------
+
+
+            dto.set中期涨幅N5(of(中期涨幅N5[i]));
+            dto.set中期涨幅N10(of(中期涨幅N10[i]));
+            dto.set中期涨幅N20(of(中期涨幅N20[i]));
+            dto.set中期涨幅N30(of(中期涨幅N30[i]));
+            dto.set中期涨幅N50(of(中期涨幅N50[i]));
+            dto.set中期涨幅N60(of(中期涨幅N60[i]));
+            dto.set中期涨幅N100(of(中期涨幅N100[i]));
+            dto.set中期涨幅N120(of(中期涨幅N120[i]));
+            dto.set中期涨幅N150(of(中期涨幅N150[i]));
+            dto.set中期涨幅N200(of(中期涨幅N200[i]));
+            dto.set中期涨幅N250(of(中期涨幅N250[i]));
+
+
+            // ---------------------------------------------------
+
+
             dto.setN3日涨幅(of(N3日涨幅[i]));
             dto.setN5日涨幅(of(N5日涨幅[i]));
             dto.setN10日涨幅(of(N10日涨幅[i]));
             dto.setN20日涨幅(of(N20日涨幅[i]));
+            dto.setN30日涨幅(of(N30日涨幅[i]));
+            dto.setN50日涨幅(of(N50日涨幅[i]));
+            dto.setN60日涨幅(of(N60日涨幅[i]));
+            dto.setN100日涨幅(of(N100日涨幅[i]));
+            dto.setN120日涨幅(of(N120日涨幅[i]));
+            dto.setN150日涨幅(of(N150日涨幅[i]));
+            dto.setN200日涨幅(of(N200日涨幅[i]));
+            dto.setN250日涨幅(of(N250日涨幅[i]));
+
+
+            // ---------------------------------------------------
 
 
             dto.set中期调整幅度(of(中期调整幅度[i]));
@@ -610,30 +732,59 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set中期调整天数2(of(中期调整天数2[i]));
 
 
+            // ---------------------------------------------------
+
+
             dto.set短期支撑线(短期趋势支撑线[i]);
             dto.set中期支撑线(中期趋势支撑线[i]);
             dto.set长期支撑线(长期趋势支撑线[i]);
 
 
+            // ---------------------------------------------------
+
+
             dto.setC_SSF_偏离率(C_SSF_偏离率[i]);
             dto.setH_SSF_偏离率(H_SSF_偏离率[i]);
 
+
+            // ---------------------------------------------------
+
+
             dto.setC_MA5_偏离率(C_MA5_偏离率[i]);
             dto.setH_MA5_偏离率(H_MA5_偏离率[i]);
+
             dto.setC_MA10_偏离率(C_MA10_偏离率[i]);
-            dto.setC_MA15_偏离率(C_MA15_偏离率[i]);
+            dto.setH_MA10_偏离率(H_MA10_偏离率[i]);
+
             dto.setC_MA20_偏离率(C_MA20_偏离率[i]);
             dto.setH_MA20_偏离率(H_MA20_偏离率[i]);
-            dto.setC_MA25_偏离率(C_MA25_偏离率[i]);
+
             dto.setC_MA30_偏离率(C_MA30_偏离率[i]);
-            dto.setC_MA40_偏离率(C_MA40_偏离率[i]);
+            dto.setH_MA30_偏离率(H_MA30_偏离率[i]);
+
             dto.setC_MA50_偏离率(C_MA50_偏离率[i]);
+            dto.setH_MA50_偏离率(H_MA50_偏离率[i]);
+
             dto.setC_MA60_偏离率(C_MA60_偏离率[i]);
+            dto.setH_MA60_偏离率(H_MA60_偏离率[i]);
+
             dto.setC_MA100_偏离率(C_MA100_偏离率[i]);
+            dto.setH_MA100_偏离率(H_MA100_偏离率[i]);
+
             dto.setC_MA120_偏离率(C_MA120_偏离率[i]);
+            dto.setH_MA120_偏离率(H_MA120_偏离率[i]);
+
             dto.setC_MA150_偏离率(C_MA150_偏离率[i]);
+            dto.setH_MA150_偏离率(H_MA150_偏离率[i]);
+
             dto.setC_MA200_偏离率(C_MA200_偏离率[i]);
+            dto.setH_MA200_偏离率(H_MA200_偏离率[i]);
+
             dto.setC_MA250_偏离率(C_MA250_偏离率[i]);
+            dto.setH_MA250_偏离率(H_MA250_偏离率[i]);
+
+
+            // ---------------------------------------------------
 
 
             dto.set上影大阴(上影大阴[i]);
@@ -644,9 +795,14 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set跌停(跌停[i]);
 
 
-            dto.setXZZB(XZZB[i]);
-//            dto.setBSQJ(BSQJ[i]);
+            // ---------------------------------------------------
 
+
+            dto.setXZZB(XZZB[i]);
+            dto.setBSQJ(BSQJ[i]);
+
+
+            // ---------------------------------------------------
 
             dto.setMA5多(MA5多[i]);
             dto.setMA5空(MA5空[i]);
@@ -664,12 +820,18 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set下SSF(下SSF[i]);
 
 
+            // ---------------------------------------------------
+
+
             dto.setN60日新高(N60日新高[i]);
             dto.setN100日新高(N100日新高[i]);
             dto.set历史新高(历史新高[i]);
 
 
             dto.set百日新高(百日新高[i]);
+
+
+            // ---------------------------------------------------
 
 
             dto.set月多(月多[i]);
@@ -681,17 +843,29 @@ public class ExtDataServiceImpl implements ExtDataService {
             dto.set均线极多头(均线极多头[i]);
 
 
+            // ---------------------------------------------------
+
+
             dto.setRPS红(RPS红[i]);
             dto.setRPS一线红(RPS一线红[i]);
             dto.setRPS双线红(RPS双线红[i]);
             dto.setRPS三线红(RPS三线红[i]);
 
 
+            // ---------------------------------------------------
+
+
             dto.set首次三线红(首次三线红[i]);
             dto.set口袋支点(口袋支点[i]);
 
 
+            // ---------------------------------------------------
+
+
             dto.setKlineType(klineType[i]);
+
+
+            // ---------------------------------------------------
         }
     }
 
@@ -955,6 +1129,9 @@ public class ExtDataServiceImpl implements ExtDataService {
         // code - id
         Map<String, Long> codeIdMap = Maps.newConcurrentMap();
 
+        // code - idx
+        Map<String, Integer> codeIdxMap = Maps.newConcurrentMap();
+
 
         // -----------------------------------------------------------------
 
@@ -970,13 +1147,14 @@ public class ExtDataServiceImpl implements ExtDataService {
                     ", codeDateMap=" + codeDateMap.size() +
                     ", codeCloseMap=" + codeCloseMap.size() +
                     ", codeIdMap=" + codeIdMap.size() +
+                    ", codeIdxMap=" + codeIdxMap.size() +
                     '}';
         }
     }
 
 
     /**
-     * 清理缓存（OOM）       // 内存 < 64GB     =>     手动GC
+     * 提前 清理缓存（OOM）       // 内存 < 64GB     =>     手动GC
      *
      * 注意：本方法会修改 data 对象内的集合，外部若只读请先做防御性拷贝
      *
@@ -984,11 +1162,57 @@ public class ExtDataServiceImpl implements ExtDataService {
      * @param code 待移除的 股票/板块code
      */
     private static void clearCodeCache(DataDTO data, String code) {
+
         data.extDataMap.remove(code);
         data.codePriceMap.remove(code);
         data.codeDateMap.remove(code);
         data.codeCloseMap.remove(code);
         data.codeIdMap.remove(code);
+
+
+        try {
+            Integer idx = data.codeIdxMap.get(code);
+            if (null == idx) {
+                return;
+            }
+
+
+            BaseBlockDO blockDO = StockTypeEnum.isBlock(code) ? data.blockDOList.get(idx) : null;
+            if (null != blockDO && Objects.equals(blockDO.getCode(), code)) {
+                blockDO.setKlineHis(null);
+                blockDO.setKlineDTOList(null);
+                blockDO.setExtDataHis(null);
+                blockDO.setExtDataDTOList(null);
+
+                data.blockDOList.set(idx, null);
+                log.info("clearCodeCache - suc   >>>   code : {} , blockDO : {}", code, JSON.toJSONString(data.blockDOList.get(idx)));
+            }
+
+
+            BaseStockDO stockDO = StockTypeEnum.isStock(code) ? data.stockDOList.get(idx) : null;
+            if (null != stockDO && Objects.equals(stockDO.getCode(), code)) {
+                earlyClearStockCache__OOM(stockDO);
+
+                data.stockDOList.set(idx, null);
+                log.info("clearCodeCache - suc   >>>   code : {} , stockDO : {}", code, JSON.toJSONString(data.stockDOList.get(idx)));
+            }
+
+        } catch (Exception e) {
+            log.error("clearCodeCache - error", e);
+        }
+    }
+
+
+    /**
+     * 提前 清理缓存（OOM）       // 内存 < 64GB     =>     手动GC
+     *
+     * @param stockDO 待清理的股票
+     */
+    public static void earlyClearStockCache__OOM(BaseStockDO stockDO) {
+        stockDO.setKlineHis(null);
+        stockDO.setKlineDTOList(null);
+        stockDO.setExtDataHis(null);
+        stockDO.setExtDataDTOList(null);
     }
 
 

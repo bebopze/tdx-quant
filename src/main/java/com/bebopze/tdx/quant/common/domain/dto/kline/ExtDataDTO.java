@@ -22,7 +22,7 @@ public class ExtDataDTO implements Serializable {
     private LocalDate date;
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- RPS
 
 
     private Double rps10;  // -> 板块 rps5
@@ -32,7 +32,7 @@ public class ExtDataDTO implements Serializable {
     private Double rps250; // -> 板块 rps50
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- MA
 
 
     private Double MA5;
@@ -62,17 +62,41 @@ public class ExtDataDTO implements Serializable {
     private Double RPS五线和;
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- 中期涨幅
 
 
-    private Double 中期涨幅;
+    private Double 中期涨幅N5;
+    private Double 中期涨幅N10;
+    private Double 中期涨幅N20;
+    private Double 中期涨幅N30;
+    private Double 中期涨幅N50;
+    private Double 中期涨幅N60;
+    private Double 中期涨幅N100;
+    private Double 中期涨幅N120;
+    private Double 中期涨幅N150;
+    private Double 中期涨幅N200;
+    private Double 中期涨幅N250;
+
+
+    // --------------------------------------------------- N日涨幅
+
+
     private Double N3日涨幅;
     private Double N5日涨幅;
     private Double N10日涨幅;
     private Double N20日涨幅;
+    private Double N30日涨幅;
+    private Double N50日涨幅;
+    private Double N60日涨幅;
+    private Double N100日涨幅;
+    private Double N120日涨幅;
+    private Double N150日涨幅;
+    private Double N200日涨幅;
+    private Double N250日涨幅;
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- 中期调整 幅度/天数
+
 
     private Double 中期调整幅度;
     private Double 中期调整天数;
@@ -80,7 +104,7 @@ public class ExtDataDTO implements Serializable {
     private Double 中期调整天数2;
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- 支撑线
 
 
     private Integer 短期支撑线 = 20;   // 默认支撑线：MA20
@@ -88,27 +112,48 @@ public class ExtDataDTO implements Serializable {
     private Integer 长期支撑线 = 100;
 
 
+    // ---------------------------------------------------
+
+
     private Double C_SSF_偏离率;
     private Double H_SSF_偏离率;
 
 
-    private Double C_MA5_偏离率;   // TODO   DEL C_MA_偏离率
-    private Double H_MA5_偏离率;   // TODO   保留 H_MA_偏离率（高抛S）
+    // --------------------------------------------------- C_MA_偏离率 / H_MA_偏离率
+
+
+    private Double C_MA5_偏离率;
+    private Double H_MA5_偏离率;
 
     private Double C_MA10_偏离率;
-    private Double C_MA15_偏离率;
+    private Double H_MA10_偏离率;
+
     private Double C_MA20_偏离率;
     private Double H_MA20_偏离率;
-    private Double C_MA25_偏离率;
+
     private Double C_MA30_偏离率;
-    private Double C_MA40_偏离率;
+    private Double H_MA30_偏离率;
+
     private Double C_MA50_偏离率;
+    private Double H_MA50_偏离率;
+
     private Double C_MA60_偏离率;
+    private Double H_MA60_偏离率;
+
     private Double C_MA100_偏离率;
+    private Double H_MA100_偏离率;
+
     private Double C_MA120_偏离率;
+    private Double H_MA120_偏离率;
+
     private Double C_MA150_偏离率;
+    private Double H_MA150_偏离率;
+
     private Double C_MA200_偏离率;
+    private Double H_MA200_偏离率;
+
     private Double C_MA250_偏离率;
+    private Double H_MA250_偏离率;
 
 
     // ---------------------------------------------------
@@ -122,13 +167,14 @@ public class ExtDataDTO implements Serializable {
     public Boolean 跌停;
 
 
-    // ---------------------------------------------------
+    // --------------------------------------------------- 多空
 
-
-    // ------- 多空
 
     private Boolean XZZB;
-//    private Boolean BSQJ;
+    private Boolean BSQJ;
+
+
+    // ---------------------------------------------------
 
 
     private Boolean MA5多;
@@ -141,13 +187,18 @@ public class ExtDataDTO implements Serializable {
     private Boolean SSF空;
 
 
+//    private Boolean MA200多;
+//    private Boolean MA200空;
+
+
     private Boolean 上MA20;
     private Boolean 下MA20;
     private Boolean 上SSF;
     private Boolean 下SSF;
 
 
-    // ------- 新高
+    // --------------------------------------------------- 新高
+
 
     private Boolean N60日新高;
     private Boolean N100日新高;
@@ -157,7 +208,8 @@ public class ExtDataDTO implements Serializable {
     private Boolean 百日新高;
 
 
-    // ------- 均线形态
+    // --------------------------------------------------- 均线形态
+
 
     private Boolean 月多;
     private Boolean 均线预萌出;
@@ -168,7 +220,8 @@ public class ExtDataDTO implements Serializable {
     private Boolean 均线极多头;
 
 
-    // ------- RPS强度
+    // --------------------------------------------------- RPS强度
+
 
     private Boolean RPS红;
     private Boolean RPS一线红;
@@ -176,15 +229,56 @@ public class ExtDataDTO implements Serializable {
     private Boolean RPS三线红;
 
 
-    // ------- 经典买点
+    // --------------------------------------------------- 经典买点
+
 
     private Boolean 首次三线红;
     private Boolean 口袋支点;
 
 
-    // ------- K线形态
+    // --------------------------------------------------- K线形态
+
 
     private int klineType;   // K线形态（1-慢牛股；2-趋势股；3-动量股；4-妖股；）
+
+
+    // ---------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+//    private KlineDTO klineDTO;
+//
+//    public Double getC_MA_偏离率(int MA) {
+//        switch (MA) {
+//            case 5:
+//                return klineDTO.getClose() / MA5 * 100 - 100;
+//            case 10:
+//                return klineDTO.getClose() / MA10 * 100 - 100;
+//            case 20:
+//                return klineDTO.getClose() / MA20 * 100 - 100;
+//            case 30:
+//                return klineDTO.getClose() / MA30 * 100 - 100;
+//            case 50:
+//                return klineDTO.getClose() / MA50 * 100 - 100;
+//            case 60:
+//                return klineDTO.getClose() / MA60 * 100 - 100;
+//            case 100:
+//                return klineDTO.getClose() / MA100 * 100 - 100;
+//            case 120:
+//                return klineDTO.getClose() / MA120 * 100 - 100;
+//            case 150:
+//                return klineDTO.getClose() / MA150 * 100 - 100;
+//            case 200:
+//                return klineDTO.getClose() / MA200 * 100 - 100;
+//            case 250:
+//                return klineDTO.getClose() / MA250 * 100 - 100;
+//            // 默认支撑线：MA250
+//            default:
+//                return klineDTO.getClose() / MA250 * 100 - 100;
+//        }
+//    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -235,16 +329,10 @@ public class ExtDataDTO implements Serializable {
             return of(C_MA5_偏离率);
         } else if (趋势支撑线 == 10) {
             return of(C_MA10_偏离率);
-        } else if (趋势支撑线 == 15) {
-            return of(C_MA15_偏离率);
         } else if (趋势支撑线 == 20) {
             return of(C_MA20_偏离率);
-        } else if (趋势支撑线 == 25) {
-            return of(C_MA25_偏离率);
         } else if (趋势支撑线 == 30) {
             return of(C_MA30_偏离率);
-        } else if (趋势支撑线 == 40) {
-            return of(C_MA40_偏离率);
         } else if (趋势支撑线 == 50) {
             return of(C_MA50_偏离率);
         } else if (趋势支撑线 == 60) {
