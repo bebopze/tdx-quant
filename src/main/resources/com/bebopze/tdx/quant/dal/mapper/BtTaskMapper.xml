@@ -109,9 +109,9 @@
     </select>
 
 
-    <select id="getMaxTotalDayByBatchNo" resultType="int">
+    <select id="getMaxTotalDaysByBatchNo" resultType="int">
 
-        SELECT MAX(total_day)
+        SELECT MAX(total_days)
 
         FROM bt_task
 
@@ -134,7 +134,7 @@
         <!--     <![CDATA[     AND max_drawdown_pct < -20     ]]>     -->
 
 
-        <![CDATA[     AND total_day < #{totalDay}
+        <![CDATA[     AND total_days < #{totalDay}
         ]]>
 
     </select>

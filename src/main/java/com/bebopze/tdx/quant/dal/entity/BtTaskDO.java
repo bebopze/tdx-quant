@@ -56,6 +56,13 @@ public class BtTaskDO implements Serializable {
     private Integer status;
 
     /**
+     * 是否提前淘汰：0-否；1-是；
+     */
+    @TableField(value = "fail_fast_flag")
+    @Schema(description = "是否提前淘汰：0-否；1-是；")
+    private Integer failFastFlag;
+
+    /**
      * B策略
      */
     @TableField("buy_strategy")
