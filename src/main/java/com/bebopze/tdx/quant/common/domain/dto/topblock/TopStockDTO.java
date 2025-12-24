@@ -29,6 +29,10 @@ public class TopStockDTO {
     private boolean posStockFlag;
     // 是否涨停
     private boolean ztFlag;
+    // 是否跌停
+    private boolean dtFlag;
+    // 中期涨幅
+    private double mediumChangePct;
 
 
     /**

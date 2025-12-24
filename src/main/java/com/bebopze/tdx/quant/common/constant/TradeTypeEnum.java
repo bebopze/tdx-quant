@@ -60,9 +60,7 @@ public enum TradeTypeEnum {
     }
 
 
-    public static TradeTypeEnum getByTradeType(String eastMoneyTradeType,
-                                               String xyjylx) {
-
+    public static TradeTypeEnum getByTradeType(String eastMoneyTradeType, String xyjylx) {
         for (TradeTypeEnum value : TradeTypeEnum.values()) {
             if (value.eastMoneyTradeType.equals(eastMoneyTradeType) && value.xyjylx.equals(xyjylx)) {
                 return value;
@@ -70,4 +68,6 @@ public enum TradeTypeEnum {
         }
         return null;
     }
+
+
 }

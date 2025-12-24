@@ -97,6 +97,9 @@ public class TopChangePctDTO {
 
     // 是否涨停
     private boolean ztFlag;
+    // 是否跌停
+    private boolean dtFlag;
+
 
     // 次日   ->   开盘价/最高价/最低价/收盘价 涨跌幅（%）    （当日 涨停后  ->  次日   是否能买进、平均可买进 挂单价格%、平均涨幅、打板成功率）
     private double today2Next_openPct;

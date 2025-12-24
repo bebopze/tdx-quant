@@ -167,7 +167,10 @@ public class BacktestCache {
 
 
     public StockFun getOrCreateStockFun(String stockCode) {
-        return getOrCreateStockFun(codeStockMap.get(stockCode));
+        BaseStockDO stockDO = codeStockMap.get(stockCode);
+        Assert.notNull(stockDO, "StockDO is null : " + stockCode);
+
+        return getOrCreateStockFun(stockDO);
     }
 
     public StockFun getOrCreateStockFun(BaseStockDO stockDO) {
@@ -180,7 +183,10 @@ public class BacktestCache {
 
 
     public BlockFun getOrCreateBlockFun(String blockCode) {
-        return getOrCreateBlockFun(codeBlockMap.get(blockCode));
+        BaseBlockDO blockDO = codeBlockMap.get(blockCode);
+        Assert.notNull(blockDO, "BlockDO is null : " + blockCode);
+
+        return getOrCreateBlockFun(blockDO);
     }
 
     public BlockFun getOrCreateBlockFun(BaseBlockDO blockDO) {
@@ -224,7 +230,7 @@ public class BacktestCache {
 
 
     /**
-     * 主线板块 Cache
+     * 主线板块（板块-月多2）    Cache
      *
      * date     /     TopBlockStrategyEnum - topBlockCodeSet
      */
@@ -236,6 +242,39 @@ public class BacktestCache {
                                                                                                          .removalListener(createStatsRemovalListener("topBlockCache", () -> BacktestCache.topBlockCache))
                                                                                                          .scheduler(Scheduler.systemScheduler())
                                                                                                          .build();
+
+
+    /**
+     * 真主线板块（涨停TOP1 + 百日新高TOP1）    Cache
+     *
+     * date     /     TopBlockStrategyEnum - topBlockCodeSet
+     */
+    public static final Cache<LocalDate, Map<TopBlockStrategyEnum, Set<String>>> TOP1__topBlockCache = Caffeine.newBuilder()
+                                                                                                               .maximumSize(1_000)
+                                                                                                               // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                                               .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                                                               .recordStats()
+                                                                                                               .removalListener(createStatsRemovalListener("topBlockCache", () -> BacktestCache.topBlockCache))
+                                                                                                               .scheduler(Scheduler.systemScheduler())
+                                                                                                               .build();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 个股 - 主线板块（IN主线板块） Cache
+     *
+     * date     /     code - name
+     */
+    public static final Cache<LocalDate, Map<String, Set<String>>> stock__inTopBlockCache = Caffeine.newBuilder()
+                                                                                                    .maximumSize(1_0000)
+                                                                                                    // .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                                                    .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                                                    .recordStats()
+                                                                                                    .removalListener(createStatsRemovalListener("stock__InTopBlockCache", () -> BacktestCache.stock__inTopBlockCache))
+                                                                                                    .scheduler(Scheduler.systemScheduler())
+                                                                                                    .build();
 
 
     // -----------------------------------------------------------------------------------------------------------------

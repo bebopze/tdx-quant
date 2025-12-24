@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.domain.dto.topblock;
 
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,18 +25,38 @@ public class TopBlockDTO {
     private String blockCode;
     private String blockName;
 
+
+    // 涨停数量
+    private int ztCount;
+    // 跌停数量
+    private int dtCount;
+
+
     /**
      * 主线板块 上榜天数
      */
     private int topDays;
 
 
+    // 主线板块  ->  主线个股 列表
     private List<TopStock> topStockList;
+    // 主线个股 数量
     private int topStockSize;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public int getTopStockSize() {
         return topStockList.size();
+    }
+
+    public int getZtCount() {
+        return CollectionUtils.isEmpty(topStockList) ? 0 : (int) topStockList.stream().filter(TopStock::isZtFlag).count();
+    }
+
+    public int getDtCount() {
+        return CollectionUtils.isEmpty(topStockList) ? 0 : (int) topStockList.stream().filter(TopStock::isDtFlag).count();
     }
 
 
@@ -47,6 +68,10 @@ public class TopBlockDTO {
         private String stockCode;
         private String stockName;
         private String xueqiuMarket;
+
+        // 是否 涨停/跌停
+        private boolean ztFlag;
+        private boolean dtFlag;
 
         /**
          * 主线个股 上榜天数
