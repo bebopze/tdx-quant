@@ -358,6 +358,10 @@ public class TdxFunParserCheck {
             boolean RPS三线红 = extDataArrDTO.RPS三线红[idx];
 
 
+            boolean 首次三线红 = extDataArrDTO.首次三线红[idx];
+            boolean 口袋支点 = extDataArrDTO.口袋支点[idx];
+
+
             // ------------------------------------------------------ fun   ->   实时计算
 
 
@@ -427,7 +431,7 @@ public class TdxFunParserCheck {
         if (fun_val instanceof Number) {
             check = TdxFunCheck.equals((Number) fun_val, (Number) DB_val, 0.05);
         } else if ("月多".equals(fieldName)) {
-            check = idx < 500 || fun_val == DB_val;
+            check = /*idx < 500*/ Double.isNaN(dto.getRps250()) || fun_val == DB_val;
         } else {
             check = fun_val == DB_val;
         }

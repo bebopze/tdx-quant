@@ -76,73 +76,6 @@ public class LdayParser {
     public static final LocalDate KLINE_START_DATE = LocalDate.of(2017, 1, 1);
 
 
-    public static void main(String[] args) {
-
-
-        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/sh/lday/sh000001.day
-        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/31#00700.day
-        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/74#SPY.day
-
-
-        // A股          sz-深圳；sh-上海；bj-北京
-        String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
-        // ds - 港美
-        String filePath_hk = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
-        String filePath_us = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
-
-
-        // 板块
-        String filePath_bk = TDX_PATH + "/vipdoc/sh/lday/sh880904.day";
-        String filePath_bk2 = TDX_PATH + "/vipdoc/sh/lday/sh880948.day";
-
-
-        // 指数
-        String filePath_zs = TDX_PATH + "/vipdoc/sh/lday/sh880003.day";
-        String filePath_zs2 = TDX_PATH + "/vipdoc/sz/lday/sz399106.day";
-
-
-        // ----------
-
-
-        String stockCode_sz = "000001";
-        String stockCode_sh = "600519";
-        String stockCode_bj = "833171";
-
-        String stockCode_bk = "880904";
-
-        String stockCode_zs_sz = "399106";
-        String stockCode_zs_sh = "880003";
-
-
-        // stockCode : 002364 , idx : 3612 , date : 2025-03-13 , diffFields : {"vol":{"v1":"88832504","v2":"2911100"}}
-        // stockCode : 002518 , idx : 3466 , date : 2025-03-13 , diffFields : {"vol":{"v1":"46390892","v2":"16293000"}}
-        // stockCode : 601988 , idx : 1303 , date : 2015-06-09 , diffFields : {"vol":{"v1":"4795353100","v2":"47953531"}}
-        // stockCode : 601988 , idx : 1323 , date : 2015-07-08 , diffFields : {"vol":{"v1":"5109897400","v2":"51098974"}}
-        // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
-
-
-        List<LdayDTO> stockDataList = parseByStockCode("300059");
-        // List<LdayDTO> stockDataList = parseByStockCode("513120");
-        for (LdayDTO e : stockDataList) {
-            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
-            System.out.println(JSON.toJSONString(item));
-        }
-
-
-        // ----------
-
-
-//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
-//        for (LdayDTO e : stockDataList) {
-//            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
-//            System.out.println(JSON.toJSONString(item));
-//        }
-
-
-        System.out.println("---------------------------------- code：" + stockDataList.get(0).code + "     总数：" + stockDataList.size());
-    }
-
-
     /**
      * tdx 盘后数据（xx.day）  -   解析器
      *
@@ -682,6 +615,82 @@ public class LdayParser {
 
         // 换手率
         private BigDecimal turnoverPct;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/sh/lday/sh000001.day
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/31#00700.day
+        // C:/soft/通达信/v_2024/跑数据专用/new_tdx/vipdoc/ds/lday/74#SPY.day
+
+
+        // A股          sz-深圳；sh-上海；bj-北京
+        String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
+        // ds - 港美
+        String filePath_hk = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
+        String filePath_us = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
+
+
+        // 板块
+        String filePath_bk = TDX_PATH + "/vipdoc/sh/lday/sh880904.day";
+        String filePath_bk2 = TDX_PATH + "/vipdoc/sh/lday/sh880948.day";
+
+
+        // 指数
+        String filePath_zs = TDX_PATH + "/vipdoc/sh/lday/sh880003.day";
+        String filePath_zs2 = TDX_PATH + "/vipdoc/sz/lday/sz399106.day";
+
+
+        // ----------
+
+
+        String stockCode_sz = "000001";
+        String stockCode_sh = "600519";
+        String stockCode_bj = "833171";
+
+        String stockCode_bk = "880904";
+
+        String stockCode_zs_sz = "399106";
+        String stockCode_zs_sh = "880003";
+
+
+        // stockCode : 002364 , idx : 3612 , date : 2025-03-13 , diffFields : {"vol":{"v1":"88832504","v2":"2911100"}}
+        // stockCode : 002518 , idx : 3466 , date : 2025-03-13 , diffFields : {"vol":{"v1":"46390892","v2":"16293000"}}
+        // stockCode : 601988 , idx : 1303 , date : 2015-06-09 , diffFields : {"vol":{"v1":"4795353100","v2":"47953531"}}
+        // stockCode : 601988 , idx : 1323 , date : 2015-07-08 , diffFields : {"vol":{"v1":"5109897400","v2":"51098974"}}
+        // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
+
+
+        List<LdayDTO> stockDataList = parseByStockCode("300059");
+        // List<LdayDTO> stockDataList = parseByStockCode("513120");
+        for (LdayDTO e : stockDataList) {
+            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+            System.out.println(JSON.toJSONString(item));
+        }
+
+
+        // ----------
+
+
+//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
+//        for (LdayDTO e : stockDataList) {
+//            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+//            System.out.println(JSON.toJSONString(item));
+//        }
+
+
+        System.out.println("---------------------------------- code：" + stockDataList.get(0).code + "     总数：" + stockDataList.size());
     }
 
 

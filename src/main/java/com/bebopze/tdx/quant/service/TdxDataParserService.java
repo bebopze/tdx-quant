@@ -16,6 +16,9 @@ public interface TdxDataParserService {
     void importAll();
 
 
+    void importAll__blockRelaStock();
+
+
     void importTdxBlockCfg();
 
 
@@ -52,4 +55,10 @@ public interface TdxDataParserService {
 
 
     Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N);
+
+
+    // ----------------------------------------------------------------
+
+
+    void calcAndFillBlockKlineAll();
 }

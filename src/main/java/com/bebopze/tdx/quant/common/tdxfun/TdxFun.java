@@ -311,19 +311,44 @@ public class TdxFun {
 
 
     /**
-     * EMA                          ->   已验证 ✅
+     * 工业级 EMA                          ->   已验证 ✅
      *
      * @param S
      * @param N
      * @return
      */
     public static double[] EMA(double[] S, int N) {
-        double[] r = new double[S.length];
-        double alpha = 2.0 / (N + 1);
-        r[0] = S[0];
-        for (int i = 1; i < S.length; i++) r[i] = alpha * S[i] + (1 - alpha) * r[i - 1];
+        if (S == null) throw new IllegalArgumentException("EMA: input is null");
+        int len = S.length;
+        double[] r = new double[len];
+        if (len == 0) return r;
+        if (N <= 0) throw new IllegalArgumentException("EMA: N must be > 0");
+
+        Arrays.fill(r, Double.NaN);
+        double alpha = 2.0 / (N + 1.0);
+
+        // 找到第一个 finite 值作为起点
+        int start = -1;
+        for (int i = 0; i < len; i++) {
+            if (Double.isFinite(S[i])) {
+                start = i;
+                r[i] = S[i];
+                break;
+            }
+        }
+        if (start < 0) return r;
+
+        for (int i = start + 1; i < len; i++) {
+            double v = S[i];
+            if (Double.isFinite(v) && Double.isFinite(r[i - 1])) {
+                r[i] = alpha * v + (1 - alpha) * r[i - 1];
+            } else {
+                r[i] = Double.NaN;
+            }
+        }
         return r;
     }
+
 
     public static double[] SMA(double[] S, int N, double M) {
         double[] r = new double[S.length];
@@ -447,24 +472,54 @@ public class TdxFun {
         return r;
     }
 
+
+    /**
+     * 斜率函数                          ->   已验证 ✅             工业级 SLOPE（安全版）
+     *
+     * @param S 输入数据序列
+     * @param N 窗口大小
+     * @return 斜率结果数组
+     */
     public static double[] SLOPE(double[] S, int N) {
-        double[] r = new double[S.length];
-        for (int i = 0; i < S.length; i++) {
-            if (i + 1 >= N) {
-                double xBar = 0, yBar = 0;
-                for (int j = i + 1 - N; j <= i; j++) {
-                    xBar += (j - (i + 1 - N));
-                    yBar += S[j];
+        if (S == null) throw new IllegalArgumentException("SLOPE: input is null");
+        if (N <= 1) throw new IllegalArgumentException("SLOPE: N must be > 1");
+
+        int len = S.length;
+        double[] r = new double[len];
+        Arrays.fill(r, Double.NaN);
+        if (len < N) return r;
+
+        final double EPS = 1e-12;
+
+        for (int i = N - 1; i < len; i++) {
+            double xBar = 0, yBar = 0;
+            boolean ok = true;
+
+            for (int j = 0; j < N; j++) {
+                double y = S[i + 1 - N + j];
+                if (!Double.isFinite(y)) {
+                    ok = false;
+                    break;
                 }
-                xBar /= N;
-                yBar /= N;
-                double num = 0, den = 0;
-                for (int j = 0; j < N; j++) {
-                    num += (j - xBar) * (S[i + 1 - N + j] - yBar);
-                    den += (j - xBar) * (j - xBar);
-                }
+                xBar += j;
+                yBar += y;
+            }
+            if (!ok) continue;
+
+            xBar /= N;
+            yBar /= N;
+
+            double num = 0, den = 0;
+            for (int j = 0; j < N; j++) {
+                double dx = j - xBar;
+                double dy = S[i + 1 - N + j] - yBar;
+                num += dx * dy;
+                den += dx * dx;
+            }
+
+            if (Math.abs(den) > EPS) {
                 r[i] = num / den;
-            } else r[i] = Double.NaN;
+            }
         }
         return r;
     }
@@ -1385,20 +1440,28 @@ public class TdxFun {
 
 
     public static double[] SAR(double[] high, double[] low) {
+        // return SAR_2(high, low, 10, 2, 20);     // ArrayIndexOutOfBoundsException
         return SAR(high, low, 10, 2, 20);
     }
 
+
     /**
      * 计算通用的 SAR（抛物转向）指标
+     * <p>
+     * 注意：该算法需要足够的历史数据才能开始产生有效输出。如果输入数组长度不足，
+     * 将返回一个全部填充为 NaN 的数组。
+     * </p>
      *
      * @param high HIGH 序列
      * @param low  LOW 序列
-     * @param N    计算周期
-     * @param S    AF 步长百分比，例如 2 表示 2%
-     * @param M    AF 极限百分比，例如 20 表示 20%
-     * @return 与输入等长的 SAR 数组，不计算前 N 个元素，填 NaN
+     * @param N    计算周期 (N > 1)
+     * @param S    AF 步长百分比，例如 2 表示 2% (S > 0)
+     * @param M    AF 极限百分比，例如 20 表示 20% (M > 0)
+     * @return 与输入等长的 SAR 数组。若输入无效或数据不足，返回全 NaN 数组。
+     * @throws IllegalArgumentException 如果 N, S, M 无效。
      */
-    public static double[] SAR(double[] high, double[] low, int N, double S, double M) {
+    @Deprecated
+    public static double[] SAR_2(double[] high, double[] low, int N, double S, double M) {
         int length = high.length;
         double fStep = S / 100.0;
         double fMax = M / 100.0;
@@ -1457,12 +1520,149 @@ public class TdxFun {
     }
 
 
+    /**
+     * 计算通用的 SAR（抛物转向）指标
+     * <p>
+     * 注意：该算法需要足够的历史数据才能开始产生有效输出。如果输入数组长度不足，
+     * 将返回一个全部填充为 NaN 的数组。
+     * </p>
+     *
+     * @param high HIGH 序列
+     * @param low  LOW 序列
+     * @param N    计算周期 (N > 1)
+     * @param S    AF 步长百分比，例如 2 表示 2% (S > 0)
+     * @param M    AF 极限百分比，例如 20 表示 20% (M > 0)
+     * @return 与输入等长的 SAR 数组。若输入无效或数据不足，返回全 NaN 数组。
+     * @throws IllegalArgumentException 如果 N, S, M 无效。
+     */
+    public static double[] SAR(double[] high, double[] low, int N, double S, double M) {
+        // 1. 输入参数基本验证
+        if (N <= 1) {
+            throw new IllegalArgumentException("SAR周期N必须大于1，当前值: " + N);
+        }
+        if (S <= 0) {
+            throw new IllegalArgumentException("SAR步长S必须大于0，当前值: " + S);
+        }
+        if (M <= 0) {
+            throw new IllegalArgumentException("SAR极限M必须大于0，当前值: " + M);
+        }
+        if (S > M) {
+            // 虽然逻辑上可行，但通常步长不应超过极限，可以视为警告或错误。
+            // 此处作为警告打印，但继续计算。
+            System.err.println("警告: SAR步长S (" + S + "%) 大于极限M (" + M + "%)。这可能导致AF增长过快。");
+        }
+
+        // 2. 数组有效性验证
+        if (high == null || low == null) {
+            System.err.println("错误: 输入数组 high 或 low 为 null。返回 NaN 数组。");
+            return new double[high != null ? high.length : (low != null ? low.length : 0)];
+        }
+        if (high.length != low.length) {
+            System.err.println("错误: 输入数组 high 和 low 长度不一致。high.length=" + high.length + ", low.length=" + low.length + ". 返回 NaN 数组。");
+            return new double[Math.max(high.length, low.length)]; // 返回较长数组的长度
+        }
+
+        int length = high.length;
+
+        // 3. 关键数据长度检查：N 周期需要至少 N+1 个数据点才能计算 isLong 初始值 (high[N-1], high[N-2])
+        // 并且循环从 i=N 开始，所以 length 必须 > N。
+        // 为了能计算 isLong，需要 N >= 2 且 length >= N。
+        // 为了循环能执行，需要 N < length。
+        // 综合来看，至少需要 N >= 2 且 length > N。
+        // 由于 N > 1，所以 length 至少为 2 才有意义。
+        if (length <= N) {
+            System.err.println("警告: 输入数组长度 (" + length + ") 小于或等于SAR周期N (" + N + ")，无法进行计算。返回全 NaN 数组。");
+            double[] sarX = new double[length];
+            Arrays.fill(sarX, Double.NaN);
+            return sarX;
+        }
+
+        // 4. 验证输入数据中是否有非数值 (NaN 或无穷大)，这可能导致后续计算结果异常
+        // 此处可选做，如果发现大量 NaN，可以提前返回或给出警告。
+        // boolean hasInvalidData = Arrays.stream(high).anyMatch(Double::isNaN) || Arrays.stream(low).anyMatch(Double::isNaN);
+        // if (hasInvalidData) {
+        //     System.err.println("警告: 输入数组 high 或 low 包含 NaN 值，可能影响计算结果。");
+        // }
+
+        double fStep = S / 100.0;
+        double fMax = M / 100.0;
+
+        // 计算 HHV(HIGH, N) 并 REF 1
+        double[] hhvN = HHV(high, N);
+        double[] sHhv = REF(hhvN, 1);
+        // 计算 LLV(LOW, N) 并 REF 1
+        double[] llvN = LLV(low, N);
+        double[] sLlv = REF(llvN, 1);
+
+        double[] sarX = new double[length];
+        Arrays.fill(sarX, Double.NaN);
+
+        // 初始趋势判断：基于 N-1 和 N-2 位置的 HIGH 值
+        boolean isLong = false;
+        // 由于已在第3步检查 length > N，所以 N-1 和 N-2 必然在 high 数组的有效范围内。
+        if (high[N - 1] > high[N - 2]) {
+            isLong = true;
+        }
+
+        boolean bFirst = true;
+        double af = 0.0;
+
+        // 主计算循环：从索引 N 开始
+        // 由于已在第3步检查 length > N，所以循环条件 i < length 是安全的。
+        for (int i = N; i < length; i++) {
+            // 由于 i 从 N 开始，且 N < length，所以 i-1 >= 0。
+            // sarX[i-1] 是安全的。
+            // sHhv[i] 和 sLlv[i] 的访问是安全的，因为 i < length，而 sHhv/sLlv 长度也为 length。
+            // high[i] 和 low[i] 的访问也是安全的。
+
+            if (bFirst) {
+                af = fStep;
+                // 在 i=N 时，sHhv[i] 和 sLlv[i] 依赖于 HHV/LLV 的结果。
+                // HHV(high, N) 的第 N-1 个元素 (0-indexed) 是第一个有效值 (如果 N=length, 则不存在 N 位置的有效值)。
+                // REF(HHV(...), 1) 将其后移一位，所以 sHhv[N] 会引用 HHV(...)[N-1]。
+                // 为了 sHhv[N] 有效，需要 HHV(...)[N-1] 有效，即 N-1 >= N-1 (恒成立) 且 N-1 < length。
+                // 这要求 N < length (已在第3步检查)。
+                sarX[i] = isLong ? sLlv[i] : sHhv[i];
+                bFirst = false;
+            } else {
+                double ep = isLong ? sHhv[i] : sLlv[i];
+                if (isLong) {
+                    if (high[i] > ep) {
+                        ep = high[i];
+                        af = Math.min(af + fStep, fMax);
+                    }
+                } else {
+                    if (low[i] < ep) {
+                        ep = low[i];
+                        af = Math.min(af + fStep, fMax);
+                    }
+                }
+                sarX[i] = sarX[i - 1] + af * (ep - sarX[i - 1]);
+            }
+
+            // 趋势反转判断
+            if (isLong) {
+                if (low[i] < sarX[i]) {
+                    isLong = false;
+                    bFirst = true;
+                }
+            } else {
+                if (high[i] > sarX[i]) {
+                    isLong = true;
+                    bFirst = true;
+                }
+            }
+        }
+        return sarX;
+    }
+
+
     public static double[] TDX_SAR(double[] high, double[] low) {
         return TDX_SAR(high, low, 2, 20);
     }
 
     /**
-     * 计算通达信 SAR(TDX_SAR) 算法，结果与通达信完全一致
+     * 计算通达信 SAR(TDX_SAR) 算法，结果与通达信完全一致                 ->   已验证 ✅
      *
      * @param high     HIGH 序列
      * @param low      LOW 序列

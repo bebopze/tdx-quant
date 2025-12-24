@@ -10,13 +10,13 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
-import com.bebopze.tdx.quant.service.ExtDataService;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
@@ -74,22 +74,47 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private MarketService marketService;
 
     @Autowired
-    private ExtDataService extDataService;
-
-    @Autowired
     private InitDataService initDataService;
 
 
     @Autowired
     private TdxTask tdxTask;
 
+    @Autowired
+    private BlockKlineFun blockKlineFun;
+
 
     /**
-     * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
+     * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入     +     Kline/ext_data 解析入库
      */
     @TotalTime
     @Override
     public void importAll() {
+
+
+        // 板块/个股/ETF/自定义板块/关联关系   ->   一键 初始化/刷新
+        importAll__blockRelaStock();
+
+
+        // ------------------------------------------------------------------------ 大盘量化
+
+
+        // marketService.importMarketMidCycle();
+
+
+        // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
+
+
+        tdxTask.execTask__refreshAll();
+    }
+
+
+    /**
+     * 通达信 - 板块/个股/ETF/自定义板块/关联关系   ->   一键 初始化/刷新
+     */
+    @TotalTime
+    @Override
+    public void importAll__blockRelaStock() {
 
 
         // ------------------------------------------------------------------------ 配置导入（缓存数据）
@@ -118,12 +143,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // marketService.importMarketMidCycle();
-
-
-        // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
-
-
-        tdxTask.execTask__refreshAll();
     }
 
 
@@ -550,7 +569,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                             Map<String, Long> block__codeIdMap) {
 
 
-        sortAllStockCodeList.forEach(stockCode -> {
+        sortAllStockCodeList.parallelStream().forEach(stockCode -> {
 
             Long stockId = stock__codeIdMap.get(stockCode);
 
@@ -589,7 +608,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // batch insert
             baseBlockRelaStockService.saveBatch(doList, 500);
         });
-
     }
 
 
@@ -1236,7 +1254,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 2-增量更新
         else if (updateTypeEnum == UpdateTypeEnum.INCR) {
-            incrUpdate__fillStockKlineAll(codeIdMap, updateTypeEnum);
+            incrUpdate__fillStockKlineAll(codeIdMap);
         }
 
 
@@ -1297,9 +1315,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      * 2-增量更新
      *
      * @param codeIdMap
-     * @param updateTypeEnum
      */
-    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
+    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
 
 
         // 东方财富   ->   批量拉取  全A（ETF） 实时行情
@@ -1355,7 +1372,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             baseStockService.updateById(entity);
 
 
-            log.info("incrUpdate__fillStockKlineAll suc     >>>     stockCode : {} , count : {}", stockCode, count.incrementAndGet());
+            log.info("incrUpdate__fillStockKlineAll suc     >>>     [{}-{}] , count : {}", stockCode, stockName, count.incrementAndGet());
         });
     }
 
@@ -1630,6 +1647,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N) {
         Map<String, Set<String>> market_stockCodeList_map = baseStockService.market_stockCodePrefixList_map(type, N);
         return market_stockCodeList_map;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Override
+    public void calcAndFillBlockKlineAll() {
+        blockKlineFun.calcAndFillBlockKlineAll();
     }
 
 
