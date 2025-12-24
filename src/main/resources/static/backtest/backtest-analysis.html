@@ -403,6 +403,9 @@
                         <th onclick="sortTable('stockName', 'position')">股票名称<span class="sort-icon"
                                                                                        id="sortStockNamePosition"></span>
                         </th>
+                        <th onclick="sortTable('topBlockSet', 'position')">主线板块<span class="sort-icon"
+                                                                                         id="sortTopBlockSetPosition"></span>
+                        </th>
                         <th onclick="sortTable('blockNamePath', 'position')">普通行业（LV2）<span class="sort-icon"
                                                                                                 id="sortBlockNamePathPosition"></span>
                         </th>
@@ -480,6 +483,9 @@
                         </th>
                         <th onclick="sortTable('stockName', 'clearPosition')">股票名称<span class="sort-icon"
                                                                                             id="sortStockNameClearPosition"></span>
+                        </th>
+                        <th onclick="sortTable('topBlockSet', 'clearPosition')">主线板块<span class="sort-icon"
+                                                                                              id="sortTopBlockSetClearPosition"></span>
                         </th>
                         <th onclick="sortTable('blockNamePath', 'clearPosition')">普通行业（LV2）<span class="sort-icon"
                                                                                                      id="sortBlockNamePathClearPosition"></span>
@@ -1118,11 +1124,14 @@
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
             const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
+            // topBlockSet:["880493-软件服务", "880921-阿里概念"]
+            const topBlockCodeNameSet = (item.topBlockSet ?? []).join('|');
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stockCode}</a></td>
                 <td>${item.tradeDate}</td>
                 <td>${item.stockName}</td>
+                <td>${topBlockCodeNameSet}</td>
                 <td>${item.blockNamePath}</td>
                 <td>${item.avgCostPrice}</td>
                 <td>${item.closePrice}</td>
@@ -1188,11 +1197,14 @@
             const tr = document.createElement('tr');
             tr.addEventListener('click', () => loadStockInfo(item.stockCode));
             const stockLink = `https://xueqiu.com/S/${xueqiuMarket(item.stockCode)}${item.stockCode}`;
+            // topBlockSet:["880493-软件服务", "880921-阿里概念"]
+            const topBlockCodeNameSet = (item.topBlockSet ?? []).join('|');
             tr.innerHTML = `
                 <td class="index-column">${index + 1}</td> <!-- 序号列 -->
                 <td><a href="${stockLink}" target="_blank" class="stock-code-link">${item.stockCode}</a></td>
                 <td>${item.tradeDate}</td>
                 <td>${item.stockName}</td>
+                <td>${topBlockCodeNameSet}</td>
                 <td>${item.blockNamePath}</td>
                 <td>${item.avgCostPrice}</td>
                 <td>${item.closePrice}</td>
@@ -1262,15 +1274,17 @@
         sumRow.innerHTML += `<td></td>`;
         // 索引 3:  (股票名称) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 4:  (普通行业（LV2）) - 非合计列
+        // 索引 4:  (主线板块) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 5:  (成本) - 非合计列
+        // 索引 5:  (普通行业（LV2）) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 6:  (收盘价) - 非合计列
+        // 索引 6:  (成本) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 7:  (持仓数量) - 非合计列
+        // 索引 7:  (收盘价) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 8:  (可用数量) - 非合计列
+        // 索引 8:  (持仓数量) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 9:  (可用数量) - 非合计列
         sumRow.innerHTML += `<td></td>`;
 
 
