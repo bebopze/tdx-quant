@@ -101,9 +101,9 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
 
 
         // 异常     ->     持仓数据 中途丢失
-        Integer maxTotalDay = baseMapper.getMaxTotalDayByBatchNo(batchNo);
-        List<Long> errTaskIdList2 = baseMapper.listErrTaskIdByBatchNoAndTotalDay(batchNo, maxTotalDay);
-        log.info("已完成 -> 异常（持仓数据 中途丢失）    >>>     maxTotalDay : {} , size : {} , errTaskIdList2 : {}", maxTotalDay, errTaskIdList2.size(), errTaskIdList2);
+        Integer maxTotalDays = baseMapper.getMaxTotalDaysByBatchNo(batchNo);
+        List<Long> errTaskIdList2 = baseMapper.listErrTaskIdByBatchNoAndTotalDay(batchNo, maxTotalDays);
+        log.info("已完成 -> 异常（持仓数据 中途丢失）    >>>     maxTotalDay : {} , size : {} , errTaskIdList2 : {}", maxTotalDays, errTaskIdList2.size(), errTaskIdList2);
 
 
         errTaskIdList.addAll(errTaskIdList2);

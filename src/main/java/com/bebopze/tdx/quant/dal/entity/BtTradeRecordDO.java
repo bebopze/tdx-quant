@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -76,6 +78,13 @@ public class BtTradeRecordDO implements Serializable {
     @TableField("trade_signal_desc")
     @Schema(description = "交易信号-描述")
     private String tradeSignalDesc;
+
+    /**
+     * 主线板块code-name JSON列表
+     */
+    @TableField("top_block_set")
+    @Schema(description = "主线板块code-name JSON列表")
+    private String topBlockSet;
 
     /**
      * 股票ID
@@ -175,6 +184,12 @@ public class BtTradeRecordDO implements Serializable {
     public String getBlockNamePath() {
         return Optional.ofNullable(InitDataServiceImpl.data.getBlock(stockCode, 2, 2)).map(BaseBlockDO::getNamePath)
                        .orElse(null);
+    }
+
+
+    @JsonRawValue
+    public String getTopBlockSet() {
+        return StringUtils.isNotBlank(topBlockSet) ? topBlockSet : "[]";
     }
 
 

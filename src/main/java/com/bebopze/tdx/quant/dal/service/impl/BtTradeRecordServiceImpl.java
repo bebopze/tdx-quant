@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 
 /**
@@ -54,11 +53,8 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    // 定义一个静态的信号量，用于限制 并发查询 数据库的线程数
-    private static final Semaphore dbReadSemaphore = new Semaphore(6);
-
-
     @TotalTime
+    @DBLimiter(6)
     @Retryable(
             value = {Exception.class},
             maxAttempts = 5,
@@ -67,48 +63,8 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
     )
     @Override
     public List<BtTradeRecordDO> listByTaskId(Long taskId) {
-
-
-        try {
-            // 尝试获取信号量许可，获取不到会阻塞等待
-            dbReadSemaphore.acquire();
-            log.info("数据库查询许可 - acquire     >>>     taskId : {} , 队列中等待的线程数 : {}", taskId, dbReadSemaphore.getQueueLength());
-
-
-            // 获取许可后，执行实际的数据库查询操作
-            return listByTaskIdAndTradeDateRange(taskId, null, null);
-
-
-        } catch (InterruptedException e) {
-
-            // 恢复中断状态
-            Thread.currentThread().interrupt();
-
-
-            String errMsg = String.format("数据库查询许可 - 被中断     >>>     taskId : %s", taskId);
-            log.error(errMsg, e);
-
-
-            throw new RuntimeException(errMsg, e);
-
-
-        } catch (Exception ex) {
-
-            String errMsg = String.format("tradeRecord listByTaskId - err     >>>     taskId : %s , errMsg : %s", taskId, ex.getMessage());
-            log.error(errMsg, ex);
-
-
-            // 重新抛出异常，以便触发 @Retryable 机制
-            throw ex;
-
-
-        } finally {
-
-            // 确保在任何情况下都释放信号量许可
-            dbReadSemaphore.release();
-
-            log.debug("数据库查询许可 - release     >>>     taskId : {}", taskId);
-        }
+        // 获取许可后，执行实际的数据库查询操作
+        return listByTaskIdAndTradeDateRange(taskId, null, null);
     }
 
 

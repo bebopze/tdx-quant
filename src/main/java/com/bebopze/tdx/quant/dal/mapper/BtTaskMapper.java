@@ -37,7 +37,7 @@ public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
     BtTaskDO getBatchNoEntityByBatchNo(@Param("batchNo") Integer batchNo);
 
 
-    Integer getMaxTotalDayByBatchNo(@Param("batchNo") Integer batchNo);
+    Integer getMaxTotalDaysByBatchNo(@Param("batchNo") Integer batchNo);
 
     /**
      * 异常     ->     持仓数据 中途丢失

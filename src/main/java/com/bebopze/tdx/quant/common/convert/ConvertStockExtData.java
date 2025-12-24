@@ -278,8 +278,8 @@ public class ConvertStockExtData {
 
         for (Field field : fields) {
 
-            // 只处理 Boolean 类型（注意不是 boolean）
-            if (field.getType() != Boolean.class) {
+            // 只处理 Boolean 类型
+            if (field.getType() != Boolean.class && field.getType() != boolean.class) {
                 continue;
             }
 
