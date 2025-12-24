@@ -41,10 +41,8 @@ public interface TopBlockService {
 
     /**
      * 1-百日新高
-     *
-     * @param N
      */
-    void nDayHighTask(UpdateTypeEnum updateTypeEnum, int N);
+    void N100DayHighTask(UpdateTypeEnum updateTypeEnum);
 
     /**
      * 2-涨幅榜（N日涨幅>25%）
@@ -79,6 +77,17 @@ public interface TopBlockService {
      * 7-均线极多头
      */
     void extremeBullMAStackTask(UpdateTypeEnum updateTypeEnum);
+
+    /**
+     * 8-涨停数量 - 占比分布
+     */
+    void ztCountTask(UpdateTypeEnum updateTypeEnum);
+
+    /**
+     * 9-跌停数量 - 占比分布
+     */
+    void dtCountTask(UpdateTypeEnum updateTypeEnum);
+
 
     /**
      * 11-板块AMO - TOP1
@@ -170,5 +179,4 @@ public interface TopBlockService {
 
 
     List<TopBlock2DTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N);
-
 }

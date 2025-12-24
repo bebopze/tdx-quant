@@ -104,6 +104,9 @@ public class TopBlockCache {
                 topStock.setStockName(topStockData.getName());
                 topStock.setTopDays(topStock__codeCountMap.getOrDefault(topStockCode, 0));
 
+                topStock.setZtFlag(topStockData.isZtFlag());
+                topStock.setDtFlag(topStockData.isDtFlag());
+
 
                 topStockList.add(topStock);
             }

@@ -80,6 +80,15 @@ public class TopPoolSumReturnDTO {
     private double winTradesPct;
 
     /**
+     * 平局总笔数（单笔收益=0）
+     */
+    private int drawTrades;
+    /**
+     * 平局率 = 平局总笔数 / 交易总笔数
+     */
+    private double drawTradesPct;
+
+    /**
      * 亏损总笔数（单笔收益<0）
      */
     private int lossTrades;
@@ -123,6 +132,15 @@ public class TopPoolSumReturnDTO {
      * 胜率 = 盈利天数占比（%） =  盈利天数 / 总天数
      */
     private double winDaysPct;
+
+    /**
+     * 平局天数（当日收益=0）
+     */
+    private int drawDays;
+    /**
+     * 平局天数占比（%） =  平局天数 / 总天数
+     */
+    private double drawDaysPct;
 
     /**
      * 亏损天数（当日收益<0）

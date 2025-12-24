@@ -226,11 +226,12 @@
         </div>
     </div>
 
-    <!-- 板块AMO-TOP1 -->
+
+    <!-- 涨停 -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
              data-bs-target="#collapse21" role="button">
-            板块AMO-TOP1 - 天数分布
+            涨停 - 天数分布
             <span class="badge bg-secondary">点击展开/收起</span>
         </div>
         <div id="collapse21" class="collapse show">
@@ -244,6 +245,54 @@
                     </div>
                     <div class="col-md-4">
                         <div id="chart21_12" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 跌停 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse22" role="button">
+            跌停 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse22" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart22_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart22_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart22_12" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 板块AMO-TOP1 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+             data-bs-target="#collapse31" role="button">
+            板块AMO-TOP1 - 天数分布
+            <span class="badge bg-secondary">点击展开/收起</span>
+        </div>
+        <div id="collapse31" class="collapse show">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="chart31_2" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart31_4" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="chart31_12" style="width: 100%; height: 400px;"></div>
                     </div>
                 </div>
             </div>
@@ -266,7 +315,9 @@
         'chart11_2', 'chart11_4', 'chart11_12',
         'chart12_2', 'chart12_4', 'chart12_12',
         'chart13_2', 'chart13_4', 'chart13_12',
-        'chart21_2', 'chart21_4', 'chart21_12'
+        'chart21_2', 'chart21_4', 'chart21_12',
+        'chart22_2', 'chart22_4', 'chart22_12',
+        'chart31_2', 'chart31_4', 'chart31_12'
     ];
     const blockNewIds = [
         1, 1, 1,
@@ -276,9 +327,13 @@
         11, 11, 11,
         12, 12, 12,
         13, 13, 13,
-        21, 21, 21
+        21, 21, 21,
+        22, 22, 22,
+        31, 31, 31
     ];
     const resultTypes = [
+        2, 4, 12,
+        2, 4, 12,
         2, 4, 12,
         2, 4, 12,
         2, 4, 12,

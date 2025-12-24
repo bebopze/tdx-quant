@@ -79,12 +79,9 @@ public class TopBlockController {
     @Operation(summary = "百日新高", description = "百日新高 - 占比分布")
     @GetMapping(value = "/task/nDayHigh")
     public Result<Void> nDayHighTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
-                                     @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum,
+                                     @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
-                                     @Schema(description = "N日新高", example = "100")
-                                     @RequestParam(defaultValue = "100") int N) {
-
-        topBlockService.nDayHighTask(updateTypeEnum, N);
+        topBlockService.N100DayHighTask(updateTypeEnum);
         return Result.SUC();
     }
 
@@ -176,6 +173,34 @@ public class TopBlockController {
                                                @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
 
         topBlockService.extremeBullMAStackTask(updateTypeEnum);
+        return Result.SUC();
+    }
+
+    /**
+     * 8-涨停数量 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "涨停数量", description = "涨停数量 - 占比分布")
+    @GetMapping(value = "/task/ztCount")
+    public Result<Void> ztCountTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
+                                    @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
+
+        topBlockService.ztCountTask(updateTypeEnum);
+        return Result.SUC();
+    }
+
+    /**
+     * 9-跌停数量 - 占比分布
+     *
+     * @return
+     */
+    @Operation(summary = "跌停数量", description = "跌停数量 - 占比分布")
+    @GetMapping(value = "/task/dtCount")
+    public Result<Void> dtCountTask(@Schema(description = "数据更新类型：ALL-全量更新；INCR-增量更新；", example = "ALL", implementation = UpdateTypeEnum.class)
+                                    @RequestParam(defaultValue = "ALL") UpdateTypeEnum updateTypeEnum) {
+
+        topBlockService.dtCountTask(updateTypeEnum);
         return Result.SUC();
     }
 
