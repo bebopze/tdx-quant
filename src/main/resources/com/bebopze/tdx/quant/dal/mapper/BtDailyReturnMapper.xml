@@ -88,7 +88,7 @@
         <![CDATA[     AND t.max_drawdown_pct < -20     ]]>
 
 
-        <![CDATA[     AND t.total_day < #{totalDays}     ]]>
+        <![CDATA[     AND t.total_days < #{totalDays}     ]]>
 
         <if test="dailyReturn != null">
             <![CDATA[     AND dr.daily_return <= #{dailyReturn}     ]]>
