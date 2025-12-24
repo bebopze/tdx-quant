@@ -715,6 +715,10 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 清理 非持仓个股 的交易记录
+        clear__tradeRecordCache();
+
+
         // END   ->   prev 赋值
         refresh_statData__prev();
 
@@ -879,9 +883,9 @@ public class BacktestStrategy {
         }
 
 
-        if (today.isEqual(LocalDate.of(2019, 3, 5))) {
-            log.debug("checkTrade     >>>     taskId : {} , tradeDate : {}", taskId, today);
-        }
+//        if (today.isEqual(LocalDate.of(2019, 3, 5))) {
+//            log.debug("checkTrade     >>>     taskId : {} , tradeDate : {}", taskId, today);
+//        }
 
 
         LocalDate prev_date = tradeDateDecr(today);
@@ -1146,11 +1150,11 @@ public class BacktestStrategy {
         createAndSave__BUY_TradeRecord(taskId, tradeDate, sort__stockCodeList, openB___buyInfoMap);
 
 
-        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDate(x.get().taskId, x.get().tradeDate);
-        if (tradeRecordDOList.size() > 0) {
-            Stat stat = x.get();
-            log.info("B策略 -> 账户统计数据 - start     >>>     [{}] [{}] , stat : {}", stat.taskId, tradeDate, JSON.toJSONString(stat));
-        }
+//        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDate(x.get().taskId, x.get().tradeDate);
+//        if (tradeRecordDOList.size() > 0) {
+//            Stat stat = x.get();
+//            log.debug("B策略 -> 账户统计数据 - start     >>>     [{}] [{}] , stat : {}", stat.taskId, tradeDate, JSON.toJSONString(stat));
+//        }
 
 
         // B后  ->  账户统计数据
@@ -1178,20 +1182,20 @@ public class BacktestStrategy {
         Map<String, SellStrategyEnum> openS___sellInfoMap = bt_OpenBSDTO.open_S___sell_infoMap;
 
 
-        if (/*tradeDate.isEqual(LocalDate.of(2025, 12, 3)) &&*/ sell__stockCodeSet.contains("301136")) {
-            log.debug("open_S debug   -   S策略 -> 交易 record - start     >>>     [{}] [{}] , sell__stockCodeSet : {}", taskId, tradeDate, sell__stockCodeSet);
-        }
+//        if (/*tradeDate.isEqual(LocalDate.of(2025, 12, 3)) &&*/ sell__stockCodeSet.contains("301136")) {
+//            log.debug("open_S debug   -   S策略 -> 交易 record - start     >>>     [{}] [{}] , sell__stockCodeSet : {}", taskId, tradeDate, sell__stockCodeSet);
+//        }
 
 
         // S策略   ->   SELL TradeRecord
         createAndSave__SELL_TradeRecord(taskId, tradeDate, sell__stockCodeSet, x.get().prev__stockCode_positionDO_Map, openS___sellInfoMap);
 
 
-        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDate(x.get().taskId, x.get().tradeDate);
-        if (tradeRecordDOList.size() > 0) {
-            Stat stat = x.get();
-            log.info("S策略 -> 账户统计数据 - start     >>>     [{}] [{}] , stat : {}", stat.taskId, tradeDate, JSON.toJSONString(stat));
-        }
+//        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskIdAndTradeDate(x.get().taskId, x.get().tradeDate);
+//        if (tradeRecordDOList.size() > 0) {
+//            Stat stat = x.get();
+//            log.debug("S策略 -> 账户统计数据 - start     >>>     [{}] [{}] , stat : {}", stat.taskId, tradeDate, JSON.toJSONString(stat));
+//        }
 
 
         // S后  ->  账户统计数据
@@ -1808,13 +1812,6 @@ public class BacktestStrategy {
         CalcStat calcStat = new CalcStat(positionRecordDOList, today_tradeRecordDOList);
         // copy覆盖
         BeanUtils.copyProperties(calcStat, x.get());
-
-
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // 清理 非持仓个股 的交易记录
-//        clear__tradeRecordCache();
     }
 
 
@@ -1825,16 +1822,6 @@ public class BacktestStrategy {
      * prev 赋值
      */
     private void refresh_statData__prev() {
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 清理 非持仓个股 的交易记录
-//        clear__tradeRecordCache();
-
-
-        // -------------------------------------------------------------------------------------------------------------
 
 
         Stat x_copy = new Stat();
@@ -2007,6 +1994,11 @@ public class BacktestStrategy {
 
         // 全量  每日收益-记录
         List<BtDailyReturnDO> dailyReturnDOList = btDailyReturnService.listByTaskId(x.get().taskId);
+        // 全量  交易记录
+        List<BtTradeRecordDO> tradeRecordDOList = btTradeRecordService.listByTaskId(x.get().taskId);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 最大回撤
@@ -2021,7 +2013,7 @@ public class BacktestStrategy {
 
 
         // 交易胜率
-        TradePairStat.TradeStatResult tradeStatResult = TradePairStat.calcTradeWinPct(tradeRecordList__cache.get());
+        TradePairStat.TradeStatResult tradeStatResult = TradePairStat.calcTradeWinPct(tradeRecordDOList);
 
         // task 交易胜率
         double winRate = tradeStatResult.getWinPct();
@@ -2715,7 +2707,9 @@ public class BacktestStrategy {
             double todayPnlPct = 0;
 
 
-            double closeTodayReturnPct = 0;
+            // 当日涨跌幅（%）
+            double changePct = getChangePct(stockCode, tradeDate);
+
 
             double priceTotalReturnPct = 0;
             double priceMaxReturnPct = 0;
@@ -2881,7 +2875,7 @@ public class BacktestStrategy {
 
                 // 当日涨跌幅（%）
                 // closeTodayReturnPct = (closePrice / prevClosePrice - 1) * 100;
-                closeTodayReturnPct = getChangePct(stockCode, tradeDate);
+                // closeTodayReturnPct = getChangePct(stockCode, tradeDate);
 
 
                 // 首次买入价格-累计涨幅（%） =  当日收盘价 / initBuyPrice  - 1
@@ -2970,7 +2964,7 @@ public class BacktestStrategy {
 
 
             // 当日涨跌幅（%）
-            positionRecordDO.setChangePct(of(closeTodayReturnPct)); // 仅作为展示 -> 不参与任何计算
+            positionRecordDO.setChangePct(of(changePct)); // 仅作为展示 -> 不参与任何计算
 
             // 首次买入价格-累计涨幅（%）
             positionRecordDO.setPriceTotalReturnPct(of(priceTotalReturnPct)); // 仅作为展示 -> 不参与任何计算
@@ -3036,7 +3030,9 @@ public class BacktestStrategy {
             double todayPnlPct = 0;
 
 
-            double closeTodayReturnPct = 0;
+            // 当日涨跌幅（%）
+            double changePct = getChangePct(stockCode, tradeDate);
+
 
             double priceTotalReturnPct = 0;
             double priceMaxReturnPct = 0;
@@ -3161,7 +3157,7 @@ public class BacktestStrategy {
 
             // 当日涨跌幅（%）
 //            closeTodayReturnPct = (closePrice / prevClosePrice - 1) * 100;
-            closeTodayReturnPct = getChangePct(stockCode, tradeDate);
+//            closeTodayReturnPct = getChangePct(stockCode, tradeDate);
 
 
             // 首次买入价格-累计涨幅（%） =  当日收盘价 / initBuyPrice  - 1
@@ -3250,7 +3246,7 @@ public class BacktestStrategy {
 
 
             // 当日涨跌幅（%）
-            positionRecordDO.setChangePct(of(closeTodayReturnPct));
+            positionRecordDO.setChangePct(of(changePct));
 
             // 首次买入价格-累计涨幅（%）
             positionRecordDO.setPriceTotalReturnPct(of(priceTotalReturnPct));
@@ -3444,7 +3440,6 @@ public class BacktestStrategy {
 
 
         // 重新初始化   统计数据
-        // x = new Stat();
         x.set(new Stat());
 
 
