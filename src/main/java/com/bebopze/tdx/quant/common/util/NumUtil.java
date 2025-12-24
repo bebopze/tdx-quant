@@ -20,7 +20,7 @@ public class NumUtil {
 
 
     public static double decimal2Double(BigDecimal val) {
-        return decimal2Double(val, 3);
+        return decimal2Double(val, 5);
     }
 
     public static double decimal2Double(BigDecimal val, int scale) {
@@ -29,7 +29,7 @@ public class NumUtil {
 
 
     public static BigDecimal double2Decimal(Double val) {
-        return double2Decimal(val, 3);
+        return double2Decimal(val, 5);
     }
 
     public static BigDecimal double2Decimal(Double val, int scale) {
@@ -38,11 +38,11 @@ public class NumUtil {
 
 
     public static BigDecimal num2Decimal(Number val) {
-        return num2Decimal(val, 3);
+        return num2Decimal(val, 5);
     }
 
     public static BigDecimal num2Decimal(Number val, int scale) {
-        return double2Decimal(of(val), scale);
+        return double2Decimal(of(val, scale + 3), scale);
     }
 
 
@@ -63,7 +63,7 @@ public class NumUtil {
 
 
     public static double of(Number val) {
-        return of(val, 3);
+        return of(val, 5);
     }
 
     public static double of(Number val, int newScale) {

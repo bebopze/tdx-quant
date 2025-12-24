@@ -1534,11 +1534,12 @@ public class TdxExtFun {
                                      double[] MA120,
                                      double[] MA200,
                                      double[] MA250,
+                                     double[] SAR,
                                      MidAdjustResult 中期调整,
-                                     boolean[] RPS一线红,
+                                     boolean[] RPS红,
                                      boolean[] 均线预萌出,
                                      boolean[] N60日新高,
-                                     double[] 中期涨幅,
+                                     double[] 中期涨幅N20,
                                      boolean[] 上影大阴) {
 
 
@@ -1561,9 +1562,6 @@ public class TdxExtFun {
 
         double[] MACD_H5 = HHV(MACD, 5);
         double[] MACD_H10 = HHV(MACD, 10);
-
-
-        double[] SAR = SAR(high, low);
 
 
         // ---------------
@@ -1665,7 +1663,7 @@ public class TdxExtFun {
             // KD1 :   A1 || A2 || A3 || A4 || A5       NODRAW;
 
 
-            boolean KD1 = RPS一线红[i];
+            boolean KD1 = RPS红[i];   // 一线红(95) || 双线红(90) || 三线红(85)
 
 
             //
@@ -1869,8 +1867,8 @@ public class TdxExtFun {
             // KD11   :   KD11_1 || KD11_2       NODRAW;
 
 
-            boolean KD11_1 = 中期涨幅[i] <= 55 || 中期调整天数[i] > 10 || 中期调整天数2[i] > 20;
-            boolean KD11_2 = 中期涨幅[i] <= 70 && (BARSLAST__中期天数_大于10[i] < 5 || BARSLAST__中期天数2_大于20[i] < 5);
+            boolean KD11_1 = 中期涨幅N20[i] <= 55 || 中期调整天数[i] > 10 || 中期调整天数2[i] > 20;
+            boolean KD11_2 = 中期涨幅N20[i] <= 70 && (BARSLAST__中期天数_大于10[i] < 5 || BARSLAST__中期天数2_大于20[i] < 5);
             boolean KD11 = KD11_1 || KD11_2;
 
             //
@@ -1927,37 +1925,55 @@ public class TdxExtFun {
 
 
     /**
-     * XZZB指标
+     * XZZB指标                           ->   已验证 ✅
      *
      *
-     * // X_1 :=  ( EMA(C, 4) + MA(C, 4*2) + MA(C, 4*4) )  /  3;
-     * // X_2 :=  ( EMA(C, 6) + MA(C, 6*2) + MA(C, 6*4) )  /  3;
-     * // X_3 :=  ( EMA(C, 9) + MA(C, 9*2) + MA(C, 9*4) )  /  3;
-     * // X_4 :=  ( EMA(C,13) + MA(C,13*2) + MA(C,13*4) )  /  3;
-     * //
-     * // X_5 :=  LLV(L,27);
-     * // X_6 :=  HHV(H,34);
-     * // X_7 :=  EMA((C-X_5) / (X_6-X_5)  *4,   4)  *25;
+     *
+     * {
+     * X_1 :=  ( EMA(C, 4) + MA(C, 4*2) + MA(C, 4*4) )  /  3;
+     * X_2 :=  ( EMA(C, 6) + MA(C, 6*2) + MA(C, 6*4) )  /  3;
+     * X_3 :=  ( EMA(C, 9) + MA(C, 9*2) + MA(C, 9*4) )  /  3;
+     * X_4 :=  ( EMA(C,13) + MA(C,13*2) + MA(C,13*4) )  /  3;
+     *
+     * X_5 :=  LLV(L,27);
+     * X_6 :=  HHV(H,34);
+     * X_7 :=  EMA((C-X_5) / (X_6-X_5)  *4,   4)  *25;
+     * }
+     *
      *
      * X_8 :=  HHV(H, 30);
      * X_9 :=  LLV(L, 30);
      *
+     * {
      * X_10:=  HHV(H, 60);
      * X_11:=  LLV(L, 60);
+     * }
+     *
      *
      * X_12:=  100 * EMA(C,50);
      * X_13:=  100 * C;
      *
+     *
+     *
      * X_14:=  X_8  - X_9;
+     *
+     *
+     * {
      * X_15:=  X_10 - X_11;
+     * }
      *
      * X_16:=  (C    - X_9 ) / X_14   *10000;
      * X_17:=  (X_8  - C   ) / X_14   *10000;
+     *
+     * {
      * X_18:=  (C    - X_11) / X_15   *10000;
      * X_19:=  (X_10 - C   ) / X_15   *10000;
+     * }
      *
      * X_20:=  EMA(X_16,   2);
      * X_21:=  EMA(X_17, 250);
+     *
+     *
      *
      *
      *
@@ -1967,131 +1983,116 @@ public class TdxExtFun {
      * @return
      */
     public static boolean[] XZZB(double[] high, double[] low, double[] close) {
+        if (high == null || low == null || close == null) {
+            throw new IllegalArgumentException("high/low/close must not be null");
+        }
         int n = close.length;
+        if (high.length != n || low.length != n) {
+            throw new IllegalArgumentException("high, low, close must have same length");
+        }
+
         boolean[] result = new boolean[n];
-
-
-//        // X_1 :=  ( EMA(C, 4) + MA(C, 4*2) + MA(C, 4*4) )  /  3;
-//        double[] ema_4 = EMA(close, 4);
-//        double[] ma_4_2 = MA(close, 4 * 2);
-//        double[] ma_4_4 = MA(close, 4 * 4);
-//
-//
-//        // X_2 :=  ( EMA(C, 6) + MA(C, 6*2) + MA(C, 6*4) )  /  3;
-//        double[] ema_6 = EMA(close, 6);
-//        double[] ma_6_2 = MA(close, 6 * 2);
-//        double[] ma_6_4 = MA(close, 6 * 4);
-//
-//
-//        // X_3 :=  ( EMA(C, 9) + MA(C, 9*2) + MA(C, 9*4) )  /  3;
-//        double[] ema_9 = EMA(close, 9);
-//        double[] ma_9_2 = MA(close, 9 * 2);
-//        double[] ma_9_4 = MA(close, 9 * 4);
-//
-//
-//        // X_4 :=  ( EMA(C,13) + MA(C,13*2) + MA(C,13*4) )  /  3;
-//        double[] ema_13 = EMA(close, 13);
-//        double[] ma_13_2 = MA(close, 13 * 2);
-//        double[] ma_13_4 = MA(close, 13 * 4);
-//
-//
-//        // X_5 :=  LLV(L,27);
-//        double[] X_5 = LLV(low, 27);
-//
-//
-//        // X_6 :=  HHV(H,34);
-//        double[] X_6 = HHV(high, 34);
-//
-//
-//        // X_7 :=  EMA((C-X_5) / (X_6-X_5)  *4,   4)  *25;
-//        double[] r_7 = new double[close.length];
-//        for (int i = 0; i < close.length; i++) {
-//            r_7[i] = close[i] - X_5[i] / (X_6[i] - X_5[i]) * 4;
-//        }
-//        double[] X_7 = EMA(r_7, 4);
-
-
-        // X_8 :=  HHV(H, 30);
-        double[] X_8 = HHV(high, 30);
-
-        // X_9 :=  LLV(L, 30);
-        double[] X_9 = LLV(low, 30);
-
-        // X_10:=  HHV(H, 60);
-        double[] X_10 = HHV(high, 60);
-
-        // X_11:=  LLV(L, 60);
-        double[] X_11 = LLV(low, 60);
-
-
-        // X_12:=  100 * EMA(C,50);
-        double[] X_12 = EMA(close, 50);
-
-
-        // X_13:=  100 * C;
-        double[] X_13 = new double[n];  // ✅ 分配新数组
-        // double[] X_13 = close;       // ❌❌❌bug：这会导致 close 数组的数据 被永久污染 扩大100倍（close = X_13  =>  X_13 *100）！！！❌❌❌
-
-
-        // X_14:=  X_8  - X_9;
-        // X_15:=  X_10 - X_11;
-        //
-        // X_16:=  (C    - X_9 ) / X_14   *10000;
-        // X_17:=  (X_8  - C   ) / X_14   *10000;
-        // X_18:=  (C    - X_11) / X_15   *10000;
-        // X_19:=  (X_10 - C   ) / X_15   *10000;
-        //
-
-
-        double[] X_16 = new double[n];
-        double[] X_17 = new double[n];
-        double[] X_18 = new double[n];
-        double[] X_19 = new double[n];
-
-
-        for (int i = 0; i < n; i++) {
-
-//            double x_1 = (ema_4[i] + ma_4_2[i] + ma_4_4[i]) / 3;
-//            double x_2 = (ema_6[i] + ma_6_2[i] + ma_6_4[i]) / 3;
-//            double x_3 = (ema_9[i] + ma_9_2[i] + ma_9_4[i]) / 3;
-//            double x_4 = (ema_13[i] + ma_13_2[i] + ma_13_4[i]) / 3;
-//            double x_5 = X_5[i];
-//            double x_6 = X_6[i];
-//            X_7[i] = X_7[i] * 25;
-            double x_8 = X_8[i];
-            double x_9 = X_9[i];
-            double x_10 = X_10[i];
-            double x_11 = X_11[i];
-
-
-            X_12[i] = X_12[i] * 100;
-            X_13[i] = close[i] * 100;   // ✅ 复制并放大
-
-
-            double x_14 = x_8 - x_9;
-            double x_15 = x_10 - x_11;
-
-
-            X_16[i] = (close[i] - x_9) / x_14 * 10000;
-            X_17[i] = (x_8 - close[i]) / x_14 * 10000;
-            X_18[i] = (close[i] - x_11) / x_15 * 10000;
-            X_19[i] = (x_10 - close[i]) / x_15 * 10000;
+        if (n == 0) {
+            return result;
         }
 
 
-        // X_20:=  EMA(X_16,   2);
-        double[] X_20 = EMA(X_16, 2);
-
-        // X_21:=  EMA(X_17, 250);
-        double[] X_21 = EMA(X_17, 250);
+        final double EPS = 1e-12;
 
 
-        // XZZB涨 :  X_20>=X_21 AND X_13>=X_12     COLORRED   NODRAW;
-        // XZZB跌 :  NOT(XZZB涨)                   COLORGREEN NODRAW;
+        // 1) 基础序列（假设 HHV/LLV/EMA 已在类中实现，返回与输入等长数组，窗口不足处为 NaN）
+        // X_8 :=  HHV(H, 30);
+        double[] X_8 = HHV(high, 30);
+        // X_9 :=  LLV(L, 30);
+        double[] X_9 = LLV(low, 30);
+
+        // X_12:=  100 * EMA(C,50);
+        double[] ema50 = EMA(close, 50); // 注意：你原来是 X_12 = EMA(close,50) 再 *100，在这里先拿 ema50
 
 
+        // 2) 预分配并初始化
+        double[] X_12 = new double[n];
+        double[] X_13 = new double[n];   // ✅ 分配新数组
+        // double[] X_13 = close;        // ❌❌❌bug：这会导致 close[] 数组的数据 被永久污染 扩大100倍（close[] = X_13[]  =>  X_13[] *100）！！！❌❌❌
+        double[] X_16 = new double[n];
+        double[] X_17 = new double[n];
+        Arrays.fill(X_12, Double.NaN);
+        Arrays.fill(X_13, Double.NaN);
+        Arrays.fill(X_16, Double.NaN);
+        Arrays.fill(X_17, Double.NaN);
+
+
+        // 3) 计算中间量并做防御性检查（避免除 0 / NaN 传播）
         for (int i = 0; i < n; i++) {
-            result[i] = X_20[i] >= X_21[i] && X_13[i] >= X_12[i];
+
+            double x8 = X_8[i];
+            double x9 = X_9[i];
+            double c = close[i];
+
+
+            // X_12 := 100 * EMA(C,50)
+            if (Double.isFinite(ema50[i])) {
+                X_12[i] = ema50[i] * 100.0;
+            } else {
+                X_12[i] = Double.NaN;
+            }
+
+
+            // X_13 := 100 * C  (复制，不改 close)
+            if (Double.isFinite(c)) {
+                X_13[i] = c * 100.0;
+            } else {
+                X_13[i] = Double.NaN;
+            }
+
+
+            // 计算 X_16 / X_17: 需保证 x8, x9, c 都是 finite，并且 x14 非 0
+            if (Double.isFinite(x8) && Double.isFinite(x9) && Double.isFinite(c)) {
+
+                // X_14:=  X_8  - X_9;
+                double x14 = x8 - x9;
+
+
+                // X_16:=  (C    - X_9 ) / X_14   *10000;
+                // X_17:=  (X_8  - C   ) / X_14   *10000;
+                if (Math.abs(x14) > EPS) {
+                    X_16[i] = (c - x9) / x14 * 10000.0;
+                    X_17[i] = (x8 - c) / x14 * 10000.0;
+                } else {
+                    // x14 太小或为 0 -> 无法可靠计算，保留为 NaN
+                    X_16[i] = Double.NaN;
+                    X_17[i] = Double.NaN;
+                }
+            } else {
+                X_16[i] = Double.NaN;
+                X_17[i] = Double.NaN;
+            }
+        }
+
+
+        // 4) 平滑
+        // X_20:=  EMA(X_16,   2);
+        double[] X_20 = EMA(X_16, 2);   // 可能在前期有 NaN
+        // X_21:=  EMA(X_17, 250);
+        double[] X_21 = EMA(X_17, 250); // 需要较长历史才能为 finite
+
+
+        // 5) 最终判断：仅当参与比较的值均为 finite 时才比较，否则为 false
+        for (int i = 0; i < n; i++) {
+
+            double x_12 = X_12[i];
+            double x_13 = X_13[i];
+            double x_20 = X_20[i];
+            double x_21 = X_21[i];
+
+
+            // XZZB涨 :  X_20>=X_21 AND X_13>=X_12     COLORRED   NODRAW;
+            // XZZB跌 :  NOT(XZZB涨)                   COLORGREEN NODRAW;
+            if (Double.isFinite(x_12) && Double.isFinite(x_13) && Double.isFinite(x_20) && Double.isFinite(x_21)) {
+                result[i] = x_20 >= x_21 && x_13 >= x_12;
+            } else {
+                result[i] = false;
+            }
         }
 
 
@@ -2102,39 +2103,94 @@ public class TdxExtFun {
     /**
      * BS区间
      *
+     *
+     *
+     *       买线 := EMA(C,2);
+     *       卖线 := EMA(SLOPE(C,21) *20 +C, 42);
+     *
+     *
+     *       指导:=EMA((EMA(CLOSE,4)+EMA(CLOSE,6)+EMA(CLOSE,12)+EMA(CLOSE,24))/4,2);
+     *       界:=MA(CLOSE,27);
+     *
+     *
+     *       B买:IF(CROSS(指导,界) OR CROSS(买线,卖线),C,DRAWNULL),COLORMAGENTA,NODRAW;
+     *       持仓（含B）:IF(买线>=卖线,C,DRAWNULL),COLORRED,NODRAW;
+     *
+     *       S卖:IF(CROSS(界,指导) OR CROSS(卖线,买线),C,DRAWNULL),COLORLIGRAY,NODRAW;
+     *       空仓（含S）:IF(买线<卖线,C,DRAWNULL),COLORGREEN,NODRAW;
+     *
+     *
      * @param close
      * @return
      */
+    /**
+     * BS区间
+     *
+     * @param close 收盘价数组（必需）
+     * @return 与输入等长的布尔数组，表示“持仓（含B）”：买线 >= 卖线 为 true
+     */
     public static boolean[] BSQJ(double[] close) {
+        if (close == null) {
+            throw new IllegalArgumentException("close must not be null");
+        }
+
+
         int n = close.length;
         boolean[] result = new boolean[n];
-
-
-        // 买线 := EMA(C,2);
-        double[] 买线 = EMA(close, 2);
-
-
-        // 卖线 := EMA(SLOPE(C,21) *20 +C, 42);
-        double[] slope = SLOPE(close, 21);
-        for (int i = 0; i < n; i++) {
-            slope[i] = slope[i] * 20 + close[i];
+        if (n == 0) {
+            return result;
         }
-        double[] 卖线 = EMA(slope, 42);
 
 
-        // 指导:=EMA((EMA(CLOSE,4)+EMA(CLOSE,6)+EMA(CLOSE,12)+EMA(CLOSE,24))/4,2);
-        // 界:=MA(CLOSE,27);
+        // 此方法只用到 close，因此高/低暂时不需要
+        // 买线 := EMA(C,2);
+        double[] buyLine = EMA(close, 2);
+        // 2) 计算卖线原始基线 := SLOPE(C,21) ，注意不要原地修改 slope 数组
+        double[] slope = SLOPE(close, 21);
 
 
-        // B买:IF(CROSS(指导,界) OR CROSS(买线,卖线),C,DRAWNULL),COLORMAGENTA,NODRAW;
-        // 持仓（含B）:IF(买线>=卖线,C,DRAWNULL),COLORRED,NODRAW;
-        // S卖:IF(CROSS(界,指导) OR CROSS(卖线,买线),C,DRAWNULL),COLORLIGRAY,NODRAW;
-        // 空仓（含S）:IF(买线<卖线,C,DRAWNULL),COLORGREEN,NODRAW;
+        // 防御性：如果 slope 返回 null（实现有误），不要直接 NPE
+        if (slope == null) {
+            log.warn("SLOPE(close,21) returned null — treating as all NaN");
+            slope = new double[n];
+            Arrays.fill(slope, Double.NaN);
+        }
 
 
-        // 持仓（含B）
+        // 生成用于 EMA 的数组（slope * 20 + close），不破坏 slope 原数组
+        double[] slopeAdjusted = new double[n];
         for (int i = 0; i < n; i++) {
-            result[i] = 买线[i] >= 卖线[i];
+            double s = slope[i];
+            double c = close[i];
+            if (Double.isFinite(s) && Double.isFinite(c)) {
+                slopeAdjusted[i] = s * 20.0 + c;
+            } else {
+                slopeAdjusted[i] = Double.NaN;
+            }
+        }
+
+
+        // 3) 卖线 := EMA(slopeAdjusted, 42)
+        double[] sellLine = EMA(slopeAdjusted, 42);
+
+
+        // 4) 结果计算：仅当 buyLine 和 sellLine 在该点均为 finite 时才进行比较，否则为 false
+        for (int i = 0; i < n; i++) {
+            double b = buyLine != null && i < buyLine.length ? buyLine[i] : Double.NaN;
+            double sAdj = sellLine != null && i < sellLine.length ? sellLine[i] : Double.NaN;
+            if (Double.isFinite(b) && Double.isFinite(sAdj)) {
+                result[i] = b >= sAdj;
+            } else {
+                result[i] = false;
+            }
+        }
+
+        // 可选：如果大量点为非 finite（数据不足/质量问题），记录一次告警（便于排查）
+        int bad = 0;
+        for (boolean r : result) if (!r) bad++;
+        double badRatio = n == 0 ? 0.0 : (double) bad / n;
+        if (badRatio > 0.5) { // 阈值可调整：这里如果超过半数为 false，可能提示数据或参数问题
+            log.debug("BSQJ: large fraction of result false (可能数据不足或指标前期为 NaN). falseRatio={}, length={}", badRatio, n);
         }
 
 
@@ -2234,22 +2290,24 @@ public class TdxExtFun {
     /**
      * RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
      *
+     * @param rps10
+     * @param rps20
      * @param rps50
      * @param rps120
      * @param rps250
-     * @param RPS1   RPS一线红
-     * @param RPS2   RPS双线红
-     * @param RPS3   RPS三线红
+     * @param RPS
      * @return
      */
-    public static boolean[] RPS红(double[] rps50,
+    public static boolean[] RPS红(double[] rps10,
+                                  double[] rps20,
+                                  double[] rps50,
                                   double[] rps120,
                                   double[] rps250,
-                                  double RPS1,
-                                  double RPS2,
-                                  double RPS3) {
+                                  double RPS) {
 
         // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
+        double RPS1 = Math.min(RPS + 10, 100);
+        double RPS2 = Math.min(RPS + 5, 100);
 
 
         int n = rps50.length;
@@ -2258,14 +2316,20 @@ public class TdxExtFun {
         for (int i = 0; i < n; i++) {
 
 
+            double rps_10 = rps10[i];
+            double rps_20 = rps20[i];
             double rps_50 = rps50[i];
             double rps_120 = rps120[i];
             double rps_250 = rps250[i];
 
 
             boolean RPS一线红 = rps_50 >= RPS1 || rps_120 >= RPS1 || rps_250 >= RPS1;
+
             boolean RPS双线红 = bool2Int(rps_50 >= RPS2) + bool2Int(rps_120 >= RPS2) + bool2Int(rps_250 >= RPS2) >= 2;
-            boolean RPS三线红 = rps_50 >= RPS3 && rps_120 >= RPS3 && rps_250 >= RPS3;
+
+            boolean RPS三线红_1 = rps_10 >= RPS2 && rps_20 >= RPS2 && rps_50 >= RPS2;
+            boolean RPS三线红_2 = rps_50 >= RPS && rps_120 >= RPS && rps_250 >= RPS;
+            boolean RPS三线红 = RPS三线红_1 || RPS三线红_2;
 
 
             result[i] = RPS一线红 || RPS双线红 || RPS三线红;
@@ -2353,6 +2417,9 @@ public class TdxExtFun {
 
 
     public static boolean[] RPS一线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
+        RPS = Math.min(RPS, 100);
+
+
         int n = rps50.length;
 
         boolean[] result = new boolean[n];
@@ -2367,6 +2434,9 @@ public class TdxExtFun {
     }
 
     public static boolean[] RPS双线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
+        RPS = Math.min(RPS, 100);
+
+
         int n = rps50.length;
 
         boolean[] result = new boolean[n];
@@ -2392,15 +2462,25 @@ public class TdxExtFun {
      * @param RPS
      * @return
      */
-    public static boolean[] RPS三线红(double[] rps50, double[] rps120, double[] rps250, double RPS) {
+    public static boolean[] RPS三线红(double[] rps10,
+                                      double[] rps20,
+                                      double[] rps50,
+                                      double[] rps120,
+                                      double[] rps250,
+                                      double RPS) {
+        RPS = Math.min(RPS, 100);
+        double RPS2 = Math.min(RPS + 5, 100);
+
+
         int n = rps50.length;
 
         boolean[] result = new boolean[n];
         for (int i = 0; i < n; i++) {
 
-            result[i] = rps50[i] >= RPS
-                    && rps120[i] >= RPS
-                    && rps250[i] >= RPS;
+            boolean RPS三线红_1 = rps10[i] >= RPS2 && rps20[i] >= RPS2 && rps50[i] >= RPS2;
+            boolean RPS三线红_2 = rps50[i] >= RPS && rps120[i] >= RPS && rps250[i] >= RPS;
+
+            result[i] = RPS三线红_1 || RPS三线红_2;
         }
 
         return result;
