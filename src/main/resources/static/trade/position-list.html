@@ -952,6 +952,12 @@
                                 <th onclick="sortTopBlocksTable('blockName')">板块名称<span class="sort-icon"
                                                                                             id="sortTopBlocksBlockName"></span>
                                 </th>
+                                <th onclick="sortTopBlocksTable('ztCount')">涨停数<span class="sort-icon"
+                                                                                        id="sortTopBlocksZtCount"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTable('dtCount')">跌停数<span class="sort-icon"
+                                                                                        id="sortTopBlocksDtCount"></span>
+                                </th>
                                 <th onclick="sortTopBlocksTable('topDays')">上榜天数<span class="sort-icon"
                                                                                           id="sortTopBlocksTopDays"></span>
                                 </th>
@@ -1183,6 +1189,12 @@
                                 </th>
                                 <th onclick="sortTopBlocksTableManual('blockName')">板块名称<span class="sort-icon"
                                                                                                   id="sortTopBlocksManualBlockName"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTableManual('ztCount')">涨停数<span class="sort-icon"
+                                                                                              id="sortTopBlocksManualZtCount"></span>
+                                </th>
+                                <th onclick="sortTopBlocksTableManual('dtCount')">跌停数<span class="sort-icon"
+                                                                                              id="sortTopBlocksManualDtCount"></span>
                                 </th>
                                 <th onclick="sortTopBlocksTableManual('topDays')">上榜天数<span class="sort-icon"
                                                                                                 id="sortTopBlocksManualTopDays"></span>
@@ -3366,6 +3378,8 @@
                     <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
                     <td>${block.blockName}</td>
+                    <td>${block.ztCount}</td>
+                    <td>${block.dtCount}</td>
                     <td>${block.topDays}</td>
                     <td>${block.topStockSize}</td>
                     <td class="top-list-item">${block.topStockList}</td>
@@ -3415,7 +3429,7 @@
 
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td colspan="10" class="text-center avg-label">【指数】平均值</td>
             <td style="color: ${avgPct.prev_close > 3000 ? 'red' : avgPct.prev_close < 3000 ? 'teal' : 'black'};">
                 ${avgPct.prev_close}
             </td>
@@ -3864,6 +3878,8 @@
                     <td>${index + 1}</td>
                     <td>${block.blockCode}</td>
                     <td>${block.blockName}</td>
+                    <td>${block.ztCount}</td>
+                    <td>${block.dtCount}</td>
                     <td>${block.topDays}</td>
                     <td>${block.topStockSize}</td>
                     <td class="top-list-item">${block.topStockList}</td>
@@ -3913,7 +3929,7 @@
 
         // 前8列是基本信息，需要合并显示标签
         avgRow.innerHTML = `
-            <td colspan="8" class="text-center avg-label">【指数】平均值</td>
+            <td colspan="10" class="text-center avg-label">【指数】平均值</td>
             <td style="color: ${avgPct.prev_close > 3000 ? 'red' : avgPct.prev_close < 3000 ? 'teal' : 'black'};">
                 ${avgPct.prev_close}
             </td>
