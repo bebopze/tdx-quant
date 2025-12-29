@@ -193,6 +193,23 @@ public class CcStockInfo implements Serializable {
     }
 
 
+    // -------------------------------------------------- S信号 ---------------------------------------------------------
+
+
+    /**
+     * 是否有 S信号
+     */
+    private boolean sellSignalFlag = false;
+    /**
+     * S信号 列表
+     */
+    private List<SellStrategyEnum> sellSignalList;
+
+    public boolean isSellSignalFlag() {
+        return sellSignalFlag ? sellSignalFlag : CollectionUtils.isNotEmpty(sellSignalList);
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -202,7 +219,7 @@ public class CcStockInfo implements Serializable {
     private boolean posFlag = true;
 
     public boolean isPosFlag() {
-        return stkbal > 0;
+        return stkbal != null && stkbal > 0;
     }
 
 

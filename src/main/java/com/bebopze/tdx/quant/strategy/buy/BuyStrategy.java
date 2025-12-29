@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -43,7 +44,7 @@ public interface BuyStrategy {
      * 根据 B策略     筛选出   ->   待买入 的 stockCodeList
      *
      * @param topBlockStrategyEnum 主线板块策略
-     * @param buyConList           买入条件列表
+     * @param buyConSet            买入条件列表
      * @param data                 回测数据缓存
      * @param tradeDate            交易日期
      * @param buy_infoMap          买点Info（ext_data）
@@ -52,7 +53,7 @@ public interface BuyStrategy {
      * @return
      */
     List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
-                      List<String> buyConList,
+                      Set<String> buyConSet,
                       BacktestCache data,
                       LocalDate tradeDate,
                       Map<String, String> buy_infoMap,
