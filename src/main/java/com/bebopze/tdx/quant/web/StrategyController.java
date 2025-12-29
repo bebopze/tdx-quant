@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -33,6 +34,50 @@ public class StrategyController {
 
     @Autowired
     private StrategyService strategyService;
+
+
+    @Operation(summary = "多策略交易", description = "多策略交易")
+    @GetMapping(value = "/bsTrade/multiStrategy")
+    public Result<BSStrategyInfoDTO> bsTradeMultiStrategy(@Schema(description = "主线策略", example = "LV3（板块-月多2 -> 月多 + RPS红 + SSF多）")
+                                                          @RequestParam(defaultValue = "LV3") TopBlockStrategyEnum topBlockStrategyEnum,
+
+                                                          @Schema(description = "B策略", example = "SSF多,月多")
+                                                          @RequestParam(defaultValue = "SSF多,月多") String buyConList,
+
+                                                          @Schema(description = "S策略", example = "月空_MA20空,SSF空,高位爆量上影大阴,C_SSF_偏离率>25%")
+                                                          @RequestParam(required = false, defaultValue = "月空_MA20空,SSF空,高位爆量上影大阴,C_SSF_偏离率>25%")
+                                                          String sellConList,
+
+                                                          @Schema(description = "交易日期", example = "2025-08-15")
+                                                          @RequestParam(required = false) LocalDate tradeDate) {
+
+
+        // 主线策略： LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
+
+        // B策略：   SSF多,月多
+        // S策略：   个股S,板块S,主线S
+
+
+        // 2019-01-01 ~ 2025-08-18          1606天
+        // 12.6991          1169.91%            年化49%
+
+        // 胜率   65.35%
+        // 盈亏比 1.269
+
+        // 最大回撤：-13.83%
+        // 盈利天数：48.57%
+        // 夏普比率：1.803
+
+        // 25830笔
+        // 7_7524_4020.04元
+
+
+        Set<String> _buyConSet = ConvertUtil.str2Set(buyConList);
+        Set<String> _sellConSet = ConvertUtil.str2Set(sellConList);
+
+
+        return Result.SUC(strategyService.bsTradeMultiStrategy(topBlockStrategyEnum, _buyConSet, _sellConSet, tradeDate));
+    }
 
 
     @Operation(summary = "策略交易", description = "策略交易")
@@ -71,11 +116,11 @@ public class StrategyController {
         // 7_7524_4020.04元
 
 
-        List<String> _buyConList = ConvertUtil.str2List(buyConList);
-        List<String> _sellConList = ConvertUtil.str2List(sellConList);
+        Set<String> _buyConSet = ConvertUtil.str2Set(buyConList);
+        Set<String> _sellConSet = ConvertUtil.str2Set(sellConList);
 
 
-        return Result.SUC(strategyService.bsTrade(topBlockStrategyEnum, _buyConList, _sellConList, tradeDate));
+        return Result.SUC(strategyService.bsTrade(topBlockStrategyEnum, _buyConSet, _sellConSet, tradeDate));
     }
 
 

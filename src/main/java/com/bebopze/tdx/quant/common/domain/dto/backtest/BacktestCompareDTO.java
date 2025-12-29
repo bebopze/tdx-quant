@@ -67,6 +67,20 @@ public class BacktestCompareDTO {
     private boolean marketPosLimitFlag = true;
 
 
+    /**
+     * 是否开启 TOP1主线板块（板块-月多2 + 涨停TOP1 + 百日新高TOP1）：true/false
+     */
+    @Schema(description = "是否开启 TOP1主线板块（板块-月多2 + 涨停TOP1 + 百日新高TOP1）", example = "true")
+    private boolean top1TopBlockFlag = true;
+
+
+    /**
+     * B策略 持仓占比（占账户总资金比例：0~1）
+     */
+    @Schema(description = "B策略 持仓占比（占账户总资金比例：0~1）", example = "1.00")
+    private double strategyPosRatio = 1.00;
+
+
     // -------------------------------------- 全局参数 上下文传递（不参与序列化）---------------------------------------------
 
 
@@ -103,7 +117,7 @@ public class BacktestCompareDTO {
      */
     @JSONField(serialize = false)
     @Schema(description = "是否开启 快速失败：true-开启；false-关闭", example = "true")
-    private transient boolean fastFailFlag = true;
+    private transient boolean failFastFlag = true;
 
 
     /**
