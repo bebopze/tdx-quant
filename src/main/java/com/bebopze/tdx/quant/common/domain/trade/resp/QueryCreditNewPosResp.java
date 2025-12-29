@@ -113,7 +113,11 @@ public class QueryCreditNewPosResp implements Serializable {
 
 
     public double getMax_buyPosPct() {
-        return ACCOUNT__POS_PCT_LIMIT - posratio.doubleValue() * 100;
+//        return ACCOUNT__POS_PCT_LIMIT - posratio.doubleValue() * 100;
+
+        // 剩余 可买仓位（%）  =   融资账户 可用总资金  /  净资产
+        double maxBuyCap = getMax_buyCap();
+        return maxBuyCap / netasset.doubleValue() * 100;
     }
 
 
