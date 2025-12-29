@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -14,9 +15,16 @@ import java.util.List;
  */
 public interface StrategyService {
 
+
+    BSStrategyInfoDTO bsTradeMultiStrategy(TopBlockStrategyEnum topBlockStrategyEnum,
+                                           Set<String> buyConSet,
+                                           Set<String> sellConSet,
+                                           LocalDate tradeDate);
+
+
     BSStrategyInfoDTO bsTrade(TopBlockStrategyEnum topBlockStrategyEnum,
-                              List<String> buyConList,
-                              List<String> sellConList,
+                              Set<String> buyConSet,
+                              Set<String> sellConSet,
                               LocalDate tradeDate);
 
     BSStrategyInfoDTO bsTradeRead();

@@ -13,7 +13,9 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
+import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.StrategyService;
@@ -36,6 +38,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.constant.AccountConst.ACCOUNT__POS_PCT_LIMIT;
 import static com.bebopze.tdx.quant.common.constant.AccountConst.STOCK__POS_PCT_LIMIT;
 import static com.bebopze.tdx.quant.service.impl.InitDataServiceImpl.data;
 import static com.bebopze.tdx.quant.service.impl.TradeServiceImpl.of;
@@ -50,6 +53,11 @@ import static com.bebopze.tdx.quant.service.impl.TradeServiceImpl.of;
 @Slf4j
 @Service
 public class StrategyServiceImpl implements StrategyService {
+
+
+    public static final ThreadLocal<BacktestStrategy.Stat> x = BacktestStrategy.x;
+
+    public static final ThreadLocal<BacktestCompareDTO> btCompareDTO = BacktestStrategy.btCompareDTO;
 
 
     @Autowired
@@ -72,15 +80,316 @@ public class StrategyServiceImpl implements StrategyService {
     private TopBlockService topBlockService;
 
 
+    @Override
+    public BSStrategyInfoDTO bsTradeMultiStrategy(TopBlockStrategyEnum topBlockStrategyEnum,
+                                                  Set<String> buyConSet,
+                                                  Set<String> sellConSet,
+                                                  LocalDate tradeDate) {
+
+
+        // {
+        //    "marketPosLimitFlag": "false",
+        //    "scoreSortN": "20",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "25.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "top1TopBlockFlag": "true",
+        //    "ztFlag": "true"
+        // }
+
+        BacktestCompareDTO btCompareDTO_1 = new BacktestCompareDTO();
+        btCompareDTO_1.setMarketPosLimitFlag(false);
+        btCompareDTO_1.setScoreSortN(20);
+        btCompareDTO_1.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_1.setSingleStockMaxPosPct(25.0);
+        btCompareDTO_1.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_1.setTop1TopBlockFlag(true);
+        btCompareDTO_1.setZtFlag(true);
+
+
+        // 策略1：打板A
+        // 大均线多头,RPS红,C_MA5_偏离率<5,中期涨幅<100,SSF多,MA20多,MA200多（29625）
+        TopBlockStrategyEnum topBlockStrategyEnum_1 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_1 = ConvertUtil.str2Set("大均线多头,RPS红,C_MA5_偏离率<5,中期涨幅<100,SSF多,MA20多,MA200多");
+        Set<String> sellConSet_1 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+
+        btCompareDTO_1.setBuyStrategyKey("D");
+        btCompareDTO_1.setTopBlockStrategyEnum(topBlockStrategyEnum_1);
+        btCompareDTO_1.setBuyConSet(buyConSet_1);
+        btCompareDTO_1.setSellConSet(sellConSet_1);
+        btCompareDTO_1.setStrategyPosRatio(0.20 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_1);
+
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_1, buyConSet_1, sellConSet_1, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_1, buyConSet_1, sellConSet_1, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // {
+        //    "marketPosLimitFlag": "true",
+        //    "scoreSortN": "100",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "20.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "top1TopBlockFlag": "false",
+        //    "ztFlag": "true"
+        // }
+
+        BacktestCompareDTO btCompareDTO_2 = new BacktestCompareDTO();
+        btCompareDTO_2.setMarketPosLimitFlag(true);
+        btCompareDTO_2.setScoreSortN(100);
+        btCompareDTO_2.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_2.setSingleStockMaxPosPct(20.0);
+        btCompareDTO_2.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_2.setTop1TopBlockFlag(false);
+        btCompareDTO_2.setZtFlag(true);
+
+
+        // 策略2：打板B
+        // RPS双线红,C_MA5_偏离率<5,中期涨幅<100,SSF多,MA20多,MA200多（86430）
+        TopBlockStrategyEnum topBlockStrategyEnum_2 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_2 = ConvertUtil.str2Set("RPS双线红,C_MA5_偏离率<5,中期涨幅<100,SSF多,MA20多,MA200多");
+        Set<String> sellConSet_2 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+
+        btCompareDTO_2.setBuyStrategyKey("D");
+        btCompareDTO_2.setTopBlockStrategyEnum(topBlockStrategyEnum_2);
+        btCompareDTO_2.setBuyConSet(buyConSet_2);
+        btCompareDTO_2.setSellConSet(sellConSet_2);
+        btCompareDTO_2.setStrategyPosRatio(0.10 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_2);
+
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_2, buyConSet_2, sellConSet_2, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_2, buyConSet_2, sellConSet_2, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // {
+        //    "marketPosLimitFlag": "true",
+        //    "scoreSortN": "100",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "20.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "top1TopBlockFlag": "true"
+        //    "ztFlag": "true"
+        // }
+
+        BacktestCompareDTO btCompareDTO_3 = new BacktestCompareDTO();
+        btCompareDTO_3.setMarketPosLimitFlag(true);
+        btCompareDTO_3.setScoreSortN(100);
+        btCompareDTO_3.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_3.setSingleStockMaxPosPct(20.0);
+        btCompareDTO_3.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_3.setTop1TopBlockFlag(true);
+        btCompareDTO_3.setZtFlag(true);
+
+
+        // 策略3：打板C
+        // 小均线多头,RPS红,中期涨幅<100,SSF多,MA20多,MA200多（84373）
+        TopBlockStrategyEnum topBlockStrategyEnum_3 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_3 = ConvertUtil.str2Set("小均线多头,RPS红,中期涨幅<100,SSF多,MA20多,MA200多");
+        Set<String> sellConSet_3 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+        btCompareDTO_3.setBuyStrategyKey("D");
+        btCompareDTO_3.setTopBlockStrategyEnum(topBlockStrategyEnum_3);
+        btCompareDTO_3.setBuyConSet(buyConSet_3);
+        btCompareDTO_3.setSellConSet(sellConSet_3);
+        btCompareDTO_3.setStrategyPosRatio(0.10 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_3);
+
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_3, buyConSet_3, sellConSet_3, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_3, buyConSet_3, sellConSet_3, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // {
+        //    "marketPosLimitFlag": "true",
+        //    "scoreSortN": "100",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "20.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "top1TopBlockFlag": "false"
+        //    "ztFlag": "null"
+        // }
+
+
+        BacktestCompareDTO btCompareDTO_4 = new BacktestCompareDTO();
+        btCompareDTO_4.setMarketPosLimitFlag(true);
+        btCompareDTO_4.setScoreSortN(100);
+        btCompareDTO_4.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_4.setSingleStockMaxPosPct(20.0);
+        btCompareDTO_4.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_4.setTop1TopBlockFlag(false);
+        btCompareDTO_4.setZtFlag(null);
+
+
+        // 策略4：趋势A
+        // RPS一线红,C_SSF_偏离率<5,中期涨幅<35,XZZB,SSF多,MA200多（74992）
+        TopBlockStrategyEnum topBlockStrategyEnum_4 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_4 = ConvertUtil.str2Set("RPS一线红,C_SSF_偏离率<5,中期涨幅<35,XZZB,SSF多,MA200多");
+        Set<String> sellConSet_4 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+
+        btCompareDTO_4.setBuyStrategyKey("D");
+        btCompareDTO_4.setTopBlockStrategyEnum(topBlockStrategyEnum_4);
+        btCompareDTO_4.setBuyConSet(buyConSet_4);
+        btCompareDTO_4.setSellConSet(sellConSet_4);
+        btCompareDTO_4.setStrategyPosRatio(0.20 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_4);
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_4, buyConSet_4, sellConSet_4, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_4, buyConSet_4, sellConSet_4, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // {
+        //    "marketPosLimitFlag": "true",
+        //    "scoreSortN": "100",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "20.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "ztFlag": null
+        // }
+
+
+        BacktestCompareDTO btCompareDTO_5 = new BacktestCompareDTO();
+        btCompareDTO_5.setMarketPosLimitFlag(true);
+        btCompareDTO_5.setScoreSortN(100);
+        btCompareDTO_5.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_5.setSingleStockMaxPosPct(20.0);
+        btCompareDTO_5.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_5.setTop1TopBlockFlag(false);
+        btCompareDTO_5.setZtFlag(null);
+
+
+        // 策略5：趋势B
+        // 百日新高,C_MA20_偏离率<5,中期涨幅<50,中期涨幅N250<150,XZZB,SSF多,MA200多（79069）
+        TopBlockStrategyEnum topBlockStrategyEnum_5 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_5 = ConvertUtil.str2Set("百日新高,C_MA20_偏离率<5,中期涨幅<50,中期涨幅N250<150,XZZB,SSF多,MA200多");
+        Set<String> sellConSet_5 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+
+        btCompareDTO_5.setBuyStrategyKey("D");
+        btCompareDTO_5.setTopBlockStrategyEnum(topBlockStrategyEnum_5);
+        btCompareDTO_5.setBuyConSet(buyConSet_5);
+        btCompareDTO_5.setSellConSet(sellConSet_5);
+        btCompareDTO_5.setStrategyPosRatio(0.20 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_5);
+
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_5, buyConSet_5, sellConSet_5, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_5, buyConSet_5, sellConSet_5, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // {
+        //    "marketPosLimitFlag": "true",
+        //    "scoreSortN": "100",
+        //    "singleStockMaxBuyAvlPct": "100.0",
+        //    "singleStockMaxPosPct": "25.0",
+        //    "singleStockMinBuyPosPct": "0.0",
+        //    "top1TopBlockFlag": "true",
+        //    "ztFlag": null
+        // }
+
+
+        BacktestCompareDTO btCompareDTO_6 = new BacktestCompareDTO();
+        btCompareDTO_6.setMarketPosLimitFlag(true);
+        btCompareDTO_6.setScoreSortN(100);
+        btCompareDTO_6.setSingleStockMaxBuyAvlPct(100.0);
+        btCompareDTO_6.setSingleStockMaxPosPct(25.0);
+        btCompareDTO_6.setSingleStockMinBuyPosPct(0.0);
+        btCompareDTO_6.setTop1TopBlockFlag(true);
+        btCompareDTO_6.setZtFlag(null);
+
+
+        // 策略6：趋势C
+        // SSF多,百日新高,月多,C_MA20_偏离率<5,中期涨幅<50（31209/31203/110698）
+        TopBlockStrategyEnum topBlockStrategyEnum_6 = TopBlockStrategyEnum.LV3;
+        Set<String> buyConSet_6 = ConvertUtil.str2Set("SSF多,百日新高,月多,C_MA20_偏离率<5,中期涨幅<50");
+        Set<String> sellConSet_6 = ConvertUtil.str2Set("个股S,板块S,主线S");
+
+        btCompareDTO_6.setBuyStrategyKey("D");
+        btCompareDTO_6.setTopBlockStrategyEnum(topBlockStrategyEnum_6);
+        btCompareDTO_6.setBuyConSet(buyConSet_6);
+        btCompareDTO_6.setSellConSet(sellConSet_6);
+        btCompareDTO_6.setStrategyPosRatio(0.25 * 2);   // 融资账户 x2
+        this.btCompareDTO.set(btCompareDTO_6);
+
+
+        try {
+            BSStrategyInfoDTO bsStrategyInfoDTO = bsTrade(topBlockStrategyEnum_6, buyConSet_6, sellConSet_6, tradeDate);
+        } catch (Exception e) {
+            log.error("bsTrade error     >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                      topBlockStrategyEnum_6, buyConSet_6, sellConSet_6, tradeDate, e);
+        } finally {
+            this.btCompareDTO.remove();
+            this.x.remove();
+        }
+
+
+        return null;
+    }
+
+
     @TotalTime
     @Override
     public BSStrategyInfoDTO bsTrade(TopBlockStrategyEnum topBlockStrategyEnum,
-                                     List<String> buyConList,
-                                     List<String> sellConList,
+                                     Set<String> buyConSet,
+                                     Set<String> sellConSet,
                                      LocalDate tradeDate) {
 
-        log.info("---------------------------- 策略交易[bsTrade]   start   >>>     topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , tradeDate : {}",
-                 topBlockStrategyEnum.getDesc(), buyConList, sellConList, tradeDate);
+        log.info("---------------------------- 策略交易[bsTrade]   start   >>>     topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , tradeDate : {}",
+                 topBlockStrategyEnum.getDesc(), buyConSet, sellConSet, tradeDate);
 
 
         tradeDate = tradeDate == null ? LocalDate.now() : tradeDate;
@@ -91,22 +400,22 @@ public class StrategyServiceImpl implements StrategyService {
 
         BSStrategyInfoDTO dto = new BSStrategyInfoDTO();
         dto.setDate(tradeDate);
-        dto.setBuyConList(buyConList);
-        dto.setSellConList(sellConList);
+        dto.setBuyConSet(buyConSet);
+        dto.setSellConSet(sellConSet);
         dto.setTopBlockCon(topBlockStrategyEnum.getDesc());
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        BacktestCompareDTO btCompareDTO = new BacktestCompareDTO();
-        btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
+//        BacktestCompareDTO btCompareDTO = new BacktestCompareDTO();
+//        btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false);
+        initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false, 1);
 //        initDataService.initData();
 
 
@@ -118,7 +427,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         // 持仓 - code列表
-        List<String> positionStockCodeList = posResp.getStocks().stream().map(CcStockInfo::getStkcode).collect(Collectors.toList());
+        Set<String> positionStockCodeSet = posResp.getStocks().stream().map(CcStockInfo::getStkcode).collect(Collectors.toSet());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -128,8 +437,34 @@ public class StrategyServiceImpl implements StrategyService {
         Map<String, SellStrategyEnum> sell_infoMap = Maps.newHashMap();
 
 
+        // ------------------------- 持仓成本（avgCostPrice）
+
+
+//        // 持仓成本（avgCostPrice）
+//        Map<String, Double> posCostMap_0 = x.get().getPositionRecordDOList().stream()
+//                                            .collect(Collectors.toMap(BtPositionRecordDO::getStockCode, e -> e.getAvgCostPrice().doubleValue()));
+//
+//        Map<String, Double> posCostMap = posResp.getStocks().stream().collect(Collectors.toMap(CcStockInfo::getStkcode, CcStockInfo::getCostprice));
+        List<BtPositionRecordDO> positionRecordDOList = posResp.getStocks().stream()
+                                                               .map(e -> {
+                                                                   BtPositionRecordDO positionRecordDO = new BtPositionRecordDO();
+                                                                   positionRecordDO.setStockCode(e.getStkcode());
+                                                                   positionRecordDO.setAvgCostPrice(e.getCostprice());
+                                                                   return positionRecordDO;
+                                                               })
+                                                               .collect(Collectors.toList());
+
+
+        BacktestStrategy.Stat stat = new BacktestStrategy.Stat();
+        stat.setPositionRecordDOList(positionRecordDOList);
+        x.set(stat);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // 卖出策略
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, positionStockCodeList, sell_infoMap, btCompareDTO);
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, positionStockCodeSet, sell_infoMap, btCompareDTO.get());
 
         log.info("S策略     >>>     date : {} , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                  tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -138,8 +473,8 @@ public class StrategyServiceImpl implements StrategyService {
         // ---------------
 
 
-        // 一键清仓   ->   指定 个股列表
-        tradeService.quickClearPosition(sell__stockCodeSet);
+        // TODO   一键清仓   ->   指定 个股列表
+// TODO        tradeService.quickClearPosition(sell__stockCodeSet);
 
 
         // ---------------
@@ -169,7 +504,7 @@ public class StrategyServiceImpl implements StrategyService {
         Map<String, String> buy_infoMap = Maps.newHashMap();
 
 
-        List<String> buy__stockCodeList = backtestBuyStrategyD.rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, false);
+        List<String> buy__stockCodeList = backtestBuyStrategyD.rule(topBlockStrategyEnum, buyConSet, data, tradeDate, buy_infoMap, posResp.getPosratio().doubleValue() / 2, btCompareDTO.get().getZtFlag());
 
 
         // ---------------------------------------------------------
@@ -200,8 +535,14 @@ public class StrategyServiceImpl implements StrategyService {
 
         // -------------------------------------------------------------------------------------------------------------
 
+
+        double singleStockMaxPosPct = btCompareDTO.get().getSingleStockMaxPosPct();
+        double strategyPosRatio = btCompareDTO.get().getStrategyPosRatio();
+
+
         // newPositionList
-        List<QuickBuyPositionParam> newPositionList = convert__newPositionList(buy__stockCodeList);
+//        List<QuickBuyPositionParam> newPositionList = convert__newPositionList(buy__stockCodeList);
+        List<QuickBuyPositionParam> newPositionList = convert__newPositionList(buy__stockCodeList, strategyPosRatio, singleStockMaxPosPct, 0, 0);
 
 
         // 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
@@ -258,8 +599,8 @@ public class StrategyServiceImpl implements StrategyService {
 
         BSStrategyInfoDTO dto = new BSStrategyInfoDTO();
         dto.setDate(LocalDate.now());
-        dto.setBuyConList(null);
-        dto.setSellConList(null);
+        dto.setBuyConSet(null);
+        dto.setSellConSet(null);
         dto.setTopBlockCon(null);
 
 
@@ -421,6 +762,9 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * buy__stockCodeList   ->   newPositionList
      *
@@ -428,10 +772,28 @@ public class StrategyServiceImpl implements StrategyService {
      * @return
      */
     public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList) {
-        return convert__newPositionList(buy__stockCodeList, STOCK__POS_PCT_LIMIT, 0.0, 0.0);
+        return convert__newPositionList(buy__stockCodeList, ACCOUNT__POS_PCT_LIMIT, STOCK__POS_PCT_LIMIT, 0.0, 0.0);
     }
 
     public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList,
+                                                                       double singleStockMaxPosPct,
+                                                                       double currPricePct,
+                                                                       double prevPricePct) {
+
+        return convert__newPositionList(buy__stockCodeList, ACCOUNT__POS_PCT_LIMIT, singleStockMaxPosPct, currPricePct, prevPricePct);
+    }
+
+
+    /**
+     * @param buy__stockCodeList   买入个股列表
+     * @param buyPosRatio          买入总仓位 比例限制（占账户总资金比例：0~1）
+     * @param singleStockMaxPosPct 单只个股 最大仓位限制（%）
+     * @param currPricePct         当前价格 涨跌幅（%）
+     * @param prevPricePct         上一价格 涨跌幅（%）
+     * @return
+     */
+    public static List<QuickBuyPositionParam> convert__newPositionList(Collection<String> buy__stockCodeList,
+                                                                       double buyPosRatio,
                                                                        double singleStockMaxPosPct,
                                                                        double currPricePct,
                                                                        double prevPricePct) {
@@ -452,7 +814,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
                                      // 单只个股 仓位   ->   最大5%
-                                     newPosition.setPosPct(singleStockMaxPosPct > 0 ? singleStockMaxPosPct : STOCK__POS_PCT_LIMIT);
+                                     newPosition.setPosPct(singleStockMaxPosPct > 0 ? singleStockMaxPosPct * buyPosRatio : STOCK__POS_PCT_LIMIT * buyPosRatio);
 
 
                                      // 价格
@@ -661,6 +1023,9 @@ public class StrategyServiceImpl implements StrategyService {
         LocalTime time = LocalTime.now();
         return time.isAfter(LocalTime.of(9, 30)) && time.isBefore(LocalTime.of(15, 0));
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
 }
