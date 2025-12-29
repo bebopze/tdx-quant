@@ -3371,12 +3371,11 @@
         } else {
             messageDiv.style.display = 'none';
             sortedBlocks.forEach((block, index) => {
+                const klineLink = `../stock/stock-kline.html?code=${block.blockCode}`;
                 const tr = document.createElement('tr');
-                // 成交额（亿）
-                const amo = block.amo / 1_0000_0000;
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${block.blockCode}</td>
+                    <td><a href="${klineLink}" target="_blank" class="stock-code-link">${block.blockCode}</a></td>
                     <td>${block.blockName}</td>
                     <td>${block.ztCount}</td>
                     <td>${block.dtCount}</td>
@@ -3387,7 +3386,7 @@
                     <td>${block.topEndDate}</td>
                     <td>${block.prev_close}</td>
                     <td>${block.today_close}</td>
-                    <td>${amo.toFixed(2)}</td>
+                    <td>${(block.amo / 1_0000_0000).toFixed(2)}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>
@@ -3871,12 +3870,11 @@
         } else {
             messageDiv.style.display = 'none';
             sortedBlocksManual.forEach((block, index) => {
+                const klineLink = `../stock/stock-kline.html?code=${block.blockCode}`;
                 const tr = document.createElement('tr');
-                // 成交额（亿）
-                const amo = block.amo / 100000000;
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${block.blockCode}</td>
+                    <td><a href="${klineLink}" target="_blank" class="stock-code-link">${block.blockCode}</a></td>
                     <td>${block.blockName}</td>
                     <td>${block.ztCount}</td>
                     <td>${block.dtCount}</td>
@@ -3887,7 +3885,7 @@
                     <td>${block.topEndDate}</td>
                     <td>${block.prev_close}</td>
                     <td>${block.today_close}</td>
-                    <td>${amo.toFixed(2)}</td>
+                    <td>${(block.amo / 1_0000_0000).toFixed(2)}</td>
                     <td style="color: ${block.today_changePct > 0 ? 'red' : block.today_changePct < 0 ? 'teal' : 'black'}">${block.today_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_changePct > 0 ? 'red' : block.today2Next_changePct < 0 ? 'teal' : 'black'}">${block.today2Next_changePct.toFixed(2)}%</td>
                     <td style="color: ${block.today2Next_openPct > 0 ? 'red' : block.today2Next_openPct < 0 ? 'teal' : 'black'}">${block.today2Next_openPct.toFixed(2)}%</td>

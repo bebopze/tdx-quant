@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>股票K线图</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
+</head>
+<body>
+<div class="container mt-4">
+
+    <!-- 表单 -->
+    <div class="card mb-4">
+        <div class="card-header">查询参数</div>
+        <div class="card-body">
+            <form id="queryForm">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="stockCode" class="form-label">股票代码</label>
+                        <input type="text" class="form-control" id="stockCode" onkeydown="handleKeyDown(event)"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">起始日期</label>
+                        <input type="date" class="form-control" id="startDate" value="2025-07-01"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">结束日期</label>
+                        <input type="date" class="form-control" id="endDate" value="2025-07-03"/>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary mt-3" onclick="loadKline()">查询</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- K线图容器 -->
+    <div class="card">
+        <div class="card-header">K线图</div>
+        <div class="card-body">
+            <div id="klineChart" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 初始化图表
+    const chartDom = document.getElementById('klineChart');
+    const myChart = echarts.init(chartDom);
+
+    // 更新URL中的code参数，保持同步
+    function updateUrlCode(stockCode) {
+        const url = new URL(window.location);
+        url.searchParams.set('code', stockCode);
+        window.history.replaceState({}, '', url);
+    }
+
+    // 监听股票代码输入框变化，同步更新URL参数
+    document.getElementById('stockCode').addEventListener('input', function () {
+        const stockCode = this.value.trim();
+        if (stockCode) {
+            updateUrlCode(stockCode);
+        }
+    });
+
+    function handleKeyDown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 阻止默认行为，避免表单提交导致的页面刷新或参数清空
+            loadKline(); // 调用查询函数
+        }
+    }
+
+    function loadKline() {
+
+        // 从输入框获取股票代码，如果为空则从URL参数获取
+        let stockCode = document.getElementById('stockCode').value;
+        if (!stockCode) {
+            stockCode = new URLSearchParams(window.location.search).get('code');
+            if (stockCode) {
+                document.getElementById('stockCode').value = stockCode;
+                updateUrlCode(stockCode); // 确保URL参数同步
+            }
+        } else {
+            // 如果输入框有值，确保URL参数同步
+            updateUrlCode(stockCode);
+        }
+
+        if (!stockCode) {
+            alert('请输入股票代码');
+            return;
+        }
+
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+
+        // 调用后端接口
+        ApiUtils.fetch(`/api/stock/info?stockCode=${stockCode}&startDate=${startDate}&endDate=${endDate}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('数据加载失败: ' + data.msg);
+                    return;
+                }
+
+                const klineData = data.data.klineDTOList.map(item => [
+                    item.open,
+                    item.close,
+                    item.low,
+                    item.high
+                ]);
+
+                const option = {
+                    title: {text: `${data.data.name}(${stockCode}) K线图`},
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: (params) => {
+                            const item = data.data.klineDTOList[params[0].dataIndex];
+                            return `<div>
+                                      <p><strong>日期:</strong> ${item.date}</p>
+                                      <p>开盘: ${item.open}</p>
+                                      <p>最高: ${item.high}</p>
+                                      <p>最低: ${item.low}</p>
+                                      <p>收盘: ${item.close}</p>
+                                      <p>涨跌幅: ${item.change_pct.toFixed(2)}%</p>
+                                      <p>成交额: ${(item.amo / 1_0000_0000).toFixed(2)}亿</p>
+                                      <p>成交量: ${(item.vol / 1_0000).toFixed(2)}万</p>
+                                      <p>换手率: ${item.turnover_pct}%</p>
+                                    </div>`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.data.klineDTOList.map(item => item.date),
+                        axisLabel: {interval: 0, rotate: 45}
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        name: 'K线',
+                        type: 'candlestick',
+                        data: klineData,
+                        itemStyle: {
+                            color: '#ec0000',
+                            color0: '#00da3c'
+                        },
+                        lineStyle: {
+                            width: 1
+                        }
+                    }],
+                    dataZoom: [{
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    }, {
+                        type: 'slider',
+                        start: 0,
+                        end: 100
+                    }]
+                };
+                myChart.setOption(option);
+            })
+            .catch(err => {
+                alert('网络错误: ' + err.message);
+            });
+    }
+
+    // 页面加载时默认查询一次
+    window.onload = loadKline;
+
+</script>
+</body>
+</html>
