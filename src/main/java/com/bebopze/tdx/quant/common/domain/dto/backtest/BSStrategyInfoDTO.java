@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.common.domain.dto.backtest;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,8 +18,8 @@ public class BSStrategyInfoDTO {
 
 
     private LocalDate date;
-    private List<String> buyConList;
-    private List<String> sellConList;
+    private Set<String> buyConSet;
+    private Set<String> sellConSet;
     private String topBlockCon;
 
 

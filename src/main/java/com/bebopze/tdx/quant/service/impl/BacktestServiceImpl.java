@@ -23,9 +23,10 @@ import com.bebopze.tdx.quant.service.DataAnalysisService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner_ZT;
+import com.bebopze.tdx.quant.strategy.buy.QuantConditionCombiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -34,6 +35,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,10 +79,11 @@ public class BacktestServiceImpl implements BacktestService {
                              BacktestCompareDTO btCompareDTO) {
 
 
-        List<List<String>> buy_conCombinerList = BuyStrategy__ConCombiner.generateCombinations(3);
+        List<Set<String>> buy_conCombinerSet = BuyStrategy__ConCombiner.generateCombinations(3);
+        List<Set<String>> buy_conCombinerList = QuantConditionCombiner.generateCombinationsNew(2);
         // 涨停策略（打板）
         if (btCompareDTO.ztFlag_true()) {
-            buy_conCombinerList = BuyStrategy__ConCombiner_ZT.generateCombinations(2);
+            buy_conCombinerSet = BuyStrategy__ConCombiner_ZT.generateCombinations(2);
         }
 
 
@@ -93,7 +96,7 @@ public class BacktestServiceImpl implements BacktestService {
 
         // Sell策略 ： 暂时固定
         // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
-        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
+        Set<String> sellConSet = new HashSet<>(Lists.newArrayList("个股S", "板块S", "主线S"));
 
 
         // 主线策略
@@ -114,7 +117,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 将嵌套循环改为平铺的任务列表
-        List<Runnable> taskList = createTaskList(buy_conCombinerList, sellConList, batchNoEntity, finishSet, btCompareDTO);
+        List<Runnable> taskList = createTaskList(buy_conCombinerSet, sellConSet, batchNoEntity, finishSet, btCompareDTO, startDate, endDate);
 
 
         // 并行执行所有任务
@@ -175,7 +178,7 @@ public class BacktestServiceImpl implements BacktestService {
 
     @Override
     public Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
-                          List<String> buyConList,
+                          Set<String> buyConSet,
                           LocalDate startDate,
                           LocalDate endDate,
                           boolean resume,
@@ -185,13 +188,13 @@ public class BacktestServiceImpl implements BacktestService {
 
         // Sell策略 ： 暂时固定
         // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
-        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
+        Set<String> sellConSet = Sets.newHashSet("个股S", "板块S", "主线S");
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate, btCompareDTO);
+        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate, btCompareDTO);
     }
 
 
@@ -205,8 +208,8 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // B/S策略
-        List<String> buyConList = Lists.newArrayList("N100日新高", "月多");
-        List<String> sellConList = Lists.newArrayList("个股S", "板块S", "主线S");
+        Set<String> buyConSet = Sets.newHashSet("N100日新高", "月多");
+        Set<String> sellConSet = Sets.newHashSet("个股S", "板块S", "主线S");
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -217,7 +220,7 @@ public class BacktestServiceImpl implements BacktestService {
         // -----------------------------------------------------------------------------
 
 
-        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate, btCompareDTO);
+        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate, btCompareDTO);
     }
 
 
@@ -280,7 +283,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         finishTaskList.forEach(e -> {
-            String key = getKey(e.getBatchNo(), e.getTopBlockStrategy(), Arrays.asList(e.getBuyStrategy().split(",")), Arrays.asList(e.getSellStrategy().split(",")));
+            String key = getKey(e.getBatchNo(), e.getTopBlockStrategy(), Sets.newHashSet(e.getBuyStrategy().split(",")), Sets.newHashSet(e.getSellStrategy().split(",")));
             finishSet.add(key);
         });
 
@@ -332,26 +335,30 @@ public class BacktestServiceImpl implements BacktestService {
 
     private String getKey(Integer batchNo,
                           String topBlockStrategyEnumDesc,
-                          List<String> buyConList,
-                          List<String> sellConList) {
+                          Set<String> buyConSet,
+                          Set<String> sellConSet) {
 
-        return batchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConList + "|" + sellConList;
+        return batchNo + "|" + topBlockStrategyEnumDesc + "|" + buyConSet + "|" + sellConSet;
     }
 
 
-    private List<Runnable> createTaskList(List<List<String>> buy_conCombinerList,
-                                          List<String> sellConList,
+    private List<Runnable> createTaskList(List<Set<String>> buy_conCombinerSet,
+                                          Set<String> sellConSet,
                                           BtTaskDO batchNoEntity,
                                           Set<String> finishSet,
-                                          BacktestCompareDTO btCompareDTO) {
+                                          BacktestCompareDTO btCompareDTO,
+                                          LocalDate startDate,
+                                          LocalDate endDate) {
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // 同一批次  ->  日期一致性
-        LocalDate finalStartDate = batchNoEntity.getStartDate();
-        LocalDate finalEndDate = batchNoEntity.getEndDate();
+//        LocalDate finalStartDate = batchNoEntity.getStartDate();
+//        LocalDate finalEndDate = batchNoEntity.getEndDate();
+        LocalDate finalStartDate = startDate;
+        LocalDate finalEndDate = endDate;
 
         Integer finalBatchNo = batchNoEntity.getBatchNo();
 
@@ -360,26 +367,26 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         AtomicInteger current = new AtomicInteger();
-        int total = buy_conCombinerList.size();
+        int total = buy_conCombinerSet.size();
 
 
         List<Runnable> tasks = Lists.newArrayList();
 
 
-        buy_conCombinerList.forEach(buyConList -> {
+        buy_conCombinerSet.forEach(buyConSet -> {
 
             Arrays.stream(TopBlockStrategyEnum.values())
                   // 暂无 LV1 主线策略
                   .filter(e -> !e.equals(TopBlockStrategyEnum.LV1))
                   .filter(e -> e.equals(TopBlockStrategyEnum.LV3))
-                  .filter(e -> !finishSet.contains(getKey(finalBatchNo, e.getDesc(), buyConList, sellConList)))
+                  .filter(e -> !finishSet.contains(getKey(finalBatchNo, e.getDesc(), buyConSet, sellConSet)))
                   .forEach(topBlockStrategyEnum -> {
 
 
                       tasks.add(() -> {
                           long start = System.currentTimeMillis();
 
-                          backTestStrategy.backtest(finalBatchNo, topBlockStrategyEnum, buyConList, sellConList, finalStartDate, finalEndDate, btCompareDTO);
+                          backTestStrategy.backtest(finalBatchNo, topBlockStrategyEnum, buyConSet, sellConSet, finalStartDate, finalEndDate, btCompareDTO);
 
                           progressLog(finalBatchNo, current.incrementAndGet(), total, start);
                       });
