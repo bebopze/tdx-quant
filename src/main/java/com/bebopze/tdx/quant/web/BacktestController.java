@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -55,7 +56,7 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -107,11 +108,11 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
-        List<String> _buyConList = ConvertUtil.str2List(buyConList);
+        Set<String> _buyConSet = ConvertUtil.str2Set(buyConList);
 
 
         if (btCompareDTO.isTaskListFlag()) {
@@ -126,14 +127,14 @@ public class BacktestController {
                         btCompareDTO.setSingleStockMaxPosPct(posPct);
 
 
-                        backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
+                        backTestService.backtest2(topBlockStrategyEnum, _buyConSet, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
                     });
                 });
             });
 
 
         } else {
-            backTestService.backtest2(topBlockStrategyEnum, _buyConList, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
+            backTestService.backtest2(topBlockStrategyEnum, _buyConSet, startDate, endDate(endDate), resume, batchNo, btCompareDTO);
         }
 
 
@@ -154,7 +155,7 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"fastFailFlag\":true,\"taskListFlag\":false}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 

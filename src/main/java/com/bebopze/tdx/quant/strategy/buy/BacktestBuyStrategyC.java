@@ -71,7 +71,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
      * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
      *
      * @param topBlockStrategyEnum 主线策略
-     * @param buyConList           B策略
+     * @param buyConSet            B策略
      * @param data                 全量行情
      * @param tradeDate            交易日期
      * @param buy_infoMap          买入个股-交易信号
@@ -82,7 +82,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     @TotalTime
     @Override
     public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
-                             List<String> buyConList,
+                             Set<String> buyConSet,
                              BacktestCache data,
                              LocalDate tradeDate,
                              Map<String, String> buy_infoMap,
@@ -131,8 +131,8 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // B策略   ->   强势个股
         long start_2 = System.currentTimeMillis();
-        List<String> buy__topStock__codeList = buy__topStock__codeList(buyConList, data, tradeDate, buy_infoMap, ztFlag);
-        log.info("BacktestBuyStrategyC - buy__topStock__codeList     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
+        Set<String> buy__topStock__codeSet = buy__topStock__codeList(buyConSet, data, tradeDate, buy_infoMap, ztFlag);
+        log.info("BacktestBuyStrategyC - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> inTopBlock__stockCodeSet = inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeList, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
         log.info("BacktestBuyStrategyC - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -181,21 +181,21 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     /**
      * 强势个股   ->   IN 主线板块                  // 通用方法
      *
-     * @param topBlockCodeSet    主线板块
-     * @param topStock__codeList 强势个股
+     * @param topBlockCodeSet   主线板块
+     * @param topStock__codeSet 强势个股
      * @param data
      * @param tradeDate
      * @return
      */
     public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                List<String> topStock__codeList,
+                                                Set<String> topStock__codeSet,
 
                                                 BacktestCache data,
                                                 LocalDate tradeDate) {
 
 
         // 强势个股   ->   IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = topStock__codeList
+        Set<String> inTopBlock__stockCodeSet = topStock__codeSet
                 .stream()
                 .filter(stockCode -> {
 
@@ -238,18 +238,18 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     /**
      * B策略   ->   强势个股
      *
-     * @param buyConList  B策略
+     * @param buyConSet   B策略
      * @param data
      * @param tradeDate
      * @param buy_infoMap
      * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
-    private List<String> buy__topStock__codeList(List<String> buyConList,
-                                                 BacktestCache data,
-                                                 LocalDate tradeDate,
-                                                 Map<String, String> buy_infoMap,
-                                                 Boolean ztFlag) {
+    private Set<String> buy__topStock__codeList(Set<String> buyConSet,
+                                                BacktestCache data,
+                                                LocalDate tradeDate,
+                                                Map<String, String> buy_infoMap,
+                                                Boolean ztFlag) {
 
 
 //        List<String> buy__topStock__CodeList = Collections.synchronizedList(Lists.newArrayList());
@@ -258,7 +258,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 //                                 stockDO -> {
 
 
-        List<String> buy__topStock__codeList = Lists.newArrayList();
+        Set<String> buy__topStock__codeSet = Sets.newHashSet();
         data.stockDOList.forEach(stockDO -> {
 
             String stockCode = stockDO.getCode();
@@ -310,11 +310,11 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
             // 是否买入       =>       conList   ->   全为 true
-            boolean signal_B = BuyStrategy__ConCombiner.calcCon(buyConList, conMap);
+            boolean signal_B = BuyStrategy__ConCombiner.calcCon(buyConSet, conMap);
 
 
             if (signal_B) {
-                buy__topStock__codeList.add(stockCode);
+                buy__topStock__codeSet.add(stockCode);
                 buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
             }
         });
@@ -324,7 +324,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 //                                 ThreadPoolType.CPU_INTENSIVE);
 
 
-        return buy__topStock__codeList;
+        return buy__topStock__codeSet;
     }
 
 
@@ -683,6 +683,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         boolean N60日新高 = extDataArrDTO.N60日新高[idx];
         boolean N100日新高 = extDataArrDTO.N100日新高[idx];
         boolean 历史新高 = extDataArrDTO.历史新高[idx];
+        boolean 百日新高 = extDataArrDTO.百日新高[idx];
 
 
         boolean 月多 = extDataArrDTO.月多[idx];
@@ -713,6 +714,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         conMap.put("N60日新高", N60日新高);
         conMap.put("N100日新高", N100日新高);
         conMap.put("历史新高", 历史新高);
+        conMap.put("百日新高", 百日新高);
 
 
         conMap.put("月多", 月多);

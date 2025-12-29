@@ -10,13 +10,14 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
-import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC;
-import com.google.common.collect.Lists;
+import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyG;
+import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.x;
 
 
 /**
@@ -46,7 +48,10 @@ public class BacktestSellStrategy implements SellStrategy {
     private MarketService marketService;
 
     @Autowired
-    private BacktestBuyStrategyC backtestBuyStrategyC;
+    private BuyStrategyFactory buyStrategyFactory;
+
+    @Autowired
+    private BacktestBuyStrategyG backtestBuyStrategyG;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -63,7 +68,7 @@ public class BacktestSellStrategy implements SellStrategy {
     public Set<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
                             BacktestCache data,
                             LocalDate tradeDate,
-                            List<String> positionStockCodeList,
+                            Set<String> positionStockCodeSet,
                             Map<String, SellStrategyEnum> sell_infoMap,
                             BacktestCompareDTO btCompareDTO) {
 
@@ -74,7 +79,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = backtestBuyStrategyC.topBlock(topBlockStrategyEnum, data, tradeDate);
+        Set<String> topBlockCodeSet = backtestBuyStrategyG.topBlock(topBlockStrategyEnum, data, tradeDate);
         log.info("BacktestSellStrategy - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
@@ -88,7 +93,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         long start_2 = System.currentTimeMillis();
-        Set<String> sell__stockCodeSet = sell__stockCodeSet(positionStockCodeList, topBlockStrategyEnum, data, tradeDate, sell_infoMap, btCompareDTO);
+        Set<String> sell__stockCodeSet = sell__stockCodeSet(positionStockCodeSet, topBlockStrategyEnum, data, tradeDate, sell_infoMap, btCompareDTO);
         log.info("BacktestSellStrategy - sell__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
@@ -102,7 +107,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
         // 取反     =>     前期 强势个股   ->   not IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> notInTopBlock__stockCodeSet = notInTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeList, data, tradeDate);
+        Set<String> notInTopBlock__stockCodeSet = notInTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeSet, data, tradeDate);
         log.info("BacktestSellStrategy - notInTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -127,7 +132,7 @@ public class BacktestSellStrategy implements SellStrategy {
     }
 
 
-    private Set<String> sell__stockCodeSet(List<String> positionStockCodeList,
+    private Set<String> sell__stockCodeSet(Set<String> positionStockCodeSet,
                                            TopBlockStrategyEnum topBlockStrategyEnum,
                                            BacktestCache data,
                                            LocalDate tradeDate,
@@ -135,7 +140,18 @@ public class BacktestSellStrategy implements SellStrategy {
                                            BacktestCompareDTO btCompareDTO) {
 
 
-        Set<String> sell__stockCodeSet = positionStockCodeList.stream().filter(stockCode -> {
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 持仓成本（avgCostPrice）
+        Map<String, Double> posCostMap = x.get().getPositionRecordDOList().stream()
+                                          .collect(Collectors.toMap(BtPositionRecordDO::getStockCode, e -> e.getAvgCostPrice().doubleValue()));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        Set<String> sell__stockCodeSet = positionStockCodeSet.stream().filter(stockCode -> {
             BaseStockDO stockDO = data.codeStockMap.getOrDefault(
                     stockCode,
                     // ETF
@@ -167,7 +183,7 @@ public class BacktestSellStrategy implements SellStrategy {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            boolean signal_S = signal_S(stockCode, topBlockStrategyEnum, data, tradeDate, sell_infoMap, extDataArrDTO, idx, fun, btCompareDTO);
+            boolean signal_S = signal_S(stockCode, topBlockStrategyEnum, data, tradeDate, sell_infoMap, extDataArrDTO, idx, fun, btCompareDTO, posCostMap);
 
 
             if (signal_S) {
@@ -217,13 +233,16 @@ public class BacktestSellStrategy implements SellStrategy {
                              ExtDataArrDTO extDataArrDTO,
                              Integer idx,
                              StockFun fun,
-                             BacktestCompareDTO btCompareDTO) {
+                             BacktestCompareDTO btCompareDTO,
+                             Map<String, Double> posCostMap) {
 
 
         KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
 
 
         // ---------------------------------------------------------------------------------------------------------
+
+        // ------------------------------------------- TODO   板块S（板块 -> 掉出 主线板块） -------------------------------
 
 
         // -------------------------------------------
@@ -346,32 +365,32 @@ public class BacktestSellStrategy implements SellStrategy {
         // ------------------------- TODO test：B_signal（月多,C_MA50_偏离率<5、SSF多,月多,C_MA20_偏离率<5）--------------------------------------------------
 
 
-        // B_signal -> 月多,C_MA50_偏离率<5
-        // B_signal -> SSF多,月多,C_MA20_偏离率<5
-        Set<String> buyConSet = btCompareDTO.getBuyConSet();
-        Set<String> buyConSet_2 = BacktestStrategy.btCompareDTO.get().getBuyConSet();
-
-        if (!Objects.equals(buyConSet, buyConSet_2)) {
-            log.error("signal_S     >>>     buyConSet={}  !=  buyConSet_2={}", buyConSet, buyConSet_2);
-        }
-
-        if (buyConSet.equals(Sets.newHashSet("月多", "C_MA50_偏离率<5"))
-                || buyConSet.equals(Sets.newHashSet("SSF多", "月多", "C_MA20_偏离率<5"))) {
-
-            // MA20空
-            if (extDataArrDTO.MA20空[idx]) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.MA20空);
-                return true;
-            }
-
-            // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
-            if (extDataArrDTO.高位爆量上影大阴[idx]) {
-                sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
-                return true;
-            }
-
-            return false;
-        }
+//        // B_signal -> 月多,C_MA50_偏离率<5
+//        // B_signal -> SSF多,月多,C_MA20_偏离率<5
+//        Set<String> buyConSet = btCompareDTO.getBuyConSet();
+//        Set<String> buyConSet_2 = BacktestStrategy.btCompareDTO.get().getBuyConSet();
+//
+//        if (!Objects.equals(buyConSet, buyConSet_2)) {
+//            log.error("signal_S     >>>     buyConSet={}  !=  buyConSet_2={}", buyConSet, buyConSet_2);
+//        }
+//
+//        if (buyConSet.equals(Sets.newHashSet("月多", "C_MA50_偏离率<5"))
+//                || buyConSet.equals(Sets.newHashSet("SSF多", "月多", "C_MA20_偏离率<5"))) {
+//
+//            // MA20空
+//            if (extDataArrDTO.MA20空[idx]) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.MA20空);
+//                return true;
+//            }
+//
+//            // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
+//            if (extDataArrDTO.高位爆量上影大阴[idx]) {
+//                sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
+//                return true;
+//            }
+//
+//            return false;
+//        }
 
 
         // TODO   ->   del   月空_MA20空、SSF空
@@ -406,8 +425,8 @@ public class BacktestSellStrategy implements SellStrategy {
         }
 
 
-        // 高位（中期涨幅_MA20 > 100）   ->   爆天量/长上影/大阴线
-        if (extDataArrDTO.高位爆量上影大阴[idx]) {
+        // 高位（中期涨幅_MA20 > 100） +  MA5支撑   ->   爆天量/长上影/大阴线
+        if (extDataArrDTO.高位爆量上影大阴[idx] && extDataArrDTO.短期支撑线[idx] <= 5) {
             sell_infoMap.put(stockCode, SellStrategyEnum.高位爆量上影大阴);
             return true;
         }
@@ -476,10 +495,29 @@ public class BacktestSellStrategy implements SellStrategy {
 //            }
 
 
-        // ---------------------------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        // TODO     最大 亏损线  ->  -7% 止损
+        // 持仓成本（avgCostPrice）
+        Double avgCostPrice = posCostMap.get(stockCode);
+        if (null == avgCostPrice || avgCostPrice <= 0) {  // 其他地方check 会调用（验证是否S_signal   ->   并未持仓）
+            BacktestStrategy.Stat stat = x.get();
+            return false;
+        }
+
+
+        // 最大 亏损线  ->  -5% 止损
+        boolean stopLoss = fun.getKlineArrDTO().close[idx] / avgCostPrice < 0.95;
+
+        // -5% 止损   +   下SSF空 || MA5空 || 下MA20
+        stopLoss = stopLoss && (extDataArrDTO.下SSF[idx] || MA5空 || extDataArrDTO.下MA20[idx]);
+        if (stopLoss) {
+            sell_infoMap.put(stockCode, SellStrategyEnum.止损卖出);
+            return true;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         return false;
@@ -590,26 +628,26 @@ public class BacktestSellStrategy implements SellStrategy {
     /**
      * 取反     =>     前期 强势个股   ->   not IN 主线板块
      *
-     * @param topBlockCodeSet       主线板块 列表
-     * @param positionStockCodeList 持仓个股 列表
-     * @param data                  回测缓存数据
-     * @param tradeDate             交易日期
+     * @param topBlockCodeSet      主线板块 列表
+     * @param positionStockCodeSet 持仓个股 列表
+     * @param data                 回测缓存数据
+     * @param tradeDate            交易日期
      * @return 不在【主线板块】中的个股集合
      */
     private Set<String> notInTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                    List<String> positionStockCodeList,
+                                                    Set<String> positionStockCodeSet,
                                                     BacktestCache data,
                                                     LocalDate tradeDate) {
 
 
         // 强势个股   ->   IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyC.inTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeList, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyG.inTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeSet, data, tradeDate);
 
 
         // 取反     =>     前期 强势个股   ->   not IN 主线板块
 
         // 走弱的   前期 【主线板块】 加速出清     =>     清理  掉出【主线板块】 -  对应的个股     ->     加快 自动 【主线板块 切换】
-        Set<String> notInTopBlock__stockCodeSet = new HashSet<>(positionStockCodeList);
+        Set<String> notInTopBlock__stockCodeSet = new HashSet<>(positionStockCodeSet);
         notInTopBlock__stockCodeSet.removeAll(inTopBlock__stockCodeSet);
 
 
@@ -659,9 +697,9 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // 今日   主线板块 列表
-        Set<String> topBlockCodeSet = backtestBuyStrategyC.topBlock(topBlockStrategyEnum, data, tradeDate);
+        Set<String> topBlockCodeSet = backtestBuyStrategyG.topBlock(topBlockStrategyEnum, data, tradeDate);
         // 今日   个股 -> IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyC.inTopBlock__stockCodeSet(topBlockCodeSet, Lists.newArrayList(stockCode), data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyG.inTopBlock__stockCodeSet(topBlockCodeSet, Sets.newHashSet(stockCode), data, tradeDate);
 
 
         // 个股   ->   NOT IN 主线板块       =>       个股  ->  全部 topBlock   ->   全 转空

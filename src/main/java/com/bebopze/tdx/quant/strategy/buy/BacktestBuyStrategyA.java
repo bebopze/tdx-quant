@@ -64,7 +64,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
      */
     @Override
     public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
-                             List<String> buyConList,
+                             Set<String> buyConSet,
                              BacktestCache data,
                              LocalDate tradeDate,
                              Map<String, String> buy_infoMap,

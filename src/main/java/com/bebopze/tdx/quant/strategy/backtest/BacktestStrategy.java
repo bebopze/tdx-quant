@@ -139,7 +139,7 @@ public class BacktestStrategy {
     @TotalTime
     public Long backtest(Integer batchNo,
                          TopBlockStrategyEnum topBlockStrategyEnum,
-                         List<String> buyConList, List<String> sellConList,
+                         Set<String> buyConSet, Set<String> sellConSet,
                          LocalDate startDate, LocalDate endDate,
                          BacktestCompareDTO btCompareDTO) {
 
@@ -148,8 +148,8 @@ public class BacktestStrategy {
         BeanUtils.copyProperties(btCompareDTO, copy_btCompareDTO);
         copy_btCompareDTO.setBatchNo(batchNo);
         copy_btCompareDTO.setTopBlockStrategyEnum(topBlockStrategyEnum);
-        copy_btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
-        copy_btCompareDTO.setSellConSet(Sets.newHashSet(sellConList));
+        copy_btCompareDTO.setBuyConSet(buyConSet);
+        copy_btCompareDTO.setSellConSet(sellConSet);
         copy_btCompareDTO.setStartDate(startDate);
         copy_btCompareDTO.setEndDate(endDate);
 
@@ -159,7 +159,7 @@ public class BacktestStrategy {
 
 
         try {
-            return execBacktest(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
+            return execBacktest(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate);
         } finally {
             clearThreadLocal();
         }
@@ -179,14 +179,14 @@ public class BacktestStrategy {
 
     private Long execBacktest(Integer batchNo,
                               TopBlockStrategyEnum topBlockStrategyEnum,
-                              List<String> buyConList,
-                              List<String> sellConList,
+                              Set<String> buyConSet,
+                              Set<String> sellConSet,
                               LocalDate startDate,
                               LocalDate endDate) {
 
 
-        log.info("execBacktest start     >>>     batchNo : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {} , startDate : {} , endDate : {} , btCompareDTO : {}",
-                 batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate, JSON.toJSONString(btCompareDTO.get()));
+        log.info("execBacktest start     >>>     batchNo : {} , topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {} , startDate : {} , endDate : {} , btCompareDTO : {}",
+                 batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate, JSON.toJSONString(btCompareDTO.get()));
 
 
         endDate = DateTimeUtil.min(endDate, LocalDate.now());
@@ -213,7 +213,7 @@ public class BacktestStrategy {
         endDate = DateTimeUtil.min(endDate, data.endDate());
 
 
-        BtTaskDO taskDO = createBacktestTask(batchNo, topBlockStrategyEnum, buyConList, sellConList, startDate, endDate);
+        BtTaskDO taskDO = createBacktestTask(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -256,7 +256,7 @@ public class BacktestStrategy {
 
             try {
                 // 每日 - 回测（B/S）
-                execBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO);
+                execBacktestDaily(topBlockStrategyEnum, buyConSet, sellConSet, tradeDate, taskDO);
             } catch (Exception e) {
                 log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
 
@@ -323,8 +323,8 @@ public class BacktestStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        List<String> buyConList = Arrays.asList(taskDO.getBuyStrategy().split(","));
-        List<String> sellConList = Arrays.asList(taskDO.getSellStrategy().split(","));
+        Set<String> buyConSet = Sets.newHashSet(taskDO.getBuyStrategy().split(","));
+        Set<String> sellConSet = Sets.newHashSet(taskDO.getSellStrategy().split(","));
 
         TopBlockStrategyEnum topBlockStrategyEnum = TopBlockStrategyEnum.getByDesc(taskDO.getTopBlockStrategy());
 
@@ -364,8 +364,8 @@ public class BacktestStrategy {
 
         btCompareDTO.setBatchNo(taskDO.getBatchNo());
         btCompareDTO.setTopBlockStrategyEnum(topBlockStrategyEnum);
-        btCompareDTO.setBuyConSet(Sets.newHashSet(buyConList));
-        btCompareDTO.setSellConSet(Sets.newHashSet(sellConList));
+        btCompareDTO.setBuyConSet(buyConSet);
+        btCompareDTO.setSellConSet(sellConSet);
         btCompareDTO.setStartDate(taskDO.getStartDate());
         btCompareDTO.setEndDate(taskDO.getEndDate());
 
@@ -393,13 +393,13 @@ public class BacktestStrategy {
 
             try {
                 // 每日 - 回测（B/S）
-                execBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO);
+                execBacktestDaily(topBlockStrategyEnum, buyConSet, sellConSet, tradeDate, taskDO);
             } catch (Exception e) {
                 log.error("execBacktestDaily     >>>     taskId : {} , tradeDate : {} , exMsg : {}", taskDO.getId(), tradeDate, e.getMessage(), e);
 
 
                 // retry
-                retryExecBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO, backup, 5);
+                retryExecBacktestDaily(topBlockStrategyEnum, buyConSet, sellConSet, tradeDate, taskDO, backup, 5);
             }
         }
 
@@ -418,16 +418,16 @@ public class BacktestStrategy {
 
 
     private void retryExecBacktestDaily(TopBlockStrategyEnum topBlockStrategyEnum,
-                                        List<String> buyConList,
-                                        List<String> sellConList,
+                                        Set<String> buyConSet,
+                                        Set<String> sellConSet,
                                         LocalDate tradeDate,
                                         BtTaskDO taskDO,
                                         Backup backup,
                                         int retry) {
 
 
-        log.info("retryExecBacktestDaily - start     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {}",
-                 retry - 1, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConList, sellConList);
+        log.info("retryExecBacktestDaily - start     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {}",
+                 retry - 1, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConSet, sellConSet);
 
 
         // if (--retry < 0) {
@@ -442,16 +442,16 @@ public class BacktestStrategy {
         try {
 
             // 每日 - 回测（B/S）
-            execBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO);
+            execBacktestDaily(topBlockStrategyEnum, buyConSet, sellConSet, tradeDate, taskDO);
 
-            log.info("retryExecBacktestDaily - suc     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {}",
-                     retry, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConList, sellConList);
+            log.info("retryExecBacktestDaily - suc     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {}",
+                     retry, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConSet, sellConSet);
 
 
         } catch (Exception e) {
 
-            log.error("retryExecBacktestDaily - fail     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConList : {} , sellConList : {}   ,   exMsg : {}",
-                      retry, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConList, sellConList, e.getMessage(), e);
+            log.error("retryExecBacktestDaily - fail     >>>     retry : {} , taskId : {} , tradeDate : {} , topBlockStrategyEnum : {} , buyConSet : {} , sellConSet : {}   ,   exMsg : {}",
+                      retry, taskDO.getId(), tradeDate, topBlockStrategyEnum, buyConSet, sellConSet, e.getMessage(), e);
 
 
             // 重试失败   ->   中断 异常task
@@ -460,15 +460,15 @@ public class BacktestStrategy {
             }
 
 
-            retryExecBacktestDaily(topBlockStrategyEnum, buyConList, sellConList, tradeDate, taskDO, backup, retry);
+            retryExecBacktestDaily(topBlockStrategyEnum, buyConSet, sellConSet, tradeDate, taskDO, backup, retry);
         }
     }
 
 
     private BtTaskDO createBacktestTask(Integer batchNo,
                                         TopBlockStrategyEnum topBlockStrategyEnum,
-                                        List<String> buyConList,
-                                        List<String> sellConList,
+                                        Set<String> buyConSet,
+                                        Set<String> sellConSet,
                                         LocalDate startDate,
                                         LocalDate endDate) {
 
@@ -481,8 +481,8 @@ public class BacktestStrategy {
 
         // B/S策略
         taskDO.setTopBlockStrategy(topBlockStrategyEnum.getDesc());
-        taskDO.setBuyStrategy(String.join(",", buyConList));
-        taskDO.setSellStrategy(String.join(",", sellConList));
+        taskDO.setBuyStrategy(String.join(",", buyConSet));
+        taskDO.setSellStrategy(String.join(",", sellConSet));
 
 
         // 回测 - 时间段
@@ -510,8 +510,8 @@ public class BacktestStrategy {
 
 
     private void execBacktestDaily(TopBlockStrategyEnum topBlockStrategyEnum,
-                                   List<String> buyConList,
-                                   List<String> sellConList,
+                                   Set<String> buyConSet,
+                                   Set<String> sellConSet,
                                    LocalDate tradeDate,
                                    BtTaskDO taskDO) {
 
@@ -657,7 +657,7 @@ public class BacktestStrategy {
 
         // 买入策略
         String buyStrategyKey = btCompareDTO.get().getBuyStrategyKey();
-        List<String> buy__stockCodeList = buyStrategyFactory.get(buyStrategyKey).rule(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
+        List<String> buy__stockCodeList = buyStrategyFactory.get(buyStrategyKey).rule(topBlockStrategyEnum, buyConSet, data, tradeDate, buy_infoMap, posRate, btCompareDTO.get().getZtFlag());
 
         log.info("B策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, buy__stockCodeList.size(), JSON.toJSONString(buy__stockCodeList), JSON.toJSONString(buy_infoMap));

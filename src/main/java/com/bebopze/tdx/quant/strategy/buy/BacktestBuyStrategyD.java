@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +66,15 @@ public class BacktestBuyStrategyD implements BuyStrategy {
     @Autowired
     private BacktestStrategy backtestStrategy;
 
+    @Lazy
     @Autowired
     private BacktestSellStrategy backtestSellStrategy;
+
+    @Autowired
+    private BacktestBuyStrategyG backtestBuyStrategyG;
+
+    @Autowired
+    private BuyStrategy__ConCombiner__TopStock buyStrategy__conCombiner__topStock;
 
 
     @Override
@@ -79,7 +87,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
      * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
      *
      * @param topBlockStrategyEnum 主线策略
-     * @param buyConList           B策略
+     * @param buyConSet            B策略
      * @param data                 全量行情
      * @param tradeDate            交易日期
      * @param buy_infoMap          买入个股-交易信号
@@ -90,7 +98,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
     @TotalTime
     @Override
     public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
-                             List<String> buyConList,
+                             Set<String> buyConSet,
                              BacktestCache data,
                              LocalDate tradeDate,
                              Map<String, String> buy_infoMap,
@@ -132,6 +140,13 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
+        // ---------------------------------------------
+        // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
+        if (btCompareDTO.get().isTop1TopBlockFlag()) {
+            topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
+        }
+
+
         // -------------------------------------------------------------------------------------------------------------
         //                                                3、（强势）个股
         // -------------------------------------------------------------------------------------------------------------
@@ -139,7 +154,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
         // B策略   ->   强势个股
         long start_2 = System.currentTimeMillis();
-        Set<String> buy__topStock__codeSet = buy__topStock__codeSet(buyConList, data, tradeDate, buy_infoMap, ztFlag);
+        Set<String> buy__topStock__codeSet = buy__topStock__codeSet(buyConSet, data, tradeDate, buy_infoMap, ztFlag);
         log.info("BacktestBuyStrategyD - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
@@ -196,7 +211,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
      * @return
      */
     public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                Set<String> buy__topStock__codeSet,
+                                                Collection<String> buy__topStock__codeSet,
 
                                                 BacktestCache data,
                                                 LocalDate tradeDate) {
@@ -211,28 +226,58 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     // 个股   -对应->   板块列表
                     Set<String> stock__blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
 
-                    for (String stock__blockCode : stock__blockCodeSet) {
+
+                    // 交集（个股板块 - 主线板块）
+                    Collection<String> stock__blockCodeSet__inTopBlock = CollectionUtils.intersection(topBlockCodeSet, stock__blockCodeSet);
+
+                    // 非空（个股所属 主线板块）
+                    if (CollectionUtils.isNotEmpty(stock__blockCodeSet__inTopBlock)) {
 
 
-                        // 个股   ->   IN 主线板块
-                        boolean inTopBlock = topBlockCodeSet.contains(stock__blockCode);
+                        // 个股   ->   主线板块（IN 主线板块）      code-name列表
+                        Set<String> stock__blockCodeNameSet__inTopBlock = stock__blockCodeSet__inTopBlock.stream()
+                                                                                                         // 板块code-板块name
+                                                                                                         .map(blockCode -> blockCode + "-" + data.block__codeNameMap.get(blockCode))
+                                                                                                         .collect(Collectors.toSet());
 
-                        if (inTopBlock) {
+                        // Cache（code-name 列表）
+                        data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
+                                                   .put(stockCode, stock__blockCodeNameSet__inTopBlock);
 
 
-                            // 个股   ->   B-signal   主线板块
-                            // String key = tradeDate + "|" + stockCode;
-                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
-
-
-                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
+                        if (log.isDebugEnabled()) {
+                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}]",
+                                      tradeDate,
                                       stockCode, data.stock__codeNameMap.get(stockCode),
-                                      stock__blockCode, data.block__codeNameMap.get(stock__blockCode));
-
-
-                            return true;
+                                      stock__blockCodeNameSet__inTopBlock);
                         }
+
+                        return true;
                     }
+
+
+//                    for (String stock__blockCode : stock__blockCodeSet) {
+//
+//
+//                        // 个股   ->   IN 主线板块
+//                        boolean inTopBlock = topBlockCodeSet.contains(stock__blockCode);
+//
+//                        if (inTopBlock) {
+//
+//
+//                            // 个股   ->   B-signal   主线板块
+//                            // String key = tradeDate + "|" + stockCode;
+//                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
+//
+//
+//                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
+//                                      stockCode, data.stock__codeNameMap.get(stockCode),
+//                                      stock__blockCode, data.block__codeNameMap.get(stock__blockCode));
+//
+//
+//                            return true;
+//                        }
+//                    }
 
 
                     return false;
@@ -246,14 +291,14 @@ public class BacktestBuyStrategyD implements BuyStrategy {
     /**
      * B策略   ->   强势个股
      *
-     * @param buyConList  B策略
+     * @param buyConSet   B策略
      * @param data
      * @param tradeDate
      * @param buy_infoMap
      * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
-    private Set<String> buy__topStock__codeSet(List<String> buyConList,
+    private Set<String> buy__topStock__codeSet(Set<String> buyConSet,
                                                BacktestCache data,
                                                LocalDate tradeDate,
                                                Map<String, String> buy_infoMap,
@@ -315,7 +360,14 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
 
             // 是否买入       =>       conList   ->   全为 true
-            boolean signal_B = BuyStrategy__ConCombiner.calcCon(buyConList, conMap);
+            boolean signal_B = BuyStrategy__ConCombiner.calcCon(buyConSet, conMap);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // B   +   anyMatch__buyStrategy          // ❌❌❌ 年收益率 从100%  ->  10% ❌❌❌（废弃！）
+            // signal_B = signal_B && buyStrategy__conCombiner__topStock.anyMatch__buyStrategy(extDataDTO);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -339,7 +391,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
                     // 次日S  ->  不能B（提前预知 -> 次日收盘价？？？❌❌❌）
 
                     // 今日B + 涨停     =>     今日S  ->  次日不能B
-                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, tradeDate, Lists.newArrayList(stockCode), Maps.newHashMap(), btCompareDTO.get());
+                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, tradeDate, Sets.newHashSet(stockCode), Maps.newHashMap(), btCompareDTO.get());
                     boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
                     if (next_date_S /*|| nextDate__大盘仓位限制->等比减仓*/) {
                         return;
@@ -711,7 +763,18 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, Boolean> conMap = ConvertStockExtData.toBooleanMap(extDataDTO);
+//        Map<String, Boolean> conMap = ConvertStockExtData.toBooleanMap(extDataDTO);
+        Map<String, Boolean> conMap = BuyStrategy__ConCombiner__TopStock.convertExtDataDTO(extDataDTO);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        double 中期涨幅N250 = extDataArrDTO.中期涨幅N250[idx];
+        conMap.put("中期涨幅N250<150", 中期涨幅N250 < 150);
+        conMap.put("中期涨幅N250<350", 中期涨幅N250 < 350);
+        conMap.put("中期涨幅N250<700", 中期涨幅N250 < 700);
+        conMap.put("中期涨幅N250<1500", 中期涨幅N250 < 1500);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -805,10 +868,10 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
 
         // MA200多  =  C>MA200  &&  MA200>prev_MA200
-        boolean MA200多 = klineArrDTO.close[idx] >= extDataArrDTO.MA200[idx]
+        boolean MA200多 = idx > 0 && klineArrDTO.close[idx] >= extDataArrDTO.MA200[idx]
                 && extDataArrDTO.MA200[idx] >= extDataArrDTO.MA200[idx - 1];
 
-        boolean MA250多 = klineArrDTO.close[idx] >= extDataArrDTO.MA250[idx]
+        boolean MA250多 = idx > 0 && klineArrDTO.close[idx] >= extDataArrDTO.MA250[idx]
                 && extDataArrDTO.MA250[idx] >= extDataArrDTO.MA250[idx - 1];
 
 

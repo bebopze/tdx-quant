@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -53,7 +54,7 @@ public interface BacktestService {
 
     @Async("taskExecutor")
     Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
-                   List<String> buyConList,
+                   Set<String> buyConSet,
                    LocalDate startDate,
                    LocalDate endDate,
                    boolean resume,
