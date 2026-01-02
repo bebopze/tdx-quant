@@ -4,8 +4,12 @@
 
     // 环境配置
     const ENV_CONFIG = {
-        dev: {
+        dev_local: {
             API_HOST: 'localhost:7001',
+            DEBUG: true
+        },
+        dev: {
+            API_HOST: '192.168.101.10:7001',
             DEBUG: true
         },
         test: {
@@ -29,7 +33,9 @@
 
         // 根据域名判断
         const hostname = window.location.hostname;
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.includes('dev')) {
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'dev_local';
+        } else if (hostname.startsWith('192.168.') || hostname.includes('dev')) {
             return 'dev';
         } else if (hostname.includes('test') || hostname.includes('staging')) {
             return 'test';
