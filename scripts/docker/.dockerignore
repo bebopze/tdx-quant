@@ -1,0 +1,25 @@
+# 构建产物
+target/
+*.jar
+!target/*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# 日志
+logs/
+*.log
+
+# 文档
+docs/
+*.md
+
+# 本地配置
+*.local
+.env.local
