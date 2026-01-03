@@ -90,8 +90,9 @@ if ! [[ "$TOTAL_MEM" =~ ^[0-9]+$ ]] || [ -z "$TOTAL_MEM" ] || [ "$TOTAL_MEM" -lt
     TOTAL_MEM=4
 fi
 
-MAX_HEAP=$(( TOTAL_MEM * 3 / 4 ))
-if [ "$MAX_HEAP" -gt 36 ]; then MAX_HEAP=36; fi
+MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
+if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
+if [ "$MAX_HEAP" -lt 25 ]; then MAX_HEAP=25; fi
 if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
 
 echo "🖥️  启动量化系统 [$(date)]"

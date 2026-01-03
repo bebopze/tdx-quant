@@ -2,9 +2,9 @@
 # ============================================================
 # restart.sh - Mac/Linux 双系统兼容版本
 # 用于重启 TdxQuant 量化系统
-# 支持 start_model 参数：debug | run (缺省 run)
+# 支持 start_model 参数：debug | run (缺省 debug)
 # 使用方式:
-#   ./restart.sh            # 默认 run
+#   ./restart.sh            # 默认 debug
 #   ./restart.sh debug      # 使用 debug 模式（调用 start-debug.sh）
 #   START_MODEL=debug ./restart.sh
 # ============================================================
@@ -16,11 +16,11 @@ set -o pipefail
 # 获取脚本所在目录
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-# 优先使用第一个参数，其次使用环境变量 START_MODEL，缺省为 run
+# 优先使用第一个参数，其次使用环境变量 START_MODEL，缺省为 debug
 if [ "${1:-}" != "" ]; then
     START_MODEL="$1"
 else
-    START_MODEL="${START_MODEL:-run}"
+    START_MODEL="${START_MODEL:-debug}"
 fi
 
 # 规范化小写

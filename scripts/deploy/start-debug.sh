@@ -88,8 +88,9 @@ if ! [[ "$TOTAL_MEM" =~ ^[0-9]+$ ]] || [ -z "$TOTAL_MEM" ] || [ "$TOTAL_MEM" -lt
     TOTAL_MEM=4
 fi
 
-MAX_HEAP=$(( TOTAL_MEM * 3 / 4 ))
-if [ "$MAX_HEAP" -gt 36 ]; then MAX_HEAP=36; fi
+MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
+if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
+if [ "$MAX_HEAP" -lt 25 ]; then MAX_HEAP=25; fi
 if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
 
 # 检测 Java 版本，设置调试参数（Java 8 vs Java 9+）
@@ -103,7 +104,7 @@ if [ -z "$JAVA_MAJOR" ]; then
 fi
 
 if [ "$JAVA_MAJOR" -lt 9 ]; then
-    DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=$DEBUG_PORT"
+    DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:$DEBUG_PORT"
 else
     DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT"
 fi
