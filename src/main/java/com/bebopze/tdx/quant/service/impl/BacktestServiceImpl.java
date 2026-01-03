@@ -22,7 +22,6 @@ import com.bebopze.tdx.quant.service.BacktestService;
 import com.bebopze.tdx.quant.service.DataAnalysisService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner;
-import com.bebopze.tdx.quant.strategy.buy.BuyStrategy__ConCombiner_ZT;
 import com.bebopze.tdx.quant.strategy.buy.QuantConditionCombiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -79,11 +78,12 @@ public class BacktestServiceImpl implements BacktestService {
                              BacktestCompareDTO btCompareDTO) {
 
 
-        List<Set<String>> buy_conCombinerSet = BuyStrategy__ConCombiner.generateCombinations(3);
-        List<Set<String>> buy_conCombinerList = QuantConditionCombiner.generateCombinationsNew(2);
+        List<Set<String>> buy_conCombinerSet = BuyStrategy__ConCombiner.generateCombinations(3);     // 7029
+        List<Set<String>> buy_conCombinerList = QuantConditionCombiner.generateCombinationsNew(2);   // 98302
         // 涨停策略（打板）
         if (btCompareDTO.ztFlag_true()) {
-            buy_conCombinerSet = BuyStrategy__ConCombiner_ZT.generateCombinations(2);
+//            buy_conCombinerSet = BuyStrategy__ConCombiner_ZT.generateCombinations(2);   // 1482
+//            buy_conCombinerSet = QuantConditionCombiner.generateCombinationsNew(2);     // 98302
         }
 
 
@@ -522,7 +522,11 @@ public class BacktestServiceImpl implements BacktestService {
     }
 
     @Override
-    public int deleteByTaskIds(List<Long> taskIdList) {
+    public int deleteByTaskIds(Integer batchNo, List<Long> taskIdList) {
+        if (null != batchNo) {
+            taskIdList = btTaskService.listIdByBatchNoAndStatus(batchNo, null);
+        }
+
         return btTaskService.delErrTaskByTaskIds(taskIdList);
     }
 

@@ -91,10 +91,11 @@ public interface BacktestService {
     /**
      * 回测 - task删除
      *
+     * @param batchNo
      * @param taskIdList taskId列表
      * @return
      */
-    int deleteByTaskIds(List<Long> taskIdList);
+    int deleteByTaskIds(Integer batchNo, List<Long> taskIdList);
 
 
     /**

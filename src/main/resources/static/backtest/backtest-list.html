@@ -214,7 +214,8 @@
                 <input type="text" class="form-control form-control-sm" id="taskId" placeholder="任务ID">
             </div>
             <div class="col-md-2 form-group">
-                <input type="text" class="form-control form-control-sm" id="batchNoList" placeholder="批次号（1,2,3）">
+                <input type="text" class="form-control form-control-sm" id="batchNoList" placeholder="批次号（1,2,3）"
+                       value="0">
             </div>
             <div class="col-md-2 form-group">
                 <input type="datetime-local" class="form-control form-control-sm" id="startCreateTime">
@@ -1031,9 +1032,18 @@
             return;
         }
 
+
+        // 截取前1000个任务ID，防止GET参数过长
+        const maxLength = 1000;
+        if (selectedTasks.length > maxLength) {
+            console.warn(`选中了【${selectedTasks.length}】个任务，超过限制，将只删除前【${maxLength}】个，剩余【${selectedTasks.length - maxLength}】个任务不会被删除`);
+            alert(`选中了【${selectedTasks.length}】个任务，超过限制，将只删除前【${maxLength}】个，剩余【${selectedTasks.length - maxLength}】个任务不会被删除`);
+        }
+
         if (!confirm('确定要删除这些任务吗？')) return;
 
-        ApiUtils.fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.join(',')}`, {method: 'GET'})
+
+        ApiUtils.fetch(`/api/backtest/task/delete?taskIdList=${selectedTasks.slice(0, maxLength).join(',')}`, {method: 'GET'})
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {

@@ -56,7 +56,7 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -108,7 +108,7 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -155,7 +155,7 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"E\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0.5,\"singleStockMaxBuyAvlPct\":10,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -212,12 +212,16 @@ public class BacktestController {
 
     @Operation(summary = "回测 - 批量删除", description = "回测 - 批量删除 异常task")
     @GetMapping("/task/delete")
-    public Result<Integer> deleteByTaskIds(@Schema(description = "taskId列表（逗号分隔）", example = "1,2,3")
-                                           @RequestParam String taskIdList) {
+    public Result<Integer> deleteByTaskIds(@Schema(description = "任务批次号（[batchNo]和[taskIdList] 2选1，有batchNo时，taskIdList无效）", example = "12")
+                                           @RequestParam(required = false) Integer batchNo,
+
+                                           @Schema(description = "taskId列表（逗号分隔）", example = "1,2,3")
+                                           @RequestParam(required = false) String taskIdList) {
+
 
         List<Long> taskIds = ConvertUtil.str2LongList(taskIdList);
 
-        return Result.SUC(backTestService.deleteByTaskIds(taskIds));
+        return Result.SUC(backTestService.deleteByTaskIds(batchNo, taskIds));
     }
 
 
