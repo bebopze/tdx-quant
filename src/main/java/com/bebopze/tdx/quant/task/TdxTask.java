@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.task;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.KlineAPI;
+import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
@@ -136,6 +137,7 @@ public class TdxTask {
     @TotalTime
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "tdx_task_execTask__refreshAll")
     public String execTask__refreshAll() {
 
 
@@ -202,6 +204,8 @@ public class TdxTask {
      */
     @TotalTime
     @Async
+    @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "tdx_task_execTask__refreshKline__lastDay")
+
     // 交易时段1：上午（周一 ~ 周五   9:30 ~ 11:35）
     @Scheduled(cron = "0 30,35,40,45,50,55 9 * * 1-5")
     @Scheduled(cron = "0 0/5 10 * * 1-5")
@@ -322,23 +326,18 @@ public class TdxTask {
     @TotalTime
     // @Scheduled(cron = "0 00 17 ? * 7", zone = "Asia/Shanghai")
     public void execTask__importAll() {
-
-
         log.info("---------------------------- 任务 [importAll - 初始化数据 更新入库]   执行 start");
         tdxDataParserService.importAll();
         log.info("---------------------------- 任务 [importAll - 初始化数据 更新入库]   执行 end");
-
-
     }
 
 
     @Async
     @TotalTime
-//    @Scheduled(cron = "0 15 0/1 ? * *", zone = "Asia/Shanghai")
-    // @Scheduled(fixedRateString = "PT1H", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 15 0/1 ? * *", zone = "Asia/Shanghai")
+//    @Scheduled(fixedRateString = "PT1H", zone = "Asia/Shanghai")
+//    @Scheduled(cron = "0/15 * * * * ? ", zone = "Asia/Shanghai")
     public void refreshEastmoneyCookie() {
-
-
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
 
 
@@ -349,9 +348,10 @@ public class TdxTask {
         MacUtil.openChrome(chromeAppName, url);
 
 
+        MacUtil.closeChrome(chromeAppName, url);
+
+
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
-
-
     }
 
 
