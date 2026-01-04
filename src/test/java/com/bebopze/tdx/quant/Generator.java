@@ -63,9 +63,9 @@ public class Generator {
 
                                      // .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
-                                     .addInclude(/*"qa_block_new_rela_stock_his", "qa_market_mid_cycle",*/ "qa_top_block")
+                                     .addInclude(/*"qa_block_new_rela_stock_his", "qa_market_mid_cycle", "qa_top_block"*/)
 
-                                     // .addInclude("cfg_account")
+                                      .addInclude(/*"conf_account",*/ "conf_distributed_lock")
 
                                      .entityBuilder()
                                      .formatFileName("%sDO")

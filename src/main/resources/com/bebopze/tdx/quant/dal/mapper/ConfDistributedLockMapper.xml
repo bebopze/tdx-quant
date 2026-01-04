@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ConfDistributedLockMapper">
+
+
+    <!-- 尝试获取锁 - 原子操作 -->
+    <insert id="tryAcquireLock">
+        INSERT INTO conf_distributed_lock (lock_key, lock_value, expire, expire_timestamp)
+        VALUES (#{lockKey}, #{lockValue}, #{expire}, #{expireTimestamp})
+    </insert>
+
+
+    <!-- 释放锁 - 只有持有者才能释放 -->
+    <delete id="releaseLock">
+        DELETE
+        FROM conf_distributed_lock
+
+        WHERE lock_key = #{lockKey}
+          AND lock_value = #{lockValue}
+    </delete>
+
+
+    <!-- 续期锁 -->
+    <update id="renewLock">
+        UPDATE conf_distributed_lock
+
+        SET expire           = #{newExpire},
+            expire_timestamp = #{newExpireTimestamp}
+
+        WHERE lock_key = #{lockKey}
+          AND lock_value = #{lockValue}
+          AND expire_timestamp > UNIX_TIMESTAMP() * 1000
+    </update>
+
+
+    <!-- 查询过期的锁 -->
+    <select id="selectExpiredLocks" resultType="com.bebopze.tdx.quant.dal.entity.ConfDistributedLockDO">
+        SELECT id, lock_key, lock_value, expire, expire_timestamp
+        FROM conf_distributed_lock
+
+        WHERE  <![CDATA[     expire_timestamp < #{currentTime}     ]]>
+
+        ORDER BY expire_timestamp ASC
+        LIMIT 1000
+    </select>
+
+
+    <!-- 批量清理过期锁 -->
+    <delete id="batchDeleteExpiredLocks">
+        DELETE FROM conf_distributed_lock
+
+        WHERE id IN
+        <foreach collection="lockIds" item="lockId" open="(" separator="," close=")">
+            #{lockId}
+        </foreach>
+    </delete>
+
+
+</mapper>
