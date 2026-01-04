@@ -160,24 +160,31 @@ public class BaseBlockDO implements Serializable {
     private BigDecimal amount;
 
     /**
-     * 涨跌幅
-     */
-    @TableField("change_pct")
-    @Schema(description = "涨跌幅")
-    private BigDecimal changePct;
-
-    /**
-     * 振幅
+     * 振幅（%）
      */
     @TableField("range_pct")
-    @Schema(description = "振幅")
+    @Schema(description = "振幅（%）")
     private BigDecimal rangePct;
 
     /**
-     * 换手率
+     * 涨跌幅（%）
+     */
+    @TableField("change_pct")
+    @Schema(description = "涨跌幅（%）")
+    private BigDecimal changePct;
+
+    /**
+     * 涨跌额
+     */
+    @TableField("change_price")
+    @Schema(description = "涨跌额")
+    private BigDecimal changePrice;
+
+    /**
+     * 换手率（%）
      */
     @TableField("turnover_pct")
-    @Schema(description = "换手率")
+    @Schema(description = "换手率（%）")
     private BigDecimal turnoverPct;
 
     /**

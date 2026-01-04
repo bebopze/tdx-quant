@@ -76,9 +76,12 @@ public class SinaKlineAPI {
 
 
         // ------------------------------------------------------------------
+        long start = System.currentTimeMillis();
 
 
         while (true) {
+            long page_start = System.currentTimeMillis();
+
 
             String url = allStockKlineUrl(pageNum++, pageSize);
 
@@ -87,7 +90,8 @@ public class SinaKlineAPI {
 
             JSONArray jsonArray = JSON.parseArray(result);
             if (CollectionUtils.isNotEmpty(jsonArray)) {
-                log.info("/quotes_service/api/json_v2.php/Market_Center.getHQNodeData   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
+                log.info("/quotes_service/api/json_v2.php/Market_Center.getHQNodeData   suc     >>>     pageNum : {} , pageSize : {} , pageTime : {} , totalTime : {} , result : {}",
+                         pageNum - 1, pageSize, DateTimeUtil.formatNow2Hms(page_start), DateTimeUtil.formatNow2Hms(start), result);
             }
 
 
