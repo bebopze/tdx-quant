@@ -134,7 +134,7 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
         // 总数
         int size = taskIdList.size();
         // 1次 N个
-        int N = 10;
+        int N = 50;
 
 
         for (int i = 0; i < size; ) {
