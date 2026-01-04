@@ -30,13 +30,13 @@ public interface TdxDataParserService {
     void importETF();
 
 
-    // ----------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
      * 行情（kline_his）  ->   板块 + 个股
      *
-     * @param updateTypeEnum 1-全量更新；2-增量更新；
+     * @param updateTypeEnum 1-全量更新；2-增量更新（实时行情）；
      */
     void refreshKlineAll(UpdateTypeEnum updateTypeEnum);
 
@@ -51,13 +51,13 @@ public interface TdxDataParserService {
     void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
-    // ----------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N);
 
 
-    // ----------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     void calcAndFillBlockKlineAll();

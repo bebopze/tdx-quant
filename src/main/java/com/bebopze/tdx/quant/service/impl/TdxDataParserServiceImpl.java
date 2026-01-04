@@ -12,8 +12,8 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
-import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
@@ -1175,7 +1175,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         baseBlockDO.setClose(last.getClose());
         baseBlockDO.setVolume(last.getVol());
         baseBlockDO.setAmount(last.getAmount());
+        baseBlockDO.setRangePct(last.getRangePct());
         baseBlockDO.setChangePct(last.getChangePct());
+        baseBlockDO.setChangePrice(last.getChangePrice());
+        baseBlockDO.setTurnoverPct(last.getTurnoverPct());
 
 
         if (blockId != null) {
@@ -1249,10 +1252,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // 1-全量更新
         if (updateTypeEnum == UpdateTypeEnum.ALL) {
-            fullUpdate__fillStockKlineAll(codeIdMap, updateTypeEnum);
+            fullUpdate__fillStockKlineAll(codeIdMap);
         }
 
-        // 2-增量更新
+        // 2-增量更新（实时行情）
         else if (updateTypeEnum == UpdateTypeEnum.INCR) {
             incrUpdate__fillStockKlineAll(codeIdMap);
         }
@@ -1266,9 +1269,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      * 1-全量更新
      *
      * @param codeIdMap
-     * @param updateTypeEnum
      */
-    private void fullUpdate__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
+    private void fullUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
         long[] start = {System.currentTimeMillis()};
         AtomicInteger count = new AtomicInteger(0);
 
@@ -1280,10 +1282,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // -------------------------------------------
 
 
-            int apiType = apiType(null, updateTypeEnum);
+            int apiType = apiType(null, UpdateTypeEnum.ALL);
 
 
-            fillStockKline(stockCode, stockId, apiType, updateTypeEnum);
+            fillStockKline(stockCode, stockId, apiType, UpdateTypeEnum.ALL);
 
 
             // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
@@ -1301,13 +1303,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
             log.info("fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                      stockCode, stockId, countVal, r1, r2, r3);
-
-
-            // ----------------------
-
-            if (updateTypeEnum == UpdateTypeEnum.INCR) {
-                SleepUtils.randomSleep(100);
-            }
         });
     }
 
@@ -1407,6 +1402,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         entity.setRangePct(of(e.getRange_pct()));
         entity.setChangePct(of(e.getChange_pct()));
+        entity.setChangePrice(of(e.getChange_price()));
         entity.setTurnoverPct(of(e.getTurnover_pct()));
 
 
@@ -1487,7 +1483,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情   -   last kline
-        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 1));
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
 
 
         // 实时行情

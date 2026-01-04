@@ -36,14 +36,29 @@ public class ParserController {
 
 
     /**
-     * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入
+     * 通达信 - （股票/板块/自定义板块）数据初始化   一键导入     +     Kline/ext_data 解析入库
      *
      * @return
      */
-    @Operation(summary = "（股票/板块/自定义板块）数据初始化 - 一键导入", description = "（股票/板块/自定义板块）数据初始化 - 一键导入")
+    @Operation(summary = "通达信 - （股票/板块/自定义板块）数据初始化   一键导入     +     Kline/ext_data 解析入库",
+            description = "通达信 - （股票/板块/自定义板块）数据初始化   一键导入     +     Kline/ext_data 解析入库")
     @GetMapping(value = "/importAll")
     public Result<Void> importAll() {
         tdxDataParserService.importAll();
+        return Result.SUC();
+    }
+
+
+    /**
+     * 通达信 - 板块/个股/ETF/自定义板块/关联关系   ->   一键 初始化/刷新
+     *
+     * @return
+     */
+    @Operation(summary = "通达信 - 板块/个股/ETF/自定义板块/关联关系   ->   一键 初始化/刷新",
+            description = "通达信 - 板块/个股/ETF/自定义板块/关联关系   ->   一键 初始化/刷新")
+    @GetMapping(value = "/importAll/blockRelaStock")
+    public Result<Void> importAll__blockRelaStock() {
+        tdxDataParserService.importAll__blockRelaStock();
         return Result.SUC();
     }
 
@@ -94,7 +109,7 @@ public class ParserController {
      */
     @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
     @GetMapping(value = "/refresh/klineAll")
-    public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
+    public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新（实时行情）；", example = "1")
                                         @RequestParam(required = false, defaultValue = "1") int updateType) {
 
         tdxDataParserService.refreshKlineAll(UpdateTypeEnum.getByType(updateType));

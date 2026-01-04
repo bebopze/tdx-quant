@@ -17,7 +17,7 @@ public enum UpdateTypeEnum {
 
     ALL(1, "全量更新"),
 
-    INCR(2, "增量更新"),
+    INCR(2, "增量更新（实时行情）"),
 
 
     ;
