@@ -12,18 +12,27 @@ public interface ExtDataService {
 
     /**
      * 扩展数据（自定义 指标）  ->   板块 + 个股
+     *
+     * @param N null 或者 <=0   ->   全量更新
+     *          >0             ->   增量更新（最近 N 日行情数据）
      */
     void refreshExtDataAll(Integer N);
 
 
     /**
      * 扩展数据（自定义 指标） - 个股
+     *
+     * @param N null 或者 <=0   ->   全量更新
+     *          >0             ->   增量更新（最近 N 日行情数据）
      */
     void calcStockExtData(Integer N);
 
 
     /**
      * 扩展数据（自定义 指标） - 板块
+     *
+     * @param N null 或者 <=0   ->   全量更新
+     *          >0             ->   增量更新（最近 N 日行情数据）
      */
     void calcBlockExtData(Integer N);
 }
