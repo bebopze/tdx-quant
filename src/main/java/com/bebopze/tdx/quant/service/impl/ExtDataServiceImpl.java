@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -38,6 +39,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
 
 /**
@@ -111,23 +114,26 @@ public class ExtDataServiceImpl implements ExtDataService {
     public void calcBlockExtData(Integer N) {
 
 
+        N = StockUtil.N(N);
+
+
         // -------------------------------------------------------------------------------------------------------------
 
         // 从本地DB   加载全部（380+支） 板块的   收盘价序列/日期序列/ code-id
 
 
         // 预加载 -> 解析数据
-        DataDTO data = loadAllBlockKline();
+        DataDTO data = loadAllBlockKline(N);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // RPS
-        blockTask__RPS(data);
+        blockTask__RPS(data, N);
 
         // 扩展数据
-        blockTask__extData(data);
+        blockTask__extData(data, N);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -138,6 +144,11 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
 
+    //
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // ---------------------------------------------------- 个股 --------------------------------------------------------
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -152,7 +163,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         data.stockDOList = baseStockService.listAllKline();
-        data.stockDOList = data.stockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getKlineHisStr()) /*&& e.getType() == 1*/).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.parallelStream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -160,28 +171,10 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // 增量更新     =>     kline_his（计算参数 -> 需截取） / ext_data_his（被计算 -> 无需截取）    =>     截取 最后N条
         if (StockUtil.incrUpdate(N)) {
-
-
             data.stockDOList.parallelStream().forEach(e -> {
-
-
                 // klineHis   ->   最后N条
-                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N);
-
-                // e.setKlineHis(ConvertStockKline.dtoList2JsonStr(klineDTOList));
+                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N + 251);
                 e.setKlineDTOList(klineDTOList);
-
-
-                // -----------------------------------------------------------------------------
-
-
-//                // extDataHis -> 无需同步 截取（数据对齐）            ==>       此处 仅需用 kline_his  ->  计算 rps + ext_data
-//
-//
-//                // extDataHis   ->   最后N条
-//                List<ExtDataDTO> extDataDTOList = ListUtil.lastN(e.getExtDataDTOList(), N); // TODO   如需截取 也应该用 date 过滤
-//
-//                e.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(extDataDTOList));
             });
         }
 
@@ -221,63 +214,24 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             data.codePriceMap.put(code, dateCloseMap);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 假设[东方财富]   不会停牌    // TODO   再加2个[贵州茅台/农业银行]   ->   总不可能 都同时 停牌！！！
+            if ("300059".equals(code) || "600519".equals(code) || "601288".equals(code)) {
+                int len = date_arr.length;
+
+                data.startDate = data.startDate == null ? date_arr[0] : DateTimeUtil.min(data.startDate, date_arr[0]);
+                data.endDate = data.endDate == null ? date_arr[len - 1] : DateTimeUtil.max(data.endDate, date_arr[len - 1]);
+
+                if (StockUtil.incrUpdate(N)) {
+                    data.startDate = DateTimeUtil.min(data.startDate, date_arr[Math.max(0, len - N)]);
+                    data.endDate = DateTimeUtil.max(data.endDate, date_arr[len - 1]);
+                }
+            }
         });
-
-
-        for (int i = 0; i < data.stockDOList.size(); i++) {
-            BaseStockDO stockDO = data.stockDOList.get(i);
-            data.codeIdxMap.put(stockDO.getCode(), i);
-        }
-
-
-        return data;
-    }
-
-
-    /**
-     * 从本地DB   加载全部（380+支）板块的 收盘价序列
-     *
-     * @return stock - close_arr
-     */
-    private DataDTO loadAllBlockKline() {
-        DataDTO data = new DataDTO();
-
-
-        data.blockDOList = baseBlockService.listAllRpsKline();
-        data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
-
-
-        data.blockDOList.parallelStream().forEach(e -> {
-
-            Long id = e.getId();
-            String code = e.getCode();
-
-
-            List<KlineDTO> klineDTOList = e.getKlineDTOList();
-            KlineArrDTO klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
-
-
-            LocalDate[] date_arr = klineArrDTO.date;
-            double[] close_arr = klineArrDTO.close;
-
-
-            TreeMap<LocalDate, Double> dateCloseMap = klineArrDTO.getDateCloseMap();
-
-
-            data.codeCloseMap.put(code, close_arr);
-            data.codeDateMap.put(code, date_arr);
-
-            data.codeIdMap.put(code, id);
-
-
-            data.codePriceMap.put(code, dateCloseMap);
-        });
-
-
-        for (int i = 0; i < data.blockDOList.size(); i++) {
-            BaseBlockDO blockDO = data.blockDOList.get(i);
-            data.codeIdxMap.put(blockDO.getCode(), i);
-        }
 
 
         return data;
@@ -305,7 +259,71 @@ public class ExtDataServiceImpl implements ExtDataService {
         log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
 
 
-        // -------------------------------------------------------------------------------------------------------------
+//        Map<String, double[]> RPS10_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
+//        Map<String, double[]> RPS20_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20);
+//        Map<String, double[]> RPS50_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50);
+//        Map<String, double[]> RPS120_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 120); // 120 -> 100
+//        Map<String, double[]> RPS250_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250); // 250 -> 200
+//
+//
+//        log.info("computeRPS - 个股2     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
+//
+//
+//        Map<String, double[]> RPS10_3 = TdxExtDataFun.computeRPS_2(data.codeDateMap, data.codeCloseMap, 10);
+//        Map<String, double[]> RPS20_3 = TdxExtDataFun.computeRPS_2(data.codeDateMap, data.codeCloseMap, 20);
+//        Map<String, double[]> RPS50_3 = TdxExtDataFun.computeRPS_2(data.codeDateMap, data.codeCloseMap, 50);
+//        Map<String, double[]> RPS120_3 = TdxExtDataFun.computeRPS_2(data.codeDateMap, data.codeCloseMap, 120); // 120 -> 100
+//        Map<String, double[]> RPS250_3 = TdxExtDataFun.computeRPS_2(data.codeDateMap, data.codeCloseMap, 250); // 250 -> 200
+//
+//
+//        log.info("computeRPS_2 - 个股3     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        try {
+//            RPS10.forEach((code, rps10_arr) -> {
+//                double[] rps10_arr_2 = RPS10_2.get(code);
+//                double[] rps10_arr_3 = RPS10_3.get(code);
+//
+//
+//                LocalDate[] date_arr = data.codeDateMap.get(code);
+//
+//                if (null == rps10_arr) {
+//                    return;
+//                }
+//
+//
+//                int rpsLen = rps10_arr.length;
+//                int rpsLen_2 = rps10_arr_2.length;
+//                int rpsLen_3 = rps10_arr_3.length;
+//
+//                int startIdx_2 = rpsLen_2 - rpsLen;
+//                int startIdx_3 = rpsLen_3 - rpsLen;
+//
+//
+//                for (int j = 0; j < rpsLen; j++) {
+//                    double rps10_1 = rps10_arr[j];
+//                    double rps10_2 = rps10_arr_2[startIdx_2 + j];
+//                    double rps10_3 = rps10_arr_3[startIdx_3 + j];
+//
+//
+//                    LocalDate date = date_arr[startIdx_2 + j];
+//
+//
+//                    try {
+//                        Assert.isTrue(Double.isNaN(rps10_1) || TdxFunCheck.equals(rps10_1, rps10_2, 0.02, 0.0001), String.format("code=[%s]  date=[%s]     RPS10_1=[%.4f] != RPS10_2=[%.4f]   ,   RPS10_3=[%.4f]", code, date, rps10_1, rps10_2, rps10_3));
+//                        Assert.isTrue(TdxFunCheck.equals(rps10_2, rps10_3, 0.01, 0.0001), String.format("code=[%s]  date=[%s]     RPS10_2=[%.4f] != RPS10_3=[%.4f]   ,   RPS10_1=[%.4f]", code, date, rps10_2, rps10_3, rps10_1));
+//                    } catch (Exception e) {
+//                        log.error("Check - err   >>>   {}", e.getMessage());
+//                    }
+//                }
+//            });
+//
+//        } catch (Exception e) {
+//            log.error("computeRPS - 个股 err     >>>     errMsg : {}", e.getMessage(), e);
+//        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -314,7 +332,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         data.codeDateMap.keySet().parallelStream().forEach(code -> {
             LocalDate[] date_arr = data.codeDateMap.get(code);
 
-            int length = date_arr.length;
+            int dateLen = date_arr.length;
+            int dateStartIdx = lastDays > 0 ? Math.max(dateLen - lastDays, 0) : 0;
 
 
             double[] rps10 = RPS10.get(code);
@@ -324,22 +343,37 @@ public class ExtDataServiceImpl implements ExtDataService {
             double[] rps250 = RPS250.get(code);
 
 
-            List<ExtDataDTO> new_dtoList = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
+            try {
+                int rpsLen = rps10.length;
 
-                ExtDataDTO dto = new ExtDataDTO();
-                dto.setDate(date_arr[i]);
-                dto.setRps10(of(rps10[i]));
-                dto.setRps20(of(rps20[i]));
-                dto.setRps50(of(rps50[i]));
-                dto.setRps120(of(rps120[i]));
-                dto.setRps250(of(rps250[i]));
+                List<ExtDataDTO> new_extDataDTOList = new ArrayList<>(rpsLen);
+                for (int i = 0; i < rpsLen; i++) {
 
-                new_dtoList.add(dto);
+                    // 排除 停牌干扰
+                    LocalDate date = date_arr[dateStartIdx + i];
+                    if (date.isBefore(data.startDate) || date.isAfter(data.endDate)) {
+                        continue;
+                    }
+
+
+                    ExtDataDTO dto = new ExtDataDTO();
+                    dto.setDate(date);
+                    dto.setRps10(of(rps10[i]));
+                    dto.setRps20(of(rps20[i]));
+                    dto.setRps50(of(rps50[i]));
+                    dto.setRps120(of(rps120[i]));
+                    dto.setRps250(of(rps250[i]));
+
+                    new_extDataDTOList.add(dto);
+
+
+                    data.extDataMap.put(code, new_extDataDTOList);
+                }
+
+
+            } catch (Exception e) {
+                log.error("stockTask__RPS - 个股     >>>     code : {}     >>>     e : {}", code, e.getMessage(), e);
             }
-
-
-            data.extDataMap.put(code, new_dtoList);
         });
     }
 
@@ -355,7 +389,17 @@ public class ExtDataServiceImpl implements ExtDataService {
         long start = System.currentTimeMillis();
 
 
-        // -----------------------------------------------------------------------------------------------
+        // -------------------------------------------------------
+
+
+        // TODO   从 TDX 实时读取（通达信 -> 开启 自定义板块  =>  每分钟刷新一次 -> 写入txt）
+
+
+        // 1亿 + 月多 + IN主线 + RPS红（5500 -> 300）
+//        data.stockDOList = data.stockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
+
+
+        // -------------------------------------------------------
 
 
         ParallelCalcUtil.forEach(data.stockDOList,
@@ -422,6 +466,235 @@ public class ExtDataServiceImpl implements ExtDataService {
         // OOM -> 缓存清理
         clearCodeCache(data, code);
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // ---------------------------------------------------- 板块 --------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 从本地DB   加载全部（380+支）板块的 收盘价序列
+     *
+     * @return stock - close_arr
+     */
+    private DataDTO loadAllBlockKline(Integer N) {
+        DataDTO data = new DataDTO();
+
+
+        data.blockDOList = baseBlockService.listAllRpsKline();
+        data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 增量更新     =>     kline_his（计算参数 -> 需截取） / ext_data_his（被计算 -> 无需截取）    =>     截取 最后N条
+        if (StockUtil.incrUpdate(N)) {
+
+            data.blockDOList.parallelStream().forEach(e -> {
+                // klineHis   ->   最后N条
+                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N + 251);
+                e.setKlineDTOList(klineDTOList);
+            });
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        data.blockDOList.parallelStream().forEach(e -> {
+
+            Long id = e.getId();
+            String code = e.getCode();
+
+
+            List<KlineDTO> klineDTOList = e.getKlineDTOList();
+            KlineArrDTO klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
+
+
+            LocalDate[] date_arr = klineArrDTO.date;
+            double[] close_arr = klineArrDTO.close;
+
+
+            TreeMap<LocalDate, Double> dateCloseMap = klineArrDTO.getDateCloseMap();
+
+
+            data.codeCloseMap.put(code, close_arr);
+            data.codeDateMap.put(code, date_arr);
+
+            data.codeIdMap.put(code, id);
+
+
+            data.codePriceMap.put(code, dateCloseMap);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 大盘/板块  ->  不会停牌
+            if (INDEX_BLOCK.equals(code)) {
+                int len = date_arr.length;
+
+                data.startDate = data.startDate == null ? date_arr[0] : DateTimeUtil.min(data.startDate, date_arr[0]);
+                data.endDate = data.endDate == null ? date_arr[len - 1] : DateTimeUtil.max(data.endDate, date_arr[len - 1]);
+
+                if (StockUtil.incrUpdate(N)) {
+                    data.startDate = DateTimeUtil.min(data.startDate, date_arr[Math.max(0, len - N)]);
+                    data.endDate = DateTimeUtil.max(data.endDate, date_arr[len - 1]);
+                }
+            }
+        });
+
+
+        return data;
+    }
+
+
+    /**
+     * 板块 - RPS计算
+     *
+     * @param data
+     */
+    private void blockTask__RPS(DataDTO data, int lastDays) {
+
+
+        // 计算 -> RPS
+        Map<String, double[]> RPS5 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 5, lastDays);
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10, lastDays);
+        Map<String, double[]> RPS15 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 15, lastDays);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20, lastDays);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50, lastDays);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        data.codeDateMap.keySet().parallelStream().forEach(code -> {
+            LocalDate[] date_arr = data.codeDateMap.get(code);
+
+            int length = date_arr.length;
+
+
+            double[] rps10 = RPS5.get(code);
+            double[] rps20 = RPS10.get(code);
+            double[] rps50 = RPS15.get(code);
+            double[] rps120 = RPS20.get(code);
+            double[] rps250 = RPS50.get(code);
+
+
+            List<ExtDataDTO> new_extDataDTOList = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+
+                // 大盘/板块  ->  不会停牌
+                ExtDataDTO dto = new ExtDataDTO();
+                dto.setDate(date_arr[i]);
+                dto.setRps10(of(rps10[i]));
+                dto.setRps20(of(rps20[i]));
+                dto.setRps50(of(rps50[i]));
+                dto.setRps120(of(rps120[i]));
+                dto.setRps250(of(rps250[i]));
+
+                new_extDataDTOList.add(dto);
+            }
+
+
+            data.extDataMap.put(code, new_extDataDTOList);
+        });
+    }
+
+
+    /**
+     * 板块 - 扩展数据 计算
+     *
+     * @param data
+     * @param N
+     */
+    private void blockTask__extData(DataDTO data, Integer N) {
+        AtomicInteger count = new AtomicInteger(0);
+        long start = System.currentTimeMillis();
+
+
+        // -------------------------------------------------------
+
+
+        ParallelCalcUtil.forEach(data.blockDOList,
+                                 blockDO -> execCalcBlockExtData(data, N, blockDO, count, start),
+                                 ThreadPoolType.CPU_INTENSIVE_2
+        );
+    }
+
+
+    private void execCalcBlockExtData(DataDTO data,
+                                      Integer N,
+                                      BaseBlockDO blockDO,
+                                      AtomicInteger count,
+                                      long start) {
+
+
+        String code = blockDO.getCode();
+        List<ExtDataDTO> new_extDataDTOList = data.extDataMap.get(code);     // 暂时 只计算了 RPS
+
+
+        // --------------------------------------------------------
+
+
+        // old（完整His  ->  load时，并未截取）
+        List<ExtDataDTO> old_extDataDTOList = blockDO.getExtDataDTOList();
+
+
+        // fill -> new_RPS（后续计算 RPS相关指标）
+        blockDO.setExtDataDTOList(new_extDataDTOList);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+        long stock_start = System.currentTimeMillis();
+
+
+        // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
+        ExtDataServiceImpl.calcExtData(new BlockFun(blockDO), new_extDataDTOList, 87);
+
+
+        log.info("blockFun 指标计算 - 板块 suc     >>>     [{}-{}] , count : {} , stockTime : {} , totalTime : {}",
+                 code, blockDO.getName(), count.incrementAndGet(), DateTimeUtil.formatNow2Hms(stock_start), DateTimeUtil.formatNow2Hms(start));
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // ------------------------------------------------------------------------ 更新 -> DB
+
+
+        // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
+        compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
+
+
+        // -------------------------
+
+
+        BaseBlockDO entity = new BaseBlockDO();
+        entity.setId(data.codeIdMap.get(code));
+        entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
+
+
+        // 更新 -> DB
+        baseBlockService.updateById(entity);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // OOM -> 缓存清理
+        clearCodeCache(data, code);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
 
     /**
      * 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
@@ -929,6 +1202,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         }
     }
 
+
     private Map<LocalDate, Integer> old_dateIndexMap(List<ExtDataDTO> old__extDataDTOList) {
         Map<LocalDate, Integer> old_dateIndexMap = Maps.newHashMap();
 
@@ -944,150 +1218,13 @@ public class ExtDataServiceImpl implements ExtDataService {
     }
 
 
-    /**
-     * 板块 - RPS计算
-     *
-     * @param data
-     */
-    private void blockTask__RPS(DataDTO data) {
-
-
-        // 计算 -> RPS
-        Map<String, double[]> RPS5 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 5);
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
-        Map<String, double[]> RPS15 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 15);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        data.codeDateMap.keySet().parallelStream().forEach(code -> {
-            LocalDate[] date_arr = data.codeDateMap.get(code);
-
-            int length = date_arr.length;
-
-
-            double[] rps10_arr = RPS5.get(code);
-            double[] rps20_arr = RPS10.get(code);
-            double[] rps50_arr = RPS15.get(code);
-            double[] rps120_arr = RPS20.get(code);
-            double[] rps250_arr = RPS50.get(code);
-
-
-            List<ExtDataDTO> dtoList = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
-
-                ExtDataDTO dto = new ExtDataDTO();
-                dto.setDate(date_arr[i]);
-                dto.setRps10(of(rps10_arr[i]));
-                dto.setRps20(of(rps20_arr[i]));
-                dto.setRps50(of(rps50_arr[i]));
-                dto.setRps120(of(rps120_arr[i]));
-                dto.setRps250(of(rps250_arr[i]));
-
-                dtoList.add(dto);
-            }
-
-
-            data.extDataMap.put(code, dtoList);
-        });
-    }
-
-
-    /**
-     * 板块 - 扩展数据 计算
-     *
-     * @param data
-     */
-    private void blockTask__extData(DataDTO data) {
-        AtomicInteger count = new AtomicInteger(0);
-        long start = System.currentTimeMillis();
-
-
-        data.blockDOList.parallelStream().forEach(blockDO -> {
-
-            if (blockDO == null) {
-                log.warn("Found null element in data.blockDOList, skipping...");
-                return;
-            }
-
-
-            String code = blockDO.getCode();
-            List<ExtDataDTO> new_dtoList = data.extDataMap.get(code);   // 此时 -> 仅计算了 RPS
-
-
-            // fill -> RPS
-            // blockDO.setExtDataHis(ConvertStockExtData.dtoList2JsonStr(dtoList));
-            blockDO.setExtDataDTOList(new_dtoList);
-
-
-            // ---------------------------------------------------------------------------------------------------------
-            long block_start = System.currentTimeMillis();
-
-
-            // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-            calcExtData(new BlockFun(code, blockDO), new_dtoList, 87);
-
-
-            log.info("blockFun 指标计算 - 板块 suc     >>>     code : {} , count : {} , blockTime : {} , totalTime : {}",
-                     code, count.incrementAndGet(), DateTimeUtil.formatNow2Hms(block_start), DateTimeUtil.formatNow2Hms(start));
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            List<String> extDataList = ConvertStockExtData.dtoList2StrList(new_dtoList);
-
-
-            BaseBlockDO entity = new BaseBlockDO();
-            entity.setId(data.codeIdMap.get(code));
-            entity.setExtDataHis(JSON.toJSONString(extDataList));
-
-
-            // 更新 -> DB
-            baseBlockService.updateById(entity);
-
-
-            // -------------------------------------------------------------------------------------------------------------
-
-
-            // OOM -> 缓存清理
-            clearCodeCache(data, code);
-        });
-    }
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    /**
-     * 填充最近N日的数据，如果 原始数据 不足N日，则不足的天数 补0（NaN）
-     *
-     * @param arr 原始数据
-     * @param N   填充N日
-     * @return
-     */
-    public static double[] fillNaN(double[] arr, int N) {
-        double[] new_arr = new double[N];
-
-
-        int M = arr.length;
-
-        if (N >= M) {
-            // 前 N-M 项补 NaN
-            for (int i = 0; i < N - M; i++) {
-                new_arr[i] = Double.NaN;
-            }
-            // 后 M 项直接拷贝 arr[0..M-1]
-            System.arraycopy(arr, 0, new_arr, N - M, M);
-        } else {
-            // N < M 时，只拷贝最近 N 天的数据（arr 的后 N 项）
-            // arr[M-N .. M-1]
-            System.arraycopy(arr, M - N, new_arr, 0, N);
-        }
-
-        return new_arr;
-    }
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     private static double of(double val) {
@@ -1113,6 +1250,10 @@ public class ExtDataServiceImpl implements ExtDataService {
         Map<String, List<ExtDataDTO>> extDataMap = Maps.newConcurrentMap();
 
 
+        LocalDate startDate;
+        LocalDate endDate;
+
+
         List<BaseStockDO> stockDOList = Lists.newArrayList();
         List<BaseBlockDO> blockDOList = Lists.newArrayList();
 
@@ -1129,6 +1270,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         // code - id
         Map<String, Long> codeIdMap = Maps.newConcurrentMap();
 
+
         // code - idx
         Map<String, Integer> codeIdxMap = Maps.newConcurrentMap();
 
@@ -1138,9 +1280,10 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         @Override
         public String toString() {
-            // toString  ->  OOM
             return "DataDTO{" +
-                    "extDataMap=" + extDataMap.size() +
+                    "extDataMap=" + extDataMap +
+                    ", startDate=" + startDate +
+                    ", endDate=" + endDate +
                     ", stockDOList=" + stockDOList.size() +
                     ", blockDOList=" + blockDOList.size() +
                     ", codePriceMap=" + codePriceMap.size() +
