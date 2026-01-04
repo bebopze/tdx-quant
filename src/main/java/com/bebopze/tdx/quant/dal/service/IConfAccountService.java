@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.dal.service;
 
-import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author bebopze
  * @since 2025-09-23
  */
-public interface ICfgAccountService extends IService<CfgAccountDO> {
+public interface IConfAccountService extends IService<ConfAccountDO> {
 
 }
