@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
-import com.bebopze.tdx.quant.dal.service.ICfgAccountService;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
+import com.bebopze.tdx.quant.dal.service.IConfAccountService;
 import com.bebopze.tdx.quant.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,30 +21,30 @@ public class AccountServiceImpl implements AccountService {
 
 
     @Autowired
-    private ICfgAccountService cfgAccountService;
+    private IConfAccountService confAccountService;
 
 
     @Override
-    public Long create(CfgAccountDO entity) {
-        cfgAccountService.save(entity);
+    public Long create(ConfAccountDO entity) {
+        confAccountService.save(entity);
         return entity.getId();
     }
 
     @Override
     public void delete(Long id) {
-        cfgAccountService.removeById(id);
+        confAccountService.removeById(id);
     }
 
     @Override
-    public void update(CfgAccountDO entity) {
+    public void update(ConfAccountDO entity) {
         Assert.isTrue(entity != null && entity.getId() != null, "id不能为空");
 
-        cfgAccountService.updateById(entity);
+        confAccountService.updateById(entity);
     }
 
     @Override
-    public CfgAccountDO info(Long id) {
-        return cfgAccountService.getById(id);
+    public ConfAccountDO info(Long id) {
+        return confAccountService.getById(id);
     }
 
 }

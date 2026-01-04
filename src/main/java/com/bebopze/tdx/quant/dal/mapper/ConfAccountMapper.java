@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.dal.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
  * @author bebopze
  * @since 2025-09-23
  */
-public interface CfgAccountMapper extends BaseMapper<CfgAccountDO> {
+public interface ConfAccountMapper extends BaseMapper<ConfAccountDO> {
 
 }

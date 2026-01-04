@@ -25,9 +25,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-@TableName("cfg_account")
-@Schema(name = "CfgAccountDO", description = "配置-持仓账户")
-public class CfgAccountDO implements Serializable {
+@TableName("conf_account")
+@Schema(name = "ConfAccountDO", description = "配置-持仓账户")
+public class ConfAccountDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 import com.bebopze.tdx.quant.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
  * @date: 2025/9/23
  */
 @RestController
-@RequestMapping("/api/cfg/account")
+@RequestMapping("/api/conf/account")
 @Tag(name = "配置-持仓账户", description = "配置-持仓账户")
-public class CfgAccountController {
+public class ConfAccountController {
 
 
     @Autowired
@@ -28,20 +28,20 @@ public class CfgAccountController {
 
     @Operation(summary = "创建", description = "创建")
     @PostMapping("/create")
-    public Result<Long> create(@RequestBody CfgAccountDO entity) {
+    public Result<Long> create(@RequestBody ConfAccountDO entity) {
         return Result.SUC(accountService.create(entity));
     }
 
     @Operation(summary = "修改", description = "修改")
     @PostMapping("/update")
-    public Result<Void> update(@RequestBody CfgAccountDO entity) {
+    public Result<Void> update(@RequestBody ConfAccountDO entity) {
         accountService.update(entity);
         return Result.SUC();
     }
 
     @Operation(summary = "查询", description = "查询")
     @GetMapping("/info")
-    public Result<CfgAccountDO> info(@Schema(description = "ID", example = "1")
+    public Result<ConfAccountDO> info(@Schema(description = "ID", example = "1")
                                      @RequestParam Long id) {
         return Result.SUC(accountService.info(id));
     }

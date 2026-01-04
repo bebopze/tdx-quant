@@ -315,16 +315,16 @@
         }
 
         /* --- 新增：持仓账户配置模块样式 --- */
-        #cfgAccountForm .form-label {
+        #confAccountForm .form-label {
             font-size: 15px;
             font-weight: 500;
         }
 
-        #cfgAccountForm .form-control {
+        #confAccountForm .form-control {
             font-size: 15px;
         }
 
-        #cfgAccountForm .form-check-label {
+        #confAccountForm .form-check-label {
             font-size: 15px;
         }
 
@@ -574,19 +574,19 @@
     <div class="card mb-4">
         <!-- 添加 ID 和 Class 用于折叠控制 -->
         <div class="card-header d-flex justify-content-between align-items-center collapsible-card-header"
-             id="cfgAccountCardHeader" onclick="toggleCfgAccountCollapse()">
+             id="confAccountCardHeader" onclick="toggleConfAccountCollapse()">
             <span>配置-持仓账户</span>
             <!-- 添加 折叠/展开 按钮/指示器 -->
-            <span class="collapse-btn" id="cfgAccountCollapseBtn"></span>
-            <button type="button" class="btn btn-primary" id="saveCfgAccountBtn"
+            <span class="collapse-btn" id="confAccountCollapseBtn"></span>
+            <button type="button" class="btn btn-primary" id="saveConfAccountBtn"
                     style="font-size: 12px; padding: 2px 8px; border: 1px solid blue; display: none;">
                 保存
             </button>
         </div>
         <!-- 添加 ID 和 Class 用于折叠内容，并设置默认隐藏 -->
-        <div class="card-body collapse-content collapsible-content" id="cfgAccountCollapseContent"
+        <div class="card-body collapse-content collapsible-content" id="confAccountCollapseContent"
              style="display: none;">
-            <form id="cfgAccountForm">
+            <form id="confAccountForm">
                 <div class="row mb-3">
                     <div class="col-md-12 mb-2">
                         <div class="form-check form-switch">
@@ -1676,7 +1676,7 @@
     let ordersData = [];
 
     // 存储持仓账户配置数据
-    let cfgAccountData = {
+    let confAccountData = {
         id: null,
         rzAccount: 0,
         maxRzPct: 0,
@@ -2621,8 +2621,8 @@
 
 
     // 加载
-    function loadCfgAccount() {
-        ApiUtils.fetch('/api/cfg/account/info?id=1') // 假设 ID 为 1
+    function loadConfAccount() {
+        ApiUtils.fetch('/api/conf/account/info?id=1') // 假设 ID 为 1
             .then(res => {
                 if (!res.ok) {
                     if (res.status === 404) {
@@ -2642,8 +2642,8 @@
                     alert('加载配置失败：' + (data.msg || '未知错误'));
                     return;
                 }
-                cfgAccountData = data.data || cfgAccountData; // 如果data.data为null，使用默认值
-                displayCfgAccountForm(cfgAccountData);
+                confAccountData = data.data || confAccountData; // 如果data.data为null，使用默认值
+                displayConfAccountForm(confAccountData);
             })
             .catch(error => {
                 console.error('查询持仓账户配置失败:', error);
@@ -2652,7 +2652,7 @@
     }
 
     // 展示
-    function displayCfgAccountForm(data) {
+    function displayConfAccountForm(data) {
         if (!data) {
             // 如果数据为空，重置表单为默认值
             document.getElementById('rzAccountCheckbox').checked = false;
@@ -2666,13 +2666,13 @@
         document.getElementById('posLimitPctInput').value = data.posLimitPct != null ? data.posLimitPct : '';
         document.getElementById('stockPosLimitPctInput').value = data.stockPosLimitPct != null ? data.stockPosLimitPct : '';
         // 存储ID以便后续更新
-        cfgAccountData.id = data.id;
+        confAccountData.id = data.id;
     }
 
     // 保存
-    function saveCfgAccount() {
+    function saveConfAccount() {
         const formData = {
-            id: cfgAccountData.id, // 包含ID，如果为null则为新增
+            id: confAccountData.id, // 包含ID，如果为null则为新增
             rzAccount: document.getElementById('rzAccountCheckbox').checked ? 1 : 0,
             maxRzPct: parseFloat(document.getElementById('maxRzPctInput').value) || 0,
             posLimitPct: parseFloat(document.getElementById('posLimitPctInput').value) || 0,
@@ -2680,10 +2680,10 @@
             // gmtCreate 和 gmtModify 通常由后端处理，前端不需要发送
         };
 
-        const url = '/api/cfg/account/update';
+        const url = '/api/conf/account/update';
         const method = 'POST';
 
-        const saveBtn = document.getElementById('saveCfgAccountBtn');
+        const saveBtn = document.getElementById('saveConfAccountBtn');
         const originalBtnText = saveBtn.textContent;
         saveBtn.textContent = '保存中...';
         saveBtn.disabled = true;
@@ -2703,11 +2703,11 @@
                 if (data && data.success) {
                     alert('配置保存成功！');
                     // 保存成功后，重新查询以获取最新的gmtModify时间等
-                    loadCfgAccount();
+                    loadConfAccount();
                 } else {
                     const errorMsg = data.msg || '操作失败，未知错误。';
                     alert(`配置保存失败：${errorMsg}`);
-                    console.error('Save CfgAccount API Error:', data);
+                    console.error('Save ConfAccount API Error:', data);
                 }
             })
             .catch(error => {
@@ -2721,11 +2721,11 @@
     }
 
     // 折叠/展开
-    function toggleCfgAccountCollapse() {
-        const content = document.getElementById('cfgAccountCollapseContent');
-        const saveButton = document.getElementById('saveCfgAccountBtn'); // 获取保存按钮
-        const header = document.getElementById('cfgAccountCardHeader');
-        const btnText = document.getElementById('cfgAccountCollapseBtn');
+    function toggleConfAccountCollapse() {
+        const content = document.getElementById('confAccountCollapseContent');
+        const saveButton = document.getElementById('saveConfAccountBtn'); // 获取保存按钮
+        const header = document.getElementById('confAccountCardHeader');
+        const btnText = document.getElementById('confAccountCollapseBtn');
 
         if (content.style.display === 'none' || content.style.display === '') {
             content.style.display = 'block';
@@ -4670,7 +4670,7 @@
 
 
         // 持仓账户配置 事件监听器
-        document.getElementById('saveCfgAccountBtn').addEventListener('click', saveCfgAccount);
+        document.getElementById('saveConfAccountBtn').addEventListener('click', saveConfAccount);
 
 
         // -------------------------- 我的持仓
@@ -4957,7 +4957,7 @@
         // 查询持仓
         loadPositions();
         // 查询配置
-        loadCfgAccount();
+        loadConfAccount();
     });
 
 

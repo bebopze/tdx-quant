@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 
 
 /**
@@ -9,11 +9,11 @@ import com.bebopze.tdx.quant.dal.entity.CfgAccountDO;
  */
 public interface AccountService {
 
-    Long create(CfgAccountDO entity);
+    Long create(ConfAccountDO entity);
 
     void delete(Long id);
 
-    void update(CfgAccountDO entity);
+    void update(ConfAccountDO entity);
 
-    CfgAccountDO info(Long id);
+    ConfAccountDO info(Long id);
 }
