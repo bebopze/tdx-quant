@@ -90,7 +90,7 @@ fi
 
 MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
 if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
-if [ "$MAX_HEAP" -lt 25 ]; then MAX_HEAP=25; fi
+if [ "$MAX_HEAP" -lt 16 ]; then MAX_HEAP=16; fi
 if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
 
 # 检测 Java 版本，设置调试参数（Java 8 vs Java 9+）
@@ -135,6 +135,7 @@ cd "$APP_HOME" || {
 nohup java \
     $DEBUG_OPTS \
     -Dfile.encoding=UTF-8 \
+    -Duser.timezone=Asia/Shanghai \
     -Xms8g -Xmx${MAX_HEAP}g \
     -XX:+UseG1GC \
     -XX:MaxGCPauseMillis=200 \
