@@ -45,9 +45,17 @@ public @interface DistributedLock {
     );
 
     @interface RetryStrategy {
+
+        /**
+         * 最大重试次数
+         */
         int maxRetries() default 3;
 
+        /**
+         * 每次重试等待时间（毫秒）
+         */
         long waitTime() default 100; // 毫秒
     }
+
 
 }
