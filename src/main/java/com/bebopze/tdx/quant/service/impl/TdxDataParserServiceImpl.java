@@ -17,6 +17,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.*;
+import com.bebopze.tdx.quant.service.ExtDataService;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
@@ -74,6 +75,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private MarketService marketService;
 
     @Autowired
+    private ExtDataService extDataService;
+
+    @Autowired
     private InitDataService initDataService;
 
 
@@ -99,13 +103,18 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 大盘量化
 
 
-        // marketService.importMarketMidCycle();
+        marketService.importMarketMidCycle();
 
 
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
 
 
-        tdxTask.execTask__refreshAll();
+        refreshKlineAll(UpdateTypeEnum.ALL);
+
+        extDataService.refreshExtDataAll(null);
+
+
+        // tdxTask.execTask__refreshAll();
     }
 
 
