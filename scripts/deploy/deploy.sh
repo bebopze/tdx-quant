@@ -14,6 +14,10 @@
 #   ./deploy.sh            # 默认 start_model=debug
 #   ./deploy.sh debug      # 使用 debug 模式
 #   START_MODEL=debug ./deploy.sh
+#
+# SSH 免密登录配置（首次需执行）:
+#   ssh-keygen -t ed25519 -C "deploy-key"
+#   ssh-copy-id -p 2222 bebopze@192.168.101.10
 # ============================================================
 
 set -o errexit
@@ -23,14 +27,20 @@ set -o nounset
 # ---------------- 配置（请根据实际修改） ----------------
 JAR_NAME="tdx-quant-1.0-SNAPSHOT.jar"
 REMOTE_USER="bebopze"
-REMOTE_PWD="123456"
 REMOTE_HOST="192.168.101.10"
 REMOTE_PORT="2222"
 REMOTE_PATH="/home/bebopze/code/tdx-quant/prod"
 SERVER_PORT=7001                # 应用端口（用于健康检查）
 BACKUP_KEEP=3                   # 在远端保留最近 N 个备份
 UPLOAD_TIMEOUT=300              # 上传/等待超时（秒）
-SSH_OPTIONS="-o StrictHostKeyChecking=no -p ${REMOTE_PORT}"
+
+# SSH 免密登录配置
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"   # 可通过环境变量指定密钥路径
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 -p ${REMOTE_PORT}"
+# 如果指定了密钥文件且存在，则添加到 SSH_OPTIONS
+if [ -f "$SSH_KEY" ]; then
+    SSH_OPTIONS="-i $SSH_KEY $SSH_OPTIONS"
+fi
 # --------------------------------------------------------
 
 # 支持命令行参数或环境变量 START_MODEL
@@ -55,26 +65,47 @@ if [ ! -f "pom.xml" ]; then
     exit 1
 fi
 
-# 检查 sshpass
-if ! command -v sshpass &>/dev/null; then
-    echo "⚠️ sshpass 未安装，本地尝试安装..."
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        brew install hudochenkov/sshpass/sshpass || {
-            echo "❌ brew 安装 sshpass 失败，请手动安装"
-            exit 1
-        }
-    else
-        sudo apt-get update && sudo apt-get install -y sshpass || {
-            echo "❌ apt 安装 sshpass 失败，请手动安装"
-            exit 1
-        }
-    fi
+# SSH 免密登录检查
+echo ""
+echo "=== 0) 检查 SSH 免密登录 ==="
+check_ssh_connection() {
+    ssh $SSH_OPTIONS "$REMOTE_USER@$REMOTE_HOST" "echo 'SSH连接成功'" 2>/dev/null
+    return $?
+}
+
+if ! check_ssh_connection; then
+    echo "❌ SSH 免密登录失败，请先配置免密登录："
+    echo ""
+    echo "   方法一（推荐）: 使用 ssh-copy-id"
+    echo "   ----------------------------------------"
+    echo "   # 1. 生成密钥（如果没有）"
+    echo "   ssh-keygen -t ed25519 -C 'deploy-key'"
+    echo ""
+    echo "   # 2. 复制公钥到远程服务器"
+    echo "   ssh-copy-id -p $REMOTE_PORT $REMOTE_USER@$REMOTE_HOST"
+    echo ""
+    echo "   方法二: 手动复制"
+    echo "   ----------------------------------------"
+    echo "   cat ~/.ssh/id_ed25519.pub | ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_HOST 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'"
+    echo ""
+    echo "   如果使用其他密钥文件，请设置环境变量："
+    echo "   SSH_KEY=/path/to/your/key ./deploy.sh"
+    echo ""
+    exit 1
 fi
+echo "✅ SSH 免密登录正常"
 
 # 远程执行 helper（返回状态）
 remote_exec() {
     local cmd="$1"
-    sshpass -p "$REMOTE_PWD" ssh $SSH_OPTIONS "$REMOTE_USER@$REMOTE_HOST" "bash -lc \"$cmd\""
+    ssh $SSH_OPTIONS "$REMOTE_USER@$REMOTE_HOST" "bash -lc \"$cmd\""
+}
+
+# 远程复制 helper
+remote_copy() {
+    local src="$1"
+    local dest="$2"
+    scp -P "$REMOTE_PORT" -o StrictHostKeyChecking=no -o BatchMode=yes ${SSH_KEY:+-i "$SSH_KEY"} "$src" "$REMOTE_USER@$REMOTE_HOST:$dest"
 }
 
 # 1) 本地构建
@@ -95,7 +126,7 @@ for f in "$SCRIPT_DIR"/*.sh; do
         continue
     fi
     echo "-> 上传 $base ..."
-    sshpass -p "$REMOTE_PWD" scp -P "$REMOTE_PORT" -o StrictHostKeyChecking=no "$f" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/"
+    remote_copy "$f" "$REMOTE_PATH/"
     if [ $? -ne 0 ]; then
         echo "❌ 上传脚本 $base 失败"
         exit 1
@@ -153,7 +184,7 @@ remote_exec "mkdir -p '$REMOTE_BACKUP_DIR' '$REMOTE_PATH' && if [ -f '$REMOTE_JA
 echo ""
 echo "=== 5) 上传新 JAR(临时名) -> 原子 mv 到目标名 ==="
 echo "-> 上传新 JAR 到远端临时文件: $REMOTE_TMP_NAME"
-sshpass -p "$REMOTE_PWD" scp -P "$REMOTE_PORT" -o StrictHostKeyChecking=no "target/$JAR_NAME" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$REMOTE_TMP_NAME"
+remote_copy "target/$JAR_NAME" "$REMOTE_PATH/$REMOTE_TMP_NAME"
 if [ $? -ne 0 ]; then
     echo "❌ JAR 上传失败，尝试恢复旧 JAR（如果有）并退出"
     # 尝试恢复旧 jar
@@ -195,7 +226,7 @@ elapsed=0
 check_ok=1
 
 while [ $elapsed -lt $HEALTH_WAIT ]; do
-  out=$(sshpass -p "$REMOTE_PWD" ssh $SSH_OPTIONS "$REMOTE_USER@$REMOTE_HOST" \
+  out=$(ssh $SSH_OPTIONS "$REMOTE_USER@$REMOTE_HOST" \
     "bash -lc '
       set -o pipefail
       # 1) 优先：actuator health（若暴露）
