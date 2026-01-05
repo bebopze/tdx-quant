@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.base.BlockDTO;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.service.BlockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 
 /**
@@ -47,7 +50,7 @@ public class BlockController {
      */
     @Operation(summary = "板块-个股", description = "板块-个股")
     @GetMapping(value = "/listStock")
-    public Result<Object> blockInfo(@RequestParam String blockCode) {
+    public Result<List<BaseStockDO>> blockInfo(@RequestParam String blockCode) {
         return Result.SUC(blockService.listStock(blockCode));
     }
 

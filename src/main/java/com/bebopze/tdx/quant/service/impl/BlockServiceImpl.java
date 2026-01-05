@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.common.domain.dto.base.BlockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 /**
@@ -68,8 +71,8 @@ public class BlockServiceImpl implements BlockService {
 
 
     @Override
-    public Object listStock(String blockCode) {
-        return null;
+    public List<BaseStockDO> listStock(String blockCode) {
+        return baseBlockRelaStockService.listStockByBlockCode(blockCode);
     }
 
 

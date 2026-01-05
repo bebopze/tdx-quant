@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -62,6 +63,11 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
     @Override
     public List<BaseBlockDO> listBlockByStockCodeList(Collection<String> stockCodeList) {
         return stockCodeList.isEmpty() ? Collections.emptyList() : baseMapper.listBlockByStockCodeList(stockCodeList);
+    }
+
+    @Override
+    public List<BaseStockDO> listStockByBlockCode(String blockCode) {
+        return listStockByBlockCodeList(Lists.newArrayList(blockCode));
     }
 
     @Override
