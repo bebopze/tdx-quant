@@ -1,6 +1,9 @@
 package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.domain.dto.base.BlockDTO;
+import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+
+import java.util.List;
 
 
 /**
@@ -11,6 +14,6 @@ public interface BlockService {
 
     BlockDTO info(String blockCode);
 
-    Object listStock(String blockCode);
+    List<BaseStockDO> listStock(String blockCode);
 
 }
