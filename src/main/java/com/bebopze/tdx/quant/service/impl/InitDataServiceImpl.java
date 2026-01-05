@@ -5,8 +5,9 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
-import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.tdxfun.BlockKlineLoader;
+import com.bebopze.tdx.quant.common.tdxfun.StockKlineLoader;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
@@ -43,7 +43,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 public class InitDataServiceImpl implements InitDataService {
 
 
-    boolean init = false;
+    private static volatile boolean init = false;
 
 
     /**
@@ -79,8 +79,7 @@ public class InitDataServiceImpl implements InitDataService {
     @Override
     public BacktestCache incrUpdateInitData() {
 
-
-        // 最近N（>= 250天）条   K线数据
+        // 最近N条   K线数据
         int N = 10;
 
         LocalDate startDate = LocalDate.now().minusDays(N);
@@ -88,6 +87,12 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         return initData(startDate, endDate, false);
+    }
+
+
+    @Override
+    public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh) {
+        return initData(startDate, endDate, refresh, 0);
     }
 
 
@@ -100,12 +105,14 @@ public class InitDataServiceImpl implements InitDataService {
      *                  内存128G以下  ->   一次截取20年
      * @param endDate
      * @param refresh
+     * @param nMonth    往前倒推  N 月（多加载 N月数据，默认：0）    // TODO：并无任何计算 需要往前倒推 N月数据（EXT_DATA [RPS250/MA250/月多/...] 指标计算   ->   有独立的 DataDTO  数据拉取实现，与 BacktestCache 毫不相干！！！）
+     *                  后续考虑 彻底废弃此参数！！！
      * @return
      */
     @TotalTime
     @Synchronized
     @Override
-    public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh) {
+    public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh, int nMonth) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -114,11 +121,6 @@ public class InitDataServiceImpl implements InitDataService {
         // null -> 全量行情（近10年）
         startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
         endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
-
-
-        // 内存够用！暂时不截取了！！     ->     此参数 先忽略！！！
-//        startDate = null;
-//        endDate = null;
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -130,21 +132,26 @@ public class InitDataServiceImpl implements InitDataService {
             if (inCacheDateRange) {
                 return data;
             }
+            log.warn("initData - 超出 Cache日期区间 -> Cache不可用   =>   扩展 Cache日期边界     >>>     cacheStartDate : {}, cacheEndDate : {}, startDate : {}, endDate : {}",
+                     data.startDate, data.endDate, startDate, endDate);
 
 
             // 超出 Cache日期区间   ->   Cache不可用     =>     扩展 Cache日期边界   ->   refreshCache
             startDate = DateTimeUtil.min(startDate, data.startDate);
             endDate = DateTimeUtil.max(endDate, data.endDate);
+
+
+            // 2次加载  =>  双份数据 OOM  ->  提前释放内存
+            data.clear();
         }
 
 
         // 加载   全量行情数据 - 个股
-        loadAllStockKline(startDate, endDate, refresh);
+        loadAllStockKline(startDate, endDate, refresh, nMonth);
 
 
         // 加载   全量行情数据 - 板块
-        // TODO   loadAllBlockKline(startDate, endDate, refresh);
-        loadAllBlockKline(refresh);
+        loadAllBlockKline(startDate, endDate, refresh);
 
 
         // 板块-个股  /  个股-板块
@@ -212,16 +219,15 @@ public class InitDataServiceImpl implements InitDataService {
 
 
     /**
-     * 从本地DB   加载   全部个股（5000+）
+     * 从本地DB   加载   全部个股（5500+）
      *
      * @return
      */
-    private void loadAllStockKline(LocalDate startDate, LocalDate endDate, boolean refresh) {
+    private void loadAllStockKline(LocalDate startDate, LocalDate endDate, boolean refresh, int nMonth) {
 
 
-//        // null -> 全量行情（近10年）
-//        startDate = startDate == null ? LocalDate.now().minusYears(10) : startDate;
-//        endDate = endDate == null ? LocalDate.now() : DateTimeUtil.min(endDate, LocalDate.now());
+        // -------------------------------------------------------------------------------------------------------------
+
 
         log.info("loadAllStockKline     >>>     startDate : {}, endDate : {}", startDate, endDate);
 
@@ -232,9 +238,9 @@ public class InitDataServiceImpl implements InitDataService {
         // DB 数据加载
         data.stockDOList = baseStockService.listAllKline(refresh);
         // 空数据 过滤
-        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && null != e.getKlineHis()
-                // TODO   基金北向
-                && e.getAmount().doubleValue() > 0.1 * 1_0000_0000).collect(Collectors.toList());
+        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
+                                                            // TODO   基金北向
+                /*&& e.getAmount().doubleValue() > 0.1 * 1_0000_0000*/).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -249,68 +255,86 @@ public class InitDataServiceImpl implements InitDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 行情起点（往前倒推 250日 -> 1年）
-        LocalDate dateLine_start = startDate.minusDays(270);
-        LocalDate dateLine_end = endDate;
+        // startDate : 2025-01-01, endDate : 2025-12-08 , totalTime : 4min 56s
+        // [2023-10-01 ~ 2025-12-08]          4min 56s（优化前）
 
-        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
-
-
-        // ----------------- TODO   待优化（耗时：1~3 min）
+        // [2023-10-01 ~ 2025-12-08]          1min 35s（优化后）
 
 
-        long start = System.currentTimeMillis();
-        AtomicInteger count = new AtomicInteger(0);
+        // [INFO ] 2025-12-08 13:06:22.710 [http-nio-7001-exec-2] StockKlineLoader - loadAllStockKline - dateLine 截取（内存爆炸）    >>>
+        // count : 5312 , [2023-10-01 ~ 2025-12-08] , stockTime : 42ms , totalTime : 1min 35s
 
 
-        // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
-        data.stockDOList.parallelStream().forEach(e -> {
-            long start_2 = System.currentTimeMillis();
+        // 优化  ->  idx边界定位[二分查找]  +  subList （避免 全量数据 遍历）
+        StockKlineLoader.loadAllStockKline(startDate, endDate, data.stockDOList, nMonth);
 
 
-            // klineHis
-            List<KlineDTO> klineDTOList = e.getKlineDTOList().stream()
-                                           .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
-                                                   // 过滤  ->  负价格（前复权）
-                                                   && k.getClose() > 0)
-                                           // .sorted(Comparator.comparing(KlineDTO::getDate))   // 本来就是有序的
-                                           .collect(Collectors.toList());
-
-            e.setKlineDTOList(klineDTOList);
-
-
-            // -----------------------------------------------------------------------------
-
-
-            // extDataHis -> 必须同步 截取（数据对齐）
-
-
-            // klineHis   ->   过滤后的 dateSet（   HashSet  ->  set.contains，只要 O(1)   ）
-            Set<LocalDate> dateSet = klineDTOList.stream()
-                                                 .map(KlineDTO::getDate)
-                                                 .collect(Collectors.toSet());
-
-
-            // 同步对齐 dateSet   ->   扩展数据
-            List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
-                                               .filter(k -> dateSet.contains(k.getDate()))
-                                               // .sorted(Comparator.comparing(ExtDataDTO::getDate))   // 本来就是有序的
-                                               .collect(Collectors.toList());
-
-            e.setExtDataDTOList(extDataDTOList);
-
-
-            // ---------------------------------------------------------------------------------------------------------
-            log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     count : {} , [{}-{}] , [{} ~ {}] , stockTime : {} , totalTime : {}",
-                     count.incrementAndGet(), e.getCode(), e.getName(), dateLine_start, dateLine_end, DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(start));
-        });
-
-
-        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {} , totalTime : {}",
-                 startDate, endDate, DateTimeUtil.formatNow2Hms(start));
-
-
-        // -------------------------------------------------------------------------------------------------------------
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // 行情起点（往前倒推 250个交易日 -> 1年[365个自然日]）
+//        LocalDate dateLine_start = startDate.minusMonths(nMonth).minusDays(10);
+//        LocalDate dateLine_end = endDate;
+//
+//        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {}", startDate, endDate);
+//
+//
+//        // ----------------- TODO   待优化（耗时：1~3 min）
+//
+//
+//        long start = System.currentTimeMillis();
+//        AtomicInteger count = new AtomicInteger(0);
+//
+//
+//        // kline_his   ->   dateLine 截取   （ 内存爆炸 ）
+//        data.stockDOList.parallelStream().forEach(e -> {
+//            long start_2 = System.currentTimeMillis();
+//
+//
+//            // klineHis
+//            List<KlineDTO> klineDTOList = e.getKlineDTOList().stream()
+//                                           // TODO   优化  ->  idx定位边界   =>   避免 全量数据 遍历（subList）
+//                                           .filter(k -> !k.getDate().isBefore(dateLine_start) && !k.getDate().isAfter(dateLine_end)
+//                                                   // 过滤  ->  负价格（前复权）
+//                                                   && k.getClose() > 0)
+//                                           // .sorted(Comparator.comparing(KlineDTO::getDate))   // 本来就是有序的
+//                                           .collect(Collectors.toList());
+//
+//            e.setKlineDTOList(klineDTOList);
+//
+//
+//            // -----------------------------------------------------------------------------
+//
+//
+//            // extDataHis -> 必须同步 截取（数据对齐）
+//
+//
+//            // klineHis   ->   过滤后的 dateSet（   HashSet  ->  set.contains，只要 O(1)   ）
+//            Set<LocalDate> dateSet = klineDTOList.stream()
+//                                                 .map(KlineDTO::getDate)
+//                                                 .collect(Collectors.toSet());
+//
+//
+//            // 同步对齐 dateSet   ->   扩展数据
+//            List<ExtDataDTO> extDataDTOList = e.getExtDataDTOList().stream()
+//                                               .filter(k -> dateSet.contains(k.getDate()))
+//                                               // .sorted(Comparator.comparing(ExtDataDTO::getDate))   // 本来就是有序的
+//                                               .collect(Collectors.toList());
+//
+//            e.setExtDataDTOList(extDataDTOList);
+//
+//
+//            // ---------------------------------------------------------------------------------------------------------
+//            log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     count : {} , [{}-{}] , [{} ~ {}] , stockTime : {} , totalTime : {}",
+//                     count.incrementAndGet(), e.getCode(), e.getName(), dateLine_start, dateLine_end, DateTimeUtil.formatNow2Hms(start_2), DateTimeUtil.formatNow2Hms(start));
+//        });
+//
+//
+//        log.info("loadAllStockKline - dateLine 截取（内存爆炸）    >>>     startDate : {}, endDate : {} , totalTime : {}",
+//                 startDate, endDate, DateTimeUtil.formatNow2Hms(start));
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
 
 
         // 空行情 过滤（时间段内 -> 未上市）
@@ -329,6 +353,7 @@ public class InitDataServiceImpl implements InitDataService {
 
             LocalDate[] date_arr = ConvertStockKline.dateFieldValArr(klineDTOList, "date");
             double[] close_arr = ConvertStockKline.fieldValArr(klineDTOList, "close");
+            double[] open_arr = ConvertStockKline.fieldValArr(klineDTOList, "open");
 
 
             // --------------------------------------------------------
@@ -341,10 +366,13 @@ public class InitDataServiceImpl implements InitDataService {
 
 
             Map<LocalDate, Double> dateCloseMap = Maps.newHashMap();
+            Map<LocalDate, Double> dateOpenMap = Maps.newHashMap();
             for (int i = 0; i < date_arr.length; i++) {
                 dateCloseMap.put(date_arr[i], close_arr[i]);
+                dateOpenMap.put(date_arr[i], open_arr[i]);
             }
             data.stock__dateCloseMap.put(stockCode, dateCloseMap);
+            data.stock__dateOpenMap.put(stockCode, dateOpenMap);
         });
     }
 
@@ -354,13 +382,20 @@ public class InitDataServiceImpl implements InitDataService {
      *
      * @return
      */
-    private void loadAllBlockKline(boolean refresh) {
+    public void loadAllBlockKline(LocalDate startDate, LocalDate endDate, boolean refresh) {
 
 
         data.blockDOList = baseBlockService.listAllKline(refresh);
 
 
-        // -------
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 优化  ->  idx边界定位[二分查找]  +  subList （避免 全量数据 遍历）
+        BlockKlineLoader.loadAllBlockKline(startDate, endDate, data.blockDOList, 0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         data.blockDOList.parallelStream().forEach(e -> {
@@ -406,7 +441,7 @@ public class InitDataServiceImpl implements InitDataService {
     /**
      * 从本地DB   加载全部   板块-个股
      */
-    private void loadAllBlockRelaStock() {
+    public void loadAllBlockRelaStock() {
 
 
         // 板块-个股   =>   lv3级【end_level=1】   ->     3级-行业（普通/研究） + 概念板块
@@ -417,16 +452,8 @@ public class InitDataServiceImpl implements InitDataService {
 
             Long blockId = rela.getBlockId();
             Long stockId = rela.getStockId();
-            String blockCode = data.block__idCodeMap.get(blockId);
-            String stockCode = data.stock__idCodeMap.get(stockId);
-
-
-            // Assert.notNull(blockCode, String.format("blockCode数据异常：rela : {} ,  [blockCode-%s] , [stockCode-%s]", JSON.toJSONString(rela), blockCode, stockCode));
-            // Assert.notNull(stockCode, String.format("stockCode数据异常：rela : {} ,  [blockCode-%s] , [stockCode-%s]", JSON.toJSONString(rela), blockCode, stockCode));
-
-
-            // data.blockId_stockIdList_Map.computeIfAbsent(blockId, k -> Lists.newArrayList()).add(stockId);
-            // data.stockId_blockIdList_Map.computeIfAbsent(stockId, k -> Lists.newArrayList()).add(blockId);
+            String blockCode = rela.getBlockCode();
+            String stockCode = rela.getStockCode();
 
 
 //            if ("880340".equals(blockCode)) {
@@ -435,7 +462,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
             // 无效板块过滤
-            if (null == stockCode /*|| Objects.equals(blockCode, INVALID_BLOCK)*/) {
+            if (null == stockCode) {
                 // null   =>   基金北向 过滤
                 log.debug("loadAllBlockRelaStock - null     >>>     blockCode : [{}-{}] , stockCode : [{}-{}]",
                           blockId, blockCode, stockId, stockCode);
@@ -492,5 +519,6 @@ public class InitDataServiceImpl implements InitDataService {
         log.debug("loadAllBlockRelaStock - map     >>>     blockCode_stockCodeSet_Map.size : {}", JSON.toJSONString(data.blockCode_stockCodeSet_Map));
         log.debug("loadAllBlockRelaStock - map     >>>     stockCode_blockCodeSet_Map.size : {}", JSON.toJSONString(data.stockCode_blockCodeSet_Map));
     }
+
 
 }
