@@ -39,7 +39,7 @@ public class BacktestCache {
 
 
     /**
-     * 缓存 时间段
+     * 缓存 时间段（initCache 参数，非实际 交易日-起始日期 [实际交易日 列表 -> dateList] ）
      */
     public LocalDate startDate;
     public LocalDate endDate;
@@ -52,7 +52,7 @@ public class BacktestCache {
      * 交易日 - 基准
      */
     public Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
-    public List<LocalDate> dateList = Lists.newArrayList();
+    public List<LocalDate> dateList = Lists.newArrayList(); // 实际交易日 列表（有序）
 
 
     /**

@@ -22,7 +22,7 @@ public interface InitDataService {
     BacktestCache initData();
 
     /**
-     * 增量更新  ->  近N（>=250）日 行情Cache
+     * 增量更新
      *
      * @return
      */
@@ -37,6 +37,18 @@ public interface InitDataService {
      * @return
      */
     BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh);
+
+    /**
+     * 指定日期范围   ->   行情Cache
+     *
+     * @param startDate
+     * @param endDate
+     * @param refresh
+     * @param nMonth    往前倒推  N 月（多加载 N月数据，默认：0）    // TODO：并无任何计算 需要往前倒推 N月数据（EXT_DATA [RPS250/MA250/月多/...] 指标计算   ->   有独立的 DataDTO  数据拉取实现，与 BacktestCache 毫不相干！！！）
+     *                  后续考虑 彻底废弃此参数！！！
+     * @return
+     */
+    BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh, int nMonth);
 
 
     void deleteCache();
