@@ -88,6 +88,13 @@ public class MysqlLockUtils {
         // 先取消已存在的任务
         cancelRenewTask(taskKey);
 
+
+        if (scheduledExecutorService.isShutdown() || scheduledExecutorService.isTerminated()) {
+            // log.error("分布式锁续期失败：线程池已被关闭！请检查 shutdownTask 是否被误触发。Key: {}", taskKey);
+            throw new RuntimeException("分布式锁续期失败：线程池已被关闭！请检查 shutdownTask 是否被误触发。Key: " + taskKey);
+        }
+
+
         // 创建新的续期任务
         ScheduledFuture<?> future = scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
@@ -96,7 +103,7 @@ public class MysqlLockUtils {
 
                 int result = lockMapper.renewLock(lockKey, lockValue, newExpireSeconds, newExpireTimestamp);
                 if (result > 0) {
-                    log.debug("分布式锁自动续期成功: key={}, value={}", lockKey, lockValue);
+                    log.info("分布式锁自动续期成功: key={}, value={}", lockKey, lockValue);
                 } else {
                     log.warn("分布式锁自动续期失败，锁可能已被释放: key={}, value={}", lockKey, lockValue);
                     // 续期失败，取消后续任务
@@ -118,7 +125,7 @@ public class MysqlLockUtils {
         ScheduledFuture<?> future = renewTasks.remove(lockKey);
         if (future != null) {
             future.cancel(true);
-            log.debug("已取消分布式锁自动续期任务: key={}", lockKey);
+            log.info("已取消分布式锁自动续期任务: key={}", lockKey);
         }
     }
 
