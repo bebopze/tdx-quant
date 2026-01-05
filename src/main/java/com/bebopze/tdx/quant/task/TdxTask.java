@@ -46,9 +46,9 @@ public class TdxTask {
     @Autowired
     private TdxDataParserService tdxDataParserService;
 
-    @Autowired
-    @Qualifier("incrUpExtDataServiceImpl")
-    private ExtDataService incrUpExtDataService;
+//    @Autowired
+//    @Qualifier("incrUpExtDataServiceImpl")
+//    private ExtDataService incrUpExtDataService;
 
 
     @Autowired
@@ -137,7 +137,7 @@ public class TdxTask {
     @TotalTime
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
-    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "tdx_task_execTask__refreshAll")
+    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
     public String execTask__refreshAll() {
 
 
@@ -145,53 +145,53 @@ public class TdxTask {
         TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘后-全量更新");
 
 
-        Executors.newSingleThreadExecutor().execute(() -> {
+//        Executors.newSingleThreadExecutor().execute(() -> {
 
 
-            try {
-                taskProgressManager.startTask(taskId);
-                log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
+        try {
+            taskProgressManager.startTask(taskId);
+            log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
-                // 更新进度
-                taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系");
-//                tdxDataParserService.importAll__blockRelaStock();
+            // 更新进度
+            taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 新概念板块]）");
+            tdxDataParserService.importAll__blockRelaStock();
 
 
-                taskProgressManager.updateProgress(taskId, 20, "行情数据");
-                tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
+            taskProgressManager.updateProgress(taskId, 20, "行情数据");
+            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
 
 
-                taskProgressManager.updateProgress(taskId, 30, "扩展（指标）计算");
-                extDataService.refreshExtDataAll(null);
+            taskProgressManager.updateProgress(taskId, 30, "扩展（指标）计算");
+            extDataService.refreshExtDataAll(null);
 
 
-                taskProgressManager.updateProgress(taskId, 50, "主线板块");
-                topBlockService.refreshAll(UpdateTypeEnum.ALL);
+            taskProgressManager.updateProgress(taskId, 50, "主线板块");
+            topBlockService.refreshAll(UpdateTypeEnum.ALL);
 
 
-                taskProgressManager.updateProgress(taskId, 70, "大盘量化");
-                marketService.importMarketMidCycle();
+            taskProgressManager.updateProgress(taskId, 70, "大盘量化");
+            marketService.importMarketMidCycle();
 
 
-                taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
-                initDataService.refreshCache();
+            taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
+            initDataService.refreshCache();
 
 
-                taskProgressManager.completeTask(taskId, "任务执行完成");
-                log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
+            taskProgressManager.completeTask(taskId, "任务执行完成");
+            log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
 
 
-                // TODO   更新 回测任务（今日数据）
-                refreshBacktest();
+            // TODO   更新 回测任务（今日数据）
+            refreshBacktest();
 
 
-            } catch (Exception e) {
-                taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
-                log.error("任务执行失败", e);
-            }
+        } catch (Exception e) {
+            taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
+            log.error("任务执行失败", e);
+        }
 
-        });
+//        });
 
 
         // 返回taskId 供前端查询
@@ -202,9 +202,9 @@ public class TdxTask {
     /**
      * 行情数据   盘中-增量更新   ->   DB
      */
-    @TotalTime
     @Async
-    @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "tdx_task_execTask__refreshKline__lastDay")
+    @TotalTime
+    @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
 
     // 交易时段1：上午（周一 ~ 周五   9:30 ~ 11:35）
     @Scheduled(cron = "0 30,35,40,45,50,55 9 * * 1-5")
@@ -214,14 +214,27 @@ public class TdxTask {
     @Scheduled(cron = "0 0/5 13,14 * * 1-5")
     @Scheduled(cron = "0 0,5 15 * * 1-5")
     public String execTask__refreshKline__lastDay() {
+        return execTask__refreshKline__lastDay(true);
+    }
+
+    @Async
+    @TotalTime
+    @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
+    public String execTask__refreshKline__lastDay(boolean check) {
         log.info("---------------------------- 任务 [refreshKline - 盘中-增量更新 入库]   执行 start");
 
 
+        // -------------------------------------------- CHECK ----------------------------------------------------------
+
+
         // 本机（Mac系统），跳过执行（仅 服务器端 执行）
-        if (!isTradeDateTime() || SystemUtils.IS_OS_MAC) {
+        if (check && (!isTradeDateTime() || SystemUtils.IS_OS_MAC)) {
             log.info("execTask__refreshKline__lastDay     >>>     非交易日/非交易时间段，跳过执行");
             return null;
         }
+
+
+        // --------------------------------------------
 
 
         String taskId = "refreshKline_lastDay_" + System.currentTimeMillis();
@@ -244,12 +257,19 @@ public class TdxTask {
         // -------------------------------------------- EXT_DATA -------------------------------------------------------
 
 
-        taskProgressManager.updateProgress(taskId, 50, "个股实时 扩展数据");
+        taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
+        extDataService.calcBlockExtData(10);
+
+
+        taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
         extDataService.calcStockExtData(10);
 
 
-        taskProgressManager.updateProgress(taskId, 75, "板块实时 扩展数据");
-        extDataService.calcBlockExtData(10);
+        // -------------------------------------------- 主线板块 --------------------------------------------------------
+
+
+        taskProgressManager.updateProgress(taskId, 90, "主线板块");
+        topBlockService.refreshAll(UpdateTypeEnum.INCR);
 
 
         return taskId;
