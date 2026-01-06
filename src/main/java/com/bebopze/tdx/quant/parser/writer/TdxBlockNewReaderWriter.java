@@ -98,14 +98,14 @@ public class TdxBlockNewReaderWriter {
             }
 
 
-            log.info("read   suc     >>>     blockNewCode : {} , filePath : {},   stockOrBlockCodeList : {}",
-                     blockNewCode, filePath, JSON.toJSONString(codeList));
+            log.info("read   suc     >>>     blockNewCode : {} , size : {} , filePath : {},   stockOrBlockCodeList : {}",
+                     blockNewCode, codeList.size(), filePath, JSON.toJSONString(codeList));
 
 
         } catch (Exception e) {
 
-            log.error("read   err     >>>     blockNewCode : {} , filePath : {}, stockOrBlockCodeList : {} , errMsg : {}",
-                      blockNewCode, filePath, JSON.toJSONString(codeList), e.getMessage(), e);
+            log.error("read   err     >>>     blockNewCode : {} , size : {} , filePath : {}, stockOrBlockCodeList : {} , errMsg : {}",
+                      blockNewCode, codeList.size(), filePath, JSON.toJSONString(codeList), e.getMessage(), e);
         }
 
 
@@ -147,14 +147,14 @@ public class TdxBlockNewReaderWriter {
             // 覆盖写入
             FileUtils.writeLines(new File(filePath), "UTF-8", codeList, false);
 
-            log.info("write   suc     >>>     blockNewCode : {} , filePath : {},   stockOrBlockCodeList : {}",
-                     blockNewCode, filePath, JSON.toJSONString(stockOrBlockCodeList));
+            log.info("write   suc     >>>     blockNewCode : {} , size : {} , filePath : {},   stockOrBlockCodeList : {}",
+                     blockNewCode, stockOrBlockCodeList.size(), filePath, JSON.toJSONString(stockOrBlockCodeList));
 
 
         } catch (IOException e) {
 
-            log.error("write   err     >>>     blockNewCode : {} , filePath : {},   errMsg : {}",
-                      blockNewCode, filePath, e.getMessage(), e);
+            log.error("write   err     >>>     blockNewCode : {} , size : {} , filePath : {},   errMsg : {}",
+                      blockNewCode, stockOrBlockCodeList.size(), filePath, e.getMessage(), e);
         }
     }
 

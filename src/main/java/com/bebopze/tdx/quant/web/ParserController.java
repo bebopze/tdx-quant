@@ -17,14 +17,14 @@ import java.util.Set;
 
 
 /**
- * 通达信 - 数据初始化（个股-板块-大盘   关联关系 / 行情）   ->   解析入库
+ * 通达信 - 数据初始化（个股/ETF-板块-大盘   关联关系 / 行情）   ->   解析入库
  *
  * @author: bebopze
  * @date: 2025/5/7
  */
 @RestController
 @RequestMapping("/api/parser/tdxdata")
-@Tag(name = "通达信 - 数据初始化", description = "（个股-板块-大盘   关联关系 / 行情）   ->   解析入库")
+@Tag(name = "通达信 - 数据初始化", description = "（个股/ETF-板块-大盘   关联关系 / 行情）   ->   解析入库")
 public class ParserController {
 
 
@@ -103,11 +103,11 @@ public class ParserController {
 
 
     /**
-     * 通达信 - 行情数据（个股/板块）   一键更新
+     * 通达信 - 行情数据（个股/ETF/板块）   一键更新
      *
      * @return
      */
-    @Operation(summary = "行情数据（个股/板块） - 一键刷新", description = "行情数据（个股/板块） - 一键刷新")
+    @Operation(summary = "行情数据（个股/ETF/板块） - 一键刷新", description = "行情数据（个股/ETF/板块） - 一键刷新")
     @GetMapping(value = "/refresh/klineAll")
     public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新（实时行情）；", example = "1")
                                         @RequestParam(required = false, defaultValue = "1") int updateType) {
@@ -132,7 +132,7 @@ public class ParserController {
     }
 
 
-    @Operation(summary = "个股行情（指定） - 拉取解析入库", description = "个股行情（指定） - 拉取解析入库")
+    @Operation(summary = "个股/ETF行情（指定） - 拉取解析入库", description = "个股/ETF行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKline")
     public Result<Void> fillStockKline(@RequestParam(defaultValue = "300059") String stockCode,
 
@@ -146,7 +146,7 @@ public class ParserController {
         return Result.SUC();
     }
 
-    @Operation(summary = "个股行情（全部） - 拉取解析入库 ", description = "个股行情（全部） - 拉取解析入库")
+    @Operation(summary = "个股/ETF行情（全部） - 拉取解析入库 ", description = "个股/ETF行情（全部） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKlineAll")
     public Result<Void> fillStockKlineAll(@Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
                                           @RequestParam(required = false, defaultValue = "1") int updateType) {

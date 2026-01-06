@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
@@ -43,31 +44,6 @@ public class BlockNewParser {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static void main(String[] args) {
-
-
-        // parseAll();
-
-
-        // parse(filePath);
-
-
-        List<BlockNewDTO> dtoList = parse_ETF();
-        dtoList.forEach(e -> System.out.println(JSON.toJSONString(e)));
-
-
-        System.out.println();
-        System.out.println("---------------------------------------");
-        System.out.println();
-
-
-//        write(Lists.newArrayList("0000001", "0000002", "0000007"));
-//
-//
-//        parse(filePath);
-    }
-
-
     public static void parseAll() {
 
 
@@ -94,12 +70,17 @@ public class BlockNewParser {
 
 
     /**
-     * 自定义板块 - 行业ETF
+     * 自定义板块 -> 行业ETF
      *
      * @return
      */
     public static List<BlockNewDTO> parse_ETF() {
+        // 直接读取   自定义板块 -> 行业ETF（HYETF）    中的全部ETF
         return parse(ETF_filePath);
+
+
+        // 解析全量 [ETF基金] TXT报表   +   去重（细分行业）
+        // return HyETFReportParser.parseAndDistinct();
     }
 
 
@@ -138,7 +119,7 @@ public class BlockNewParser {
                         String stockCode = line.substring(1, 7);
 
 
-                        BlockNewDTO dto = new BlockNewDTO(marketType, stockCode);
+                        BlockNewDTO dto = new BlockNewDTO(stockCode, null, marketType);
                         dtoList.add(dto);
 
 
@@ -189,10 +170,41 @@ public class BlockNewParser {
 
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class BlockNewDTO {
-        private Integer tdxMarketType;
         private String stockCode;
+        private String stockName;
+        private Integer tdxMarketType;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+
+        // parseAll();
+
+
+        // parse(filePath);
+
+
+        List<BlockNewDTO> dtoList = parse_ETF();
+        dtoList.forEach(e -> System.out.println(JSON.toJSONString(e)));
+
+
+        System.out.println();
+        System.out.println("---------------------------------------");
+        System.out.println();
+
+
+//        write(Lists.newArrayList("0000001", "0000002", "0000007"));
+//
+//
+//        parse(filePath);
+    }
+
 
 }

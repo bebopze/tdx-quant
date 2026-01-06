@@ -436,17 +436,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         baseStockDO.setTdxMarketType(marketType);
 
 
-        // Long stockId = iBaseStockService.getIdByCode(stockCode);
-        Long stockId = stock__codeIdMap_DB.get(stockCode);
-        if (stockId != null) {
-            baseStockDO.setId(stockId);
-            baseStockService.updateById(baseStockDO);
-        } else {
-            baseStockService.save(baseStockDO);
-            stockId = baseStockDO.getId();
-        }
+        baseStockDO.setId(stock__codeIdMap_DB.get(stockCode));
+        baseStockService.saveOrUpdate(baseStockDO);
 
 
+        Long stockId = baseStockDO.getId();
         stock__codeIdMap.put(stockCode, stockId);
 
 
@@ -1039,7 +1033,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void importETF() {
 
-        List<BlockNewParser.BlockNewDTO> etfList = BlockNewParser.parse_ETF();
+        // List<BlockNewParser.BlockNewDTO> etfList = BlockNewParser.parse_ETF();
+        List<BlockNewParser.BlockNewDTO> etfList = HyETFReportParser.parseAndDistinct();
 
         exec___save2DB___ETF(etfList);
     }
@@ -1047,39 +1042,34 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     private void exec___save2DB___ETF(List<BlockNewParser.BlockNewDTO> etfList) {
 
+
+        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
+
+
         etfList.forEach(dto -> {
 
 
             String stockCode = dto.getStockCode();
+            String stockName = StringUtils.isBlank(dto.getStockName()) ? EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getName() : dto.getStockName();
             Integer tdxMarketType = dto.getTdxMarketType();
 
 
             // ETF
             BaseStockDO baseStockDO = new BaseStockDO();
             baseStockDO.setCode(stockCode);
-            baseStockDO.setName(EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getName());
+            baseStockDO.setName(stockName);
             baseStockDO.setType(StockTypeEnum.ETF.type);
             baseStockDO.setTdxMarketType(tdxMarketType);
 
 
-            Long stockId = baseStockService.getIdByCode(stockCode);
-            // Long stockId = stock__codeIdMap_DB.get(stockCode);
-            if (stockId != null) {
-                baseStockDO.setId(stockId);
-                baseStockService.updateById(baseStockDO);
-            } else {
-                baseStockService.save(baseStockDO);
-                stockId = baseStockDO.getId();
-            }
+            baseStockDO.setId(codeIdMap.get(stockCode));
+            baseStockService.saveOrUpdate(baseStockDO);
 
 
-            // stock__codeIdMap.put(stockCode, stockId);
-
-
-            if (stockId == null) {
-                log.error("base_stock ETF - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
-                          stockCode, stockId, JSON.toJSONString(baseStockDO));
-            }
+//            if (stockId == null) {
+//                log.error("base_stock ETF - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
+//                          stockCode, stockId, JSON.toJSONString(baseStockDO));
+//            }
         });
     }
 
@@ -1110,9 +1100,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         });
 
 
-        // 行情-个股
+        // 行情-个股/ETF
         Future<?> task2 = Executors.newCachedThreadPool().submit(() -> {
-            // refresh  ->  stock kline
+            // refresh  ->  stock/ETF kline
             fillStockKlineAll(updateTypeEnum);
         });
 

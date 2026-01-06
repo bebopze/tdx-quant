@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -28,6 +29,9 @@ public class StockServiceImpl implements StockService {
     private IBaseStockService baseStockService;
 
     @Autowired
+    private IBaseBlockService baseBlockService;
+
+    @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
@@ -36,23 +40,25 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public BaseStockDTO info(String stockCode) {
-        BaseStockDO entity = baseStockService.getByCode(stockCode);
+
+        BaseStockDO entity = null;
+        if (StockTypeEnum.isStock(stockCode) || StockTypeEnum.isETF(stockCode)) {
+
+            entity = baseStockService.getByCode(stockCode);
+
+        } else if (StockTypeEnum.isBlock(stockCode)) {
+
+            BaseBlockDO blockDO = baseBlockService.getByCode(stockCode);
+            if (blockDO != null) {
+                entity = new BaseStockDO();
+                BeanUtils.copyProperties(blockDO, entity);
+            }
+        }
 
 
         BaseStockDTO dto = new BaseStockDTO();
         if (entity != null) {
-
-            // dto.setKlineHis(entity.getKlineHis());
             BeanUtils.copyProperties(entity, dto);
-
-
-//            List<KlineDTO> klineDTOList = ConvertStockKline.str2DTOList(entity.getKlineHis(), 100);
-//
-//            Map<String, Object> klineMap = new HashMap<>();
-//            klineMap.put("date", ConvertStockKline.dateFieldValArr(klineDTOList, "date"));
-//            klineMap.put("close", ConvertStockKline.fieldValArr(klineDTOList, "close"));
-//
-//            dto.setKlineMap(klineMap);
         }
 
 
