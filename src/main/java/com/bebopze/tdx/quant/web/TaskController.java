@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.service.InitDataService;
@@ -9,9 +10,11 @@ import com.bebopze.tdx.quant.task.TdxTask;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -45,9 +48,10 @@ public class TaskController {
      * @return
      */
     @Operation(summary = "refreshAll - 增量更新", description = "refreshAll - 盘中 -> 增量更新")
-    @GetMapping(value = "/refreshAll__lataDay")
-    public Result<String> refreshAll__lataDay() {
-        String taskId = tdxTask.execTask__refreshAll__lataDay();
+    @GetMapping(value = "/refreshAll__lastDay")
+    public Result<String> refreshAll__lastDay() {
+//        String taskId = tdxTask.execTask__refreshAll__lastDay();
+        String taskId = tdxTask.execTask__refreshKline__lastDay(false);
         return Result.SUC(taskId);
     }
 
@@ -83,8 +87,18 @@ public class TaskController {
 
     @Operation(summary = "BacktestCache（回测 - 全量行情Cache） -  refresh", description = "BacktestCache（回测 - 全量行情Cache） -  refresh")
     @GetMapping(value = "/initData/refresh")
-    public Result<Void> refreshCache(@RequestParam(defaultValue = "true") Boolean refresh) {
-        initDataService.initData(null, null, refresh);
+    public Result<Void> refreshCache(@Schema(description = "开始时间", example = "2019-01-01")
+                                     @RequestParam(required = false, defaultValue = "2019-01-01") LocalDate startDate,
+
+                                     @Schema(description = "结束时间", example = "2026-01-01")
+                                     @RequestParam(required = false) LocalDate endDate,
+
+                                     @RequestParam(defaultValue = "false") Boolean refresh) {
+
+
+        endDate = endDate == null ? LocalDate.now() : endDate;
+
+        initDataService.initData(startDate, endDate, refresh);
         return Result.SUC();
     }
 
@@ -98,6 +112,21 @@ public class TaskController {
     public Result<Void> task_933() {
         TdxScript.task_933();
         return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * bsStrategyTradeDaily   -   bsStrategy - 每日自动BS
+     *
+     * @return
+     */
+    @Operation(summary = "bsStrategy - 每日自动BS", description = "bsStrategy - 每日自动BS")
+    @GetMapping(value = "bsStrategyTradeDaily")
+    public Result<BSStrategyInfoDTO> bsStrategyTradeDaily() {
+        return Result.SUC(tdxTask.bsStrategyTradeDaily___SSF多_月多__C_MA60_偏离率());
     }
 
 
