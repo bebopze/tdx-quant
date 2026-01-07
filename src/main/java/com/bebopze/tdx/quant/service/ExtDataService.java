@@ -22,10 +22,12 @@ public interface ExtDataService {
     /**
      * 扩展数据（自定义 指标） - 个股
      *
-     * @param N null 或者 <=0   ->   全量更新
-     *          >0             ->   增量更新（最近 N 日行情数据）
+     * @param N         null 或者 <=0   ->   全量更新
+     *                  >0             ->   增量更新（最近 N 日行情数据）
+     * @param stockType 股票类型：1-A股；2-ETF；
+     *                  （StockTypeEnum.type）
      */
-    void calcStockExtData(Integer N);
+    void calcStockExtData(Integer N, Integer stockType);
 
 
     /**
@@ -35,4 +37,5 @@ public interface ExtDataService {
      *          >0             ->   增量更新（最近 N 日行情数据）
      */
     void calcBlockExtData(Integer N);
+
 }

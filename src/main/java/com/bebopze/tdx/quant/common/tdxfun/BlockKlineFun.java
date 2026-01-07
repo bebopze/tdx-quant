@@ -75,7 +75,7 @@ public class BlockKlineFun {
         // 1、加载数据
 //        BacktestCache data = initDataService.incrUpdateInitData();
         if (CollectionUtils.isEmpty(data.blockDOList)) {
-            initDataServiceImpl.loadAllBlockKline(false);
+            initDataServiceImpl.loadAllBlockKline(null, null, false);
             initDataServiceImpl.loadAllBlockRelaStock();
         }
 
