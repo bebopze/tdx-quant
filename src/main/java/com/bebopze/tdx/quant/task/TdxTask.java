@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
@@ -145,19 +146,18 @@ public class TdxTask {
         TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘后-全量更新");
 
 
-//        Executors.newSingleThreadExecutor().execute(() -> {
-
-
         try {
             taskProgressManager.startTask(taskId);
             log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
+            Executors.newSingleThreadExecutor().execute(() -> {
+                taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 新概念板块]）");
+                tdxDataParserService.importAll__blockRelaStock();
+            });
+
+
             // 更新进度
-            taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 新概念板块]）");
-            tdxDataParserService.importAll__blockRelaStock();
-
-
             taskProgressManager.updateProgress(taskId, 20, "行情数据");
             tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
 
@@ -190,8 +190,6 @@ public class TdxTask {
             taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
             log.error("任务执行失败", e);
         }
-
-//        });
 
 
         // 返回taskId 供前端查询
@@ -261,8 +259,12 @@ public class TdxTask {
         extDataService.calcBlockExtData(10);
 
 
+        taskProgressManager.updateProgress(taskId, 60, "ETF实时 扩展数据");
+        extDataService.calcStockExtData(10, StockTypeEnum.ETF.type);
+
+
         taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
-        extDataService.calcStockExtData(10);
+        extDataService.calcStockExtData(10, StockTypeEnum.A_STOCK.type);
 
 
         // -------------------------------------------- 主线板块 --------------------------------------------------------
