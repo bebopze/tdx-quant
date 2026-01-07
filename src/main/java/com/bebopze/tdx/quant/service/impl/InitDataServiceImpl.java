@@ -211,7 +211,7 @@ public class InitDataServiceImpl implements InitDataService {
         baseBlockService.listAllKline(true);
 
         // refresh  ->  stockCache
-        baseStockService.listAllKline(true);
+        baseStockService.listAllKline(null, true);
 
 
         init = false;
@@ -236,7 +236,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // DB 数据加载
-        data.stockDOList = baseStockService.listAllKline(refresh);
+        data.stockDOList = baseStockService.listAllKline(null, refresh);
         // 空数据 过滤
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
                                                             // TODO   基金北向

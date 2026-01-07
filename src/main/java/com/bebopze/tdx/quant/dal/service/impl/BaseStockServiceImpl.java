@@ -148,14 +148,22 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public List<BaseStockDO> listAllKline() {
-        return listAllKline(false);
+    public List<BaseStockDO> listAllKline(Integer type) {
+        return listAllKline(type, false);
     }
+
 
     @TotalTime
     @Override
-    public List<BaseStockDO> listAllKline(boolean refresh) {
-        log.info("listAllKline     >>>     refresh : {}", refresh);
+    public List<BaseStockDO> listAllKline(Integer type, boolean refresh) {
+        return listAllKline_0(type, refresh)
+                .stream()
+                .filter(e -> type == null || Objects.equals(type, e.getType())).
+                collect(Collectors.toList());
+    }
+
+    private List<BaseStockDO> listAllKline_0(Integer type, boolean refresh) {
+        log.info("listAllKline     >>>     type : {} , refresh : {}", type, refresh);
 
 
         // listAllFromDiskCache >>> totalTime :6.9 s
@@ -173,6 +181,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         // 不可用（OFFSET  =>  全表顺序读 + 丢弃）
         // return listAllPageQuery();
     }
+
 
     @Override
     public List<BaseStockDO> listAllETFKline() {

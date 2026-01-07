@@ -36,9 +36,16 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     Map<String, Long> codeIdMap(Collection<String> codeList);
 
 
-    List<BaseStockDO> listAllKline();
+    List<BaseStockDO> listAllKline(Integer type);
 
-    List<BaseStockDO> listAllKline(boolean refresh);
+    /**
+     * 从 Cache 中获取   全部个股/ETF
+     *
+     * @param type    股票类型：1-A股；2-ETF；  null：全部（A股 + ETF）
+     * @param refresh 是否刷新缓存：true/false
+     * @return
+     */
+    List<BaseStockDO> listAllKline(Integer type, boolean refresh);
 
     List<BaseStockDO> listAllETFKline();
 
@@ -52,4 +59,5 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
 
     boolean updateById(BaseStockDO entity);
+
 }
