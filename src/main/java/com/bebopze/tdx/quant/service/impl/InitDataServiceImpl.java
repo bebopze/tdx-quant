@@ -146,7 +146,7 @@ public class InitDataServiceImpl implements InitDataService {
         }
 
 
-        // 加载   全量行情数据 - 个股
+        // 加载   全量行情数据 - 个股+ETF
         loadAllStockKline(startDate, endDate, refresh, nMonth);
 
 
@@ -235,21 +235,12 @@ public class InitDataServiceImpl implements InitDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // DB 数据加载
+        // DB 数据加载（个股+ETF）
         data.stockDOList = baseStockService.listAllKline(null, refresh);
         // 空数据 过滤
         data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
                                                             // TODO   基金北向
                 /*&& e.getAmount().doubleValue() > 0.1 * 1_0000_0000*/).collect(Collectors.toList());
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // ETF
-        data.ETF_stockDOList = data.stockDOList.stream()
-                                               .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
-                                               .collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -374,6 +365,21 @@ public class InitDataServiceImpl implements InitDataService {
             data.stock__dateCloseMap.put(stockCode, dateCloseMap);
             data.stock__dateOpenMap.put(stockCode, dateOpenMap);
         });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // ETF
+        data.ETF_stockDOList = data.stockDOList.stream()
+                                               .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
+                                               .collect(Collectors.toList());
+
+
+        // 个股
+        data.stockDOList = data.stockDOList.stream()
+                                           .filter(e -> Objects.equals(e.getType(), StockTypeEnum.A_STOCK.type))
+                                           .collect(Collectors.toList());
     }
 
 
