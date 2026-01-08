@@ -64,12 +64,16 @@ public class TradePairStat {
 
         // 盈利总笔数
         int winTrades = 0;
+        // 平局总笔数
+        int drawTrades = 0;
         // 亏损总笔数
         int lossTrades = 0;
 
 
         // 总盈利率
         double winTotalRate = 0;
+        // 总平局率
+        double drawTotalRate = 0;
         // 总亏损率
         double lossTotalRate = 0;
 
@@ -186,6 +190,8 @@ public class TradePairStat {
 
         // 交易胜率（%） =  盈利总笔数 / 交易总笔数
         double winTradesPct = totalTrades > 0 ? winTrades * 100.0 / totalTrades : 0.0;
+        // 交易平局率（%） =  平局总笔数 / 交易总笔数
+        double drawTradesPct = totalTrades > 0 ? drawTrades * 100.0 / totalTrades : 0.0;
         // 交易败率（%） =  亏损总笔数 / 交易总笔数
         double lossTradesPct = totalTrades > 0 ? lossTrades * 100.0 / totalTrades : 0.0;
 
@@ -226,6 +232,9 @@ public class TradePairStat {
 
         result.setWinTotal(winTrades);
         result.setWinPct(of(winTradesPct));
+
+        result.setDrawTotal(drawTrades);
+        result.setDrawPct(of(drawTradesPct));
 
         result.setLossTotal(lossTrades);
         result.setLossPct(of(lossTradesPct));
@@ -305,12 +314,16 @@ public class TradePairStat {
 
         // 盈利总天数
         int winDays = (int) dailyReturnPctList.stream().filter(r -> r > 0).count();
+        // 平局总天数
+        int drawDays = (int) dailyReturnPctList.stream().filter(r -> r == 0).count();
         // 亏损总天数
         int lossDays = (int) dailyReturnPctList.stream().filter(r -> r < 0).count();
 
 
         // 交易胜率（%） =  盈利总天数 / 交易总天数
         double winDaysPct = totalTrades > 0 ? winDays * 100.0 / totalTrades : 0.0;
+        // 交易平局率（%） =  平局总天数 / 交易总天数
+        double drawDaysPct = totalTrades > 0 ? drawDays * 100.0 / totalTrades : 0.0;
         // 交易败率（%） =  亏损总天数 / 交易总天数
         double lossDaysPct = totalTrades > 0 ? lossDays * 100.0 / totalTrades : 0.0;
 
@@ -334,6 +347,9 @@ public class TradePairStat {
 
         result.setWinTotal(winDays);
         result.setWinPct(of(winDaysPct));
+
+        result.setDrawTotal(drawDays);
+        result.setDrawPct(of(drawDaysPct));
 
         result.setLossTotal(lossDays);
         result.setLossPct(of(lossDaysPct));
@@ -392,8 +408,8 @@ public class TradePairStat {
 
             TopPoolDailyReturnDTO dr = new TopPoolDailyReturnDTO();
             dr.setDate(date);
-            dr.setDailyReturn(of(daily_return));
-            dr.setNav(of(nav));
+            dr.setDailyReturn(of(daily_return, 6));
+            dr.setNav(of(nav, 6));
             dr.setCapital(of(capital));
 
 
@@ -545,12 +561,16 @@ public class TradePairStat {
 
         // 盈利总笔数
         public int winTotal = 0;
+        // 平局总笔数
+        public int drawTotal = 0;
         // 亏损总笔数
         public int lossTotal = 0;
 
 
         // 交易胜率（%） =  盈利总笔数 / 交易总笔数
         public double winPct = 0;
+        // 交易平局率（%） =  平局总笔数 / 交易总笔数
+        public double drawPct = 0;
         // 交易败率（%） =  亏损总笔数 / 交易总笔数
         public double lossPct = 0;
 

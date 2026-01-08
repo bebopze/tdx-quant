@@ -219,7 +219,7 @@ public class TdxTask {
     @TotalTime
     @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
     public String execTask__refreshKline__lastDay(boolean check) {
-        log.info("---------------------------- 任务 [refreshKline - 盘中-增量更新 入库]   执行 start");
+        log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 start");
 
 
         // -------------------------------------------- CHECK ----------------------------------------------------------
@@ -272,6 +272,11 @@ public class TdxTask {
 
         taskProgressManager.updateProgress(taskId, 90, "主线板块");
         topBlockService.refreshAll(UpdateTypeEnum.INCR);
+
+
+        taskProgressManager.completeSubTask(taskId, "主线板块", "任务执行完成");
+        taskProgressManager.completeTask(taskId, "任务执行完成");
+        log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 end");
 
 
         return taskId;

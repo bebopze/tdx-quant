@@ -28,8 +28,7 @@ public class BizException extends RuntimeException {
         this.msg = msg;
     }
 
-    public BizException(Integer code,
-                        String msg) {
+    public BizException(Integer code, String msg) {
         super(msg);
         this.code = code;
         this.msg = msg;
