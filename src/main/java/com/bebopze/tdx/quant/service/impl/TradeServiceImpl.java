@@ -134,7 +134,7 @@ public class TradeServiceImpl implements TradeService {
 
         // ------------------------- 主线个股 列表
 
-        List<TopStockDTO> topStockList = topBlockService.topStockList(today, TopTypeEnum.AUTO.type).getTopStockDTOList();
+        List<TopStockDTO> topStockList = topBlockService.topStockList(today, TopTypeEnum.AUTO.type, 1).getTopStockDTOList();
         // code - topStock
         Map<String, TopStockDTO> code_topStock__Map = Maps.uniqueIndex(topStockList, TopStockDTO::getStockCode);
 

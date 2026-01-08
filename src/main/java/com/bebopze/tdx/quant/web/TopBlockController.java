@@ -259,7 +259,7 @@ public class TopBlockController {
     public Result<TopBlockPoolDTO> topBlockList(@Schema(description = "交易日", example = "2025-09-30")
                                                 @RequestParam(required = false) LocalDate date,
 
-                                                @Schema(description = "策略类型：1-机选；2-人选；", example = "1")
+                                                @Schema(description = "策略类型：1-机选；2-精选；", example = "1")
                                                 @RequestParam(defaultValue = "1") Integer type) {
 
         date = date == null ? LocalDate.now() : date;
@@ -267,18 +267,36 @@ public class TopBlockController {
     }
 
     /**
-     * 主线个股 列表
+     * 主线ETF 列表
      */
-    @Operation(summary = "主线个股 列表（板块-月多2）", description = "主线个股 列表（板块-月多2）")
+    @Operation(summary = "主线ETF 列表（板块-月多2）", description = "主线ETF 列表（板块-月多2）")
+    @GetMapping(value = "/bk-yd2/topEtfList")
+    public Result<TopStockPoolDTO> topEtfList(@Schema(description = "交易日", example = "2025-09-30")
+                                              @RequestParam(required = false) LocalDate date,
+
+                                              @Schema(description = "策略类型：1-机选；2-精选；", example = "1")
+                                              @RequestParam(defaultValue = "1") Integer type) {
+
+        date = date == null ? LocalDate.now() : date;
+        return Result.SUC(topBlockService.topEtfList(date, type));
+    }
+
+    /**
+     * 主线个股/ETF 列表
+     */
+    @Operation(summary = "主线个股/ETF 列表（板块-月多2）", description = "主线个股/ETF 列表（板块-月多2）")
     @GetMapping(value = "/bk-yd2/topStockList")
     public Result<TopStockPoolDTO> topStockList(@Schema(description = "交易日", example = "2025-09-30")
                                                 @RequestParam(required = false) LocalDate date,
 
-                                                @Schema(description = "策略类型：1-机选；2-人选；", example = "1")
-                                                @RequestParam(defaultValue = "1") Integer type) {
+                                                @Schema(description = "策略类型：1-机选；2-精选；", example = "1")
+                                                @RequestParam(defaultValue = "1") Integer type,
+
+                                                @Schema(description = "股票类型：1-A股；2-ETF；", example = "1")
+                                                @RequestParam(defaultValue = "1") Integer stockType) {
 
         date = date == null ? LocalDate.now() : date;
-        return Result.SUC(topBlockService.topStockList(date, type));
+        return Result.SUC(topBlockService.topStockList(date, type, stockType));
     }
 
 
@@ -293,7 +311,7 @@ public class TopBlockController {
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
                                            @RequestParam String stockCodeList,
 
-                                           @Schema(description = "策略类型：1-机选；2-人选；", example = "2")
+                                           @Schema(description = "策略类型：1-机选；2-精选；", example = "2")
                                            @RequestParam(defaultValue = "2") Integer type) {
 
 
@@ -313,7 +331,7 @@ public class TopBlockController {
                                            @Schema(description = "新增 个股code列表（逗号分隔）", example = "1,2,3")
                                            @RequestParam String stockCodeList,
 
-                                           @Schema(description = "策略类型：1-机选；2-人选；", example = "2")
+                                           @Schema(description = "策略类型：1-机选；2-精选；", example = "2")
                                            @RequestParam(defaultValue = "2") Integer type) {
 
 

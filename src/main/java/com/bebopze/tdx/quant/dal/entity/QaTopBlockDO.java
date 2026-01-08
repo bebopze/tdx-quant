@@ -126,6 +126,16 @@ public class QaTopBlockDO implements Serializable {
     }
 
 
+    public List<TopChangePctDTO> getTopStockList(int type, int stockType) {
+        if (stockType == 1) {
+            return getTopStockList(type);
+        } else if (stockType == 2) {
+            return getTopEtfList(type);
+        }
+        return getTopStockList(type);
+    }
+
+
     private List<TopChangePctDTO> getTopList(String topCodeSet, int type) {
         return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
                    .stream()
@@ -147,6 +157,16 @@ public class QaTopBlockDO implements Serializable {
 
     public TopPoolAvgPctDTO getTopStockAvgPct(int type) {
         return getTopAvgPct(stockAvgPct, type);
+    }
+
+
+    public TopPoolAvgPctDTO getTopStockAvgPct(int type, int stockType) {
+        if (stockType == 1) {
+            return getTopStockAvgPct(type);
+        } else if (stockType == 2) {
+            return getTopEtfAvgPct(type);
+        }
+        return getTopStockAvgPct(type);
     }
 
 
@@ -176,6 +196,16 @@ public class QaTopBlockDO implements Serializable {
 
     public Set<String> getTopStockCodeJsonSet(int type) {
         return getTopCodeJsonSet(topStockCodeSet, type);
+    }
+
+
+    public Set<String> getTopStockCodeJsonSet(int type, int stockType) {
+        if (stockType == 1) {
+            return getTopStockCodeJsonSet(type);
+        } else if (stockType == 2) {
+            return getTopEtfCodeJsonSet(type);
+        }
+        return getTopStockCodeJsonSet(type);
     }
 
 

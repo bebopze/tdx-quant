@@ -111,19 +111,29 @@ public interface TopBlockService {
      * 主线板块 列表
      *
      * @param date            交易日
-     * @param topStrategyType 策略类型：1-机选；2-人选；
+     * @param topStrategyType 策略类型：1-机选；2-精选；
      * @return
      */
     TopBlockPoolDTO topBlockList(LocalDate date, Integer topStrategyType);
 
     /**
+     * 主线ETF 列表
+     *
+     * @param date            交易日
+     * @param topStrategyType 策略类型：1-机选；2-精选；
+     * @return
+     */
+    TopStockPoolDTO topEtfList(LocalDate date, Integer topStrategyType);
+
+    /**
      * 主线个股 列表
      *
      * @param date            交易日
-     * @param topStrategyType 策略类型：1-机选；2-人选；
+     * @param topStrategyType 策略类型：1-机选；2-精选；
+     * @param stockType       股票类型：1-个股；2-ETF；
      * @return
      */
-    TopStockPoolDTO topStockList(LocalDate date, Integer topStrategyType);
+    TopStockPoolDTO topStockList(LocalDate date, Integer topStrategyType, Integer stockType);
 
 
     /**

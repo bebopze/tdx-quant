@@ -120,7 +120,11 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         Map<String, TopCountDTO> code_countMap = Maps.newHashMap();
 
         Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
+        Map<String, Integer> topEtf__codeCountMap = Maps.newHashMap();
         Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
+
+
+        Map<String, TopStatDTO> code_StatMap = Maps.newHashMap();
 
         Map<String, Map<String, Integer>> topStock__code_buySignalCountMap = Maps.newHashMap();
         Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap = Maps.newHashMap();
@@ -130,7 +134,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         // 每日收益率列表
-        List<TopPoolDailyReturnDTO> dailyReturnDTOList = dailyReturnDTOList(list, topPoolType, topStrategyType, code_countMap, topBlock__codeCountMap, topStock__codeCountMap);
+        List<TopPoolDailyReturnDTO> dailyReturnDTOList = dailyReturnDTOList(list, topPoolType, topStrategyType, code_countMap, topBlock__codeCountMap, topEtf__codeCountMap, topStock__codeCountMap, code_StatMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -148,13 +152,24 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         dto.setMarginSumReturnDTO(marginSumReturnDTO);
         dto.setDailyReturnDTOList(dailyReturnDTOList);
         dto.setAvgDailyReturnDTO(avgDailyReturn(dailyReturnDTOList));
-        dto.setCountDTOList(countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap));
+        dto.setCountDTOList(countDTOList(code_countMap, topBlock__codeCountMap, topEtf__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap));
+        dto.setStatDTOList(statDTOList(list));
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         return dto;
+    }
+
+    private List<TopStatDTO> statDTOList(List<QaTopBlockDO> list) {
+
+        for (QaTopBlockDO entity : list) {
+            List<TopChangePctDTO> topBlockList = entity.getTopBlockList(TopTypeEnum.涨停_SSF多_月多.type);
+            List<TopChangePctDTO> topList = entity.getTopStockList(TopTypeEnum.涨停_SSF多_月多.type);
+        }
+
+        return null;
     }
 
 
@@ -717,7 +732,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         LocalDate prevDate = null;
-        List<String> prev_posList = Lists.newArrayList();
+        Set<String> prev_posSet = Sets.newHashSet();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -730,7 +745,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
         TopBlockStrategyEnum topBlockStrategyEnum = TopBlockStrategyEnum.LV3;
 
-        List<String> buyConList = Lists.newArrayList("月多", "SSF多");
+        Set<String> buyConSet = Sets.newHashSet("月多", "SSF多");
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -767,7 +782,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             // 卖出策略
-            Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, prev_posList, sell_infoMap, btCompareDTO.get());
+            Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, prev_posSet, sell_infoMap, btCompareDTO.get());
 
             log.info("S策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                      tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -779,7 +794,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
             // BS策略
-            List<String> today__buy__stockCodeList = backtestBuyStrategyD.rule2(topBlockStrategyEnum, buyConList, data, tradeDate, buy_infoMap, posRate, ztFlag);
+            List<String> today__buy__stockCodeList = backtestBuyStrategyD.rule(topBlockStrategyEnum, buyConSet, data, tradeDate, buy_infoMap, posRate, ztFlag);
 
             log.info("B策略     >>>     [{}] , topBlockStrategyEnum : {} , size : {} , buy__stockCodeList : {} , buy_infoMap : {}",
                      tradeDate, topBlockStrategyEnum, today__buy__stockCodeList.size(), JSON.toJSONString(today__buy__stockCodeList), JSON.toJSONString(buy_infoMap));
@@ -792,15 +807,15 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                 LocalDate finalTradeDate = tradeDate;
 
                 // 昨日持仓列表
-                prev_posList.stream()
-                            // 昨日持仓中 -> 今日未S     =>     今日继续持仓中
-                            .filter(stockCode -> !sell__stockCodeSet.contains(stockCode) && !today__buy__stockCodeList.contains(stockCode))
-                            .forEach(stockCode -> {
-                                TopChangePctDTO pos_dto = convertPrevPos2TodayPos(stockCode, finalTradeDate);
-                                if (null != pos_dto) {
-                                    today_posTopList.add(pos_dto);
-                                }
-                            });
+                prev_posSet.stream()
+                           // 昨日持仓中 -> 今日未S     =>     今日继续持仓中
+                           .filter(stockCode -> !sell__stockCodeSet.contains(stockCode) && !today__buy__stockCodeList.contains(stockCode))
+                           .forEach(stockCode -> {
+                               TopChangePctDTO pos_dto = convertPrevPos2TodayPos(stockCode, finalTradeDate);
+                               if (null != pos_dto) {
+                                   today_posTopList.add(pos_dto);
+                               }
+                           });
             }
 
 
@@ -820,7 +835,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
             // ---------------------------------------------------------------------------------------------------------
             prevDate = tradeDate;
-            prev_posList = today_posTopList.stream().map(TopChangePctDTO::getCode).collect(Collectors.toList());
+            prev_posSet = today_posTopList.stream().map(TopChangePctDTO::getCode).collect(Collectors.toSet());
             // ---------------------------------------------------------------------------------------------------------
         }
 
@@ -1010,7 +1025,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            // return buySignal.getBSQJ();
+            return buySignal.getBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
@@ -1085,7 +1100,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            // return buySignal.getBSQJ();
+            return buySignal.getBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
@@ -1189,7 +1204,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
      * @param type                   主线策略：1-机选；2-精选（TOP50）；3-历史新高；4-极多头；5-RPS三线红；6-10亿；7-首次三线红；8-口袋支点；9-T0；10-涨停（打板）；     // TopTypeEnum
      * @param code_countMap
      * @param topBlock__codeCountMap
+     * @param topEtf__codeCountMap
      * @param topStock__codeCountMap
+     * @param code_StatMap
      * @return
      */
     private List<TopPoolDailyReturnDTO> dailyReturnDTOList(List<QaTopBlockDO> list,
@@ -1197,7 +1214,9 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                                                            Integer type,
                                                            Map<String, TopCountDTO> code_countMap,
                                                            Map<String, Integer> topBlock__codeCountMap,
-                                                           Map<String, Integer> topStock__codeCountMap) {
+                                                           Map<String, Integer> topEtf__codeCountMap,
+                                                           Map<String, Integer> topStock__codeCountMap,
+                                                           Map<String, TopStatDTO> code_StatMap) {
 
 
         List<TopPoolDailyReturnDTO> dailyReturnDTOList = Lists.newArrayList();
@@ -1267,6 +1286,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
             // 主线板块
             entity.getTopBlockCodeNameMap(type).forEach((code, name) -> topBlock__codeCountMap.merge(code, 1, Integer::sum));
+            // 主线ETF
+            entity.getTopEtfCodeNameMap(type).forEach((code, name) -> topEtf__codeCountMap.merge(code, 1, Integer::sum));
             // 主线个股
             entity.getTopStockCodeNameMap(type).forEach((code, name) -> topStock__codeCountMap.merge(code, 1, Integer::sum));
 
@@ -1550,6 +1571,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         Map<String, TopCountDTO> code_countMap = Maps.newHashMap();
 
         Map<String, Integer> topBlock__codeCountMap = Maps.newHashMap();
+        Map<String, Integer> topEtf__codeCountMap = Maps.newHashMap();
         Map<String, Integer> topStock__codeCountMap = Maps.newHashMap();
 
         Map<String, Map<String, Integer>> topStock__code_buySignalCountMap = Maps.newHashMap();
@@ -1654,7 +1676,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        return countDTOList(code_countMap, topBlock__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap);
+        return countDTOList(code_countMap, topBlock__codeCountMap, topEtf__codeCountMap, topStock__codeCountMap, topStock__code_buySignalCountMap, topStock__code_sellSignalCountMap);
     }
 
 
@@ -1828,6 +1850,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         sumReturnDTO.setTotalTrades(tradeStatResult.total);
         sumReturnDTO.setWinTrades(tradeStatResult.winTotal);
         sumReturnDTO.setWinTradesPct(tradeStatResult.winPct);
+        sumReturnDTO.setDrawTrades(tradeStatResult.drawTotal);
+        sumReturnDTO.setDrawTradesPct(tradeStatResult.drawPct);
         sumReturnDTO.setLossTrades(tradeStatResult.lossTotal);
         sumReturnDTO.setLossTradesPct(tradeStatResult.lossPct);
         sumReturnDTO.setAvgWinTradesPct(tradeStatResult.avgWinPct);
@@ -1845,6 +1869,8 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         sumReturnDTO.setTotalDays(daysStatResult.total);
         sumReturnDTO.setWinDays(daysStatResult.winTotal);
         sumReturnDTO.setWinDaysPct(daysStatResult.winPct);
+        sumReturnDTO.setDrawDays(daysStatResult.drawTotal);
+        sumReturnDTO.setDrawDaysPct(daysStatResult.drawPct);
         sumReturnDTO.setLossDays(daysStatResult.lossTotal);
         sumReturnDTO.setLossDaysPct(daysStatResult.lossPct);
         sumReturnDTO.setAvgWinDailyPct(daysStatResult.avgWinPct);
@@ -1906,6 +1932,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
     private List<TopCountDTO> countDTOList(Map<String, TopCountDTO> code_countMap,
                                            Map<String, Integer> topBlock__codeCountMap,
+                                           Map<String, Integer> topEtf__codeCountMap,
                                            Map<String, Integer> topStock__codeCountMap,
                                            Map<String, Map<String, Integer>> topStock__code_buySignalCountMap,
                                            Map<String, Map<String, Integer>> topStock__code_sellSignalCountMap) {
@@ -2012,6 +2039,26 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
                             .sorted(Comparator.comparing(TopCountDTO::getCount).reversed())
                             .sorted(Comparator.comparing(TopCountDTO::getPct).reversed())
                             .collect(Collectors.toList());
+    }
+
+
+    private List<TopStatDTO> statDTOList(Map<String, TopCountDTO> codeCountMap,
+                                         Map<String, Integer> topBlock__codeCountMap,
+                                         Map<String, Integer> topStock__codeCountMap,
+                                         Map<String, Map<String, Integer>> topStock__codeBuySignalCountMap,
+                                         Map<String, Map<String, Integer>> topStock__codeSellSignalCountMap) {
+
+
+        List<TopStatDTO> dtoList = Lists.newArrayList();
+
+
+//        TopStatDTO dto = new TopStatDTO();
+//        dto.setDate();
+//        dto.setZtCount(ztCount);
+//        dto.setN100HighCount(n100HighCount);
+
+
+        return dtoList;
     }
 
 
