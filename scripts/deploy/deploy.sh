@@ -137,7 +137,8 @@ done
 if [ "$uploaded_any" = true ]; then
     echo "-> 设置远端脚本可执行权限"
     # 仅对 deploy 目录下的脚本设置权限
-    remote_exec "cd '$REMOTE_PATH' && for s in *.sh; do [ \"\$s\" = \"$(basename "$0")\" ] && continue; chmod +x \"\$s\" || true; done"
+    # 简化：直接给远端脚本目录下的所有 .sh 加可执行位（更稳健）
+    remote_exec "cd '$REMOTE_PATH' && chmod +x -- *.sh || true"
     echo "✅ 脚本上传并 chmod 完成"
 else
     echo "⚠️ 未上传任何脚本"
