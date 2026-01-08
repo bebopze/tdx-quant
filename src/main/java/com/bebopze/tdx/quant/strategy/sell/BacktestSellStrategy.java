@@ -29,8 +29,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
-import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.x;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.*;
 
 
 /**
@@ -640,6 +639,12 @@ public class BacktestSellStrategy implements SellStrategy {
                                                     LocalDate tradeDate) {
 
 
+        // TODO   ETF 策略   ->   忽略  IN主线板块
+        if (Objects.equals(btCompareDTO.get().getBuyStrategyKey(), "ETF")) {
+            return Sets.newHashSet();
+        }
+
+
         // 强势个股   ->   IN 主线板块
         Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyG.inTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeSet, data, tradeDate);
 
@@ -694,6 +699,12 @@ public class BacktestSellStrategy implements SellStrategy {
                                TopBlockStrategyEnum topBlockStrategyEnum,
                                BacktestCache data,
                                LocalDate tradeDate) {
+
+
+        // TODO   ETF 策略   ->   忽略  IN主线板块
+        if (Objects.equals(btCompareDTO.get().getBuyStrategyKey(), "ETF")) {
+            return false;
+        }
 
 
         // 今日   主线板块 列表

@@ -19,6 +19,7 @@ import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
+import com.bebopze.tdx.quant.strategy.buy.ScoreSort;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -42,7 +43,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.BuyStrategyEnum.涨停_SSF多_月多;
-import static com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD.scoreSort;
 
 
 /**
@@ -741,6 +741,9 @@ public class BacktestStrategy {
         }
 
 
+        double ztRatio = btCompareDTO.get().ztFlag_true() ? 0.7 : 1.0;
+
+
         LocalDate startDate = taskDO.getStartDate();
         LocalDate endDate = taskDO.getEndDate();
 
@@ -757,27 +760,27 @@ public class BacktestStrategy {
             if (diff > 70) {
 
                 long N = diff / 30;
-                if (N >= 2 && N <= 3 && nav < 1 + (0.015 * N)) {
+                if (N >= 2 && N <= 3 && nav < 1 + (0.015 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 4 && N <= 6 && nav < 1 + (0.025 * N)) {
+                if (N >= 4 && N <= 6 && nav < 1 + (0.025 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 7 && N <= 12 && nav < 1 + (0.035 * N)) {
+                if (N >= 7 && N <= 12 && nav < 1 + (0.035 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 13 && N <= 24 && nav < 1 + (0.045 * N)) {
+                if (N >= 13 && N <= 24 && nav < 1 + (0.045 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 25 && nav < 1 + (0.055 * N)) {
+                if (N >= 25 && nav < 1 + (0.055 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
@@ -1139,7 +1142,7 @@ public class BacktestStrategy {
 
 
         // 按照 规则打分 -> sort
-        List<String> sort__stockCodeList = scoreSort(buy__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> sort__stockCodeList = ScoreSort.scoreSort(buy__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
 
 
         log.debug("B策略 -> 交易 record - start     >>>     [{}] [{}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {}",
@@ -1405,7 +1408,7 @@ public class BacktestStrategy {
      * @param topBlockStrategyEnum
      * @param data
      * @param tradeDate
-     * @param buy__stockCodeSet
+     * @param buy__stockCodeList
      * @param buy_infoMap
      */
     @TotalTime
