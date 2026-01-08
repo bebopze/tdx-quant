@@ -239,6 +239,7 @@ public class DistributedLockAspect {
     @PreDestroy
     public void shutdownTask() {
         lockUtils.shutdown();
+        lockUtils.cleanLocks();
     }
 
 

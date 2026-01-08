@@ -25,8 +25,10 @@ import java.util.stream.Collectors;
 public class MysqlLockUtils {
 
 
+    // 定时（自动续期）任务执行器
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
+    // 自动续期任务
     private final ConcurrentHashMap<String, ScheduledFuture<?>> renewTasks = new ConcurrentHashMap<>();
 
 
@@ -179,6 +181,8 @@ public class MysqlLockUtils {
      * 关闭资源
      */
     public void shutdown() {
+        log.info("开始关闭分布式锁资源（定时[自动续期]任务执行器）");
+
         scheduledExecutorService.shutdown();
         try {
             if (!scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -188,6 +192,25 @@ public class MysqlLockUtils {
             scheduledExecutorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+
+    /**
+     * 清理本机 所有锁
+     */
+    public void cleanLocks() {
+        log.info("开始清理本机 所有分布式锁，数量: {}", renewTasks.size());
+
+        renewTasks.forEach((key, future) -> {
+
+            // String taskKey = lockKey + ":" + lockValue;
+            String[] keyArr = key.split(":");
+            String lockKey = keyArr[0];
+            String lockValue = keyArr[2];
+
+            // 释放锁
+            releaseLock(lockKey, lockValue);
+        });
     }
 
 
