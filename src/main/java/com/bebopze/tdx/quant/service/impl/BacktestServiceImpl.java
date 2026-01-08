@@ -33,14 +33,9 @@ import org.springframework.util.Assert;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 
 
 /**
@@ -92,6 +87,19 @@ public class BacktestServiceImpl implements BacktestService {
 
 
 //         List<List<String>> sell_conCombinerList = SellStrategy__ConCombiner.generateCombinations();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // ETF B策略  ->  固定：主线ETF
+        List<Set<String>> ETF_buyConList = Lists.newArrayList();
+        ETF_buyConList.add(Sets.newHashSet("主线ETF"));
+
+        buy_conCombinerSet = btCompareDTO.getBuyStrategyKey().equals("ETF") ? ETF_buyConList : buy_conCombinerSet;
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // Sell策略 ： 暂时固定
