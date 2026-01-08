@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
+import com.bebopze.tdx.quant.common.config.aspect.MysqlLockUtils;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
@@ -40,6 +41,9 @@ public class TaskController {
 
     @Autowired
     private TaskProgressManager taskProgressManager;
+
+    @Autowired
+    private MysqlLockUtils mysqlLockUtils;
 
 
     /**
@@ -83,6 +87,14 @@ public class TaskController {
         dataService.eastmoneyRefreshSession(validatekey, cookie);
         return Result.SUC();
     }
+
+
+//    @Operation(summary = "释放本机 所有分布式锁", description = "释放本机 所有分布式锁")
+//    @GetMapping(value = "/lock/cleanLocks")
+//    public Result<Void> releaseLock() {
+//        mysqlLockUtils.cleanLocks();
+//        return Result.SUC();
+//    }
 
 
     @Operation(summary = "BacktestCache（回测 - 全量行情Cache） -  refresh", description = "BacktestCache（回测 - 全量行情Cache） -  refresh")
@@ -152,5 +164,6 @@ public class TaskController {
     public Result<List<TaskProgress>> getTaskHistory() {
         return Result.SUC(taskProgressManager.getTaskHistory());
     }
+
 
 }

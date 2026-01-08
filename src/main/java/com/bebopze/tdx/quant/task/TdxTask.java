@@ -154,6 +154,7 @@ public class TdxTask {
             Executors.newSingleThreadExecutor().execute(() -> {
                 taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 新概念板块]）");
                 tdxDataParserService.importAll__blockRelaStock();
+                taskProgressManager.completeSubTask(taskId, "任务执行完成", "SUC");
             });
 
 
