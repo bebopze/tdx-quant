@@ -25,7 +25,6 @@ import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.COUNT;
-import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.MACD;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.*;
 
 
@@ -425,15 +424,16 @@ public class StockFun {
                               double[] MA120,
                               double[] MA200,
                               double[] MA250,
+                              double[] SAR,
                               MidAdjustResult 中期调整,
-                              boolean[] RPS一线红,
+                              boolean[] RPS红,
                               boolean[] 均线预萌出,
                               boolean[] N60日新高,
-                              double[] 中期涨幅,
+                              double[] 中期涨幅N20,
                               boolean[] 上影大阴) {
 
 
-        return TdxExtFun.口袋支点(open, high, low, close, amo, MA10, MA20, MA50, MA100, MA120, MA200, MA250, 中期调整, RPS一线红, 均线预萌出, N60日新高, 中期涨幅, 上影大阴);
+        return TdxExtFun.口袋支点(open, high, low, close, amo, MA10, MA20, MA50, MA100, MA120, MA200, MA250, SAR, 中期调整, RPS红, 均线预萌出, N60日新高, 中期涨幅N20, 上影大阴);
     }
 
 
@@ -468,7 +468,7 @@ public class StockFun {
     }
 
     public boolean[] RPS三线红(double RPS) {
-        return TdxExtFun.RPS三线红(rps50, rps120, rps250, RPS);
+        return TdxExtFun.RPS三线红(rps10, rps20, rps50, rps120, rps250, RPS);
     }
 
     public boolean[] 首次三线红(double RPS) {
@@ -483,7 +483,7 @@ public class StockFun {
 
     public boolean[] RPS红(double RPS) {
         // RPS一线红(95) || RPS双线红(90) || RPS三线红(85);
-        return TdxExtFun.RPS红(rps50, rps120, rps250, Math.min(RPS + 10, 100), Math.min(RPS + 5, 100), RPS);
+        return TdxExtFun.RPS红(rps10, rps20, rps50, rps120, rps250, RPS);
     }
 
 
@@ -536,7 +536,7 @@ public class StockFun {
         // --------------------------------------------------------------- RPS / 均线形态
 
 
-        boolean[] con_5 = TdxExtFun.RPS红(rps50, rps120, rps250, 95, 90, 85);
+        boolean[] con_5 = TdxExtFun.RPS红(rps10, rps20, rps50, rps120, rps250, 85);
         boolean[] con_6 = TdxExtFun.大均线多头(close);
         boolean[] con_7 = TdxExtFun.均线预萌出(close);
 

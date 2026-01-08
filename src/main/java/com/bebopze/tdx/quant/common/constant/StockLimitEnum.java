@@ -32,7 +32,7 @@ public enum StockLimitEnum {
     // 920
 
     //  "43", "83", "87"   ->   已废弃（已全部迁移到 92）
-    BJ("北交所", 3, 30, Lists.newArrayList("92", "43", "83", "87"));
+    BJ("北交所", 3, 30, Lists.newArrayList("92"));
 
 
     /**
@@ -213,6 +213,5 @@ public enum StockLimitEnum {
         return null != stockName && stockName.contains("ETF")
                 && (stockName.contains("科创") || stockName.contains("创业板"));
     }
-
 
 }

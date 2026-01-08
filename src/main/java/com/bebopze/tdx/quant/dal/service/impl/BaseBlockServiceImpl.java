@@ -143,7 +143,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
             // write Cache
-            JsonFileWriterAndReader.writeLargeListToFile___block_listAllKline(list);
+//  TODO   先注释掉，等后面再开启           JsonFileWriterAndReader.writeLargeListToFile___block_listAllKline(list);
         }
 
 

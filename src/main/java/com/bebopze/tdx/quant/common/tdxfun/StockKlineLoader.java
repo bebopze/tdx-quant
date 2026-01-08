@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
+
 
 /**
  * 股票K线加载器
@@ -38,6 +40,12 @@ public class StockKlineLoader {
                                          LocalDate endDate,
                                          List<BaseStockDO> stockDOList,
                                          int nMonth) {
+
+
+        if (!startDate.isAfter(KLINE_START_DATE) && !endDate.isBefore(LocalDate.now())) {
+            log.info("loadAllStockKline - dateLine 截取（内存爆炸） =>  包含 全部日期 -> 无需截取     >>>     startDate : {}, endDate : {}", startDate, endDate);
+            return;
+        }
 
 
         // -------------------------------------------------------------------------------------------------------------
