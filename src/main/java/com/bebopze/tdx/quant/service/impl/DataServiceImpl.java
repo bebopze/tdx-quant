@@ -1,23 +1,21 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
+import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
-import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
-import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
-import com.bebopze.tdx.quant.dal.service.IBaseStockService;
-import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
-import com.bebopze.tdx.quant.dal.service.IQaMarketMidCycleService;
+import com.bebopze.tdx.quant.dal.entity.*;
+import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.DataService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
@@ -44,6 +42,9 @@ public class DataServiceImpl implements DataService {
 
     @Autowired
     private IQaMarketMidCycleService qaMarketMidCycleService;
+
+    @Autowired
+    private IConfAccountService confAccountService;
 
 
     @Override
@@ -74,8 +75,39 @@ public class DataServiceImpl implements DataService {
 
     @Override
     public void eastmoneyRefreshSession(String validatekey, String cookie) {
+        eastmoneyRefreshSession(validatekey, cookie, true);
+    }
+
+    private void eastmoneyRefreshSession(String validatekey, String cookie, boolean save2DB) {
         PropsUtil.refreshEastmoneySession(validatekey, cookie);
         EastMoneyTradeAPI.refreshEastmoneySession();
+
+
+        // 写入DB
+        if (save2DB) {
+            ConfAccountDO entity = new ConfAccountDO();
+            entity.setId(1L);
+            entity.setValidatekey(validatekey);
+            entity.setCookie(cookie);
+            confAccountService.updateById(entity);
+        }
+    }
+
+
+    @PostConstruct
+    public void init__eastmoneySession() {
+        String activeProfile = PropsUtil.getProperty("spring.profiles.active");
+
+        try {
+            QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
+            log.info("application-{}.yml     >>>     session 有效", activeProfile);
+
+        } catch (BizException e) {
+            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMsg());
+
+            ConfAccountDO entity = confAccountService.getById(1L);
+            eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
+        }
     }
 
 
