@@ -29,7 +29,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 /**
  * 通达信   报表导出（ETF基金[TDX系统自带板块]   =>   行情报价[细分行业]）   -   解析
  * -
- * -   ETF基金（行情报价 面板 [TDX系统自带板块]）  ->   34（数据导出）  ->   格式文本文件（所有数据[显示的栏目]）
+ * -   刷新港美 扩展市场行情（必须！-> 否则[细分行业] 加载不全）  ->   ETF基金（行情报价 面板 [TDX系统自带板块]）  ->   34（数据导出）  ->   格式文本文件（所有数据[显示的栏目]）
  *
  *
  *
@@ -61,7 +61,7 @@ public class HyETFReportParser {
 
     /**
      * 1、解析 全量 [ETF基金] TXT报表
-     * 2、根据 ETF -> [细分行业] 去重     =>     同一[细分行业]  ->  保留最大 AMO 的ETF
+     * 2、根据 ETF -> [细分行业/name] 去重     =>     同一[细分行业/name]  ->  保留最大 AMO 的ETF
      *
      * @return
      */
@@ -75,30 +75,47 @@ public class HyETFReportParser {
         List<TdxETFDTO> tdx_etf__rowList = parseByFilePath(file_ETF);
 
 
-        // 去重（细分行业）
-        Map<String, TdxETFDTO> tdx__rowMap = Maps.newHashMap();
+        // 去重1（细分行业）
+        Map<String, TdxETFDTO> hy__rowMap = Maps.newHashMap();
         tdx_etf__rowList.stream()
-                        .filter(e -> StringUtils.isNotBlank(e.get细分行业()))
+                        .filter(e -> StringUtils.isNotBlank(e.细分行业))
                         .forEach(e -> {
 
-                            TdxETFDTO old_row = tdx__rowMap.computeIfAbsent(e.get细分行业(), k -> e);
-                            // 同一细分行业   ->   筛选保留 最大金额ETF
+                            String 细分行业 = e.细分行业;
+
+                            TdxETFDTO old_row = hy__rowMap.computeIfAbsent(细分行业, k -> e);
+                            // 同一[细分行业]   ->   筛选保留 最大金额ETF
                             if (e.getAmount() > old_row.getAmount()) {
-                                tdx__rowMap.put(e.get细分行业(), e);
+                                log.info("同一[细分行业:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", 细分行业, old_row, e);
+                                hy__rowMap.put(细分行业, e);
                             }
                         });
 
+        // 去重2（name）
+        Map<String, TdxETFDTO> name__rowMap = Maps.newHashMap();
+        hy__rowMap.values().forEach(e -> {
 
-        return tdx__rowMap.values()
-                          .stream()
-                          .sorted((o1, o2) -> o2.getCode().compareTo(o1.getCode()))   // code 正序
-                          .collect(Collectors.toList());
+            String name = e.name;
+
+            TdxETFDTO old_row = name__rowMap.computeIfAbsent(name, k -> e);
+            // 同一[name]   ->   筛选保留 最大金额ETF
+            if (e.getAmount() > old_row.getAmount()) {
+                log.info("同一[name:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", name, old_row, e);
+                name__rowMap.put(name, e);
+            }
+        });
+
+
+        return name__rowMap.values()
+                           .stream()
+                           .sorted((o1, o2) -> o2.getCode().compareTo(o1.getCode()))   // code 正序
+                           .collect(Collectors.toList());
     }
 
 
     /**
      * 1、解析 全量 [ETF基金] TXT报表
-     * 2、根据 ETF -> [细分行业] 去重     =>     同一[细分行业]  ->  保留最大 AMO 的ETF
+     * 2、根据 ETF -> [细分行业+name] 去重     =>     同一[细分行业+name]  ->  保留最大 AMO 的ETF
      * 3、List<TdxETFDTO>   转换为   List<BlockNewDTO>
      *
      * @return
@@ -342,7 +359,8 @@ public class HyETFReportParser {
         List<TdxETFDTO> tdx__rowList = parseAndDistinct_0();
 
 
-        System.out.println("size : " + tdx__rowList.size() + "\n");
+        System.out.println("\nsize : " + tdx__rowList.size() + "\n");
+
 
         tdx__rowList.forEach(row -> System.out.println(row.细分行业 + " : " + row));
     }
