@@ -102,10 +102,10 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // RPS
-        stockTask__RPS(data, N);
+        stockTask__RPS(data, N, stockType);
 
         // 扩展数据
-        stockTask__extData(data, N);
+        stockTask__extData(data, N, stockType);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -227,8 +227,12 @@ public class ExtDataServiceImpl implements ExtDataService {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // 假设[东方财富]   不会停牌    // TODO   再加2个[贵州茅台/农业银行]   ->   总不可能 都同时 停牌！！！
-            if ("300059".equals(code) || "600519".equals(code) || "601288".equals(code)) {
+            // 300059[东方财富] / 600519[贵州茅台] / 601288[农业银行]     ->     总不可能 都同时 停牌！！！
+            if ("300059".equals(code) || "600519".equals(code) || "601288".equals(code)
+                    // 510300[沪深300ETF] / 159915[创业板ETF] / 588000[科创50ETF]
+                    || "510300".equals(code) || "159915".equals(code) || "588000".equals(code)) {
+
+
                 int len = date_arr.length;
 
                 data.startDate = data.startDate == null ? date_arr[0] : DateTimeUtil.min(data.startDate, date_arr[0]);
@@ -250,21 +254,30 @@ public class ExtDataServiceImpl implements ExtDataService {
      * 个股 - RPS计算
      *
      * @param data
-     * @param lastDays 仅计算最后 lastDays 天的数据（<=0 时计算全部）
+     * @param lastDays  仅计算最后 lastDays 天的数据（<=0 时计算全部）
+     * @param stockType
      */
-    private void stockTask__RPS(DataDTO data, int lastDays) {
+    private void stockTask__RPS(DataDTO data, int lastDays, Integer stockType) {
         long start = System.currentTimeMillis();
 
 
+        // 个股
+        int[] RPS_N_arr = new int[]{10, 20, 50, 120, 250};
+        // ETF（等同于 板块）
+        if (Objects.equals(stockType, StockTypeEnum.ETF.type)) {
+            RPS_N_arr = new int[]{5, 10, 15, 20, 50};
+        }
+
+
         // 计算 -> RPS
-        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10, lastDays);
-        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20, lastDays);
-        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50, lastDays);
-        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 120, lastDays); // 120 -> 100
-        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 250, lastDays); // 250 -> 200
+        Map<String, double[]> RPS10 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, RPS_N_arr[0], lastDays);
+        Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, RPS_N_arr[1], lastDays);
+        Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, RPS_N_arr[2], lastDays);
+        Map<String, double[]> RPS120 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, RPS_N_arr[3], lastDays); // 120 -> 100
+        Map<String, double[]> RPS250 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, RPS_N_arr[4], lastDays); // 250 -> 200
 
 
-        log.info("computeRPS - 个股     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
+        log.info("computeRPS - {}     >>>     totalTime : {}", StockTypeEnum.getDescByType(stockType), DateTimeUtil.formatNow2Hms(start));
 
 
 //        Map<String, double[]> RPS10_2 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 10);
@@ -388,8 +401,9 @@ public class ExtDataServiceImpl implements ExtDataService {
      *
      * @param data
      * @param N
+     * @param stockType
      */
-    private void stockTask__extData(DataDTO data, Integer N) {
+    private void stockTask__extData(DataDTO data, Integer N, Integer stockType) {
         AtomicInteger count = new AtomicInteger(0);
         long start = System.currentTimeMillis();
 
@@ -408,12 +422,13 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         ParallelCalcUtil.forEach(data.stockDOList,
-                                 stockDO -> execCalcStockExtData(data, N, stockDO, count, start),
+                                 stockDO -> execCalcStockExtData(data, N, stockType, stockDO, count, start),
                                  ThreadPoolType.CPU_INTENSIVE_2
         );
     }
 
-    private void execCalcStockExtData(DataDTO data, Integer N, BaseStockDO stockDO, AtomicInteger count, long start) {
+    private void execCalcStockExtData(DataDTO data, Integer N, Integer stockType,
+                                      BaseStockDO stockDO, AtomicInteger count, long start) {
 
 
         String code = stockDO.getCode();
@@ -436,7 +451,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 1、计算ExtData（序列值）    ->     2、convert（序列   ->   列表）
-        calcExtData(new StockFun(stockDO), new_extDataDTOList, 85);
+        int RPS = Objects.equals(stockType, StockTypeEnum.A_STOCK.type) ? 85 : 87;
+        calcExtData(new StockFun(stockDO), new_extDataDTOList, RPS);
 
 
         log.info("stockFun 指标计算 - 个股 suc     >>>     code : {} , count : {} , stockTime : {} , totalTime : {}",
@@ -559,6 +575,7 @@ public class ExtDataServiceImpl implements ExtDataService {
      * @param data
      */
     private void blockTask__RPS(DataDTO data, int lastDays) {
+        long start = System.currentTimeMillis();
 
 
         // 计算 -> RPS
@@ -567,6 +584,9 @@ public class ExtDataServiceImpl implements ExtDataService {
         Map<String, double[]> RPS15 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 15, lastDays);
         Map<String, double[]> RPS20 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 20, lastDays);
         Map<String, double[]> RPS50 = TdxExtDataFun.computeRPS(data.codeDateMap, data.codeCloseMap, 50, lastDays);
+
+
+        log.info("computeRPS - 板块     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -941,7 +961,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         // ---------------------------- 2、convert（序列   ->   列表）
 
 
-        for (int i = lastN; i < extDataDTOList.size(); i++) {
+        for (int i = 0; i < extDataDTOList.size(); i++) {
             ExtDataDTO dto = extDataDTOList.get(i);
 
 
