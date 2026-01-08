@@ -628,7 +628,7 @@ public class StrategyServiceImpl implements StrategyService {
         // 今日 主线个股列表 （待调仓换股）
         LocalDate today = LocalDate.now();
         today = LocalDate.of(2025, 10, 31);
-        TopStockPoolDTO new_dto = topBlockService.topStockList(today, TopTypeEnum.AUTO.type);
+        TopStockPoolDTO new_dto = topBlockService.topStockList(today, TopTypeEnum.AUTO.type, 1);
 
 
         // ------------------------------------------------- check -----------------------------------------------------

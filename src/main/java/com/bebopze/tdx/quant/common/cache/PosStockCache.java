@@ -88,13 +88,15 @@ public class PosStockCache {
 
 
             LocalDate tradeDate = baseStockDTO.getTradeDate();
-            if (tradeDate.isBefore(LocalDate.now())) {
-                return baseStockDTO.getClose().doubleValue();
+            if (tradeDate != null) {
+                if (tradeDate.isBefore(LocalDate.now())) {
+                    return baseStockDTO.getClose().doubleValue();
+                }
+
+
+                KlineDTO klineDTO = baseStockDTO.getKlineDTOList().get(baseStockDTO.getKlineDTOList().size() - 2);
+                return klineDTO.getClose();
             }
-
-
-            KlineDTO klineDTO = baseStockDTO.getKlineDTOList().get(baseStockDTO.getKlineDTOList().size() - 2);
-            return klineDTO.getClose();
         }
 
 
