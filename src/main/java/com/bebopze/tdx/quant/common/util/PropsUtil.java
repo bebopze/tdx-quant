@@ -104,10 +104,14 @@ public class PropsUtil {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static void main(String[] args) {
         String tdxPath = getTdxPath();
         getSid();
         getCookie();
     }
+
 
 }

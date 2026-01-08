@@ -67,6 +67,20 @@ public class ConfAccountDO implements Serializable {
     private BigDecimal stockPosLimitPct;
 
     /**
+     * 登录SID
+     */
+    @TableField("validatekey")
+    @Schema(description = "登录SID")
+    private String validatekey;
+
+    /**
+     * 登录cookie
+     */
+    @TableField("cookie")
+    @Schema(description = "登录cookie")
+    private String cookie;
+
+    /**
      * 创建时间
      */
     @TableField("gmt_create")
