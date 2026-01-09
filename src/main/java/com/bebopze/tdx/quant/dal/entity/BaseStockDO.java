@@ -192,6 +192,53 @@ public class BaseStockDO implements Serializable {
     @Schema(description = "扩展数据-JSON（byte[]）压缩前长度（解压算法参数）")
     private Integer extDataHisRawLen;
 
+
+//    // ------------------------------------------------- 持仓/BS --------------------------------------------------------
+//
+//
+//    /**
+//     * 是否持仓：0-否；1-是；
+//     */
+//    @TableField(value = "pos_flag")
+//    @Schema(description = "是否持仓：0-否；1-是；")
+//    private Boolean posFlag;
+//
+//    /**
+//     * 是否IN主线板块：0-否；1-是；
+//     */
+//    @TableField(value = "in_top_block_flag")
+//    @Schema(description = "是否IN主线板块：0-否；1-是；")
+//    private Boolean inTopBlockFlag;
+//
+//    /**
+//     * 是否主线个股（IN主线+最强TOP）：0-否；1-是；
+//     */
+//    @TableField(value = "top_stock_flag")
+//    @Schema(description = "是否主线个股（IN主线+最强TOP）：0-否；1-是；")
+//    private Boolean topStockFlag;
+//
+//    /**
+//     * 实时扩展数据（当日）
+//     */
+//    @TableField(value = "ext_data")
+//    @Schema(description = "实时扩展数据（当日）")
+//    private String extData;
+//
+//    /**
+//     * 实时买入信号
+//     */
+//    @TableField(value = "buy_signal")
+//    @Schema(description = "实时买入信号")
+//    private String buySignal;
+//
+//    /**
+//     * 实时卖出信号
+//     */
+//    @TableField(value = "sell_signal")
+//    @Schema(description = "实时卖出信号")
+//    private String sellSignal;
+
+
     /**
      * 创建时间
      */
