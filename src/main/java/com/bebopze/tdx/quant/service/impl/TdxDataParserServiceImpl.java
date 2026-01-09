@@ -817,7 +817,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<BaseBlockRelaStockDO> new__relaEntityList = Lists.newArrayList();
 
 
-        // 新增
+        // 新增    ->  insert
         Set<String> new__keySet = Sets.newHashSet();
         // 已存在  ->  略过
         Set<String> exist__keySet = Sets.newHashSet();

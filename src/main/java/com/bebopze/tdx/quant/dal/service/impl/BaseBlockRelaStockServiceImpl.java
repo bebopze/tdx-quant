@@ -107,6 +107,7 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
             int end = Math.min(i + batchSize, size);
             List<BaseBlockRelaStockDO> sub = list.subList(i, end);
 
+            // 批量插入 优化后：5W条插入     =>     耗时：8min（saveBatch  [Mybatis-plus]）  ->   耗时：1.5s（batchInsert  [手写SQL]）
             count += baseMapper.batchInsert(sub);
         }
 
