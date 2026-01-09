@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.dto.backtest;
 
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopCountDTO;
+import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolDailyReturnDTO;
 import com.bebopze.tdx.quant.common.domain.dto.analysis.TopPoolSumReturnDTO;
 import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
@@ -63,16 +64,22 @@ public class BacktestAnalysisDTO {
 
 
     /**
+     * 每日收益率（普通账户/融资账户）
+     */
+    private List<TopPoolDailyReturnDTO> dailyReturnDTOList;
+    /**
+     * 平均每日收益率（普通账户/融资账户）
+     */
+    private TopPoolDailyReturnDTO avgDailyReturnDTO;
+
+
+    /**
      * 上榜 次数/涨幅 统计
      */
     private List<TopCountDTO> countDTOList;
 
 
     // ------------------------------------------------------------------- TODO     单次 B-S TOP分析（单次BS TOP排名）
-
-
-
-
 
 
     // ------------------------------------------------------------------- 回撤记录

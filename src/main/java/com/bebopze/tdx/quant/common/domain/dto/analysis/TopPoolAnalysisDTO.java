@@ -40,4 +40,11 @@ public class TopPoolAnalysisDTO {
      */
     private List<TopCountDTO> countDTOList;
 
+
+    /**
+     * 每日主线板块  涨停数/百日新高数/...  统计（TOP榜）
+     */
+    private List<TopStatDTO> statDTOList;
+
+
 }
