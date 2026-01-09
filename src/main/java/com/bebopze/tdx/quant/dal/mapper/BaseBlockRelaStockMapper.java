@@ -40,4 +40,6 @@ public interface BaseBlockRelaStockMapper extends BaseMapper<BaseBlockRelaStockD
 
     List<BaseBlockRelaStockDO> listAll();
 
+
+    int batchInsert(@Param("list") List<BaseBlockRelaStockDO> list);
 }

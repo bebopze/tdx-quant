@@ -51,4 +51,7 @@ public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockD
 
 
     List<BaseStockDO> listETFByBlockCodes(Set<String> topBlockCodeSet);
+
+
+    int batchInsert(List<BaseBlockRelaStockDO> list);
 }

@@ -60,4 +60,5 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     boolean updateById(BaseStockDO entity);
 
+    int batchInsert(List<BaseStockDO> list);
 }

@@ -22,8 +22,14 @@ public interface TdxDataParserService {
     void importTdxBlockCfg();
 
 
+    /**
+     * 系统板块   txt报表导入                         （行业/概念）板块 - 个股     关联关系
+     */
     void importBlockReport();
 
+    /**
+     * 自定义板块 txt报表导入                               自定义板块 - 个股     关联关系
+     */
     void importBlockNewReport();
 
 

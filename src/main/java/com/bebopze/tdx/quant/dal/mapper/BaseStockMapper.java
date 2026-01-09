@@ -47,4 +47,8 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
     List<BaseStockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);
 
     List<BaseStockDO> listBaseByCodeList(@Param("codeList") Collection<String> codeList);
+
+
+    int batchInsert(@Param("list") List<BaseStockDO> list);
+
 }

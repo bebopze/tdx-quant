@@ -29,4 +29,8 @@ public interface IBaseBlockNewRelaStockService extends IService<BaseBlockNewRela
     List<BaseStockDO> listStockByBlockNewCodeList(List<String> blockNewCodeList);
 
     List<BaseBlockDO> listBlockByBlockNewCodeList(List<String> blockNewCodeList);
+
+
+    int batchInsert(List<BaseBlockNewRelaStockDO> list);
+
 }
