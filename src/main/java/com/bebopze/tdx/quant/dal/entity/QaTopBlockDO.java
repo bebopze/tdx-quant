@@ -137,7 +137,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private List<TopChangePctDTO> getTopList(String topCodeSet, int type) {
-        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
+        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toList());
@@ -210,7 +210,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Set<String> getTopCodeJsonSet(String topCodeSet, int type) {
-        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
+        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .map(TopChangePctDTO::getCode)
@@ -235,7 +235,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Map<String, String> getTopCodeNameMap(String topCodeSet, int type) {
-        return JSON.parseArray(topCodeSet, TopChangePctDTO.class)
+        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toMap(TopChangePctDTO::getCode,
