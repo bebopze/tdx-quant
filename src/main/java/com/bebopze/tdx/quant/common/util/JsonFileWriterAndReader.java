@@ -4,9 +4,11 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +21,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -148,7 +154,9 @@ public class JsonFileWriterAndReader {
         try (JsonReader reader = new JsonReader(new FileReader(filePath))) {
             reader.beginArray();
             while (reader.hasNext()) {
+                long start_1 = System.currentTimeMillis();
                 entityList.add(readStockKLine(reader));
+                log.info("stock__readLargeJsonFile - 读取1行耗时     >>>     size : {} , time : {}", entityList.size(), DateTimeUtil.formatNow2Hms(start_1));
             }
             reader.endArray();
         } catch (FileNotFoundException e) {
@@ -159,6 +167,90 @@ public class JsonFileWriterAndReader {
 
 
         return entityList;
+    }
+
+
+    @SneakyThrows
+    public static List<BaseStockDO> stock__readLargeJsonFile_parallel(String filePath) {
+        long startTime = System.currentTimeMillis();
+        log.info("开始并行读取大文件: {}", filePath);
+
+
+        // 1、读取所有JSON对象字符串
+        List<String> jsonItems = readJsonLines_jackson(filePath);
+
+
+        if (jsonItems.isEmpty()) {
+            log.warn("文件为空或解析失败，返回空列表");
+            return Lists.newArrayList();
+        }
+        log.info("读取完成，共 {} 个JSON对象，耗时: {}", jsonItems.size(), DateTimeUtil.formatNow2Hms(startTime));
+
+
+        // 2、并行解析
+        List<BaseStockDO> entityList = Collections.synchronizedList(new ArrayList<>(jsonItems.size()));
+        AtomicInteger processed = new AtomicInteger(0);
+        int totalItems = jsonItems.size();
+
+
+        long parseStart = System.currentTimeMillis();
+
+
+        // 使用并行流处理
+        jsonItems.parallelStream().forEach(jsonItem -> {
+            try {
+                BaseStockDO entity = JSON.parseObject(jsonItem, BaseStockDO.class);
+                entityList.add(entity);
+
+                int count = processed.incrementAndGet();
+                if (count % 1000 == 0 || count == totalItems) {
+                    log.info("解析进度: {}/{} ({}%)，速度: {}条/秒",
+                             count, totalItems,
+                             NumUtil.of(count * 100.0 / totalItems),
+                             NumUtil.of(count * 1000.0 / (System.currentTimeMillis() - parseStart)));
+                }
+            } catch (Exception e) {
+                log.error("解析JSON失败: {}", jsonItem.substring(0, Math.min(200, jsonItem.length())), e);
+            }
+        });
+
+
+        long totalDuration = System.currentTimeMillis() - startTime;
+        log.info("并行读取完成，总记录数: {}，总耗时: {}ms，平均速度: {}条/秒",
+                 entityList.size(), totalDuration, entityList.size() * 1000.0 / totalDuration);
+
+
+        return entityList;
+    }
+
+    private static List<String> readJsonLines_jackson(String filePath) throws Exception {
+        List<String> lines = Lists.newArrayList();
+        ObjectMapper mapper = new ObjectMapper();
+
+
+        try (JsonParser parser = mapper.createParser(new File(filePath))) {
+            // 确保是数组开始
+            if (parser.nextToken() != JsonToken.START_ARRAY) {
+                throw new IOException("文件不是JSON数组格式");
+            }
+
+            // 逐个读取数组元素
+            while (parser.nextToken() != JsonToken.END_ARRAY) {
+                // 读取整个对象为字符串
+                String itemJson = mapper.writeValueAsString(parser.readValueAs(Object.class));
+                lines.add(itemJson);
+            }
+
+
+        } catch (FileNotFoundException e) {
+            log.warn("readJsonLines_jackson - 全量个股Cache为空（缓存文件不存在）    >>>     warnMsg : {}", e.getMessage());
+        } catch (Exception e) {
+            log.warn("readJsonLines_jackson - 读取文件失败     >>>     errMsg : {}", e.getMessage(), e);
+        }
+
+
+        log.info("Jackson解析成功，共读取 {} 条记录", lines.size());
+        return lines;
     }
 
 
@@ -282,7 +374,7 @@ public class JsonFileWriterAndReader {
 
 
             Object val = field.get(entity);
-            String valStr = val == null ? null : val.toString();
+            String valStr = null;
 
 
             Class<?> type = field.getType();
@@ -291,6 +383,15 @@ public class JsonFileWriterAndReader {
                     valStr = DateTimeUtil.format_yyyy_MM_dd((LocalDate) val);
                 } else if (type.equals(LocalDateTime.class)) {
                     valStr = DateTimeUtil.formatTime_yyyy_MM_dd((LocalDateTime) val);
+                } else if (type.equals(byte[].class)) {
+                    // byte[] 转换为 Base64字符串
+                    // valStr = Base64.getEncoder().encodeToString((byte[]) val);
+                    continue;
+                } else if (type.equals(List.class)) {
+                    // List -> JSONString
+                    valStr = JSON.toJSONString(val);
+                } else {
+                    valStr = val.toString();
                 }
             }
 
@@ -317,7 +418,7 @@ public class JsonFileWriterAndReader {
         field.setAccessible(true);
 
 
-        if (reader.peek() == JsonToken.NULL) {
+        if (reader.peek() == com.google.gson.stream.JsonToken.NULL) {
             reader.nextNull();
             log.debug("{} 为空     >>>     entity : {}", fieldName, JSON.toJSONString(entity));
         } else {
@@ -339,6 +440,13 @@ public class JsonFileWriterAndReader {
                 value = DateTimeUtil.parseDate_yyyy_MM_dd(valStr);
             } else if (type.equals(LocalDateTime.class)) {
                 value = DateTimeUtil.parseTime_yyyy_MM_dd(valStr);
+            } else if (type.equals(byte[].class)) {
+                // Base64字符串 转换回 byte[]
+                if (valStr != null && !valStr.isEmpty()) {
+                    value = Base64.getDecoder().decode(valStr);
+                } else {
+                    value = new byte[0];
+                }
             }
 
 
@@ -449,7 +557,7 @@ public class JsonFileWriterAndReader {
      */
     public static List<BaseStockDO> readLargeListFromFile___stock_listAllKline() {
 
-        List<BaseStockDO> stockDOList = stock__readLargeJsonFile(stock_filePath);
+        List<BaseStockDO> stockDOList = stock__readLargeJsonFile_parallel(stock_filePath);
         log.info("disk cache READ  -  readLargeListFromFile___stock_listAllKline     >>>     stock size : {}", stockDOList.size());
 
         return stockDOList;
