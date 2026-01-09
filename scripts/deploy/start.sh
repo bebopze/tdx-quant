@@ -80,17 +80,58 @@ echo "🗺️  当前环境 LANG=$LANG LC_ALL=$LC_ALL"
 
 # 智能内存配置 - Mac/Linux 兼容
 if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac系统
     TOTAL_MEM=$(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%.0f", $1/1024/1024/1024}')
+    IS_MAC=true
 else
+    # Linux系统
     TOTAL_MEM=$(free -g 2>/dev/null | awk '/^Mem:/{print $2}')
+    IS_MAC=false
 fi
 
-# fallback
 if ! [[ "$TOTAL_MEM" =~ ^[0-9]+$ ]] || [ -z "$TOTAL_MEM" ] || [ "$TOTAL_MEM" -lt 1 ]; then
     TOTAL_MEM=4
 fi
 
+echo "🖥️  系统类型: $([ "$IS_MAC" = true ] && echo "Mac" || echo "Linux")"
+echo "📊 总内存: ${TOTAL_MEM}GB"
+
+# 基础内存计算 (95% 总内存)
 MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
+
+# 应用边界限制
+if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
+if [ "$MAX_HEAP" -lt 16 ]; then MAX_HEAP=16; fi
+if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
+
+# Mac系统特殊处理：增加20%内存分配
+if [ "$IS_MAC" = true ]; then
+    # 使用bc进行浮点数计算，然后取整
+    MAC_HEAP=$(echo "scale=0; $MAX_HEAP * 1.5 / 1" | bc)
+
+    # 重新应用边界限制 (Mac处理后可能超过50GB)
+    if [ "$MAC_HEAP" -gt 50 ]; then
+        MAC_HEAP=50
+        echo "⚠️  Mac内存调整后超过50GB，限制为50GB"
+    fi
+
+    MAX_HEAP=$MAC_HEAP
+    echo "🍎 Mac系统特殊处理: 基础内存 ${MAX_HEAP}GB * 1.5 = ${MAC_HEAP}GB"
+fi
+
+echo "✅ 最终MAX_HEAP配置: ${MAX_HEAP}GB"
+
+# 验证计算结果
+echo "----------------------------------------"
+echo "内存计算详情:"
+echo "  系统总内存: ${TOTAL_MEM}GB"
+echo "  95% 基础值: $(( TOTAL_MEM * 95 / 100 ))GB"
+echo "  Mac调整: $([ "$IS_MAC" = true ] && echo "✅ 启用 (×1.5)" || echo "❌ 未启用")"
+echo "  边界限制: 1GB ≤ HEAP ≤ 50GB"
+echo "  最终分配: ${MAX_HEAP}GB"
+echo "----------------------------------------"
+
+
 if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
 if [ "$MAX_HEAP" -lt 16 ]; then MAX_HEAP=16; fi
 if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
