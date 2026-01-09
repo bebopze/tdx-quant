@@ -235,7 +235,8 @@ public class TopBlockCache {
         }
 
 
-        // 停牌
+        // 当日停牌（当 startTopDate_idx/endTopDate_idx 为 null 时，使用当前日期作为 起始/结束日期）
+        startTopDate_idx = startTopDate_idx == null ? date_idx : startTopDate_idx;
         endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
 
 
@@ -277,7 +278,7 @@ public class TopBlockCache {
     }
 
     public static Set<String> getTopCodeSet(QaTopBlockDO topBlockDO, String code, int type) {
-        return StockTypeEnum.isBlock(code) ? topBlockDO.getTopBlockCodeJsonSet(type) : topBlockDO.getTopStockCodeJsonSet(type);
+        return StockTypeEnum.isBlock(code) ? topBlockDO.getTopBlockCodeJsonSet(type) : topBlockDO.getTopStockCodeJsonSet(type, StockTypeEnum.getTypeByStockCode(code));
     }
 
 

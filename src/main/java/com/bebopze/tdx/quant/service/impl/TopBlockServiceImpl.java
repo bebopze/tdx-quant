@@ -726,7 +726,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 主线板块
         List<TopChangePctDTO> topBlockList = entity.getTopBlockList(type);
         // 主线个股
-        List<TopChangePctDTO> topStockList = entity.getTopStockList(type);
+        List<TopChangePctDTO> topStockList = entity.getTopStockList(type, stockType);
 
 
         List<TopStockDTO> topStockDTOList = topStockList.parallelStream()
@@ -919,7 +919,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("calc_bkyd2     >>>     calcTopBlock : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
-        // 主线个股
+        // 主线ETF
         long start_2 = System.currentTimeMillis();
         Map<LocalDate, Set<String>> date_topETFCodeSet__map = calcTopETF();
         log.info("calc_bkyd2     >>>     calcTopETF : {}", DateTimeUtil.formatNow2Hms(start_2));
@@ -988,6 +988,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         if ((月多 || 均线预萌出) && RPS红 && SSF多) {
+                            log.info("calcTopBlock     >>>     {} , [{}-{}]", date, blockCode, blockDO.getName());
                             date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(blockCode);
                         } else {
                             // 当日 无主线   ->   记录 空数据行
@@ -1057,6 +1058,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                         // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
                         if ((月多 || 均线预萌出) && RPS红 && SSF多) {
+                            log.info("calcTopETF     >>>     {} , [{}-{}]", date, stockCode, stockDO.getName());
                             date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
                         } else {
                             // 当日 无主线   ->   记录 空数据行
@@ -1132,6 +1134,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                         if ((百日新高 && 月多 && IN主线) || (涨停 && SSF多 && 月多 && IN主线)) {
+                            log.info("calcTopStock     >>>     {} , [{}-{}]", date, stockCode, stockDO.getName());
                             date_topStockCodeSet__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
                         }
                     });
@@ -1162,42 +1165,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-//        long maxId_val = dateIdMap.values().stream().max(Long::compareTo).orElse(0L);
-//        AtomicLong maxId = new AtomicLong(maxId_val);
-//
-//        sortMap.keySet().forEach(date -> dateIdMap.computeIfAbsent(date, k -> maxId.incrementAndGet()));
-//
-//
-//        // -----------------
-//
-//
-//        // 并行
-//        sortMap.entrySet().parallelStream().forEach(entry -> {
-//            LocalDate date = entry.getKey();
-//            Set<String> topBlockCodeSet = entry.getValue();
-//
-//
-//            QaTopBlockDO entity = new QaTopBlockDO();
-//            // 交易日
-//            entity.setDate(date);
-//
-//            // 当日 主线板块
-//            entity.setTopBlockCodeSet(JSON.toJSONString(convert2TopDTOList(topBlockCodeSet)));
-//
-//            // 当日 主线个股
-//            Set<String> topStockCodeSet = date_topStockCodeSet__map.getOrDefault(date, Sets.newHashSet());
-//            entity.setTopStockCodeSet(JSON.toJSONString(convert2TopDTOList(topStockCodeSet)));
-//
-//
-//            entity.setId(dateIdMap.get(date));
-//            qaTopBlockService.saveOrUpdate(entity);
-//        });
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
         // save DB
+        List<QaTopBlockDO> entityList = Lists.newArrayList();
         sortMap.forEach((date, topBlockCodeSet) -> {
 
             QaTopBlockDO entity = new QaTopBlockDO();
@@ -1209,7 +1178,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
             // 当日 主线ETF
             Set<String> topETFCodeSet = date_topETFCodeSet__map.getOrDefault(date, Sets.newHashSet());
-            entity.setTopStockCodeSet(JSON.toJSONString(convert2InitTopDTOList(topETFCodeSet)));
+            entity.setTopEtfCodeSet(JSON.toJSONString(convert2InitTopDTOList(topETFCodeSet)));
 
             // 当日 主线个股
             Set<String> topStockCodeSet = date_topStockCodeSet__map.getOrDefault(date, Sets.newHashSet());
@@ -1217,8 +1186,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             entity.setId(dateIdMap.get(date));
-            qaTopBlockService.saveOrUpdate(entity);
+            entityList.add(entity);
         });
+
+        qaTopBlockService.saveOrUpdateBatch(entityList);
     }
 
 
@@ -1338,7 +1309,7 @@ public class TopBlockServiceImpl implements TopBlockService {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // old != null     +     new -> null     +     INCR_UPDATE
+            // old != null     +     new = null     +     INCR_UPDATE
             if (StringUtils.isNotBlank(e.getTopBlockCodeSet()) && CollectionUtils.isEmpty(auto___topBlockList)
                     && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
                 return;
@@ -1378,6 +1349,11 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
             // ---------------------------------------------------------------------------------------------------------
+
+
+            if (e.getTopEtfCodeSet().equals("[]")) {
+                log.error("autoType___date_topList_Map - err     >>>     {} , topEtfCodeSet : {}", date, auto___topETFList);
+            }
 
 
             qaTopBlockService.updateById(e);
@@ -1554,24 +1530,25 @@ public class TopBlockServiceImpl implements TopBlockService {
 
             try {
                 if (Objects.equals(TopTypeEnum.历史新高, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get历史新高()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get历史新高()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.极多头, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get均线极多头()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get均线极多头()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.RPS三线红, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().getRPS三线红()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().getRPS三线红()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.十亿, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getAmo() > 10_0000_0000).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getAmo() > 10_0000_0000).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.首次三线红, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get首次三线红()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get首次三线红()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.口袋支点, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().get口袋支点()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get口袋支点()).collect(Collectors.toSet());
                 } /*else if (Objects.equals(TopTypeEnum.T0, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> e.getBuySignalExtDataDTO().getT0()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().getT0()).collect(Collectors.toSet());
                 }*/ else if (Objects.equals(TopTypeEnum.涨停_SSF多_月多, topTypeEnum)) {
                     rule_set = topList.stream()
                                       // 涨停（打板）- 次1日（开盘价[open] -> 直接买入）
                                       // 涨停 + SSF多 + 月多 + IN主线
-                                      .filter(e -> e.getBuySignalExtDataDTO().get涨停()
+                                      .filter(e -> null != e.getBuySignalExtDataDTO()
+                                              && e.getBuySignalExtDataDTO().get涨停()
                                               && e.getBuySignalExtDataDTO().getSSF多()
                                               && e.getBuySignalExtDataDTO().get月多())
                                       .collect(Collectors.toSet());
@@ -2037,7 +2014,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         Integer startTopDate_idx = dateIndexMap.get(topChangePctDTO.topStartDate);
         Integer endTopDate_idx = dateIndexMap.get(topChangePctDTO.topEndDate);
 
-        // 停牌
+        // 当日停牌（当 startTopDate_idx/endTopDate_idx 为 null 时，使用当前日期作为 起始/结束日期）
+        startTopDate_idx = startTopDate_idx == null ? date_idx : startTopDate_idx;
         endTopDate_idx = endTopDate_idx == null ? date_idx : endTopDate_idx;
 
 
@@ -2562,7 +2540,7 @@ public class TopBlockServiceImpl implements TopBlockService {
             // TODO   OOM   ->   暂行方案
             LocalDate startDate = LocalDate.of(2022, 1, 1);
             LocalDate endDate = LocalDate.now();
-            data = initDataService.initData(startDate, endDate, false, 1);
+            data = initDataService.initData(startDate, endDate, false, 0);
         }
     }
 
