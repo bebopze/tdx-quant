@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -8,6 +9,7 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -84,6 +86,32 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
     public List<BaseStockDO> listETFByBlockCodes(Set<String> topBlockCodeSet) {
         // TODO
         return Collections.emptyList();
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsert(List<BaseBlockRelaStockDO> list) {
+
+        int batchSize = 5000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<BaseBlockRelaStockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsert(sub);
+        }
+
+
+        return count;
     }
 
 }

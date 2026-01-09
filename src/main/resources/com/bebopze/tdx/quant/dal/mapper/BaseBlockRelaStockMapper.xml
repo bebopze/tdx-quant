@@ -154,4 +154,17 @@
     </select>
 
 
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO base_block_rela_stock
+
+        (block_id, stock_id)
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (#{item.blockId}, #{item.stockId})
+        </foreach>
+    </insert>
+
+
 </mapper>

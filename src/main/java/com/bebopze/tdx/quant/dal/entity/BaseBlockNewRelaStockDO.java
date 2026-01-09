@@ -37,6 +37,13 @@ public class BaseBlockNewRelaStockDO implements Serializable {
     private Long id;
 
     /**
+     * 自定义板块ID
+     */
+    @TableField("block_new_id")
+    @Schema(description = "自定义板块ID")
+    private Long blockNewId;
+
+    /**
      * 关联ID：股票ID/板块ID/指数ID
      */
     @TableField("stock_id")
@@ -49,13 +56,6 @@ public class BaseBlockNewRelaStockDO implements Serializable {
     @TableField("type")
     @Schema(description = "关联ID类型：1-个股；2-板块；3-指数；")
     private Integer type;
-
-    /**
-     * 自定义板块ID
-     */
-    @TableField("block_new_id")
-    @Schema(description = "自定义板块ID")
-    private Long blockNewId;
 
     /**
      * 创建时间

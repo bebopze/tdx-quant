@@ -157,4 +157,29 @@
     </select>
 
 
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO base_stock
+
+        (
+        code, name, type, tdx_market_type, trade_date,
+        open, high, low, close, prev_close,
+        volume, amount,
+        change_pct, change_price, range_pct, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.tradeDate},
+            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.changePct}, #{item.changePrice}, #{item.rangePct}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+    </insert>
+
+
 </mapper>

@@ -29,7 +29,10 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 public class BlockReportParser {
 
 
+    // 行业板块 分为：普通行业、研究行业（需在通达信中 手动修改：板块指数设置 > [普通细分行业 / 研究行业三级]）  ==>   分2次 导出+导入：34[数据导出] > 板块成分导出
     private static final String filePath_hy = TDX_PATH + "/T0002/export/行业板块.txt";
+
+
     private static final String filePath_gn = TDX_PATH + "/T0002/export/概念板块.txt";
     private static final String filePath_fg = TDX_PATH + "/T0002/export/风格板块.txt";
     private static final String filePath_dq = TDX_PATH + "/T0002/export/地区板块.txt";
@@ -155,7 +158,7 @@ public class BlockReportParser {
 
 
         try {
-            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            List<String> lines = FileUtils.readLines(new File(filePath), "GBK"); // GBK 是GB2312的超集   ->   GBK 100%兼容 GB2312
             for (String line : lines) {
 
                 // 处理每一行
@@ -163,8 +166,6 @@ public class BlockReportParser {
 
 
                     // 880515,通达信88,000100,TCL科技
-
-
                     String[] strArr = line.trim().split(",");
 
                     if (strArr.length < 4) {
@@ -199,16 +200,13 @@ public class BlockReportParser {
             }
 
 
-            return dtoList;
-
-
         } catch (IOException e) {
 
-            log.error("ExportBlockParser#parse err     >>>     filePath : {} , blockType : {} , errMsg : {}", filePath, blockTypeEnum, e.getMessage(), e);
+            log.error("ExportBlockParser#parse err     >>>     filePath : {} , blockTypeEnum : {} , errMsg : {}", filePath, blockTypeEnum.getDesc(), e.getMessage(), e);
         }
 
 
-        log.info("ExportBlockParser#parse suc     >>>     filePath : {} , blockType : {} , totalNum : {} , dtoList : {}", filePath, blockTypeEnum, dtoList.size(), JSON.toJSONString(dtoList));
+        log.info("ExportBlockParser#parse suc     >>>     filePath : {} , blockTypeEnum : {} , totalNum : {} , dtoList : {}", filePath, blockTypeEnum.getDesc(), dtoList.size(), JSON.toJSONString(dtoList));
         return dtoList;
     }
 

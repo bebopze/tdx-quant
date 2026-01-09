@@ -35,4 +35,7 @@ public interface BaseBlockNewRelaStockMapper extends BaseMapper<BaseBlockNewRela
     List<BaseBlockDO> listBlockByBlockNewCodeList(@Param("blockNewCodeList") List<String> blockNewCodeList,
                                                   @Param("type") Integer type);
 
+
+    int batchInsert(@Param("list") List<BaseBlockNewRelaStockDO> list);
+
 }

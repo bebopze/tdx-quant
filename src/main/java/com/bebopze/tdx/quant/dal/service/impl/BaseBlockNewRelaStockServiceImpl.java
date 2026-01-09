@@ -1,14 +1,13 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.BaseBlockNewRelaStockDO;
+import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockNewRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,5 +47,32 @@ public class BaseBlockNewRelaStockServiceImpl extends ServiceImpl<BaseBlockNewRe
     public List<BaseBlockDO> listBlockByBlockNewCodeList(List<String> blockNewCodeList) {
         return baseMapper.listBlockByBlockNewCodeList(blockNewCodeList, BlockNewTypeEnum.BLOCK.getType());
     }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsert(List<BaseBlockNewRelaStockDO> list) {
+
+        int batchSize = 5000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<BaseBlockNewRelaStockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsert(sub);
+        }
+
+
+        return count;
+    }
+
 
 }
