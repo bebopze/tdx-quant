@@ -1122,12 +1122,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
                 } else {
 
-                    BaseBlockNewRelaStockDO baseBlockNewRelaStockDO = new BaseBlockNewRelaStockDO();
-                    baseBlockNewRelaStockDO.setBlockNewId(blockNewId);
-                    baseBlockNewRelaStockDO.setStockId(relaId);
-                    baseBlockNewRelaStockDO.setType(type);
+                    BaseBlockNewRelaStockDO entity = new BaseBlockNewRelaStockDO();
+                    entity.setBlockNewId(blockNewId);
+                    entity.setStockId(relaId);
+                    entity.setType(type);
 
-                    relaDOList.add(baseBlockNewRelaStockDO);
+                    relaDOList.add(entity);
                 }
             });
 
