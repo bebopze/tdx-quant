@@ -87,4 +87,34 @@ public class DataAnalysisController {
     }
 
 
+//    /**
+//     * 主线列表 - 统计分析
+//     */
+//    @Operation(summary = "主线列表 - 统计分析（指定时间段）", description = "主线列表 - 统计分析（指定时间段）")
+//    @GetMapping(value = "/bk-yd2/topList/stat")
+//    public Result<TopPoolAnalysisDTO> topListStatAnalysis(@Schema(description = "交易日", example = "2017-01-01")
+//                                                          @RequestParam(defaultValue = "2019-01-01") LocalDate startDate,
+//
+//                                                          @Schema(description = "交易日", example = "2025-10-31")
+//                                                          @RequestParam(required = false) LocalDate endDate,
+//
+//                                                          @Schema(description = "主线类型：1-板块；2-ETF；3-个股；", example = "3")
+//                                                          @RequestParam(defaultValue = "3") Integer topPoolType,
+//
+//                                                          @Schema(description = "主线策略：1-机选；2-精选（TOP50）；3-历史新高；4-极多头；5-RPS三线红；6-10亿；7-首次三线红；8-口袋支点；9-T0；10-涨停（打板）；", example = "1",
+//                                                                  implementation = TopTypeEnum.class)
+//                                                          @RequestParam(defaultValue = "1") Integer topStrategyType,
+//
+//                                                          @Schema(description = "BS策略：1-高抛低吸（C_SSF）；2-高抛低吸（C_MA5）；3-高抛低吸（C_MA10）；4-高抛低吸（C_MA15）；5-高抛低吸（C_MA20）；6-高抛低吸（C_MA25）；7-高抛低吸（C_MA30）；8-高抛低吸（C_MA40）；9-高抛低吸（C_MA50）；10-高抛低吸（C_MA60）；11-高抛低吸（C_MA100）；12-高抛低吸（C_MA120）；13-高抛低吸（C_MA150）；14-高抛低吸（C_MA200）；15-高抛低吸（C_MA250）；", example = "1",
+//                                                                  implementation = BSStrategyTypeEnum.class)
+//                                                          @RequestParam(required = false) Integer bsStrategyType,
+//
+//                                                          @Schema(description = "是否涨停：true-是；false-否；", example = "false")
+//                                                          @RequestParam(required = false) Boolean ztFlag) {
+//
+//        endDate = endDate == null ? LocalDate.now() : endDate;
+//        return Result.SUC(dataAnalysisService.topListStatAnalysis(startDate, endDate, topPoolType, topStrategyType, bsStrategyType, ztFlag));
+//    }
+
+
 }
