@@ -4027,6 +4027,8 @@
 
         // 策略类型
         const type = document.getElementById('filterTopStocksManual__topStrategyType').value;
+        // 股票类型
+        const stockType = document.getElementById('filterTopStocksManual__topPoolType').value;
 
 
         const tbody = document.querySelector('#topStocksTableManual tbody');
@@ -4040,7 +4042,7 @@
         tbody.innerHTML = '';
         messageDiv.style.display = 'none';
 
-        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=${type}`)
+        ApiUtils.fetch(`/api/topBlock/bk-yd2/topStockList?date=${date}&type=${type}&stockType=${stockType}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
