@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.config.aspect;
 
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -82,13 +83,13 @@ public class DistributedLockAspect {
             // 4. 执行目标方法
             stopWatch.stop();
             long lockWaitTime = stopWatch.getTotalTimeMillis();
-            log.info("获取分布式锁成功，等待时间: {}ms, key={}", lockWaitTime, lockKey);
+            log.info("获取分布式锁成功，等待时间: {}, key={}", DateTimeUtil.format2Hms(lockWaitTime), lockKey);
 
             stopWatch.start();
             result = point.proceed();
             stopWatch.stop();
             long executionTime = stopWatch.getTotalTimeMillis();
-            log.info("方法执行完成，耗时: {}ms, {}.{}", executionTime, className, methodName);
+            log.info("方法执行完成，耗时: {}, {}.{}", DateTimeUtil.format2Hms(executionTime), className, methodName);
 
         } catch (Throwable ex) {
             throw ex;
@@ -225,8 +226,7 @@ public class DistributedLockAspect {
 
             lockUtils.cleanExpiredLocks();
 
-            long costTime = System.currentTimeMillis() - startTime;
-            log.debug("分布式锁清理任务完成，耗时: {}ms", costTime);
+            log.debug("分布式锁清理任务完成，耗时: {}", DateTimeUtil.formatNow2Hms(startTime));
         } catch (Exception e) {
             log.error("执行分布式锁清理任务异常", e);
         }
