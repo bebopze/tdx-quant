@@ -356,9 +356,9 @@ public class MacUtil {
                 totalTabs++;
                 boolean isEmptyTab = isEmptyTabUrl(url);
                 if (isEmptyTab) {
-                    debugUrls.append("[").append(url).append("->EMPTY]").append(",");
+                    debugUrls.append("[").append(url).append(" ->EMPTY]").append(",");
                 } else {
-                    debugUrls.append("[").append(url).append("->NON_EMPTY]").append(",");
+                    debugUrls.append("[").append(url).append(" ->NON_EMPTY]").append(",");
                     nonEmptyCount++;
                 }
             }

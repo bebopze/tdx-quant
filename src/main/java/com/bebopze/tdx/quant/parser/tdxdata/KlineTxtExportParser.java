@@ -159,7 +159,7 @@ public class KlineTxtExportParser {
         LocalDate date = null;
         try {
 
-            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
             for (String line : lines) {
 
 

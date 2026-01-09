@@ -151,11 +151,17 @@ public class TdxTask {
             log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
+            // ---------------------------------------------------------------------------------------------------------
+
+
             Executors.newSingleThreadExecutor().execute(() -> {
-                taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 新概念板块]）");
+                taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）");
                 tdxDataParserService.importAll__blockRelaStock();
                 taskProgressManager.completeSubTask(taskId, "任务执行完成", "SUC");
             });
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 更新进度
@@ -238,6 +244,16 @@ public class TdxTask {
 
         String taskId = "refreshKline_lastDay_" + System.currentTimeMillis();
         TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘中-增量更新");
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            taskProgressManager.updateProgress(taskId, 10, "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）");
+            tdxDataParserService.importBlockReport();
+            taskProgressManager.completeSubTask(taskId, "任务执行完成", "SUC");
+        });
 
 
         // -------------------------------------------- KLINE ----------------------------------------------------------

@@ -25,7 +25,7 @@ public class ZdyReportParser {
 
     public static void main(String[] args) {
 
-        // GB2312
+        // GB2312（GBK 是GB2312的超集   ->   GBK 100%兼容 GB2312）
         String filePath_export = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.txt";
         // GB2312
         String filePath_export2 = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.xls";
@@ -51,7 +51,7 @@ public class ZdyReportParser {
 
 
         try {
-            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i).trim();
 
@@ -135,5 +135,6 @@ public class ZdyReportParser {
         log.error("ExportParser#parse suc     >>>     filePath : {},   totalNum : {}", filePath, items.size());
         return items;
     }
+
 
 }

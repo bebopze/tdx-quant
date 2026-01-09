@@ -850,7 +850,7 @@ public class TdxFunCheck {
         LocalDate date = null;
         try {
 
-            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
             if (CollectionUtils.isEmpty(lines) || lines.size() < 3) {
                 return dtoList;
             }

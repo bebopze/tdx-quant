@@ -48,7 +48,7 @@ public class TdxhyParser {
 
 
         try {
-            List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
+            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
 
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
