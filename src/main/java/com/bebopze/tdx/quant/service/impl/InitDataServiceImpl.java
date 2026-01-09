@@ -371,13 +371,13 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // ETF
-        data.ETF_stockDOList = data.stockDOList.stream()
+        data.ETF_stockDOList = data.stockDOList.parallelStream()
                                                .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
                                                .collect(Collectors.toList());
 
 
         // 个股
-        data.stockDOList = data.stockDOList.stream()
+        data.stockDOList = data.stockDOList.parallelStream()
                                            .filter(e -> Objects.equals(e.getType(), StockTypeEnum.A_STOCK.type))
                                            .collect(Collectors.toList());
     }

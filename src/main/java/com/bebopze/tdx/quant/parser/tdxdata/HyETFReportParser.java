@@ -169,8 +169,8 @@ public class HyETFReportParser {
         LocalDate date = null;
         try {
 
-            // List<String> lines = FileUtils.readLines(new File(filePath), "GB2312");
-            List<String> lines = FileUtils.readLines(file_ETF, "GB2312");
+            // List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
+            List<String> lines = FileUtils.readLines(file_ETF, "GBK");
             if (CollectionUtils.isEmpty(lines) || lines.size() < 2) {
                 return dtoList;
             }
