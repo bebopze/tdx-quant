@@ -1,8 +1,9 @@
 package com.bebopze.tdx.quant;
 
-import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure;
+import com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure;
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -21,10 +22,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author: bebopze
  * @date: 2025/5/4
  */
-@SpringBootApplication(exclude = {DruidDataSourceAutoConfigure.class, DataSourceAutoConfiguration.class})
+@SpringBootApplication(exclude = {DruidDataSourceAutoConfigure.class, DataSourceAutoConfiguration.class, MybatisAutoConfiguration.class})
 @EnableTransactionManagement
 @EnableFeignClients("com.bebopze.tdx.quant.client")
-@MapperScan("com.bebopze.tdx.quant.dal.mapper")
+//@MapperScan("com.bebopze.tdx.quant.dal.mapper")
 @EnableAsync
 @EnableScheduling
 @EnableCaching

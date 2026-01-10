@@ -15,10 +15,10 @@ import com.github.benmanes.caffeine.cache.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
@@ -51,7 +51,7 @@ public class BacktestCache {
     /**
      * 交易日 - 基准
      */
-    public Map<LocalDate, Integer> dateIndexMap = Maps.newHashMap();
+    public Map<LocalDate, Integer> dateIndexMap = Maps.newConcurrentMap();
     public List<LocalDate> dateList = Lists.newArrayList(); // 实际交易日 列表（有序）
 
 
@@ -68,10 +68,10 @@ public class BacktestCache {
     public Map<String, Map<LocalDate, Double>> stock__dateOpenMap = Maps.newConcurrentMap();
 
 
-    public Map<String, Double> rt_stock_zt__codePriceMap = Maps.newHashMap(); // 涨停价     ->  东财API
-    public Map<String, Double> rt_stock_dt__codePriceMap = Maps.newHashMap(); // 跌停价     ->  东财API
-    public Map<String, Double> rt_stock__codePriceMap = Maps.newHashMap();    // 实时行情   ->  东财API
-    public Map<String, Double> rt_stock__codePctMap = Maps.newHashMap();      // 实时涨跌幅 ->  东财API
+    public Map<String, Double> rt_stock_zt__codePriceMap = Maps.newConcurrentMap(); // 涨停价     ->  东财API
+    public Map<String, Double> rt_stock_dt__codePriceMap = Maps.newConcurrentMap(); // 跌停价     ->  东财API
+    public Map<String, Double> rt_stock__codePriceMap = Maps.newConcurrentMap();    // 实时行情   ->  东财API
+    public Map<String, Double> rt_stock__codePctMap = Maps.newConcurrentMap();      // 实时涨跌幅 ->  东财API
 
 
     /**
@@ -88,22 +88,22 @@ public class BacktestCache {
     /**
      * 个股 - 板块
      */
-    public Map<String, Set<String>> stockCode_blockCodeSet_Map = Maps.newHashMap();
+    public Map<String, Set<String>> stockCode_blockCodeSet_Map = Maps.newConcurrentMap();
     // public Map<Long, List<Long>> stockId_blockIdList_Map = Maps.newHashMap();
 
 
     /**
      * 板块 - 个股
      */
-    public Map<String, Set<String>> blockCode_stockCodeSet_Map = Maps.newHashMap();
+    public Map<String, Set<String>> blockCode_stockCodeSet_Map = Maps.newConcurrentMap();
     // public Map<Long, List<Long>> blockId_stockIdList_Map = Maps.newHashMap();
 
 
     /**
      * 板块 - 子板块       【2-普通行业 / 12-研究行业】
      */
-    public Map<String, Set<String>> bk2_level1__blockCode_stockCodeSet_Map = Maps.newHashMap();
-    public Map<String, Set<String>> bk12_level1__blockCode_stockCodeSet_Map = Maps.newHashMap();
+    public Map<String, Set<String>> bk2_level1__blockCode_stockCodeSet_Map = Maps.newConcurrentMap();
+    public Map<String, Set<String>> bk12_level1__blockCode_stockCodeSet_Map = Maps.newConcurrentMap();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ public class BacktestCache {
     // ====== 优化后的缓存 Caffeine ======
 
 
-    // ----------------------------- （Java 内存管理 非常“垃圾”（黑盒无感->极易失控）   =>   只要涉及大对象  ->  一律卡死）
+    // ----------------------------- （Java 内存管理 非常"垃圾"（黑盒无感->极易失控）   =>   只要涉及大对象  ->  一律卡死）
 
 
     // 凡是系统   运行一段时间 直接卡死！   每次重启后 正常运行！     ->     一律为 GC bug！！！
