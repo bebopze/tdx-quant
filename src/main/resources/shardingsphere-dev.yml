@@ -1,0 +1,166 @@
+# ShardingSphere 5.5.x 独立配置文件
+mode:
+  type: Standalone
+  repository:
+    type: JDBC
+
+
+
+dataSources:
+  ds_common:
+    dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    username: root
+    password: 123456
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialSize: 20
+    minIdle: 10
+    maxActive: 100
+    maxWait: 60000
+    testOnBorrow: true
+    testOnReturn: false
+    keepAlive: true
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    testWhileIdle: true
+    validationQuery: SELECT 1
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000;druid.stat.logSlowSql=true
+
+  ds_0:
+    dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/tdx_bt_0?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    username: root
+    password: 123456
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialSize: 20
+    minIdle: 10
+    maxActive: 100
+    maxWait: 60000
+    testOnBorrow: true
+    testOnReturn: false
+    keepAlive: true
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    testWhileIdle: true
+    validationQuery: SELECT 1
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000;druid.stat.logSlowSql=true
+
+  ds_1:
+    dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/tdx_bt_1?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    username: root
+    password: 123456
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialSize: 20
+    minIdle: 10
+    maxActive: 100
+    maxWait: 60000
+    testOnBorrow: true
+    testOnReturn: false
+    keepAlive: true
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    testWhileIdle: true
+    validationQuery: SELECT 1
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000;druid.stat.logSlowSql=true
+
+
+
+rules:
+  # 单表规则 - 处理非分片表（如 conf_account, base_stock 等）
+  - !SINGLE
+    tables:
+      - "*.*"
+    defaultDataSource: ds_common
+
+  # 分片规则
+  - !SHARDING
+    tables:
+
+      # 表：bt_trade_record
+      bt_trade_record:
+        actualDataNodes: ds_$->{0..1}.bt_trade_record_$->{0..99}
+        # 分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: task_id
+            shardingAlgorithmName: db_inline
+        # 分表策略
+        tableStrategy:
+          standard:
+            shardingColumn: task_id
+            shardingAlgorithmName: trade_table_inline
+        # 主键生成策略
+        keyGenerateStrategy:
+          column: id
+          keyGeneratorName: snowflake
+
+      # 表：bt_position_record
+      bt_position_record:
+        actualDataNodes: ds_$->{0..1}.bt_position_record_$->{0..99}
+        # 分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: task_id
+            shardingAlgorithmName: db_inline
+        # 分表策略
+        tableStrategy:
+          standard:
+            shardingColumn: task_id
+            shardingAlgorithmName: position_table_inline
+        # 主键生成策略
+        keyGenerateStrategy:
+          column: id
+          keyGeneratorName: snowflake
+
+
+    # 绑定表配置（大表 join 优化）
+    bindingTables:
+      - bt_trade_record, bt_position_record
+
+
+    # 分片算法
+    shardingAlgorithms:
+      db_inline:
+        type: INLINE
+        props:
+          algorithm-expression: ds_$->{task_id % 2}
+          # algorithm-expression: ds_$->{((task_id.longValue() / 100) as int) % 2}
+
+      trade_table_inline:
+        type: INLINE
+        props:
+          algorithm-expression: bt_trade_record_$->{((task_id.longValue() / 2) as int) % 100}
+          # algorithm-expression: bt_trade_record_$->{task_id % 100}
+
+      position_table_inline:
+        type: INLINE
+        props:
+          algorithm-expression: bt_position_record_$->{((task_id.longValue() / 2) as int) % 100}
+          # algorithm-expression: bt_position_record_$->{task_id % 100}
+
+
+    # 主键生成器配置
+    keyGenerators:
+      snowflake:
+        type: SNOWFLAKE
+        props:
+          worker-id: 123
+
+
+
+props:
+  # 打印SQL
+  sql-show: false
+  check-table-metadata-enabled: false
+  max-connections-size-per-query: 10
+  kernel-executor-size: 16

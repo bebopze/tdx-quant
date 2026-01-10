@@ -6,16 +6,17 @@ server.port: 7001
 spring.application.name: tdx-quant
 
 
-# 404 交给异常处理器处理
-spring.mvc.throw-exception-if-no-handler-found: true
-spring.web.resources.add-mappings: false
+# 允许 Swagger 静态资源访问
+spring.web.resources.add-mappings: true
+# 禁用 Spring Cloud 版本兼容性检查
+spring.cloud.compatibility-verifier.enabled: false
 
 
 # Actuator
 management.endpoints.web.exposure.include: '*'         # 开放所有     ->     暴露所有 Actuator 端点给 Admin Server (也就是它自己)
 management.endpoint.health.show-details: ALWAYS        # 显示详细的健康信息
-management.endpoint.shutdown.enabled: true             # 如需 /shutdown
-management.metrics.export.prometheus.enabled: true     # 如需 /prometheus
+management.endpoint.shutdown.access: unrestricted      # 如需 /shutdown
+management.prometheus.metrics.export.enabled: true     # 如需 /prometheus
 
 
 # Admin Client
@@ -65,6 +66,8 @@ logging.config: "classpath:log4j2.xml"
 # springdoc
 springdoc.api-docs.path: "/v3/api-docs"
 springdoc.swagger-ui.path: "/swagger-ui.html"
+# 文档展开
+springdoc.swagger-ui.doc-expansion: none
 
 
 
