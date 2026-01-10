@@ -53,10 +53,9 @@ public class TaskController {
      */
     @Operation(summary = "refreshAll - 增量更新", description = "refreshAll - 盘中 -> 增量更新")
     @GetMapping(value = "/refreshAll__lastDay")
-    public Result<String> refreshAll__lastDay() {
-//        String taskId = tdxTask.execTask__refreshAll__lastDay();
-        String taskId = tdxTask.execTask__refreshKline__lastDay(false);
-        return Result.SUC(taskId);
+    public Result<Void> refreshAll__lastDay() {
+        tdxTask.execTask__refreshKline__lastDay(false);
+        return Result.SUC();
     }
 
 
@@ -67,9 +66,9 @@ public class TaskController {
      */
     @Operation(summary = "refreshAll - 全量更新", description = "refreshAll - 盘后 -> 全量更新")
     @GetMapping(value = "/refreshAll")
-    public Result<String> refreshAll() {
-        String taskId = tdxTask.execTask__refreshAll();
-        return Result.SUC(taskId);
+    public Result<Void> refreshAll() {
+        tdxTask.execTask__refreshAll();
+        return Result.SUC();
     }
 
 

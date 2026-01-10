@@ -31,13 +31,13 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer
-                // 禁用基于参数的内容协商
-                .favorParameter(false)
-                // 忽略 Accept 头（强制 JSON）
-                .ignoreAcceptHeader(true)
-                // API 默认返回 JSON（response Header   ->   Content-Type: application/json）
-                .defaultContentType(MediaType.APPLICATION_JSON);
+
+        // 禁用基于参数的内容协商
+        configurer.favorParameter(false)
+                  // 忽略 Accept 头（强制 JSON）
+                  .ignoreAcceptHeader(true)
+                  // API 默认返回 JSON（response Header   ->   Content-Type: application/json）
+                  .defaultContentType(MediaType.APPLICATION_JSON);
     }
 
 

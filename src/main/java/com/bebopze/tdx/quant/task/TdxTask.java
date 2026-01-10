@@ -139,7 +139,7 @@ public class TdxTask {
     @Async
     @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
-    public String execTask__refreshAll() {
+    public void execTask__refreshAll() {
 
 
         String taskId = "refreshAll_" + System.currentTimeMillis();
@@ -200,7 +200,7 @@ public class TdxTask {
 
 
         // 返回taskId 供前端查询
-        return taskId;
+        // return taskId;
     }
 
 
@@ -218,14 +218,14 @@ public class TdxTask {
     // 交易时段2：下午（周一 ~ 周五   13:00 ~ 15:05）
     @Scheduled(cron = "0 0/5 13,14 * * 1-5")
     @Scheduled(cron = "0 0,5 15 * * 1-5")
-    public String execTask__refreshKline__lastDay() {
-        return execTask__refreshKline__lastDay(true);
+    public void execTask__refreshKline__lastDay() {
+        execTask__refreshKline__lastDay(true);
     }
 
     @Async
     @TotalTime
     @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
-    public String execTask__refreshKline__lastDay(boolean check) {
+    public void execTask__refreshKline__lastDay(boolean check) {
         log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 start");
 
 
@@ -235,7 +235,7 @@ public class TdxTask {
         // 本机（Mac系统），跳过执行（仅 服务器端 执行）
         if (check && (!isTradeDateTime() || SystemUtils.IS_OS_MAC)) {
             log.info("execTask__refreshKline__lastDay     >>>     非交易日/非交易时间段，跳过执行");
-            return null;
+            return;
         }
 
 
@@ -296,7 +296,7 @@ public class TdxTask {
         log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 end");
 
 
-        return taskId;
+        // return taskId;
     }
 
 
