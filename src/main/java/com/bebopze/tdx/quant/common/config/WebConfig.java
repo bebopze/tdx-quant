@@ -5,7 +5,9 @@ import com.bebopze.tdx.quant.common.config.convert.StringToLocalDateTimeConverte
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.http.MediaType;
 import org.springframework.web.filter.RequestContextFilter;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -23,7 +25,24 @@ public class WebConfig implements WebMvcConfigurer {
 
 
     /**
-     * 解决swagger-ui.html 404无法访问的问题
+     * 决定服务端 返回什么格式的响应内容（JSON、XML、HTML等）
+     *
+     * @param configurer
+     */
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer
+                // 禁用基于参数的内容协商
+                .favorParameter(false)
+                // 忽略 Accept 头（强制 JSON）
+                .ignoreAcceptHeader(true)
+                // API 默认返回 JSON（response Header   ->   Content-Type: application/json）
+                .defaultContentType(MediaType.APPLICATION_JSON);
+    }
+
+
+    /**
+     * 静态资源映射配置：解决swagger-ui.html 404无法访问的问题
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

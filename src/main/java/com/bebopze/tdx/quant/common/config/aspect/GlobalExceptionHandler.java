@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.config.aspect;
 
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.Result;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.sql.SQLException;
 
@@ -66,5 +68,22 @@ public class GlobalExceptionHandler {
             return Result.ERR(errorMsg == null || "".equals(errorMsg) ? "未知错误" : errorMsg);
         }
     }
+
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public Result<Void> handleNoResourceFoundException(NoResourceFoundException e, HttpServletRequest request) {
+        String uri = request.getRequestURI();
+
+        if (uri.contains("favicon") || uri.contains(".well-known")) {
+            log.debug("静态资源不存在: {}", uri);
+            return Result.ERR("资源不存在");
+        }
+
+        log.warn("资源不存在: {}", uri);
+        return Result.ERR("资源不存在");
+    }
+
 
 }
