@@ -54,12 +54,15 @@ else
     fi
 fi
 
+
 PID_FILE="$APP_HOME/logs/app.pid"
 STARTUP_LOG="$APP_HOME/logs/startup.log"
 
 echo "🔎 最终决定 -> 模式: $MODE_HINT"
 echo "   APP_HOME = $APP_HOME"
 echo "   JAR_FILE = $JAR_FILE"
+
+
 
 # 验证 JAR 文件存在
 if [ ! -f "$JAR_FILE" ]; then
@@ -69,14 +72,20 @@ if [ ! -f "$JAR_FILE" ]; then
     exit 1
 fi
 
+
+
 # 创建日志目录
 mkdir -p "$APP_HOME/logs"
+
+
 
 # --- 强制设置环境 locale（防止 ssh 非交互 shell 无 locale，引发日志编码问题） ---
 # 优先使用已有的 LANG，否则使用 zh_CN.UTF-8（可改为 en_US.UTF-8）
 export LANG="${LANG:-zh_CN.UTF-8}"
 export LC_ALL="${LC_ALL:-$LANG}"
 echo "🗺️  当前环境 LANG=$LANG LC_ALL=$LC_ALL"
+
+
 
 # 智能内存配置 - Mac/Linux 兼容
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -93,16 +102,31 @@ if ! [[ "$TOTAL_MEM" =~ ^[0-9]+$ ]] || [ -z "$TOTAL_MEM" ] || [ "$TOTAL_MEM" -lt
     TOTAL_MEM=4
 fi
 
+
 echo "🖥️  系统类型: $([ "$IS_MAC" = true ] && echo "Mac" || echo "Linux")"
 echo "📊 总内存: ${TOTAL_MEM}GB"
 
+
 # 基础内存计算 (95% 总内存)
 MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
+
 
 # 应用边界限制
 if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
 if [ "$MAX_HEAP" -lt 16 ]; then MAX_HEAP=16; fi
 if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
+
+# ========== 根据堆大小计算 G1 Region Size ==========
+if [ "$MAX_HEAP" -ge 32 ]; then
+    G1_REGION_SIZE="32m"
+elif [ "$MAX_HEAP" -ge 16 ]; then
+    G1_REGION_SIZE="16m"
+elif [ "$MAX_HEAP" -ge 8 ]; then
+    G1_REGION_SIZE="8m"
+else
+    G1_REGION_SIZE="4m"
+fi
+
 
 # Mac系统特殊处理：增加20%内存分配
 if [ "$IS_MAC" = true ]; then
@@ -119,7 +143,9 @@ if [ "$IS_MAC" = true ]; then
     echo "🍎 Mac系统特殊处理: 基础内存 ${MAX_HEAP}GB * 1.5 = ${MAC_HEAP}GB"
 fi
 
+
 echo "✅ 最终MAX_HEAP配置: ${MAX_HEAP}GB"
+
 
 # 验证计算结果
 echo "----------------------------------------"
@@ -129,17 +155,17 @@ echo "  95% 基础值: $(( TOTAL_MEM * 95 / 100 ))GB"
 echo "  Mac调整: $([ "$IS_MAC" = true ] && echo "✅ 启用 (×1.5)" || echo "❌ 未启用")"
 echo "  边界限制: 1GB ≤ HEAP ≤ 50GB"
 echo "  最终分配: ${MAX_HEAP}GB"
+echo "  G1 Region: ${G1_REGION_SIZE}"
 echo "----------------------------------------"
 
 
-if [ "$MAX_HEAP" -gt 50 ]; then MAX_HEAP=50; fi
-if [ "$MAX_HEAP" -lt 16 ]; then MAX_HEAP=16; fi
-if [ "$MAX_HEAP" -lt 1 ]; then MAX_HEAP=1; fi
 
 echo "🖥️  启动量化系统 [$(date)]"
 echo "📊 物理内存: ${TOTAL_MEM}GB | 分配堆内存: ${MAX_HEAP}GB"
 echo "🚀 JAR文件: $JAR_FILE"
 echo "🔗 访问地址: http://localhost:$SERVER_PORT"
+
+
 
 # 检查是否已在运行（根据 jar 名称）
 EXISTING_PID=$(pgrep -f "$JAR_NAME" 2>/dev/null | head -1 || true)
@@ -149,26 +175,62 @@ if [ -n "$EXISTING_PID" ]; then
     exit 1
 fi
 
+
+
 # 切换到 APP_HOME
 cd "$APP_HOME" || {
     echo "❌ 无法切换到目录: $APP_HOME"
     exit 1
 }
 
+
+
 # 清空或创建启动日志
 : > "$STARTUP_LOG"
 
-# 启动应用 — 强制 JVM file.encoding=UTF-8
-nohup java \
-    -Dfile.encoding=UTF-8 \
-    -Duser.timezone=Asia/Shanghai \
-    -Xms8g -Xmx${MAX_HEAP}g \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+AlwaysPreTouch \
-    -XX:InitiatingHeapOccupancyPercent=30 \
-    -XX:G1ReservePercent=10 \
-    -XX:MaxDirectMemorySize=4g \
+
+
+# JVM 参数
+JAVA_OPTS=(
+    # 内存
+    -Xms8g
+    -Xmx${MAX_HEAP}g
+    -XX:MaxDirectMemorySize=4g
+    -XX:MaxMetaspaceSize=512m
+    -XX:+AlwaysPreTouch
+
+    # G1GC
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=100
+    -XX:InitiatingHeapOccupancyPercent=30
+    -XX:G1ReservePercent=15
+    -XX:G1HeapRegionSize=${G1_REGION_SIZE}
+    # 移除实验性参数 G1NewSizePercent / G1MaxNewSizePercent
+
+    # Java 25 兼容
+    --enable-native-access=ALL-UNNAMED
+    --add-opens=java.base/java.lang=ALL-UNNAMED
+    --add-opens=java.base/java.nio=ALL-UNNAMED
+    --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+
+    # 编码
+    -Dfile.encoding=UTF-8
+    -Dsun.stdout.encoding=UTF-8
+    -Dsun.stderr.encoding=UTF-8
+    -Duser.timezone=Asia/Shanghai
+
+    # 性能
+    -XX:+UseStringDeduplication
+    -XX:AutoBoxCacheMax=20000
+)
+
+# GC 日志（生产环境建议开启）
+GC_LOG_OPTS=(
+    -Xlog:gc*:file=$APP_HOME/logs/gc.log:time,level,tags:filecount=5,filesize=100M
+)
+
+# 启动
+nohup java "${JAVA_OPTS[@]}" "${GC_LOG_OPTS[@]}" \
     -jar "$JAR_FILE" \
     --spring.profiles.active="$PROFILE" \
     --server.port="$SERVER_PORT" \
@@ -176,6 +238,8 @@ nohup java \
 
 JAVA_PID=$!
 disown $JAVA_PID 2>/dev/null || true
+
+
 
 echo "⏳ 启动中 (PID: $JAVA_PID)，等待服务就绪..."
 
