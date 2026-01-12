@@ -61,6 +61,7 @@ class SubTaskProgress {
 
 
     private String name;
+    private int taskType = 1; // 1-同步子任务；2-异步子任务；
     private TaskStatus status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

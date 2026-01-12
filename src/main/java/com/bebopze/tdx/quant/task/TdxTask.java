@@ -47,10 +47,6 @@ public class TdxTask {
     @Autowired
     private TdxDataParserService tdxDataParserService;
 
-//    @Autowired
-//    @Qualifier("incrUpExtDataServiceImpl")
-//    private ExtDataService incrUpExtDataService;
-
 
     @Autowired
     @Qualifier("extDataServiceImpl")
@@ -143,27 +139,31 @@ public class TdxTask {
 
 
         String taskId = "refreshAll_" + System.currentTimeMillis();
-        TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘后-全量更新");
+        TaskProgress taskProgress = taskProgressManager.createAndStartTask(taskId, "盘后-全量更新");
+
+
+        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
+
+
+        // ---------------------------------------------------------------------------------------------------------
+
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String asyncSubTask = "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）";
+            try {
+                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
+                tdxDataParserService.importAll__blockRelaStock();
+                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
+            } catch (Exception e) {
+                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
+            }
+        });
+
+
+        // ---------------------------------------------------------------------------------------------------------
 
 
         try {
-            taskProgressManager.startTask(taskId);
-            log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            Executors.newSingleThreadExecutor().execute(() -> {
-                taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）");
-                tdxDataParserService.importAll__blockRelaStock();
-                taskProgressManager.completeSubTask(taskId, "任务执行完成", "SUC");
-            });
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
             // 更新进度
             taskProgressManager.updateProgress(taskId, 20, "行情数据");
             tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
@@ -243,57 +243,69 @@ public class TdxTask {
 
 
         String taskId = "refreshKline_lastDay_" + System.currentTimeMillis();
-        TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘中-增量更新");
+        TaskProgress taskProgress = taskProgressManager.createAndStartTask(taskId, "盘中-增量更新");
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            taskProgressManager.updateProgress(taskId, 10, "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）");
-            tdxDataParserService.importBlockReport();
-            taskProgressManager.completeSubTask(taskId, "任务执行完成", "SUC");
+            String asyncSubTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
+            try {
+                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
+                tdxDataParserService.importBlockReport();
+                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
+            } catch (Exception e) {
+                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
+            }
         });
 
 
         // -------------------------------------------- KLINE ----------------------------------------------------------
 
 
-        taskProgressManager.updateProgress(taskId, 30, "个股实时 行情数据");
-        // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
-        tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.INCR);
+        try {
+            taskProgressManager.updateProgress(taskId, 30, "个股实时 行情数据");
+            // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
+            tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.INCR);
 
 
-        taskProgressManager.updateProgress(taskId, 40, "板块实时 行情数据");
-        // 根据 板块-个股列表   ->   实时计算   板块指数 涨跌幅/成交额/成交量/...
-        tdxDataParserService.calcAndFillBlockKlineAll();
+            taskProgressManager.updateProgress(taskId, 40, "板块实时 行情数据");
+            // 根据 板块-个股列表   ->   实时计算   板块指数 涨跌幅/成交额/成交量/...
+            tdxDataParserService.calcAndFillBlockKlineAll();
 
 
-        // -------------------------------------------- EXT_DATA -------------------------------------------------------
+            // -------------------------------------------- EXT_DATA -------------------------------------------------------
 
 
-        taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
-        extDataService.calcBlockExtData(10);
+            taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
+            extDataService.calcBlockExtData(10);
 
 
-        taskProgressManager.updateProgress(taskId, 60, "ETF实时 扩展数据");
-        extDataService.calcStockExtData(10, StockTypeEnum.ETF.type);
+            taskProgressManager.updateProgress(taskId, 60, "ETF实时 扩展数据");
+            extDataService.calcStockExtData(10, StockTypeEnum.ETF.type);
 
 
-        taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
-        extDataService.calcStockExtData(10, StockTypeEnum.A_STOCK.type);
+            taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
+            extDataService.calcStockExtData(10, StockTypeEnum.A_STOCK.type);
 
 
-        // -------------------------------------------- 主线板块 --------------------------------------------------------
+            // -------------------------------------------- 主线板块 --------------------------------------------------------
 
 
-        taskProgressManager.updateProgress(taskId, 90, "主线板块");
-        topBlockService.refreshAll(UpdateTypeEnum.INCR);
+            taskProgressManager.updateProgress(taskId, 90, "主线板块");
+            topBlockService.refreshAll(UpdateTypeEnum.INCR);
 
 
-        taskProgressManager.completeSubTask(taskId, "主线板块", "任务执行完成");
-        taskProgressManager.completeTask(taskId, "任务执行完成");
-        log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 end");
+            taskProgressManager.completeSubTask(taskId, "主线板块", "任务执行完成");
+            taskProgressManager.completeTask(taskId, "任务执行完成");
+            log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 end");
+
+
+        } catch (Exception e) {
+            taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
+            log.error("任务执行失败", e);
+        }
 
 
         // return taskId;
