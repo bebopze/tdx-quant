@@ -95,7 +95,19 @@ public class HyETFReportParser {
         Map<String, TdxETFDTO> name__rowMap = Maps.newHashMap();
         hy__rowMap.values().forEach(e -> {
 
+
+            // 卫星ETF / 卫星ETF
+            // 1、name -> 完全相同
             String name = e.name;
+
+
+            // 2、name -> 不完全相同（模糊匹配）
+            // 卫星ETF/卫星产业ETF、人工智能ETF/人工智能ETF易方达、信用债ETF基金/信用债ETF广发
+            name = name.split("ETF")[0];
+            // 光伏ETF / 光伏龙头ETF广发
+            name = name.replace("龙头", "");
+            // TODO   ->   有色ETF基金 / 有色金属ETF基金
+
 
             TdxETFDTO old_row = name__rowMap.computeIfAbsent(name, k -> e);
             // 同一[name]   ->   筛选保留 最大金额ETF
