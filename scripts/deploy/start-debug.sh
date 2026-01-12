@@ -55,12 +55,26 @@ else
 fi
 
 
+
 PID_FILE="$APP_HOME/logs/app.pid"
 STARTUP_LOG="$APP_HOME/logs/startup.log"
+LOG_DIR="$APP_HOME/logs"
+GC_LOG_DIR="$APP_HOME/logs/gc"
 
 echo "🔎 最终决定 -> 模式: $MODE_HINT"
 echo "   APP_HOME = $APP_HOME"
 echo "   JAR_FILE = $JAR_FILE"
+echo "   LOG_DIR = $LOG_DIR"
+echo "   GC_LOG_DIR = $GC_LOG_DIR"
+
+
+
+# 检查 Java 版本
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | cut -d'.' -f1)
+if [ "$JAVA_VERSION" -lt 17 ]; then
+    echo "错误: 需要 Java 17 或更高版本，当前版本: $JAVA_VERSION"
+    exit 1
+fi
 
 
 
@@ -75,7 +89,8 @@ fi
 
 
 # 创建日志目录
-mkdir -p "$APP_HOME/logs"
+mkdir -p "$LOG_DIR" "$GC_LOG_DIR"
+echo "📝   创建日志目录 $LOG_DIR   $GC_LOG_DIR"
 
 
 
@@ -211,40 +226,58 @@ cd "$APP_HOME" || {
 
 # JVM 参数
 JAVA_OPTS=(
-    # 内存
+    # ========== 堆内存配置 ==========
     -Xms8g
     -Xmx${MAX_HEAP}g
     -XX:MaxDirectMemorySize=4g
-    -XX:MaxMetaspaceSize=512m
     -XX:+AlwaysPreTouch
 
-    # G1GC
-    -XX:+UseG1GC
-    -XX:MaxGCPauseMillis=100
-    -XX:InitiatingHeapOccupancyPercent=30
-    -XX:G1ReservePercent=15
-    -XX:G1HeapRegionSize=${G1_REGION_SIZE}
+    # ========== ZGC 配置 ==========
+    -XX:+UseZGC
+    -XX:SoftMaxHeapSize=14g
+    -XX:ConcGCThreads=4
+    -XX:+UseStringDeduplication
+    -XX:+UseCompressedOops
 
-    # Java 25 兼容
+    # ========== OOM 处理 ==========
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:HeapDumpPath=$GC_LOG_DIR/heapdump-%t.hprof
+    -XX:+ExitOnOutOfMemoryError
+    -XX:ErrorFile=$GC_LOG_DIR/hs_err_pid%p.log
+
+    # ========== 性能分析 ==========
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+DebugNonSafepoints
+    -XX:+FlightRecorder
+
+    # ========== Java 25 兼容 ==========
     --enable-native-access=ALL-UNNAMED
     --add-opens=java.base/java.lang=ALL-UNNAMED
     --add-opens=java.base/java.nio=ALL-UNNAMED
     --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
 
-    # 编码
+    # ========== Spring Boot 优化 ==========
+    -Dspring.jmx.enabled=false
+    -Dspring.main.lazy-initialization=false
+    -Djava.security.egd=file:/dev/./urandom
+
+    # ========== 编码配置 ==========
     -Dfile.encoding=UTF-8
     -Dsun.stdout.encoding=UTF-8
     -Dsun.stderr.encoding=UTF-8
     -Duser.timezone=Asia/Shanghai
-
-    # 性能
-    -XX:+UseStringDeduplication
-    -XX:AutoBoxCacheMax=20000
+    -Duser.language=zh
+    -Duser.region=CN
 )
 
 # GC 日志（生产环境建议开启）
 GC_LOG_OPTS=(
-    -Xlog:gc*:file=$APP_HOME/logs/gc.log:time,level,tags:filecount=5,filesize=100M
+    # ========== GC 日志配置 ==========
+    -Xlog:gc*:file=$GC_LOG_DIR/gc-%t.log:time,uptime,level,tags:filecount=10,filesize=100M
+    -Xlog:safepoint:file=$GC_LOG_DIR/safepoint-%t.log:time,uptime:filecount=5,filesize=50M
+
+    # ========== JFR 持续录制（生产环境推荐）==========
+    -XX:StartFlightRecording=disk=true,maxsize=1G,maxage=6h,dumponexit=true,dumponexitpath=$GC_LOG_DIR/jfr-exit-%t.jfr,filename=$GC_LOG_DIR/continuous-recording.jfr,settings=default
 )
 
 # 启动
