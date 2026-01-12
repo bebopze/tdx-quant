@@ -38,6 +38,20 @@ public class TaskProgressManager {
 
 
     /**
+     * 创建并开始 主任务
+     *
+     * @param taskId
+     * @param taskName
+     */
+    public TaskProgress createAndStartTask(String taskId, String taskName) {
+        TaskProgress task = createTask(taskId, taskName);
+        startTask(taskId);
+
+        return task;
+    }
+
+
+    /**
      * 创建 主任务
      *
      * @param taskId
@@ -76,13 +90,25 @@ public class TaskProgressManager {
      *
      * @param taskId         主任务ID
      * @param progress       主任务 进度
-     * @param currentSubTask 当前 子任务
+     * @param currentSubTask 当前子任务
      */
     public void updateProgress(String taskId, int progress, String currentSubTask) {
+        updateProgress(taskId, progress, currentSubTask, true);
+    }
+
+    /**
+     * 更新 主任务进度、当前关联 子任务
+     *
+     * @param taskId         主任务ID
+     * @param progress       主任务 进度
+     * @param currentSubTask 当前子任务
+     * @param isSyncSubTask  当前子任务 是否为同步
+     */
+    public void updateProgress(String taskId, int progress, String currentSubTask, boolean isSyncSubTask) {
 
 
         // 创建 子任务
-        addSubTask(taskId, currentSubTask);
+        addSubTask(taskId, currentSubTask, isSyncSubTask);
 
 
         // 主任务
@@ -95,7 +121,7 @@ public class TaskProgressManager {
 
         // old != new     =>     当前为 new子任务   =>   old子任务 -> [已完成]
         String old_currentSubTask = taskProgress.getCurrentSubTask();
-        if (old_currentSubTask != null && !old_currentSubTask.equals(currentSubTask)) {
+        if (isSyncSubTask && old_currentSubTask != null && !old_currentSubTask.equals(currentSubTask)) {
             completeSubTask(taskId, old_currentSubTask, "SUC");
         }
 
@@ -114,12 +140,14 @@ public class TaskProgressManager {
      *
      * @param taskId
      * @param subTaskName
+     * @param isSyncSubTask 是否为同步子任务
      */
-    public void addSubTask(String taskId, String subTaskName) {
+    public void addSubTask(String taskId, String subTaskName, boolean isSyncSubTask) {
         TaskProgress taskProgress = taskProgressMap.get(taskId);
         if (taskProgress != null) {
             SubTaskProgress subTask = new SubTaskProgress();
             subTask.setName(subTaskName);
+            subTask.setTaskType(isSyncSubTask ? 1 : 2);
             subTask.setStatus(TaskStatus.RUNNING);
             subTask.setStartTime(LocalDateTime.now());
             taskProgress.getSubTasks().add(subTask);
@@ -130,6 +158,10 @@ public class TaskProgressManager {
 
     public void completeSubTask(String taskId, String subTaskName, String message) {
         completeSubTask(taskId, subTaskName, message, TaskStatus.COMPLETED);
+    }
+
+    public void failSubTask(String taskId, String subTaskName, String message) {
+        completeSubTask(taskId, subTaskName, message, TaskStatus.FAILED);
     }
 
     public void completeSubTask(String taskId, String subTaskName, String message, TaskStatus status) {
