@@ -5,8 +5,8 @@
 
     <!-- 尝试获取锁 - 原子操作 -->
     <insert id="tryAcquireLock">
-        INSERT INTO conf_distributed_lock (lock_key, lock_value, expire, expire_timestamp)
-        VALUES (#{lockKey}, #{lockValue}, #{expire}, #{expireTimestamp})
+        INSERT INTO conf_distributed_lock (lock_key, lock_value, expire, expire_timestamp, machine_unique_id)
+        VALUES (#{lockKey}, #{lockValue}, #{expire}, #{expireTimestamp}, #{machineUniqueId})
     </insert>
 
 
@@ -40,8 +40,7 @@
 
         WHERE  <![CDATA[     expire_timestamp < #{currentTime}     ]]>
 
-        ORDER BY expire_timestamp ASC
-        LIMIT 1000
+        ORDER BY expire_timestamp ASC LIMIT 1000
     </select>
 
 
@@ -53,6 +52,14 @@
         <foreach collection="lockIds" item="lockId" open="(" separator="," close=")">
             #{lockId}
         </foreach>
+    </delete>
+
+
+    <delete id="cleanLocalLocks">
+        DELETE
+        FROM conf_distributed_lock
+
+        WHERE machine_unique_id = #{machineUniqueId}
     </delete>
 
 

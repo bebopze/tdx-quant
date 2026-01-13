@@ -1,7 +1,9 @@
 package com.bebopze.tdx.quant.common.config.aspect;
 
+import com.bebopze.tdx.quant.common.util.MachineUtil;
 import com.bebopze.tdx.quant.dal.entity.ConfDistributedLockDO;
 import com.bebopze.tdx.quant.dal.mapper.ConfDistributedLockMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -31,6 +33,9 @@ public class MysqlLockUtils {
     // 自动续期任务
     private final ConcurrentHashMap<String, ScheduledFuture<?>> renewTasks = new ConcurrentHashMap<>();
 
+    // 本机唯一标识（每次JVM重启都会重新生成）
+    private final String machineUniqueId = MachineUtil.generateMachineUniqueId();
+
 
     @Autowired
     private ConfDistributedLockMapper lockMapper;
@@ -43,7 +48,7 @@ public class MysqlLockUtils {
         long expireTimestamp = System.currentTimeMillis() + expireSeconds * 1000;
 
         try {
-            int result = lockMapper.tryAcquireLock(lockKey, lockValue, expireSeconds, expireTimestamp);
+            int result = lockMapper.tryAcquireLock(lockKey, lockValue, expireSeconds, expireTimestamp, machineUniqueId);
             if (result > 0) {
                 log.debug("获取分布式锁成功: key={}, value={}", lockKey, lockValue);
                 return true;
@@ -154,7 +159,7 @@ public class MysqlLockUtils {
 
 
     /**
-     * 清理过期锁
+     * 清理过期锁（全局清理）
      */
     @Transactional(rollbackFor = Exception.class)
     public void cleanExpiredLocks() {
@@ -178,10 +183,31 @@ public class MysqlLockUtils {
 
 
     /**
+     * 清理本机 所有遗留[孤儿锁]分布式锁（应用启动时调用 -> 清理遗留资源）
+     */
+    @PostConstruct
+    @Transactional(rollbackFor = Exception.class)
+    public void cleanupOrphanedLocks() {
+        log.info("开始清理本机 遗留分布式锁[孤儿锁]，本机唯一标识: {}", machineUniqueId);
+
+        try {
+            int cleanedCount = lockMapper.cleanLocalLocks(machineUniqueId);
+            log.info("清理本机 遗留分布式锁[孤儿锁] 完成，清理数量: {}", cleanedCount);
+
+        } catch (Exception e) {
+            log.error("清理本机 遗留分布式锁[孤儿锁] 异常，本机唯一标识: {}", machineUniqueId, e);
+        }
+    }
+
+
+    /**
      * 关闭资源
      */
     public void shutdown() {
-        log.info("开始关闭分布式锁资源（定时[自动续期]任务执行器）");
+        log.info("开始关闭分布式锁资源（定时[自动续期]任务执行器），本机唯一标识: {}", machineUniqueId);
+
+        // 清理本机所有锁
+        cleanLocalLocks();
 
         scheduledExecutorService.shutdown();
         try {
@@ -198,18 +224,20 @@ public class MysqlLockUtils {
     /**
      * 清理本机 所有锁
      */
-    public void cleanLocks() {
-        log.info("开始清理本机 所有分布式锁，数量: {}", renewTasks.size());
+    public void cleanLocalLocks() {
+        log.info("开始清理本机 所有分布式锁，数量: {}, 本机唯一标识: {}", renewTasks.size(), machineUniqueId);
 
         renewTasks.forEach((key, future) -> {
 
             // String taskKey = lockKey + ":" + lockValue;
             String[] keyArr = key.split(":");
-            String lockKey = keyArr[0];
-            String lockValue = keyArr[2];
+            if (keyArr.length >= 3) {
+                String lockKey = keyArr[0];
+                String lockValue = keyArr[2];
 
-            // 释放锁
-            releaseLock(lockKey, lockValue);
+                // 释放锁
+                releaseLock(lockKey, lockValue);
+            }
         });
     }
 

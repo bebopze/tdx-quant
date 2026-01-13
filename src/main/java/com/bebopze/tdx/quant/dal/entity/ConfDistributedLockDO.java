@@ -60,6 +60,13 @@ public class ConfDistributedLockDO implements Serializable {
     @TableField("expire_timestamp")
     private Long expireTimestamp;
 
+    /**
+     * 本机唯一标识
+     */
+    @TableField("machine_unique_id")
+    @Schema(description = "本机唯一标识")
+    private String machineUniqueId;
+
     @TableField("gmt_create")
     private LocalDateTime gmtCreate;
 
