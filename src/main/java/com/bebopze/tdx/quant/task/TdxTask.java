@@ -27,7 +27,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Set;
-import java.util.concurrent.Executors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
@@ -145,26 +144,14 @@ public class TdxTask {
         log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
 
 
-        // ---------------------------------------------------------------------------------------------------------
-
-
-        Executors.newSingleThreadExecutor().execute(() -> {
-            String asyncSubTask = "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）";
-            try {
-                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
-                tdxDataParserService.importAll__blockRelaStock();
-                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
-            } catch (Exception e) {
-                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
-            }
-        });
-
-
-        // ---------------------------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
 
 
         try {
-            // 更新进度
+            taskProgressManager.updateProgress(taskId, 10, "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）");
+            tdxDataParserService.importAll__blockRelaStock();
+
+
             taskProgressManager.updateProgress(taskId, 20, "行情数据");
             tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
 
@@ -249,18 +236,6 @@ public class TdxTask {
         // -------------------------------------------- 板块-个股 -------------------------------------------------------
 
 
-//        Executors.newSingleThreadExecutor().execute(() -> {
-//            String asyncSubTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
-//            try {
-//                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
-//                tdxDataParserService.importBlockReport();
-//                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
-//            } catch (Exception e) {
-//                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
-//            }
-//        });
-
-
         String subTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
         try {
             taskProgressManager.updateProgress(taskId, 10, subTask);
@@ -325,69 +300,6 @@ public class TdxTask {
 
         // return taskId;
     }
-
-
-//    /**
-//     * 行情数据   盘中-增量更新   ->   DB
-//     */
-//    @TotalTime
-//    // @Async
-//    // @Scheduled(cron = "0 0/30 13-14 * * 1-5", zone = "Asia/Shanghai")
-//    public String execTask__refreshAll__lastDay() {
-//
-//
-//        String taskId = "refreshAll_lastay_" + System.currentTimeMillis();
-//        TaskProgress taskProgress = taskProgressManager.createTask(taskId, "盘中-增量更新");
-//
-//
-//        Executors.newSingleThreadExecutor().execute(() -> {
-//
-//
-//            try {
-//                taskProgressManager.startTask(taskId);
-//                log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 start");
-//
-//
-//                taskProgressManager.updateProgress(taskId, 10, "行情数据");
-//                tdxDataParserService.refreshKlineAll(UpdateTypeEnum.INCR);
-//
-//
-//                taskProgressManager.updateProgress(taskId, 30, "扩展数据");
-//                extDataService.refreshExtDataAll(10);
-//
-//
-//                taskProgressManager.updateProgress(taskId, 50, "主线板块");
-//                if (checkBlockLastDay()) {
-//                    topBlockService.refreshAll(UpdateTypeEnum.INCR);
-//                }
-//
-//
-//                taskProgressManager.updateProgress(taskId, 70, "大盘量化");
-//                marketService.importMarketMidCycle();
-//
-//
-//                taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
-//                initDataService.refreshCache();
-//
-//
-//                taskProgressManager.completeTask(taskId, "任务执行完成");
-//                log.info("---------------------------- 任务 [refreshAll - 盘中-增量更新 入库]   执行 end");
-//
-//
-//                // TODO   更新 回测任务（今日数据）
-//                refreshBacktest();
-//
-//
-//            } catch (Exception e) {
-//                taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
-//                log.error("任务执行失败", e);
-//            }
-//
-//        });
-//
-//
-//        return taskId;
-//    }
 
 
     /**
