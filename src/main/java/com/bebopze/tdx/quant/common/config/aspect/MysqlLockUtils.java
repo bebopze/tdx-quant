@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.common.config.aspect;
 import com.bebopze.tdx.quant.common.util.MachineUtil;
 import com.bebopze.tdx.quant.dal.entity.ConfDistributedLockDO;
 import com.bebopze.tdx.quant.dal.mapper.ConfDistributedLockMapper;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -185,7 +184,6 @@ public class MysqlLockUtils {
     /**
      * 清理本机 所有遗留[孤儿锁]分布式锁（应用启动时调用 -> 清理遗留资源）
      */
-    @PostConstruct
     @Transactional(rollbackFor = Exception.class)
     public void cleanupOrphanedLocks() {
         log.info("开始清理本机 遗留分布式锁[孤儿锁]，本机唯一标识: {}", machineUniqueId);
