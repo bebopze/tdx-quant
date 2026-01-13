@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
         }
 
         log.warn("资源不存在: {}", uri);
-        return Result.ERR("资源不存在");
+        return Result.ERR("资源不存在：" + uri);
     }
 
 
