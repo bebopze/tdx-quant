@@ -45,4 +45,9 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
 
     List<BaseBlockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);
+
+
+    int batchInsert(@Param("list") List<BaseBlockDO> list);
+
+    int batchInsertOrUpdate(@Param("list") List<BaseBlockDO> list);
 }

@@ -28,7 +28,6 @@ import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -501,7 +500,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         data.blockDOList = baseBlockService.listAllRpsKline();
-        data.blockDOList = data.blockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getKlineHis())).collect(Collectors.toList());
+        data.blockDOList = data.blockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -704,7 +703,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         BaseBlockDO entity = new BaseBlockDO();
         entity.setId(data.codeIdMap.get(code));
-        entity.setExtDataHis(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
+        entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
 
 
         // 更新 -> DB

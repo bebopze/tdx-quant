@@ -32,6 +32,8 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     Map<String, Long> codeIdMap(Collection<String> blockCodeList);
 
+    Map<Long, String> idCodeMap();
+
 
     List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList);
 
@@ -48,4 +50,14 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
     List<BaseBlockDO> listAllKline(boolean refresh);
 
     List<BaseBlockDO> listAllSimple();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    boolean updateById(BaseBlockDO entity);
+
+    int batchInsert(List<BaseBlockDO> list);
+
+    int batchInsertOrUpdate(List<BaseBlockDO> list);
 }

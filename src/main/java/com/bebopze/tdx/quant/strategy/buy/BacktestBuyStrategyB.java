@@ -9,7 +9,7 @@ import com.bebopze.tdx.quant.indicator.StockFun;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -69,7 +69,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
         // 扩展数据（板块指数RPS）     =>     2-细分行业（end_level=1）   +   4-概念板块
-        data.blockDOList.parallelStream().filter(e -> StringUtils.isNotBlank(e.getExtDataHis())).forEach(blockDO -> {
+        data.blockDOList.parallelStream().filter(e -> CollectionUtils.isNotEmpty(e.getExtDataDTOList())).forEach(blockDO -> {
 
 
             String blockCode = blockDO.getCode();

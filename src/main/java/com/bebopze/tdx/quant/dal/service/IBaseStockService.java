@@ -54,6 +54,8 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     Map<String, Long> codeIdMap();
 
+    Map<Long, String> idCodeMap();
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -61,4 +63,6 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     boolean updateById(BaseStockDO entity);
 
     int batchInsert(List<BaseStockDO> list);
+
+    int batchInsertOrUpdate(List<BaseStockDO> list);
 }

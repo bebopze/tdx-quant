@@ -246,25 +246,40 @@ public class TdxTask {
         TaskProgress taskProgress = taskProgressManager.createAndStartTask(taskId, "盘中-增量更新");
 
 
+        // -------------------------------------------- 板块-个股 -------------------------------------------------------
+
+
+//        Executors.newSingleThreadExecutor().execute(() -> {
+//            String asyncSubTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
+//            try {
+//                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
+//                tdxDataParserService.importBlockReport();
+//                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
+//            } catch (Exception e) {
+//                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
+//            }
+//        });
+
+
+        String subTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
+        try {
+            taskProgressManager.updateProgress(taskId, 10, subTask);
+            tdxDataParserService.importBlockReport();
+            taskProgressManager.completeSubTask(taskId, subTask, "SUC");
+        } catch (Exception e) {
+            taskProgressManager.failSubTask(taskId, subTask, "FAIL");
+        }
+
+
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Executors.newSingleThreadExecutor().execute(() -> {
-            String asyncSubTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
-            try {
-                taskProgressManager.updateProgress(taskId, 10, asyncSubTask, false);
-                tdxDataParserService.importBlockReport();
-                taskProgressManager.completeSubTask(taskId, asyncSubTask, "SUC");
-            } catch (Exception e) {
-                taskProgressManager.failSubTask(taskId, asyncSubTask, "FAIL");
-            }
-        });
-
-
-        // -------------------------------------------- KLINE ----------------------------------------------------------
-
-
         try {
+
+
+            // -------------------------------------------- KLINE ------------------------------------------------------
+
+
             taskProgressManager.updateProgress(taskId, 30, "个股实时 行情数据");
             // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
             tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.INCR);
@@ -275,7 +290,7 @@ public class TdxTask {
             tdxDataParserService.calcAndFillBlockKlineAll();
 
 
-            // -------------------------------------------- EXT_DATA -------------------------------------------------------
+            // -------------------------------------------- EXT_DATA ---------------------------------------------------
 
 
             taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
@@ -290,7 +305,7 @@ public class TdxTask {
             extDataService.calcStockExtData(10, StockTypeEnum.A_STOCK.type);
 
 
-            // -------------------------------------------- 主线板块 --------------------------------------------------------
+            // -------------------------------------------- 主线板块 ----------------------------------------------------
 
 
             taskProgressManager.updateProgress(taskId, 90, "主线板块");

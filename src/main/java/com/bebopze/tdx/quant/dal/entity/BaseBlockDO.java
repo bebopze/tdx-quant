@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.util.CompressUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
@@ -19,6 +20,7 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -193,17 +195,29 @@ public class BaseBlockDO implements Serializable {
     @JsonIgnore
     @TableField(value = "kline_his"/*, typeHandler = KlineListTypeHandler.class*/)
     @Schema(description = "K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
-    private String klineHis;
-    // private List<KlineDTO> klineHis;
+    private byte[] klineHis;
 
     /**
-     * 扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）
+     * K线数据-JSON（byte[]）压缩前长度（解压算法参数）
+     */
+    @TableField(value = "kline_his_raw_len")
+    @Schema(description = "K线数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    private Integer klineHisRawLen;
+
+    /**
+     * 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
      */
     @JsonIgnore
-    @TableField(value = "ext_data_his"/*, typeHandler = ExtDataListTypeHandler.class*/)
-    @Schema(description = "扩展数据 指标-JSON（[日期,RPS5,RPS10,RPS15,RPS20,RPS50]）")
-    private String extDataHis;
-    // private List<ExtDataDTO> extDataHis;
+    @TableField(value = "ext_data_his")
+    @Schema(description = "扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
+    private byte[] extDataHis;
+
+    /**
+     * 扩展数据-JSON（byte[]）压缩前长度（解压算法参数）
+     */
+    @TableField(value = "ext_data_his_raw_len")
+    @Schema(description = "扩展数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    private Integer extDataHisRawLen;
 
     /**
      * 创建时间
@@ -225,6 +239,53 @@ public class BaseBlockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 自动压缩 K线数据（String  ->  byte[]）
+     *
+     * @param klineHisStr K线数据-JSON字符串
+     */
+    public void setKlineHisStr(String klineHisStr) {
+        byte[] raw = klineHisStr == null ? null : klineHisStr.getBytes(StandardCharsets.UTF_8);
+        this.klineHis = CompressUtil.zstdCompress(raw);
+        this.klineHisRawLen = klineHisStr == null ? null : raw.length;
+    }
+
+    /**
+     * 自动解压 K线数据（byte[]  ->  String）
+     *
+     * @return K线数据-JSON字符串
+     */
+    public String getKlineHisStr() {
+        byte[] decompressed = CompressUtil.zstdDecompress(klineHis, klineHisRawLen);
+        return decompressed == null ? null : new String(decompressed, StandardCharsets.UTF_8);
+    }
+
+
+    /**
+     * 自动压缩 扩展数据（String  ->  byte[]）
+     *
+     * @param extDataHisStr 扩展数据-JSON字符串
+     */
+    public void setExtDataHisStr(String extDataHisStr) {
+        byte[] raw = extDataHisStr == null ? null : extDataHisStr.getBytes(StandardCharsets.UTF_8);
+        this.extDataHis = CompressUtil.zstdCompress(raw);
+        this.extDataHisRawLen = extDataHisStr == null ? null : raw.length;
+    }
+
+    /**
+     * 自动解压 扩展数据（byte[]  ->  String）
+     *
+     * @return 扩展数据-JSON字符串
+     */
+    public String getExtDataHisStr() {
+        byte[] decompressed = CompressUtil.zstdDecompress(extDataHis, extDataHisRawLen);
+        return decompressed == null ? null : new String(decompressed, StandardCharsets.UTF_8);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @TableField(exist = false)
     private List<KlineDTO> klineDTOList;
 
@@ -232,48 +293,66 @@ public class BaseBlockDO implements Serializable {
     private List<ExtDataDTO> extDataDTOList;
 
 
+    /**
+     * K线数据-JSON字符串  ->  K线数据-DTO列表         （延迟加载）
+     *
+     * @return K线数据-DTO列表
+     */
+    @Schema(description = "K线数据-JSON字符串  ->  K线数据-DTO列表")
     public List<KlineDTO> getKlineDTOList() {
-        // 手动set过的，直接返回
+        // 手动set过的，直接返回（只转换1次）
         if (klineDTOList != null) {
             return klineDTOList;
         }
 
+
         synchronized (this) {
-            if (klineHis == null) {
-                return Lists.newArrayList();
+            // 双重检测
+            if (klineDTOList == null && klineHis != null) {
+
+                // 只转换1次
+                klineDTOList = ConvertStockKline.str2DTOList(getKlineHisStr());
+
+                // Str -> null（否则，会同时存在2份【klineHis + klineDTOList】 ->  OOM）
+                klineHis = null;
+                klineHisRawLen = null;
             }
 
-            // 只转换1次
-            klineDTOList = ConvertStockKline.str2DTOList(klineHis);
-            // Str -> null（否则，会同时存在2份【klineHis + klineDTOList】 ->  OOM）
-            klineHis = null;
 
-            return klineDTOList;
+            return klineDTOList != null ? klineDTOList : Lists.newArrayList();
         }
     }
 
 
+    /**
+     * 扩展数据-JSON字符串  ->  扩展数据-DTO列表         （延迟加载）
+     *
+     * @return 扩展数据-DTO列表
+     */
+    @Schema(description = "扩展数据-JSON字符串  -> 扩展数据-DTO列表")
     public List<ExtDataDTO> getExtDataDTOList() {
-        // 手动set过的，直接返回
+        // 手动set过的，直接返回（只转换1次）
         if (extDataDTOList != null) {
             return extDataDTOList;
         }
 
-        synchronized (this) {
 
-            if (extDataHis == null) {
-                return Lists.newArrayList();
+        synchronized (this) {
+            // 双重检测
+            if (extDataDTOList == null && extDataHis != null) {
+
+                // 只转换1次
+                extDataDTOList = ConvertStockExtData.extDataHis2DTOList(getExtDataHisStr());
+
+                // Str -> null（否则，会同时存在2份【extDataHis + extDataDTOList】 ->  OOM）
+                extDataHis = null;
+                extDataHisRawLen = null;
             }
 
-            // 只转换1次
-            extDataDTOList = ConvertStockExtData.extDataHis2DTOList(extDataHis);
-            // Str -> null（否则，会同时存在2份【extDataHis + extDataDTOList】 ->  OOM）
-            extDataHis = null;
 
-            return extDataDTOList;
+            return extDataDTOList != null ? extDataDTOList : Lists.newArrayList();
         }
     }
-
 
     // -----------------------------------------------------------------------------------------------------------------
 
