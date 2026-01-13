@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
@@ -9,8 +10,12 @@ import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -87,6 +92,22 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
         return code_id_map;
     }
 
+    @Override
+    public Map<Long, String> idCodeMap() {
+        List<BaseBlockDO> entityList = baseMapper.listAllSimple();
+
+
+        Map<Long, String> id_code_map = entityList.stream()
+                                                  .collect(Collectors.toMap(
+                                                          BaseBlockDO::getId,
+                                                          BaseBlockDO::getCode,
+
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
+
+        return id_code_map;
+    }
+
 
     @Override
     public List<BaseBlockDO> listSimpleByCodeList(Collection<String> blockCodeList) {
@@ -151,5 +172,73 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
         log.info("listAllFromDiskCache     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
         return list;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @DBLimiter(12)
+    @Retryable(
+            value = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            exclude = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
+    @Override
+    public boolean updateById(BaseBlockDO entity) {
+        return super.updateById(entity);
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsert(List<BaseBlockDO> list) {
+
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<BaseBlockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsert(sub);
+        }
+
+
+        return count;
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsertOrUpdate(List<BaseBlockDO> list) {
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<BaseBlockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsertOrUpdate(sub);
+        }
+
+        return count;
+    }
+
 
 }

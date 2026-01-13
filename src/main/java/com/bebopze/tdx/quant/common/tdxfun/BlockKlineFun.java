@@ -201,7 +201,7 @@ public class BlockKlineFun {
             entity.setTurnoverPct(of2(block_klineDTO.getTurnover_pct()));
 
 
-            entity.setKlineHis(ConvertStockKline.dtoList2JsonStr(old_klineDTOList));
+            entity.setKlineHisStr(ConvertStockKline.dtoList2JsonStr(old_klineDTOList));
 
 
             baseBlockService.updateById(entity);

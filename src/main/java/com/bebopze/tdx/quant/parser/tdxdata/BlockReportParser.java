@@ -208,6 +208,8 @@ public class BlockReportParser {
         } catch (IOException e) {
 
             log.error("ExportBlockParser#parse err     >>>     filePath : {} , blockTypeEnum : {} , errMsg : {}", filePath, blockTypeEnum.getDesc(), e.getMessage(), e);
+            // 不能吞异常（快速失败）
+            throw new RuntimeException(e);
         }
 
 

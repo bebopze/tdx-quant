@@ -51,4 +51,5 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     int batchInsert(@Param("list") List<BaseStockDO> list);
 
+    int batchInsertOrUpdate(@Param("list") List<BaseStockDO> list);
 }

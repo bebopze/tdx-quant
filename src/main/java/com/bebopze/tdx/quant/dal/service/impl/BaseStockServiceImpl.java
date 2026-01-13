@@ -213,6 +213,22 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
+    @Override
+    public Map<Long, String> idCodeMap() {
+        List<BaseStockDO> entityList = listAllSimple();
+
+
+        Map<Long, String> id_code_map = entityList.stream()
+                                                  .collect(Collectors.toMap(
+                                                          BaseStockDO::getId,
+                                                          BaseStockDO::getCode,
+
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
+
+        return id_code_map;
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -341,7 +357,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     @Override
     public int batchInsert(List<BaseStockDO> list) {
 
-        int batchSize = 5000;
+        int batchSize = 1000;
         if (list == null || list.isEmpty()) {
             return 0;
         }
@@ -357,6 +373,30 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             count += baseMapper.batchInsert(sub);
         }
 
+
+        return count;
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsertOrUpdate(List<BaseStockDO> list) {
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<BaseStockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsertOrUpdate(sub);
+        }
 
         return count;
     }

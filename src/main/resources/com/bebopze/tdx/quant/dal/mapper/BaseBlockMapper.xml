@@ -9,7 +9,12 @@
         <id property="id" column="id"/>
         <result property="code" column="code"/>
         <result property="name" column="name"/>
+        <result property="code_path" column="codePath"/>
+        <result property="name_path" column="namePath"/>
+        <result property="parent_id" column="parentId"/>
         <result property="type" column="type"/>
+        <result property="level" column="level"/>
+        <result property="end_level" column="endLevel"/>
         <result property="tradeDate" column="trade_date"/>
         <result property="open" column="open"/>
         <result property="high" column="high"/>
@@ -42,14 +47,14 @@
     </select>
 
 
-    <select id="getByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="getByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT *
         FROM base_block
         WHERE code = #{code}
     </select>
 
 
-    <select id="getSimpleByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT id,
                code,
                name,
@@ -65,7 +70,7 @@
     </select>
 
 
-    <select id="getSimpleById" resultMap="BaseResultMap">
+    <select id="getSimpleById" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT id,
                code,
                name,
@@ -81,7 +86,7 @@
     </select>
 
 
-    <select id="listAllSimple" resultMap="BaseResultMap">
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT id,
                code,
                name,
@@ -96,14 +101,14 @@
     </select>
 
 
-    <select id="listAllKline" resultMap="BaseResultMap">
+    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT *
 
         FROM base_block
     </select>
 
 
-    <select id="listAllRpsKline" resultMap="BaseResultMap">
+    <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT *
 
         FROM base_block
@@ -113,7 +118,7 @@
     </select>
 
 
-    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <select id="listSimpleByCodeList" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
 
         SELECT
 
@@ -137,6 +142,95 @@
             </foreach>
         </where>
     </select>
+
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO base_block
+
+        (
+        code, name, code_path, name_path, parent_id,
+        type, level, end_level, trade_date,
+        open, high, low, close, prev_close,
+        volume, amount,
+        range_pct, change_pct, change_price, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.codePath}, #{item.namePath}, #{item.parentId},
+            #{item.type}, #{item.level}, #{item.endLevel}, #{item.tradeDate},
+            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+    </insert>
+
+
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO base_block
+
+        (
+        code, name, code_path, name_path, parent_id,
+        type, level, end_level, trade_date,
+        open, high, low, close, prev_close,
+        volume, amount,
+        range_pct, change_pct, change_price, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.codePath}, #{item.namePath},
+            IFNULL(#{item.parentId}, 0),
+            IFNULL(#{item.type}, 0), IFNULL(#{item.level}, 0), IFNULL(#{item.endLevel}, 0),
+            #{item.tradeDate},
+            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+
+
+        ON DUPLICATE KEY UPDATE
+
+
+        -- 下面使用 COALESCE(VALUES(col), col) ：当传入值为 NULL 时保留原值
+        name = COALESCE(VALUES(name), name),
+        code_path = COALESCE(VALUES(code_path), code_path),
+        name_path = COALESCE(VALUES(name_path), name_path),
+        parent_id = COALESCE(VALUES(parent_id), parent_id),
+        type = COALESCE(VALUES(type), type),
+        level = COALESCE(VALUES(level), level),
+        end_level = COALESCE(VALUES(end_level), end_level),
+        trade_date = COALESCE(VALUES(trade_date), trade_date),
+
+        open = COALESCE(VALUES(open), open),
+        high = COALESCE(VALUES(high), high),
+        low = COALESCE(VALUES(low), low),
+        close = COALESCE(VALUES(close), close),
+        prev_close = COALESCE(VALUES(prev_close), prev_close),
+
+        volume = COALESCE(VALUES(volume), volume),
+        amount = COALESCE(VALUES(amount), amount),
+
+        range_pct = COALESCE(VALUES(range_pct), range_pct),
+        change_pct = COALESCE(VALUES(change_pct), change_pct),
+        change_price = COALESCE(VALUES(change_price), change_price),
+        turnover_pct = COALESCE(VALUES(turnover_pct), turnover_pct),
+
+        kline_his = COALESCE(VALUES(kline_his), kline_his),
+        kline_his_raw_len = COALESCE(VALUES(kline_his_raw_len), kline_his_raw_len),
+        ext_data_his = COALESCE(VALUES(ext_data_his), ext_data_his),
+        ext_data_his_raw_len = COALESCE(VALUES(ext_data_his_raw_len), ext_data_his_raw_len)
+    </insert>
 
 
 </mapper>

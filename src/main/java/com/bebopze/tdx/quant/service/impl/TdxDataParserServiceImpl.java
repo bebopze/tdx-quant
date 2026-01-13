@@ -259,6 +259,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, String> hyBlock__code_pCode_map = Maps.newHashMap();
 
 
+        // 板块 - 个股列表
+        Map<String, Set<String>> blockCode_stockCodeSet_map = Maps.newHashMap();
+        stockCode_blockCodeSet_map.forEach((stockCode, blockCodeSet) -> {
+            blockCodeSet.forEach(blockCode -> {
+                blockCode_stockCodeSet_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
+            });
+        });
+
+
         // -------------------------------------------------------------------------------------------------------------
         //                                              save2DB
         // -------------------------------------------------------------------------------------------------------------
@@ -274,8 +283,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         save2DB___hyBlock_pId(hyBlock__code_pCode_map, block__codeIdMap, block__codeNameMap);
 
 
+//        // 板块 - 个股
+//        save2DB___block_rela_stock(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
         // 板块 - 个股
-        save2DB___block_rela_stock(sortAllStockCodeList, stock__codeIdMap, stockCode_blockCodeSet_map, block__codeIdMap);
+        importBlockReport_____save2DB___block_rela_stock(blockCode_stockCodeSet_map,
+
+                                                         block__codeIdMap,
+                                                         stock__codeIdMap);
     }
 
 
@@ -324,17 +338,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String blockCode_X = txCode_blockCode_map.get(hy_XCode);
 
 
-            Set<String> exist_blockCodeSet = stockCode_blockCodeSet_map.get(stockCode);
-            if (CollectionUtils.isEmpty(exist_blockCodeSet)) {
+            Set<String> blockCodeSet = Sets.newHashSet(blockCode_T, blockCode_X).stream().filter(Objects::nonNull).collect(Collectors.toSet());
 
-                Set<String> blockCodeSet = Sets.newHashSet(blockCode_T, blockCode_X).stream().filter(Objects::nonNull).collect(Collectors.toSet());
-                stockCode_blockCodeSet_map.put(stockCode, blockCodeSet);
 
-            } else {
-
-                Set<String> blockCodeSet = Sets.newHashSet(blockCode_T, blockCode_X).stream().filter(Objects::nonNull).collect(Collectors.toSet());
-                exist_blockCodeSet.addAll(blockCodeSet);
-            }
+            stockCode_blockCodeSet_map.computeIfAbsent(stockCode, k -> Sets.newHashSet())
+                                      .addAll(blockCodeSet);
         });
 
     }
@@ -397,20 +405,83 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, Long> stock__codeIdMap_DB = baseStockService.codeIdMap();
 
 
-        if (MapUtils.isEmpty(stock__codeIdMap_DB)) {
+        // -------------------------------------------------------------------------------------------------------------
 
-            // 初次 init   ->   有序 insert
-            sortAllStockCodeList.forEach(stockCode -> {
-                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
-            });
 
-        } else {
+        long start_1 = System.currentTimeMillis();
 
-            // 并行 update（无序）
-            sortAllStockCodeList.parallelStream().forEach(stockCode -> {
-                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
-            });
-        }
+
+        List<BaseStockDO> entityList = Lists.newArrayList();
+        sortAllStockCodeList.forEach(stockCode -> {
+
+            Integer marketType = stockCode_marketType_map.get(stockCode);
+            if (marketType == null) {
+                log.warn("marketType为空     >>>     stockCode : {}", stockCode);
+                return;
+            }
+
+
+            // 个股
+            BaseStockDO entity = new BaseStockDO();
+            entity.setCode(stockCode);
+            entity.setName(stockCode_stockName_map.get(stockCode));
+            entity.setType(StockTypeEnum.A_STOCK.type);
+            entity.setTdxMarketType(marketType);
+
+
+            entity.setId(stock__codeIdMap_DB.get(stockCode));
+            entityList.add(entity);
+
+
+//            Long stockId = entity.getId();
+//            stock__codeIdMap.put(stockCode, stockId);
+//
+//
+//            if (stockId == null) {
+//                log.error("base_stock - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
+//                          stockCode, stockId, JSON.toJSONString(entity));
+//            }
+        });
+
+
+        // 3min 4s（狗屎🐶💩 Mybatis-plus）  ->   1.5s
+        baseStockService.batchInsertOrUpdate(entityList);
+        log.info("save2DB___stock     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(start_1));
+
+
+//        // 3min 4s（狗屎🐶💩 Mybatis-plus）
+//        long s_2 = System.currentTimeMillis();
+//        baseStockService.saveOrUpdateBatch(entityList);
+//        log.info("save2DB___stock     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(s_2));
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        Map<String, Long> stock__codeIdMap_DB2 = baseStockService.codeIdMap();
+        stock__codeIdMap.putAll(stock__codeIdMap_DB2);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+//        long start_2 = System.currentTimeMillis();
+//        if (MapUtils.isEmpty(stock__codeIdMap_DB)) {
+//
+//            // 初次 init   ->   有序 insert
+//            sortAllStockCodeList.forEach(stockCode -> {
+//                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
+//            });
+//
+//        } else {
+//
+//            // 并行 update（无序）
+//            sortAllStockCodeList.parallelStream().forEach(stockCode -> {
+//                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
+//            });
+//        }
+//        // 50.9s
+//        log.info("save2DB___stock     >>>     耗时 : {}", DateTimeUtil.formatNow2Hms(start_2));
     }
 
     private void exec___save2DB___stock(String stockCode,
@@ -429,24 +500,24 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 个股
-        BaseStockDO baseStockDO = new BaseStockDO();
-        baseStockDO.setCode(stockCode);
-        baseStockDO.setName(stockCode_stockName_map.get(stockCode));
-        baseStockDO.setType(StockTypeEnum.A_STOCK.type);
-        baseStockDO.setTdxMarketType(marketType);
+        BaseStockDO entity = new BaseStockDO();
+        entity.setCode(stockCode);
+        entity.setName(stockCode_stockName_map.get(stockCode));
+        entity.setType(StockTypeEnum.A_STOCK.type);
+        entity.setTdxMarketType(marketType);
 
 
-        baseStockDO.setId(stock__codeIdMap_DB.get(stockCode));
-        baseStockService.saveOrUpdate(baseStockDO);
+        entity.setId(stock__codeIdMap_DB.get(stockCode));
+        baseStockService.saveOrUpdate(entity);
 
 
-        Long stockId = baseStockDO.getId();
+        Long stockId = entity.getId();
         stock__codeIdMap.put(stockCode, stockId);
 
 
         if (stockId == null) {
             log.error("base_stock - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
-                      stockCode, stockId, JSON.toJSONString(baseStockDO));
+                      stockCode, stockId, JSON.toJSONString(entity));
         }
     }
 
@@ -458,16 +529,24 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                  Map<String, String> hyBlock__code_pCode_map) {
 
 
+        long start = System.currentTimeMillis();
+
+
         // 从小到大   排列
-        Collections.sort(tdxzs3DTOList, Comparator.comparing(Tdxzs3Parser.Tdxzs3DTO::getCode));
+        tdxzs3DTOList.sort(Comparator.comparing(Tdxzs3Parser.Tdxzs3DTO::getCode));
 
 
         // 概念 - 行业
         // Map<String, String> gnCode__hyCode__map = GnRelaHyParser.gnCode__hyCode__map();
 
 
+        Map<String, Long> block__codeIdMap_DB = baseBlockService.codeIdMap();
+
+
         // ----------------------------------- 遍历 - save
 
+
+        List<BaseBlockDO> entityList = Lists.newArrayList();
         tdxzs3DTOList.forEach(e -> {
 
             String blockCode = e.getCode();
@@ -485,24 +564,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // -----------------------------------
 
 
-            BaseBlockDO baseBlockDO = new BaseBlockDO();
-            baseBlockDO.setCode(blockCode);
-            baseBlockDO.setName(blockName);
-            baseBlockDO.setType(e.getBlockType());
-            baseBlockDO.setLevel(e.getLevel());
-            baseBlockDO.setEndLevel(e.getEndLevel());
+            BaseBlockDO entity = new BaseBlockDO();
+
+            entity.setCode(blockCode);
+            entity.setName(blockName);
+            entity.setType(e.getBlockType());
+            entity.setLevel(e.getLevel());
+            entity.setEndLevel(e.getEndLevel());
             // 父级
-            baseBlockDO.setParentId(null);
+            entity.setParentId(null);
 
 
-            Long blockId = baseBlockService.getIdByCode(blockCode);
-            if (blockId != null) {
-                baseBlockDO.setId(blockId);
-                baseBlockService.updateById(baseBlockDO);
-            } else {
-                baseBlockService.save(baseBlockDO);
-                blockId = baseBlockDO.getId();
-            }
+            Long blockId = block__codeIdMap_DB.get(blockCode);
+            entity.setId(blockId);
+            entityList.add(entity);
 
 
             block__codeIdMap.put(blockCode, blockId);
@@ -513,13 +588,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             if (StringUtils.isNotEmpty(pCode)) {
                 hyBlock__code_pCode_map.put(blockCode, pCode);
             }
-
-
-            if (blockId == null) {
-                log.error("base_block - insertOrUpdate   err     >>>     blockCode : {} , blockId : {} , baseBlockDO : {}",
-                          blockCode, blockId, JSON.toJSONString(baseBlockDO));
-            }
         });
+
+
+        baseBlockService.batchInsertOrUpdate(entityList);
+        entityList.forEach(e -> block__codeIdMap.put(e.getCode(), e.getId()));
+
+
+        log.info("save2DB___block     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(start));
     }
 
 
@@ -527,8 +603,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                        Map<String, Long> block__codeIdMap,
                                        Map<String, String> block__codeNameMap) {
 
+        long start = System.currentTimeMillis();
+
+
         // p_id（行业板块）
-        hyBlock__code_pCode_map.forEach((blockCode, pCode) -> {
+        hyBlock__code_pCode_map.entrySet().parallelStream().forEach(entry -> {
+            String blockCode = entry.getKey();
+            String pCode = entry.getValue();
 
 
             BaseBlockDO baseBlockDO = new BaseBlockDO();
@@ -563,6 +644,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             baseBlockService.updateById(baseBlockDO);
         });
+
+
+        log.info("save2DB___hyBlock_pId     >>>     size : {} , 耗时 : {}", hyBlock__code_pCode_map.size(), DateTimeUtil.formatNow2Hms(start));
     }
 
 
@@ -571,13 +655,17 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                             Map<String, Set<String>> stockCode_blockCodeSet_map,
                                             Map<String, Long> block__codeIdMap) {
 
+        long start = System.currentTimeMillis();
 
-        sortAllStockCodeList.parallelStream().forEach(stockCode -> {
+
+        Set<Long> stockIdSet = Sets.newHashSet();
+        List<BaseBlockRelaStockDO> entityList = Lists.newArrayList();
+
+
+        sortAllStockCodeList.forEach(stockCode -> {
 
             Long stockId = stock__codeIdMap.get(stockCode);
-
             Set<String> blockCodeSet = stockCode_blockCodeSet_map.get(stockCode);
-            List<BaseBlockRelaStockDO> doList = Lists.newArrayList();
 
 
             if (stockId == null || CollectionUtils.isEmpty(blockCodeSet)) {
@@ -588,29 +676,35 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             blockCodeSet.forEach(blockCode -> {
+                Long blockId = block__codeIdMap.get(blockCode);
+
 
                 // 板块 - 个股
-                BaseBlockRelaStockDO baseBlockRelaStockDO = new BaseBlockRelaStockDO();
-                baseBlockRelaStockDO.setStockId(stockId);
-                baseBlockRelaStockDO.setBlockId(block__codeIdMap.get(blockCode));
+                BaseBlockRelaStockDO entity = new BaseBlockRelaStockDO();
+                entity.setStockId(stockId);
+                entity.setBlockId(blockId);
 
 
-                if (null == baseBlockRelaStockDO.getBlockId()) {
+                if (null == blockId) {
                     log.error("板块-个股   NPE     >>>     stockCode : {} , stockId : {} , blockCode : {} , blockId : {}",
-                              stockCode, stockId, blockCode, baseBlockRelaStockDO.getBlockId());
+                              stockCode, stockId, blockCode, blockId);
                     return;
                 }
 
 
-                doList.add(baseBlockRelaStockDO);
+                entityList.add(entity);
             });
-
-
-            // del All
-            baseBlockRelaStockService.deleteByStockId(stockId);
-            // batch insert
-            baseBlockRelaStockService.batchInsert(doList);
+            stockIdSet.add(stockId);
         });
+
+
+        // del All
+        stockIdSet.parallelStream().forEach(baseBlockRelaStockService::deleteByStockId);
+        // batch insert
+        baseBlockRelaStockService.batchInsert(entityList);
+
+
+        log.info("save2DB___block_rela_stock     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(start));
     }
 
 
@@ -836,12 +930,26 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // DEL  ->  仅对比  IN txt中的板块（行业  =>  细分行业  +  研究行业[未导出 -> 否则，会被删除]）
+        Set<Long> txt__blockIdSet = Sets.newHashSet();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         blockCode_stockCodeSet_map.forEach((blockCode, stockCodeSet) -> {
             Long blockId = block__codeIdMap.get(blockCode);
+            txt__blockIdSet.add(blockId);
 
 
             stockCodeSet.forEach(stockCode -> {
                 Long stockId = stock__codeIdMap.get(stockCode);
+
+
+                if (null == stockId) {
+                    log.error("importBlockReport_____save2DB___block_rela_stock   -   个股不存在   ->   忽略    >>>     stockCode : {}", stockCode);
+                    return;
+                }
 
 
                 // K : blockId-stockId
@@ -873,10 +981,18 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<Long> del_ID_List = Lists.newArrayList();
 
 
+        Map<Long, String> debug___block__idCodeMap = baseBlockService.idCodeMap();
+        Map<Long, String> debug___stock__idCodeMap = baseStockService.idCodeMap();
+
+
         // IN old   +   NOT IN (new + exist)     =>     DEL
         old__blockIdStockId_ID_Map.forEach((key, old_ID) -> {
-            if (!new__keySet.contains(key) && !exist__keySet.contains(key)) {
+            Long blockId = Long.parseLong(key.split("-")[0]);
+            Long stockId = Long.parseLong(key.split("-")[1]);
+            if (!new__keySet.contains(key) && !exist__keySet.contains(key) && txt__blockIdSet.contains(blockId)) {
                 del_ID_List.add(old_ID);
+
+                log.warn("系统板块-个股 删除   >>>     blockCode : {} , stockCode : {} , ID : {}", debug___block__idCodeMap.get(blockId), debug___stock__idCodeMap.get(stockId), old_ID);
             }
         });
 
@@ -1263,7 +1379,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             klines.add(klineStr);
         });
 
-        baseBlockDO.setKlineHis(JSON.toJSONString(klines));
+        baseBlockDO.setKlineHisStr(JSON.toJSONString(klines));
 
 
         if (CollectionUtils.isEmpty(ldayDTOList)) {

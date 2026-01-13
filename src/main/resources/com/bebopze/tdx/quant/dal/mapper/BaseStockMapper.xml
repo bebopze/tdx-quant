@@ -70,19 +70,7 @@
                name,
                type,
                tdx_market_type,
-               trade_date,
-               open,
-               high,
-               low,
-               close,
-               prev_close,
-               volume,
-               amount,
-               change_pct,
-               range_pct,
-               turnover_pct,
-               gmt_create,
-               gmt_modify
+               trade_date, open, high, low, close, prev_close, volume, amount, change_pct, range_pct, turnover_pct, gmt_create, gmt_modify
 
         FROM base_stock
     </select>
@@ -110,8 +98,7 @@
         WHERE id > #{lastId}
 
         ORDER BY id
-
-        LIMIT #{pageSize}
+            LIMIT #{pageSize}
     </select>
 
 
@@ -164,7 +151,7 @@
         code, name, type, tdx_market_type, trade_date,
         open, high, low, close, prev_close,
         volume, amount,
-        change_pct, change_price, range_pct, turnover_pct,
+        range_pct, change_pct, change_price, turnover_pct,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
         )
 
@@ -175,10 +162,65 @@
             #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.tradeDate},
             #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
-            #{item.changePct}, #{item.changePrice}, #{item.rangePct}, #{item.turnoverPct},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
             )
         </foreach>
+    </insert>
+
+
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO base_stock
+
+        (
+        code, name, type, tdx_market_type, trade_date,
+        open, high, low, close, prev_close,
+        volume, amount,
+        range_pct, change_pct, change_price, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.tradeDate},
+            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+
+
+        ON DUPLICATE KEY UPDATE
+
+
+        -- 下面使用 COALESCE(VALUES(col), col) ：当传入值为 NULL 时保留原值
+        code = COALESCE(VALUES(code), code),
+        name = COALESCE(VALUES(name), name),
+        type = COALESCE(VALUES(type), type),
+        tdx_market_type = COALESCE(VALUES(tdx_market_type), tdx_market_type),
+        trade_date = COALESCE(VALUES(trade_date), trade_date),
+
+        open = COALESCE(VALUES(open), open),
+        high = COALESCE(VALUES(high), high),
+        low = COALESCE(VALUES(low), low),
+        close = COALESCE(VALUES(close), close),
+        prev_close = COALESCE(VALUES(prev_close), prev_close),
+
+        volume = COALESCE(VALUES(volume), volume),
+        amount = COALESCE(VALUES(amount), amount),
+
+        range_pct = COALESCE(VALUES(range_pct), range_pct),
+        change_pct = COALESCE(VALUES(change_pct), change_pct),
+        change_price = COALESCE(VALUES(change_price), change_price),
+        turnover_pct = COALESCE(VALUES(turnover_pct), turnover_pct),
+
+        kline_his = COALESCE(VALUES(kline_his), kline_his),
+        kline_his_raw_len = COALESCE(VALUES(kline_his_raw_len), kline_his_raw_len),
+        ext_data_his = COALESCE(VALUES(ext_data_his), ext_data_his),
+        ext_data_his_raw_len = COALESCE(VALUES(ext_data_his_raw_len), ext_data_his_raw_len)
     </insert>
 
 
