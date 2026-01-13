@@ -245,6 +245,18 @@ public class ExtDataServiceImpl implements ExtDataService {
         });
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        for (int i = 0; i < data.stockDOList.size(); i++) {
+            BaseStockDO stockDO = data.stockDOList.get(i);
+            data.codeIdxMap.put(stockDO.getCode(), i);
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         return data;
     }
 
@@ -562,6 +574,18 @@ public class ExtDataServiceImpl implements ExtDataService {
                 }
             }
         });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        for (int i = 0; i < data.blockDOList.size(); i++) {
+            BaseBlockDO blockDO = data.blockDOList.get(i);
+            data.codeIdxMap.put(blockDO.getCode(), i);
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         return data;
@@ -1357,29 +1381,36 @@ public class ExtDataServiceImpl implements ExtDataService {
      */
     private static void clearCodeCache(DataDTO data, String code) {
 
-        data.extDataMap.remove(code);
-        data.codePriceMap.remove(code);
-        data.codeDateMap.remove(code);
-        data.codeCloseMap.remove(code);
-        data.codeIdMap.remove(code);
+        List<ExtDataDTO> remove1 = data.extDataMap.remove(code);
+        TreeMap<LocalDate, Double> remove2 = data.codePriceMap.remove(code);
+        LocalDate[] remove3 = data.codeDateMap.remove(code);
+        double[] remove4 = data.codeCloseMap.remove(code);
+        Long remove5 = data.codeIdMap.remove(code);
+        log.info("clearCodeCache  ->  [Map] - suc     >>>     remove1_size : {} , remove2_size : {} , remove3_size : {} , remove4_size : {} , remove5_size : {}",
+                 remove1.size(), remove2.size(), remove3.length, remove4.length, remove5 != null ? 1 : 0);
 
 
         try {
             Integer idx = data.codeIdxMap.get(code);
             if (null == idx) {
+                log.error("clearCodeCache  ->  [Entity] - fail     >>>     code : {} , idx : {}", code, idx);
                 return;
             }
 
 
             BaseBlockDO blockDO = StockTypeEnum.isBlock(code) ? data.blockDOList.get(idx) : null;
             if (null != blockDO && Objects.equals(blockDO.getCode(), code)) {
+
                 blockDO.setKlineHis(null);
+                blockDO.setKlineHisStr(null);
                 blockDO.setKlineDTOList(null);
+
                 blockDO.setExtDataHis(null);
+                blockDO.setExtDataHisStr(null);
                 blockDO.setExtDataDTOList(null);
 
                 data.blockDOList.set(idx, null);
-                log.info("clearCodeCache - suc   >>>   code : {} , blockDO : {}", code, JSON.toJSONString(data.blockDOList.get(idx)));
+                log.info("clearCodeCache  ->  [blockDO] - suc     >>>     code : {} , blockDO : {}", code, JSON.toJSONString(data.blockDOList.get(idx)));
             }
 
 
@@ -1388,7 +1419,7 @@ public class ExtDataServiceImpl implements ExtDataService {
                 earlyClearStockCache__OOM(stockDO);
 
                 data.stockDOList.set(idx, null);
-                log.info("clearCodeCache - suc   >>>   code : {} , stockDO : {}", code, JSON.toJSONString(data.stockDOList.get(idx)));
+                log.info("clearCodeCache  ->  [stockDO] - suc     >>>     code : {} , stockDO : {}", code, JSON.toJSONString(data.stockDOList.get(idx)));
             }
 
         } catch (Exception e) {
@@ -1404,8 +1435,11 @@ public class ExtDataServiceImpl implements ExtDataService {
      */
     public static void earlyClearStockCache__OOM(BaseStockDO stockDO) {
         stockDO.setKlineHis(null);
+        stockDO.setKlineHisStr(null);
         stockDO.setKlineDTOList(null);
+
         stockDO.setExtDataHis(null);
+        stockDO.setExtDataHisStr(null);
         stockDO.setExtDataDTOList(null);
     }
 
