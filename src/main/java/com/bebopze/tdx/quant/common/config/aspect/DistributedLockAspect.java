@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.config.aspect;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -234,12 +235,21 @@ public class DistributedLockAspect {
 
 
     /**
+     * 清理本机所有分布式锁（应用启动时调用，清理本机遗留的分布式锁）
+     */
+    @PostConstruct
+    public void startupTask() {
+        lockUtils.cleanupOrphanedLocks();
+    }
+
+
+    /**
      * 应用关闭时清理资源
      */
     @PreDestroy
     public void shutdownTask() {
         lockUtils.shutdown();
-        lockUtils.cleanLocks();
+        lockUtils.cleanLocalLocks();
     }
 
 

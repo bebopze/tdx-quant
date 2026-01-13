@@ -23,7 +23,8 @@ public interface ConfDistributedLockMapper extends BaseMapper<ConfDistributedLoc
     int tryAcquireLock(@Param("lockKey") String lockKey,
                        @Param("lockValue") String lockValue,
                        @Param("expire") long expire,
-                       @Param("expireTimestamp") long expireTimestamp);
+                       @Param("expireTimestamp") long expireTimestamp,
+                       @Param("machineUniqueId") String machineUniqueId);
 
     /**
      * 释放锁 - 只有持有者才能释放
@@ -49,4 +50,11 @@ public interface ConfDistributedLockMapper extends BaseMapper<ConfDistributedLoc
      */
     int batchDeleteExpiredLocks(@Param("lockIds") List<Long> lockIds);
 
+    /**
+     * 清理本地锁
+     *
+     * @param machineUniqueId 本机唯一标识
+     * @return
+     */
+    int cleanLocalLocks(@Param("machineUniqueId") String machineUniqueId);
 }
