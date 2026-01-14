@@ -43,4 +43,12 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
      * @return
      */
     List<QaTopBlockDO> beforeAfterN(LocalDate date, int N);
+
+
+    int batchInsert(List<QaTopBlockDO> list);
+
+    int batchUpdate(List<QaTopBlockDO> list);
+
+    int batchInsertOrUpdate(List<QaTopBlockDO> list);
+
 }

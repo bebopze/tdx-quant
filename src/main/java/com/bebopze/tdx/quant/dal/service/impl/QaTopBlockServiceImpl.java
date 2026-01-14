@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -59,5 +60,79 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
         date = date.plusDays(N / 5 * 7);
         return lastN(date, N);
     }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsert(List<QaTopBlockDO> list) {
+
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<QaTopBlockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsert(sub);
+        }
+
+
+        return count;
+    }
+
+    @Override
+    public int batchUpdate(List<QaTopBlockDO> list) {
+
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<QaTopBlockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchUpdate(sub);
+        }
+
+
+        return count;
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsertOrUpdate(List<QaTopBlockDO> list) {
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<QaTopBlockDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsertOrUpdate(sub);
+        }
+
+        return count;
+    }
+
 
 }

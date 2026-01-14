@@ -28,5 +28,5 @@ public interface QaBlockNewRelaStockHisMapper extends BaseMapper<QaBlockNewRelaS
                                                                 @Param("date") LocalDate date,
                                                                 @Param("limit") int limit);
 
-
+    int batchInsert(@Param("list") List<QaBlockNewRelaStockHisDO> list);
 }

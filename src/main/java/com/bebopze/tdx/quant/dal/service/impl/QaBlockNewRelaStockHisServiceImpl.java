@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -54,6 +55,32 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
     @Override
     public QaBlockNewRelaStockHisDO last() {
         return listByBlockNewIdDateAndLimit(1, LocalDate.of(9999, 1, 1), 1).get(0);
+    }
+
+
+    @TotalTime
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public int batchInsert(List<QaBlockNewRelaStockHisDO> list) {
+
+        int batchSize = 1000;
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<QaBlockNewRelaStockHisDO> sub = list.subList(i, end);
+
+            count += baseMapper.batchInsert(sub);
+        }
+
+
+        return count;
     }
 
 
