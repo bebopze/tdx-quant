@@ -560,11 +560,11 @@ public class BacktestCache {
 
 
     public LocalDate startDate() {
-        return CollectionUtils.isEmpty(dateList) ? null : dateList.get(0);
+        return CollectionUtils.isEmpty(dateList) ? null : dateList.getFirst();
     }
 
     public LocalDate endDate() {
-        return CollectionUtils.isEmpty(dateList) ? null : dateList.get(dateList.size() - 1);
+        return CollectionUtils.isEmpty(dateList) ? null : dateList.getLast();
     }
 
 

@@ -55,7 +55,7 @@ public class EventStreamUtil {
 
 
     public static String fetchOnce(String _url) {
-        return fetchN(_url, 1).get(0);
+        return fetchN(_url, 1).getFirst();
     }
 
     /**

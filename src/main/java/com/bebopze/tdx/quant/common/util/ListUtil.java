@@ -68,13 +68,12 @@ public class ListUtil {
      * @return
      */
     public static <E> E last(List<E> list) {
-        return CollectionUtils.isEmpty(list) ? null : list.get(list.size() - 1);
+        return CollectionUtils.isEmpty(list) ? null : list.getLast();
     }
 
 
     public static int size(Collection list) {
         return list == null ? 0 : list.size();
     }
-
 
 }

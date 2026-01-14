@@ -102,7 +102,7 @@ public class MonthlyBullSignal2 {
                 // 一周只有 一根K线（每天动态计算 替换本周old_val）
 
                 // 同一周：更新最后一根的 high/low/close（open 不变）
-                MonthlyBullSignal.KlineBar last = weeks.get(weeks.size() - 1);
+                MonthlyBullSignal.KlineBar last = weeks.getLast();
                 last.high = Math.max(last.high, dayHigh[i]);
                 last.low = Math.min(last.low, dayLow[i]);
                 last.close = dayClose[i];
@@ -117,7 +117,7 @@ public class MonthlyBullSignal2 {
                 curYm = ym;
             } else {
                 // 一月只有 一根K线（每天动态计算 替换本月old_val）
-                MonthlyBullSignal.KlineBar last = months.get(months.size() - 1);
+                MonthlyBullSignal.KlineBar last = months.getLast();
                 last.high = Math.max(last.high, dayHigh[i]);
                 last.low = Math.min(last.low, dayLow[i]);
                 last.close = dayClose[i];

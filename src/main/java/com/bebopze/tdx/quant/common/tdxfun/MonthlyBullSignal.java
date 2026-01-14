@@ -318,10 +318,10 @@ public class MonthlyBullSignal {
                               group.sort(Comparator.comparing(b -> b.date));
 
                               // 用周最后一个交易日的日期代表
-                              LocalDate date = group.get(group.size() - 1).date;
+                              LocalDate date = group.getLast().date;
 
-                              double open = group.get(0).open;
-                              double close = group.get(group.size() - 1).close;
+                              double open = group.getFirst().open;
+                              double close = group.getLast().close;
                               double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
                               double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
 
@@ -355,10 +355,10 @@ public class MonthlyBullSignal {
                               group.sort(Comparator.comparing(b -> b.date));
 
                               // 用当月最后一个交易日的日期代表
-                              LocalDate date = group.get(group.size() - 1).date;
+                              LocalDate date = group.getLast().date;
 
-                              double open = group.get(0).open;
-                              double close = group.get(group.size() - 1).close;
+                              double open = group.getFirst().open;
+                              double close = group.getLast().close;
                               double high = group.stream().mapToDouble(b -> b.high).max().orElse(Double.NaN);
                               double low = group.stream().mapToDouble(b -> b.low).min().orElse(Double.NaN);
 
