@@ -8,12 +8,12 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -101,8 +101,8 @@ public class StockServiceImpl implements StockService {
             blockDTO.setBlockType(type);
             blockDTO.setLevel(e.getLevel());
             blockDTO.setEndLevel(e.getEndLevel());
-            blockDTO.setBlockCodePath(StringUtils.defaultString(e.getCodePath(), e.getCode()));
-            blockDTO.setBlockNamePath(StringUtils.defaultString(e.getNamePath(), e.getName()));
+            blockDTO.setBlockCodePath(Objects.toString(e.getCodePath(), e.getCode()));
+            blockDTO.setBlockNamePath(Objects.toString(e.getNamePath(), e.getName()));
 
 
             // 个股-概念     1->多

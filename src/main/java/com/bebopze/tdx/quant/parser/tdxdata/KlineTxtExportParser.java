@@ -40,43 +40,6 @@ import static com.bebopze.tdx.quant.parser.tdxdata.LdayParser.KLINE_START_DATE;
 public class KlineTxtExportParser {
 
 
-    public static void main(String[] args) {
-
-
-        // ----------
-
-
-        String stockCode_sz = "000001";
-        String stockCode_sh = "600519";
-        String stockCode_bj = "833171";
-
-        String stockCode_bk = "880904";
-
-        String stockCode_zs_sz = "399106";
-        String stockCode_zs_sh = "880003";
-
-
-        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
-        for (LdayParser.LdayDTO e : stockDataList) {
-            String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
-            System.out.println(JSON.toJSONString(item));
-        }
-
-
-        // ----------
-
-
-//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
-//        for (LdayDTO e : stockDataList) {
-//            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
-//            System.out.println(JSON.toJSONString(item));
-//        }
-
-
-        System.out.println("---------------------------------- code：" + stockDataList.get(0).getCode() + "     总数：" + stockDataList.size());
-    }
-
-
     /**
      * tdx 行情导出数据（xx.txt）  -   解析器
      *
@@ -332,5 +295,44 @@ public class KlineTxtExportParser {
         return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP);
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+
+        // ----------
+
+
+        String stockCode_sz = "000001";
+        String stockCode_sh = "600519";
+        String stockCode_bj = "833171";
+
+        String stockCode_bk = "880904";
+
+        String stockCode_zs_sz = "399106";
+        String stockCode_zs_sh = "880003";
+
+
+        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
+        for (LdayParser.LdayDTO e : stockDataList) {
+            String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
+            System.out.println(JSON.toJSONString(item));
+        }
+
+
+        // ----------
+
+
+//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
+//        for (LdayDTO e : stockDataList) {
+//            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+//            System.out.println(JSON.toJSONString(item));
+//        }
+
+
+        System.out.println("---------------------------------- code：" + stockDataList.get(0).getCode() + "     总数：" + stockDataList.size());
+    }
 
 }
