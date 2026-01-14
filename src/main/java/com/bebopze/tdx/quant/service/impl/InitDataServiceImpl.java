@@ -160,7 +160,7 @@ public class InitDataServiceImpl implements InitDataService {
 
         data.setStartDate(startDate);
         data.setEndDate(endDate);
-        data.clear();
+        data.clearFunCache();
         init = true;
 
 
