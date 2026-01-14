@@ -11,13 +11,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -137,7 +137,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private List<TopChangePctDTO> getTopList(String topCodeSet, int type) {
-        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
+        return JSON.parseArray(Objects.toString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toList());
@@ -171,7 +171,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private TopPoolAvgPctDTO getTopAvgPct(String avgPct, int type) {
-        return JSON.parseArray(StringUtils.defaultString(avgPct, "[]"), TopPoolAvgPctDTO.class)
+        return JSON.parseArray(Objects.toString(avgPct, "[]"), TopPoolAvgPctDTO.class)
                    .stream()
                    .filter(e -> e.getType() == type)
                    .findFirst()
@@ -210,7 +210,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Set<String> getTopCodeJsonSet(String topCodeSet, int type) {
-        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
+        return JSON.parseArray(Objects.toString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .map(TopChangePctDTO::getCode)
@@ -235,7 +235,7 @@ public class QaTopBlockDO implements Serializable {
 
 
     private Map<String, String> getTopCodeNameMap(String topCodeSet, int type) {
-        return JSON.parseArray(StringUtils.defaultString(topCodeSet, "[]"), TopChangePctDTO.class)
+        return JSON.parseArray(Objects.toString(topCodeSet, "[]"), TopChangePctDTO.class)
                    .stream()
                    .filter(e -> e.getTopTypeSet().contains(type))
                    .collect(Collectors.toMap(TopChangePctDTO::getCode,
