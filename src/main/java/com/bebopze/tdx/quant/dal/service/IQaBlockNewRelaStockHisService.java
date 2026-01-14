@@ -25,4 +25,6 @@ public interface IQaBlockNewRelaStockHisService extends IService<QaBlockNewRelaS
     List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit);
 
     QaBlockNewRelaStockHisDO last();
+
+    int batchInsert(List<QaBlockNewRelaStockHisDO> list);
 }

@@ -59,4 +59,24 @@
     </select>
 
 
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO qa_block_new_rela_stock_his
+
+        (
+        block_new_id, date, stock_id_list, result, gn_result,
+        pthy_lv1_result, pthy_lv2_result, pthy_lv3_result,
+        yjhy_lv1_result, yjhy_lv2_result, yjhy_lv3_result
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.blockNewId}, #{item.date}, #{item.stockIdList}, #{item.result}, #{item.gnResult},
+            #{item.pthyLv1Result}, #{item.pthyLv2Result}, #{item.pthyLv3Result},
+            #{item.yjhyLv1Result}, #{item.yjhyLv2Result}, #{item.yjhyLv3Result}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

@@ -47,4 +47,144 @@
     </select>
 
 
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO qa_top_block
+
+        (
+        date,
+        top_block_code_set,
+        top_etf_code_set,
+        top_stock_code_set,
+        block_avg_pct,
+        etf_avg_pct,
+        stock_avg_pct
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.date},
+            #{item.topBlockCodeSet},
+            #{item.topEtfCodeSet},
+            #{item.topStockCodeSet},
+            #{item.blockAvgPct},
+            #{item.etfAvgPct},
+            #{item.stockAvgPct}
+            )
+        </foreach>
+    </insert>
+
+
+    <!-- 批量更新（单条 UPDATE + CASE WHEN），传 NULL 时保留原值 -->
+    <update id="batchUpdate" parameterType="java.util.List">
+        <if test="list != null and list.size() > 0">
+            UPDATE qa_top_block
+
+
+            SET
+
+
+            date = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.date}, date)
+            </foreach>
+            ELSE date
+            END,
+
+            top_block_code_set = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.topBlockCodeSet}, top_block_code_set)
+            </foreach>
+            ELSE top_block_code_set
+            END,
+
+            top_etf_code_set = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.topEtfCodeSet}, top_etf_code_set)
+            </foreach>
+            ELSE top_etf_code_set
+            END,
+
+            top_stock_code_set = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.topStockCodeSet}, top_stock_code_set)
+            </foreach>
+            ELSE top_stock_code_set
+            END,
+
+            block_avg_pct = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.blockAvgPct}, block_avg_pct)
+            </foreach>
+            ELSE block_avg_pct
+            END,
+
+            etf_avg_pct = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.etfAvgPct}, etf_avg_pct)
+            </foreach>
+            ELSE etf_avg_pct
+            END,
+
+            stock_avg_pct = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN COALESCE(#{item.stockAvgPct}, stock_avg_pct)
+            </foreach>
+            ELSE stock_avg_pct
+            END
+
+
+            WHERE id IN
+
+
+            <foreach collection="list" item="item" open="(" separator="," close=")">
+                #{item.id}
+            </foreach>
+        </if>
+    </update>
+
+
+    <!-- 批量插入或更新 -->
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO qa_top_block
+
+        (
+        date,
+        top_block_code_set,
+        top_etf_code_set,
+        top_stock_code_set,
+        block_avg_pct,
+        etf_avg_pct,
+        stock_avg_pct
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.date},
+            #{item.topBlockCodeSet},
+            #{item.topEtfCodeSet},
+            #{item.topStockCodeSet},
+            #{item.blockAvgPct},
+            #{item.etfAvgPct},
+            #{item.stockAvgPct}
+            )
+        </foreach>
+
+
+        ON DUPLICATE KEY UPDATE
+
+
+        date = COALESCE(VALUES(date), date),
+        top_block_code_set = COALESCE(VALUES(top_block_code_set), top_block_code_set),
+        top_etf_code_set = COALESCE(VALUES(top_etf_code_set), top_etf_code_set),
+        top_stock_code_set = COALESCE(VALUES(top_stock_code_set), top_stock_code_set),
+        block_avg_pct = COALESCE(VALUES(block_avg_pct), block_avg_pct),
+        etf_avg_pct = COALESCE(VALUES(etf_avg_pct), etf_avg_pct),
+        stock_avg_pct = COALESCE(VALUES(stock_avg_pct), stock_avg_pct)
+    </insert>
+
 </mapper>

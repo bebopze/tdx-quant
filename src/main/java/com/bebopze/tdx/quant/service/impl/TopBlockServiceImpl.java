@@ -916,25 +916,25 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 主线板块
         long start_1 = System.currentTimeMillis();
         Map<LocalDate, Set<String>> date_topBlockCodeSet__map = calcTopBlock();
-        log.info("calc_bkyd2     >>>     calcTopBlock : {}", DateTimeUtil.formatNow2Hms(start_1));
+        log.info("calc_bkyd2 - calcTopBlock     >>>     size : {} , 耗时 : {}", date_topBlockCodeSet__map.size(), DateTimeUtil.formatNow2Hms(start_1));
 
 
         // 主线ETF
         long start_2 = System.currentTimeMillis();
         Map<LocalDate, Set<String>> date_topETFCodeSet__map = calcTopETF();
-        log.info("calc_bkyd2     >>>     calcTopETF : {}", DateTimeUtil.formatNow2Hms(start_2));
+        log.info("calc_bkyd2 - calcTopETF     >>>     size : {} , 耗时 : {}", date_topETFCodeSet__map.size(), DateTimeUtil.formatNow2Hms(start_2));
 
 
         // 主线个股
         long start_3 = System.currentTimeMillis();
         Map<LocalDate, Set<String>> date_topStockCodeSet__map = calcTopStock(date_topBlockCodeSet__map);
-        log.info("calc_bkyd2     >>>     calcTopStock : {}", DateTimeUtil.formatNow2Hms(start_3));
+        log.info("calc_bkyd2 - calcTopStock     >>>     size : {} , 耗时 : {}", date_topStockCodeSet__map.size(), DateTimeUtil.formatNow2Hms(start_3));
 
 
         // 保存
         long start_4 = System.currentTimeMillis();
         saveOrUpdate(date_topBlockCodeSet__map, date_topETFCodeSet__map, date_topStockCodeSet__map);
-        log.info("calc_bkyd2     >>>     saveOrUpdate : {}", DateTimeUtil.formatNow2Hms(start_4));
+        log.info("calc_bkyd2 - saveOrUpdate     >>>     topBlock_size : {} , topETF_size : {} , topStock_size : {} , 耗时 : {}", date_topBlockCodeSet__map.size(), date_topETFCodeSet__map.size(), date_topStockCodeSet__map.size(), DateTimeUtil.formatNow2Hms(start_4));
     }
 
 
@@ -1189,7 +1189,8 @@ public class TopBlockServiceImpl implements TopBlockService {
             entityList.add(entity);
         });
 
-        qaTopBlockService.saveOrUpdateBatch(entityList);
+
+        qaTopBlockService.batchInsertOrUpdate(entityList);
     }
 
 
@@ -1277,8 +1278,11 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        List<QaTopBlockDO> entityList = Lists.newArrayList();
+
+
         // 逐日遍历
-        topSortListAll.parallelStream().forEach(e -> {
+        topSortListAll.forEach(e -> {
 
             // 日期
             LocalDate date = e.getDate();
@@ -1351,13 +1355,16 @@ public class TopBlockServiceImpl implements TopBlockService {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            if (e.getTopEtfCodeSet().equals("[]")) {
+            if (Objects.equals(e.getTopEtfCodeSet(), "[]")) {
                 log.error("autoType___date_topList_Map - err     >>>     {} , topEtfCodeSet : {}", date, auto___topETFList);
             }
 
 
-            qaTopBlockService.updateById(e);
+            entityList.add(e);
         });
+
+
+        qaTopBlockService.batchUpdate(entityList);
     }
 
 
@@ -2615,7 +2622,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 日期 - 结果（个股code 列表）
-        Map<LocalDate, Set<String>> date_stockCodeSet_Map = Maps.newConcurrentMap();
+        Map<LocalDate, Set<String>> date_stockCodeSet_topMap = Maps.newConcurrentMap();
 
 
         // 遍历计算   =>   每日 - 结果（个股code 列表）
@@ -2644,7 +2651,7 @@ public class TopBlockServiceImpl implements TopBlockService {
                     dateIndexMap.forEach((date, idx) -> {
                         // 检查索引是否在数组范围内
                         if (/*idx != null && idx >= 0 && idx < arrLength && */resultArr[idx]) {
-                            date_stockCodeSet_Map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                            date_stockCodeSet_topMap.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
                         }
                     });
 
@@ -2658,11 +2665,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
-        qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet_Map);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+        blockSum__delOld__saveNew(date_stockCodeSet_topMap, blockNewId, UpdateTypeEnum.ALL);
     }
 
 
@@ -2781,17 +2784,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
-
-
-        Integer blockNewId = BlockNewIdEnum.百日新高.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__highMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__highMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+        blockSum__delOld__saveNew(date_stockCodeSet__highMap, BlockNewIdEnum.百日新高.getBlockNewId(), updateTypeEnum);
     }
 
 
@@ -2872,17 +2865,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.涨幅榜.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.涨幅榜.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.涨幅榜.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -2933,17 +2927,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.RPS红.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.RPS红.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.RPS红.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3055,17 +3050,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.大均线多头.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.大均线多头.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.大均线多头.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3116,17 +3112,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.均线大多头.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.均线大多头.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.均线大多头.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3177,17 +3174,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.均线极多头.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.均线极多头.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.均线极多头.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3238,17 +3236,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.涨停.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.涨停.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.涨停.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3299,17 +3298,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
+        blockSum__delOld__saveNew(date_stockCodeSet__topMap, BlockNewIdEnum.跌停.getBlockNewId(), updateTypeEnum);
 
 
-        Integer blockNewId = BlockNewIdEnum.跌停.getBlockNewId();
-        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
-
-
-        delOld(blockNewId, dateSet, updateTypeEnum);
-
-
-        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
-        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
+//        Integer blockNewId = BlockNewIdEnum.跌停.getBlockNewId();
+//        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+//
+//
+//        delOld(blockNewId, dateSet, updateTypeEnum);
+//
+//
+//        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+//        sortMap.forEach((date, stockCodeSet) -> blockSum(date, stockCodeSet, blockNewId));
     }
 
 
@@ -3618,6 +3618,33 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    private void blockSum__delOld__saveNew(Map<LocalDate, Set<String>> date_stockCodeSet__topMap,
+                                           Integer blockNewId,
+                                           UpdateTypeEnum updateTypeEnum) {
+
+
+        Set<LocalDate> dateSet = date_stockCodeSet__topMap.keySet();
+
+
+        // blockSum
+        Map<LocalDate, Set<String>> sortMap = new TreeMap<>(date_stockCodeSet__topMap);
+
+        List<QaBlockNewRelaStockHisDO> entityList = Lists.newArrayList();
+        sortMap.forEach((date, stockCodeSet) -> {
+            QaBlockNewRelaStockHisDO entity = blockSum(date, stockCodeSet, blockNewId);
+            entityList.add(entity);
+        });
+
+
+        // DEL old
+        delOld(blockNewId, dateSet, updateTypeEnum);
+
+
+        // insert new
+        qaBlockNewRelaStockHisService.batchInsert(entityList);
+    }
+
+
     private void delOld(Integer blockNewId, Set<LocalDate> dateSet, UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
             qaBlockNewRelaStockHisService.deleteByDateSet(blockNewId, dateSet);
@@ -3635,7 +3662,7 @@ public class TopBlockServiceImpl implements TopBlockService {
      * @param filter_stockCodeSet
      * @param blockNewId          1-百日新高；2-涨幅榜；3-RPS三线红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；
      */
-    private void blockSum(LocalDate date, Set<String> filter_stockCodeSet, Integer blockNewId) {
+    private QaBlockNewRelaStockHisDO blockSum(LocalDate date, Set<String> filter_stockCodeSet, Integer blockNewId) {
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -3811,7 +3838,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         entity.setResult(JSON.toJSONString(sortAndRank(resultList)));
 
 
-        qaBlockNewRelaStockHisService.save(entity);
+        // qaBlockNewRelaStockHisService.save(entity);
+        return entity;
     }
 
 

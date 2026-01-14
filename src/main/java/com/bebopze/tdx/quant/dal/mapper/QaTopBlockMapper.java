@@ -27,4 +27,11 @@ public interface QaTopBlockMapper extends BaseMapper<QaTopBlockDO> {
 
     List<QaTopBlockDO> lastN(@Param("date") LocalDate date,
                              @Param("N") int N);
+
+
+    int batchInsert(@Param("list") List<QaTopBlockDO> list);
+
+    int batchUpdate(@Param("list") List<QaTopBlockDO> list);
+
+    int batchInsertOrUpdate(@Param("list") List<QaTopBlockDO> list);
 }
