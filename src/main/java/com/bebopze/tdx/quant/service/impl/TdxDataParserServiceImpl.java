@@ -1790,7 +1790,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // new__klineHis   ->   start_date
-        LocalDate new__start_date = DateTimeUtil.parseDate_yyyy_MM_dd(new_klines.get(0).split("\\,")[0]);
+        LocalDate new__start_date = DateTimeUtil.parseDate_yyyy_MM_dd(new_klines.getFirst().split("\\,")[0]);
 
 
         // ----------------------------- remove + add     =>     2、从 old__klineHis 中   剔除全部 new__klineHis     =>     3、再 addAll  ->  new__klineHis

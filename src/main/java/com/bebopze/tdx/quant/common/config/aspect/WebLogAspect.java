@@ -90,7 +90,7 @@ public class WebLogAspect {
             params.append(paramName).append("=").append(paramValue).append("&");
         }
 
-        return params.length() == 0 ? JSON.toJSONString(argList.size() > 1 ? argList : argList.get(0)) : params.substring(0, params.length() - 1);
+        return params.isEmpty() ? JSON.toJSONString(argList.size() > 1 ? argList : argList.getFirst()) : params.substring(0, params.length() - 1);
     }
 
 
