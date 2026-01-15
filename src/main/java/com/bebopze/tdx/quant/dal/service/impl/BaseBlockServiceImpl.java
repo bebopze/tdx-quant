@@ -192,8 +192,15 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
-    @Override
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     public int batchInsert(List<BaseBlockDO> list) {
 
         int batchSize = 1000;
@@ -218,8 +225,15 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
-    @Override
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     public int batchInsertOrUpdate(List<BaseBlockDO> list) {
         int batchSize = 1000;
         if (list == null || list.isEmpty()) {

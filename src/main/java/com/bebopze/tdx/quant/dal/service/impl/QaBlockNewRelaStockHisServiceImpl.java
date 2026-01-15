@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper;
@@ -59,6 +60,7 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int batchInsert(List<QaBlockNewRelaStockHisDO> list) {
