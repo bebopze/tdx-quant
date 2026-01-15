@@ -353,7 +353,15 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     @Override
     public int batchInsert(List<BaseStockDO> list) {
 
@@ -379,8 +387,15 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
-    @Override
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     public int batchInsertOrUpdate(List<BaseStockDO> list) {
         int batchSize = 1000;
         if (list == null || list.isEmpty()) {

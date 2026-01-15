@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
@@ -90,6 +91,7 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int batchInsert(List<BaseBlockRelaStockDO> list) {

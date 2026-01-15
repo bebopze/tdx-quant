@@ -1,13 +1,17 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.QaTopBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -62,12 +66,23 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     @Override
     public int batchInsert(List<QaTopBlockDO> list) {
 
-        int batchSize = 1000;
+        int batchSize = 500;
         if (list == null || list.isEmpty()) {
             return 0;
         }
@@ -87,10 +102,20 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
         return count;
     }
 
+    @TotalTime
+    @DBLimiter(1)
+    @Transactional(rollbackFor = Exception.class)
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     @Override
     public int batchUpdate(List<QaTopBlockDO> list) {
 
-        int batchSize = 1000;
+        int batchSize = 500;
         if (list == null || list.isEmpty()) {
             return 0;
         }
@@ -112,10 +137,18 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
 
 
     @TotalTime
+    @DBLimiter(1)
     @Transactional(rollbackFor = Exception.class)
+    @Retryable(
+            retryFor = {Exception.class},
+            maxAttempts = 5,   // 重试次数
+            backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
+                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+    )
     @Override
     public int batchInsertOrUpdate(List<QaTopBlockDO> list) {
-        int batchSize = 1000;
+        int batchSize = 500;
         if (list == null || list.isEmpty()) {
             return 0;
         }
