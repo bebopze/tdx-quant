@@ -19,6 +19,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
@@ -576,6 +577,9 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * 手动 clear Cache     =>     Java大对象   ->   直接卡死（已优化 -> 支持 TTL）
+     */
     public void clearFunCache() {
         stockFunCache.invalidateAll();
         blockFunCache.invalidateAll();
@@ -589,7 +593,7 @@ public class BacktestCache {
 
 
     /**
-     * 手动 clear Cache     =>     Java大对象   ->   直接卡死（已优化 -> 支持 TTL）
+     * 清理缓存（OOM）       // 内存 < 64GB     =>     手动GC
      */
     public void clear() {
 
@@ -600,46 +604,8 @@ public class BacktestCache {
         // ---------------------------
 
 
-        startDate = null;
-        endDate = null;
-
-
-        dateIndexMap = null;
-        dateList = null;
-
-
-        stockDOList = null;
-        ETF_stockDOList = null;
-        codeStockMap = null;
-        stock__idCodeMap = null;
-        stock__codeIdMap = null;
-        stock__codeNameMap = null;
-        stock__dateCloseMap = null;
-        stock__dateOpenMap = null;
-
-
-        rt_stock_zt__codePriceMap = null;
-        rt_stock_dt__codePriceMap = null;
-        rt_stock__codePriceMap = null;
-        rt_stock__codePctMap = null;
-
-
-        blockDOList = null;
-        codeBlockMap = null;
-        block__idCodeMap = null;
-        block__codeIdMap = null;
-        block__codeNameMap = null;
-        block__dateCloseMap = null;
-
-
-        stockCode_blockCodeSet_Map = null;
-
-
-        blockCode_stockCodeSet_Map = null;
-
-
-        bk2_level1__blockCode_stockCodeSet_Map = null;
-        bk12_level1__blockCode_stockCodeSet_Map = null;
+        BacktestCache initData = new BacktestCache();
+        BeanUtils.copyProperties(initData, this);
     }
 
 
