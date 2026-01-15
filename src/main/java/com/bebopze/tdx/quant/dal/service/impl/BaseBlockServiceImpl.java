@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
@@ -179,10 +180,10 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
     @DBLimiter(12)
     @Retryable(
-            value = {Exception.class},
+            retryFor = {Exception.class},
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
-            exclude = {IllegalArgumentException.class, IllegalStateException.class,
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
                     SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
@@ -202,6 +203,8 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
                     SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     public int batchInsert(List<BaseBlockDO> list) {
+        log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
+
 
         int batchSize = 1000;
         if (list == null || list.isEmpty()) {
@@ -235,6 +238,9 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
                     SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     public int batchInsertOrUpdate(List<BaseBlockDO> list) {
+        log.info("batchInsertOrUpdate     >>>     size : {}", ListUtil.size(list));
+
+
         int batchSize = 1000;
         if (list == null || list.isEmpty()) {
             return 0;

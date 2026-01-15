@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -9,6 +10,7 @@ import com.bebopze.tdx.quant.dal.mapper.BaseBlockRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ import java.util.Set;
  * @author bebopze
  * @since 2025-05-09
  */
+@Slf4j
 @Service
 public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStockMapper, BaseBlockRelaStockDO> implements IBaseBlockRelaStockService {
 
@@ -95,6 +98,8 @@ public class BaseBlockRelaStockServiceImpl extends ServiceImpl<BaseBlockRelaStoc
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int batchInsert(List<BaseBlockRelaStockDO> list) {
+        log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
+
 
         int batchSize = 5000;
         if (list == null || list.isEmpty()) {

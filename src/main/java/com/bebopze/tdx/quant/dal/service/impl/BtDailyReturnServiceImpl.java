@@ -79,10 +79,10 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
     @DBLimiter(6)
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
-            value = {Exception.class},
+            retryFor = {Exception.class},
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
-            exclude = {IllegalArgumentException.class, IllegalStateException.class,
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
                     SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
