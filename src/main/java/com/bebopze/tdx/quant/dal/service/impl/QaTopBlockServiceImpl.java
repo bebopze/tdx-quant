@@ -2,10 +2,12 @@ package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.QaTopBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
  * @author bebopze
  * @since 2025-09-24
  */
+@Slf4j
 @Service
 public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBlockDO> implements IQaTopBlockService {
 
@@ -81,6 +84,8 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
     )
     @Override
     public int batchInsert(List<QaTopBlockDO> list) {
+        log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
+
 
         int batchSize = 500;
         if (list == null || list.isEmpty()) {
@@ -114,8 +119,10 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
     )
     @Override
     public int batchUpdate(List<QaTopBlockDO> list) {
+        log.info("batchUpdate     >>>     size : {}", ListUtil.size(list));
 
-        int batchSize = 500;
+
+        int batchSize = 100;
         if (list == null || list.isEmpty()) {
             return 0;
         }
@@ -148,6 +155,9 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
     )
     @Override
     public int batchInsertOrUpdate(List<QaTopBlockDO> list) {
+        log.info("batchInsertOrUpdate     >>>     size : {}", ListUtil.size(list));
+
+
         int batchSize = 500;
         if (list == null || list.isEmpty()) {
             return 0;

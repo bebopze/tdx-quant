@@ -3,10 +3,12 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockNewTypeEnum;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewRelaStockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockNewRelaStockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.List;
  * @author bebopze
  * @since 2025-05-11
  */
+@Slf4j
 @Service
 public class BaseBlockNewRelaStockServiceImpl extends ServiceImpl<BaseBlockNewRelaStockMapper, BaseBlockNewRelaStockDO> implements IBaseBlockNewRelaStockService {
 
@@ -55,6 +58,8 @@ public class BaseBlockNewRelaStockServiceImpl extends ServiceImpl<BaseBlockNewRe
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int batchInsert(List<BaseBlockNewRelaStockDO> list) {
+        log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
+
 
         int batchSize = 5000;
         if (list == null || list.isEmpty()) {

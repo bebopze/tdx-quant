@@ -56,10 +56,10 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
     @TotalTime
     @DBLimiter(6)
     @Retryable(
-            value = {Exception.class},
+            retryFor = {Exception.class},
             maxAttempts = 5,
             backoff = @Backoff(delay = 3000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
-            exclude = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class}              // 排除业务异常
     )
     @Override
     public List<BtTradeRecordDO> listByTaskId(Long taskId) {
@@ -94,10 +94,10 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
     @DBLimiter(6)
     @Transactional(rollbackFor = Exception.class)
     @Retryable(
-            value = {Exception.class, RecoverableDataAccessException.class},   // 包含可恢复的数据库异常
+            retryFor = {Exception.class, RecoverableDataAccessException.class},   // 包含可恢复的数据库异常
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
-            exclude = {IllegalArgumentException.class, IllegalStateException.class,
+            noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
                     SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
