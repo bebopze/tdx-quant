@@ -28,7 +28,11 @@
 
         DISTINCT
 
-        r.*, s.code AS stockCode, s.name AS stockName, b.code AS blockCode, b.name AS blockName
+        r.*,
+        s.code AS stockCode,
+        s.name AS stockName,
+        b.code AS blockCode,
+        b.name AS blockName
 
 
         FROM base_block_rela_stock r
@@ -49,7 +53,11 @@
 
         DISTINCT
 
-        r.*, s.code AS stockCode, s.name AS stockName, b.code AS blockCode, b.name AS blockName
+        r.*,
+        s.code AS stockCode,
+        s.name AS stockName,
+        b.code AS blockCode,
+        b.name AS blockName
 
 
         FROM base_block_rela_stock r
@@ -94,10 +102,27 @@
         b.id,
         b.code,
         b.name,
-        b.type,
+        b.code_path,
+        b.name_path,
         b.parent_id,
+        b.type,
         b.level,
-        b.end_level
+        b.end_level,
+        b.trade_date,
+        b.open,
+        b.high,
+        b.low,
+        b.close,
+        b.prev_close,
+        b.volume,
+        b.amount,
+        b.range_pct,
+        b.change_pct,
+        b.change_price,
+        b.turnover_pct,
+
+        b.gmt_create,
+        b.gmt_modify
 
 
         FROM base_block_rela_stock r
@@ -120,7 +145,26 @@
 
         DISTINCT
 
-        s.id, s.code, s.name,s.tdx_market_type
+        s.id,
+        s.code,
+        s.name,
+        s.type,
+        s.tdx_market_type,
+        s.trade_date,
+        s.open,
+        s.high,
+        s.low,
+        s.close,
+        s.prev_close,
+        s.volume,
+        s.amount,
+        s.range_pct,
+        s.change_pct,
+        s.change_price,
+        s.turnover_pct,
+
+        s.gmt_create,
+        s.gmt_modify
 
 
         FROM base_block_rela_stock r

@@ -179,7 +179,7 @@ public class QaTopBlockDO implements Serializable {
                        e.setDate(date);
                        return e;
                    })
-                   .orElse(null);
+                   .orElse(new TopPoolAvgPctDTO(type));
     }
 
 
