@@ -191,7 +191,7 @@
         }
 
 
-        /* ---------- 主线个股（人选） ->  删除（操作按钮） ---------- */
+        /* ---------- 主线个股（精选） ->  删除（操作按钮） ---------- */
         .btn-stockManual-delete-row {
             color: white;
             background-color: #336aba;
@@ -409,7 +409,7 @@
         /* ----------------------------- */
 
 
-        /* --- 主线板块/个股（人选）表格优化 --- */
+        /* --- 主线板块/个股（精选）表格优化 --- */
 
         /* 优化：主线个股 - 超出宽度时强制换行 */
         .col-topStockList {
@@ -650,16 +650,16 @@
                     type="button" role="tab" aria-controls="top-stocks" aria-selected="false">主线个股（机选）
             </button>
         </li>
-        <!-- 主线板块（人选）-->
+        <!-- 主线板块（精选）-->
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="top-blocks-manual-tab" data-bs-toggle="tab" data-bs-target="#top-blocks-manual"
-                    type="button" role="tab" aria-controls="top-blocks-manual" aria-selected="false">主线板块（人选）
+                    type="button" role="tab" aria-controls="top-blocks-manual" aria-selected="false">主线板块（精选）
             </button>
         </li>
-        <!-- 主线个股（人选）-->
+        <!-- 主线个股（精选）-->
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="top-stocks-manual-tab" data-bs-toggle="tab" data-bs-target="#top-stocks-manual"
-                    type="button" role="tab" aria-controls="top-stocks-manual" aria-selected="false">主线个股（人选）
+                    type="button" role="tab" aria-controls="top-stocks-manual" aria-selected="false">主线个股（精选）
             </button>
         </li>
     </ul>
@@ -1160,7 +1160,7 @@
             </div>
         </div>
 
-        <!-- 主线板块(人选) Tab -->
+        <!-- 主线板块(精选) Tab -->
         <div class="tab-pane fade" id="top-blocks-manual" role="tabpanel" aria-labelledby="top-blocks-manual-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -1283,7 +1283,7 @@
             </div>
         </div>
 
-        <!-- 主线个股(人选) Tab -->
+        <!-- 主线个股(精选) Tab -->
         <div class="tab-pane fade" id="top-stocks-manual" role="tabpanel" aria-labelledby="top-stocks-manual-tab">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -1303,7 +1303,7 @@
                         <select id="filterTopStocksManual__topStrategyType" class="form-select form-select-sm"
                                 style="width:auto">
                             <option value="1">机选</option>
-                            <option value="2" selected>人选</option>
+                            <option value="2" selected>精选</option>
                             <option value="3">历史新高</option>
                             <option value="4">极多头</option>
                             <option value="5">RPS三线红</option>
@@ -1645,8 +1645,8 @@
                         <option value="QC">清仓列表</option>
                         <option value="ZXBK(JX)">主线板块列表（机选）</option>
                         <option value="ZXGG(JX)">主线个股列表（机选）</option>
-                        <option value="ZXBK(RX)">主线板块列表（人选）</option>
-                        <option value="ZXGG(RX)">主线个股列表（人选）</option>
+                        <option value="ZXBK(RX)">主线板块列表（精选）</option>
+                        <option value="ZXGG(RX)">主线个股列表（精选）</option>
                     </select>
                 </div>
                 <div id="syncConfirmationMessage" class="alert alert-info" style="display: none;">
@@ -1703,14 +1703,14 @@
     let topStocksSortState = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
 
 
-    // 主线板块/个股数据 (人选)
+    // 主线板块/个股数据 (精选)
     let topBlocksDataManual = [];
     let topStocksDataManual = [];
     let topBlockAvgPctDataManual = {};
     let topStockAvgPctDataManual = {};
-    // 存储排序状态 (主线板块 人选)
+    // 存储排序状态 (主线板块 精选)
     let topBlocksManualSortState = {column: 'topStockSize', order: 'desc'}; // 默认按topStockSize倒序
-    // 存储排序状态 (主线个股 人选)
+    // 存储排序状态 (主线个股 精选)
     let topStocksManualSortState = {column: 'topBlockSize', order: 'desc'}; // 默认按topBlockSize倒序
 
 
@@ -1726,7 +1726,7 @@
     // - 新增：主线板块/个股当前日期 (机选) -
     let topBlocksCurrentDate = today; // 默认为今天
     let topStocksCurrentDate = today; // 默认为今天
-    // - 新增：主线板块/个股当前日期 (人选) -
+    // - 新增：主线板块/个股当前日期 (精选) -
     let topBlocksCurrentDateManual = today; // 默认为今天
     let topStocksCurrentDateManual = today; // 默认为今天
 
@@ -2482,11 +2482,11 @@
         } else if (selectedCode === 'ZXBK(RX)') {
             selectedCode = 'ZXBK';
             selectedData = topBlocksDataManual;
-            dataSourceName = '主线板块列表（人选）';
+            dataSourceName = '主线板块列表（精选）';
         } else if (selectedCode === 'ZXGG(RX)') {
             selectedCode = 'ZXGG';
             selectedData = topStocksDataManual;
-            dataSourceName = '主线个股列表（人选）';
+            dataSourceName = '主线个股列表（精选）';
         }
 
         if (selectedData && selectedData.length > 0) {
@@ -2548,11 +2548,11 @@
         } else if (selectedCode === 'ZXBK(RX)') {
             selectedCode = 'ZXBK';
             selectedData = topBlocksDataManual;
-            dataSourceName = '主线板块列表（人选）';
+            dataSourceName = '主线板块列表（精选）';
         } else if (selectedCode === 'ZXGG(RX)') {
             selectedCode = 'ZXGG';
             selectedData = topStocksDataManual;
-            dataSourceName = '主线个股列表（人选）';
+            dataSourceName = '主线个股列表（精选）';
         }
 
         if (!selectedData || selectedData.length === 0) {
@@ -3771,7 +3771,7 @@
     }
 
 
-    // ----------------------------------------- 主线板块 列表（人选）-----------------------------------------------------
+    // ----------------------------------------- 主线板块 列表（精选）-----------------------------------------------------
 
 
     // 加载
@@ -3792,7 +3792,7 @@
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
-                    throw new Error(data.msg || '获取主线板块列表(人选)失败');
+                    throw new Error(data.msg || '获取主线板块列表(精选)失败');
                 }
                 topBlockAvgPctDataManual = data.data.topBlockAvgPctDTO;
 
@@ -3817,7 +3817,7 @@
                 if (!topBlocksDataManual || topBlocksDataManual.length === 0) {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
-                    document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
+                    document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（精选）（${date}）（0）`;
                     // 移除平均值行
                     const thead = document.querySelector('#topBlocksTableManual thead');
                     if (thead) {
@@ -3834,9 +3834,9 @@
                 displayTopBlocksManual(topBlocksDataManual);
             })
             .catch(error => {
-                console.error('获取主线板块列表(人选)失败:', error);
+                console.error('获取主线板块列表(精选)失败:', error);
                 tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${date}）（0）`;
+                document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（精选）（${date}）（0）`;
             })
             .finally(() => {
                 buttonInit('refreshTopBlocksManualButton', originalText);
@@ -3866,7 +3866,7 @@
         if (sortedBlocksManual.length === 0) {
             messageDiv.style.display = 'block';
             messageDiv.textContent = '暂无数据';
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlocksCurrentDateManual}）（0）`;
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（精选）（${topBlocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
             sortedBlocksManual.forEach((block, index) => {
@@ -3905,7 +3905,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（人选）（${topBlockAvgPctDataManual.date}）（${sortedBlocksManual.length}）`;
+            document.getElementById('topBlocksManualCardTitle').textContent = `主线板块列表（精选）（${topBlockAvgPctDataManual.date}）（${sortedBlocksManual.length}）`;
         }
     }
 
@@ -4017,7 +4017,7 @@
     }
 
 
-    // ----------------------------------------- 主线个股 列表（人选）-----------------------------------------------------
+    // ----------------------------------------- 主线个股 列表（精选）-----------------------------------------------------
 
 
     // 加载
@@ -4028,7 +4028,9 @@
         // 策略类型
         const type = document.getElementById('filterTopStocksManual__topStrategyType').value;
         // 股票类型
-        const stockType = document.getElementById('filterTopStocksManual__topPoolType').value;
+        const topPoolType = document.getElementById('filterTopStocksManual__topPoolType').value;
+        // 板块/ETF/个股
+        const stockType = topPoolType === '2' ? 2 : topPoolType === '3' ? 1 : 1;
 
 
         const tbody = document.querySelector('#topStocksTableManual tbody');
@@ -4046,7 +4048,7 @@
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
-                    throw new Error(data.msg || '获取主线个股列表(人选)失败');
+                    throw new Error(data.msg || '获取主线个股列表(精选)失败');
                 }
                 topStockAvgPctDataManual = data.data.topStockAvgPctDTO;
 
@@ -4070,7 +4072,7 @@
                 if (!topStocksDataManual || topStocksDataManual.length === 0) {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = '暂无数据';
-                    document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
+                    document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（精选）（${date}）（0）`;
                     // 移除平均值行
                     const thead = document.querySelector('#topStocksTableManual thead');
                     if (thead) {
@@ -4087,9 +4089,9 @@
                 displayTopStocksManual(topStocksDataManual);
             })
             .catch(error => {
-                console.error('获取主线个股列表(人选)失败:', error);
+                console.error('获取主线个股列表(精选)失败:', error);
                 tbody.innerHTML = '<tr><td colspan="14">加载失败：' + error.message + '</td></tr>';
-                document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${date}）（0）`;
+                document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（精选）（${date}）（0）`;
             })
             .finally(() => {
                 buttonInit('refreshTopStocksManualButton', originalText);
@@ -4122,7 +4124,7 @@
         if (sortedStocksManual.length === 0) {
             messageDiv.style.display = 'block';
             messageDiv.textContent = '暂无数据';
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStocksCurrentDateManual}）（0）`;
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（精选）（${topStocksCurrentDateManual}）（0）`;
         } else {
             messageDiv.style.display = 'none';
             sortedStocksManual.forEach((stock, index) => {
@@ -4166,7 +4168,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（人选）（${topStockAvgPctDataManual.date}）（${sortedStocksManual.length}）`;
+            document.getElementById('topStocksManualCardTitle').textContent = `主线个股列表（精选）（${topStockAvgPctDataManual.date}）（${sortedStocksManual.length}）`;
 
 
             // 为新渲染的复选框添加事件监听器
@@ -4336,10 +4338,10 @@
     }
 
 
-    // ------- 主线个股（人选）：支持勾选（等比买入 / 批量删除）
+    // ------- 主线个股（精选）：支持勾选（等比买入 / 批量删除）
 
 
-    // 主线个股（人选）  ->   复选框 事件监听
+    // 主线个股（精选）  ->   复选框 事件监听
     function attachTopStocksManualCheckboxListeners() {
         const checkboxes = document.querySelectorAll('.top-stocks-manual-checkbox');
         const selectAllCheckbox = document.getElementById('topStocksManualSelectAllCheckboxHeader');
@@ -4362,7 +4364,7 @@
         }
     }
 
-    // 主线个股（人选）  ->   全选/取消全选
+    // 主线个股（精选）  ->   全选/取消全选
     function updateTopStocksManualSelectAllState() {
         const checkboxes = document.querySelectorAll('.top-stocks-manual-checkbox');
         const selectAllCheckbox = document.getElementById('topStocksManualSelectAllCheckboxHeader');
@@ -4391,7 +4393,7 @@
     }
 
 
-    // ------- 主线个股（人选）：一键等比买入（支持勾选）
+    // ------- 主线个股（精选）：一键等比买入（支持勾选）
 
     // 1. 按钮
     function handleBuyNewPosition() {
@@ -4530,7 +4532,7 @@
                 alert(`【一键等比买入（调仓换股）】操作成功！`);
                 // 可选：刷新持仓或主线个股数据
                 loadPositions(); // 如果需要 刷新持仓
-                loadTopStocksManual(); // 如果需要 刷新主线个股（人选）
+                loadTopStocksManual(); // 如果需要 刷新主线个股（精选）
             } else {
                 const errorMsg = data.msg || '操作失败，未知错误。';
                 alert(`【一键等比买入（调仓换股）】失败：${errorMsg}`);
@@ -4551,7 +4553,7 @@
     }
 
 
-    // 主线个股（人选）- 删除（单个）
+    // 主线个股（精选）- 删除（单个）
     function deleteTopStockManual(stockCode, buttonElement) {
         const date = topStockAvgPctDataManual.date;
 
@@ -4575,12 +4577,12 @@
                 }
             })
             .catch(error => {
-                console.error('删除主线个股列表（人选）单行失败:', stockCode, error);
+                console.error('删除主线个股列表（精选）单行失败:', stockCode, error);
                 alert(`删除请求失败：${error.message || error}`);
             });
     }
 
-    // 主线个股（人选）- 批量删除
+    // 主线个股（精选）- 批量删除
     function batchDeleteTopStocksManual() {
         const checkboxes = document.querySelectorAll('#topStocksTableManual tbody input[type="checkbox"]:checked');
         if (checkboxes.length === 0) {
@@ -4619,7 +4621,7 @@
                 }
             })
             .catch(error => {
-                console.error('删除主线个股列表（人选）失败:', error);
+                console.error('删除主线个股列表（精选）失败:', error);
                 alert(`删除请求失败：${error.message || error}`);
             });
     }
@@ -4737,7 +4739,7 @@
         }
 
 
-        // -------------------------- 主线 板块/个股（人选）
+        // -------------------------- 主线 板块/个股（精选）
 
 
         // 主线板块/个股   日期、刷新 按钮事件
@@ -4767,7 +4769,8 @@
             });
 
             document.getElementById('refreshTopStocksManualButton').addEventListener('click', () => loadTopStocksManual(topStocksCurrentDateManual));
-            document.getElementById('filterTopStocksManual__topStrategyType').addEventListener('change', () => loadTopStocksManual(topBlocksCurrentDateManual));
+            document.getElementById('filterTopStocksManual__topStrategyType').addEventListener('change', () => loadTopStocksManual(topStocksCurrentDateManual));
+            document.getElementById('filterTopStocksManual__topPoolType').addEventListener('change', () => loadTopStocksManual(topStocksCurrentDateManual));
         }
 
 
@@ -4802,7 +4805,7 @@
         }
 
 
-        // 人选
+        // 精选
         if (topBlocksManualTab) {
             topBlocksManualTab.addEventListener('shown.bs.tab', function (event) {
                 if (!hasLoadedTopBlocksManual) {
@@ -4933,7 +4936,7 @@
         }
 
 
-        // 主线个股（人选）- 批量删除
+        // 主线个股（精选）- 批量删除
         document.getElementById('batchDeleteTopStocksManualButton').addEventListener('click', batchDeleteTopStocksManual);
 
 
@@ -4946,7 +4949,7 @@
                 cancelOrder(date, wtbh, e.target);
             }
 
-            // 主线个股（人选）：删除（单个）
+            // 主线个股（精选）：删除（单个）
             if (e.target.classList.contains('btn-stockManual-delete-row')) {
                 const stockCode = e.target.getAttribute('data-stockcode'); // 个股代码
                 deleteTopStockManual(stockCode, e.target);

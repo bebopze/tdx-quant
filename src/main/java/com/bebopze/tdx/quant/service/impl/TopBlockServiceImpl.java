@@ -705,7 +705,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaTopBlockDO entity = CollectionUtils.isEmpty(lastEntityList) ? null : lastEntityList.get(0); // 倒序
+        QaTopBlockDO entity = CollectionUtils.isEmpty(lastEntityList) ? null : lastEntityList.getFirst(); // 倒序
         if (entity == null) {
             return dto;
         }

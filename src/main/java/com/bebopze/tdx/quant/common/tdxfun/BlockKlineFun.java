@@ -252,17 +252,38 @@ public class BlockKlineFun {
                                 .orElse(0);
 
 
+        double open_change_ratio = list.stream()
+                                       .mapToDouble(k -> k.getOpen() == null ? 0 : k.getOpen() / (k.getClose() - k.getChange_price()) - 1)
+                                       .average()
+                                       .orElse(0);
+
+        double high_change_ratio = list.stream()
+                                       .mapToDouble(k -> k.getHigh() == null ? 0 : k.getHigh() / (k.getClose() - k.getChange_price()) - 1)
+                                       .average()
+                                       .orElse(0);
+
+        double low_change_ratio = list.stream()
+                                      .mapToDouble(k -> k.getLow() == null ? 0 : k.getLow() / (k.getClose() - k.getChange_price()) - 1)
+                                      .average()
+                                      .orElse(0);
+
+
         // 收盘价（现价）
         double close = prevClose * (1 + change_pct * 0.01);
 
-        double open = prevSnapshot__today_klineDTO == null ? close : prevSnapshot__today_klineDTO.getOpen();
-        double high = prevSnapshot__today_klineDTO == null ? close : Math.max(prevSnapshot__today_klineDTO.getHigh(), close);
-        double low = prevSnapshot__today_klineDTO == null ? close : Math.min(prevSnapshot__today_klineDTO.getLow(), close);
+
+        double open = prevClose * (1 + open_change_ratio);
+        double high = prevClose * (1 + high_change_ratio);
+        double low = prevClose * (1 + low_change_ratio);
+
+//        double open = prevSnapshot__today_klineDTO == null ? close : prevSnapshot__today_klineDTO.getOpen();
+//        double high = prevSnapshot__today_klineDTO == null ? close : Math.max(prevSnapshot__today_klineDTO.getHigh(), close);
+//        double low = prevSnapshot__today_klineDTO == null ? close : Math.min(prevSnapshot__today_klineDTO.getLow(), close);
 
 
         KlineDTO dto = new KlineDTO();
 
-        dto.setDate(list.get(0).getDate());
+        dto.setDate(list.getFirst().getDate());
 
         dto.setOpen(open);
         dto.setHigh(high);
