@@ -1,8 +1,6 @@
 package com.bebopze.tdx.quant.client;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineListSinaResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -16,7 +14,6 @@ import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.client.EastMoneyKlineAPI.lastTradeDate;
@@ -33,7 +30,7 @@ public class SinaKlineAPI {
 
 
     /**
-     * 东方财富   ->   批量拉取  全A（ETF） 实时行情          // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
+     * 新浪财经   ->   批量拉取  全A（ETF） 实时行情          // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
      *
      * @return
      */
@@ -58,11 +55,15 @@ public class SinaKlineAPI {
 
 
     /**
-     * 东方财富  ->  批量拉取 全A 实时行情               // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
+     * 行情中心首页 > A股 > 分类 > 沪深A股
+     *
+     *
+     * 新浪财经  ->  批量拉取 全A 实时行情               // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
      *
      * @return
      */
     public static List<StockSnapshotKlineDTO> pullAllStockSnapshotKline() {
+        log.info("pullAllStockSnapshotKline - start");
 
 
         int pageNum = 1;
@@ -84,31 +85,14 @@ public class SinaKlineAPI {
 
 
             String url = allStockKlineUrl(pageNum++, pageSize);
-
             String result = HttpUtil.doGet(url, null);
 
 
-            JSONArray jsonArray = JSON.parseArray(result);
-            if (CollectionUtils.isNotEmpty(jsonArray)) {
-                log.info("/quotes_service/api/json_v2.php/Market_Center.getHQNodeData   suc     >>>     pageNum : {} , pageSize : {} , pageTime : {} , totalTime : {} , result : {}",
-                         pageNum - 1, pageSize, DateTimeUtil.formatNow2Hms(page_start), DateTimeUtil.formatNow2Hms(start), result);
+            List<StockKlineListSinaResp> dataList = JSON.parseArray(result, StockKlineListSinaResp.class);
+            if (CollectionUtils.isNotEmpty(dataList)) {
+                log.info("/quotes_service/api/json_v2.php/Market_Center.getHQNodeData - suc     >>>     pageNum : {} , pageSize : {} , dataSize : {} , pageTime : {} , totalTime : {} , result : {}",
+                         pageNum - 1, pageSize, dataList.size(), DateTimeUtil.formatNow2Hms(page_start), DateTimeUtil.formatNow2Hms(start), result);
             }
-
-
-            List<StockKlineListSinaResp> dataList = jsonArray.stream()
-                                                             .map(e -> {
-
-                                                                 JSONObject json = (JSONObject) e;
-
-//                                                                 // 包含大量 退市/停牌 个股（东方财富 A股 -> 5735）
-//                                                                 if (isErrStock(json)) {
-//                                                                     log.warn("个股行情 异常 -> 退市/停牌/未上市/盘前     >>>     {} {}", json.getString("f12"), json.getString("f14"));
-//                                                                     return null;
-//                                                                 }
-
-                                                                 return json.toJavaObject(StockKlineListSinaResp.class);
-
-                                                             }).filter(Objects::nonNull).collect(Collectors.toList());
 
 
             // ------------------------------------------------------
@@ -122,7 +106,7 @@ public class SinaKlineAPI {
             // ------------------------------------------------------ total: 5738     ->     58页
 
 
-            if (jsonArray.size() < pageSize || dtoList.size() > 7500 || pageNum > 75) {
+            if (dataList.size() < pageSize || dtoList.size() > 7500 || pageNum > 75) {
                 break;
             }
 
@@ -132,6 +116,7 @@ public class SinaKlineAPI {
         }
 
 
+        log.info("pullAllStockSnapshotKline - end     >>>     size : {} , totalTime : {}", dtoList.size(), DateTimeUtil.formatNow2Hms(start));
         return dtoList;
     }
 
@@ -157,6 +142,7 @@ public class SinaKlineAPI {
      */
     @Deprecated
     public static List<StockSnapshotKlineDTO> pullAllETFSnapshotKline() {
+        log.info("pullAllETFSnapshotKline - start");
 
 
         int pageNum = 1;
@@ -170,36 +156,22 @@ public class SinaKlineAPI {
 
 
         // ------------------------------------------------------------------
+        long start = System.currentTimeMillis();
 
 
         while (true) {
+            long page_start = System.currentTimeMillis();
+
 
             String url = allETFKlineUrl(pageNum++, pageSize);
-
             String result = HttpUtil.doGet(url, null);
 
 
-            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("rc") == 0) {
-                log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
+            List<StockKlineListSinaResp> dataList = JSON.parseArray(result, StockKlineListSinaResp.class);
+            if (CollectionUtils.isNotEmpty(dataList)) {
+                log.info("/quotes_service/api/json_v2.php/Market_Center.getHQNodeDataSimple - suc     >>>     pageNum : {} , pageSize : {} , dataSize : {} , pageTime : {} , totalTime : {} , result : {}",
+                         pageNum - 1, pageSize, dataList.size(), DateTimeUtil.formatNow2Hms(page_start), DateTimeUtil.formatNow2Hms(start), result);
             }
-
-
-            JSONArray jsonArray = resultJson.getJSONObject("data").getJSONArray("diff");
-
-            List<StockKlineListSinaResp> dataList = jsonArray.stream()
-                                                             .map(e -> {
-
-                                                                 JSONObject json = (JSONObject) e;
-
-//                                                                 // 包含大量 退市/停牌 个股（ETF）（东方财富 A股 -> 5735）
-//                                                                 if (isErrStock(json)) {
-//                                                                     return null;
-//                                                                 }
-
-                                                                 return json.toJavaObject(StockKlineListSinaResp.class);
-
-                                                             }).filter(Objects::nonNull).collect(Collectors.toList());
 
 
             // ------------------------------------------------------
@@ -210,10 +182,10 @@ public class SinaKlineAPI {
             dtoList.addAll(pageDTOList);
 
 
-            // ------------------------------------------------------ total: 1213     ->     13页
+            // ------------------------------------------------------ total: 1405     ->     15页
 
 
-            if (jsonArray.size() < pageSize || dtoList.size() > 2000 || pageNum > 20) {
+            if (dataList.size() < pageSize || dtoList.size() > 3000 || pageNum > 30) {
                 break;
             }
 
@@ -223,6 +195,7 @@ public class SinaKlineAPI {
         }
 
 
+        log.info("pullAllETFSnapshotKline - end     >>>     size : {} , totalTime : {}", dtoList.size(), DateTimeUtil.formatNow2Hms(start));
         return dtoList;
     }
 
@@ -347,6 +320,43 @@ public class SinaKlineAPI {
 
 
     /**
+     * 新浪财经 > 行情中心首页 > 基金 > ETF基金行情
+     *
+     *
+     * -                                        https://vip.stock.finance.sina.com.cn/mkt/#etf_hq_fund
+     *
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    @SneakyThrows
+    private static String allETFKlineUrl(int pageNum, int pageSize) {
+
+
+        // https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeDataSimple?
+        //
+        // page=5&num=80&sort=symbol&asc=0&node=etf_hq_fund&_s_r_a=page
+
+
+        String url = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeDataSimple?" +
+
+                "&node=etf_hq_fund&_s_r_a=page" +
+
+                // 排序
+                "&sort=symbol" +       // f12 - 股票code
+                "&asc=0" +             // 0-正序（小->大）
+
+
+                // 分页
+                "&page=" + pageNum +
+                "&num=" + pageSize;       // pageSize  ->  最大值100
+
+
+        return url;
+    }
+
+
+    /**
      * 新浪财经 > 基金数据中心首页 > 基金行情 > ETF基金
      *
      * -                                        https://vip.stock.finance.sina.com.cn/fund_center/index.html#jjhqetf
@@ -356,7 +366,7 @@ public class SinaKlineAPI {
      * @return
      */
     @SneakyThrows
-    private static String allETFKlineUrl(int pageNum, int pageSize) {
+    private static String allETFKlineUrl_2(int pageNum, int pageSize) {
 
 
         // https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp.php/IO.XSRV2.CallbackList['1KnUEEthTLUr9FAR']/Market_Center.getHQNodeDataSimple?page=1&num=80&sort=symbol&asc=0&node=etf_hq_fund&%5Bobject%20HTMLDivElement%5D=n0r9
@@ -387,16 +397,12 @@ public class SinaKlineAPI {
 
 
     public static void main(String[] args) {
-
-        String stockCode = "300059";
-
-
         long start = System.currentTimeMillis();
 
 
-        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllStockSnapshotKline();
-        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllETFSnapshotKline();
-        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
+//        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllStockSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllETFSnapshotKline();
+//        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
 
 
         System.out.println(stockSnapshotKlineDTOS.size());
@@ -404,6 +410,5 @@ public class SinaKlineAPI {
 
         System.out.println("耗时：" + DateTimeUtil.formatNow2Hms(start));
     }
-
 
 }

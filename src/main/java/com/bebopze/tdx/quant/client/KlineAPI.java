@@ -148,6 +148,7 @@ public class KlineAPI {
         // 雪球
         if (klineDTOList == null) {
             log.info("pullAllStockSnapshotKline     >>>     使用 雪球 API");
+
         }
 
 
@@ -170,12 +171,12 @@ public class KlineAPI {
         List<StockSnapshotKlineDTO> klineDTOList = null;
 
 
-        // 东方财富
-        try {
-            klineDTOList = EastMoneyKlineAPI.pullAllETFSnapshotKline();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
+//        // 东方财富
+//        try {
+//            klineDTOList = EastMoneyKlineAPI.pullAllETFSnapshotKline();
+//        } catch (Exception e) {
+//            log.error(e.getMessage(), e);
+//        }
 
 
         // 新浪财经
@@ -187,8 +188,8 @@ public class KlineAPI {
 
         // 雪球
         if (klineDTOList == null) {
-
             log.info("pullAllETFSnapshotKline     >>>     使用 雪球 API");
+
         }
 
 
@@ -213,12 +214,15 @@ public class KlineAPI {
 
 
         List<StockSnapshotKlineDTO> stockDTOList = pullAllStockSnapshotKline();
-        // List<StockSnapshotKlineDTO> etfDTOList = pullAllETFSnapshotKline();
-
-        // stockDTOList.addAll(etfDTOList);
+        List<StockSnapshotKlineDTO> etfDTOList = pullAllETFSnapshotKline();
 
 
-        log.info("pullAllStockETFSnapshotKline     >>>     size : {} , time : {}", stockDTOList.size(), DateTimeUtil.formatNow2Hms(start));
+        int stock_size = stockDTOList.size();
+        stockDTOList.addAll(etfDTOList);
+
+
+        log.info("pullAllStockETFSnapshotKline     >>>     totalSize : {} , stock_size : {} , ETF_size : {} , time : {}",
+                 stockDTOList.size(), stock_size, etfDTOList.size(), DateTimeUtil.formatNow2Hms(start));
 
         return stockDTOList;
     }
