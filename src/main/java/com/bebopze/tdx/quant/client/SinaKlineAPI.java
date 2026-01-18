@@ -211,38 +211,41 @@ public class SinaKlineAPI {
                                                                             LocalDate date) {
 
 
-        return dataList.parallelStream().map(e -> {
+        return dataList.stream()
+                       // 停牌   ->   价格=0（新浪API  ->  停牌时，price 返回0）
+                       .filter(e -> e.getTrade() != 0)
+                       .map(e -> {
 
-            StockSnapshotKlineDTO dto = new StockSnapshotKlineDTO();
+                           StockSnapshotKlineDTO dto = new StockSnapshotKlineDTO();
 
-            dto.setStockCode(e.getCode());
-            dto.setStockName(e.getName());
+                           dto.setStockCode(e.getCode());
+                           dto.setStockName(e.getName());
 
-            dto.setPrevClose(e.getSettlement());
-
-
-            // -------------------------------
-
-
-            dto.setDate(date);
-
-            dto.setOpen(e.getOpen());
-            dto.setHigh(e.getHigh());
-            dto.setLow(e.getLow());
-            dto.setClose(e.getTrade());
+                           dto.setPrevClose(e.getSettlement());
 
 
-            dto.setVol(e.getVolume());
-            dto.setAmo(e.getAmount());
-
-            dto.setRange_pct(e.getRangePct());
-            dto.setChange_pct(e.getChangepercent());
-            dto.setChange_price(e.getPricechange());
-            dto.setTurnover_pct(e.getTurnoverratio());
+                           // -------------------------------
 
 
-            return dto;
-        }).collect(Collectors.toList());
+                           dto.setDate(date);
+
+                           dto.setOpen(e.getOpen());
+                           dto.setHigh(e.getHigh());
+                           dto.setLow(e.getLow());
+                           dto.setClose(e.getTrade());
+
+
+                           dto.setVol(e.getVolume());
+                           dto.setAmo(e.getAmount());
+
+                           dto.setRange_pct(e.getRangePct());
+                           dto.setChange_pct(e.getChangepercent());
+                           dto.setChange_price(e.getPricechange());
+                           dto.setTurnover_pct(e.getTurnoverratio());
+
+
+                           return dto;
+                       }).collect(Collectors.toList());
 
     }
 

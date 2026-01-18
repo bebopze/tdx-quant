@@ -107,7 +107,9 @@ public class StockKlineListSinaResp {
 
     // 振幅       (H/L - 1) x 100%
     public double getRangePct() {
-        return NumUtil.of((high / low - 1) * 100);
+        return Double.isNaN(high) || Double.isNaN(low) || high == 0 || low == 0 ?
+                0 :
+                NumUtil.of((high / low - 1) * 100);
     }
 
 }
