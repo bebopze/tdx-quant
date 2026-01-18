@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -73,15 +72,10 @@ public class BlockKlineFun {
 
 
         // 1、加载数据
-//        BacktestCache data = initDataService.incrUpdateInitData();
         if (CollectionUtils.isEmpty(data.blockDOList)) {
             initDataServiceImpl.loadAllBlockKline(null, null, false);
             initDataServiceImpl.loadAllBlockRelaStock();
         }
-
-
-//        List<BaseBlockDO> blockDOList = baseBlockService.listAllKline();
-//        List<BaseBlockDO> blockDOList = baseBlockService.listAllRpsKline();
 
 
         // 2、当前交易日
@@ -99,23 +93,16 @@ public class BlockKlineFun {
             // 板块-个股 KlineDTO列表
             List<KlineDTO> allStock_klineDTOList = stockCodeSet.stream()
                                                                .map(stockCode -> {
-//                                                                   BaseStockDO stockDO = data.codeStockMap.get(stockCode);
-//                                                                   List<KlineDTO> stock_klineDTOList = stockDO.getKlineDTOList();
-//
-//                                                                   KlineDTO klineDTO = stock_klineDTOList.get(stock_klineDTOList.size() - 1);
-//                                                                   if (klineDTO.getDate().isEqual(date)) {
-//                                                                       return klineDTO;
-//                                                                   }
-//                                                                   return null;
-
                                                                    BaseStockDO stockDO = codeStockMap.get(stockCode);
 
                                                                    if (stockDO == null
                                                                            // 未上市/停牌/退市
                                                                            || stockDO.getTradeDate() == null
-                                                                           || !stockDO.getTradeDate().isEqual(date)) {
+                                                                           || !stockDO.getTradeDate().isEqual(date)
+                                                                           || stockDO.getClose() == null
+                                                                           || stockDO.getClose().doubleValue() == 0) {
 
-                                                                       log.warn("未上市/停牌/退市     >>>     [{}-{}]", stockCode, stockDO != null ? stockDO.getName() : null);
+                                                                       log.warn("未上市/停牌/退市     >>>     [{}-{}] , close : {}", stockCode, stockDO != null ? stockDO.getName() : null, stockDO != null ? stockDO.getClose() : null);
                                                                        return null;
                                                                    }
 
@@ -135,7 +122,7 @@ public class BlockKlineFun {
             // prev_close
             double prevClose = blockDO.getTradeDate().isEqual(date) ? blockDO.getPrevClose().doubleValue() : 0;
             // 之前时刻计算的 当日 KlineDTO
-            KlineDTO prevSnapshot__today_klineDTO = blockDO.getTradeDate().isEqual(date) ? ListUtil.last(old_klineDTOList) : null;
+            // KlineDTO prevSnapshot__today_klineDTO = blockDO.getTradeDate().isEqual(date) ? ListUtil.last(old_klineDTOList) : null;
 
 
             // 从大到小排序索引，避免索引变化影响
@@ -158,7 +145,7 @@ public class BlockKlineFun {
 
 
             // 个股 KlineDTO列表   ->   板块指数 KlineDTO
-            KlineDTO block_klineDTO = calcAndFillBlockKlineAll(allStock_klineDTOList, prevClose, prevSnapshot__today_klineDTO);
+            KlineDTO block_klineDTO = calcAndFillBlockKlineAll(allStock_klineDTOList, prevClose);
             if (block_klineDTO == null) {
                 return;
             }
@@ -231,9 +218,7 @@ public class BlockKlineFun {
     }
 
 
-    public static KlineDTO calcAndFillBlockKlineAll(List<KlineDTO> list,
-                                                    double prevClose,
-                                                    KlineDTO prevSnapshot__today_klineDTO) {
+    public static KlineDTO calcAndFillBlockKlineAll(List<KlineDTO> list, double prevClose) {
         if (CollectionUtils.isEmpty(list)) {
             return null;
         }
@@ -250,6 +235,11 @@ public class BlockKlineFun {
                                 .mapToDouble(k -> k.getChange_pct() == null ? 0 : k.getChange_pct())
                                 .average()
                                 .orElse(0);
+        // 换手率 = 平均值
+        double turnover_pct = list.stream()
+                                  .mapToDouble(k -> k.getTurnover_pct() == null ? 0 : k.getTurnover_pct())
+                                  .average()
+                                  .orElse(0);
 
 
         double open_change_ratio = list.stream()
@@ -276,9 +266,8 @@ public class BlockKlineFun {
         double high = prevClose * (1 + high_change_ratio);
         double low = prevClose * (1 + low_change_ratio);
 
-//        double open = prevSnapshot__today_klineDTO == null ? close : prevSnapshot__today_klineDTO.getOpen();
-//        double high = prevSnapshot__today_klineDTO == null ? close : Math.max(prevSnapshot__today_klineDTO.getHigh(), close);
-//        double low = prevSnapshot__today_klineDTO == null ? close : Math.min(prevSnapshot__today_klineDTO.getLow(), close);
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         KlineDTO dto = new KlineDTO();
@@ -296,7 +285,7 @@ public class BlockKlineFun {
         dto.setRange_pct(of(high / low * 100 - 100));
         dto.setChange_pct(of(change_pct));
         dto.setChange_price(of(close - prevClose));
-        dto.setTurnover_pct(null);
+        dto.setTurnover_pct(turnover_pct);
 
         return dto;
     }
@@ -305,5 +294,6 @@ public class BlockKlineFun {
     private BigDecimal of2(Double val) {
         return NumUtil.double2Decimal(val);
     }
+
 
 }
