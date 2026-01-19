@@ -312,21 +312,31 @@
     <div class="task-section">
         <h2 class="section-title">📊 扩展数据计算（个股/板块）（每日执行N次）</h2>
 
-        <div class="form-group">
-            <label>N日参数（可选）:</label>
-            <input type="number" id="extDataN" placeholder="输入N值(0-100)" min="0" max="100">
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <span style="white-space: nowrap; font-weight: normal;">
+                N日参数（可选）（null：全量更新；>0：增量更新）：
+            </span>
+            <input type="number" id="extDataN"
+                   placeholder="输入N值(0-100)"
+                   min="0" max="100"
+                   style="width: 150px; padding: 6px 8px; box-sizing: border-box; flex-shrink: 0;">
         </div>
+
         <button class="btn-warning"
-                onclick="callApi('/api/extData/refreshExtDataAll?N=' + getExtDataN(), '扩展数据计算 - 个股/板块')">
-            🔄 扩展数据计算 - 个股/板块
-        </button>
-        <button class="btn-warning"
-                onclick="callApi('/api/extData/stock/calc?N=' + getExtDataN(), '扩展数据计算 - 个股')">
-            📈 扩展数据计算 - 个股
+                onclick="callApi('/api/extData/refreshExtDataAll?N=' + getExtDataN(), '扩展数据计算 - 板块/ETF/个股')">
+            🔄 扩展数据计算 - 板块/ETF/个股
         </button>
         <button class="btn-warning"
                 onclick="callApi('/api/extData/block/calc?N=' + getExtDataN(), '扩展数据计算 - 板块')">
             📊 扩展数据计算 - 板块
+        </button>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/stock/calc?stockType=2&N=' + getExtDataN(), '扩展数据计算 - ETF')">
+            📈 扩展数据计算 - ETF
+        </button>
+        <button class="btn-warning"
+                onclick="callApi('/api/extData/stock/calc?stockType=1&N=' + getExtDataN(), '扩展数据计算 - 个股')">
+            📈 扩展数据计算 - 个股
         </button>
     </div>
 
