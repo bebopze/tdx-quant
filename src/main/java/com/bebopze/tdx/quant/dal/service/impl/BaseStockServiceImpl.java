@@ -285,16 +285,23 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
                 break;
             }
 
+
             list.addAll(pageList);
-            lastId = pageList.get(pageList.size() - 1).getId();
+            lastId = pageList.getLast().getId();
 
 
-            log.info("listByCursor - page=[{}]     >>>     pageTime : {} , totalTime : {}",
-                     list.size() / pageSize, DateTimeUtil.formatNow2Hms(start_1), DateTimeUtil.formatNow2Hms(start));
+            int pageNum = (list.size() - 1) / pageSize + 1;
+            log.info("listByCursor - pageNum=[{}]     >>>     pageSize : {} , pageTime : {} , totalTime : {}",
+                     pageNum, pageList.size(), DateTimeUtil.formatNow2Hms(start_1), DateTimeUtil.formatNow2Hms(start));
+
+
+            if (pageList.size() < pageSize) {
+                break;
+            }
         }
 
 
-        log.info("listByCursor     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start));
+        log.info("listByCursor     >>>     totalSize : {} , totalTime : {}", list.size(), DateTimeUtil.formatNow2Hms(start));
         return list;
     }
 
