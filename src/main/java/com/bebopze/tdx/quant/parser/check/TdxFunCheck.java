@@ -904,6 +904,8 @@ public class TdxFunCheck {
                     if (fullData) {
                         TdxFunResultDTO dto = convert2DTO(code, row);
                         dtoList.add(dto);
+
+                        date = dto.getDate();
                     }
                 }
             }

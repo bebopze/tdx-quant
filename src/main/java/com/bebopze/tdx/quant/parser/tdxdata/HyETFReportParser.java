@@ -11,12 +11,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
+import static com.bebopze.tdx.quant.parser.tdxdata.BlockReportParser.readLinesWithEncoding;
 
 
 /**
@@ -178,11 +177,10 @@ public class HyETFReportParser {
         List<TdxETFDTO> dtoList = Lists.newArrayList();
 
 
-        LocalDate date = null;
+        String code = null;
         try {
 
-            // List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
-            List<String> lines = FileUtils.readLines(file_ETF, "GBK");
+            List<String> lines = readLinesWithEncoding(file_ETF, "GBK");
             if (CollectionUtils.isEmpty(lines) || lines.size() < 2) {
                 return dtoList;
             }
@@ -237,13 +235,15 @@ public class HyETFReportParser {
                     if (fullData) {
                         TdxETFDTO dto = convert2DTO(row);
                         dtoList.add(dto);
+
+                        code = dto.getCode();
                     }
                 }
             }
 
 
         } catch (Exception e) {
-            log.error("err     >>>     code : {} , date : {} , exMsg : {}", null, date, e.getMessage(), e);
+            log.error("err     >>>     code : {} , exMsg : {}", code, e.getMessage(), e);
         }
 
 

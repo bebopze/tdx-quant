@@ -1276,6 +1276,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, Long> codeIdMap = baseStockService.codeIdMap();
 
 
+        List<BaseStockDO> ETF_entityList = Lists.newArrayList();
         etfList.forEach(dto -> {
 
 
@@ -1285,22 +1286,19 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // ETF
-            BaseStockDO baseStockDO = new BaseStockDO();
-            baseStockDO.setCode(stockCode);
-            baseStockDO.setName(stockName);
-            baseStockDO.setType(StockTypeEnum.ETF.type);
-            baseStockDO.setTdxMarketType(tdxMarketType);
+            BaseStockDO entity = new BaseStockDO();
+            entity.setCode(stockCode);
+            entity.setName(stockName);
+            entity.setType(StockTypeEnum.ETF.type);
+            entity.setTdxMarketType(tdxMarketType);
 
 
-            baseStockDO.setId(codeIdMap.get(stockCode));
-            baseStockService.saveOrUpdate(baseStockDO);
-
-
-//            if (stockId == null) {
-//                log.error("base_stock ETF - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
-//                          stockCode, stockId, JSON.toJSONString(baseStockDO));
-//            }
+            entity.setId(codeIdMap.get(stockCode));
+            ETF_entityList.add(entity);
         });
+
+
+        baseStockService.batchInsertOrUpdate(ETF_entityList);
     }
 
 
