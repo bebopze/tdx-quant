@@ -202,13 +202,29 @@
         <a href="task.html">← 返回主任务页面🚀</a>
     </div>
 
-    <!-- 数据解析相关 -->
+    <!-- 数据解析相关（全量配置 + 大盘量化 + kline/ext_data） -->
     <div class="task-section">
-        <h2 class="section-title">📄 通达信数据初始化（每月执行1次 -> 同步 新板块/个股、淘汰 过时板块/ST个股）</h2>
-        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/importAll', '一键导入所有数据')"
-                title="一键导入所有数据（板块/个股/ETF）">
-            🔄 一键导入所有数据
+        <h2 class="section-title">📄 全量 通达信数据初始化（每周执行1次 -> 同步 新板块/个股、淘汰 过时板块/ST个股）</h2>
+        <button class="btn-primary"
+                onclick="callApi('/api/parser/tdxdata/importAll', '一键导入所有配置数据【含 大盘量化 + kline/ext_data】')"
+                title="一键导入所有配置数据（板块/个股/ETF）【含 大盘量化 + kline/ext_data】">
+            🔄 一键导入所有配置数据（板块/个股/ETF）【含 大盘量化 + kline/ext_data】
         </button>
+    </div>
+
+    <!-- 数据解析相关（全量配置） -->
+    <div class="task-section">
+        <h2 class="section-title">📄 通达信 - 板块/个股/ETF/自定义板块/关联关系 -> 一键 初始化/刷新（每周执行1次 -> 同步
+            新板块/个股、淘汰 过时板块/ST个股）</h2>
+        <button class="btn-primary"
+                onclick="callApi('/api/parser/tdxdata/importAll/blockRelaStock', '一键导入 板块/个股/ETF/自定义板块/关联关系')"
+                title="一键导入所有配置数据（板块/个股/ETF）【不含 大盘量化 + kline/ext_data】">
+            🔄 一键导入所有配置数据（板块/个股/ETF）【不含 大盘量化 + kline/ext_data】
+        </button>
+
+        <!-- 分隔线 -->
+        <div style="height: 1px; background-color: #eee; margin: 20px 0;"></div>
+
         <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/blockCfg', '导入板块配置')"
                 title="导入板块配置（cfg文件 板块-个股 code关联）">
             📄 导入板块配置
