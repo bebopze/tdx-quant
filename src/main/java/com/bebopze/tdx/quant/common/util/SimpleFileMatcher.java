@@ -21,7 +21,7 @@ public class SimpleFileMatcher {
 
 
     /**
-     * 获取指定目录下匹配"ETF基金"的文件列表
+     * 获取指定目录下匹配 "ETF基金yyyyMMdd.txt" 的文件列表
      *
      * @return 文件列表（按照文件名 倒序）
      */
@@ -34,7 +34,7 @@ public class SimpleFileMatcher {
 
 
         return Arrays.stream(directory.listFiles())
-                     .filter(file -> file.isFile() && file.getName().startsWith(fileName))
+                     .filter(file -> file.isFile() && file.getName().startsWith(fileName) && file.getName().endsWith(".txt"))
                      .sorted((f1, f2) -> f2.getName().compareTo(f1.getName())) // 按文件名 降序
                      // .sorted((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified())) // 按文件修改日期 降序
                      .collect(Collectors.toList());

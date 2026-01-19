@@ -34,15 +34,21 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 public class BlockReportParser {
 
 
+    /**
+     * 系统自带板块   导出路径
+     */
+    private static final String SYS_BLOCK_PATH = TDX_PATH + "/T0002/export/A股/";
+
+
     // 行业板块 分为：普通行业、研究行业（需在通达信中 手动修改：板块指数设置 > [普通细分行业 / 研究行业三级]）  ==>   分2次 导出+导入：34[数据导出] > 板块成分导出
-    private static final String filePath_hy = TDX_PATH + "/T0002/export/行业板块.txt";
+    private static final String filePath_hy = SYS_BLOCK_PATH + "行业板块.txt";
 
 
-    private static final String filePath_gn = TDX_PATH + "/T0002/export/概念板块.txt";
-    private static final String filePath_fg = TDX_PATH + "/T0002/export/风格板块.txt";
-    private static final String filePath_dq = TDX_PATH + "/T0002/export/地区板块.txt";
-    private static final String filePath_zs = TDX_PATH + "/T0002/export/指数板块.txt";
-    private static final String filePath_zdy = TDX_PATH + "/T0002/export/自定义板块.txt";
+    private static final String filePath_gn = SYS_BLOCK_PATH + "概念板块.txt";
+    private static final String filePath_fg = SYS_BLOCK_PATH + "风格板块.txt";
+    private static final String filePath_dq = SYS_BLOCK_PATH + "地区板块.txt";
+    private static final String filePath_zs = SYS_BLOCK_PATH + "指数板块.txt";
+    private static final String filePath_zdy = SYS_BLOCK_PATH + "自定义板块.txt";
 
 
     public static void main(String[] args) {
@@ -226,7 +232,7 @@ public class BlockReportParser {
      * @return 文件行列表
      * @throws IOException 读取异常
      */
-    private static List<String> readLinesWithEncoding(File file, String charsetName) throws IOException {
+    public static List<String> readLinesWithEncoding(File file, String charsetName) throws IOException {
         // 首先尝试使用 GBK 编码（通达信文件通常是 GBK，GB2312的超集）
         try {
             return FileUtils.readLines(file, charsetName);
