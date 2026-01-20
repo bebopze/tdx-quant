@@ -11,6 +11,7 @@
         <result property="name" column="name"/>
         <result property="type" column="type"/>
         <result property="tdxMarketType" column="tdx_market_type"/>
+        <result property="blockName" column="block_name"/>
         <result property="tradeDate" column="trade_date"/>
         <result property="open" column="open"/>
         <result property="high" column="high"/>
@@ -70,6 +71,7 @@
                name,
                type,
                tdx_market_type,
+               block_name,
                trade_date,
                open,
                high,
@@ -111,7 +113,7 @@
         WHERE id > #{lastId}
 
         ORDER BY id
-            LIMIT #{pageSize}
+        LIMIT #{pageSize}
     </select>
 
 
@@ -157,12 +159,12 @@
     </select>
 
 
-    <insert id="batchInsert" parameterType="java.util.List">
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO base_stock
 
         (
-        code, name, type, tdx_market_type, trade_date,
-        open, high, low, close, prev_close,
+        code, name, type, tdx_market_type, block_name,
+        trade_date, open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
@@ -172,8 +174,8 @@
 
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.tradeDate},
-            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.blockName},
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
@@ -186,8 +188,8 @@
         INSERT INTO base_stock
 
         (
-        code, name, type, tdx_market_type, trade_date,
-        open, high, low, close, prev_close,
+        code, name, type, tdx_market_type, block_name,
+        trade_date, open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
@@ -197,8 +199,8 @@
 
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.tradeDate},
-            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.code}, #{item.name}, #{item.type}, #{item.tdxMarketType}, #{item.blockName},
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
@@ -214,8 +216,9 @@
         name = COALESCE(VALUES(name), name),
         type = COALESCE(VALUES(type), type),
         tdx_market_type = COALESCE(VALUES(tdx_market_type), tdx_market_type),
-        trade_date = COALESCE(VALUES(trade_date), trade_date),
+        block_name = COALESCE(VALUES(block_name), block_name),
 
+        trade_date = COALESCE(VALUES(trade_date), trade_date),
         open = COALESCE(VALUES(open), open),
         high = COALESCE(VALUES(high), high),
         low = COALESCE(VALUES(low), low),

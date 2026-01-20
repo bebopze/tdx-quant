@@ -59,7 +59,7 @@
     </select>
 
 
-    <insert id="batchInsert" parameterType="java.util.List">
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO qa_block_new_rela_stock_his
 
         (

@@ -144,13 +144,13 @@
     </select>
 
 
-    <insert id="batchInsert" parameterType="java.util.List">
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO base_block
 
         (
-        code, name, code_path, name_path, parent_id,
-        type, level, end_level, trade_date,
-        open, high, low, close, prev_close,
+        code, name, code_path, name_path,
+        parent_id, type, level, end_level,
+        trade_date, open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
@@ -160,9 +160,9 @@
 
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.code}, #{item.name}, #{item.codePath}, #{item.namePath}, #{item.parentId},
-            #{item.type}, #{item.level}, #{item.endLevel}, #{item.tradeDate},
-            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.code}, #{item.name}, #{item.codePath}, #{item.namePath},
+            IFNULL(#{item.parentId}, 0), IFNULL(#{item.type}, 0), IFNULL(#{item.level}, 0), IFNULL(#{item.endLevel}, 0),
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
@@ -175,9 +175,9 @@
         INSERT INTO base_block
 
         (
-        code, name, code_path, name_path, parent_id,
-        type, level, end_level, trade_date,
-        open, high, low, close, prev_close,
+        code, name, code_path, name_path,
+        parent_id, type, level, end_level,
+        trade_date,open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
@@ -188,10 +188,8 @@
         <foreach collection="list" item="item" separator=",">
             (
             #{item.code}, #{item.name}, #{item.codePath}, #{item.namePath},
-            IFNULL(#{item.parentId}, 0),
-            IFNULL(#{item.type}, 0), IFNULL(#{item.level}, 0), IFNULL(#{item.endLevel}, 0),
-            #{item.tradeDate},
-            #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            IFNULL(#{item.parentId}, 0), IFNULL(#{item.type}, 0), IFNULL(#{item.level}, 0), IFNULL(#{item.endLevel}, 0),
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
@@ -210,8 +208,8 @@
         type = COALESCE(VALUES(type), type),
         level = COALESCE(VALUES(level), level),
         end_level = COALESCE(VALUES(end_level), end_level),
-        trade_date = COALESCE(VALUES(trade_date), trade_date),
 
+        trade_date = COALESCE(VALUES(trade_date), trade_date),
         open = COALESCE(VALUES(open), open),
         high = COALESCE(VALUES(high), high),
         low = COALESCE(VALUES(low), low),
