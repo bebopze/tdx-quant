@@ -198,7 +198,7 @@
     </select>
 
 
-    <insert id="batchInsert" parameterType="java.util.List">
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO base_block_rela_stock
 
         (block_id, stock_id)
