@@ -51,4 +51,5 @@ public interface IQaTopBlockService extends IService<QaTopBlockDO> {
 
     int batchInsertOrUpdate(List<QaTopBlockDO> list);
 
+    int saveOrUpdateBatch(List<QaTopBlockDO> list);
 }

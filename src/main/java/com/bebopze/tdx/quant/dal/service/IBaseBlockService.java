@@ -60,4 +60,6 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
     int batchInsert(List<BaseBlockDO> list);
 
     int batchInsertOrUpdate(List<BaseBlockDO> list);
+
+    int saveOrUpdateBatch(List<BaseBlockDO> list);
 }

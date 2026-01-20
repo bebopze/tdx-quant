@@ -9,7 +9,7 @@ mode:
 dataSources:
   ds_common:
     dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    url: jdbc:mysql://localhost:3306/tdx?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
     username: root
     password: 123456
     driverClassName: com.mysql.cj.jdbc.Driver
@@ -31,7 +31,7 @@ dataSources:
 
   ds_0:
     dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/tdx_bt_0?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    url: jdbc:mysql://localhost:3306/tdx_bt_0?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
     username: root
     password: 123456
     driverClassName: com.mysql.cj.jdbc.Driver
@@ -53,7 +53,7 @@ dataSources:
 
   ds_1:
     dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/tdx_bt_1?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
+    url: jdbc:mysql://localhost:3306/tdx_bt_1?useSSL=false&serverTimezone=Asia/Shanghai&character_set_server=utf8mb4&useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&tcpKeepAlive=true&socketTimeout=300000&connectTimeout=300000
     username: root
     password: 123456
     driverClassName: com.mysql.cj.jdbc.Driver
