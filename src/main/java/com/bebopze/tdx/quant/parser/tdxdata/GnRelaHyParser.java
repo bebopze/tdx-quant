@@ -39,12 +39,6 @@ public class GnRelaHyParser {
     private static final String filePath = TDX_PATH + "/T0002/export/概念-行业.txt";
 
 
-    public static void main(String[] args) {
-        List<GnRelaHyDTO> dtoList = parse();
-        System.out.println(JSON.toJSONString(dtoList));
-    }
-
-
     /**
      * tdx 板块数据   ->     个股 - 行业BK（研究行业 + 普通/细分行业）
      * -
@@ -135,7 +129,7 @@ public class GnRelaHyParser {
         // 概念code - 普通行业code
         Map<String, String> gnCode__hyCode__map = Maps.newHashMap();
 
-        gnRelaHyDTOList.stream().forEach(e -> {
+        gnRelaHyDTOList.forEach(e -> {
 
             // 概念板块
             String gnCode = e.getGnCode();
@@ -168,5 +162,15 @@ public class GnRelaHyParser {
         private String lv1_yjhy_code;
         private String lv1_yjhy_name;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+        List<GnRelaHyDTO> dtoList = parse();
+        System.out.println(JSON.toJSONString(dtoList));
+    }
+
 
 }

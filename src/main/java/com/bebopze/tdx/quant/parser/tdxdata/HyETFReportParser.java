@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.util.SimpleFileMatcher;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.google.common.collect.Lists;
@@ -60,11 +59,33 @@ public class HyETFReportParser {
 
     /**
      * 1、解析 全量 [ETF基金] TXT报表
+     * 2、根据 ETF -> [细分行业+name] 去重     =>     同一[细分行业+name]  ->  保留最大 AMO 的ETF
+     * 3、List<TdxETFDTO>   转换为   List<BlockNewDTO>
+     *
+     * @return
+     */
+    public static List<TdxETFDTO> parseAndDistinct() {
+
+
+        // 解析 + 去重（细分行业）
+        List<TdxETFDTO> exportTxtDTOList = parseAndDistinct_0();
+
+
+        // 写回 tdx自定义板块   ->   行业ETF（HYETF）
+        write2Tdx__distinct_HyETF(exportTxtDTOList);
+
+
+        return exportTxtDTOList;
+    }
+
+
+    /**
+     * 1、解析 全量 [ETF基金] TXT报表
      * 2、根据 ETF -> [细分行业/name] 去重     =>     同一[细分行业/name]  ->  保留最大 AMO 的ETF
      *
      * @return
      */
-    public static List<TdxETFDTO> parseAndDistinct_0() {
+    private static List<TdxETFDTO> parseAndDistinct_0() {
 
         // 通达信 - ETF文件（行情报价 面板列表导出txt）
         File file_ETF = SimpleFileMatcher.getLastETFFile(basePath, fileName);
@@ -87,6 +108,12 @@ public class HyETFReportParser {
                             if (e.getAmount() > old_row.getAmount()) {
                                 log.info("同一[细分行业:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", 细分行业, old_row, e);
                                 hy__rowMap.put(细分行业, e);
+                            }
+
+
+                            if (e.code.equals("516270") || 细分行业.equals("新能源")) {
+                                TdxETFDTO tdxETFDTO = hy__rowMap.get(细分行业);
+                                log.debug("{}", tdxETFDTO);
                             }
                         });
 
@@ -121,38 +148,6 @@ public class HyETFReportParser {
                            .stream()
                            .sorted((o1, o2) -> o2.getCode().compareTo(o1.getCode()))   // code 正序
                            .collect(Collectors.toList());
-    }
-
-
-    /**
-     * 1、解析 全量 [ETF基金] TXT报表
-     * 2、根据 ETF -> [细分行业+name] 去重     =>     同一[细分行业+name]  ->  保留最大 AMO 的ETF
-     * 3、List<TdxETFDTO>   转换为   List<BlockNewDTO>
-     *
-     * @return
-     */
-    public static List<BlockNewParser.BlockNewDTO> parseAndDistinct() {
-
-
-        // 解析 + 去重（细分行业）
-        List<TdxETFDTO> exportTxtDTOList = parseAndDistinct_0();
-
-
-        // 写回 tdx自定义板块   ->   行业ETF（HYETF）
-        write2Tdx__distinct_HyETF(exportTxtDTOList);
-
-
-        // 转换为   BlockNewDTO
-        return exportTxtDTOList.stream()
-                               .map(etf -> {
-
-                                   String code = etf.getCode();
-                                   String name = etf.getName();
-                                   Integer tdxMarketType = StockMarketEnum.getTdxMarketType(code);
-
-                                   return new BlockNewParser.BlockNewDTO(code, name, tdxMarketType);
-                               })
-                               .collect(Collectors.toList());
     }
 
 
