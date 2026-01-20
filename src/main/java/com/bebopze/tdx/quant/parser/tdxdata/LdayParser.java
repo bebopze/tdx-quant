@@ -163,10 +163,10 @@ public class LdayParser {
 
             if (size(klineTxtReport__ldayDTOList) == 0 && size(lday__ldayDTOList) == 0) {
                 // 准 新股  ->  未上市/上市失败                    688688 蚂蚁金服
-                log.warn("parseByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                log.warn("parseLdayByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
                          stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
             } else {
-                log.error("parseByFilePath   err     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
+                log.error("parseLdayByFilePath   err     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
                           stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
             }
         }
@@ -341,21 +341,19 @@ public class LdayParser {
                 Assert.isTrue(DateTimeUtil.between(tradeDate, MARKET_START_DATE, LocalDate.now()), String.format("tradeDate=[%s]超出有效范围", tradeDate));
 
             } catch (Exception ex) {
-                log.error("parseByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
+                log.error("parseLdayByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
                           code, date, year, month, day);
                 continue;
             }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // 只记录   2017-01-01   以后的数据
             if (tradeDate.isBefore(KLINE_START_DATE)) {
                 continue;
             }
-
-
-//            if (tradeDate.isEqual(LocalDate.of(2024, 10, 9))) {
-//                System.out.println("-------- vol : " + vol);
-//            }
 
 
             if (Float.isNaN(preClose)) {
@@ -371,11 +369,20 @@ public class LdayParser {
             float rangePct = (high / low - 1) * 100;
 
 
-            // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};
-            // System.out.println(JSON.toJSONString(item));
-
-
             LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 成交额为0（停牌）
+            if (amount.doubleValue() == 0) {
+                log.error("parseLdayByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
+                continue;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             dtoList.add(dto);
@@ -561,7 +568,7 @@ public class LdayParser {
 
 
             // 盘后   ->   已下载 [盘后数据]     ->     以 xx.day 为准（舍弃 盘中导出 行情数据）
-            klineReport__ldayDTOList.remove(klineReport__ldayDTOList.size() - 1);
+            klineReport__ldayDTOList.removeLast();
             size1--;
         }
 
@@ -683,7 +690,7 @@ public class LdayParser {
         // ----------
 
 
-//        List<LdayDTO> stockDataList = parseByFilePath(filePath_zs);
+//        List<LdayDTO> stockDataList = parseLdayByFilePath(filePath_zs);
 //        for (LdayDTO e : stockDataList) {
 //            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), String.valueOf(e.amount), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
 //            System.out.println(JSON.toJSONString(item));

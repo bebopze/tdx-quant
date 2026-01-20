@@ -116,7 +116,7 @@ public class KlineTxtExportParser {
 
 
         List<LdayParser.LdayDTO> dtoList = Lists.newArrayList();
-        double preClose = Double.NaN;
+        double prevClose = Double.NaN;
 
 
         LocalDate date = null;
@@ -158,35 +158,42 @@ public class KlineTxtExportParser {
                     BigDecimal amount = new BigDecimal(strArr[6]);
 
 
+                    // -------------------------------------------------------------------------------------------------
+
+
                     // 只记录   2017-01-01   以后的数据
                     if (date.isBefore(KLINE_START_DATE)) {
                         continue;
                     }
 
 
-//                    if (date.isEqual(LocalDate.of(2024, 10, 9))) {
-//                        System.out.println("-------- vol : " + vol);
-//                    }
-
-
-                    if (Double.isNaN(preClose)) {
-                        preClose = close;
+                    if (Double.isNaN(prevClose)) {
+                        prevClose = close;
                     }
 
-                    double changePct = Math.round((close - preClose) / preClose * 100 * 100.0f) / 100.0f;
-                    double changePrice = close - preClose;
-                    preClose = close;
+                    double changePct = Math.round((close - prevClose) / prevClose * 100 * 100.0f) / 100.0f;
+                    double changePrice = close - prevClose;
+                    prevClose = close;
 
 
                     // 振幅       (H/L - 1) x 100%
                     double rangePct = low == 0 ? 0 : (high / low - 1) * 100;
 
 
-                    // String[] item = {code, String.valueOf(tradeDate), String.format("%.2f", open), String.format("%.2f", high), String.format("%.2f", low), String.format("%.2f", close), amount.toPlainString(), String.valueOf(vol), String.format("%.2f", changePct)};
-                    // System.out.println(JSON.toJSONString(item));
-
-
                     LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
+
+
+                    // -------------------------------------------------------------------------------------------------
+
+
+                    // 成交额为0（停牌）
+                    if (amount.doubleValue() == 0) {
+                        log.error("parseTxtByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
+                        continue;
+                    }
+
+
+                    // -------------------------------------------------------------------------------------------------
 
 
                     dtoList.add(dto);
