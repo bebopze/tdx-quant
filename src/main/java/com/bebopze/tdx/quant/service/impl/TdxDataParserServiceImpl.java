@@ -28,7 +28,6 @@ import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -365,26 +364,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             String stockCode = e.getStockCode();
             String stockName = e.getStockName();
 
-            // List<String> stockCodeList = e.getStockCodeList();
-
 
             allStockCodeSet.add(stockCode);
             stockCode_stockName_map.put(stockCode, stockName);
 
-
-            // stockCodeList.forEach(stockCode -> {
-
-
-            Set<String> exist_blockCodeList = stockCode_blockCodeSet_map.get(stockCode);
-            if (CollectionUtils.isEmpty(exist_blockCodeList)) {
-
-                stockCode_blockCodeSet_map.put(stockCode, Sets.newTreeSet(Lists.newArrayList(blockCode)));
-
-            } else {
-
-                exist_blockCodeList.add(blockCode);
-            }
-            // });
+            stockCode_blockCodeSet_map.computeIfAbsent(stockCode, k -> Sets.newTreeSet()).add(blockCode);
         });
 
     }
@@ -402,7 +386,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                                  Map<String, Long> stock__codeIdMap) {
 
 
-        Map<String, Long> stock__codeIdMap_DB = baseStockService.codeIdMap();
+        Map<String, Long> stock__codeIdMap_DB = baseStockService.codeIdMap(StockTypeEnum.A_STOCK.type);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -431,16 +415,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
             entity.setId(stock__codeIdMap_DB.get(stockCode));
             entityList.add(entity);
-
-
-//            Long stockId = entity.getId();
-//            stock__codeIdMap.put(stockCode, stockId);
-//
-//
-//            if (stockId == null) {
-//                log.error("base_stock - insertOrUpdate   err     >>>     stockCode : {} , stockId : {} , baseStockDO : {}",
-//                          stockCode, stockId, JSON.toJSONString(entity));
-//            }
         });
 
 
@@ -449,39 +423,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         log.info("save2DB___stock     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(start_1));
 
 
-//        // 3min 4s（狗屎🐶💩 Mybatis-plus）
-//        long s_2 = System.currentTimeMillis();
-//        baseStockService.saveOrUpdateBatch(entityList);
-//        log.info("save2DB___stock     >>>     size : {} , 耗时 : {}", entityList.size(), DateTimeUtil.formatNow2Hms(s_2));
-
-
         // -------------------------------------------------------------------------------------------------------------
 
 
-        Map<String, Long> stock__codeIdMap_DB2 = baseStockService.codeIdMap();
+        Map<String, Long> stock__codeIdMap_DB2 = baseStockService.codeIdMap(StockTypeEnum.A_STOCK.type);
         stock__codeIdMap.putAll(stock__codeIdMap_DB2);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-//        long start_2 = System.currentTimeMillis();
-//        if (MapUtils.isEmpty(stock__codeIdMap_DB)) {
-//
-//            // 初次 init   ->   有序 insert
-//            sortAllStockCodeList.forEach(stockCode -> {
-//                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
-//            });
-//
-//        } else {
-//
-//            // 并行 update（无序）
-//            sortAllStockCodeList.parallelStream().forEach(stockCode -> {
-//                exec___save2DB___stock(stockCode, stock__codeIdMap_DB, stockCode_marketType_map, stockCode_stockName_map, stock__codeIdMap);
-//            });
-//        }
-//        // 50.9s
-//        log.info("save2DB___stock     >>>     耗时 : {}", DateTimeUtil.formatNow2Hms(start_2));
     }
 
     private void exec___save2DB___stock(String stockCode,
@@ -1263,26 +1209,26 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void importETF() {
 
-        // List<BlockNewParser.BlockNewDTO> etfList = BlockNewParser.parse_ETF();
-        List<BlockNewParser.BlockNewDTO> etfList = HyETFReportParser.parseAndDistinct();
+        List<HyETFReportParser.TdxETFDTO> etfList = HyETFReportParser.parseAndDistinct();
 
         exec___save2DB___ETF(etfList);
     }
 
 
-    private void exec___save2DB___ETF(List<BlockNewParser.BlockNewDTO> etfList) {
+    private void exec___save2DB___ETF(List<HyETFReportParser.TdxETFDTO> etfList) {
 
 
-        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
+        Map<String, Long> old__ETF_codeIdMap = baseStockService.codeIdMap(StockTypeEnum.ETF.type);
 
 
         List<BaseStockDO> ETF_entityList = Lists.newArrayList();
-        etfList.forEach(dto -> {
+        etfList.forEach(etf -> {
 
 
-            String stockCode = dto.getStockCode();
-            String stockName = StringUtils.isBlank(dto.getStockName()) ? EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getName() : dto.getStockName();
-            Integer tdxMarketType = dto.getTdxMarketType();
+            String stockCode = etf.getCode();
+            String stockName = StringUtils.isBlank(etf.getName()) ? EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode).getName() : etf.getName();
+            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
+            String 细分行业 = etf.get细分行业();
 
 
             // ETF
@@ -1291,14 +1237,29 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             entity.setName(stockName);
             entity.setType(StockTypeEnum.ETF.type);
             entity.setTdxMarketType(tdxMarketType);
+            entity.setBlockName(细分行业);
 
 
-            entity.setId(codeIdMap.get(stockCode));
+            entity.setId(old__ETF_codeIdMap.get(stockCode));
             ETF_entityList.add(entity);
         });
 
 
+        // insert new
         baseStockService.batchInsertOrUpdate(ETF_entityList);
+
+
+        // --------------------------------------------------------
+
+
+        // DEL old（NOT IN -> new）
+        Set<String> new__etfCodeSet = ETF_entityList.stream().map(BaseStockDO::getCode).collect(Collectors.toSet());
+        old__ETF_codeIdMap.forEach((code, id) -> {
+            if (!new__etfCodeSet.contains(code)) {
+                baseStockService.removeById(id);
+                log.warn("DEL old     >>>     code : {}", code);
+            }
+        });
     }
 
 
@@ -1474,7 +1435,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public void fillStockKlineAll(UpdateTypeEnum updateTypeEnum) {
 
 
-        Map<String, Long> codeIdMap = baseStockService.codeIdMap();
+        Map<String, Long> codeIdMap = baseStockService.codeIdMap((Integer) null);
 
 
         // 1-全量更新
@@ -1718,22 +1679,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // --------------------- DB
-
-
-//        List<KlineDTO> klineDTOList = entity.getKlineDTOList();
-//        for (int i = 0; i < klineDTOList.size(); i++) {
-//
-//            KlineDTO klineDTO = klineDTOList.get(i);
-//            String kline = klines.get(i);
-//
-//
-//            if (klineDTO.getDate().equals(LocalDate.of(2025, 3, 28))) {
-//                log.info("klineDTO :" + klineDTO);
-//                log.info("kline :" + kline);
-//            }
-//        }
-
-
         baseStockService.updateById(entity);
     }
 
