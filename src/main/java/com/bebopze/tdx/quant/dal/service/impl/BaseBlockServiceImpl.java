@@ -240,24 +240,58 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     public int batchInsertOrUpdate(List<BaseBlockDO> list) {
         log.info("batchInsertOrUpdate     >>>     size : {}", ListUtil.size(list));
 
+        return saveOrUpdateBatch(list);
 
-        int batchSize = 1000;
+
+        // -------------------------------------------------------------------------------------------------------------
+        // batchInsertOrUpdate “BUG”（INSERT INTO xxx   ON DUPLICATE KEY UPDATE）：自增ID 双倍跳跃  ->  每执行1次，自增ID x2
+        // -------------------------------------------------------------------------------------------------------------
+
+
+//        int batchSize = 1000;
+//        if (list == null || list.isEmpty()) {
+//            return 0;
+//        }
+//
+//
+//        int count = 0;
+//        int size = list.size();
+//
+//        for (int i = 0; i < size; i += batchSize) {
+//            int end = Math.min(i + batchSize, size);
+//            List<BaseBlockDO> sub = list.subList(i, end);
+//
+//            count += baseMapper.batchInsertOrUpdate(sub);
+//        }
+//
+//        return count;
+    }
+
+
+    @TotalTime
+    @DBLimiter(1)
+    @Transactional(rollbackFor = Exception.class)
+    public int saveOrUpdateBatch(List<BaseBlockDO> list) {
         if (list == null || list.isEmpty()) {
             return 0;
         }
 
 
-        int count = 0;
-        int size = list.size();
+        List<BaseBlockDO> insert_list = list.stream().filter(e -> e.getId() == null).toList();
+        List<BaseBlockDO> update_list = list.stream().filter(e -> e.getId() != null).toList();
 
-        for (int i = 0; i < size; i += batchSize) {
-            int end = Math.min(i + batchSize, size);
-            List<BaseBlockDO> sub = list.subList(i, end);
 
-            count += baseMapper.batchInsertOrUpdate(sub);
-        }
+        long s1 = System.currentTimeMillis();
+        batchInsert(insert_list);
+        log.info("insert_list - batchInsert     >>>     insert_size : {} , totalTime : {}", insert_list.size(), DateTimeUtil.formatNow2Hms(s1));
 
-        return count;
+
+        long s2 = System.currentTimeMillis();
+        baseMapper.updateById(update_list);
+        log.info("update_list - updateById     >>>     update_size : {} , totalTime : {}", update_list.size(), DateTimeUtil.formatNow2Hms(s2));
+
+
+        return list.size();
     }
 
 

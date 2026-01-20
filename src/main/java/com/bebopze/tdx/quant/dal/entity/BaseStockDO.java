@@ -75,6 +75,13 @@ public class BaseStockDO implements Serializable {
     private Integer tdxMarketType;
 
     /**
+     * 细分行业（仅ETF导入后 关联概念板块 用）
+     */
+    @TableField("block_name")
+    @Schema(description = "细分行业（仅ETF导入后 关联概念板块 用）")
+    private String blockName;
+
+    /**
      * 交易日期
      */
     @TableField("trade_date")

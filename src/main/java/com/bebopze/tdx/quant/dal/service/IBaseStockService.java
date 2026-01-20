@@ -52,7 +52,7 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     List<BaseStockDO> listAllSimple();
 
-    Map<String, Long> codeIdMap();
+    Map<String, Long> codeIdMap(Integer type);
 
     Map<Long, String> idCodeMap();
 
@@ -65,4 +65,6 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     int batchInsert(List<BaseStockDO> list);
 
     int batchInsertOrUpdate(List<BaseStockDO> list);
+
+    int saveOrUpdateBatch(List<BaseStockDO> list);
 }
