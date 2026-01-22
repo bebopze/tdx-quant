@@ -264,7 +264,7 @@ public class TdxTask {
             // -------------------------------------------- KLINE ------------------------------------------------------
 
 
-            taskProgressManager.updateProgress(taskId, 30, "个股实时 行情数据");
+            taskProgressManager.updateProgress(taskId, 30, "个股/ETF实时 行情数据");
             // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
             tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.INCR);
 

@@ -921,7 +921,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 主线ETF
         long start_2 = System.currentTimeMillis();
-        Map<LocalDate, Set<String>> date_topETFCodeSet__map = calcTopETF();
+        Map<LocalDate, Set<String>> date_topETFCodeSet__map = calcTopETF(date_topBlockCodeSet__map);
         log.info("calc_bkyd2 - calcTopETF     >>>     size : {} , 耗时 : {}", date_topETFCodeSet__map.size(), DateTimeUtil.formatNow2Hms(start_2));
 
 
@@ -1008,11 +1008,11 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-    private Map<LocalDate, Set<String>> calcTopETF() {
+    private Map<LocalDate, Set<String>> calcTopETF(Map<LocalDate, Set<String>> date_topBlockCodeSet__map) {
 
 
-        // 日期 - 板块_月多2（板块code 列表）
-        Map<LocalDate, Set<String>> date_bkyd2__map = Maps.newConcurrentMap();
+        // 日期 - 主线ETF（ETF code列表）
+        Map<LocalDate, Set<String>> date_topETFCodeSet__map = Maps.newConcurrentMap();
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1056,13 +1056,30 @@ public class TopBlockServiceImpl implements TopBlockService {
                         boolean SSF多 = extDataArrDTO.SSF多[idx];
 
 
+                        // ---------------------------------------------------------------------------------------------
+
+
+                        // 当日  ->  主线板块 列表
+                        Set<String> topBlockCodeSet = date_topBlockCodeSet__map.getOrDefault(date, Sets.newHashSet());
+
+                        // 当前个股  ->  板块列表
+                        Set<String> blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
+
+
+                        // IN主线（个股板块 与 主线板块   ->   存在交集）
+                        boolean IN主线 = !CollectionUtils.intersection(topBlockCodeSet, blockCodeSet).isEmpty();
+
+
+                        // ---------------------------------------------------------------------------------------------
+
+
                         // LV3（板块-月多2 -> 月多 + RPS红 + SSF多）
-                        if ((月多 || 均线预萌出) && RPS红 && SSF多) {
+                        if ((月多 || 均线预萌出) && RPS红 && SSF多 && IN主线) {
                             log.info("calcTopETF     >>>     {} , [{}-{}]", date, stockCode, stockDO.getName());
-                            date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
+                            date_topETFCodeSet__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet()).add(stockCode);
                         } else {
                             // 当日 无主线   ->   记录 空数据行
-                            date_bkyd2__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet());
+                            date_topETFCodeSet__map.computeIfAbsent(date, k -> Sets.newConcurrentHashSet());
                         }
                     });
 
@@ -1074,7 +1091,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         });
 
 
-        return date_bkyd2__map;
+        return date_topETFCodeSet__map;
     }
 
     private Map<LocalDate, Set<String>> calcTopStock(Map<LocalDate, Set<String>> date_topBlockCodeSet__map) {

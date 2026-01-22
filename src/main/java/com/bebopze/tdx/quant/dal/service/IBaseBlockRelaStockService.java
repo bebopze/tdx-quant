@@ -45,9 +45,10 @@ public interface IBaseBlockRelaStockService extends IService<BaseBlockRelaStockD
     /**
      * 板块-个股   =>   lv3级【end_level=1】   ->     3级-行业（普通/研究） + 概念板块
      *
+     * @param stockType 1-A股；2-ETF；
      * @return
      */
-    List<BaseBlockRelaStockDO> listAll();
+    List<BaseBlockRelaStockDO> listAll(Integer stockType);
 
 
     List<BaseStockDO> listETFByBlockCodes(Set<String> topBlockCodeSet);

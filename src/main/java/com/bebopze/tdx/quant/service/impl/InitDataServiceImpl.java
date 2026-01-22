@@ -451,7 +451,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 板块-个股   =>   lv3级【end_level=1】   ->     3级-行业（普通/研究） + 概念板块
-        List<BaseBlockRelaStockDO> relaList = baseBlockRelaStockService.listAll();
+        List<BaseBlockRelaStockDO> relaList = baseBlockRelaStockService.listAll(null);
 
 
         for (BaseBlockRelaStockDO rela : relaList) {
