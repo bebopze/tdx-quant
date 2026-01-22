@@ -14,10 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
@@ -60,7 +57,6 @@ public class HyETFReportParser {
     /**
      * 1、解析 全量 [ETF基金] TXT报表
      * 2、根据 ETF -> [细分行业+name] 去重     =>     同一[细分行业+name]  ->  保留最大 AMO 的ETF
-     * 3、List<TdxETFDTO>   转换为   List<BlockNewDTO>
      *
      * @return
      */
@@ -109,12 +105,6 @@ public class HyETFReportParser {
                                 log.info("同一[细分行业:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", 细分行业, old_row, e);
                                 hy__rowMap.put(细分行业, e);
                             }
-
-
-                            if (e.code.equals("516270") || 细分行业.equals("新能源")) {
-                                TdxETFDTO tdxETFDTO = hy__rowMap.get(细分行业);
-                                log.debug("{}", tdxETFDTO);
-                            }
                         });
 
         // 去重2（name）
@@ -146,7 +136,7 @@ public class HyETFReportParser {
 
         return name__rowMap.values()
                            .stream()
-                           .sorted((o1, o2) -> o2.getCode().compareTo(o1.getCode()))   // code 正序
+                           .sorted(Comparator.comparing(TdxETFDTO::getCode))   // code 正序
                            .collect(Collectors.toList());
     }
 
@@ -369,7 +359,7 @@ public class HyETFReportParser {
         System.out.println("\nsize : " + tdx__rowList.size() + "\n");
 
 
-        tdx__rowList.forEach(row -> System.out.println(row.细分行业 + " : " + row));
+        tdx__rowList.forEach(row -> System.out.println(row.细分行业 + " : " + row + "\n"));
     }
 
 

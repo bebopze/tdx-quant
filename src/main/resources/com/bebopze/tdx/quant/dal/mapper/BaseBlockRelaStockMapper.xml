@@ -185,28 +185,35 @@
     <select id="listAll" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO">
         SELECT DISTINCT r.*,
 
-                        s.code AS stockCode,
-                        s.name AS stockName,
+        s.code AS stockCode,
+        s.name AS stockName,
 
-                        b.code AS blockCode,
-                        b.name AS blockName
+        b.code AS blockCode,
+        b.name AS blockName
 
 
         FROM base_block_rela_stock r
-                 LEFT JOIN base_stock s ON r.stock_id = s.id
-                 LEFT JOIN base_block b ON r.block_id = b.id
+        LEFT JOIN base_stock s ON r.stock_id = s.id
+        LEFT JOIN base_block b ON r.block_id = b.id
+
+
+        <where>
+            <if test="stockType != null">
+                r.stock_type = #{stockType}
+            </if>
+        </where>
     </select>
 
 
     <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO base_block_rela_stock
 
-        (block_id, stock_id)
+        (block_id, stock_id, stock_type)
 
         VALUES
 
         <foreach collection="list" item="item" separator=",">
-            (#{item.blockId}, #{item.stockId})
+            (#{item.blockId}, #{item.stockId}, #{item.stockType})
         </foreach>
     </insert>
 

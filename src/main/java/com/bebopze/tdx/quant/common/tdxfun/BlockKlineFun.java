@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.tdxfun;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -95,6 +96,7 @@ public class BlockKlineFun {
                                                                .map(stockCode -> {
                                                                    BaseStockDO stockDO = codeStockMap.get(stockCode);
 
+
                                                                    if (stockDO == null
                                                                            // 未上市/停牌/退市
                                                                            || stockDO.getTradeDate() == null
@@ -103,6 +105,12 @@ public class BlockKlineFun {
                                                                            || stockDO.getClose().doubleValue() == 0) {
 
                                                                        log.warn("未上市/停牌/退市     >>>     [{}-{}] , close : {}", stockCode, stockDO != null ? stockDO.getName() : null, stockDO != null ? stockDO.getClose() : null);
+                                                                       return null;
+                                                                   }
+
+
+                                                                   // 过滤 ETF
+                                                                   if (!Objects.equals(stockDO.getType(), StockTypeEnum.A_STOCK.type)) {
                                                                        return null;
                                                                    }
 
