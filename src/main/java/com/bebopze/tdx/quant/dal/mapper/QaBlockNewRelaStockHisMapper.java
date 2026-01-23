@@ -5,8 +5,8 @@ import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>
@@ -22,7 +22,7 @@ public interface QaBlockNewRelaStockHisMapper extends BaseMapper<QaBlockNewRelaS
                   @Param("date") LocalDate date);
 
     int deleteByBlockNewIdAndDateSet(@Param("blockNewId") Integer blockNewId,
-                                     @Param("dateSet") Set<LocalDate> dateSet);
+                                     @Param("dateSet") Collection<LocalDate> dateSet);
 
     List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(@Param("blockNewId") Integer blockNewId,
                                                                 @Param("date") LocalDate date,

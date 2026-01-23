@@ -19,7 +19,7 @@ public interface IQaBlockNewRelaStockHisService extends IService<QaBlockNewRelaS
 
     int deleteAll(Integer blockNewId, LocalDate date);
 
-    void deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet);
+    int deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet);
 
 
     List<QaBlockNewRelaStockHisDO> listByBlockNewIdDateAndLimit(Integer blockNewId, LocalDate date, int limit);
