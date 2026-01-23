@@ -249,11 +249,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     public void refreshAll(UpdateTypeEnum updateTypeEnum) {
 
 
-        // 板块-月多2
-        bkyd2Task(updateTypeEnum);
-
-
-        // ---------------------------------------
+        // --------------------------------------- 快速完成（5~10s）
 
 
         // 1- 百日新高
@@ -287,6 +283,16 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 31- 板块AMO-Top1
         blockAmoTopTask(updateTypeEnum);
+
+
+        // --------------------------------------- 极其耗时（ALL：1~2h  /  INCR：10min）
+
+
+        // 板块-月多2
+        bkyd2Task(updateTypeEnum);
+
+
+        // ---------------------------------------
 
 
         // GC
@@ -491,15 +497,61 @@ public class TopBlockServiceImpl implements TopBlockService {
         long start = System.currentTimeMillis();
 
 
-        initCache(updateTypeEnum);
+        // 全量更新
+        if (updateTypeEnum == UpdateTypeEnum.ALL) {
 
 
-        // dateIndexMap   +   saveOrUpdate     ->     自动跟随 initCache  ->  startDate、endDate （无需 updateTypeEnum）
-        calc_bkyd2();
+            LocalDate startDate = LocalDate.of(2019, 1, 1);
+            // 计算当前区间的结束日期（2年或到当前日期）
+            LocalDate now = LocalDate.now();
+            LocalDate endDate = startDate.plusYears(2).isAfter(now) ? now : startDate.plusYears(2);
 
 
-        // 日期-主线列表
-        autoType___date_topList_Map(updateTypeEnum);
+            // 190101 - 210101
+            // 210102 - 230101
+            // 230102 - 250101
+            // 250102 - 270101（260124）
+            // 260125 - 260124
+            while (!startDate.isAfter(now)) {
+                long s_2 = System.currentTimeMillis();
+
+
+                log.info("bkyd2Task - range start     >>>     startDate : {} , endDate : {}", startDate, endDate);
+                // ---------------------------------------------------------------------------------------------------------
+                initCache__range(updateTypeEnum, startDate, endDate);
+
+
+                // dateIndexMap   +   saveOrUpdate     ->     自动跟随 initCache  ->  startDate、endDate （无需 updateTypeEnum）
+                calc_bkyd2();
+
+
+                // 日期-主线列表
+                autoType___date_topList_Map(updateTypeEnum);
+                // ---------------------------------------------------------------------------------------------------------
+                log.info("bkyd2Task - range end     >>>     startDate : {} , endDate : {} , rangeTime : {} , totalTime : {}",
+                         startDate, endDate, DateTimeUtil.formatNow2Hms(s_2), DateTimeUtil.formatNow2Hms(start));
+
+
+                // 更新起始日期：跳到下一个区间的起始点（避免重叠）
+                startDate = endDate.plusDays(1); // 关键：从下一天开始新周期
+                endDate = startDate.plusYears(2).isAfter(now) ? now : startDate.plusYears(2);
+            }
+        }
+
+
+        // 增量更新
+        else if (updateTypeEnum == UpdateTypeEnum.INCR) {
+
+
+            initCache(updateTypeEnum);
+
+
+            calc_bkyd2();
+
+
+            // 日期-主线列表
+            autoType___date_topList_Map(updateTypeEnum);
+        }
 
 
         log.info("-------------------------------- bkyd2Task     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
@@ -2564,11 +2616,20 @@ public class TopBlockServiceImpl implements TopBlockService {
     private void initCache(UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
+        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+            data = initDataService.initData();
+        }
+    }
+
+
+    private void initCache__range(UpdateTypeEnum updateTypeEnum, LocalDate startDate, LocalDate endDate) {
+        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+            data = initDataService.incrUpdateInitData();
         } else {
             // data = initDataService.initData();
             // TODO   OOM   ->   暂行方案
-            LocalDate startDate = LocalDate.of(2022, 1, 1);
-            LocalDate endDate = LocalDate.now();
+            // LocalDate startDate = LocalDate.of(2022, 1, 1);
+            // LocalDate endDate = LocalDate.now();
             data = initDataService.initData(startDate, endDate, false, 0);
         }
     }

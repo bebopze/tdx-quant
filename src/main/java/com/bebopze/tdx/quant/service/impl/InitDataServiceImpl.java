@@ -113,6 +113,7 @@ public class InitDataServiceImpl implements InitDataService {
     @Synchronized
     @Override
     public BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh, int nMonth) {
+        log.info("initData     >>>     startDate : {}, endDate : {}, refresh : {}, nMonth : {}", startDate, endDate, refresh, nMonth);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -139,11 +140,11 @@ public class InitDataServiceImpl implements InitDataService {
             // 超出 Cache日期区间   ->   Cache不可用     =>     扩展 Cache日期边界   ->   refreshCache
             startDate = DateTimeUtil.min(startDate, data.startDate);
             endDate = DateTimeUtil.max(endDate, data.endDate);
-
-
-            // 2次加载  =>  双份数据 OOM  ->  提前释放内存
-            data.clear();
         }
+
+
+        // 可能为 2次加载  =>  双份数据 OOM  ->  提前释放内存
+        data.clear();
 
 
         // 加载   全量行情数据 - 个股+ETF
