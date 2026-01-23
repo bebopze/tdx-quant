@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -32,15 +33,40 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
 
 
     @TotalTime
+    @DBLimiter(1)
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public int deleteAll(Integer blockNewId, LocalDate date) {
         return baseMapper.deleteAll(blockNewId, date);
     }
 
     @TotalTime
+    @DBLimiter(1)
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet) {
-        baseMapper.deleteByBlockNewIdAndDateSet(blockNewId, dateSet);
+    public int deleteByDateSet(Integer blockNewId, Set<LocalDate> dateSet) {
+        log.info("deleteByDateSet     >>>     size : {}", ListUtil.size(dateSet));
+
+
+        int batchSize = 500;
+        List<LocalDate> list = Lists.newArrayList(dateSet);
+        if (list.isEmpty()) {
+            return 0;
+        }
+
+
+        int count = 0;
+        int size = list.size();
+
+        for (int i = 0; i < size; i += batchSize) {
+            int end = Math.min(i + batchSize, size);
+            List<LocalDate> sub = list.subList(i, end);
+
+            count += baseMapper.deleteByBlockNewIdAndDateSet(blockNewId, sub);
+        }
+
+
+        return count;
     }
 
 
