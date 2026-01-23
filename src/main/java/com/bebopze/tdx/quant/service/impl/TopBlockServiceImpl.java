@@ -3306,7 +3306,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 日期-板块类型-板块lv       -       AMO_blockCode_TreeMap
         // <groupKey: date|type|level, <AMO DESC, blockCode>>
-        Map<String, TreeMap<Double, String>> date__block_type_lv_____amo_blockCode_TreeMap_____map = Maps.newHashMap();
+        Map<String, TreeMap<Double, String>> date__block_type_lv_____amo_blockCode_TreeMap_____map = Maps.newConcurrentMap();
 
 
         ParallelCalcUtil.chunkForEachWithProgress(data.dateList, 200, chunk -> {
@@ -3637,7 +3637,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         long start = System.currentTimeMillis();
 
 
-        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum) || Objects.equals(UpdateTypeEnum.ALL_RANGE, updateTypeEnum)) {
             qaBlockNewRelaStockHisService.deleteByDateSet(blockNewId, dateSet);
         } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
             qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
