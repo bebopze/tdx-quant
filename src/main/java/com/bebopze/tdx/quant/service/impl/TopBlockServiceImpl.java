@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.cache.TopBlockCache;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.config.anno.UpdateAll;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
@@ -244,12 +245,13 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @UpdateAll
     @TotalTime
     @Override
     public void refreshAll(UpdateTypeEnum updateTypeEnum) {
 
 
-        // --------------------------------------- 快速完成（5~10s）
+        // --------------------------------------- 快速完成（ALL：1min  /  INCR：5~10s）
 
 
         // 1- 百日新高
@@ -300,6 +302,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
+    @UpdateAll
     @TotalTime
     public void N100DayHighTask(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- nDayHighTask     >>>     start");
@@ -314,6 +317,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- nDayHighTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void changePctTopTask(UpdateTypeEnum updateTypeEnum, int N) {
@@ -331,6 +335,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- changePctTopTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void rpsRedTask(UpdateTypeEnum updateTypeEnum, double RPS) {
@@ -348,6 +353,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- rpsRedTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void stage2Task(UpdateTypeEnum updateTypeEnum) {
@@ -365,6 +371,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- stage2Task     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void longTermMABullStackTask(UpdateTypeEnum updateTypeEnum) {
@@ -382,6 +389,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- longTermMABullStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void bullMAStackTask(UpdateTypeEnum updateTypeEnum) {
@@ -399,6 +407,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- bullMAStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void extremeBullMAStackTask(UpdateTypeEnum updateTypeEnum) {
@@ -416,6 +425,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- extremeBullMAStackTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void ztCountTask(UpdateTypeEnum updateTypeEnum) {
@@ -433,6 +443,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- ztCountTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void dtCountTask(UpdateTypeEnum updateTypeEnum) {
@@ -450,6 +461,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         log.info("-------------------------------- dtCountTask     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
     }
 
+    @UpdateAll
     @TotalTime
     @Override
     public void blockAmoTopTask(UpdateTypeEnum updateTypeEnum) {
@@ -470,6 +482,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
+    @UpdateAll
     @TotalTime
     @Override
     public void bkyd2Task_v1(UpdateTypeEnum updateTypeEnum) {
@@ -490,9 +503,29 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @UpdateAll
     @TotalTime
     @Override
     public void bkyd2Task(UpdateTypeEnum updateTypeEnum) {
+        log.info("-------------------------------- bkyd2Task     >>>     start");
+        long start = System.currentTimeMillis();
+
+
+        initCache(updateTypeEnum);
+
+
+        calc_bkyd2();
+
+
+        // 日期-主线列表
+        autoType___date_topList_Map(updateTypeEnum);
+
+
+        log.info("-------------------------------- bkyd2Task     >>>     end , {}", DateTimeUtil.formatNow2Hms(start));
+    }
+
+    @TotalTime
+    public void bkyd2Task_2(UpdateTypeEnum updateTypeEnum) {
         log.info("-------------------------------- bkyd2Task     >>>     start");
         long start = System.currentTimeMillis();
 
@@ -518,7 +551,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                 log.info("bkyd2Task - range start     >>>     startDate : {} , endDate : {}", startDate, endDate);
                 // ---------------------------------------------------------------------------------------------------------
-                initCache__range(updateTypeEnum, startDate, endDate);
+                initCache__range(startDate, endDate);
 
 
                 // dateIndexMap   +   saveOrUpdate     ->     自动跟随 initCache  ->  startDate、endDate （无需 updateTypeEnum）
@@ -2613,7 +2646,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    private void initCache(UpdateTypeEnum updateTypeEnum) {
+    private void initCache_0(UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
         } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
@@ -2622,16 +2655,28 @@ public class TopBlockServiceImpl implements TopBlockService {
     }
 
 
-    private void initCache__range(UpdateTypeEnum updateTypeEnum, LocalDate startDate, LocalDate endDate) {
+    private void initCache(UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
-        } else {
-            // data = initDataService.initData();
-            // TODO   OOM   ->   暂行方案
-            // LocalDate startDate = LocalDate.of(2022, 1, 1);
-            // LocalDate endDate = LocalDate.now();
-            data = initDataService.initData(startDate, endDate, false, 0);
+        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+            data = initDataService.initData();
+        } else if (Objects.equals(UpdateTypeEnum.ALL_RANGE, updateTypeEnum)) {
+            log.info("initCache - ALL_RANGE     >>>     ALL_RANGE 初始化数据 特殊处理（AOP）");
         }
+    }
+
+
+    public void initCache__range(LocalDate startDate, LocalDate endDate) {
+        log.info("initCache__range     >>>     startDate : {} , endDate : {}", startDate, endDate);
+
+
+        // data = initDataService.initData();
+        // TODO   OOM   ->   暂行方案
+        // LocalDate startDate = LocalDate.of(2022, 1, 1);
+        // LocalDate endDate = LocalDate.now();
+
+
+        data = initDataService.initData(startDate, endDate, false, 0);
     }
 
 
