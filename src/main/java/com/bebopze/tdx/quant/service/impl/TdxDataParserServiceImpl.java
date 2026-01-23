@@ -1401,7 +1401,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         });
 
 
-        initDataService.deleteCache();
+        initDataService.deleteDiskCache();
     }
 
 
@@ -1431,7 +1431,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         }
 
 
-        initDataService.deleteCache();
+        initDataService.deleteDiskCache();
     }
 
 

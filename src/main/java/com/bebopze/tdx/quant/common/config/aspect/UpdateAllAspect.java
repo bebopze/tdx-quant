@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.common.config.aspect;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
+import com.sun.management.OperatingSystemMXBean;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,6 +13,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
 
@@ -43,6 +45,23 @@ public class UpdateAllAspect {
 
         // 获取方法参数
         Object[] args = point.getArgs();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 物理机内存
+        long physicalMemorySize = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class).getTotalMemorySize() / (1024 * 1024 * 1024);
+        // JVM内存
+        long totalMemory = Runtime.getRuntime().totalMemory() / (1024 * 1024 * 1024);
+
+
+        // 物理机内存 和 JVM内存 均大于50GB   ->   无需分段，直接执行
+        if (physicalMemorySize > 50 && totalMemory > 50) {
+            log.info("[{} - {}]     >>>     物理机内存：{} GB , JVM内存：{} GB , 均大于50GB   ->   无需分段，直接执行", serviceName, methodName, physicalMemorySize, totalMemory);
+            return point.proceed(args);
+        }
+        log.info("[{} - {}]     >>>     物理机内存：{} GB , JVM内存：{} GB , 小于50GB   ->   分段执行", serviceName, methodName, physicalMemorySize, totalMemory);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -132,5 +151,6 @@ public class UpdateAllAspect {
 
         return result;
     }
+
 
 }

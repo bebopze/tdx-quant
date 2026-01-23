@@ -178,7 +178,7 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
-            initDataService.refreshCache();
+            initDataService.refreshDiskCache();
 
 
             taskProgressManager.completeTask(taskId, "任务执行完成");
