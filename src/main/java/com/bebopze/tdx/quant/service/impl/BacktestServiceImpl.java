@@ -185,7 +185,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
     @Override
-    public Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
+    public void backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
                           Set<String> buyConSet,
                           LocalDate startDate,
                           LocalDate endDate,
@@ -202,7 +202,7 @@ public class BacktestServiceImpl implements BacktestService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        return backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate, btCompareDTO);
+        backTestStrategy.backtest(batchNo, topBlockStrategyEnum, buyConSet, sellConSet, startDate, endDate, btCompareDTO);
     }
 
 

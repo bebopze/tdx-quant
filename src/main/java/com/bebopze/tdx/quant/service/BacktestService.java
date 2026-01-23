@@ -53,7 +53,7 @@ public interface BacktestService {
 
 
     @Async("taskExecutor")
-    Long backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
+    void backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
                    Set<String> buyConSet,
                    LocalDate startDate,
                    LocalDate endDate,

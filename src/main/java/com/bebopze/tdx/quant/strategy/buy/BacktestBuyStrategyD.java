@@ -323,16 +323,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
             }
 
 
-            // ----------------------------------------- ztFlag 过滤策略 ------------------------------------------------
-
-
-            // ztFlag 策略   ->   是否过滤 涨停（true/false/不过滤）
-            boolean today_涨停 = extDataArrDTO.涨停[idx];
-            if (ztFlag != null && !Objects.equals(ztFlag, today_涨停)) {
-                return;
-            }
-
-
             // ---------------------------------------------------------------------------------------------------------
 
 
@@ -365,47 +355,92 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
 
             // ---------------------------------------------------------------------------------------------------------
-
-
-            // B + 未涨停  ->  可买入（今日[close]  ->  直接买入）
-            if (signal_B && !today_涨停) {
-                buy__topStock__codeSet.add(stockCode);
-                buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
-            }
-
-
-            // B + 涨停  ->  无法买入（最简化处理：[next_close] = [next_open]，次日开盘 直接买入）
-            if (signal_B && today_涨停) {
-
-                if (idx < fun.getMaxIdx()) {
-
-                    LocalDate next_date = klineArrDTO.date[idx + 1];
-
-
-                    // 次日S  ->  不能B（提前预知 -> 次日收盘价？？？❌❌❌）
-
-                    // 今日B + 涨停     =>     今日S  ->  次日不能B
-                    Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, tradeDate, Sets.newHashSet(stockCode), Maps.newHashMap(), btCompareDTO.get());
-                    boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
-                    if (next_date_S /*|| nextDate__大盘仓位限制->等比减仓*/) {
-                        return;
-                    }
-
-
-                    // -------------------------------------------------------------------------------------------------
-
-
-                    // 今日B + 涨停     =>     次日 -> 开盘B
-                    btOpenBSDTO.get().today_date = tradeDate;
-                    btOpenBSDTO.get().next_date = next_date;
-                    btOpenBSDTO.get().open_B___stockCodeSet.add(stockCode);
-                    btOpenBSDTO.get().open_B___buy_infoMap.put(stockCode, 涨停_SSF多_月多.getDesc());
-                }
-            }
+            zt_buy(signal_B, buy__topStock__codeSet, data, tradeDate, idx, conMap, buy_infoMap, stockCode, fun, klineArrDTO, extDataArrDTO, ztFlag);
         });
 
 
         return buy__topStock__codeSet;
+    }
+
+
+    /**
+     * 涨停B 特殊处理
+     *
+     * @param signal_B
+     * @param buy__topStock__codeSet
+     * @param data
+     * @param tradeDate
+     * @param idx
+     * @param conMap
+     * @param buy_infoMap
+     * @param stockCode
+     * @param fun
+     * @param klineArrDTO
+     * @param extDataArrDTO
+     * @param ztFlag
+     */
+    public void zt_buy(boolean signal_B,
+                       Set<String> buy__topStock__codeSet,
+                       BacktestCache data,
+                       LocalDate tradeDate,
+                       Integer idx,
+                       Map<String, Boolean> conMap,
+                       Map<String, String> buy_infoMap,
+                       String stockCode,
+                       StockFun fun,
+                       KlineArrDTO klineArrDTO,
+                       ExtDataArrDTO extDataArrDTO,
+                       Boolean ztFlag) {
+
+
+        // ----------------------------------------- ztFlag 过滤策略 ----------------------------------------------------
+
+
+        // ztFlag 策略   ->   是否过滤 涨停（true/false/不过滤）
+        boolean today_涨停 = extDataArrDTO.涨停[idx];
+        if (ztFlag != null && !Objects.equals(ztFlag, today_涨停)) {
+            return;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // B + 未涨停  ->  可买入（今日[close]  ->  直接买入）
+        if (signal_B && !today_涨停) {
+            buy__topStock__codeSet.add(stockCode);
+            buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
+        }
+
+
+        // B + 涨停  ->  无法买入（最简化处理：[next_close] = [next_open]，次日开盘 直接买入）
+        if (signal_B && today_涨停) {
+
+            if (idx < fun.getMaxIdx()) {
+
+                LocalDate next_date = klineArrDTO.date[idx + 1];
+
+
+                // 次日S  ->  不能B（提前预知 -> 次日收盘价？？？❌❌❌）
+
+                // 今日B + 涨停     =>     今日S  ->  次日不能B
+                Set<String> nextDate__sellStockCodeSet = backtestSellStrategy.rule(btCompareDTO.get().getTopBlockStrategyEnum(), data, tradeDate, Sets.newHashSet(stockCode), Maps.newHashMap(), btCompareDTO.get());
+                boolean next_date_S = nextDate__sellStockCodeSet.contains(stockCode);
+                if (next_date_S /*|| nextDate__大盘仓位限制->等比减仓*/) {
+                    return;
+                }
+
+
+                // -------------------------------------------------------------------------------------------------
+
+
+                // 今日B + 涨停     =>     次日 -> 开盘B
+                btOpenBSDTO.get().today_date = tradeDate;
+                btOpenBSDTO.get().next_date = next_date;
+                btOpenBSDTO.get().open_B___stockCodeSet.add(stockCode);
+                btOpenBSDTO.get().open_B___buy_infoMap.put(stockCode, 涨停_SSF多_月多.getDesc());
+            }
+        }
     }
 
 
@@ -487,10 +522,19 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
+        //                                      topN（涨停TOP + 百日新高TOP）
+        // -------------------------------------------------------------------------------------------------------------
 
 
-        topBlockCodeSet.removeIf(StringUtils::isBlank);
-        return topBlockCodeSet;
+        // topN（涨停TOP + 百日新高TOP）
+        Set<String> topN__topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet(data, topBlockCodeSet, tradeDate, false);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        topN__topBlockCodeSet.removeIf(StringUtils::isBlank);
+        return topN__topBlockCodeSet;
     }
 
 
@@ -729,9 +773,6 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
         List<String> topBlock__codeNameSet = lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code)).collect(Collectors.toList());
         log.info("topBlockCodeSet - 板块-月多2     >>>     [{}] , {} , {}", tradeDate, lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
-
-
-        // TODO   排序（上榜天数TOP1 + 主线个股数量TOP1）
 
 
         return lv3_topBlockCodeSet;
