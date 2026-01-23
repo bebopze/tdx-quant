@@ -331,8 +331,8 @@ public class ScoreSort {
 
 
             // 个股>5亿   /   ETF>500万
-            double MIN_AMO = Objects.equals(stockDO.getType(), StockTypeEnum.A_STOCK) ? 5_0000_0000 : 500_0000;
-            if (amount < MIN_AMO && !extDataArrDTO.涨停[idx]) {
+            double MIN_AMO = Objects.equals(stockDO.getType(), StockTypeEnum.A_STOCK.type) ? 5_0000_0000 : 500_0000;
+            if (amount < MIN_AMO && !extDataArrDTO.涨停[idx] || Double.isNaN(RPS五线和)) {
                 return;
             }
 

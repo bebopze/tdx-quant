@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestAnalysisDTO;
@@ -235,8 +236,13 @@ public class BacktestController {
 
 
     private LocalDate endDate(LocalDate endDate) {
-        LocalDate dataDate = dataService.dataInfo().getBlock_extDataDTO().getDate();
-        return dataDate.isBefore(endDate) ? dataDate : endDate;
+        try {
+            LocalDate dataDate = dataService.dataInfo().getBlock_extDataDTO().getDate();
+            return dataDate.isBefore(endDate) ? dataDate : endDate;
+        } catch (Exception e) {
+            LocalDate lastTradeDate = KlineAPI.lastTradeDate();
+            return endDate.isAfter(lastTradeDate) ? lastTradeDate : endDate;
+        }
     }
 
 
