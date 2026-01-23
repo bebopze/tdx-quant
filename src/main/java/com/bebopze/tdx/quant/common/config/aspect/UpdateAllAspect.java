@@ -75,7 +75,7 @@ public class UpdateAllAspect {
 
     @SneakyThrows
     private Object execMethodByRange(ProceedingJoinPoint point, String serviceName, String methodName, Object[] args) {
-        log.info("分段更新 - start     >>>     [{}-{}]", serviceName, methodName);
+        log.info("分段更新 - start     >>>     [{} - {}]", serviceName, methodName);
         long start = System.currentTimeMillis();
 
 
@@ -89,7 +89,7 @@ public class UpdateAllAspect {
         LocalDate endDate = startDate.plusYears(2).isAfter(now) ? now : startDate.plusYears(2);
 
 
-        log.info("分段更新 - start     >>>     [{}-{}] , 区间：{}  ～  {}", serviceName, methodName, startDate_0, now);
+        log.info("分段更新 - start     >>>     [{} - {}] , 区间：{}  ～  {}", serviceName, methodName, startDate_0, now);
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -108,7 +108,7 @@ public class UpdateAllAspect {
 
 
             // ---------------------------------------------------------------------------------------------------------
-            log.info("开始执行分段更新     >>>     [{}-{}] , 区间：{}  ～  {}", serviceName, methodName, startDate, endDate);
+            log.info("开始执行分段更新     >>>     [{} - {}] , 区间：{}  ～  {}", serviceName, methodName, startDate, endDate);
             long s_range = System.currentTimeMillis();
 
 
@@ -116,7 +116,7 @@ public class UpdateAllAspect {
             result = point.proceed(args);
 
 
-            log.info("完成分段更新     >>>     [{}-{}] , 区间：{}  ～  {} , range_time : {} , totalTime : {}",
+            log.info("完成分段更新     >>>     [{} - {}] , 区间：{}  ～  {} , range_time : {} , totalTime : {}",
                      serviceName, methodName, startDate, endDate, DateTimeUtil.formatNow2Hms(s_range), DateTimeUtil.formatNow2Hms(start));
             // ---------------------------------------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ public class UpdateAllAspect {
         }
 
 
-        log.info("分段更新 - suc     >>>     [{}-{}] , 区间：{}  ～  {} , totalTime : {}",
+        log.info("分段更新 - suc     >>>     [{} - {}] , 区间：{}  ～  {} , totalTime : {}",
                  serviceName, methodName, startDate_0, endDate, DateTimeUtil.formatNow2Hms(start));
 
         return result;
