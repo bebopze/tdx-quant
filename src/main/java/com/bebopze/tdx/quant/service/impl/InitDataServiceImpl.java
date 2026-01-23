@@ -144,7 +144,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 可能为 2次加载  =>  双份数据 OOM  ->  提前释放内存
-        data.clear();
+        clearData();
 
 
         // 加载   全量行情数据 - 个股+ETF
@@ -183,15 +183,28 @@ public class InitDataServiceImpl implements InitDataService {
         }
 
 
+        // 如果缓存的日期范围未初始化，则无法包含任何范围
+        if (data.startDate == null || data.endDate == null) {
+            return false;
+        }
+
+
         // IN Cache日期区间   ->   Cache可用
         return DateTimeUtil.between(startDate, data.startDate, data.endDate)
                 && DateTimeUtil.between(endDate, data.startDate, data.endDate);
     }
 
 
+    @Override
+    public void clearData() {
+        data.clear();
+        init = false;
+    }
+
+
     @TotalTime
     @Override
-    public void deleteCache() {
+    public void deleteDiskCache() {
 
         // del  ->  blockCache
         JsonFileWriterAndReader.delBlockCache();
@@ -206,7 +219,7 @@ public class InitDataServiceImpl implements InitDataService {
 
     @TotalTime
     @Override
-    public void refreshCache() {
+    public void refreshDiskCache() {
 
         // refresh  ->  blockCache
         baseBlockService.listAllKline(true);

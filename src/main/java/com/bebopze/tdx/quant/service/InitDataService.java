@@ -51,8 +51,10 @@ public interface InitDataService {
     BacktestCache initData(LocalDate startDate, LocalDate endDate, boolean refresh, int nMonth);
 
 
-    void deleteCache();
+    void clearData();
 
-    void refreshCache();
 
+    void deleteDiskCache();
+
+    void refreshDiskCache();
 }

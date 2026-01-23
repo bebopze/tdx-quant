@@ -111,7 +111,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // del Cache
-        initDataService.deleteCache();
+        initDataService.deleteDiskCache();
     }
 
 
@@ -146,7 +146,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // del Cache
-        initDataService.deleteCache();
+        initDataService.deleteDiskCache();
     }
 
 

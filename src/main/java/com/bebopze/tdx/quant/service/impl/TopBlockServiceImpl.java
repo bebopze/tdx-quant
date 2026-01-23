@@ -298,7 +298,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // GC
-        data.clear();
+        initDataService.clearData();
     }
 
 
