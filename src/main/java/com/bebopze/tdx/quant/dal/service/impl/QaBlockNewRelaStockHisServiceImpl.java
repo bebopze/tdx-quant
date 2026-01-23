@@ -60,7 +60,9 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
 
     @Override
     public QaBlockNewRelaStockHisDO last() {
-        return listByBlockNewIdDateAndLimit(1, LocalDate.of(9999, 1, 1), 1).get(0);
+        // 默认倒序
+        List<QaBlockNewRelaStockHisDO> listAll = listByBlockNewIdDateAndLimit(1, LocalDate.of(9999, 1, 1), 1);
+        return ListUtil.first(listAll);
     }
 
 

@@ -143,8 +143,10 @@ public class DataServiceImpl implements DataService {
         QaBlockNewRelaStockHisDO lastEntity = qaBlockNewRelaStockHisService.last();
 
 
-        info.setTopBlock_tradeDate(lastEntity.getDate());
-        info.setTopBlock_updateTime(lastEntity.getGmtModify());
+        if (lastEntity != null) {
+            info.setTopBlock_tradeDate(lastEntity.getDate());
+            info.setTopBlock_updateTime(lastEntity.getGmtModify());
+        }
     }
 
 

@@ -62,6 +62,17 @@ public class ListUtil {
 
 
     /**
+     * 截取  第1条
+     *
+     * @param list
+     * @return
+     */
+    public static <E> E first(List<E> list) {
+        return CollectionUtils.isEmpty(list) ? null : list.getFirst();
+    }
+
+
+    /**
      * 截取  最后1条
      *
      * @param list
