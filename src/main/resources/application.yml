@@ -10,6 +10,8 @@ spring.application.name: tdx-quant
 spring.web.resources.add-mappings: true
 # 禁用 Spring Cloud 版本兼容性检查
 spring.cloud.compatibility-verifier.enabled: false
+# 虚拟线程
+spring.threads.virtual.enabled: true
 
 
 # Actuator
