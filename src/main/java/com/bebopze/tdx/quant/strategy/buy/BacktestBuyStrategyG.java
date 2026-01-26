@@ -877,6 +877,9 @@ public class BacktestBuyStrategyG implements BuyStrategy {
                 if (null != stock_idx && stockFun.getExtDataArrDTO().涨停[stock_idx]) {
                     topBlock__涨停数_Map.merge(blockCode, 1, Integer::sum);
                 }
+                if (null != stock_idx && stockFun.getExtDataArrDTO().跌停[stock_idx]) {
+                    topBlock__涨停数_Map.merge(blockCode, -1, Integer::sum);
+                }
                 // 板块内个股  ->  当日 百日新高
                 if (null != stock_idx && stockFun.getExtDataArrDTO().百日新高[stock_idx]) {
                     topBlock__百日新高_Map.merge(blockCode, 1, Integer::sum);
