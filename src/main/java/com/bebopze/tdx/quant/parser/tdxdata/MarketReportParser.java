@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.FileUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
@@ -10,7 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -84,9 +84,9 @@ public class MarketReportParser {
 
 
         LocalDate date = null;
-        try {
 
-            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
+        try {
+            List<String> lines = FileUtil.readLines(new File(filePath), "GBK");
             if (CollectionUtils.isEmpty(lines) || lines.size() < 3) {
                 return dtoList;
             }

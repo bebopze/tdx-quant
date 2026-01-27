@@ -1,9 +1,9 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.util.FileUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -23,20 +23,6 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 public class ZdyReportParser {
 
 
-    public static void main(String[] args) {
-
-        // GB2312（GBK 是GB2312的超集   ->   GBK 100%兼容 GB2312）
-        String filePath_export = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.txt";
-        // GB2312
-        String filePath_export2 = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.xls";
-        // UTF-8
-        String filePath_export3 = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.csv";
-
-
-        List<String> strings = parse(filePath_export);
-    }
-
-
     /**
      * 个股-所属板块   [报表]       解析
      * -
@@ -51,7 +37,7 @@ public class ZdyReportParser {
 
 
         try {
-            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
+            List<String> lines = FileUtil.readLines(new File(filePath), "GBK");
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i).trim();
 
@@ -134,6 +120,25 @@ public class ZdyReportParser {
 
         log.error("ExportParser#parse suc     >>>     filePath : {},   totalNum : {}", filePath, items.size());
         return items;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+        // GB2312（GBK 是GB2312的超集   ->   GBK 100%兼容 GB2312）
+        String filePath_export = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.txt";
+        // GB2312
+        String filePath_export2 = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.xls";
+        // UTF-8
+        String filePath_export3 = TDX_PATH + "/T0002/export/全部Ａ股_20250430_1.csv";
+
+
+        List<String> result = parse(filePath_export);
+
+        result.forEach(System.out::println);
     }
 
 

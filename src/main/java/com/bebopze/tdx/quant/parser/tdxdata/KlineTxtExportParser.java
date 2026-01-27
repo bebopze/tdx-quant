@@ -4,11 +4,11 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.FileUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -120,9 +120,9 @@ public class KlineTxtExportParser {
 
 
         LocalDate date = null;
-        try {
 
-            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
+        try {
+            List<String> lines = FileUtil.readLines(new File(filePath), "GBK");
             for (String line : lines) {
 
 
