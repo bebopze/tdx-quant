@@ -26,7 +26,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bebopze.tdx.quant.common.util.BoolUtil.bool2Int;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
 
 /**
@@ -104,7 +104,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.stockDOList.parallelStream().forEach(stockDO -> {
+        data.getStockDOList(btCompareDTO.get().getStockType()).parallelStream().forEach(stockDO -> {
 
 
             try {

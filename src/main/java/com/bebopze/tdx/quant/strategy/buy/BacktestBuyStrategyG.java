@@ -299,7 +299,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
 
 
         Set<String> buy__topStock__codeSet = Sets.newHashSet();
-        data.stockDOList.forEach(stockDO -> {
+        data.getStockDOList(btCompareDTO.get().getStockType()).forEach(stockDO -> {
 
             String stockCode = stockDO.getCode();
             StockFun fun = data.getOrCreateStockFun(stockDO);
