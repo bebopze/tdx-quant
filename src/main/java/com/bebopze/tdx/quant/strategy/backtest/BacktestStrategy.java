@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BtTradeTypeEnum;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestOpenBSDTO;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
@@ -742,6 +743,7 @@ public class BacktestStrategy {
 
 
         double ztRatio = btCompareDTO.get().ztFlag_true() ? 0.7 : 1.0;
+        int min_diff = btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 500 : 70;
 
 
         LocalDate startDate = taskDO.getStartDate();
@@ -757,7 +759,7 @@ public class BacktestStrategy {
 
             // 执行天数（自然日）
             long diff = DateTimeUtil.diff(startDate, tradeDate);
-            if (diff > 70) {
+            if (diff > min_diff) {
 
                 long N = diff / 30;
                 if (N >= 2 && N <= 3 && nav < 1 + (0.015 * N * ztRatio)) {

@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
+
 
 /**
  * 回测 - B策略
@@ -177,7 +179,7 @@ public class BacktestBuyStrategyB implements BuyStrategy {
 
 
         List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.stockDOList.parallelStream().forEach(stockDO -> {
+        data.getStockDOList(btCompareDTO.get().getStockType()).parallelStream().forEach(stockDO -> {
 
 
             String stockCode = stockDO.getCode();

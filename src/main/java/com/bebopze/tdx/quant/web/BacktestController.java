@@ -57,7 +57,7 @@ public class BacktestController {
                                      @RequestParam(required = false) Integer batchNo,
 
 
-                                     @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                     @Schema(description = "回测-对照组 可变参数", example = "{\"stockType\":\"1\",\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                      @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -109,7 +109,7 @@ public class BacktestController {
                                   @RequestParam(required = false) Integer batchNo,
 
 
-                                  @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                  @Schema(description = "回测-对照组 可变参数", example = "{\"stockType\":\"1\",\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                   @RequestBody BacktestCompareDTO btCompareDTO) {
 
 
@@ -156,7 +156,7 @@ public class BacktestController {
                                       @RequestParam(defaultValue = "2025-07-01") LocalDate endDate,
 
 
-                                      @Schema(description = "回测-对照组 可变参数", example = "{\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
+                                      @Schema(description = "回测-对照组 可变参数", example = "{\"stockType\":\"1\",\"buyStrategyKey\":\"D\",\"scoreSortN\":100,\"singleStockMaxPosPct\":20,\"singleStockMinBuyPosPct\":0,\"singleStockMaxBuyAvlPct\":100,\"ztFlag\":false,\"marketPosLimitFlag\":true,\"failFastFlag\":true,\"checkTradeFlag\":false,\"top1TopBlockFlag\":false,\"taskListFlag\":false}")
                                       @RequestBody BacktestCompareDTO btCompareDTO) {
 
 

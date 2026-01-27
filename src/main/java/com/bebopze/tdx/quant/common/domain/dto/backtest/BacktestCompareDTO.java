@@ -21,6 +21,13 @@ public class BacktestCompareDTO {
 
 
     /**
+     * 回测个股类型：1-A股；2-ETF；
+     */
+    @Schema(description = "回测个股类型：1-A股；2-ETF；", example = "1")
+    private int stockType = 1;
+
+
+    /**
      * 买入前N支
      */
     @Schema(description = "买入前N支", example = "100")
@@ -131,7 +138,7 @@ public class BacktestCompareDTO {
      * B策略：A/B/C/D/E/F
      */
     @JSONField(serialize = false)
-    private transient String buyStrategyKey = "F";
+    private transient String buyStrategyKey = "D";
 
 
     /**

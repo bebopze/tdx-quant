@@ -281,6 +281,20 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public List<BaseStockDO> getStockDOList(Integer stockType) {
+        if (Objects.equals(stockType, StockTypeEnum.A_STOCK.type)) {
+            return stockDOList;
+        } else if (Objects.equals(stockType, StockTypeEnum.ETF.type)) {
+            return ETF_stockDOList;
+        }
+
+        throw new BizException("未知的 stockType : " + stockType);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Override
     public String toString() {
         // toString  ->  OOM

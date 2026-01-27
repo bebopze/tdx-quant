@@ -151,10 +151,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         Set<String> sell__stockCodeSet = positionStockCodeSet.stream().filter(stockCode -> {
-            BaseStockDO stockDO = data.codeStockMap.getOrDefault(
-                    stockCode,
-                    // ETF
-                    data.ETF_stockDOList.stream().filter(e -> e.getCode().equals(stockCode)).findFirst().orElse(null));
+            BaseStockDO stockDO = data.codeStockMap.get(stockCode);
 
 
             if (stockDO == null) {
