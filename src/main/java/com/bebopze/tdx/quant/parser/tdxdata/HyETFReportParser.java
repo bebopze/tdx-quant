@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.common.util.FileUtil;
 import com.bebopze.tdx.quant.common.util.SimpleFileMatcher;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.google.common.collect.Lists;
@@ -18,7 +19,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
-import static com.bebopze.tdx.quant.parser.tdxdata.BlockReportParser.readLinesWithEncoding;
 
 
 /**
@@ -165,7 +165,7 @@ public class HyETFReportParser {
         String code = null;
         try {
 
-            List<String> lines = readLinesWithEncoding(file_ETF, "GBK");
+            List<String> lines = FileUtil.readLines(file_ETF, "GBK");
             if (CollectionUtils.isEmpty(lines) || lines.size() < 2) {
                 return dtoList;
             }

@@ -1,11 +1,11 @@
 package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.common.util.FileUtil;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -48,7 +48,7 @@ public class TdxhyParser {
 
 
         try {
-            List<String> lines = FileUtils.readLines(new File(filePath), "GBK");
+            List<String> lines = FileUtil.readLines(new File(filePath), "GBK");
 
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
