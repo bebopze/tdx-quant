@@ -136,9 +136,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
 
         // ---------------------------------------------
         // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
-        if (btCompareDTO.get().isTop1TopBlockFlag()) {
-            topBlockCodeSet = top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
-        }
+        topBlockCodeSet = top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
 
 
         // -------------------------------------------------------------------------------------------------------------

@@ -132,9 +132,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
         // ---------------------------------------------
         // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
-        if (btCompareDTO.get().isTop1TopBlockFlag()) {
-            topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
-        }
+        topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
 
 
         // -------------------------------------------------------------------------------------------------------------
