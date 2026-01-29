@@ -110,7 +110,9 @@
 
         FROM base_stock
 
-        WHERE id > #{lastId}
+        WHERE type = #{type}
+
+          AND id > #{lastId}
 
         ORDER BY id
         LIMIT #{pageSize}

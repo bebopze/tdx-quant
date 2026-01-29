@@ -34,11 +34,13 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
     /**
      * 游标分页（非 OFFSET分页）
      *
+     * @param type
      * @param lastId
      * @param pageSize
      * @return
      */
-    List<BaseStockDO> listByCursor(@Param("lastId") Long lastId,
+    List<BaseStockDO> listByCursor(@Param("type") Integer type,
+                                   @Param("lastId") Long lastId,
                                    @Param("pageSize") int pageSize);
 
 
