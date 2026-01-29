@@ -9,7 +9,6 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
-import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.google.common.collect.Maps;
@@ -44,7 +43,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
     private MarketService marketService;
 
     @Autowired
-    private TopBlockService topBlockService;
+    private TopBlockStrategy topblockStrategy;
 
     @Autowired
     private BacktestBuyStrategyA backtestBuyStrategyA;
@@ -126,13 +125,8 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = backtestBuyStrategyD.topBlock(topBlockStrategyEnum, data, tradeDate); // 板块-月多2
+        Set<String> topBlockCodeSet = topblockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
-
-
-        // --------------------------------------------- 2次过滤（1~5个）
-        // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
-        topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
 
 
         // -------------------------------------------------------------------------------------------------------------

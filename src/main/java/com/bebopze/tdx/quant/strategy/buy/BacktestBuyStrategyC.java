@@ -1,26 +1,19 @@
 package com.bebopze.tdx.quant.strategy.buy;
 
-import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
-import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
-import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
-import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -48,7 +41,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     private MarketService marketService;
 
     @Autowired
-    private TopBlockService topBlockService;
+    private TopBlockStrategy topblockStrategy;
 
     @Autowired
     private BacktestBuyStrategyA backtestBuyStrategyA;
@@ -117,7 +110,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = topBlock(topBlockStrategyEnum, data, tradeDate);
+        Set<String> topBlockCodeSet = topblockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
@@ -320,338 +313,6 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
         return buy__topStock__codeSet;
-    }
-
-
-    /**
-     * 指定   主线策略 + 日期     ->     主线板块 列表
-     *
-     * @param topBlockStrategyEnum 主线策略
-     * @param data
-     * @param tradeDate            日期
-     * @return
-     */
-    public Set<String> topBlock(TopBlockStrategyEnum topBlockStrategyEnum, BacktestCache data, LocalDate tradeDate) {
-        // return data.topBlockCache.get(tradeDate + "|" + topBlockStrategyEnum.getDesc(), k -> topBlockStrategy(topBlockStrategyEnum, data, tradeDate));
-
-        return data.topBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
-                                 .computeIfAbsent(topBlockStrategyEnum, kk -> topBlockStrategy(topBlockStrategyEnum, data, tradeDate));
-    }
-
-
-    /**
-     * 主线板块（LV2 -> 普通行业   ）    ->     百日新高 - 天数占比Top1       ->      唯一主线
-     * 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多     ->     N个 “主线”
-     *
-     * @param topBlockStrategyEnum
-     * @param data
-     * @param tradeDate
-     * @return
-     */
-    private Set<String> topBlockStrategy(TopBlockStrategyEnum topBlockStrategyEnum,
-                                         BacktestCache data,
-                                         LocalDate tradeDate) {
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                      1、主线板块（LV1 -> 研究行业）
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // TODO   暂不考虑
-        //
-        //
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                      2、主线板块（LV2 -> 普通行业）
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 主线板块（唯一）    ->     LV2（普通行业） /  LV1（研究行业）
-        String lv2_topBlockCode = lv2_topBlockCode(tradeDate);
-
-
-        // TdxBlockNewWriter.write("ZXBK-LV2", Sets.newHashSet(lv2_topBlockCode));
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                      3、主线板块（LV3 -> 概念 + 细分）
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 主线板块（N个）    ->     LV3（概念 + 细分）
-        Set<String> lv3_topBlockCodeSet = lv3_topBlockCodeSet(data, tradeDate);
-
-
-        // TdxBlockNewWriter.write("ZXBK-LV3", lv3_topBlockCodeSet);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                      4、主线板块（LV2普通行业   <- 升级/降级 ->   LV3 概念 + 细分）
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // LV2_LV3
-        Set<String> lv2_lv3__topBlockCodeSet = lv2_lv3__topBlockCodeSet(tradeDate, lv3_topBlockCodeSet);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                      topBlockStrategyEnum
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 中期  = 短期     ->     100% LV2 （   唯一主线）
-        // 中期 != 短期     ->     主线 切换期（无 唯一主线）    =>     LV2（唯一主线）    -降级->     LV3（N个 “主线”）
-        Set<String> topBlockCodeSet = topBlockStrategy(topBlockStrategyEnum, lv2_topBlockCode, lv3_topBlockCodeSet, lv2_lv3__topBlockCodeSet);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        topBlockCodeSet.removeIf(StringUtils::isBlank);
-        return topBlockCodeSet;
-    }
-
-
-    /**
-     * 主线板块（LV2 -> 普通行业   ）    ->     百日新高 - 天数占比Top1       ->      唯一主线
-     * 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多     ->     N个 “主线”
-     *
-     * @param topBlockStrategyEnum
-     * @param data
-     * @param tradeDate
-     * @return
-     */
-    private Set<String> topBlockStrategy2(TopBlockStrategyEnum topBlockStrategyEnum,
-                                          BacktestCache data,
-                                          LocalDate tradeDate) {
-
-
-        if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV1)) {
-
-
-            // ---------------------------------------------------------------------------------------------------------
-            //                                      1、主线板块（LV1 -> 研究行业）
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // TODO   暂不考虑
-            //
-            //
-
-
-        } else if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV2)) {
-
-
-            // ---------------------------------------------------------------------------------------------------------
-            //                                      2、主线板块（LV2 -> 普通行业）
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // 主线板块（唯一）    ->     LV2（普通行业） /  LV1（研究行业）
-            String lv2_topBlockCode = lv2_topBlockCode__unique(tradeDate);
-
-            return Sets.newHashSet(lv2_topBlockCode);
-
-
-        } else if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV3)) {
-
-            // ---------------------------------------------------------------------------------------------------------
-            //                                      3、主线板块（LV3 -> 概念 + 细分）
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // 主线板块（N个）    ->     LV3（概念 + 细分）
-            Set<String> lv3_topBlockCodeSet = lv3_topBlockCodeSet(data, tradeDate);
-
-            return lv3_topBlockCodeSet;
-
-
-        } else if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV2_LV3)) {
-
-
-            // ---------------------------------------------------------------------------------------------------------
-            //                                      4、主线板块（LV2普通行业   <- 升级/降级 ->   LV3 概念 + 细分）
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // LV2_LV3
-
-            // 中期  = 短期     ->     100% LV2 （   唯一主线）
-            // 中期 != 短期     ->     主线 切换期（无 唯一主线）    =>     LV2（唯一主线）    -降级->     LV3（N个 “主线”）
-
-            Set<String> lv2_lv3__topBlockCodeSet = lv2_lv3__topBlockCodeSet(tradeDate, lv3_topBlockCodeSet(data, tradeDate));
-
-
-            return lv2_lv3__topBlockCodeSet;
-        }
-
-
-        throw new BizException("topBlockStrategyEnum=[" + topBlockStrategyEnum + "]有误！");
-    }
-
-
-    /**
-     * 中期  = 短期     ->     100% LV2 （   唯一主线）
-     * 中期 != 短期     ->     主线 切换期（无 唯一主线）    =>     LV2（唯一主线）    -降级->     LV3（N个 “主线”）
-     *
-     * @param topBlockStrategyEnum
-     * @param lv2_topBlockCode         LV2（唯一主线）
-     * @param lv3_topBlockCodeSet      LV3（N个 “主线”）
-     * @param lv2_lv3__topBlockCodeSet
-     * @return
-     */
-    private Set<String> topBlockStrategy(TopBlockStrategyEnum topBlockStrategyEnum,
-                                         String lv2_topBlockCode,
-                                         Set<String> lv3_topBlockCodeSet,
-                                         Set<String> lv2_lv3__topBlockCodeSet) {
-
-
-        if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV2)) {
-
-            return Sets.newHashSet(lv2_topBlockCode);
-
-        } else if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV3)) {
-
-            return lv3_topBlockCodeSet;
-
-        } else if (Objects.equals(topBlockStrategyEnum, TopBlockStrategyEnum.LV2_LV3)) {
-
-            return lv2_lv3__topBlockCodeSet;
-        }
-
-
-        // 默认值：LV3
-        return lv3_topBlockCodeSet;
-    }
-
-    private Set<String> lv2_lv3__topBlockCodeSet(LocalDate tradeDate, Set<String> lv3_topBlockCodeSet) {
-
-        // 唯一主线  !=  null     ->     LV2（唯一主线）
-        // 唯一主线  ==  null     ->     LV3（N个 “主线”）
-        String lv2_topBlockCode = lv2_topBlockCode__unique(tradeDate);
-
-        return StringUtils.isNotBlank(lv2_topBlockCode) ? Sets.newHashSet(lv2_topBlockCode) : lv3_topBlockCodeSet;
-    }
-
-
-    /**
-     * 主线板块（LV2 -> 普通行业   ）    ->     百日新高 - 天数占比Top1       ->      唯一主线（中期 = 短期）
-     *
-     *
-     * 中期 = 短期     ->     100% LV2（唯一主线）
-     *
-     * @param tradeDate
-     * @return
-     */
-    private String lv2_topBlockCode(LocalDate tradeDate) {
-
-
-        // 主线板块
-        Map<String, Integer> blockCode_count_Map = topBlockService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
-
-
-        // 主线板块   ->   仅取 TOP1 板块
-        return MapUtils.isEmpty(blockCode_count_Map) ? null :
-                blockCode_count_Map.keySet().iterator().next().split("-")[0];
-    }
-
-    /**
-     * 主线板块（LV2 -> 普通行业   ）    ->     百日新高 - 天数占比Top1       ->      唯一主线（中期 = 短期）
-     *
-     *
-     * 中期 = 短期     ->     100% LV2（唯一主线）
-     *
-     * @param tradeDate
-     * @return
-     */
-    private String lv2_topBlockCode__unique(LocalDate tradeDate) {
-
-
-        // 主线板块
-        Map<String, Integer> blockCode_count_Map__N15 = topBlockService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 15);
-        Map<String, Integer> blockCode_count_Map__N7 = topBlockService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 7);
-
-
-        // 主线板块   ->   仅取 TOP1 板块
-        String topBlockCodeSet__db__N15 = MapUtils.isEmpty(blockCode_count_Map__N15) ? null :
-                blockCode_count_Map__N15.keySet().iterator().next().split("-")[0];
-
-        String topBlockCodeSet__db__N7 = MapUtils.isEmpty(blockCode_count_Map__N7) ? null :
-                blockCode_count_Map__N7.keySet().iterator().next().split("-")[0];
-
-
-        // 中期 = 短期     ->     100% LV2（唯一主线）
-        if (Objects.equals(topBlockCodeSet__db__N15, topBlockCodeSet__db__N7)) {
-            return topBlockCodeSet__db__N15;
-        }
-
-
-        // 中期 != 短期     ->     主线 切换期（无 唯一主线）    =>     LV2（唯一主线）    -降级->     LV3（N个 “主线”）
-        return null;
-    }
-
-    /**
-     * 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多     ->     N个 “主线”
-     *
-     * @param data
-     * @param tradeDate
-     * @return
-     */
-    private Set<String> lv3_topBlockCodeSet(BacktestCache data, LocalDate tradeDate) {
-
-
-        Set<String> lv3_topBlockCodeSet = Sets.newHashSet();
-
-
-        data.blockDOList.forEach(blockDO -> {
-
-
-            String blockCode = blockDO.getCode();
-
-
-            BlockFun fun = data.getOrCreateBlockFun(blockDO);
-
-
-            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-            // ---------------------
-
-
-            Integer idx = dateIndexMap.get(tradeDate);
-
-            // 过滤当日  ->  未上市/新板块、非LV3
-            if (blockDO.getEndLevel() != 1 || extDataArrDTO.date.length == 0 || idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
-                return;
-            }
-
-
-            // ---------------------
-
-
-            // --------------------- 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多
-
-
-            boolean 月多 = extDataArrDTO.月多[idx];
-            boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
-            boolean RPS红 = extDataArrDTO.RPS红[idx];
-            boolean SSF多 = extDataArrDTO.SSF多[idx];
-
-
-            if ((月多 || 均线预萌出) && RPS红 && SSF多) {
-                lv3_topBlockCodeSet.add(blockCode);
-            }
-        });
-
-
-        List<String> topBlock__codeNameSet = lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code)).collect(Collectors.toList());
-        log.info("topBlockCodeSet - 板块-月多2     >>>     [{}] , {} , {}", tradeDate, lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
-
-
-        return lv3_topBlockCodeSet;
     }
 
 

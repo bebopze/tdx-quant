@@ -17,6 +17,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyG;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
+import com.bebopze.tdx.quant.strategy.buy.TopBlockStrategy;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.*;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
 
 /**
@@ -44,6 +46,9 @@ public class BacktestSellStrategy implements SellStrategy {
 
     @Autowired
     private MarketService marketService;
+
+    @Autowired
+    private TopBlockStrategy topBlockStrategy;
 
     @Autowired
     private BuyStrategyFactory buyStrategyFactory;
@@ -77,7 +82,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = backtestBuyStrategyG.topBlock(topBlockStrategyEnum, data, tradeDate);
+        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.isTop1TopBlockFlag());
         log.info("BacktestSellStrategy - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
@@ -701,7 +706,7 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // 今日   主线板块 列表
-        Set<String> topBlockCodeSet = backtestBuyStrategyG.topBlock(topBlockStrategyEnum, data, tradeDate);
+        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         // 今日   个股 -> IN 主线板块
         Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyG.inTopBlock__stockCodeSet(topBlockCodeSet, Sets.newHashSet(stockCode), data, tradeDate);
 
