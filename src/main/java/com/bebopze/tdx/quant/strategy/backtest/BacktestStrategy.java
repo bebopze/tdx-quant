@@ -477,6 +477,8 @@ public class BacktestStrategy {
 
         // 任务批次号
         taskDO.setBatchNo(batchNo);
+        // 回测股票类型
+        taskDO.setStockType(btCompareDTO.get().getStockType());
         // 任务状态
         taskDO.setStatus(1);
 

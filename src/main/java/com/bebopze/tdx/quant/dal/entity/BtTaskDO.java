@@ -49,6 +49,13 @@ public class BtTaskDO implements Serializable {
     private Integer batchNo;
 
     /**
+     * 回测股票类型：1-A股；2-ETF；3-板块；
+     */
+    @TableField(value = "stock_type")
+    @Schema(description = "回测股票类型：1-A股；2-ETF；3-板块；")
+    private Integer stockType;
+
+    /**
      * 任务状态（用于每日 更新至最新交易日）：1-进行中（新开任务）；2-已完成（已更新至 最新交易日）；3-待更新至 最新交易日（之前已完成过）；
      */
     @TableField(value = "status")
