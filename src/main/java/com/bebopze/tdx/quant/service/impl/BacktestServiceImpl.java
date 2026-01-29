@@ -118,7 +118,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 中断 -> 恢复执行
-        BtTaskDO batchNoEntity = filterFinishTaskList(startDate, endDate, resume, batchNo, finishSet);
+        BtTaskDO batchNoEntity = filterFinishTaskList(startDate, endDate, resume, batchNo, finishSet, btCompareDTO);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -133,27 +133,6 @@ public class BacktestServiceImpl implements BacktestService {
                                  Runnable::run,  // 直接执行 Runnable
                                  ThreadPoolType.IO_INTENSIVE
         );
-
-
-//        ParallelCalcUtil.forEach(buy_conCombinerList,
-//
-//
-//                                 buyConList -> {
-//                                     long start = System.currentTimeMillis();
-//
-//
-//                                     Arrays.stream(TopBlockStrategyEnum.values())
-//                                           // 暂无 LV1 主线策略
-//                                           .filter(e -> !e.equals(TopBlockStrategyEnum.LV1))
-//                                           .filter(e -> !finishSet.contains(getKey(finalBatchNo, e.getDesc(), buyConList, sellConList)))
-//                                           .forEach(topBlockStrategyEnum -> backTestStrategy.backtest(finalBatchNo, topBlockStrategyEnum, buyConList, sellConList, finalStartDate, finalEndDate));
-//
-//
-//                                     progressLog(finalBatchNo, current.incrementAndGet(), total, start);
-//                                 },
-//
-//                                 // ThreadPoolType.CPU_INTENSIVE);
-//                                 ThreadPoolType.IO_INTENSIVE);
     }
 
 
@@ -240,13 +219,15 @@ public class BacktestServiceImpl implements BacktestService {
      * @param resume
      * @param batchNo
      * @param finishSet
+     * @param btCompareDTO
      * @return
      */
     private BtTaskDO filterFinishTaskList(LocalDate startDate,
                                           LocalDate endDate,
                                           boolean resume,
                                           Integer batchNo,
-                                          Set<String> finishSet) {
+                                          Set<String> finishSet,
+                                          BacktestCompareDTO btCompareDTO) {
 
 
         // 任务批次号 - last
@@ -269,6 +250,8 @@ public class BacktestServiceImpl implements BacktestService {
             BtTaskDO new_batchNoEntity = new BtTaskDO();
 
             new_batchNoEntity.setBatchNo(lastBatchNo + 1);
+            new_batchNoEntity.setStockType(btCompareDTO.getStockType());
+            new_batchNoEntity.setStatus(1);
             new_batchNoEntity.setStartDate(startDate);
             new_batchNoEntity.setEndDate(endDate);
 
@@ -363,8 +346,6 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // 同一批次  ->  日期一致性
-//        LocalDate finalStartDate = batchNoEntity.getStartDate();
-//        LocalDate finalEndDate = batchNoEntity.getEndDate();
         LocalDate finalStartDate = startDate;
         LocalDate finalEndDate = endDate;
 
