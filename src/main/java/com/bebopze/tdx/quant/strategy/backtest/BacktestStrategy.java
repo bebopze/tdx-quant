@@ -3462,9 +3462,12 @@ public class BacktestStrategy {
                  ListUtil.size(data.stockDOList), Thread.currentThread().getName());
 
 
+        // 仅明确 回测ETF   ->   可只加载 ETF数据（回测个股 -> 有大盘极限底 ETF抄底策略）
+        Integer stockType = Objects.equals(btCompareDTO.get().getStockType(), StockTypeEnum.ETF.type) ? StockTypeEnum.ETF.type : null;
+
+
         // 全量行情
-        data = initDataService.initData(startDate, endDate, false, 0);
-        // initDataService.initData(startDate, endDate, false);   // 等价 data = 全局Cache;       data -本身就已全局指向-> 全局Cache
+        data = initDataService.initData(startDate, endDate, stockType, false, 0);
 
 
         log.info("--------------------------- data.stockDOList - after      >>>     size : {} , 线程 : {}",

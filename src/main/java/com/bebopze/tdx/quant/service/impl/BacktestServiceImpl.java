@@ -424,7 +424,7 @@ public class BacktestServiceImpl implements BacktestService {
 
 
         // cache
-        BacktestCache data = backTestStrategy.getInitDataService().initData(taskDO.getStartDate(), taskDO.getEndDate(), false);
+        BacktestCache data = backTestStrategy.getInitDataService().initData(taskDO.getStartDate(), taskDO.getEndDate(), null, false);
 
 
         // date

@@ -109,7 +109,7 @@ public class TaskController {
 
         endDate = endDate == null ? LocalDate.now() : endDate;
 
-        initDataService.initData(startDate, endDate, refresh);
+        initDataService.initData(startDate, endDate, null, refresh);
         return Result.SUC();
     }
 

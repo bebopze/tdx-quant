@@ -421,7 +421,7 @@ public class StrategyServiceImpl implements StrategyService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), false, 0);
+        initDataService.initData(LocalDate.now().minusYears(2), LocalDate.now(), null, false, 0);
 //        initDataService.initData();
 
 

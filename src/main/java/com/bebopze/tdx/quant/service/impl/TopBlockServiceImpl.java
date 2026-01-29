@@ -2610,7 +2610,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // LocalDate endDate = LocalDate.now();
 
 
-        data = initDataService.initData(startDate, endDate, false, 0);
+        data = initDataService.initData(startDate, endDate, null, false, 0);
     }
 
 
