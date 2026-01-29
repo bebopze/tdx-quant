@@ -45,7 +45,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
     private MarketService marketService;
 
     @Autowired
-    private TopBlockStrategy topblockStrategy;
+    private TopBlockStrategy topBlockStrategy;
 
     @Autowired
     private BacktestBuyStrategyA backtestBuyStrategyA;
@@ -127,7 +127,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = topblockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
+        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         log.info("BacktestBuyStrategy_Stock - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
@@ -155,7 +155,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> inTopBlock__stockCodeSet = backtestBuyStrategyD.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
         log.info("BacktestBuyStrategy_Stock - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 

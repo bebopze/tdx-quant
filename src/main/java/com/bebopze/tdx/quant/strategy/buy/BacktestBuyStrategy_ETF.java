@@ -147,7 +147,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
         // 强势ETF   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> inTopBlock__stockCodeSet = inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = topblockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
         log.info("BacktestBuyStrategy_ETF - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -180,69 +180,6 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
 
         return sort__stockCodeList;
-    }
-
-
-    /**
-     * 强势个股   ->   IN 主线板块                  // 通用方法
-     *
-     * @param topBlockCodeSet        主线板块
-     * @param buy__topStock__codeSet 强势个股
-     * @param data
-     * @param tradeDate
-     * @return
-     */
-    public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                Collection<String> buy__topStock__codeSet,
-
-                                                BacktestCache data,
-                                                LocalDate tradeDate) {
-
-
-        // 强势个股   ->   IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = buy__topStock__codeSet
-                .stream()
-                .filter(stockCode -> {
-
-
-                    // ETF   -对应->   板块列表
-                    Set<String> stock__blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
-
-
-                    // 交集（ETF板块 - 主线板块）
-                    Collection<String> stock__blockCodeSet__inTopBlock = CollectionUtils.intersection(topBlockCodeSet, stock__blockCodeSet);
-
-                    // 非空（ETF所属 主线板块）
-                    if (CollectionUtils.isNotEmpty(stock__blockCodeSet__inTopBlock)) {
-
-
-                        // ETF   ->   主线板块（IN 主线板块）      code-name列表
-                        Set<String> stock__blockCodeNameSet__inTopBlock = stock__blockCodeSet__inTopBlock.stream()
-                                                                                                         // 板块code-板块name
-                                                                                                         .map(blockCode -> blockCode + "-" + data.block__codeNameMap.get(blockCode))
-                                                                                                         .collect(Collectors.toSet());
-
-                        // Cache（code-name 列表）
-                        data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
-                                                   .put(stockCode, stock__blockCodeNameSet__inTopBlock);
-
-
-                        if (log.isDebugEnabled()) {
-                            log.debug("ETF -> IN 主线板块     >>>     {} , [{}-{}] , [{}]",
-                                      tradeDate,
-                                      stockCode, data.stock__codeNameMap.get(stockCode),
-                                      stock__blockCodeNameSet__inTopBlock);
-                        }
-
-                        return true;
-                    }
-
-
-                    return false;
-                }).collect(Collectors.toSet());
-
-
-        return inTopBlock__stockCodeSet;
     }
 
 

@@ -579,4 +579,94 @@ public class TopBlockStrategy {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 强势个股   ->   IN 主线板块                  // 通用方法
+     *
+     * @param topBlockCodeSet        主线板块
+     * @param buy__topStock__codeSet 强势个股
+     * @param data
+     * @param tradeDate
+     * @return
+     */
+    public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
+                                                Collection<String> buy__topStock__codeSet,
+
+                                                BacktestCache data,
+                                                LocalDate tradeDate) {
+
+
+        // 强势个股   ->   IN 主线板块
+        Set<String> inTopBlock__stockCodeSet = buy__topStock__codeSet
+                .stream()
+                .filter(stockCode -> {
+
+
+                    // 个股   -对应->   板块列表
+                    Set<String> stock__blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
+
+
+                    // 交集（个股板块 - 主线板块）
+                    Collection<String> stock__blockCodeSet__inTopBlock = CollectionUtils.intersection(topBlockCodeSet, stock__blockCodeSet);
+
+                    // 非空（个股所属 主线板块）
+                    if (CollectionUtils.isNotEmpty(stock__blockCodeSet__inTopBlock)) {
+
+
+                        // 个股   ->   主线板块（IN 主线板块）      code-name列表
+                        Set<String> stock__blockCodeNameSet__inTopBlock = stock__blockCodeSet__inTopBlock.stream()
+                                                                                                         // 板块code-板块name
+                                                                                                         .map(blockCode -> blockCode + "-" + data.block__codeNameMap.get(blockCode))
+                                                                                                         .collect(Collectors.toSet());
+
+                        // Cache（code-name 列表）
+                        data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
+                                                   .put(stockCode, stock__blockCodeNameSet__inTopBlock);
+
+
+                        if (log.isDebugEnabled()) {
+                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}]",
+                                      tradeDate,
+                                      stockCode, data.stock__codeNameMap.get(stockCode),
+                                      stock__blockCodeNameSet__inTopBlock);
+                        }
+
+                        return true;
+                    }
+
+
+//                    for (String stock__blockCode : stock__blockCodeSet) {
+//
+//
+//                        // 个股   ->   IN 主线板块
+//                        boolean inTopBlock = topBlockCodeSet.contains(stock__blockCode);
+//
+//                        if (inTopBlock) {
+//
+//
+//                            // 个股   ->   B-signal   主线板块
+//                            // String key = tradeDate + "|" + stockCode;
+//                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
+//
+//
+//                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
+//                                      stockCode, data.stock__codeNameMap.get(stockCode),
+//                                      stock__blockCode, data.block__codeNameMap.get(stock__blockCode));
+//
+//
+//                            return true;
+//                        }
+//                    }
+
+
+                    return false;
+                }).collect(Collectors.toSet());
+
+
+        return inTopBlock__stockCodeSet;
+    }
+
+
 }

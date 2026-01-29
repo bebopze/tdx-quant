@@ -21,7 +21,6 @@ import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
@@ -41,7 +40,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
     private MarketService marketService;
 
     @Autowired
-    private TopBlockStrategy topblockStrategy;
+    private TopBlockStrategy topBlockStrategy;
 
     @Autowired
     private BacktestBuyStrategyA backtestBuyStrategyA;
@@ -110,7 +109,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = topblockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
+        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
@@ -132,7 +131,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> inTopBlock__stockCodeSet = inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
         log.info("BacktestBuyStrategyC - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -163,63 +162,6 @@ public class BacktestBuyStrategyC implements BuyStrategy {
 
 
         return sort__stockCodeList;
-    }
-
-
-    /**
-     * 强势个股   ->   IN 主线板块                  // 通用方法
-     *
-     * @param topBlockCodeSet   主线板块
-     * @param topStock__codeSet 强势个股
-     * @param data
-     * @param tradeDate
-     * @return
-     */
-    public Set<String> inTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                Set<String> topStock__codeSet,
-
-                                                BacktestCache data,
-                                                LocalDate tradeDate) {
-
-
-        // 强势个股   ->   IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = topStock__codeSet
-                .stream()
-                .filter(stockCode -> {
-
-
-                    // 个股   -对应->   板块列表
-                    Set<String> stock__blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
-
-                    for (String stock__blockCode : stock__blockCodeSet) {
-
-
-                        // 个股   ->   IN 主线板块
-                        boolean inTopBlock = topBlockCodeSet.contains(stock__blockCode);
-
-                        if (inTopBlock) {
-
-
-                            // 个股   ->   B-signal   主线板块
-                            // String key = tradeDate + "|" + stockCode;
-                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
-
-
-                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
-                                      stockCode, data.stock__codeNameMap.get(stockCode),
-                                      stock__blockCode, data.block__codeNameMap.get(stock__blockCode));
-
-
-                            return true;
-                        }
-                    }
-
-
-                    return false;
-                }).collect(Collectors.toSet());
-
-
-        return inTopBlock__stockCodeSet;
     }
 
 
