@@ -5,7 +5,10 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
+import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import com.google.common.collect.Maps;
@@ -16,6 +19,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -32,6 +36,9 @@ import java.util.stream.Collectors;
 @Component
 public class TopBlockStrategy {
 
+
+    @Autowired
+    private MarketService marketService;
 
     @Autowired
     private TopBlockService topBlockService;
@@ -666,6 +673,72 @@ public class TopBlockStrategy {
 
 
         return inTopBlock__stockCodeSet;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
+     *
+     * @param inTopBlock__stockCodeSet
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     * @param posRate
+     */
+    public void buyStrategy_ETF(Set<String> inTopBlock__stockCodeSet,
+                                BacktestCache data,
+                                LocalDate tradeDate,
+                                Map<String, String> buy_infoMap,
+                                double posRate) {
+
+
+        // 无股可买（inTopBlock__stockCodeList 为空     ||     总仓位 < 50%）
+
+
+        // 有股可买   ->   取反（无股可买）
+        // if (CollectionUtils.isNotEmpty(inTopBlock__stockCodeList) && posRate > 0.5) {
+        if (!(CollectionUtils.isEmpty(inTopBlock__stockCodeSet) || posRate < 0.5)) {
+            return;
+        }
+
+
+        // 大盘量化
+        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
+        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
+
+
+        // 大盘-牛熊：1-牛市；2-熊市；
+        Integer marketBullBearStatus = marketInfo.getMarketBullBearStatus();
+        // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
+        Integer marketMidStatus = marketInfo.getMarketMidStatus();
+
+
+        // 大盘底
+        if (marketMidStatus == 1) {
+
+
+            // ETF
+            data.ETF_stockDOList.forEach(e -> {
+
+                // ETF   ->   最小交易日（上市日期）
+                List<KlineDTO> klineDTOList = e.getKlineDTOList();
+                LocalDate date = CollectionUtils.isEmpty(klineDTOList) ? null : klineDTOList.get(0).getDate();
+
+                // 当前日期   ->   已上市
+                if (date != null && date.isBefore(tradeDate)) {
+                    String stockCode = e.getCode();
+
+                    inTopBlock__stockCodeSet.add(stockCode);
+                    buy_infoMap.put(stockCode, "大盘极限底->ETF策略");
+                }
+            });
+
+
+            System.out.println(inTopBlock__stockCodeSet);
+        }
     }
 
 

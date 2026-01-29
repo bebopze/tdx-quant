@@ -166,7 +166,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
         long start_4 = System.currentTimeMillis();
         if (/*CollectionUtils.isEmpty(inTopBlock__stockCodeSet) || */inTopBlock__stockCodeSet.size() < 25) { // ETF策略  ->  只有在 无个股可买 时 才触发
-            backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
+            topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
         }
         log.info("BacktestBuyStrategy_Stock - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
