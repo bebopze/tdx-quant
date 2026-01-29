@@ -122,7 +122,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
 
         long start_1 = System.currentTimeMillis();
         Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
-        log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+        log.info("BacktestBuyStrategyG - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         // B策略   ->   强势个股
         long start_2 = System.currentTimeMillis();
         Set<String> buy__topStock__codeSet = buy__topStock__codeSet(buyConSet, data, tradeDate, buy_infoMap, ztFlag);
-        log.info("BacktestBuyStrategyD - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
+        log.info("BacktestBuyStrategyG - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
         Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
-        log.info("BacktestBuyStrategyD - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+        log.info("BacktestBuyStrategyG - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -153,15 +153,8 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
         long start_4 = System.currentTimeMillis();
-        backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
-        log.info("BacktestBuyStrategyD - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
-        // backtestStrategy.buy_sell__signalConflict(data, tradeDate, inTopBlock__stockCodeList);
+        topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
+        log.info("BacktestBuyStrategyG - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -171,7 +164,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         long start_5 = System.currentTimeMillis();
         // TODO   TEST
         List<String> sort__stockCodeList = ScoreSort.scoreSort__AMO(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
-        log.info("BacktestBuyStrategyD - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
+        log.info("BacktestBuyStrategyG - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
         return sort__stockCodeList;

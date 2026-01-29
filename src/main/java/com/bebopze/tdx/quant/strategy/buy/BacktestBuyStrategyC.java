@@ -141,7 +141,7 @@ public class BacktestBuyStrategyC implements BuyStrategy {
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
         long start_4 = System.currentTimeMillis();
-        backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
+        topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
         log.info("BacktestBuyStrategyC - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
 

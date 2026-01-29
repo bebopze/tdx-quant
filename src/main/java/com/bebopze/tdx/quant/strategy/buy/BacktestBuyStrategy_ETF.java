@@ -11,7 +11,6 @@ import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -22,7 +21,6 @@ import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 import static com.bebopze.tdx.quant.strategy.buy.ScoreSort.scoreSort__RPS;
@@ -43,16 +41,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
     private MarketService marketService;
 
     @Autowired
-    private TopBlockStrategy topblockStrategy;
-
-    @Autowired
-    private BacktestBuyStrategyA backtestBuyStrategyA;
-
-    @Autowired
-    private BacktestBuyStrategyD backtestBuyStrategyD;
-
-    @Autowired
-    private BacktestBuyStrategyG backtestBuyStrategyG;
+    private TopBlockStrategy topBlockStrategy;
 
     @Lazy
     @Autowired
@@ -125,8 +114,8 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
 
         long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = topblockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
-        log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
+        log.info("BacktestBuyStrategy_ETF - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -147,7 +136,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
         // 强势ETF   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
-        Set<String> inTopBlock__stockCodeSet = topblockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
         log.info("BacktestBuyStrategy_ETF - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
@@ -158,7 +147,7 @@ public class BacktestBuyStrategy_ETF implements BuyStrategy {
 
         long start_4 = System.currentTimeMillis();
         if (CollectionUtils.isEmpty(inTopBlock__stockCodeSet)) { // ETF策略  ->  只有在 无ETF可买 时 才触发
-            backtestBuyStrategyA.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
+            topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
         }
         log.info("BacktestBuyStrategy_ETF - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 

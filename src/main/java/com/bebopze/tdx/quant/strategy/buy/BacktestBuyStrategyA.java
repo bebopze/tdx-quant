@@ -43,6 +43,9 @@ public class BacktestBuyStrategyA implements BuyStrategy {
     @Autowired
     private TopBlockService topBlockService;
 
+    @Autowired
+    private TopBlockStrategy topBlockStrategy;
+
 
     @Override
     public String key() {
@@ -302,8 +305,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
-
-        buyStrategy_ETF(filter__stockCodeSet2, data, tradeDate, buy_infoMap, posRate);
+        topBlockStrategy.buyStrategy_ETF(filter__stockCodeSet2, data, tradeDate, buy_infoMap, posRate);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -319,6 +321,9 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
         return filterSort__stockCodeList;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
