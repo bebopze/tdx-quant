@@ -115,6 +115,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         btCompareDTO_1.setBuyStrategyKey("D");
+        btCompareDTO_1.setSellStrategyKey("A");
         btCompareDTO_1.setTopBlockStrategyEnum(topBlockStrategyEnum_1);
         btCompareDTO_1.setBuyConSet(buyConSet_1);
         btCompareDTO_1.setSellConSet(sellConSet_1);
@@ -164,6 +165,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         btCompareDTO_2.setBuyStrategyKey("D");
+        btCompareDTO_2.setSellStrategyKey("A");
         btCompareDTO_2.setTopBlockStrategyEnum(topBlockStrategyEnum_2);
         btCompareDTO_2.setBuyConSet(buyConSet_2);
         btCompareDTO_2.setSellConSet(sellConSet_2);
@@ -212,6 +214,7 @@ public class StrategyServiceImpl implements StrategyService {
         Set<String> sellConSet_3 = ConvertUtil.str2Set("个股S,板块S,主线S");
 
         btCompareDTO_3.setBuyStrategyKey("D");
+        btCompareDTO_3.setSellStrategyKey("A");
         btCompareDTO_3.setTopBlockStrategyEnum(topBlockStrategyEnum_3);
         btCompareDTO_3.setBuyConSet(buyConSet_3);
         btCompareDTO_3.setSellConSet(sellConSet_3);
@@ -262,6 +265,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         btCompareDTO_4.setBuyStrategyKey("D");
+        btCompareDTO_4.setSellStrategyKey("A");
         btCompareDTO_4.setTopBlockStrategyEnum(topBlockStrategyEnum_4);
         btCompareDTO_4.setBuyConSet(buyConSet_4);
         btCompareDTO_4.setSellConSet(sellConSet_4);
@@ -310,6 +314,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
         btCompareDTO_5.setBuyStrategyKey("D");
+        btCompareDTO_5.setSellStrategyKey("A");
         btCompareDTO_5.setTopBlockStrategyEnum(topBlockStrategyEnum_5);
         btCompareDTO_5.setBuyConSet(buyConSet_5);
         btCompareDTO_5.setSellConSet(sellConSet_5);
@@ -359,6 +364,7 @@ public class StrategyServiceImpl implements StrategyService {
         Set<String> sellConSet_6 = ConvertUtil.str2Set("个股S,板块S,主线S");
 
         btCompareDTO_6.setBuyStrategyKey("D");
+        btCompareDTO_6.setSellStrategyKey("A");
         btCompareDTO_6.setTopBlockStrategyEnum(topBlockStrategyEnum_6);
         btCompareDTO_6.setBuyConSet(buyConSet_6);
         btCompareDTO_6.setSellConSet(sellConSet_6);

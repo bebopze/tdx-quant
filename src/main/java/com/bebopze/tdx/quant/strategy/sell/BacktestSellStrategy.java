@@ -3,7 +3,6 @@ package com.bebopze.tdx.quant.strategy.sell;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
@@ -670,12 +669,9 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         for (String stockCode : notInTopBlock__stockCodeSet) {
-
-            // 排除ETF（无板块关联）
-            if (!Objects.equals(StockTypeEnum.getByStockCode(stockCode), StockTypeEnum.ETF)) {
-                sell__stockCodeSet.add(stockCode);
-                sell_infoMap.put(stockCode, SellStrategyEnum.S71);
-            }
+            // ETF 已支持 关联板块
+            sell__stockCodeSet.add(stockCode);
+            sell_infoMap.put(stockCode, SellStrategyEnum.S71);
         }
     }
 

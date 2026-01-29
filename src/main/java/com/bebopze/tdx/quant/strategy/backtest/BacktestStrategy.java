@@ -602,7 +602,8 @@ public class BacktestStrategy {
 
 
         // 卖出策略
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, x.get().positionStockCodeSet, sell_infoMap, btCompareDTO.get());
+        String sellStrategyKey = btCompareDTO.get().getSellStrategyKey();
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get(sellStrategyKey).rule(topBlockStrategyEnum, data, tradeDate, x.get().positionStockCodeSet, sell_infoMap, btCompareDTO.get());
 
         log.info("S策略     >>>     [{}] [{}] , topBlockStrategyEnum : {} , size : {} , sell__stockCodeSet : {} , sell_infoMap : {}",
                  taskId, tradeDate, topBlockStrategyEnum, sell__stockCodeSet.size(), JSON.toJSONString(sell__stockCodeSet), JSON.toJSONString(sell_infoMap));
@@ -742,7 +743,9 @@ public class BacktestStrategy {
         }
 
 
+        // double ztRatio = btCompareDTO.get().ztFlag_true() || btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 0.7 : 1.0;
         double ztRatio = btCompareDTO.get().ztFlag_true() ? 0.7 : 1.0;
+        ztRatio = btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 0.5 : ztRatio;
         int min_diff = btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 500 : 70;
 
 
@@ -1429,7 +1432,8 @@ public class BacktestStrategy {
 
 
         // 当前 buyList   ->   是否 与 S策略 相互冲突       =>       过滤出 冲突个股（sellList）
-        Set<String> sell__stockCodeSet = sellStrategyFactory.get("A").rule(topBlockStrategyEnum, data, tradeDate, Sets.newHashSet(buy__stockCodeList), sell_infoMap, btCompareDTO.get());
+        String sellStrategyKey = btCompareDTO.get().getSellStrategyKey();
+        Set<String> sell__stockCodeSet = sellStrategyFactory.get(sellStrategyKey).rule(topBlockStrategyEnum, data, tradeDate, Sets.newHashSet(buy__stockCodeList), sell_infoMap, btCompareDTO.get());
 
 
         // 今日开盘买入[涨停_SSF多_月多]   ->   今日无法卖出     =>     不参与 BS冲突过滤

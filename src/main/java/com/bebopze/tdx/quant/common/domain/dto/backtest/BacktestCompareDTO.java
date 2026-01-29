@@ -140,6 +140,12 @@ public class BacktestCompareDTO {
     @JSONField(serialize = false)
     private transient String buyStrategyKey = "D";
 
+    /**
+     * S策略：A/B/C/D/E/F
+     */
+    @JSONField(serialize = false)
+    private transient String sellStrategyKey = "A";
+
 
     /**
      * 是否开启 taskList：true-是；false-否；
