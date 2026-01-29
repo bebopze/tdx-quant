@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -121,6 +122,17 @@ public class BacktestController {
             Lists.newArrayList(null, true, false).forEach(ztFlag -> {
                 Lists.newArrayList(true, false).forEach(marketPosLimitFlag -> {
                     Lists.newArrayList(5, 10, 15, 20, 25, 30).forEach(posPct -> {
+
+
+                        if (btCompareDTO.getBuyStrategyKey().equals("ETF")) {
+                            // ETF 不考虑 涨停板
+                            if (ztFlag != null) {
+                                return;
+                            }
+
+                            // ETF 持仓上限 翻倍
+                            posPct *= 2;
+                        }
 
 
                         btCompareDTO.setZtFlag(ztFlag);
