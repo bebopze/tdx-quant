@@ -136,9 +136,9 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
-        // ---------------------------------------------
+        // --------------------------------------------- 2次过滤（1~5个）
         // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
-        topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
+        topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -524,7 +524,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // topN（涨停TOP + 百日新高TOP）
+        // topN（涨停TOP + 百日新高TOP）  ->   false-取TOP5（1~5个）
         Set<String> topN__topBlockCodeSet = backtestBuyStrategyG.top1__topBlockCodeSet(data, topBlockCodeSet, tradeDate, false);
 
 

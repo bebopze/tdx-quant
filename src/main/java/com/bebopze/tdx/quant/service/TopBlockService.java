@@ -167,7 +167,7 @@ public interface TopBlockService {
      * @param blockNewId 1-百日新高；2-涨幅榜；3-RPS红（一线95/双线90/三线85）；4-二阶段；5-大均线多头；     - @See BlockNewIdEnum
      * @param date
      * @param resultType result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）
-     * @param N
+     * @param N          近N日
      * @return
      */
     Map<String, Integer> topBlockRate(int blockNewId, LocalDate date, int resultType, int N);
@@ -179,7 +179,7 @@ public interface TopBlockService {
      * @param date
      * @param resultType result类型：2-普通行业（LV2）；4-概念板块（LV3）；12-研究行业（LV1）
      * @param hyLevel    行业level：1-一级行业；2-二级行业；3-三级行业；
-     * @param N
+     * @param N          近N日
      * @return
      */
     Map<String, Integer> topBlockRate(int blockNewId, LocalDate date, int resultType, Integer hyLevel, int N);
@@ -189,4 +189,7 @@ public interface TopBlockService {
 
 
     List<TopBlock2DTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N);
+
+
+    List<TopBlockServiceImpl.BlockTopInfoDTO> topBlockInfo(int blockNewId, LocalDate date);
 }

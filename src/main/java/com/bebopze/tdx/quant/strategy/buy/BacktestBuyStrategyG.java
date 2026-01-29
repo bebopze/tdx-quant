@@ -16,6 +16,7 @@ import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TopBlockService;
+import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.google.common.collect.Lists;
@@ -134,9 +135,9 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
-        // ---------------------------------------------
+        // --------------------------------------------- 2次过滤（1~5个）
         // 板块-月多2     +     涨停TOP1 + 百日新高TOP1
-        topBlockCodeSet = top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate);
+        topBlockCodeSet = top1__topBlockCodeSet__Cache(topBlockStrategyEnum, data, topBlockCodeSet, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -794,13 +795,24 @@ public class BacktestBuyStrategyG implements BuyStrategy {
     }
 
 
+    /**
+     * topN（涨停TOP + 百日新高TOP）  ->   真 主线板块（1~2个）      // Cache
+     *
+     * @param topBlockStrategyEnum
+     * @param data
+     * @param topBlockCodeSet
+     * @param tradeDate
+     * @param top1TopBlockFlag     2次过滤（1~5个）：true-取TOP1（1~2个）；false-取TOP5（1~5个）
+     * @return
+     */
     public Set<String> top1__topBlockCodeSet__Cache(TopBlockStrategyEnum topBlockStrategyEnum,
                                                     BacktestCache data,
                                                     Set<String> topBlockCodeSet,
-                                                    LocalDate tradeDate) {
+                                                    LocalDate tradeDate,
+                                                    boolean top1TopBlockFlag) {
 
         Set<String> top1__topBlockCodeSet = data.TOP1__topBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
-                                                                    .computeIfAbsent(topBlockStrategyEnum, kk -> top1__topBlockCodeSet(data, topBlockCodeSet, tradeDate, true));
+                                                                    .computeIfAbsent(topBlockStrategyEnum, kk -> top1__topBlockCodeSet(data, topBlockCodeSet, tradeDate, top1TopBlockFlag));
         return top1__topBlockCodeSet;
     }
 
@@ -811,7 +823,7 @@ public class BacktestBuyStrategyG implements BuyStrategy {
      * @param data
      * @param bkyd2_topBlockCodeSet
      * @param tradeDate
-     * @param top1TopBlockFlag      true-取TOP1（1~2个）；false-取TOP5（1~5个）
+     * @param top1TopBlockFlag      2次过滤（1~5个）：true-取TOP1（1~2个）；false-取TOP5（1~5个）
      * @return
      */
     public Set<String> top1__topBlockCodeSet(BacktestCache data,
@@ -833,57 +845,96 @@ public class BacktestBuyStrategyG implements BuyStrategy {
         Map<String, Integer> topBlock__百日新高_Map = Maps.newHashMap();
 
 
-        data.blockDOList.forEach(blockDO -> {
-            String blockCode = blockDO.getCode();
-            if (!bkyd2_topBlockCodeSet.contains(blockCode)) {
-                return;
+        // ------------------------------------- 方式1：topBlock 预计算 --------------------------------------------------
+
+
+        List<TopBlockServiceImpl.BlockTopInfoDTO> zt_blockTopInfoDTOS = topBlockService.topBlockInfo(BlockNewIdEnum.涨停.getBlockNewId(), tradeDate);
+        List<TopBlockServiceImpl.BlockTopInfoDTO> dt_blockTopInfoDTOS = topBlockService.topBlockInfo(BlockNewIdEnum.跌停.getBlockNewId(), tradeDate);
+        List<TopBlockServiceImpl.BlockTopInfoDTO> 百日新高_blockTopInfoDTOS = topBlockService.topBlockInfo(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate);
+
+
+        zt_blockTopInfoDTOS.forEach(dto -> {
+            String blockCode = dto.getBlockCode();
+            if (bkyd2_topBlockCodeSet.contains(blockCode)) {
+                topBlock__涨停数_Map.put(blockCode, dto.getSize());
             }
-
-
-            BlockFun fun = data.getOrCreateBlockFun(blockDO);
-
-
-            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-
-
-            // ---------------------
-
-
-            Integer idx = dateIndexMap.get(tradeDate);
-
-            // 过滤当日  ->  未上市/新板块、非LV3
-            if (blockDO.getEndLevel() != 1 || extDataArrDTO.date.length == 0 || idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
-                return;
-            }
-
-
-            // 主线板块 -> 个股列表
-            Set<String> block__stockCodeSet = data.blockCode_stockCodeSet_Map.get(blockCode);
-            block__stockCodeSet.forEach(stockCode -> {
-
-                // 当前个股 未上市（当前OOM 截取date范围内  ->  当前日期段 未上市）
-                if (data.codeStockMap.get(stockCode) == null) {
-                    return;
-                }
-
-
-                StockFun stockFun = data.getFun(stockCode);
-                Integer stock_idx = stockFun.getDateIndexMap().get(tradeDate);
-
-                // 板块内个股  ->  当日 涨停
-                if (null != stock_idx && stockFun.getExtDataArrDTO().涨停[stock_idx]) {
-                    topBlock__涨停数_Map.merge(blockCode, 1, Integer::sum);
-                }
-                if (null != stock_idx && stockFun.getExtDataArrDTO().跌停[stock_idx]) {
-                    topBlock__涨停数_Map.merge(blockCode, -1, Integer::sum);
-                }
-                // 板块内个股  ->  当日 百日新高
-                if (null != stock_idx && stockFun.getExtDataArrDTO().百日新高[stock_idx]) {
-                    topBlock__百日新高_Map.merge(blockCode, 1, Integer::sum);
-                }
-            });
         });
+
+
+        dt_blockTopInfoDTOS.forEach(dto -> {
+            String blockCode = dto.getBlockCode();
+            if (bkyd2_topBlockCodeSet.contains(blockCode)) {
+                topBlock__涨停数_Map.merge(blockCode, -dto.getSize(), Integer::sum);
+            }
+        });
+
+
+        百日新高_blockTopInfoDTOS.forEach(dto -> {
+            String blockCode = dto.getBlockCode();
+            if (bkyd2_topBlockCodeSet.contains(blockCode)) {
+                topBlock__百日新高_Map.put(blockCode, dto.getSize());
+            }
+        });
+
+
+//        // ------------------------------------- 方式2：extData 实时计算 -----------------------------------------------
+//
+//
+//        data.blockDOList.forEach(blockDO -> {
+//            String blockCode = blockDO.getCode();
+//            if (!bkyd2_topBlockCodeSet.contains(blockCode)) {
+//                return;
+//            }
+//
+//
+//            BlockFun fun = data.getOrCreateBlockFun(blockDO);
+//
+//
+//            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+//            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+//
+//
+//            // ---------------------
+//
+//
+//            Integer idx = dateIndexMap.get(tradeDate);
+//
+//            // 过滤当日  ->  未上市/新板块、非LV3
+//            if (blockDO.getEndLevel() != 1 || extDataArrDTO.date.length == 0 || idx == null || Double.isNaN(extDataArrDTO.rps50[idx])) {
+//                return;
+//            }
+//
+//
+//            // 主线板块 -> 个股列表
+//            Set<String> block__stockCodeSet = data.blockCode_stockCodeSet_Map.get(blockCode);
+//            block__stockCodeSet.forEach(stockCode -> {
+//
+//                // 当前个股 未上市（当前OOM 截取date范围内  ->  当前日期段 未上市）
+//                if (data.codeStockMap.get(stockCode) == null) {
+//                    return;
+//                }
+//
+//
+//                StockFun stockFun = data.getFun(stockCode);
+//                Integer stock_idx = stockFun.getDateIndexMap().get(tradeDate);
+//
+//                // 板块内个股  ->  当日 涨停
+//                if (null != stock_idx && stockFun.getExtDataArrDTO().涨停[stock_idx]) {
+//                    topBlock__涨停数_Map.merge(blockCode, 1, Integer::sum);
+//                }
+//                if (null != stock_idx && stockFun.getExtDataArrDTO().跌停[stock_idx]) {
+//                    topBlock__涨停数_Map.merge(blockCode, -1, Integer::sum);
+//                }
+//                // 板块内个股  ->  当日 百日新高
+//                if (null != stock_idx && stockFun.getExtDataArrDTO().百日新高[stock_idx]) {
+//                    topBlock__百日新高_Map.merge(blockCode, 1, Integer::sum);
+//                }
+//            });
+//        });
+//
+//
+//        Assert.notEmpty(topBlock__涨停数_Map, "topBlock__涨停数_Map 为空：检查Cache是否 未加载全量stockDOList（block -> stockDO -> extData -> 涨停/跌停）");
+//        Assert.notEmpty(topBlock__涨停数_Map, "topBlock__百日新高_Map 为空：检查Cache是否 未加载全量stockDOList（block -> stockDO -> extData -> 百日新高）");
 
 
         // -------------------------------------------------------------------------------------------------------------

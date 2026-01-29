@@ -2474,7 +2474,7 @@ public class TopBlockServiceImpl implements TopBlockService {
             } else if (resultType == 12) {
                 result = e.getYjhyLv1Result();      //  1级  研究行业  ->  30个
             } else if (resultType == 0) {
-                result = e.getResult();             //  2级  普通行业   +   (3级) 概念板块
+                result = e.getResult();             //  3级  普通行业（细分行业）  +   (3级) 概念板块
             }
 
 
@@ -2580,6 +2580,31 @@ public class TopBlockServiceImpl implements TopBlockService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Override
+    public List<BlockTopInfoDTO> topBlockInfo(int blockNewId, LocalDate date) {
+
+        QaBlockNewRelaStockHisDO entity = qaBlockNewRelaStockHisService.listByBlockNewIdAndDate(blockNewId, date);
+        if (entity == null) {
+            return Collections.emptyList();
+        }
+
+
+        // 概念板块
+        List<BlockTopInfoDTO> gn_list = JSON.parseArray(entity.getGnResult(), BlockTopInfoDTO.class);
+        // 普通行业
+        List<BlockTopInfoDTO> pthy_lv3_List = JSON.parseArray(entity.getPthyLv3Result(), BlockTopInfoDTO.class); // 细分行业
+
+
+        gn_list.addAll(pthy_lv3_List);
+
+
+        return gn_list;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     private void initCache_0(UpdateTypeEnum updateTypeEnum) {
         if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
@@ -2661,7 +2686,7 @@ public class TopBlockServiceImpl implements TopBlockService {
             }
 
         } else if (resultType == 0) {
-            result = e.getResult();                 //  2级  普通行业   +   (3级) 概念板块  ->  380个
+            result = e.getResult();                 //  3级  普通行业（细分行业）  +   (3级) 概念板块   ->   380个
         }
 
 
@@ -3676,7 +3701,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 2-普通行业
         Map<String, Set<String>> pthy_1_map = Maps.newHashMap();
         Map<String, Set<String>> pthy_2_map = Maps.newHashMap();
-        Map<String, Set<String>> pthy_3_map = Maps.newHashMap();
+        Map<String, Set<String>> pthy_3_map = Maps.newHashMap(); // 细分行业（end_level = 1）
 
 
         // 12-研究行业
@@ -3715,15 +3740,15 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                 // 2-普通行业 - 一级/二级/三级分类（细分行业）
-                if (Objects.equals(type, 2) && Objects.equals(endLevel, 1)) {
+                if (Objects.equals(type, BlockTypeEnum.HY_PT.type) && Objects.equals(endLevel, 1)) {
                     pthy_3_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
                 }
                 // 4-概念板块
-                else if (Objects.equals(type, 4)) {
+                else if (Objects.equals(type, BlockTypeEnum.GN.type)) {
                     gn_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
                 }
                 // 12-研究行业 - 一级/二级/三级分类
-                else if (Objects.equals(type, 12) && Objects.equals(endLevel, 1)) {
+                else if (Objects.equals(type, BlockTypeEnum.HY_YJ.type) && Objects.equals(endLevel, 1)) {
                     yjhy_3_map.computeIfAbsent(blockCode, k -> Sets.newHashSet()).add(stockCode);
                 }
 
@@ -3803,7 +3828,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         List<BlockTopInfoDTO> resultList = Lists.newArrayList();
 
         resultList.addAll(gnList);
-        resultList.addAll(pthy_lv2_List);
+        resultList.addAll(pthy_lv3_List);
 
 
         // -------------------------------------------------------------------------------------------------------------
