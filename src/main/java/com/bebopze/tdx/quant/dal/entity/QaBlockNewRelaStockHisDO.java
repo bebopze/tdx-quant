@@ -59,10 +59,10 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private String stockIdList;
 
     /**
-     * 汇总-分析结果JSON（二级普通行业 + 概念板块）
+     * 汇总-分析结果JSON（细分行业 + 概念板块）
      */
     @TableField("result")
-    @Schema(description = "汇总-分析结果JSON（二级普通行业 + 概念板块）")
+    @Schema(description = "汇总-分析结果JSON（细分行业 + 概念板块）")
     private String result;
 
     /**
@@ -87,10 +87,10 @@ public class QaBlockNewRelaStockHisDO implements Serializable {
     private String pthyLv2Result;
 
     /**
-     * 三级普通行业-分析结果JSON
+     * 三级普通行业(细分行业)-分析结果JSON
      */
     @TableField("pthy_lv3_result")
-    @Schema(description = "三级普通行业-分析结果JSON")
+    @Schema(description = "三级普通行业(细分行业)-分析结果JSON")
     private String pthyLv3Result;
 
     /**

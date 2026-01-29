@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -83,6 +84,16 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
         return baseMapper.listByBlockNewIdDateAndLimit(blockNewId, date, limit);
     }
 
+    @Override
+    public QaBlockNewRelaStockHisDO listByBlockNewIdAndDate(Integer blockNewId, LocalDate date) {
+        // 默认倒序
+        List<QaBlockNewRelaStockHisDO> entityList = listByBlockNewIdDateAndLimit(blockNewId, date, 1);
+        if (CollectionUtils.isNotEmpty(entityList)) {
+            return entityList.getFirst();
+        }
+        return null;
+    }
+
 
     @Override
     public QaBlockNewRelaStockHisDO last() {
@@ -90,6 +101,9 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
         List<QaBlockNewRelaStockHisDO> listAll = listByBlockNewIdDateAndLimit(1, LocalDate.of(9999, 1, 1), 1);
         return ListUtil.first(listAll);
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @TotalTime

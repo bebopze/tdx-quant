@@ -32,13 +32,13 @@ public enum BlockTypeEnum {
 
 
     @Getter
-    private String code;
+    public String code;
 
     @Getter
-    private Integer type;
+    public Integer type;
 
     @Getter
-    private String desc;
+    public String desc;
 
 
     public static String getDescByType(Integer type) {
