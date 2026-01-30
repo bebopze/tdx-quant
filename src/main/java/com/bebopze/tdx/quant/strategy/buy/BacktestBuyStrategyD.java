@@ -169,7 +169,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
-        List<String> sort__stockCodeList = ScoreSort.scoreSort(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> sort__stockCodeList = ScoreSort.scoreSort__RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategyD - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 

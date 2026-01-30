@@ -365,8 +365,8 @@ public class BacktestBuyStrategyB implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // TODO     按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = ScoreSort.scoreSort(filter__stockCodeSet2, data, tradeDate, 20);
+        // 按照 规则打分 -> sort
+        List<String> filterSort__stockCodeList = ScoreSort.scoreSort__RPS(filter__stockCodeSet2, data, tradeDate, btCompareDTO.get().getScoreSortN());
 
 
         return filterSort__stockCodeList;

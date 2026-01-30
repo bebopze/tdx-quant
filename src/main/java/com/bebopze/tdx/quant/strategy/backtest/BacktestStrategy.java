@@ -1149,7 +1149,7 @@ public class BacktestStrategy {
 
 
         // 按照 规则打分 -> sort
-        List<String> sort__stockCodeList = ScoreSort.scoreSort(buy__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> sort__stockCodeList = ScoreSort.scoreSort__RPS(buy__stockCodeList, data, tradeDate, btCompareDTO.get().getScoreSortN());
 
 
         log.debug("B策略 -> 交易 record - start     >>>     [{}] [{}] , prevAvlCapital : {} , sellCapital : {} , avlCapital : {} , prevCapital : {}",

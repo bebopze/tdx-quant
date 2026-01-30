@@ -40,6 +40,138 @@ public class ScoreSort {
      * @param N
      * @return
      */
+    public static List<String> scoreSort__AMO(Collection<String> stockCodeList,
+                                              BacktestCache data,
+                                              LocalDate tradeDate,
+                                              int N) {
+
+
+        Map<String, Double> code_amo_map = Maps.newHashMap();
+
+
+        stockCodeList.forEach(stockCode -> {
+            String stockName = data.stock__codeNameMap.get(stockCode);
+            StockFun fun = data.getOrCreateStockFun(stockCode);
+
+
+            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+
+
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+            Integer idx = dateIndexMap.get(tradeDate);
+
+
+            // 停牌（159915 创业板ETF   2021-02-08）
+            if (idx == null) {
+                log.warn("scoreSort - idx is null     >>>     [{}-{}] , tradeDate : {} , idx : {}", stockCode, stockName, tradeDate, idx);
+                return;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // AMO
+            double amount = klineArrDTO.amo[idx];
+
+
+            // >5亿   ||   涨停
+            if (amount >= 5_0000_0000 || extDataArrDTO.涨停[idx]) {
+                code_amo_map.put(stockCode, amount);
+            }
+        });
+
+
+        // sort
+        Map<String, Double> sortedMap = MapUtil.reverseSortByValue(code_amo_map);
+        // limit N
+        return sortedMap.keySet().stream().limit(N).collect(Collectors.toList());
+    }
+
+
+    /**
+     * 权重规则   排序
+     *
+     * @param stockCodeList
+     * @param data
+     * @param tradeDate
+     * @param N
+     * @return
+     */
+    public static List<String> scoreSort__RPS(Collection<String> stockCodeList,
+                                              BacktestCache data,
+                                              LocalDate tradeDate,
+                                              int N) {
+
+
+        Map<String, Double> code_amo_map = Maps.newHashMap();
+
+
+        stockCodeList.forEach(stockCode -> {
+            String stockName = data.stock__codeNameMap.get(stockCode);
+            StockFun fun = data.getOrCreateStockFun(stockCode);
+
+
+            BaseStockDO stockDO = data.codeStockMap.get(stockCode);
+
+
+            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
+            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
+
+
+            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+            Integer idx = dateIndexMap.get(tradeDate);
+
+
+            // 停牌（159915 创业板ETF   2021-02-08）
+            if (idx == null) {
+                log.warn("scoreSort - idx is null     >>>     [{}-{}] , tradeDate : {} , idx : {}", stockCode, stockName, tradeDate, idx);
+                return;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // AMO
+            double amount = klineArrDTO.amo[idx];
+
+
+            // RPS五线和
+            double RPS五线和 = extDataArrDTO.RPS五线和[idx];
+
+
+            // 个股>5亿   /   ETF>500万
+            double MIN_AMO = Objects.equals(stockDO.getType(), StockTypeEnum.A_STOCK.type) ? 5_0000_0000 : 500_0000;
+            if ((amount < MIN_AMO && !extDataArrDTO.涨停[idx]) || Double.isNaN(RPS五线和)) {
+                return;
+            }
+
+
+            code_amo_map.put(stockCode, RPS五线和);
+        });
+
+
+        // sort
+        Map<String, Double> sortedMap = MapUtil.reverseSortByValue(code_amo_map);
+        // limit N
+        return sortedMap.keySet().stream().limit(N).collect(Collectors.toList());
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 权重规则   排序
+     *
+     * @param stockCodeList
+     * @param data
+     * @param tradeDate
+     * @param N
+     * @return
+     */
     public static List<String> scoreSort(Collection<String> stockCodeList,
                                          BacktestCache data,
                                          LocalDate tradeDate,
@@ -78,12 +210,10 @@ public class ScoreSort {
             String stockName = codeNameMap.get(stockCode);
 
 
-            // -------------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // BUY策略   ->   已完成init
-            // StockFun fun = data.stockFunCache.getIfPresent(stockCode);
-            // StockFun fun = data.stockFunCache.get(stockCode, k -> new StockFun(data.codeStockMap.get(stockCode)));
             StockFun fun = data.getOrCreateStockFun(stockCode);
 
 
@@ -216,135 +346,6 @@ public class ScoreSort {
 
     private static boolean NaNor0(double val) {
         return Double.isNaN(val) || val == 0;
-    }
-
-
-    /**
-     * 权重规则   排序
-     *
-     * @param stockCodeList
-     * @param data
-     * @param tradeDate
-     * @param N
-     * @return
-     */
-    public static List<String> scoreSort__AMO(Collection<String> stockCodeList,
-                                              BacktestCache data,
-                                              LocalDate tradeDate,
-                                              int N) {
-
-
-        Map<String, Double> code_amo_map = Maps.newHashMap();
-
-
-        stockCodeList.forEach(stockCode -> {
-            String stockName = data.stock__codeNameMap.get(stockCode);
-            StockFun fun = data.getOrCreateStockFun(stockCode);
-
-
-            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
-            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
-
-
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-            Integer idx = dateIndexMap.get(tradeDate);
-
-
-            // 停牌（159915 创业板ETF   2021-02-08）
-            if (idx == null) {
-                log.warn("scoreSort - idx is null     >>>     [{}-{}] , tradeDate : {} , idx : {}", stockCode, stockName, tradeDate, idx);
-                return;
-            }
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // AMO
-            double amount = klineArrDTO.amo[idx];
-
-
-            // >5亿   ||   涨停
-            if (amount >= 5_0000_0000 || extDataArrDTO.涨停[idx]) {
-                code_amo_map.put(stockCode, amount);
-            }
-        });
-
-
-        // sort
-        Map<String, Double> sortedMap = MapUtil.reverseSortByValue(code_amo_map);
-        // limit N
-        return sortedMap.keySet().stream().limit(N).collect(Collectors.toList());
-    }
-
-
-    /**
-     * 权重规则   排序
-     *
-     * @param stockCodeList
-     * @param data
-     * @param tradeDate
-     * @param N
-     * @return
-     */
-    public static List<String> scoreSort__RPS(Collection<String> stockCodeList,
-                                              BacktestCache data,
-                                              LocalDate tradeDate,
-                                              int N) {
-
-
-        Map<String, Double> code_amo_map = Maps.newHashMap();
-
-
-        stockCodeList.forEach(stockCode -> {
-            String stockName = data.stock__codeNameMap.get(stockCode);
-            StockFun fun = data.getOrCreateStockFun(stockCode);
-
-
-            BaseStockDO stockDO = data.codeStockMap.get(stockCode);
-
-
-            KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
-            ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();
-
-
-            Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-            Integer idx = dateIndexMap.get(tradeDate);
-
-
-            // 停牌（159915 创业板ETF   2021-02-08）
-            if (idx == null) {
-                log.warn("scoreSort - idx is null     >>>     [{}-{}] , tradeDate : {} , idx : {}", stockCode, stockName, tradeDate, idx);
-                return;
-            }
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // AMO
-            double amount = klineArrDTO.amo[idx];
-
-
-            // RPS五线和
-            double RPS五线和 = extDataArrDTO.RPS五线和[idx];
-
-
-            // 个股>5亿   /   ETF>500万
-            double MIN_AMO = Objects.equals(stockDO.getType(), StockTypeEnum.A_STOCK.type) ? 5_0000_0000 : 500_0000;
-            if (amount < MIN_AMO && !extDataArrDTO.涨停[idx] || Double.isNaN(RPS五线和)) {
-                return;
-            }
-
-
-            code_amo_map.put(stockCode, RPS五线和);
-        });
-
-
-        // sort
-        Map<String, Double> sortedMap = MapUtil.reverseSortByValue(code_amo_map);
-        // limit N
-        return sortedMap.keySet().stream().limit(N).collect(Collectors.toList());
     }
 
 
