@@ -27,7 +27,6 @@ import java.time.LocalDate;
 import java.util.*;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
-import static com.bebopze.tdx.quant.strategy.buy.ScoreSort.scoreSort__RPS;
 
 
 /**
@@ -183,7 +182,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
-        List<String> sort__stockCodeList = scoreSort__RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> sort__stockCodeList = ScoreSort.scoreSort__RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategy_Stock - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 

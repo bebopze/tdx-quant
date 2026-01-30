@@ -162,7 +162,6 @@ public class BacktestBuyStrategyG implements BuyStrategy {
 
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
-        // TODO   TEST
         List<String> sort__stockCodeList = ScoreSort.scoreSort__AMO(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategyG - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
