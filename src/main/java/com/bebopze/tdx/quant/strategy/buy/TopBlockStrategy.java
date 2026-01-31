@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
+import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.TopBlockService;
 import com.bebopze.tdx.quant.service.impl.TopBlockServiceImpl;
@@ -721,15 +722,30 @@ public class TopBlockStrategy {
 
 
             // ETF
-            data.ETF_stockDOList.forEach(e -> {
+            data.ETF_stockDOList.forEach(stockDO -> {
 
-                // ETF   ->   最小交易日（上市日期）
-                List<KlineDTO> klineDTOList = e.getKlineDTOList();
-                LocalDate date = CollectionUtils.isEmpty(klineDTOList) ? null : klineDTOList.get(0).getDate();
+//                // ETF   ->   最小交易日（上市日期）
+//                List<KlineDTO> klineDTOList = stockDO.getKlineDTOList();
+//                LocalDate date = CollectionUtils.isEmpty(klineDTOList) ? null : klineDTOList.get(0).getDate();
+//
+//
+//                // 当前日期   ->   已上市
+//                if (date != null && date.isBefore(tradeDate)) {
+//                    String stockCode = stockDO.getCode();
+//
+//                    inTopBlock__stockCodeSet.add(stockCode);
+//                    buy_infoMap.put(stockCode, "大盘极限底->ETF策略");
+//                }
 
-                // 当前日期   ->   已上市
-                if (date != null && date.isBefore(tradeDate)) {
-                    String stockCode = e.getCode();
+
+                StockFun fun = data.getOrCreateStockFun(stockDO);
+                Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
+
+
+                Integer idx = dateIndexMap.get(tradeDate);
+                // 当前日期   ->   未停牌
+                if (idx != null) {
+                    String stockCode = stockDO.getCode();
 
                     inTopBlock__stockCodeSet.add(stockCode);
                     buy_infoMap.put(stockCode, "大盘极限底->ETF策略");
