@@ -32,17 +32,6 @@ public interface BuyStrategy {
      *
      * -     买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
      *
-     * @param data
-     * @param tradeDate
-     * @param buy_infoMap
-     * @param posRate     当前 持仓占比
-     * @return
-     */
-
-
-    /**
-     * 根据 B策略     筛选出   ->   待买入 的 stockCodeList
-     *
      * @param topBlockStrategyEnum 主线板块策略
      * @param buyConSet            买入条件列表
      * @param data                 回测数据缓存
@@ -59,4 +48,5 @@ public interface BuyStrategy {
                       Map<String, String> buy_infoMap,
                       double posRate,
                       Boolean ztFlag);
+
 }

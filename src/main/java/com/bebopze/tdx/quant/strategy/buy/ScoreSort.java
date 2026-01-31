@@ -99,10 +99,10 @@ public class ScoreSort {
      * @param N
      * @return
      */
-    public static List<String> scoreSort__RPS(Collection<String> stockCodeList,
-                                              BacktestCache data,
-                                              LocalDate tradeDate,
-                                              int N) {
+    public static List<String> scoreSort__AMO_RPS(Collection<String> stockCodeList,
+                                                  BacktestCache data,
+                                                  LocalDate tradeDate,
+                                                  int N) {
 
 
         Map<String, Double> code_amo_map = Maps.newHashMap();

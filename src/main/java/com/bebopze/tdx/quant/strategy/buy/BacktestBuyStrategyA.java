@@ -33,10 +33,13 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
     @Autowired
-    private TopBlockService topBlockService;
+    private MarketStrategy marketStrategy;
 
     @Autowired
     private TopBlockStrategy topBlockStrategy;
+
+    @Autowired
+    private TopBlockService topBlockService;
 
 
     @Override
@@ -65,15 +68,13 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                                1、大盘 -> 仓位
+        //                                                1、大盘牛熊
         // -------------------------------------------------------------------------------------------------------------
 
-        // QaMarketMidCycleDO qaMarketMidCycleDO = marketService.marketInfo(tradeDate);
-        // Assert.notNull(qaMarketMidCycleDO, "[大盘量化]数据为空：" + tradeDate);
 
-
-        // 总仓位-上限
-        // BigDecimal positionPct = qaMarketMidCycleDO.getPositionPct();
+        if (marketStrategy.marketBear(data, tradeDate)) {
+            return marketStrategy.bearRule(data, tradeDate, buy_infoMap, posRate);
+        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -304,7 +305,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         // 按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = ScoreSort.scoreSort__RPS(filter__stockCodeSet2, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> filterSort__stockCodeList = ScoreSort.scoreSort__AMO_RPS(filter__stockCodeSet2, data, tradeDate, btCompareDTO.get().getScoreSortN());
         // List<String> filterSort__stockCodeList = filter__stockCodeSet2.stream().limit(20).collect(Collectors.toList());
 
 

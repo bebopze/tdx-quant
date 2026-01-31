@@ -8,20 +8,14 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.bebopze.tdx.quant.service.MarketService;
-import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
-import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -41,27 +35,13 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
 
     @Autowired
-    private MarketService marketService;
+    private MarketStrategy marketStrategy;
 
     @Autowired
     private TopBlockStrategy topBlockStrategy;
 
     @Autowired
-    private BacktestBuyStrategyA backtestBuyStrategyA;
-
-    @Autowired
     private BacktestBuyStrategyD backtestBuyStrategyD;
-
-    @Autowired
-    private BacktestBuyStrategyG backtestBuyStrategyG;
-
-    @Lazy
-    @Autowired
-    private BacktestStrategy backtestStrategy;
-
-    @Lazy
-    @Autowired
-    private BacktestSellStrategy backtestSellStrategy;
 
     @Autowired
     private BuyStrategy__ConCombiner__TopStock buyStrategy__conCombiner__topStock;
@@ -101,22 +81,8 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        QaMarketMidCycleDO marketInfo = data.marketCache.get(tradeDate, k -> marketService.marketInfo(tradeDate));
-        Assert.notNull(marketInfo, "[大盘量化]数据为空：" + tradeDate);
-
-        // 大盘-牛熊：1-牛市；2-熊市；
-        Integer marketBullBearStatus = marketInfo.getMarketBullBearStatus();
-        // 大盘-中期顶底：1-底部；2- 底->顶；3-顶部；4- 顶->底；
-        Integer marketMidStatus = marketInfo.getMarketMidStatus();
-
-
-        // 1-牛市
-        if (marketBullBearStatus == 1) {
-            // TODO   ->   牛市策略   ->   个股 B/S策略 、 主线板块 策略
-        }
-        // 2-熊市
-        else if (marketMidStatus == 2) {
-            // TODO   ->   熊市策略   ->   个股 B/S策略 、 主线板块 策略
+        if (marketStrategy.marketBear(data, tradeDate)) {
+            return marketStrategy.bearRule(data, tradeDate, buy_infoMap, posRate);
         }
 
 
@@ -173,16 +139,9 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // B策略 - S策略   相互冲突bug       =>       以 S策略 为准       ->       出现 S信号 个股不能买入（buyList -> 剔除）
-        // backtestStrategy.buy_sell__signalConflict(data, tradeDate, inTopBlock__stockCodeList);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
-        List<String> sort__stockCodeList = ScoreSort.scoreSort__RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
+        List<String> sort__stockCodeList = ScoreSort.scoreSort__AMO_RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
         log.info("BacktestBuyStrategy_Stock - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
