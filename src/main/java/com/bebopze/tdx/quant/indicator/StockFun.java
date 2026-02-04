@@ -332,16 +332,16 @@ public class StockFun {
     }
 
 
-    public int[] 短期趋势支撑线() {
-        return TdxExtFun.短期趋势支撑线(close);
+    public int[] 短期支撑线() {
+        return TdxExtFun.短期支撑线(close);
     }
 
-    public int[] 中期趋势支撑线(int[] 短期趋势支撑线) {
-        return TdxExtFun.中期趋势支撑线(close, 短期趋势支撑线);
+    public int[] 中期支撑线(int[] 短期支撑线) {
+        return TdxExtFun.中期支撑线(close, 短期支撑线);
     }
 
-    public int[] 长期趋势支撑线(int[] 中期趋势支撑线) {
-        return TdxExtFun.中期趋势支撑线(close, 中期趋势支撑线);
+    public int[] 长期支撑线(int[] 中期支撑线) {
+        return TdxExtFun.中期支撑线(close, 中期支撑线);
     }
 
 
