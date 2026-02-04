@@ -648,7 +648,7 @@ public class TdxFunCheck {
 
 
         double[] 中期涨幅 = fun.中期涨幅N(20);
-        int[] 趋势支撑线 = fun.短期趋势支撑线();
+        int[] 趋势支撑线 = fun.短期支撑线();
 
 
         boolean[] 高位爆量上影大阴 = fun.高位爆量上影大阴();

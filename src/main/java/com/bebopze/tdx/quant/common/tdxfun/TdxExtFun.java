@@ -2637,7 +2637,7 @@ public class TdxExtFun {
 
 
     /**
-     * 趋势支撑线
+     * 短期支撑线
      *
      *
      *
@@ -2647,25 +2647,27 @@ public class TdxExtFun {
      *
      *
      * { -------------------------------------------------------------------------- }
-     * 支撑线 :
+     * 短期支撑线 :
      *
+     * IF(MA多(  2) AND COUNT(MA多(  2),  7)>= 7   AND   小均线多头,      5,
      * IF(MA多(  5) AND COUNT(MA多(  5), 10)>= 9   AND   小均线多头,      5,
-     * IF(MA多( 10) AND COUNT(MA多( 10), 15)>=14   AND   均线大多头,     10,
-     * IF(MA多( 20) AND COUNT(MA多( 20), 20)>=19,     20,
-     * IF(MA多( 50) AND COUNT(MA多( 50), 50)>=47,     50,
-     * IF(MA多( 60) AND COUNT(MA多( 60), 50)>=47,     60,
-     * IF(MA多(100) AND COUNT(MA多(100), 70)>=67,    100,
-     * IF(MA多(120) AND COUNT(MA多(120), 70)>=67,    120,
-     * IF(MA多(150) AND COUNT(MA多(150), 75)>=72,    150,
-     * IF(MA多(200) AND COUNT(MA多(200), 90)>=85,    200,
+     * IF(MA多( 10) AND COUNT(MA多( 10), 12)>=11   AND   均线大多头,     10,
+     * IF(MA多( 20) AND COUNT(MA多( 20), 15)>=14,     20,
+     * IF(MA多( 30) AND COUNT(MA多( 30), 20)>=19,     30,
+     * IF(MA多( 50) AND COUNT(MA多( 50), 35)>=32,     50,
+     * IF(MA多( 60) AND COUNT(MA多( 60), 40)>=37,     60,
+     * IF(MA多(100) AND COUNT(MA多(100), 50)>=45,    100,
+     * IF(MA多(120) AND COUNT(MA多(120), 60)>=55,    120,
+     * IF(MA多(150) AND COUNT(MA多(150), 70)>=65,    150,
+     * IF(MA多(200) AND COUNT(MA多(200), 80)>=75,    200,
      * IF(MA多(250) AND COUNT(MA多(250), 90)>=85,    250,
      *
-     * 0))))))))))       COLORWHITE DOTLINE;
+     * 250))))))))))))       COLORYELLOW NODRAW;
      *
      * @param close
      * @return
      */
-    public static int[] 短期趋势支撑线(double[] close) {
+    public static int[] 短期支撑线(double[] close) {
         int n = close.length;
         int[] MA = new int[n];
 
@@ -2677,25 +2679,29 @@ public class TdxExtFun {
 
 
         // { -------------------------------------------------------------------------- }
-        // 支撑线 :
+        // 短期支撑线 :
         //
+        //   IF(MA多(  2) AND COUNT(MA多(  2),  7)>= 7   AND   小均线多头,      5,
         //   IF(MA多(  5) AND COUNT(MA多(  5), 10)>= 9   AND   小均线多头,      5,
-        //   IF(MA多( 10) AND COUNT(MA多( 10), 15)>=14   AND   均线大多头,     10,
-        //   IF(MA多( 20) AND COUNT(MA多( 20), 20)>=19,     20,
-        //   IF(MA多( 50) AND COUNT(MA多( 50), 50)>=47,     50,
-        //   IF(MA多( 60) AND COUNT(MA多( 60), 50)>=47,     60,
-        //   IF(MA多(100) AND COUNT(MA多(100), 70)>=67,    100,
-        //   IF(MA多(120) AND COUNT(MA多(120), 70)>=67,    120,
-        //   IF(MA多(150) AND COUNT(MA多(150), 75)>=72,    150,
-        //   IF(MA多(200) AND COUNT(MA多(200), 90)>=85,    200,
+        //   IF(MA多( 10) AND COUNT(MA多( 10), 12)>=11   AND   均线大多头,     10,
+        //   IF(MA多( 20) AND COUNT(MA多( 20), 15)>=14,     20,
+        //   IF(MA多( 30) AND COUNT(MA多( 30), 20)>=19,     30,
+        //   IF(MA多( 50) AND COUNT(MA多( 50), 35)>=32,     50,
+        //   IF(MA多( 60) AND COUNT(MA多( 60), 40)>=37,     60,
+        //   IF(MA多(100) AND COUNT(MA多(100), 50)>=45,    100,
+        //   IF(MA多(120) AND COUNT(MA多(120), 60)>=55,    120,
+        //   IF(MA多(150) AND COUNT(MA多(150), 70)>=65,    150,
+        //   IF(MA多(200) AND COUNT(MA多(200), 80)>=75,    200,
         //   IF(MA多(250) AND COUNT(MA多(250), 90)>=85,    250,
         //
-        //   0))))))))))       COLORWHITE DOTLINE;
+        //   250))))))))))))       COLORYELLOW NODRAW;
 
 
+        boolean[] MA2_多 = MA多(close, 2);
         boolean[] MA5_多 = MA多(close, 5);
         boolean[] MA10_多 = MA多(close, 10);
         boolean[] MA20_多 = MA多(close, 20);
+        boolean[] MA30_多 = MA多(close, 30);
         boolean[] MA50_多 = MA多(close, 50);
         boolean[] MA60_多 = MA多(close, 60);
         boolean[] MA100_多 = MA多(close, 100);
@@ -2705,42 +2711,48 @@ public class TdxExtFun {
         boolean[] MA250_多 = MA多(close, 250);
 
 
+        int[] count_MA2_多 = COUNT(MA2_多, 7);
         int[] count_MA5_多 = COUNT(MA5_多, 10);
-        int[] count_MA10_多 = COUNT(MA10_多, 15);
-        int[] count_MA20_多 = COUNT(MA20_多, 20);
-        int[] count_MA50_多 = COUNT(MA50_多, 50);
-        int[] count_MA60_多 = COUNT(MA60_多, 50);
-        int[] count_MA100_多 = COUNT(MA100_多, 70);
-        int[] count_MA120_多 = COUNT(MA120_多, 70);
-        int[] count_MA150_多 = COUNT(MA150_多, 75);
-        int[] count_MA200_多 = COUNT(MA200_多, 90);
+        int[] count_MA10_多 = COUNT(MA10_多, 12);
+        int[] count_MA20_多 = COUNT(MA20_多, 15);
+        int[] count_MA30_多 = COUNT(MA20_多, 20);
+        int[] count_MA50_多 = COUNT(MA50_多, 35);
+        int[] count_MA60_多 = COUNT(MA60_多, 40);
+        int[] count_MA100_多 = COUNT(MA100_多, 50);
+        int[] count_MA120_多 = COUNT(MA120_多, 60);
+        int[] count_MA150_多 = COUNT(MA150_多, 70);
+        int[] count_MA200_多 = COUNT(MA200_多, 80);
         int[] count_MA250_多 = COUNT(MA250_多, 90);
 
 
         for (int i = 0; i < n; i++) {
-            if (MA5_多[i] && count_MA5_多[i] >= 9 && 小均线多头[i]) {
+            if (MA2_多[i] && count_MA2_多[i] >= 7 && 小均线多头[i]) {
                 MA[i] = 5;
-            } else if (MA10_多[i] && count_MA10_多[i] >= 14 && 均线大多头[i]) {
+            } else if (MA5_多[i] && count_MA5_多[i] >= 9 && 小均线多头[i]) {
+                MA[i] = 5;
+            } else if (MA10_多[i] && count_MA10_多[i] >= 11 && 均线大多头[i]) {
                 MA[i] = 10;
-            } else if (MA20_多[i] && count_MA20_多[i] >= 19) {
+            } else if (MA20_多[i] && count_MA20_多[i] >= 14) {
                 MA[i] = 20;
-            } else if (MA50_多[i] && count_MA50_多[i] >= 47) {
+            } else if (MA30_多[i] && count_MA30_多[i] >= 19) {
+                MA[i] = 20;
+            } else if (MA50_多[i] && count_MA50_多[i] >= 32) {
                 MA[i] = 50;
-            } else if (MA60_多[i] && count_MA60_多[i] >= 47) {
+            } else if (MA60_多[i] && count_MA60_多[i] >= 37) {
                 MA[i] = 60;
-            } else if (MA100_多[i] && count_MA100_多[i] >= 67) {
+            } else if (MA100_多[i] && count_MA100_多[i] >= 45) {
                 MA[i] = 100;
-            } else if (MA120_多[i] && count_MA120_多[i] >= 67) {
+            } else if (MA120_多[i] && count_MA120_多[i] >= 55) {
                 MA[i] = 120;
-            } else if (MA150_多[i] && count_MA150_多[i] >= 72) {
+            } else if (MA150_多[i] && count_MA150_多[i] >= 65) {
                 MA[i] = 150;
-            } else if (MA200_多[i] && count_MA200_多[i] >= 85) {
+            } else if (MA200_多[i] && count_MA200_多[i] >= 75) {
                 MA[i] = 200;
             } else if (MA250_多[i] && count_MA250_多[i] >= 85) {
                 MA[i] = 250;
             } else {
                 // default
-                MA[i] = 200;
+                MA[i] = 250;
             }
         }
 
@@ -2749,34 +2761,198 @@ public class TdxExtFun {
     }
 
     /**
-     * 中期趋势支撑线
+     * 中期支撑线
+     *
+     *
+     *
+     * { -------------------------------------------------------------------------- }
+     * 中期支撑线 :
+     *
+     * IF(短期支撑线<= 10,      20,
+     * IF(短期支撑线<= 30,      50,
+     *
+     * IF(短期支撑线<= 50 AND MA多( 50) AND COUNT(MA多( 50),  50)>=45,     50,
+     * IF(短期支撑线<= 60 AND MA多( 60) AND COUNT(MA多( 60),  60)>=55,     60,
+     *
+     * IF(短期支撑线<=100 AND MA多(100) AND COUNT(MA多(100), 100)>=95,    100,
+     * IF(短期支撑线<=120 AND MA多(120) AND COUNT(MA多(120), 100)>=95,    120,
+     * IF(短期支撑线<=150 AND MA多(150) AND COUNT(MA多(150), 100)>=95,    150,
+     *
+     * IF(短期支撑线<=200 AND MA多(200) AND COUNT(MA多(200), 100)>=95,    200,
+     * IF(短期支撑线<=250 AND MA多(250) AND COUNT(MA多(250), 100)>=95,    250,
+     *
+     * 250)))))))))       COLORMAGENTA NODRAW;
      *
      * @param close
-     * @param 短期趋势支撑线
+     * @param 短期支撑线
      * @return
      */
-    public static int[] 中期趋势支撑线(double[] close, int[] 短期趋势支撑线) {
-        int[] result = new int[close.length];
+    public static int[] 中期支撑线(double[] close, int[] 短期支撑线) {
+        int n = close.length;
+        int[] MA = new int[n];
 
 
-        boolean[] 下MA20 = 下MA(close, 20);
-        int[] BARSLAST__下MA20 = TdxFun.BARSLAST(下MA20);
+        // { -------------------------------------------------------------------------- }
+        // 中期支撑线 :
+        //
+        //   IF(短期支撑线<= 10,      20,
+        //   IF(短期支撑线<= 30,      50,
+        //
+        //   IF(短期支撑线<= 50 AND MA多( 50) AND COUNT(MA多( 50),  50)>=45,     50,
+        //   IF(短期支撑线<= 60 AND MA多( 60) AND COUNT(MA多( 60),  60)>=55,     60,
+        //
+        //   IF(短期支撑线<=100 AND MA多(100) AND COUNT(MA多(100), 100)>=95,    100,
+        //   IF(短期支撑线<=120 AND MA多(120) AND COUNT(MA多(120), 100)>=95,    120,
+        //   IF(短期支撑线<=150 AND MA多(150) AND COUNT(MA多(150), 100)>=95,    150,
+        //
+        //   IF(短期支撑线<=200 AND MA多(200) AND COUNT(MA多(200), 100)>=95,    200,
+        //   IF(短期支撑线<=250 AND MA多(250) AND COUNT(MA多(250), 100)>=95,    250,
+        //
+        //   250)))))))))       COLORMAGENTA NODRAW;
 
 
-        for (int i = 0; i < close.length; i++) {
-            // 支撑线 区间起始日期   ->   距今天数
-            int last__下MA20__days = BARSLAST__下MA20[i];
+        boolean[] MA50_多 = MA多(close, 50);
+        boolean[] MA60_多 = MA多(close, 60);
+        boolean[] MA100_多 = MA多(close, 100);
+        boolean[] MA120_多 = MA多(close, 120);
+        boolean[] MA150_多 = MA多(close, 150);
+        boolean[] MA200_多 = MA多(close, 200);
+        boolean[] MA250_多 = MA多(close, 250);
 
-            // 支撑线 区间起始日期   ->   idx
-            int lastIdx = Math.max(i - last__下MA20__days, 0);
+
+        int[] count_MA50_多 = COUNT(MA50_多, 50);
+        int[] count_MA60_多 = COUNT(MA60_多, 60);
+        int[] count_MA100_多 = COUNT(MA100_多, 100);
+        int[] count_MA120_多 = COUNT(MA120_多, 100);
+        int[] count_MA150_多 = COUNT(MA150_多, 100);
+        int[] count_MA200_多 = COUNT(MA200_多, 100);
+        int[] count_MA250_多 = COUNT(MA250_多, 100);
 
 
-            result[i] = 短期趋势支撑线[lastIdx];
+        for (int i = 0; i < n; i++) {
+            if (短期支撑线[i] <= 10) {
+                MA[i] = 20;
+            } else if (短期支撑线[i] <= 30) {
+                MA[i] = 50;
+            } else if (短期支撑线[i] <= 50 && MA50_多[i] && count_MA50_多[i] >= 45) {
+                MA[i] = 50;
+            } else if (短期支撑线[i] <= 60 && MA60_多[i] && count_MA60_多[i] >= 55) {
+                MA[i] = 60;
+            } else if (短期支撑线[i] <= 100 && MA100_多[i] && count_MA100_多[i] >= 95) {
+                MA[i] = 100;
+            } else if (短期支撑线[i] <= 120 && MA120_多[i] && count_MA120_多[i] >= 95) {
+                MA[i] = 120;
+            } else if (短期支撑线[i] <= 150 && MA150_多[i] && count_MA150_多[i] >= 95) {
+                MA[i] = 150;
+            } else if (短期支撑线[i] <= 200 && MA200_多[i] && count_MA200_多[i] >= 95) {
+                MA[i] = 200;
+            } else if (短期支撑线[i] <= 250 && MA250_多[i] && count_MA250_多[i] >= 95) {
+                MA[i] = 250;
+            } else {
+                // default
+                MA[i] = 250;
+            }
         }
 
 
-        return result;
+        return MA;
     }
+
+
+    /**
+     * 长期支撑线
+     *
+     *
+     *
+     * { -------------------------------------------------------------------------- }
+     * 长期支撑线 :
+     *
+     * IF(中期支撑线<= 30,      50,
+     *
+     * IF(中期支撑线<= 50 AND MA多( 50) AND COUNT(MA多( 50),  55)>=50,     50,
+     * IF(中期支撑线<= 60 AND MA多( 60) AND COUNT(MA多( 60),  65)>=60,     60,
+     *
+     * IF(中期支撑线<=100 AND MA多(100) AND COUNT(MA多(100), 100)>=95,    100,
+     * IF(中期支撑线<=120 AND MA多(120) AND COUNT(MA多(120), 100)>=95,    120,
+     * IF(中期支撑线<=150 AND MA多(150) AND COUNT(MA多(150), 100)>=95,    150,
+     *
+     * IF(中期支撑线<=200 AND MA多(200) AND COUNT(MA多(200), 100)>=95,    200,
+     * IF(中期支撑线<=250 AND MA多(250) AND COUNT(MA多(250), 100)>=95,    250,
+     *
+     * 250))))))))        COLORGREEN NODRAW;
+     *
+     * @param close
+     * @param 中期支撑线
+     * @return
+     */
+    public static int[] 长期支撑线(double[] close, int[] 中期支撑线) {
+        int n = close.length;
+        int[] MA = new int[n];
+
+
+        // { -------------------------------------------------------------------------- }
+        // 长期支撑线 :
+        //
+        //   IF(中期支撑线<= 30,      50,
+        //
+        //   IF(中期支撑线<= 50 AND MA多( 50) AND COUNT(MA多( 50),  55)>=50,     50,
+        //   IF(中期支撑线<= 60 AND MA多( 60) AND COUNT(MA多( 60),  65)>=60,     60,
+        //
+        //   IF(中期支撑线<=100 AND MA多(100) AND COUNT(MA多(100), 100)>=95,    100,
+        //   IF(中期支撑线<=120 AND MA多(120) AND COUNT(MA多(120), 100)>=95,    120,
+        //   IF(中期支撑线<=150 AND MA多(150) AND COUNT(MA多(150), 100)>=95,    150,
+        //
+        //   IF(中期支撑线<=200 AND MA多(200) AND COUNT(MA多(200), 100)>=95,    200,
+        //   IF(中期支撑线<=250 AND MA多(250) AND COUNT(MA多(250), 100)>=95,    250,
+        //
+        //   250))))))))        COLORGREEN NODRAW;
+
+
+        boolean[] MA50_多 = MA多(close, 50);
+        boolean[] MA60_多 = MA多(close, 60);
+        boolean[] MA100_多 = MA多(close, 100);
+        boolean[] MA120_多 = MA多(close, 120);
+        boolean[] MA150_多 = MA多(close, 150);
+        boolean[] MA200_多 = MA多(close, 200);
+        boolean[] MA250_多 = MA多(close, 250);
+
+
+        int[] count_MA50_多 = COUNT(MA50_多, 55);
+        int[] count_MA60_多 = COUNT(MA60_多, 65);
+        int[] count_MA100_多 = COUNT(MA100_多, 100);
+        int[] count_MA120_多 = COUNT(MA120_多, 100);
+        int[] count_MA150_多 = COUNT(MA150_多, 100);
+        int[] count_MA200_多 = COUNT(MA200_多, 100);
+        int[] count_MA250_多 = COUNT(MA250_多, 100);
+
+
+        for (int i = 0; i < n; i++) {
+            if (中期支撑线[i] <= 30) {
+                MA[i] = 50;
+            } else if (中期支撑线[i] <= 50 && MA50_多[i] && count_MA50_多[i] >= 50) {
+                MA[i] = 50;
+            } else if (中期支撑线[i] <= 60 && MA60_多[i] && count_MA60_多[i] >= 60) {
+                MA[i] = 60;
+            } else if (中期支撑线[i] <= 100 && MA100_多[i] && count_MA100_多[i] >= 95) {
+                MA[i] = 100;
+            } else if (中期支撑线[i] <= 120 && MA120_多[i] && count_MA120_多[i] >= 95) {
+                MA[i] = 120;
+            } else if (中期支撑线[i] <= 150 && MA150_多[i] && count_MA150_多[i] >= 95) {
+                MA[i] = 150;
+            } else if (中期支撑线[i] <= 200 && MA200_多[i] && count_MA200_多[i] >= 95) {
+                MA[i] = 200;
+            } else if (中期支撑线[i] <= 250 && MA250_多[i] && count_MA250_多[i] >= 95) {
+                MA[i] = 250;
+            } else {
+                // default
+                MA[i] = 250;
+            }
+        }
+
+
+        return MA;
+    }
+
 
     public static int[] 趋势支撑线_2(double[] close, double[] ssf) {
         int n = close.length;
