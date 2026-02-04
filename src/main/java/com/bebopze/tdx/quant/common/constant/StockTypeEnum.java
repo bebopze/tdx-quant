@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.constant;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,6 +34,14 @@ public enum StockTypeEnum {
     TDX_BLOCK(3, "板块", Lists.newArrayList("8")),
 
 
+    // ----------------------------------------------------
+
+
+    HK_STOCK(11, "港股", Lists.newArrayList("")),
+
+    US_STOCK(12, "美股", Lists.newArrayList("")),
+
+
     ;
 
 
@@ -46,6 +55,9 @@ public enum StockTypeEnum {
     private final List<String> stockCodePrefixList;
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static String getDescByType(Integer type) {
         for (StockTypeEnum value : StockTypeEnum.values()) {
             if (value.type.equals(type)) {
@@ -57,6 +69,11 @@ public enum StockTypeEnum {
 
 
     public static StockTypeEnum getByStockCode(String stockCode) {
+
+
+        // -------------------------------------------------- A股/ETF/板块
+
+
         // 前1位
         String codePrefix = stockCode.trim().substring(0, 1);
 
@@ -65,8 +82,24 @@ public enum StockTypeEnum {
                 return value;
             }
         }
+
+
+        // -------------------------------------------------- 港美股
+
+
+        // 港股（00700）
+        if (NumUtil.isNumber(stockCode) && stockCode.length() == 5) {
+            return StockTypeEnum.HK_STOCK;
+        }
+
+        // 美股（NVDA）
+        if (NumUtil.isPureEnglish(stockCode)) {
+            return StockTypeEnum.US_STOCK;
+        }
+
         return null;
     }
+
 
     public static Integer getTypeByStockCode(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
@@ -77,7 +110,12 @@ public enum StockTypeEnum {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static boolean isStock(String stockCode) {
+    public static boolean isStock_ETF(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum);
+    }
+
+    public static boolean isAStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
         return A_STOCK.equals(stockTypeEnum);
     }

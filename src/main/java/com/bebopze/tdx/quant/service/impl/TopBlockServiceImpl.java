@@ -809,8 +809,8 @@ public class TopBlockServiceImpl implements TopBlockService {
         }
 
 
-        List<TopChangePctDTO> topChangePctList = Lists.newArrayList();
-        dto.getTopStockDTOList().forEach(e -> {
+        List<TopChangePctDTO> topChangePctList = Collections.synchronizedList(Lists.newArrayList());
+        dto.getTopStockDTOList().parallelStream().forEach(e -> {
             String stockCode = e.getStockCode();
 
 

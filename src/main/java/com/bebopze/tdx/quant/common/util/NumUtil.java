@@ -1,5 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -91,5 +93,23 @@ public class NumUtil {
         return decimal == null ? null : decimal.stripTrailingZeros().toPlainString();
     }
 
+
+    public static boolean isNumber(String str) {
+        return NumberUtils.isNumber(str);
+    }
+
+    public static boolean isPureEnglish(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if ((c < 'A' || c > 'Z') && (c < 'a' || c > 'z')) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
