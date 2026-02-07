@@ -461,20 +461,21 @@ public class BacktestBuyStrategyD implements BuyStrategy {
         // ------------------------------------------- 低吸 -------------------------------------------------------------
 
 
-//        double C_MA_偏离率 = extDataDTO.getC_MA5_偏离率();
-        double C_MA_短期偏离率 = extDataDTO.getC_短期MA_偏离率();
-//        double C_MA_中期偏离率 = extDataDTO.getC_中期MA_偏离率();
-//        double C_MA_长期偏离率 = extDataDTO.getC_长期MA_偏离率();
-        conMap.put("C_MA_偏离率<3", C_MA_短期偏离率 < 3);
-        conMap.put("C_MA_偏离率<5", C_MA_短期偏离率 < 5);
-        conMap.put("C_MA_偏离率<7", C_MA_短期偏离率 < 7);
+        double C_短期MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
+        double C_中期MA_偏离率 = extDataDTO.getC_中期MA_偏离率();
+        double C_长期MA_偏离率 = extDataDTO.getC_长期MA_偏离率();
+        conMap.put("C_短期MA_偏离率<5", C_短期MA_偏离率 < 5);
+        conMap.put("C_中期MA_偏离率<5", C_中期MA_偏离率 < 5);
+        conMap.put("C_长期MA_偏离率<5", C_长期MA_偏离率 < 5);
 
 
-//        int 短期趋势支撑线 = extDataDTO.get短期支撑线();
-//        int 中期趋势支撑线 = extDataDTO.get中期支撑线();
+//        int 短期支撑线 = extDataDTO.get短期支撑线();
+//        int 中期支撑线 = extDataDTO.get中期支撑线();
+//        int 长期支撑线 = extDataDTO.get长期支撑线();
 //
-//        conMap.put("短期趋势支撑线", 短期趋势支撑线);
-//        conMap.put("中期趋势支撑线", 中期趋势支撑线);
+//        conMap.put("短期支撑线", 短期支撑线);
+//        conMap.put("中期支撑线", 中期支撑线);
+//        conMap.put("长期支撑线", 长期支撑线);
 
 
         // ------------------------------------------- 低吸 -------------------------------------------------------------

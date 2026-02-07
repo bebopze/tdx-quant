@@ -110,9 +110,15 @@
 
         FROM base_stock
 
-        WHERE type = #{type}
+        <where>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+            <if test="lastId != null">
+                AND id > #{lastId}
+            </if>
+        </where>
 
-          AND id > #{lastId}
 
         ORDER BY id
         LIMIT #{pageSize}

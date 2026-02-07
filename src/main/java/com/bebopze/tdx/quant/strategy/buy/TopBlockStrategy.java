@@ -5,7 +5,6 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
-import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -59,8 +58,7 @@ public class TopBlockStrategy {
 
 
         // --------------------------------------------- 主线板块（板块-月多2）列表（10~20个）    =>     内部增加了 1次 top1__topBlockCodeSet(false)   ->   初次过滤（false：1~5个）
-        Set<String> topBlockCodeSet = data.topBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
-                                                        .computeIfAbsent(topBlockStrategyEnum, kk -> topBlockStrategy(topBlockStrategyEnum, data, tradeDate));
+        Set<String> topBlockCodeSet = topN__topBlockCodeSet__Cache(topBlockStrategyEnum, data, tradeDate);
 
 
         // --------------------------------------------- 2次过滤（true：1~2个）
@@ -399,7 +397,27 @@ public class TopBlockStrategy {
 
 
     /**
-     * topN（涨停TOP + 百日新高TOP）  ->   真 主线板块（1~2个）      // Cache
+     * topN（涨停TOP + 百日新高TOP）  ->   topN 主线板块（1~5个）      // Cache
+     *
+     * @param topBlockStrategyEnum
+     * @param data
+     * @param tradeDate
+     * @return
+     */
+    private Set<String> topN__topBlockCodeSet__Cache(TopBlockStrategyEnum topBlockStrategyEnum,
+                                                     BacktestCache data,
+                                                     LocalDate tradeDate) {
+
+        Set<String> topN__topBlockCodeSet = data.topBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
+                                                              .computeIfAbsent(topBlockStrategyEnum, kk -> topBlockStrategy(topBlockStrategyEnum, data, tradeDate));
+
+
+        return topN__topBlockCodeSet;
+    }
+
+
+    /**
+     * top1（涨停TOP + 百日新高TOP）  ->   真 主线板块（1~2个）      // Cache
      *
      * @param topBlockStrategyEnum
      * @param data
@@ -588,6 +606,30 @@ public class TopBlockStrategy {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 强势个股   ->   IN 主线板块                  // 通用方法
+     *
+     * @param topBlockStrategyEnum   主线策略
+     * @param buy__topStock__codeSet 强势个股
+     * @param data
+     * @param tradeDate
+     * @return
+     */
+    public Set<String> inBaseTopBlock__stockCodeSet(TopBlockStrategyEnum topBlockStrategyEnum,
+                                                    Collection<String> buy__topStock__codeSet,
+
+                                                    BacktestCache data,
+                                                    LocalDate tradeDate) {
+
+
+        // read Cache   ->   topN 主线板块（1~5个）
+        Set<String> topN__topBlockCodeSet = topN__topBlockCodeSet__Cache(topBlockStrategyEnum, data, tradeDate);
+
+
+        return inTopBlock__stockCodeSet(topN__topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
+    }
 
 
     /**
