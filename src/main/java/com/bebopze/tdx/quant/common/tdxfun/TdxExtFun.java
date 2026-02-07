@@ -2654,8 +2654,8 @@ public class TdxExtFun {
      * IF(MA多( 10) AND COUNT(MA多( 10), 12)>=11   AND   均线大多头,     10,
      * IF(MA多( 20) AND COUNT(MA多( 20), 15)>=14,     20,
      * IF(MA多( 30) AND COUNT(MA多( 30), 20)>=19,     30,
-     * IF(MA多( 50) AND COUNT(MA多( 50), 35)>=32,     50,
-     * IF(MA多( 60) AND COUNT(MA多( 60), 40)>=37,     60,
+     * IF(MA多( 50) AND COUNT(MA多( 50), 25)>=23,     50,
+     * IF(MA多( 60) AND COUNT(MA多( 60), 30)>=27,     60,
      * IF(MA多(100) AND COUNT(MA多(100), 50)>=45,    100,
      * IF(MA多(120) AND COUNT(MA多(120), 60)>=55,    120,
      * IF(MA多(150) AND COUNT(MA多(150), 70)>=65,    150,
@@ -2686,8 +2686,8 @@ public class TdxExtFun {
         //   IF(MA多( 10) AND COUNT(MA多( 10), 12)>=11   AND   均线大多头,     10,
         //   IF(MA多( 20) AND COUNT(MA多( 20), 15)>=14,     20,
         //   IF(MA多( 30) AND COUNT(MA多( 30), 20)>=19,     30,
-        //   IF(MA多( 50) AND COUNT(MA多( 50), 35)>=32,     50,
-        //   IF(MA多( 60) AND COUNT(MA多( 60), 40)>=37,     60,
+        //   IF(MA多( 50) AND COUNT(MA多( 50), 25)>=23,     50,
+        //   IF(MA多( 60) AND COUNT(MA多( 60), 30)>=27,     60,
         //   IF(MA多(100) AND COUNT(MA多(100), 50)>=45,    100,
         //   IF(MA多(120) AND COUNT(MA多(120), 60)>=55,    120,
         //   IF(MA多(150) AND COUNT(MA多(150), 70)>=65,    150,
@@ -2716,8 +2716,8 @@ public class TdxExtFun {
         int[] count_MA10_多 = COUNT(MA10_多, 12);
         int[] count_MA20_多 = COUNT(MA20_多, 15);
         int[] count_MA30_多 = COUNT(MA20_多, 20);
-        int[] count_MA50_多 = COUNT(MA50_多, 35);
-        int[] count_MA60_多 = COUNT(MA60_多, 40);
+        int[] count_MA50_多 = COUNT(MA50_多, 25);
+        int[] count_MA60_多 = COUNT(MA60_多, 30);
         int[] count_MA100_多 = COUNT(MA100_多, 50);
         int[] count_MA120_多 = COUNT(MA120_多, 60);
         int[] count_MA150_多 = COUNT(MA150_多, 70);
@@ -2736,9 +2736,9 @@ public class TdxExtFun {
                 MA[i] = 20;
             } else if (MA30_多[i] && count_MA30_多[i] >= 19) {
                 MA[i] = 20;
-            } else if (MA50_多[i] && count_MA50_多[i] >= 32) {
+            } else if (MA50_多[i] && count_MA50_多[i] >= 23) {
                 MA[i] = 50;
-            } else if (MA60_多[i] && count_MA60_多[i] >= 37) {
+            } else if (MA60_多[i] && count_MA60_多[i] >= 27) {
                 MA[i] = 60;
             } else if (MA100_多[i] && count_MA100_多[i] >= 45) {
                 MA[i] = 100;

@@ -160,8 +160,8 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     public List<BaseStockDO> listAllKline(Integer type, boolean refresh) {
         return listAllKline_0(type, refresh)
                 .stream()
-                .filter(e -> type == null || Objects.equals(type, e.getType())).
-                collect(Collectors.toList());
+                .filter(e -> type == null || Objects.equals(type, e.getType()))
+                .collect(Collectors.toList());
     }
 
     private List<BaseStockDO> listAllKline_0(Integer type, boolean refresh) {

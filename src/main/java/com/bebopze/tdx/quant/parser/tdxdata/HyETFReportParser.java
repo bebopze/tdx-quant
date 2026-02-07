@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.util.SimpleFileMatcher;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -44,11 +45,12 @@ public class HyETFReportParser {
     /**
      * 行情报价（代码	名称	涨幅%	现价	开盘%	最高%	最低%	振幅%	换手%	开盘金额	总金额	一二级行业	[细分行业]	昨涨幅%	3日涨幅%	5日涨幅%	10日涨幅%	20日涨幅%	60日涨幅%	年初至今%	连涨天	）
      */
-    private static final String filePath_ETF = TDX_PATH + "/T0002/export/ETF基金20260107.txt";
+//    private static final String filePath_ETF = TDX_PATH + "/T0002/export/ETF基金20260107.txt";
+    private static final String filePath_ETF = TDX_PATH + "/T0002/export/沪深基金20260107.txt";
 
 
     private static final String basePath = TDX_PATH + "/T0002/export";
-    private static final String fileName = "ETF基金";
+    private static final String fileName = "沪深基金";
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -97,7 +99,16 @@ public class HyETFReportParser {
                         .filter(e -> StringUtils.isNotBlank(e.细分行业))
                         .forEach(e -> {
 
+
+                            // 过滤 货币基金、债券基金、0流动性（成交额）
+                            if (filter_ETF(e)) {
+                                log.info("filter_ETF     >>>     name : {} , 细分行业 : {}", e.name, e.细分行业);
+                                return;
+                            }
+
+
                             String 细分行业 = e.细分行业;
+
 
                             TdxETFDTO old_row = hy__rowMap.computeIfAbsent(细分行业, k -> e);
                             // 同一[细分行业]   ->   筛选保留 最大金额ETF
@@ -141,6 +152,20 @@ public class HyETFReportParser {
     }
 
 
+    private static boolean filter_ETF(TdxETFDTO e) {
+
+        // "国债", "科创债", "地债", "信用债", "转债"
+        Set<String> filter_nameSet = Sets.newHashSet("日利", "债");
+        Set<String> filter_hySet = Sets.newHashSet("短融", "债");
+
+
+        return filter_nameSet.stream().anyMatch(name -> e.name.contains(name))
+                || filter_hySet.stream().anyMatch(hy -> e.细分行业.contains(hy))
+                // 100W
+                || e.amount < 100;
+    }
+
+
     private static void write2Tdx__distinct_HyETF(List<TdxETFDTO> exportTxtDTOList) {
         // ETF code列表（按照[细分行业] 去重后的）
         Set<String> ETF_codeSet = exportTxtDTOList.stream().map(TdxETFDTO::getCode).collect(Collectors.toSet());
@@ -151,9 +176,9 @@ public class HyETFReportParser {
 
 
     /**
-     * tdx ETF 报表txt（ETF基金20260107.txt）   -   解析器
+     * tdx ETF 报表txt（沪深基金20260107.txt）   -   解析器
      *
-     * @param file_ETF ETF文件     -    /new_tdx/T0002/export/ETF基金20260107.txt
+     * @param file_ETF ETF文件     -    /new_tdx/T0002/export/沪深基金20260107.txt
      * @return
      */
     private static List<TdxETFDTO> parseByFilePath(File file_ETF) {
@@ -316,7 +341,7 @@ public class HyETFReportParser {
 
         // 开盘金额
         private double openAmount;
-        // 总金额
+        // 总金额（万）
         private double amount;
 
 

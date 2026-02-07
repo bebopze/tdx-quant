@@ -81,9 +81,9 @@ public class BacktestSellStrategy implements SellStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        long start_1 = System.currentTimeMillis();
-        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.isTop1TopBlockFlag());
-        log.info("BacktestSellStrategy - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+//        long start_1 = System.currentTimeMillis();
+//        Set<String> topN__topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, false);
+//        log.info("BacktestSellStrategy - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -108,17 +108,19 @@ public class BacktestSellStrategy implements SellStrategy {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 取反     =>     前期 强势个股   ->   not IN 主线板块
-        long start_3 = System.currentTimeMillis();
-        Set<String> notInTopBlock__stockCodeSet = notInTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeSet, data, tradeDate);
-        log.info("BacktestSellStrategy - notInTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+        // TODO   ->   重复校验   =>   sell__stockCodeSet 中每个 个股已经执行过   ->   S_topBlock （已包含  stockCode  ->  NOT IN 主线板块）
 
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // merge   ->   个股S + 板块S
-        merge___sell__stockCodeSet(sell__stockCodeSet, notInTopBlock__stockCodeSet, sell_infoMap);
+//        // 取反     =>     前期 强势个股   ->   not IN 主线板块
+//        long start_3 = System.currentTimeMillis();
+//        Set<String> notInTopBlock__stockCodeSet = notInBaseTopBlock__stockCodeSet(topBlockStrategyEnum/*, topN__topBlockCodeSet*/, positionStockCodeSet, data, tradeDate);
+//        log.info("BacktestSellStrategy - notInBaseTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        // merge   ->   个股S + 板块S
+//        merge___sell__stockCodeSet(sell__stockCodeSet, notInTopBlock__stockCodeSet, sell_infoMap);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -628,16 +630,18 @@ public class BacktestSellStrategy implements SellStrategy {
     /**
      * 取反     =>     前期 强势个股   ->   not IN 主线板块
      *
-     * @param topBlockCodeSet      主线板块 列表
-     * @param positionStockCodeSet 持仓个股 列表
-     * @param data                 回测缓存数据
-     * @param tradeDate            交易日期
+     * @param topBlockStrategyEnum  主线策略
+     * @param topN__topBlockCodeSet 主线板块 列表（topN -> 1~5个）
+     * @param positionStockCodeSet  持仓个股 列表
+     * @param data                  回测缓存数据
+     * @param tradeDate             交易日期
      * @return 不在【主线板块】中的个股集合
      */
-    private Set<String> notInTopBlock__stockCodeSet(Set<String> topBlockCodeSet,
-                                                    Set<String> positionStockCodeSet,
-                                                    BacktestCache data,
-                                                    LocalDate tradeDate) {
+    private Set<String> notInBaseTopBlock__stockCodeSet(TopBlockStrategyEnum topBlockStrategyEnum,
+            /*Set<String> topN__topBlockCodeSet,*/
+                                                        Set<String> positionStockCodeSet,
+                                                        BacktestCache data,
+                                                        LocalDate tradeDate) {
 
 
         // TODO   ETF 策略   ->   忽略  IN主线板块
@@ -647,14 +651,14 @@ public class BacktestSellStrategy implements SellStrategy {
 
 
         // 强势个股   ->   IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, positionStockCodeSet, data, tradeDate);
+        Set<String> inBaseTopBlock__stockCodeSet = topBlockStrategy.inBaseTopBlock__stockCodeSet(topBlockStrategyEnum, positionStockCodeSet, data, tradeDate);
 
 
         // 取反     =>     前期 强势个股   ->   not IN 主线板块
 
         // 走弱的   前期 【主线板块】 加速出清     =>     清理  掉出【主线板块】 -  对应的个股     ->     加快 自动 【主线板块 切换】
         Set<String> notInTopBlock__stockCodeSet = new HashSet<>(positionStockCodeSet);
-        notInTopBlock__stockCodeSet.removeAll(inTopBlock__stockCodeSet);
+        notInTopBlock__stockCodeSet.removeAll(inBaseTopBlock__stockCodeSet);
 
 
         return notInTopBlock__stockCodeSet;
@@ -705,13 +709,11 @@ public class BacktestSellStrategy implements SellStrategy {
         }
 
 
-        // 今日   主线板块 列表
-        Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
         // 今日   个股 -> IN 主线板块
-        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, Sets.newHashSet(stockCode), data, tradeDate);
+        Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inBaseTopBlock__stockCodeSet(topBlockStrategyEnum, Sets.newHashSet(stockCode), data, tradeDate);
 
 
-        // 个股   ->   NOT IN 主线板块       =>       个股  ->  全部 topBlock   ->   全 转空
+        // 个股   ->   NOT IN 主线板块       =>       个股  ->  全部 topBlock   ->   全 转弱（空）
         return CollectionUtils.isEmpty(inTopBlock__stockCodeSet);
 
 

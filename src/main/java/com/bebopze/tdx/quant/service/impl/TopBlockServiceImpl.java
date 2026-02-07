@@ -3913,8 +3913,8 @@ public class TopBlockServiceImpl implements TopBlockService {
      */
     private boolean block_SSF多(String blockCode, LocalDate date) {
 
-        // BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? data.getOrCreateBlockFun(blockCode) : data.getOrCreateBlockFun(baseBlockService.getByCode(blockCode));
-        BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? new BlockFun(data.codeBlockMap.get(blockCode)) : new BlockFun(baseBlockService.getByCode(blockCode));
+        BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? data.getOrCreateBlockFun(blockCode) : data.getOrCreateBlockFun(baseBlockService.getByCode(blockCode));
+        // BlockFun fun = (CollectionUtils.isNotEmpty(data.blockDOList)) ? new BlockFun(data.codeBlockMap.get(blockCode)) : new BlockFun(baseBlockService.getByCode(blockCode));
 
 
         ExtDataArrDTO extDataArrDTO = fun.getExtDataArrDTO();

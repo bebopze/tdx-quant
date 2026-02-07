@@ -16,7 +16,7 @@ import java.util.*;
 public class BuyStrategy__ConCombiner {
 
 
-    // ----------------------------------------------- AND -------------------------------------------------------------
+    // ----------------------------------------------- 随机组（AND）------------------------------------------------------
 
 
     // 短期趋势
@@ -27,7 +27,7 @@ public class BuyStrategy__ConCombiner {
     private static final List<String> conKeyList_2 = Lists.newArrayList("百日新高", "N60日新高"/*, "N100日新高", "历史新高"*/);
 
     // 长期趋势（均线）
-    private static final List<String> conKeyList_3 = Lists.newArrayList(/*"月多", "均线预萌出",*/ /*"均线萌出",*/ "小均线多头", "大均线多头"/*, "均线大多头", "均线极多头"*/);
+    private static final List<String> conKeyList_3 = Lists.newArrayList("月多", "均线预萌出", /*"均线萌出",*/ "小均线多头", "大均线多头", "均线大多头", "均线极多头");
 
     // RPS强度
     private static final List<String> conKeyList_4 = Lists.newArrayList(/*"RPS红",*/ "RPS一线红", "RPS双线红", "RPS三线红");
@@ -37,17 +37,19 @@ public class BuyStrategy__ConCombiner {
 //    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5"/*, "C_MA_偏离率<3", "C_MA_偏离率<5", "C_MA_偏离率<7"*/);
 //    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5", /*"C_MA5_偏离率<5", "C_MA10_偏离率<5",*/ "C_MA20_偏离率<5", "C_MA30_偏离率<5",
 //            /*"C_MA50_偏离率<5",*/ "C_MA60_偏离率<5"/*, "C_MA100_偏离率<5"*/);
-    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5", "C_MA5_偏离率<5", "C_MA10_偏离率<5", "C_MA20_偏离率<5");
+    private static final List<String> conKeyList_5__DEL = Lists.newArrayList("C_SSF_偏离率<5", "C_MA5_偏离率<5", "C_MA10_偏离率<5", "C_MA20_偏离率<5");
+
+    // 买点2 -> 回踩支撑线
+    private static final List<String> conKeyList_5 = Lists.newArrayList("C_短期MA_偏离率<5", "C_中期MA_偏离率<5", "C_长期MA_偏离率<5");
 
 
     // 中期涨幅_MA20（限高）
     private static final List<String> conKeyList_6 = Lists.newArrayList("中期涨幅<35", "中期涨幅<50", "中期涨幅<100");
     // 长期涨幅_MA250（限高）
-    private static final List<String> conKeyList_7 = Lists.newArrayList("中期涨幅N250<150", "中期涨幅N250<350", "中期涨幅N250<700", "中期涨幅N250<1500");
+    private static final List<String> conKeyList_7 = Lists.newArrayList(/*"中期涨幅N250<150", "中期涨幅N250<350",*/ "中期涨幅N250<700", "中期涨幅N250<1500");
 
 
-    // TODO   回踩支撑线
-    private static final List<String> conKeyList_8 = Lists.newArrayList("C_短期MA_偏离率<5", "C_中期MA_偏离率<5", "C_长期MA_偏离率<5");
+    // ----------------------------------------------- 必选组（AND）------------------------------------------------------
 
 
     // TODO   必选组
@@ -55,7 +57,7 @@ public class BuyStrategy__ConCombiner {
 //    private static final List<String> conKeyList_11 = Lists.newArrayList(/*"XZZB",*/ "上MA200", "上MA250", "MA200多", "MA250多");
 
 
-    // ----------------------------------------------- OR --------------------------------------------------------------
+    // ----------------------------------------------- 必选组（OR）-------------------------------------------------------
 
 
     // 买点2 -> 经典买点
@@ -215,7 +217,7 @@ public class BuyStrategy__ConCombiner {
     public static void main(String[] args) {
 
 
-        int N = 3;
+        int N = 2;
         List<Set<String>> combinations = generateCombinations(N);
 
 
