@@ -398,7 +398,7 @@ public class TdxExtFun {
 
 
     /**
-     * 中期涨幅N
+     * 中期涨幅N                          ->   已验证 ✅
      *
      * @param high
      * @param low
@@ -444,7 +444,7 @@ public class TdxExtFun {
 
 
     /**
-     * 中期调整 指标计算
+     * 中期调整 指标计算                          ->   已验证 ✅
      *
      *
      * ————————————————————————————————————————————————————————
@@ -640,7 +640,7 @@ public class TdxExtFun {
 
 
     /**
-     * 是否涨停
+     * 是否涨停                          ->   已验证 ✅
      *
      * @param close
      * @param changePctLimit
@@ -668,7 +668,7 @@ public class TdxExtFun {
     }
 
     /**
-     * 是否跌停
+     * 是否跌停                          ->   已验证 ✅
      *
      * @param close
      * @param changePctLimit

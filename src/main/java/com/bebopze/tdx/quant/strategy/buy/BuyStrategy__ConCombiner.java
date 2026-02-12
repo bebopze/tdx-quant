@@ -21,50 +21,49 @@ public class BuyStrategy__ConCombiner {
 
     // 短期趋势
     private static final List<String> conKeyList_1 = Lists.newArrayList(/*"XZZB", "SSF多",*/ "MA20多");
-//    private static final List<String> conKeyList_1 = Lists.newArrayList();
 
     // 新高
     private static final List<String> conKeyList_2 = Lists.newArrayList("百日新高", "N60日新高"/*, "N100日新高", "历史新高"*/);
 
     // 长期趋势（均线）
-    private static final List<String> conKeyList_3 = Lists.newArrayList("月多", "均线预萌出", /*"均线萌出",*/ "小均线多头", "大均线多头", "均线大多头", "均线极多头");
+    private static final List<String> conKeyList_3 = Lists.newArrayList("月多", "均线预萌出", /*"均线萌出",*/ "小均线多头", "大均线多头"/*, "均线大多头", "均线极多头"*/);
 
     // RPS强度
-    private static final List<String> conKeyList_4 = Lists.newArrayList(/*"RPS红",*/ "RPS一线红", "RPS双线红", "RPS三线红");
+    private static final List<String> conKeyList_4 = Lists.newArrayList("RPS红"/*, "RPS一线红", "RPS双线红", "RPS三线红"*/);
 
 
     // 买点1 -> 低吸
-//    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5"/*, "C_MA_偏离率<3", "C_MA_偏离率<5", "C_MA_偏离率<7"*/);
-//    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5", /*"C_MA5_偏离率<5", "C_MA10_偏离率<5",*/ "C_MA20_偏离率<5", "C_MA30_偏离率<5",
-//            /*"C_MA50_偏离率<5",*/ "C_MA60_偏离率<5"/*, "C_MA100_偏离率<5"*/);
-    private static final List<String> conKeyList_5__DEL = Lists.newArrayList("C_SSF_偏离率<5", "C_MA5_偏离率<5", "C_MA10_偏离率<5", "C_MA20_偏离率<5");
+    private static final List<String> conKeyList_5 = Lists.newArrayList("C_SSF_偏离率<5", /*"C_MA5_偏离率<5", "C_MA10_偏离率<5",*/ "C_MA20_偏离率<5", /*"C_MA30_偏离率<5",*/
+            /*"C_MA50_偏离率<5",*/ "C_MA60_偏离率<5"/*, "C_MA100_偏离率<5"*/);
 
-    // 买点2 -> 回踩支撑线
-    private static final List<String> conKeyList_5 = Lists.newArrayList("C_短期MA_偏离率<5", "C_中期MA_偏离率<5", "C_长期MA_偏离率<5");
+//    // 买点2 -> 回踩支撑线
+//    private static final List<String> conKeyList_5 = Lists.newArrayList("C_短期MA_偏离率<5", "C_中期MA_偏离率<5", "C_长期MA_偏离率<5");
 
 
     // 中期涨幅_MA20（限高）
     private static final List<String> conKeyList_6 = Lists.newArrayList("中期涨幅<35", "中期涨幅<50", "中期涨幅<100");
     // 长期涨幅_MA250（限高）
-    private static final List<String> conKeyList_7 = Lists.newArrayList(/*"中期涨幅N250<150", "中期涨幅N250<350",*/ "中期涨幅N250<700", "中期涨幅N250<1500");
+//    private static final List<String> conKeyList_7 = Lists.newArrayList("中期涨幅N250<150", "中期涨幅N250<350", "中期涨幅N250<700", "中期涨幅N250<1500");
 
 
     // ----------------------------------------------- 必选组（AND）------------------------------------------------------
 
 
-    // TODO   必选组
-    private static final List<String> conKeyList_11 = Lists.newArrayList("XZZB", "SSF多", "MA200多");
-//    private static final List<String> conKeyList_11 = Lists.newArrayList(/*"XZZB",*/ "上MA200", "上MA250", "MA200多", "MA250多");
+    // 必选组
+    private static final List<String> conKeyList_11 = Lists.newArrayList("XZZB", "SSF多", /*"上MA200", "上MA250",*/ "MA200多"/*, "MA250多"*/);
 
 
     // ----------------------------------------------- 必选组（OR）-------------------------------------------------------
 
 
+    // 买点1 -> 回踩支撑线（低吸）
+    private static final List<String> or_conKeyList_1 = Lists.newArrayList("C_短期MA_偏离率<5", "C_中期MA_偏离率<5", "C_长期MA_偏离率<5");
+
     // 买点2 -> 经典买点
-    private static final List<String> or_conKeyList_1 = Lists.newArrayList("首次三线红", "口袋支点");
+    private static final List<String> or_conKeyList_2 = Lists.newArrayList("首次三线红", "口袋支点");
 
     // 均线形态
-    private static final List<String> or_conKeyList_2 = Lists.newArrayList("月多", "均线预萌出");
+//    private static final List<String> or_conKeyList_3 = Lists.newArrayList("月多", "均线预萌出");
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -89,29 +88,17 @@ public class BuyStrategy__ConCombiner {
     public static boolean calcCon(Set<String> conKeySet, Map<String, Boolean> conMap) {
 
 
-//        // 必选组 -> OR_1
-//        boolean or_flag = false;
-//        for (String or_key : or_conKeyList_1) {
-//            if (conMap.getOrDefault(or_key, false)) {
-//                or_flag = true;
-//                break;
-//            }
-//        }
-//        if (!or_flag) {
-//            return false;
-//        }
+//        // 必选组 -> OR
+//        boolean con_or_1 = con_or(conMap, or_conKeyList_1);
+//        boolean con_or_2 = con_or(conMap, or_conKeyList_2);
 //
-//        // 必选组 -> OR_2
-//        boolean or_flag_2 = false;
-//        for (String or_key : or_conKeyList_2) {
-//            if (conMap.getOrDefault(or_key, false)) {
-//                or_flag_2 = true;
-//                break;
-//            }
-//        }
-//        if (!or_flag_2) {
+//        boolean con_or = con_or_1 || con_or_2;
+//        if (!con_or) {
 //            return false;
 //        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 随机组 -> AND
@@ -128,6 +115,21 @@ public class BuyStrategy__ConCombiner {
 
         return true;
     }
+
+
+    private static boolean con_or(Map<String, Boolean> conMap, List<String> or_conKeyList) {
+        boolean or_flag = false;
+
+        for (String or_key : or_conKeyList) {
+            if (conMap.getOrDefault(or_key, false)) {
+                or_flag = true;
+                break;
+            }
+        }
+
+        return or_flag;
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -166,8 +168,6 @@ public class BuyStrategy__ConCombiner {
         g5.add(0, null);
         List<String> g6 = new ArrayList<>(conKeyList_6);
         g6.add(0, null);
-        List<String> g7 = new ArrayList<>(conKeyList_7);
-        g7.add(0, null);
 
 
         for (String c1 : g1) {
@@ -176,27 +176,24 @@ public class BuyStrategy__ConCombiner {
                     for (String c4 : g4) {
                         for (String c5 : g5) {
                             for (String c6 : g6) {
-                                for (String c7 : g7) {
 
 
-                                    Set<String> combo = new HashSet<>();
-                                    if (c1 != null) combo.add(c1);
-                                    if (c2 != null) combo.add(c2);
-                                    if (c3 != null) combo.add(c3);
-                                    if (c4 != null) combo.add(c4);
-                                    if (c5 != null) combo.add(c5);
-                                    if (c6 != null) combo.add(c6);
-                                    if (c7 != null) combo.add(c7);
+                                Set<String> combo = new HashSet<>();
+                                if (c1 != null) combo.add(c1);
+                                if (c2 != null) combo.add(c2);
+                                if (c3 != null) combo.add(c3);
+                                if (c4 != null) combo.add(c4);
+                                if (c5 != null) combo.add(c5);
+                                if (c6 != null) combo.add(c6);
 
 
-                                    // 只保留至少 N（>=2） 个条件的组合
-                                    if (combo.size() >= N) {
+                                // 只保留至少 N（>=2） 个条件的组合
+                                if (combo.size() >= N) {
 
-                                        // 必选组
-                                        combo.addAll(conKeyList_11);
+                                    // 必选组
+                                    combo.addAll(conKeyList_11);
 
-                                        result.add(combo);
-                                    }
+                                    result.add(combo);
                                 }
                             }
                         }

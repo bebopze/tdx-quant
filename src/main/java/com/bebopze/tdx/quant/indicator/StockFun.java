@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.tdxfun.TdxExtFun.*;
 import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.COUNT;
+import static com.bebopze.tdx.quant.common.tdxfun.TdxFun.HHV;
 import static com.bebopze.tdx.quant.common.util.BoolUtil.*;
 
 
@@ -498,7 +499,7 @@ public class StockFun {
      * @param N
      * @return
      */
-    public boolean[] 创N日新高(int N) {
+    public boolean[] 创N日新高_0(int N) {
 
 
         // CON_1 :=  COUNT(N日新高(N),  5);
@@ -547,18 +548,13 @@ public class StockFun {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
-    //                                                  统计指标（百日新高/...）
-    // -----------------------------------------------------------------------------------------------------------------
-
-
     /**
      * 百日新高（开盘啦APP）     ->     近5日内创百日新高，并且未大幅回落
      *
      * @param N
      * @return
      */
-    public boolean[] 百日新高(int N) {
+    public boolean[] 创N日新高(int N) {
 
 
         // CON_1 :=  COUNT(N日新高(N),  5);
@@ -609,6 +605,57 @@ public class StockFun {
 
 
         return con_and(con_1, con_2, con_3, con_4, con_5);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  统计指标（百日新高/...）
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 百日新高（开盘啦APP）     ->     近5日内创百日新高，并且未大幅回落
+     *
+     * @param N
+     * @return
+     */
+    public boolean[] 百日新高_0(int N) {
+        return 创N日新高(N);
+    }
+
+
+    /**
+     * 百日新高（开盘啦APP）     ->     近5日内创百日新高，并且未大幅回落
+     *
+     * @param N
+     * @return
+     */
+    public boolean[] 百日新高(int N) {
+
+
+        // COUNT(N日新高(100), 5)   AND   SSF多.SSF多   AND   C/HHV(C, 5)>0.9;   {近5日创 100日新高 + 未大幅回落};
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 近5日内 创百日新高
+        boolean[] con_1 = int2Bool(COUNT(N日新高(N), 5)); // 近5日
+
+
+        // SSF多
+        boolean[] con_2 = SSF多();
+
+
+        // 未大幅回落（5日 最大跌幅 > -10%）
+        boolean[] con_3 = new boolean[close.length];
+        double[] H_close = HHV(close, 5);
+        for (int i = 0; i < close.length; i++) {
+            con_3[i] = close[i] / H_close[i] > 0.9;
+        }
+
+
+        return con_and(con_1, con_2, con_3);
     }
 
 
