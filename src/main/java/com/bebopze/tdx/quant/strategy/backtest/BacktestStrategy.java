@@ -21,6 +21,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.buy.ScoreSort;
+import com.bebopze.tdx.quant.strategy.buy.TopBlockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -132,6 +133,9 @@ public class BacktestStrategy {
 
     @Autowired
     private MarketService marketService;
+
+    @Autowired
+    private TopBlockStrategy topBlockStrategy;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -1263,7 +1267,7 @@ public class BacktestStrategy {
             sell_tradeRecordDO.setTradeSignalDesc(sellStrategyEnum.getDesc());
 
             // 主线板块
-            Set<String> stock__blockCodeNameSet__inTopBlock = data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap()).get(stockCode);
+            Set<String> stock__blockCodeNameSet__inTopBlock = topBlockStrategy.get__stock_topBlock__fromCache(tradeDate, stockCode);
             sell_tradeRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
 
 
@@ -1370,7 +1374,7 @@ public class BacktestStrategy {
 
 
             // 主线板块
-            Set<String> stock__blockCodeNameSet__inTopBlock = data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap()).get(stockCode);
+            Set<String> stock__blockCodeNameSet__inTopBlock = topBlockStrategy.get__stock_topBlock__fromCache(tradeDate, stockCode);
             sell_tradeRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
 
 
@@ -1544,42 +1548,42 @@ public class BacktestStrategy {
             // -----------------------------------------------------------
 
 
-            BtTradeRecordDO tradeRecordDO = new BtTradeRecordDO();
-            tradeRecordDO.setTaskId(taskId);
-            tradeRecordDO.setTradeType(BtTradeTypeEnum.BUY.getTradeType());
-            tradeRecordDO.setStockId(data.stock__codeIdMap.get(stockCode));
-            tradeRecordDO.setStockCode(stockCode);
-            tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
-            tradeRecordDO.setTradeDate(tradeDate);
-            tradeRecordDO.setTradeSignalType(1);
-            tradeRecordDO.setTradeSignalDesc(buy_infoMap.get(stockCode));
+            BtTradeRecordDO buy_tradeRecordDO = new BtTradeRecordDO();
+            buy_tradeRecordDO.setTaskId(taskId);
+            buy_tradeRecordDO.setTradeType(BtTradeTypeEnum.BUY.getTradeType());
+            buy_tradeRecordDO.setStockId(data.stock__codeIdMap.get(stockCode));
+            buy_tradeRecordDO.setStockCode(stockCode);
+            buy_tradeRecordDO.setStockName(data.stock__codeNameMap.get(stockCode));
+            buy_tradeRecordDO.setTradeDate(tradeDate);
+            buy_tradeRecordDO.setTradeSignalType(1);
+            buy_tradeRecordDO.setTradeSignalDesc(buy_infoMap.get(stockCode));
 
 
             // 主线板块
-            Set<String> stock__blockCodeNameSet__inTopBlock = data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap()).get(stockCode);
-            tradeRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
+            Set<String> stock__blockCodeNameSet__inTopBlock = topBlockStrategy.get__stock_topBlock__fromCache(tradeDate, stockCode);
+            buy_tradeRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
 
 
             // 收盘价
             BigDecimal close = NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate));
-            tradeRecordDO.setPrice(close);
+            buy_tradeRecordDO.setPrice(close);
 
             // 买入数量   =   可买仓位 / 收盘价                                  （忽略 🐶💩共产主义特色   ->   100股 bug）
             double qty = amount / close.doubleValue();
-            tradeRecordDO.setQuantity((int) qty);
+            buy_tradeRecordDO.setQuantity((int) qty);
 
             // 成交额 = 价格 x 数量
             // 不能用 amount（double qty  ->  int qty  =>  会少买1股）  ->   必须用 price x qty           // 如果 price = 100， amount -> 100 x 1 = 100   =>   bug：B金额 -> 凭空 多计入 100 ❗❗❗
-            double act_amount = tradeRecordDO.getPrice().doubleValue() * tradeRecordDO.getQuantity(); // BUG：每天  100多只个股   =>   每天 B金额 -> 凭空 多计入 1000 ~ 10000 ❗❗❗
-            tradeRecordDO.setAmount(of(act_amount));     // BUG：导致  实际市值（持仓个股 【price x qty ↓】 累加） <  计算市值（持仓个股 【amount ↑】 累加）
+            double act_amount = buy_tradeRecordDO.getPrice().doubleValue() * buy_tradeRecordDO.getQuantity(); // BUG：每天  100多只个股   =>   每天 B金额 -> 凭空 多计入 1000 ~ 10000 ❗❗❗
+            buy_tradeRecordDO.setAmount(of(act_amount));     // BUG：导致  实际市值（持仓个股 【price x qty ↓】 累加） <  计算市值（持仓个股 【amount ↑】 累加）
             //                                              BUG：导致  实际可用资金（+S -B【price x qty ↓ 累加】）>  计算可用资金（+S -B【amount ↑ 累加】）  =>   计算可用资金（甚至会 出现负数）❗❗❗
 
 
             // 仓位占比 = 持仓市值 / 总资金
             double positionPct = act_amount / x.get().capital * 100;
-            tradeRecordDO.setPositionPct(of(positionPct));
+            buy_tradeRecordDO.setPositionPct(of(positionPct));
 
-            tradeRecordDO.setFee(BigDecimal.ZERO);
+            buy_tradeRecordDO.setFee(BigDecimal.ZERO);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -1603,7 +1607,7 @@ public class BacktestStrategy {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            buy__tradeRecordDO__List.add(tradeRecordDO);
+            buy__tradeRecordDO__List.add(buy_tradeRecordDO);
         }
 
 
@@ -2939,7 +2943,7 @@ public class BacktestStrategy {
 
 
             // 主线板块
-            Set<String> stock__blockCodeNameSet__inTopBlock = data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap()).get(stockCode);
+            Set<String> stock__blockCodeNameSet__inTopBlock = topBlockStrategy.get__stock_topBlock__fromCache(tradeDate, stockCode);
             positionRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
 
 
@@ -3222,7 +3226,7 @@ public class BacktestStrategy {
             positionRecordDO.setStockName(prevPos.getStockName());
 
             // 主线板块
-            Set<String> stock__blockCodeNameSet__inTopBlock = data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap()).get(stockCode);
+            Set<String> stock__blockCodeNameSet__inTopBlock = topBlockStrategy.get__stock_topBlock__fromCache(tradeDate, stockCode);
             positionRecordDO.setTopBlockSet(JSON.toJSONString(stock__blockCodeNameSet__inTopBlock));
 
             positionRecordDO.setAvgCostPrice(of(avgCost));

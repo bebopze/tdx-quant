@@ -293,6 +293,14 @@
                         <span class="sort-order" id="order-topBlockStrategy"></span>
                     </div>
                 </th>
+                <th data-key="stockType">
+                    股票类型
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-stockType"></span>
+                    </div>
+                </th>
                 <th data-key="scoreSortN">
                     scoreSortN
                     <div class="sort-controls">
@@ -795,6 +803,7 @@
               <td>${task.buyStrategy}</td>
               <td>${task.sellStrategy}</td>
               <td>${task.topBlockStrategy}</td>
+              <td>${task.stockType === 1 ? 'A股' : task.stockType === 2 ? 'ETF' : task.stockType === 3 ? '板块' : '-'}</td>
               <td>${task.extData?.scoreSortN || ''}</td>
               <td>${task.extData?.singleStockMaxPosPct || ''}</td>
               <td>${task.extData?.marketPosLimitFlag || 'true'}</td>
@@ -989,6 +998,7 @@
             'buyStrategy': 'B策略',
             'sellStrategy': 'S策略',
             'topBlockStrategy': '主线策略',
+            'stockType': '股票类型',
             'scoreSortN': 'scoreSortN',
             'singleStockMaxPosPct': '个股仓位限制%',
             'ztFlag': '涨停',
@@ -1274,7 +1284,7 @@
 
         // 构造 CSV 内容
         const headers = [
-            "任务ID", "批次号", "B策略", "S策略", "主线策略",
+            "任务ID", "批次号", "B策略", "S策略", "主线策略", "股票类型",
             "scoreSortN", "个股仓位限制%", "开启大盘仓位限制", "涨停",
             "开始日期", "结束日期", "初始资金", "结束资金", "初始净值", "结束净值",
             "总天数", "交易总笔数", "交易总金额", "总收益率%", "年化%", "胜率%", "盈亏比", "最大回撤%",
@@ -1292,6 +1302,7 @@
                 task.buyStrategy,
                 task.sellStrategy,
                 task.topBlockStrategy,
+                task.stockType,
                 task.extData?.scoreSortN ?? '',
                 task.extData?.singleStockMaxPosPct ?? '',
                 task.extData?.marketPosLimitFlag || 'true',

@@ -26,6 +26,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.bebopze.tdx.quant.common.cache.BacktestCache.stock__inTopBlockCache;
+
 
 /**
  * 主线策略
@@ -732,8 +734,8 @@ public class TopBlockStrategy {
                                                                                                          .collect(Collectors.toSet());
 
                         // Cache（code-name 列表）
-                        data.stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
-                                                   .put(stockCode, stock__blockCodeNameSet__inTopBlock);
+                        stock__inTopBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
+                                              .put(stockCode, stock__blockCodeNameSet__inTopBlock);
 
 
                         if (log.isDebugEnabled()) {
@@ -745,30 +747,6 @@ public class TopBlockStrategy {
 
                         return true;
                     }
-
-
-//                    for (String stock__blockCode : stock__blockCodeSet) {
-//
-//
-//                        // 个股   ->   IN 主线板块
-//                        boolean inTopBlock = topBlockCodeSet.contains(stock__blockCode);
-//
-//                        if (inTopBlock) {
-//
-//
-//                            // 个股   ->   B-signal   主线板块
-//                            // String key = tradeDate + "|" + stockCode;
-//                            // data.stockCode_topBlockCache.get(stockCode, k -> Sets.newConcurrentHashSet()).add(stock__blockCode);
-//
-//
-//                            log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
-//                                      stockCode, data.stock__codeNameMap.get(stockCode),
-//                                      stock__blockCode, data.block__codeNameMap.get(stock__blockCode));
-//
-//
-//                            return true;
-//                        }
-//                    }
 
 
                     return false;
@@ -901,6 +879,36 @@ public class TopBlockStrategy {
 
             System.out.println(inTopBlock__stockCodeSet);
         }
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 当日（B/S/持仓） 个股所属   ->   主线板块（topN/top1）         // read Cache
+     *
+     * @param tradeDate
+     * @param stockCode
+     * @return
+     */
+    public Set<String> get__stock_topBlock__fromCache(LocalDate tradeDate, String stockCode) {
+
+        // 主线板块
+        Set<String> stock__blockCodeNameSet__inTopBlock = stock__inTopBlockCache.asMap().getOrDefault(tradeDate, Maps.newHashMap()).get(stockCode);
+
+
+        LocalDate cacheDate = tradeDate.minusDays(1);
+        LocalDate cacheMinDate = tradeDate.minusDays(15);
+
+        // 个股当日 -> 未找到 对应主线板块[板块 当日回调 暂时转弱]     =>     往前找（限定15日内[一般不会超过3日]）
+        while (CollectionUtils.isEmpty(stock__blockCodeNameSet__inTopBlock) && cacheDate.isAfter(cacheMinDate)) {
+            stock__blockCodeNameSet__inTopBlock = stock__inTopBlockCache.asMap().getOrDefault(cacheDate, Maps.newHashMap()).get(stockCode);
+            cacheDate = cacheDate.minusDays(1);
+        }
+
+
+        return stock__blockCodeNameSet__inTopBlock;
     }
 
 
