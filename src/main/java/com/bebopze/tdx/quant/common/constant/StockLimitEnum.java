@@ -1,12 +1,11 @@
 package com.bebopze.tdx.quant.common.constant;
 
-import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -19,20 +18,25 @@ import java.util.Objects;
 public enum StockLimitEnum {
 
 
+    // 00
+    // 60
+    ZB("主板", 1, 10, Set.of("00", "60")),
+
+
     // 300
     // 301
-    CY("创业板", 1, 20, Lists.newArrayList("30")),
+    CY("创业板", 2, 20, Set.of("30")),
 
 
     // 688
     // 689
-    KC("科创板", 2, 20, Lists.newArrayList("68")),
+    KC("科创板", 3, 20, Set.of("68")),
 
 
     // 920
 
     //  "43", "83", "87"   ->   已废弃（已全部迁移到 92）
-    BJ("北交所", 3, 30, Lists.newArrayList("92"));
+    BJ("北交所", 4, 30, Set.of("92"));
 
 
     /**
@@ -42,7 +46,7 @@ public enum StockLimitEnum {
     private String marketDesc;
 
     /**
-     * A股 类型type（创业板、科创板、北交所）
+     * A股 类型type（主板、创业板、科创板、北交所）
      */
     @Getter
     private Integer marketType;
@@ -58,7 +62,7 @@ public enum StockLimitEnum {
      * A股 - 股票代码 前缀（前2位）
      */
     @Getter
-    private List<String> stockCodePrefixList;
+    private Set<String> stockCodePrefixSet;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -95,7 +99,7 @@ public enum StockLimitEnum {
         String codePrefix = StringUtils.isBlank(stockCode) ? "" : stockCode.trim().substring(0, 2);
 
         for (StockLimitEnum value : StockLimitEnum.values()) {
-            if (value.stockCodePrefixList.contains(codePrefix)) {
+            if (value.stockCodePrefixSet.contains(codePrefix)) {
                 return value;
             }
         }
@@ -197,6 +201,10 @@ public enum StockLimitEnum {
      * @return
      */
     private static boolean is20CM_ETF(String stockCode, String stockName) {
+        if (!StockTypeEnum.isETF(stockCode)) {
+            return false;
+        }
+
 
         // 588000 - 科创50ETF
         // ...
@@ -210,8 +218,8 @@ public enum StockLimitEnum {
         }
 
 
-        return null != stockName && stockName.contains("ETF")
-                && (stockName.contains("科创") || stockName.contains("创业板"));
+        return null != stockName && (stockName.contains("科创") || stockName.contains("创业板"));
     }
+
 
 }

@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.indicator.BlockFun;
 import com.bebopze.tdx.quant.indicator.StockFun;
@@ -35,6 +36,59 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TopBlockStrategy {
+
+
+    // ----------------------------------------------- DEBUG -----------------------------------------------------------
+
+
+    private final static Map<LocalDate, Set<String>> top1__topBlock__codeSetMap = Maps.newHashMap();
+
+    static {
+        LocalDate date = LocalDate.of(2025, 1, 1).minusDays(1);
+
+        while (!date.isAfter(LocalDate.now())) {
+            date = date.plusDays(1);
+
+
+            // 2025-01-14 ~ 2025-02-27（人形机器人）
+            if (DateTimeUtil.between(date, LocalDate.of(2025, 1, 14), LocalDate.of(2025, 2, 27))) {
+                top1__topBlock__codeSetMap.put(date, Sets.newHashSet("880703"));
+            }
+
+            // 2025-05-29 ~ 2025-06-12（创新药）
+            else if (DateTimeUtil.between(date, LocalDate.of(2025, 5, 29), LocalDate.of(2025, 6, 12))) {
+                top1__topBlock__codeSetMap.put(date, Sets.newHashSet("880652"));
+            }
+
+            // 2025-07-10 ~ 2025-08-05（创新药）
+            else if (DateTimeUtil.between(date, LocalDate.of(2025, 7, 10), LocalDate.of(2025, 8, 5))) {
+                top1__topBlock__codeSetMap.put(date, Sets.newHashSet("880652"));
+            }
+
+            // 2025-08-12 ~ 2025-09-01（半导体）
+            else if (DateTimeUtil.between(date, LocalDate.of(2025, 8, 12), LocalDate.of(2025, 9, 1))) {
+                top1__topBlock__codeSetMap.put(date, Sets.newHashSet("880491"));
+            }
+
+            // 2025-10-29 ~ 2025-11-17（锂电池）
+            else if (DateTimeUtil.between(date, LocalDate.of(2025, 10, 29), LocalDate.of(2025, 11, 17))) {
+                top1__topBlock__codeSetMap.put(date, Sets.newHashSet("880534"));
+            }
+
+            // 2025-12-05 ~ 2026-01-14（商业航天/卫星导航）
+            else if (DateTimeUtil.between(date, LocalDate.of(2025, 12, 5), LocalDate.of(2026, 1, 14))) {
+                top1__topBlock__codeSetMap.computeIfAbsent(date, k -> Sets.newHashSet()).addAll(Sets.newHashSet("880548", "880546"));
+            }
+
+            // 2026-01-20 ~ 2026-01-29（黄金/铜/铅锌/有色金属）
+            else if (DateTimeUtil.between(date, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 29))) {
+                top1__topBlock__codeSetMap.computeIfAbsent(date, k -> Sets.newHashSet()).addAll(Sets.newHashSet("880328", "880325", "880327", "880329"));
+            }
+        }
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     @Autowired
@@ -412,6 +466,8 @@ public class TopBlockStrategy {
                                                               .computeIfAbsent(topBlockStrategyEnum, kk -> topBlockStrategy(topBlockStrategyEnum, data, tradeDate));
 
 
+//        Set<String> topN__topBlockCodeSet = top1__topBlock__codeSetMap.getOrDefault(tradeDate, Sets.newHashSet());
+
         return topN__topBlockCodeSet;
     }
 
@@ -434,6 +490,10 @@ public class TopBlockStrategy {
 
         Set<String> top1__topBlockCodeSet = data.TOP1__topBlockCache.get(tradeDate, k -> Maps.newConcurrentMap())
                                                                     .computeIfAbsent(topBlockStrategyEnum, kk -> top1__topBlockCodeSet(data, topBlockCodeSet, tradeDate, top1TopBlockFlag));
+
+
+//        Set<String> top1__topBlockCodeSet = top1__topBlock__codeSetMap.getOrDefault(tradeDate, Sets.newHashSet());
+
         return top1__topBlockCodeSet;
     }
 
@@ -568,7 +628,7 @@ public class TopBlockStrategy {
 
 
         int topN = top1TopBlockFlag ? 1 : 5;
-        int zt_minN = top1TopBlockFlag ? 10 : 5;
+        int zt_minN = top1TopBlockFlag ? 12 : 10;
 
 
         // 1、板块  涨停榜TOP1
@@ -577,21 +637,21 @@ public class TopBlockStrategy {
                             .limit(topN)
                             .forEach(entry -> {
                                 String topBlockCode = entry.getKey();
-                                if (entry.getValue() > zt_minN) {
+                                if (entry.getValue() >= zt_minN) {
                                     top1__lv3_topBlockCodeSet.add(topBlockCode);
                                 }
                             });
 
-//        // 2、板块  百日新高榜TOP1
-//        topBlock__百日新高_Map.entrySet().stream()
-//                              .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-//                              .limit(1)
-//                              .forEach(entry -> {
-//                                  String topBlockCode = entry.getKey();
-//                                  if (entry.getValue() > 20) {
-//                                      top1__lv3_topBlockCodeSet.add(topBlockCode);
-//                                  }
-//                              });
+        // 2、板块  百日新高榜TOP1
+        topBlock__百日新高_Map.entrySet().stream()
+                              .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                              .limit(1)
+                              .forEach(entry -> {
+                                  String topBlockCode = entry.getKey();
+                                  if (entry.getValue() >= 20) {
+                                      top1__lv3_topBlockCodeSet.add(topBlockCode);
+                                  }
+                              });
 
 
         List<String> topBlock__codeNameSet = top1__lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code)).collect(Collectors.toList());
@@ -716,6 +776,50 @@ public class TopBlockStrategy {
 
 
         return inTopBlock__stockCodeSet;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 个股所属   ->   topN 主线板块 列表
+     *
+     * @param topBlockStrategyEnum
+     * @param topStockCodeSet
+     * @param data
+     * @param tradeDate
+     * @return
+     */
+    public Set<String> inBaseTopBlock__topBlockCodeSet(TopBlockStrategyEnum topBlockStrategyEnum,
+                                                       Set<String> topStockCodeSet,
+                                                       BacktestCache data,
+                                                       LocalDate tradeDate) {
+
+        Set<String> inBaseTopBlock__topBlockCodeSet = Sets.newHashSet();
+
+
+        // read Cache   ->   topN 主线板块（1~5个）
+        Set<String> topN__topBlockCodeSet = topN__topBlockCodeSet__Cache(topBlockStrategyEnum, data, tradeDate);
+
+
+        // 强势个股   ->   IN 主线板块
+        topStockCodeSet.forEach(stockCode -> {
+
+            // 个股   -对应->   板块列表
+            Set<String> stock__blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
+            // 交集（个股板块 - 主线板块）
+            Collection<String> stock__blockCodeSet__inTopBlock = CollectionUtils.intersection(topN__topBlockCodeSet, stock__blockCodeSet);
+
+
+            // 非空（个股所属 主线板块）
+            if (CollectionUtils.isNotEmpty(stock__blockCodeSet__inTopBlock)) {
+                inBaseTopBlock__topBlockCodeSet.addAll(stock__blockCodeSet__inTopBlock);
+            }
+        });
+
+
+        return inBaseTopBlock__topBlockCodeSet;
     }
 
 
