@@ -97,7 +97,7 @@ public class BacktestBuyStrategyD implements BuyStrategy {
 
         long start_1 = System.currentTimeMillis();
         Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
-        log.info("BacktestBuyStrategyC - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+        log.info("BacktestBuyStrategyD - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
