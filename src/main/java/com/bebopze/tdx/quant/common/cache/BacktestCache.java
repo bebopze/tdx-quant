@@ -264,7 +264,7 @@ public class BacktestCache {
 
 
     /**
-     * 个股 - 主线板块（IN主线板块） Cache
+     * 个股 - 主线板块（IN主线板块） Cache       // 一般只会记录 首次买入日期 [个股 当日满足 B策略时 -> 写入Cache]（持仓阶段 -> 需要 轮询倒查）
      *
      * date     /     code - name
      */

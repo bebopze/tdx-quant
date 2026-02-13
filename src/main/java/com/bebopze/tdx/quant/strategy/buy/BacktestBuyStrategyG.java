@@ -34,7 +34,7 @@ import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSD
  */
 @Slf4j
 @Component
-public class BacktestBuyStrategyG implements BuyStrategy {
+public class BacktestBuyStrategyG extends AbstractBuyStrategy implements BuyStrategy {
 
 
     @Autowired
@@ -155,11 +155,11 @@ public class BacktestBuyStrategyG implements BuyStrategy {
      * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
-    private Set<String> buy__topStock__codeSet(Set<String> buyConSet,
-                                               BacktestCache data,
-                                               LocalDate tradeDate,
-                                               Map<String, String> buy_infoMap,
-                                               Boolean ztFlag) {
+    public Set<String> buy__topStock__codeSet(Set<String> buyConSet,
+                                              BacktestCache data,
+                                              LocalDate tradeDate,
+                                              Map<String, String> buy_infoMap,
+                                              Boolean ztFlag) {
 
 
         Set<String> buy__topStock__codeSet = Sets.newHashSet();
