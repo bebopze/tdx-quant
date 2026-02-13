@@ -2744,6 +2744,8 @@ public class BacktestStrategy {
 
             // 今日BS 持仓变动数量
             int todayBsQty = 0;
+            // 今日BS 浮动盈亏
+            double todayBsPnl = 0;
 
 
             // 今日BS变动
@@ -2754,15 +2756,15 @@ public class BacktestStrategy {
 
                 // 当日买入
                 if (tr.getTradeType() == 1) {
-                    // 当日浮动盈亏 = 实时价 - 今日买入价
-                    todayPnl += (closePrice - price) * quantity;
+                    // 当日BS 浮动盈亏 = 实时价 - 今日买入价
+                    todayBsPnl += (closePrice - price) * quantity;
                     todayBsQty += quantity;
                 }
 
                 // 当日卖出（实际不会有S  ->  约定：B/S 互斥）
                 if (tr.getTradeType() == 2) {
-                    // 当日浮动盈亏 = 今日卖出价 - 昨日收盘价
-                    todayPnl += (price - prevClosePrice) * quantity;
+                    // 当日BS 浮动盈亏 = 今日卖出价 - 昨日收盘价
+                    todayBsPnl += (price - prevClosePrice) * quantity;
                     todayBsQty -= quantity;
                 }
             }
@@ -2774,11 +2776,13 @@ public class BacktestStrategy {
                           taskId, tradeDate, stockCode, qty, todayBsQty, prevQty);
             }
             // 昨日->今日   未变持仓盈亏 =  (今日收盘价 - 昨日收盘价) * 未变持仓数量
-            todayPnl += (closePrice - prevClosePrice) * prevQty;
+            todayPnl = (closePrice - prevClosePrice) * prevQty;
+            // 当日 总浮动盈亏  =  未变持仓盈亏 + 今日BS 浮动盈亏
+            todayPnl += todayBsPnl;
 
 
-            // 当日浮动盈亏率 = 当日浮动盈亏 / 总成本 × 100%
-            todayPnlPct = todayPnl / totalCost * 100;
+            // 当日浮动盈亏率 = 当日浮动盈亏 / 昨日收盘权益[=昨日收盘市值] × 100%
+            todayPnlPct = prevQty == 0 ? 0 : todayPnl / (prevClosePrice * prevQty) * 100;
 
 
             // ---------------------------------------------------------------------------------------------------------

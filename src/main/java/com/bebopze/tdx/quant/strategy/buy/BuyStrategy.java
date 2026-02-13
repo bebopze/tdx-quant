@@ -49,4 +49,25 @@ public interface BuyStrategy {
                       double posRate,
                       Boolean ztFlag);
 
+
+    /**
+     * B策略   ->   强势个股
+     *
+     * @param buyConSet   B策略
+     * @param data
+     * @param tradeDate
+     * @param buy_infoMap
+     * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
+     * @return
+     */
+    default Set<String> buy__topStock__codeSet(Set<String> buyConSet,
+                                               BacktestCache data,
+                                               LocalDate tradeDate,
+                                               Map<String, String> buy_infoMap,
+                                               Boolean ztFlag) {
+
+        return Set.of();
+    }
+
+
 }

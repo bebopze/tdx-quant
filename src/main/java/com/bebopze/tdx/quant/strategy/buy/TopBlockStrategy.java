@@ -442,7 +442,7 @@ public class TopBlockStrategy {
 
 
         List<String> topBlock__codeNameSet = lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code)).collect(Collectors.toList());
-        log.info("topBlockCodeSet - 板块-月多2     >>>     [{}] , {} , {}", tradeDate, lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
+        log.info("topBlockCodeSet - 板块-月多2     >>>     [{}] , size={} , {}", tradeDate, lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
 
 
         return lv3_topBlockCodeSet;
@@ -656,8 +656,12 @@ public class TopBlockStrategy {
                               });
 
 
-        List<String> topBlock__codeNameSet = top1__lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code)).collect(Collectors.toList());
-        log.info("topBlockCodeSet - 真-主线板块（涨停榜TOP1 + 百日新高榜TOP1）    >>>     [{}] , {} , {}", tradeDate, top1__lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
+        List<String> topBlock__codeNameSet = top1__lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code) + "|涨停数=" + topBlock__涨停数_Map.get(code) + "|百日新高数=" + topBlock__百日新高_Map.get(code)).collect(Collectors.toList());
+        if (top1TopBlockFlag) {
+            log.info("topBlockCodeSet - top1真-主线板块（涨停榜TOP1 + 百日新高榜TOP1）    >>>     [{}] , size={} , {}", tradeDate, top1__lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
+        } else {
+            log.info("topBlockCodeSet - topN-主线板块（涨停榜TOP1 + 百日新高榜TOP1）    >>>     [{}] , size={} , {}", tradeDate, top1__lv3_topBlockCodeSet.size(), JSON.toJSONString(topBlock__codeNameSet));
+        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -899,9 +903,9 @@ public class TopBlockStrategy {
 
 
         LocalDate cacheDate = tradeDate.minusDays(1);
-        LocalDate cacheMinDate = tradeDate.minusDays(15);
+        LocalDate cacheMinDate = tradeDate.minusDays(50);
 
-        // 个股当日 -> 未找到 对应主线板块[板块 当日回调 暂时转弱]     =>     往前找（限定15日内[一般不会超过3日]）
+        // 个股当日 -> 未找到 对应主线板块[板块 当日回调 暂时转弱]     =>     往前找（限定50日内[一般不会超过20日]）
         while (CollectionUtils.isEmpty(stock__blockCodeNameSet__inTopBlock) && cacheDate.isAfter(cacheMinDate)) {
             stock__blockCodeNameSet__inTopBlock = stock__inTopBlockCache.asMap().getOrDefault(cacheDate, Maps.newHashMap()).get(stockCode);
             cacheDate = cacheDate.minusDays(1);
