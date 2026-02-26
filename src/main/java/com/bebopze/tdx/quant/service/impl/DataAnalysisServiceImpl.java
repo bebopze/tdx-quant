@@ -908,7 +908,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
             double H_SSF_偏离率 = buySignal.getH_SSF_偏离率();
             double C_MA5_偏离率 = buySignal.getC_MA5_偏离率();
             double H_MA5_偏离率 = buySignal.getH_MA5_偏离率();
-            boolean 高位爆量上影大阴 = buySignal.get高位爆量上影大阴();
+            boolean 高位爆量上影大阴 = buySignal.is高位爆量上影大阴();
 
 
             // B   ->   C_SSF_偏离率   ∈   [-0.3%, 3%]
@@ -991,22 +991,22 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         if (Objects.equals(BSStrategyTypeEnum.BS_MA20多.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getMA20多();
+            return buySignal.isMA20多();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上MA20.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.get上MA20();
+            return buySignal.is上MA20();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_SSF多.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getSSF多();
+            return buySignal.isSSF多();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上SSF.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.get上SSF();
+            return buySignal.is上SSF();
 
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上SAR.type, bsStrategyType)) {
@@ -1020,12 +1020,12 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_XZZB.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getXZZB();
+            return buySignal.isXZZB();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getBSQJ();
+            return buySignal.isBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 
@@ -1066,22 +1066,22 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         if (Objects.equals(BSStrategyTypeEnum.BS_MA20多.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getMA20多();
+            return buySignal.isMA20多();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上MA20.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.get上MA20();
+            return buySignal.is上MA20();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_SSF多.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getSSF多();
+            return buySignal.isSSF多();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上SSF.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.get上SSF();
+            return buySignal.is上SSF();
 
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_上SAR.type, bsStrategyType)) {
@@ -1095,12 +1095,12 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
         } else if (Objects.equals(BSStrategyTypeEnum.BS_XZZB.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getXZZB();
+            return buySignal.isXZZB();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_BS区间.type, bsStrategyType)) {
 
             // B/持仓
-            return buySignal.getBSQJ();
+            return buySignal.isBSQJ();
 
         } else if (Objects.equals(BSStrategyTypeEnum.BS_MA_偏离率.type, bsStrategyType)) {
 

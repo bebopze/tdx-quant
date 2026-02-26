@@ -240,28 +240,28 @@ public class BlockKlineFun {
 
         // 涨幅 = 平均值
         double change_pct = list.stream()
-                                .mapToDouble(k -> k.getChange_pct() == null ? 0 : k.getChange_pct())
+                                .mapToDouble(k -> Double.isNaN(k.getChange_pct()) ? 0 : k.getChange_pct())
                                 .average()
                                 .orElse(0);
         // 换手率 = 平均值
         double turnover_pct = list.stream()
-                                  .mapToDouble(k -> k.getTurnover_pct() == null ? 0 : k.getTurnover_pct())
+                                  .mapToDouble(k -> Double.isNaN(k.getTurnover_pct()) ? 0 : k.getTurnover_pct())
                                   .average()
                                   .orElse(0);
 
 
         double open_change_ratio = list.stream()
-                                       .mapToDouble(k -> k.getOpen() == null ? 0 : k.getOpen() / (k.getClose() - k.getChange_price()) - 1)
+                                       .mapToDouble(k -> Double.isNaN(k.getOpen()) ? 0 : k.getOpen() / (k.getClose() - k.getChange_price()) - 1)
                                        .average()
                                        .orElse(0);
 
         double high_change_ratio = list.stream()
-                                       .mapToDouble(k -> k.getHigh() == null ? 0 : k.getHigh() / (k.getClose() - k.getChange_price()) - 1)
+                                       .mapToDouble(k -> Double.isNaN(k.getHigh()) ? 0 : k.getHigh() / (k.getClose() - k.getChange_price()) - 1)
                                        .average()
                                        .orElse(0);
 
         double low_change_ratio = list.stream()
-                                      .mapToDouble(k -> k.getLow() == null ? 0 : k.getLow() / (k.getClose() - k.getChange_price()) - 1)
+                                      .mapToDouble(k -> Double.isNaN(k.getLow()) ? 0 : k.getLow() / (k.getClose() - k.getChange_price()) - 1)
                                       .average()
                                       .orElse(0);
 
