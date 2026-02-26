@@ -321,77 +321,77 @@ public class ConvertStock {
             // ---------------------------------------------------
 
 
-            arrDTO.上影大阴[i] = of(dto.get上影大阴());
-            arrDTO.高位爆量上影大阴[i] = of(dto.get高位爆量上影大阴());
+            arrDTO.上影大阴[i] = of(dto.is上影大阴());
+            arrDTO.高位爆量上影大阴[i] = of(dto.is高位爆量上影大阴());
 
 
-            arrDTO.涨停[i] = of(dto.get涨停());
-            arrDTO.跌停[i] = of(dto.get跌停());
-
-
-            // ---------------------------------------------------
-
-
-            arrDTO.XZZB[i] = of(dto.getXZZB());
-            arrDTO.BSQJ[i] = of(dto.getBSQJ());
+            arrDTO.涨停[i] = of(dto.is涨停());
+            arrDTO.跌停[i] = of(dto.is跌停());
 
 
             // ---------------------------------------------------
 
 
-            arrDTO.MA5多[i] = of(dto.getMA5多());
-            arrDTO.MA5空[i] = of(dto.getMA5空());
-            arrDTO.MA10多[i] = of(dto.getMA10多());
-            arrDTO.MA10空[i] = of(dto.getMA10空());
-            arrDTO.MA20多[i] = of(dto.getMA20多());
-            arrDTO.MA20空[i] = of(dto.getMA20空());
-            arrDTO.SSF多[i] = of(dto.getSSF多());
-            arrDTO.SSF空[i] = of(dto.getSSF空());
-
-
-            arrDTO.上MA20[i] = of(dto.get上MA20());
-            arrDTO.下MA20[i] = of(dto.get下MA20());
-            arrDTO.上SSF[i] = of(dto.get上SSF());
-            arrDTO.下SSF[i] = of(dto.get下SSF());
+            arrDTO.XZZB[i] = of(dto.isXZZB());
+            arrDTO.BSQJ[i] = of(dto.isBSQJ());
 
 
             // ---------------------------------------------------
 
 
-            arrDTO.N60日新高[i] = of(dto.getN60日新高());
-            arrDTO.N100日新高[i] = of(dto.getN100日新高());
-            arrDTO.历史新高[i] = of(dto.get历史新高());
+            arrDTO.MA5多[i] = of(dto.isMA5多());
+            arrDTO.MA5空[i] = of(dto.isMA5空());
+            arrDTO.MA10多[i] = of(dto.isMA10多());
+            arrDTO.MA10空[i] = of(dto.isMA10空());
+            arrDTO.MA20多[i] = of(dto.isMA20多());
+            arrDTO.MA20空[i] = of(dto.isMA20空());
+            arrDTO.SSF多[i] = of(dto.isSSF多());
+            arrDTO.SSF空[i] = of(dto.isSSF空());
 
 
-            arrDTO.百日新高[i] = of(dto.get百日新高());
-
-
-            // ---------------------------------------------------
-
-
-            arrDTO.月多[i] = of(dto.get月多());
-            arrDTO.均线预萌出[i] = of(dto.get均线预萌出());
-            arrDTO.均线萌出[i] = of(dto.get均线萌出());
-            arrDTO.小均线多头[i] = of(dto.get小均线多头());
-            arrDTO.大均线多头[i] = of(dto.get大均线多头());
-            arrDTO.均线大多头[i] = of(dto.get均线大多头());
-            arrDTO.均线极多头[i] = of(dto.get均线极多头());
+            arrDTO.上MA20[i] = of(dto.is上MA20());
+            arrDTO.下MA20[i] = of(dto.is下MA20());
+            arrDTO.上SSF[i] = of(dto.is上SSF());
+            arrDTO.下SSF[i] = of(dto.is下SSF());
 
 
             // ---------------------------------------------------
 
 
-            arrDTO.RPS红[i] = of(dto.getRPS红());
-            arrDTO.RPS一线红[i] = of(dto.getRPS一线红());
-            arrDTO.RPS双线红[i] = of(dto.getRPS双线红());
-            arrDTO.RPS三线红[i] = of(dto.getRPS三线红());
+            arrDTO.N60日新高[i] = of(dto.isN60日新高());
+            arrDTO.N100日新高[i] = of(dto.isN100日新高());
+            arrDTO.历史新高[i] = of(dto.is历史新高());
+
+
+            arrDTO.百日新高[i] = of(dto.is百日新高());
 
 
             // ---------------------------------------------------
 
 
-            arrDTO.首次三线红[i] = of(dto.get首次三线红());
-            arrDTO.口袋支点[i] = of(dto.get口袋支点());
+            arrDTO.月多[i] = of(dto.is月多());
+            arrDTO.均线预萌出[i] = of(dto.is均线预萌出());
+            arrDTO.均线萌出[i] = of(dto.is均线萌出());
+            arrDTO.小均线多头[i] = of(dto.is小均线多头());
+            arrDTO.大均线多头[i] = of(dto.is大均线多头());
+            arrDTO.均线大多头[i] = of(dto.is均线大多头());
+            arrDTO.均线极多头[i] = of(dto.is均线极多头());
+
+
+            // ---------------------------------------------------
+
+
+            arrDTO.RPS红[i] = of(dto.isRPS红());
+            arrDTO.RPS一线红[i] = of(dto.isRPS一线红());
+            arrDTO.RPS双线红[i] = of(dto.isRPS双线红());
+            arrDTO.RPS三线红[i] = of(dto.isRPS三线红());
+
+
+            // ---------------------------------------------------
+
+
+            arrDTO.首次三线红[i] = of(dto.is首次三线红());
+            arrDTO.口袋支点[i] = of(dto.is口袋支点());
 
 
             // ---------------------------------------------------

@@ -88,6 +88,30 @@ public class NumUtil {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public static float ofFloat(Number val) {
+        return ofFloat(val, 5);
+    }
+
+    public static float ofFloat(Number val, int newScale) {
+        return ofFloat(val, newScale, RoundingMode.HALF_UP);
+    }
+
+    public static float ofFloat(Number val, int newScale, RoundingMode roundingMode) {
+        if (null == val || (val instanceof Float && (Float.isNaN((Float) val) || Float.isInfinite((Float) val)))) {
+            return Float.NaN;
+        }
+        return new BigDecimal(String.valueOf(val)).setScale(newScale, roundingMode).floatValue();
+    }
+
+
+    public static float NaN_0(float v) {
+        return Float.isNaN(v) ? 0 : v;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static String str(Number val) {
         BigDecimal decimal = num2Decimal(val);
         return decimal == null ? null : decimal.stripTrailingZeros().toPlainString();

@@ -28,23 +28,23 @@ public class KlineDTO implements Serializable {
     // A股 股票真实成交价 在交易所层面   统一精确到  小数点后 2位（分）
     // 券商线上系统 或 API 虽可能对参数格式 或 成本测算展示更多小数位，但最终的 撮合成交价 均以  2位小数  上报并成交
 
-    private Double open;
-    private Double high;
-    private Double low;
-    private Double close;
+    private double open;
+    private double high;
+    private double low;
+    private double close;
 
 
-    private Long vol;
+    private long vol;
 
-    private Double amo;
+    private double amo;
 
 
     // 振幅（%）       H/L   x100-100
-    private Double range_pct;
+    private double range_pct;
     // 涨跌幅（%）     C/prev_C   x100-100
-    private Double change_pct;
+    private double change_pct;
     // 涨跌额（元）    C - prev_C
-    private Double change_price;
+    private double change_price;
     // 换手率（%）
-    private Double turnover_pct;
+    private double turnover_pct;
 }
