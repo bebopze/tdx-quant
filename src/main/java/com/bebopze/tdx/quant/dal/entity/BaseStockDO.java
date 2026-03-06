@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.entity;
 
+import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.*;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
@@ -314,9 +315,11 @@ public class BaseStockDO implements Serializable {
 
 
     @TableField(exist = false)
+    @JSONField(serialize = false)
     private List<KlineDTO> klineDTOList;
 
     @TableField(exist = false)
+    @JSONField(serialize = false)
     private List<ExtDataDTO> extDataDTOList;
 
 
