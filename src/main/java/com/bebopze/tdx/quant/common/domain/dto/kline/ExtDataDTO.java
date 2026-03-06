@@ -9,7 +9,7 @@ import static com.bebopze.tdx.quant.common.util.NumUtil.of;
 
 
 /**
- * 扩展数据（预计算 指标） -  RPS/...
+ * 扩展数据（预计算 指标） -  RPS/MA/中期涨幅/中期调整/支撑线/偏离率/...
  *
  * @author: bebopze
  * @date: 2025/5/15
@@ -24,14 +24,17 @@ public class ExtDataDTO implements Serializable {
     // boolean      ->        1 bytes                 栈/堆(作为字段)               1（基础值大小）
     // Boolean      ->       16 bytes                 堆(对象)                     1（基础值大小） + 12（对象头）+ 3（对齐填充）
 
-    // float        ->        4 bytes                 栈/堆(作为字段)               4（基础值大小）
-    // Float        ->       20 bytes                 堆(对象)                     4（基础值大小） + 12（对象头）+ 4（对齐填充）
+    // int          ->        4 bytes                 栈/堆(作为字段)               4（基础值大小）
+    // Integer      ->       16 bytes                 堆(对象)                     4（基础值大小） + 12（对象头）+ 0（对齐填充）
 
-    // double       ->        8 bytes                 栈/堆(作为字段)               8（基础值大小）
-    // Double       ->       24 bytes                 堆(对象)                     8（基础值大小） + 12（对象头）+ 4（对齐填充）
+    // float        ->        4 bytes                 栈/堆(作为字段)               4（基础值大小）
+    // Float        ->       16 bytes                 堆(对象)                     4（基础值大小） + 12（对象头）+ 0（对齐填充）
 
     // long         ->        8 bytes                 栈/堆(作为字段)               8（基础值大小）
     // Long         ->       24 bytes                 堆(对象)                     8（基础值大小） + 12（对象头）+ 4（对齐填充）
+
+    // double       ->        8 bytes                 栈/堆(作为字段)               8（基础值大小）
+    // Double       ->       24 bytes                 堆(对象)                     8（基础值大小） + 12（对象头）+ 4（对齐填充）
 
 
     // =================================================================================================================
@@ -289,42 +292,6 @@ public class ExtDataDTO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    private KlineDTO klineDTO;
-//
-//    public double getC_MA_偏离率(int MA) {
-//        switch (MA) {
-//            case 5:
-//                return klineDTO.getClose() / MA5 * 100 - 100;
-//            case 10:
-//                return klineDTO.getClose() / MA10 * 100 - 100;
-//            case 20:
-//                return klineDTO.getClose() / MA20 * 100 - 100;
-//            case 30:
-//                return klineDTO.getClose() / MA30 * 100 - 100;
-//            case 50:
-//                return klineDTO.getClose() / MA50 * 100 - 100;
-//            case 60:
-//                return klineDTO.getClose() / MA60 * 100 - 100;
-//            case 100:
-//                return klineDTO.getClose() / MA100 * 100 - 100;
-//            case 120:
-//                return klineDTO.getClose() / MA120 * 100 - 100;
-//            case 150:
-//                return klineDTO.getClose() / MA150 * 100 - 100;
-//            case 200:
-//                return klineDTO.getClose() / MA200 * 100 - 100;
-//            case 250:
-//                return klineDTO.getClose() / MA250 * 100 - 100;
-//            // 默认支撑线：MA250
-//            default:
-//                return klineDTO.getClose() / MA250 * 100 - 100;
-//        }
-//    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
     /**
      * 获取 C_MA偏离率 （短期）    ->     B（低吸/高抛）
      *
@@ -393,5 +360,6 @@ public class ExtDataDTO implements Serializable {
 
         return Double.NaN;
     }
+
 
 }
