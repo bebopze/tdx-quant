@@ -131,10 +131,10 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
                        // --------------------- 主线板块（LV3 -> 概念 + 细分）    ->     月多 + RPS红(87) + SSF多
-                       boolean 月多 = e.get月多();
-                       boolean 均线预萌出 = e.get均线预萌出();
-                       boolean RPS红 = e.getRPS红();
-                       boolean SSF多 = e.getSSF多();
+                       boolean 月多 = e.is月多();
+                       boolean 均线预萌出 = e.is均线预萌出();
+                       boolean RPS红 = e.isRPS红();
+                       boolean SSF多 = e.isSSF多();
 
                        if ((月多 || 均线预萌出) && RPS红 && SSF多) {
                            topBlockCodeSet.add(blockDO.getCode());
@@ -195,9 +195,9 @@ public class TopBlockServiceImpl implements TopBlockService {
 
                            // --------------------- 涨停 + SSF多 + 月多 + IN主线
                            // 涨停（打板）- 次1日（开盘价[open] -> 直接买入）
-                           boolean 涨停 = e.get涨停();
-                           boolean SSF多 = e.getSSF多();
-                           boolean 月多 = e.get月多();
+                           boolean 涨停 = e.is涨停();
+                           boolean SSF多 = e.isSSF多();
+                           boolean 月多 = e.is月多();
 
 
                            if (涨停 && SSF多 && 月多) {
@@ -1578,17 +1578,17 @@ public class TopBlockServiceImpl implements TopBlockService {
 
             try {
                 if (Objects.equals(TopTypeEnum.历史新高, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get历史新高()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().is历史新高()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.极多头, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get均线极多头()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().is均线极多头()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.RPS三线红, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().getRPS三线红()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().isRPS三线红()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.十亿, topTypeEnum)) {
                     rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getAmo() > 10_0000_0000).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.首次三线红, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get首次三线红()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().is首次三线红()).collect(Collectors.toSet());
                 } else if (Objects.equals(TopTypeEnum.口袋支点, topTypeEnum)) {
-                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().get口袋支点()).collect(Collectors.toSet());
+                    rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().is口袋支点()).collect(Collectors.toSet());
                 } /*else if (Objects.equals(TopTypeEnum.T0, topTypeEnum)) {
                     rule_set = topList.stream().filter(e -> null != e.getBuySignalExtDataDTO() && e.getBuySignalExtDataDTO().getT0()).collect(Collectors.toSet());
                 }*/ else if (Objects.equals(TopTypeEnum.涨停_SSF多_月多, topTypeEnum)) {
@@ -1596,9 +1596,9 @@ public class TopBlockServiceImpl implements TopBlockService {
                                       // 涨停（打板）- 次1日（开盘价[open] -> 直接买入）
                                       // 涨停 + SSF多 + 月多 + IN主线
                                       .filter(e -> null != e.getBuySignalExtDataDTO()
-                                              && e.getBuySignalExtDataDTO().get涨停()
-                                              && e.getBuySignalExtDataDTO().getSSF多()
-                                              && e.getBuySignalExtDataDTO().get月多())
+                                              && e.getBuySignalExtDataDTO().is涨停()
+                                              && e.getBuySignalExtDataDTO().isSSF多()
+                                              && e.getBuySignalExtDataDTO().is月多())
                                       .collect(Collectors.toSet());
                 }
 

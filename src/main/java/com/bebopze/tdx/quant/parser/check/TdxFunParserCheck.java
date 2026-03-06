@@ -138,27 +138,27 @@ public class TdxFunParserCheck {
             double SSF = dto.getSSF();
 
 
-            boolean SSF多 = dto.getSSF多();
-            boolean MA20多 = dto.getMA20多();
+            boolean SSF多 = dto.isSSF多();
+            boolean MA20多 = dto.isMA20多();
 
 
-            boolean N60日新高 = dto.getN60日新高();
-            boolean N100日新高 = dto.getN100日新高();
-            boolean 历史新高 = dto.get历史新高();
+            boolean N60日新高 = dto.isN60日新高();
+            boolean N100日新高 = dto.isN100日新高();
+            boolean 历史新高 = dto.is历史新高();
 
 
-            boolean 月多 = dto.get月多();
-            boolean 均线预萌出 = dto.get均线预萌出();
-            boolean 均线萌出 = dto.get均线萌出();
-            boolean 大均线多头 = dto.get大均线多头();
-            boolean 均线大多头 = dto.get均线大多头();
-            boolean 均线极多头 = dto.get均线极多头();
+            boolean 月多 = dto.is月多();
+            boolean 均线预萌出 = dto.is均线预萌出();
+            boolean 均线萌出 = dto.is均线萌出();
+            boolean 大均线多头 = dto.is大均线多头();
+            boolean 均线大多头 = dto.is均线大多头();
+            boolean 均线极多头 = dto.is均线极多头();
 
 
-            boolean RPS红 = dto.getRPS红();
-            boolean RPS一线红 = dto.getRPS一线红();
-            boolean RPS双线红 = dto.getRPS双线红();
-            boolean RPS三线红 = dto.getRPS三线红();
+            boolean RPS红 = dto.isRPS红();
+            boolean RPS一线红 = dto.isRPS一线红();
+            boolean RPS双线红 = dto.isRPS双线红();
+            boolean RPS三线红 = dto.isRPS三线红();
 
 
             // ------------------------------------------------------ fun   ->   实时计算
