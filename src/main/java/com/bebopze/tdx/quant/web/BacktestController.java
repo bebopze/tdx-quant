@@ -187,13 +187,14 @@ public class BacktestController {
     @GetMapping("/task/list")
     public Result<List<BtTaskDO>> listTask(@RequestParam(required = false) Long taskId,
                                            @RequestParam(required = false, defaultValue = "") String batchNoList,
+                                           @RequestParam(required = false) Integer favoriteFlag,
                                            @RequestParam(required = false) LocalDateTime startCreateTime,
                                            @RequestParam(required = false) LocalDateTime endCreateTime) {
 
 
         List<Integer> _batchNoList = ConvertUtil.str2IntList(batchNoList);
 
-        return Result.SUC(backTestService.listTask(taskId, _batchNoList, startCreateTime, endCreateTime));
+        return Result.SUC(backTestService.listTask(taskId, _batchNoList, favoriteFlag, startCreateTime, endCreateTime));
     }
 
 

@@ -74,6 +74,7 @@ public interface BacktestService {
 
     List<BtTaskDO> listTask(Long taskId,
                             List<Integer> batchNo,
+                            Integer favoriteFlag,
                             LocalDateTime startCreateTime,
                             LocalDateTime endCreateTime);
 

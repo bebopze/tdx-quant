@@ -19,6 +19,7 @@ public interface BtTaskMapper extends BaseMapper<BtTaskDO> {
 
     List<BtTaskDO> listByTaskIdAndDate(@Param("taskId") Long taskId,
                                        @Param("batchNoList") List<Integer> batchNoList,
+                                       @Param("favoriteFlag") Integer favoriteFlag,
                                        @Param("startTime") LocalDateTime startTime,
                                        @Param("endTime") LocalDateTime endTime);
 

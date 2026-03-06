@@ -249,6 +249,14 @@
                        value="0">
             </div>
             <div class="col-md-2 form-group">
+                <label for="favoriteFlag">收藏:</label>
+                <select id="favoriteFlag" class="form-select w-auto">
+                    <option value="" selected>全部</option>
+                    <option value="1">已收藏</option>
+                    <option value="0">未收藏</option>
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
                 <input type="datetime-local" class="form-control form-control-sm" id="startCreateTime">
             </div>
             <div class="col-md-2 form-group">
@@ -770,6 +778,7 @@
     function loadTasks() {
         const taskId = document.getElementById('taskId').value;
         const batchNoList = document.getElementById('batchNoList').value;
+        const favoriteFlag = document.getElementById('favoriteFlag').value;
         const startCreateTimeRaw = document.getElementById('startCreateTime').value;
         const endCreateTimeRaw = document.getElementById('endCreateTime').value;
 
@@ -777,7 +786,7 @@
         const endCreateTime = formatDateTimeLocal(endCreateTimeRaw);
 
         // 在API请求URL中添加过滤参数
-        let apiUrl = `/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`;
+        let apiUrl = `/api/backtest/task/list?taskId=${taskId}&batchNoList=${batchNoList}&favoriteFlag=${favoriteFlag}&startCreateTime=${startCreateTime}&endCreateTime=${endCreateTime}`;
         // 可以在这里添加更多通过API查询的过滤参数，如果后端支持的话
         // 例如: apiUrl += `&buyStrategy=${filters.buyStrategy}`;
 

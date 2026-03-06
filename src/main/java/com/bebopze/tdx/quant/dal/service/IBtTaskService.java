@@ -19,6 +19,7 @@ public interface IBtTaskService extends IService<BtTaskDO> {
 
     List<BtTaskDO> listByTaskId(Long taskId,
                                 List<Integer> batchNo,
+                                Integer favoriteFlag,
                                 LocalDateTime startCreateTime,
                                 LocalDateTime endCreateTime);
 
