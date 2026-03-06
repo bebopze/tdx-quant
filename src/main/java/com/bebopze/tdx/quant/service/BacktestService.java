@@ -79,6 +79,8 @@ public interface BacktestService {
 
     BacktestAnalysisDTO analysis(Long taskId, LocalDate startDate, LocalDate endDate);
 
+    void favoriteTask(Long taskId, Integer favoriteFlag);
+
 
     /**
      * 回测 - 异常task删除（by任务批次号）
@@ -106,5 +108,4 @@ public interface BacktestService {
      * @return
      */
     List<BtTradeRecordDO> stockTradeRecordList(Long taskId, String stockCode);
-
 }

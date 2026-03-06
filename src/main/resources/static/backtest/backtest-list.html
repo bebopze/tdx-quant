@@ -102,6 +102,29 @@
             padding: 2px 8px;
         }
 
+        /* 收藏按钮样式 */
+        .favorite-btn {
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .favorite-btn:hover {
+            background-color: #ffebee;
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            color: #ff4444;
+        }
+
+        .favorite-btn.inactive {
+            color: #cccccc;
+        }
+
         /* 样式化过滤行 */
         .filter-row input, .filter-row select {
             font-size: 12px;
@@ -148,6 +171,14 @@
             </div>
             <div class="col-md-1 form-group">
                 <input type="text" class="form-control form-control-sm" id="filterZtFlag" placeholder="涨停">
+            </div>
+            <div class="col-md-1 form-group">
+                <label for="filterFavoriteFlag">收藏:</label>
+                <select id="filterFavoriteFlag" class="form-select w-auto">
+                    <option value="">全部</option>
+                    <option value="1">已收藏</option>
+                    <option value="0">未收藏</option>
+                </select>
             </div>
             <div class="col-md-1 form-group">
                 <label for="filterFinalNav">净值:</label>
@@ -299,6 +330,14 @@
                         <span class="sort-icon sort-asc">▲</span>
                         <span class="sort-icon sort-desc">▼</span>
                         <span class="sort-order" id="order-stockType"></span>
+                    </div>
+                </th>
+                <th data-key="favoriteFlag">
+                    收藏
+                    <div class="sort-controls">
+                        <span class="sort-icon sort-asc">▲</span>
+                        <span class="sort-icon sort-desc">▼</span>
+                        <span class="sort-order" id="order-favoriteFlag"></span>
                     </div>
                 </th>
                 <th data-key="scoreSortN">
@@ -640,6 +679,7 @@
             singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
             ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
             marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+            filterFavoriteFlag: document.getElementById('filterFavoriteFlag').value,
             filterFinalNav: document.getElementById('filterFinalNav').value,
             finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
             finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
@@ -672,9 +712,16 @@
             if (filters.filterStartDate && task.startDate < filters.filterStartDate) return false;
             if (filters.filterEndDate && task.endDate > filters.filterEndDate) return false;
 
-            // 数值字段过滤 (范围)
-            const finalNav = parseFloat(task.finalNav);
 
+            // 数值字段过滤 (值/范围)
+            if (filters.filterFavoriteFlag !== '') {
+                if (filters.filterFavoriteFlag != task.favoriteFlag) {
+                    return false;
+                }
+            }
+
+
+            const finalNav = parseFloat(task.finalNav);
 
             if (filters.filterFinalNav !== '') {
                 if (filters.filterFinalNav === 'null') {
@@ -804,6 +851,12 @@
               <td>${task.sellStrategy}</td>
               <td>${task.topBlockStrategy}</td>
               <td>${task.stockType === 1 ? 'A股' : task.stockType === 2 ? 'ETF' : task.stockType === 3 ? '板块' : '-'}</td>
+              <td><button class="favorite-btn ${task.favoriteFlag === 1 ? 'active' : 'inactive'}" 
+                          onclick="favoriteTask(${task.id}, ${task.favoriteFlag === 1 ? 0 : 1})" 
+                          title="点击${task.favoriteFlag === 1 ? '取消' : '添加'}收藏">
+                      ${task.favoriteFlag === 1 ? '★' : '☆'}
+                  </button>
+              </td>
               <td>${task.extData?.scoreSortN || ''}</td>
               <td>${task.extData?.singleStockMaxPosPct || ''}</td>
               <td>${task.extData?.marketPosLimitFlag || 'true'}</td>
@@ -999,6 +1052,7 @@
             'sellStrategy': 'S策略',
             'topBlockStrategy': '主线策略',
             'stockType': '股票类型',
+            'favoriteFlag': '收藏',
             'scoreSortN': 'scoreSortN',
             'singleStockMaxPosPct': '个股仓位限制%',
             'ztFlag': '涨停',
@@ -1032,6 +1086,25 @@
         };
         return fieldMap[key] || key;
     }
+
+
+    function favoriteTask(taskId, favoriteFlag) {
+        ApiUtils.fetch(`/api/backtest/task/favorite?taskId=${taskId}&favoriteFlag=${favoriteFlag}`, {
+            method: 'GET'
+        }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadTasks();
+                } else {
+                    alert('收藏失败：' + data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('收藏请求失败:', error);
+                alert('网络错误，请重试');
+            });
+    }
+
 
     function deleteSelectedTasks() {
         const selectedTasks = Array.from(document.querySelectorAll('.select-task:checked'))
@@ -1097,6 +1170,7 @@
                     singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
                     ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
                     marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+                    favoriteFlag: document.getElementById('filterFavoriteFlag').value,
                     filterFinalNav: document.getElementById('filterFinalNav').value,
                     finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
                     finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
@@ -1202,6 +1276,7 @@
                     singleStockMaxPosPct: document.getElementById('filterSingleStockMaxPosPct').value.toLowerCase(),
                     ztFlag: document.getElementById('filterZtFlag').value.toLowerCase(),
                     marketPosLimitFlag: document.getElementById('filterMarketPosLimitFlag').value.toLowerCase(),
+                    favoriteFlag: document.getElementById('filterFavoriteFlag').value,
                     filterFinalNav: document.getElementById('filterFinalNav').value,
                     finalNavMin: parseFloat(document.getElementById('filterFinalNavMin').value),
                     finalNavMax: parseFloat(document.getElementById('filterFinalNavMax').value),
@@ -1227,6 +1302,7 @@
                     if (filters.singleStockMaxPosPct && !String(task.extData?.singleStockMaxPosPct || '').toLowerCase().includes(filters.singleStockMaxPosPct)) return false;
                     if (filters.ztFlag && !String(task.extData?.ztFlag || '').toLowerCase().includes(filters.ztFlag)) return false;
                     if (filters.marketPosLimitFlag && !String(task.extData?.marketPosLimitFlag || '').toLowerCase().includes(filters.marketPosLimitFlag)) return false;
+                    if (filters.favoriteFlag && String(task.favoriteFlag) !== filters.favoriteFlag) return false;
                     if (filters.filterStartDate && task.startDate < filters.filterStartDate) return false;
                     if (filters.filterEndDate && task.endDate > filters.filterEndDate) return false;
 
@@ -1303,6 +1379,7 @@
                 task.sellStrategy,
                 task.topBlockStrategy,
                 task.stockType,
+                task.favoriteFlag,
                 task.extData?.scoreSortN ?? '',
                 task.extData?.singleStockMaxPosPct ?? '',
                 task.extData?.marketPosLimitFlag || 'true',
@@ -1389,7 +1466,7 @@
         const filterFields = [
                 'filterBuyStrategy', 'filterSellStrategy', 'filterTopBlockStrategy',
                 'filterStartDate', 'filterEndDate', 'filterSingleStockMaxPosPct',
-                'filterZtFlag', 'filterMarketPosLimitFlag',
+                'filterZtFlag', 'filterMarketPosLimitFlag', 'filterFavoriteFlag',
                 'filterFinalNav', 'filterFinalNavMin', 'filterFinalNavMax',
                 'filterWinPctMin', 'filterWinPctMax',
                 'filterProfitFactorMin', 'filterProfitFactorMax',
