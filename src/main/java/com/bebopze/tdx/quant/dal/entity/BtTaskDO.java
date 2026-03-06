@@ -63,6 +63,13 @@ public class BtTaskDO implements Serializable {
     private Integer status;
 
     /**
+     * 是否收藏（B/S策略）
+     */
+    @TableField("favorite_flag")
+    @Schema(description = "是否收藏（B/S策略）：0-否；1-是；")
+    private Integer favoriteFlag;
+
+    /**
      * 是否提前淘汰：0-否；1-是；
      */
     @TableField(value = "fail_fast_flag")
@@ -326,12 +333,6 @@ public class BtTaskDO implements Serializable {
 //
 //        return JSON.parseObject(tradeStatResult);
 //    }
-
-
-    @JsonRawValue
-    public String getExtData() {
-        return null == extData ? "" : extData;
-    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 
@@ -211,6 +210,18 @@ public class BacktestController {
 
         endDate = endDate == null ? LocalDate.now() : endDate;
         return Result.SUC(backTestService.analysis(taskId, startDate, endDate));
+    }
+
+    @Operation(summary = "回测 - 收藏", description = "回测 - 收藏")
+    @GetMapping("/task/favorite")
+    public Result<BacktestAnalysisDTO> favoriteTask(@RequestParam(defaultValue = "1") Long taskId,
+
+                                                    @Schema(description = "是否收藏：0-否；1-是", example = "1")
+                                                    @RequestParam(defaultValue = "1") Integer favoriteFlag) {
+
+
+        backTestService.favoriteTask(taskId, favoriteFlag);
+        return Result.SUC();
     }
 
 

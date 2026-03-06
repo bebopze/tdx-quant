@@ -504,6 +504,17 @@ public class BacktestServiceImpl implements BacktestService {
         return dto;
     }
 
+    @Override
+    public void favoriteTask(Long taskId, Integer favoriteFlag) {
+
+        BtTaskDO entity = new BtTaskDO();
+        entity.setId(taskId);
+        entity.setFavoriteFlag(favoriteFlag);
+
+
+        btTaskService.updateById(entity);
+    }
+
 
     @Override
     public int delErrTaskByBatchNo(Integer batchNo) {
