@@ -455,10 +455,11 @@ public class BacktestServiceImpl implements BacktestService {
     @Override
     public List<BtTaskDO> listTask(Long taskId,
                                    List<Integer> batchNoList,
+                                   Integer favoriteFlag,
                                    LocalDateTime startCreateTime,
                                    LocalDateTime endCreateTime) {
 
-        return btTaskService.listByTaskId(taskId, batchNoList, startCreateTime, endCreateTime);
+        return btTaskService.listByTaskId(taskId, batchNoList, favoriteFlag, startCreateTime, endCreateTime);
     }
 
     @Override

@@ -21,6 +21,9 @@
                     #{batchNo}
                 </foreach>
             </if>
+            <if test="favoriteFlag != null">
+                AND favorite_flag = #{favoriteFlag}
+            </if>
             <if test="startTime != null">
                 <![CDATA[     AND gmt_create >= #{startTime}     ]]>
             </if>

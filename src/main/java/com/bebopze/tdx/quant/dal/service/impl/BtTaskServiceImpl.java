@@ -52,10 +52,11 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
     @Override
     public List<BtTaskDO> listByTaskId(Long taskId,
                                        List<Integer> batchNoList,
+                                       Integer favoriteFlag,
                                        LocalDateTime startCreateTime,
                                        LocalDateTime endCreateTime) {
 
-        return baseMapper.listByTaskIdAndDate(taskId, batchNoList, startCreateTime, endCreateTime);
+        return baseMapper.listByTaskIdAndDate(taskId, batchNoList, favoriteFlag, startCreateTime, endCreateTime);
     }
 
     @Override
