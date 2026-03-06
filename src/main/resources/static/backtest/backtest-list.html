@@ -861,7 +861,7 @@
               <td>${task.topBlockStrategy}</td>
               <td>${task.stockType === 1 ? 'A股' : task.stockType === 2 ? 'ETF' : task.stockType === 3 ? '板块' : '-'}</td>
               <td><button class="favorite-btn ${task.favoriteFlag === 1 ? 'active' : 'inactive'}" 
-                          onclick="favoriteTask(${task.id}, ${task.favoriteFlag === 1 ? 0 : 1})" 
+                          onclick="toggleFavorite(${task.id}, ${task.favoriteFlag})" 
                           title="点击${task.favoriteFlag === 1 ? '取消' : '添加'}收藏">
                       ${task.favoriteFlag === 1 ? '★' : '☆'}
                   </button>
@@ -1097,6 +1097,23 @@
     }
 
 
+    /**
+     * 切换收藏状态（带二次确认）
+     */
+    function toggleFavorite(taskId, currentFavoriteFlag) {
+        const isFavorited = currentFavoriteFlag === 1;
+        const newFavoriteFlag = isFavorited ? 0 : 1;
+        const actionText = isFavorited ? '【取消收藏】' : '【收藏】';
+
+        // 二次确认
+        if (confirm(`确定要${actionText}这个任务吗？`)) {
+            favoriteTask(taskId, newFavoriteFlag);
+        }
+    }
+
+    /**
+     * 执行收藏操作（调用 API）
+     */
     function favoriteTask(taskId, favoriteFlag) {
         ApiUtils.fetch(`/api/backtest/task/favorite?taskId=${taskId}&favoriteFlag=${favoriteFlag}`, {
             method: 'GET'
