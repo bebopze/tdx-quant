@@ -1261,15 +1261,15 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
-     * 交易时间段 限制         9:35 - 11:29  /  13:00 - 14:56
+     * 交易时间段 限制         9:30 - 11:29  /  13:00 - 14:56
      */
     private static void preCheck__tradeTime() {
 
         LocalTime now = LocalTime.now();
 
 
-        //  9:35 - 11:29
-        LocalTime start_1 = LocalTime.of(9, 35);
+        //  9:30 - 11:29
+        LocalTime start_1 = LocalTime.of(9, 30);
         LocalTime end_1 = LocalTime.of(11, 29);
 
         // 13:00 - 14:56
@@ -1402,8 +1402,8 @@ public class TradeServiceImpl implements TradeService {
 
         LocalTime now = LocalTime.now();
 
-        //  9:35 ~ 11:29
-        LocalTime start_1 = LocalTime.of(9, 35);
+        //  9:30 ~ 11:29
+        LocalTime start_1 = LocalTime.of(9, 30);
         LocalTime end_1 = LocalTime.of(11, 29);
 
         // 13:00 ~ 14:56

@@ -93,34 +93,53 @@ public class HyETFReportParser {
         List<TdxETFDTO> tdx_etf__rowList = parseByFilePath(file_ETF);
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
         // 去重1（细分行业）
-        Map<String, TdxETFDTO> hy__rowMap = Maps.newHashMap();
-        tdx_etf__rowList.stream()
-                        .filter(e -> StringUtils.isNotBlank(e.细分行业))
-                        .forEach(e -> {
+        Set<TdxETFDTO> no_hy__rowSet = Sets.newHashSet();           // 无 行业   ->   全部保留
+        Map<String, TdxETFDTO> hy__rowMap = Maps.newHashMap();      // 有 行业   ->   行业去重
 
 
-                            // 过滤 货币基金、债券基金、0流动性（成交额）
-                            if (filter_ETF(e)) {
-                                log.info("filter_ETF     >>>     name : {} , 细分行业 : {}", e.name, e.细分行业);
-                                return;
-                            }
+        tdx_etf__rowList.forEach(e -> {
 
 
-                            String 细分行业 = e.细分行业;
+            // 过滤 货币基金、债券基金、0流动性（成交额）
+            if (filter_ETF(e)) {
+                log.info("filter_ETF     >>>     name : {} , 细分行业 : {}", e.name, e.细分行业);
+                return;
+            }
 
 
-                            TdxETFDTO old_row = hy__rowMap.computeIfAbsent(细分行业, k -> e);
-                            // 同一[细分行业]   ->   筛选保留 最大金额ETF
-                            if (e.getAmount() > old_row.getAmount()) {
-                                log.info("同一[细分行业:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", 细分行业, old_row, e);
-                                hy__rowMap.put(细分行业, e);
-                            }
-                        });
+            String 细分行业 = e.细分行业;
+
+
+            // 国家ETF（美、日、德、法、亚）、原油LOF   ->   无 [细分行业]
+            if (StringUtils.isBlank(细分行业)) {
+                log.info("无[细分行业]     >>>     name : {} , 细分行业 : {}", e.name, 细分行业);
+                no_hy__rowSet.add(e);
+                return;
+            }
+
+
+            TdxETFDTO old_row = hy__rowMap.computeIfAbsent(细分行业, k -> e);
+            // 同一[细分行业]   ->   筛选保留 最大金额ETF
+            if (e.getAmount() > old_row.getAmount()) {
+                log.info("同一[细分行业:{}] -> 筛选保留 最大金额ETF     >>>     old : {} , new : {}", 细分行业, old_row, e);
+                hy__rowMap.put(细分行业, e);
+            }
+        });
+
+
+        // ------------------------------------------------------------
+
 
         // 去重2（name）
         Map<String, TdxETFDTO> name__rowMap = Maps.newHashMap();
-        hy__rowMap.values().forEach(e -> {
+
+
+        no_hy__rowSet.addAll(hy__rowMap.values());
+        no_hy__rowSet.forEach(e -> {
 
 
             // 卫星ETF / 卫星ETF
@@ -128,11 +147,34 @@ public class HyETFReportParser {
             String name = e.name;
 
 
+            if (name.contains("原油")) {
+                log.debug("{} , {}", e.name, e.细分行业);
+            }
+
+
             // 2、name -> 不完全相同（模糊匹配）
-            // 卫星ETF/卫星产业ETF、人工智能ETF/人工智能ETF易方达、信用债ETF基金/信用债ETF广发
-            name = name.split("ETF")[0];
-            // 光伏ETF / 光伏龙头ETF广发
-            name = name.replace("龙头", "");
+
+            // ETF
+            Set<String> etf_set = Sets.newHashSet("ETF", "LOF", "基金");   // 人工智能ETF/人工智能ETF易方达、信用债ETF基金/信用债ETF广发
+            for (String etf : etf_set) {
+                name = name.split(etf)[0];
+            }
+
+            // 证券公司
+            Set<String> zq_set = Sets.newHashSet("华宝", "华夏", "中金", "嘉实", "国投", "国泰海通", "国泰", "南方", "招商", "东吴");
+            for (String zq : zq_set) {
+                if (name.contains(zq)) {
+                    name = name.split(zq)[1];
+                }
+            }
+
+            // 龙头
+            Set<String> lt_set = Sets.newHashSet("龙头", "主题", "产业");   // 光伏ETF/光伏龙头ETF广发、卫星ETF/卫星产业ETF
+            for (String lt : lt_set) {
+                name = name.replace(lt, "");
+            }
+
+
             // TODO   ->   有色ETF基金 / 有色金属ETF基金
 
 
@@ -154,15 +196,18 @@ public class HyETFReportParser {
 
     private static boolean filter_ETF(TdxETFDTO e) {
 
+        // "货币", "现金", "日利", "添利", "增利", "丰利", "添益", "收益", "财富宝"
         // "国债", "科创债", "地债", "信用债", "转债"
-        Set<String> filter_nameSet = Sets.newHashSet("日利", "债");
+        Set<String> filter_nameSet = Sets.newHashSet("货币", "现金", "日利", "添利", "增利", "丰利", "添益", "收益", "财富宝", "债");
         Set<String> filter_hySet = Sets.newHashSet("短融", "债");
 
 
         return filter_nameSet.stream().anyMatch(name -> e.name.contains(name))
                 || filter_hySet.stream().anyMatch(hy -> e.细分行业.contains(hy))
                 // 100W
-                || e.amount < 100;
+                || e.amount < 100
+                // 无[细分行业]  ->  保留 1000W以上
+                || (StringUtils.isBlank(e.细分行业) && e.amount < 1000);
     }
 
 
