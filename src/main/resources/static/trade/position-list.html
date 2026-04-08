@@ -730,14 +730,14 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterPositions_curProfitratio__min"
-                                   class="me-2">当日盈亏比例(%):</label>
-                            <input type="number" id="filterPositions_curProfitratio__min"
+                            <label for="filterPositions_changePct__min"
+                                   class="me-2">涨跌幅(%):</label>
+                            <input type="number" id="filterPositions_changePct__min"
                                    class="form-control form-control-sm me-2"
                                    style="width: auto;" min="-30" max="30" step="0.5" value="-30">
-                            <label for="filterPositions_curProfitratio__max"
+                            <label for="filterPositions_changePct__max"
                                    class="me-2"> ~ </label>
-                            <input type="number" id="filterPositions_curProfitratio__max"
+                            <input type="number" id="filterPositions_changePct__max"
                                    class="form-control form-control-sm me-2"
                                    style="width: auto;" min="-30" max="30" step="0.5" value="30">
                         </div>
@@ -2196,8 +2196,8 @@
         let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
         let posFlag = document.getElementById('filterPositions_posFlag').value;
         let sellSignalFlag = document.getElementById('filterPositions_sellSignalFlag').value;
-        let curProfitratio__min = document.getElementById('filterPositions_curProfitratio__min').value;
-        let curProfitratio__max = document.getElementById('filterPositions_curProfitratio__max').value;
+        let changePct__min = document.getElementById('filterPositions_changePct__min').value;
+        let changePct__max = document.getElementById('filterPositions_changePct__max').value;
 
         let filterPositions = positions;
         if (stockType) {
@@ -2220,13 +2220,13 @@
             sellSignalFlag = toBoolean(sellSignalFlag);
             filterPositions = filterPositions.filter(position => position.sellSignalFlag === sellSignalFlag);
         }
-        if (curProfitratio__min) {
-            curProfitratio__min = toNumber(curProfitratio__min) * 0.01;
-            filterPositions = filterPositions.filter(position => position.curProfitratio >= curProfitratio__min);
+        if (changePct__min) {
+            changePct__min = toNumber(changePct__min);
+            filterPositions = filterPositions.filter(position => position.changePct >= changePct__min);
         }
-        if (curProfitratio__max) {
-            curProfitratio__max = toNumber(curProfitratio__max) === 30 ? 30.05 * 0.01 : toNumber(curProfitratio__max) * 0.01;
-            filterPositions = filterPositions.filter(position => position.curProfitratio < curProfitratio__max);
+        if (changePct__max) {
+            changePct__max = toNumber(changePct__max) === 30 ? 30.05 : toNumber(changePct__max);
+            filterPositions = filterPositions.filter(position => position.changePct < changePct__max);
         }
 
 
@@ -2345,7 +2345,7 @@
             if (typeof position.profit === 'number') sumValues.profit += position.profit;
             if (typeof position.profitratio === 'number') sumValues.profitratio += position.profitratio;
             if (typeof position.curprofit === 'number') sumValues.curprofit += position.curprofit;
-            if (typeof position.klineDTO.changePct === 'number') sumValues.changePct += position.klineDTO.changePct;
+            if (typeof position.changePct === 'number') sumValues.changePct += position.changePct;
             if (typeof position.posratio === 'number') sumValues.posratio += position.posratio;
         });
         // 当日盈亏比例 = 当日盈亏额 / 市值
@@ -4742,8 +4742,8 @@
         document.getElementById('filterPositions_topStockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_inTopBlockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_posFlag').addEventListener('change', () => displayPositionRecords(positionsData));
-        document.getElementById('filterPositions_curProfitratio__min').addEventListener('change', () => displayPositionRecords(positionsData));
-        document.getElementById('filterPositions_curProfitratio__max').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_changePct__min').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_changePct__max').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions());
 
 
