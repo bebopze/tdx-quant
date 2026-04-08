@@ -835,8 +835,16 @@
                     <div class="d-flex align-items-center flex-wrap" id="orders-filter-controls">
                         <!-- 筛选条件 -->
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterOrdersStatus">委托状态：</label>
-                            <select id="filterOrdersStatus" class="form-select form-select-sm" style="width:auto">
+                            <label for="filterOrders_stockType">证券类型：</label>
+                            <select id="filterOrders_stockType" class="form-select form-select-sm" style="width:auto">
+                                <option value="">全部</option>
+                                <option value="1">个股</option>
+                                <option value="2">ETF</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
+                            <label for="filterOrders_status">委托状态：</label>
+                            <select id="filterOrders_status" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 // 已成交 -> 已撤/已成/废单/正报/已报待撤
                                 // 未成交 -> 未报/已报/部成
@@ -853,16 +861,16 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterDirection">委托方向：</label>
-                            <select id="filterDirection" class="form-select form-select-sm" style="width:auto">
+                            <label for="filterOrders_mmsm">委托方向：</label>
+                            <select id="filterOrders_mmsm" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 <option value="证券买入">证券买入</option>
                                 <option value="证券卖出">证券卖出</option>
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
-                            <label for="filterXyjylx">信用交易类型：</label>
-                            <select id="filterXyjylx" class="form-select form-select-sm" style="width:auto">
+                            <label for="filterOrders_xyjylx">信用交易类型：</label>
+                            <select id="filterOrders_xyjylx" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 <option value="融资开仓">融资开仓</option>
                                 <option value="买入担保品">买入担保品</option>
@@ -2183,7 +2191,7 @@
 
 
         // 筛选
-        let sotckType = document.getElementById('filterPositions_stockType').value;
+        let stockType = document.getElementById('filterPositions_stockType').value;
         let topStockFlag = document.getElementById('filterPositions_topStockFlag').value;
         let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
         let posFlag = document.getElementById('filterPositions_posFlag').value;
@@ -2192,9 +2200,9 @@
         let curProfitratio__max = document.getElementById('filterPositions_curProfitratio__max').value;
 
         let filterPositions = positions;
-        if (sotckType) {
-            sotckType = toNumber(sotckType);
-            filterPositions = filterPositions.filter(position => position.stockType === sotckType);
+        if (stockType) {
+            stockType = toNumber(stockType);
+            filterPositions = filterPositions.filter(position => position.stockType === stockType);
         }
         if (topStockFlag) {
             topStockFlag = toBoolean(topStockFlag);
@@ -2880,9 +2888,11 @@
 
 
         // 筛选
-        const statusFilter = document.getElementById('filterOrdersStatus').value;
-        const directionFilter = document.getElementById('filterDirection').value;
-        const xyjylxFilter = document.getElementById('filterXyjylx').value;
+        const stockTypeFilter = document.getElementById('filterOrders_stockType').value;
+        const statusFilter = document.getElementById('filterOrders_status').value;
+        const mmsmFilter = document.getElementById('filterOrders_mmsm').value;
+        const xyjylxFilter = document.getElementById('filterOrders_xyjylx').value;
+
         let filteredOrders = orders;
         if (statusFilter) {
             // 未成交 -> 未报/已报/部成/正报/已报待撤
@@ -2896,8 +2906,14 @@
                 filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
             }
         }
-        if (directionFilter) {
-            filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
+        if (stockTypeFilter !== '' && stockTypeFilter != null) {
+            const filterValue = toNumber(stockTypeFilter);
+            if (!Number.isNaN(filterValue)) {
+                filteredOrders = filteredOrders.filter(order => order.stockType === filterValue);
+            }
+        }
+        if (mmsmFilter) {
+            filteredOrders = filteredOrders.filter(order => order.mmsm === mmsmFilter);
         }
         if (xyjylxFilter) {
             filteredOrders = filteredOrders.filter(order => order.xyjylx === xyjylxFilter);
@@ -4912,9 +4928,10 @@
 
         // --- 当日委托相关元素和事件 ---
         const ordersTab = document.getElementById('orders-tab');
-        const filterOrdersStatus = document.getElementById('filterOrdersStatus');
-        const filterDirection = document.getElementById('filterDirection');
-        const filterXyjylx = document.getElementById('filterXyjylx');
+        const filterOrders_stockType = document.getElementById('filterOrders_stockType');
+        const filterOrders_status = document.getElementById('filterOrders_status');
+        const filterOrders_mmsm = document.getElementById('filterOrders_mmsm');
+        const filterOrders_xyjylx = document.getElementById('filterOrders_xyjylx');
         const refreshOrdersButton = document.getElementById('refreshOrdersButton');
         const batchCancelOrdersButton = document.getElementById('batchCancelOrdersButton');
         const quickCancelOrdersButton = document.getElementById('quickCancelOrdersButton');
@@ -4935,7 +4952,7 @@
         }
 
 
-        if (ordersTab && filterOrdersStatus && filterDirection && filterXyjylx && refreshOrdersButton) {
+        if (ordersTab && filterOrders_stockType && filterOrders_status && filterOrders_mmsm && filterOrders_xyjylx && refreshOrdersButton) {
             let hasLoadedOrders = false;
             ordersTab.addEventListener('shown.bs.tab', function (event) {
                 if (!hasLoadedOrders) {
@@ -4944,9 +4961,10 @@
                 }
             });
             refreshOrdersButton.addEventListener('click', loadOrders);
-            filterOrdersStatus.addEventListener('change', () => displayOrders(ordersData));
-            filterDirection.addEventListener('change', () => displayOrders(ordersData));
-            filterXyjylx.addEventListener('change', () => displayOrders(ordersData));
+            filterOrders_stockType.addEventListener('change', () => displayOrders(ordersData));
+            filterOrders_status.addEventListener('change', () => displayOrders(ordersData));
+            filterOrders_mmsm.addEventListener('change', () => displayOrders(ordersData));
+            filterOrders_xyjylx.addEventListener('change', () => displayOrders(ordersData));
             // --- 现有代码：当日委托按钮事件 ---
             if (batchCancelOrdersButton) {
                 batchCancelOrdersButton.addEventListener('click', handleBatchCancelOrders);

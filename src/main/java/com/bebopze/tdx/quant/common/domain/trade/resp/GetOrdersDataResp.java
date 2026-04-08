@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.StockUtil;
@@ -190,6 +191,10 @@ public class GetOrdersDataResp implements Serializable {
     private String stktype_ex;
 
 
+    // 证券类型：1-股票；2-ETF；
+    private Integer stockType;
+
+
     public double getZtPrice() {
         return StockUtil.ztPrice(prevClosePrice, Zqdm, Zqmc);
     }
@@ -215,5 +220,9 @@ public class GetOrdersDataResp implements Serializable {
         return StockUtil.stktype_ex(Zqdm, Zqmc);
     }
 
+
+    public Integer getStockType() {
+        return StockTypeEnum.getTypeByStockCode(Zqdm);
+    }
 
 }
