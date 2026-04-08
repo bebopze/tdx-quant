@@ -102,8 +102,6 @@ public class TradeServiceImpl implements TradeService {
                 PosStockCache dto = posStockCache.get(stockCode);
                 // BaseStockDTO baseStockDTO = dto.getBaseStockDTO();
                 stock.setBlockInfoDTO(dto.getStockBlockInfoDTO());
-                // stock.setPreClose(dto.getBaseStockDTO().getPreClose().doubleValue());
-                stock.setPrevClose(PosStockCache.getPrevClose(stockCode));
             });
 
 
@@ -228,7 +226,7 @@ public class TradeServiceImpl implements TradeService {
         // -------------------- 实时行情 / 涨跌停价格（自动计算）
         respList.parallelStream().forEach(e -> {
             // 实时行情
-            StockSnapshotKlineDTO klineDTO = KlineAPI.kline(e.getZqdm());
+            StockSnapshotKlineDTO klineDTO = KlineAPI.klineCache(e.getZqdm());
 
             e.setPrevClosePrice(klineDTO.getPrevClose());
             e.setClosePrice(klineDTO.getClose());
@@ -356,7 +354,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -830,20 +828,26 @@ public class TradeServiceImpl implements TradeService {
         log.info("quickResetFinancing     >>>     posResp : {}", JSON.toJSONString(posResp));
 
 
-        // 4、一键清仓
-        quickClearPosition();
+        // 4、从持仓个股中   过滤出   ->   非[涨跌停] 个股列表
+        List<CcStockInfo> filter_ztd__stockList = filter_ztd__stockList(posResp.getStocks());
+        Set<String> filter_ztd__stockCodeSet = filter_ztd__stockList.stream().map(CcStockInfo::getStkcode).collect(Collectors.toSet());
+
+
+        // 5、一键清仓
+        quick__clearPosition(filter_ztd__stockList);
+//        quickClearPosition(filter_ztd__stockCodeSet);
 
 
         // 等待成交   ->   1.5s
         SleepUtils.winSleep(1500);
 
 
-        // 5、check/retry   =>   [一键清仓]-委托单 状态
+        // 6、check/retry   =>   [一键清仓]-委托单 状态
         checkAndRetry___clearPosition__OrdersStatus(3);
 
 
-        // 6、一键再买入
-        quick__buyAgain(posResp.getStocks());
+        // 7、一键再买入
+        quick__buyAgain(filter_ztd__stockList);
     }
 
 
@@ -976,7 +980,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -1417,6 +1421,42 @@ public class TradeServiceImpl implements TradeService {
 
 
     /**
+     * 从持仓个股中   过滤出   ->   非[涨跌停] 个股列表
+     *
+     * @param stocks
+     * @return
+     */
+    private List<CcStockInfo> filter_ztd__stockList(List<CcStockInfo> stocks) {
+
+        List<CcStockInfo> filter_ztd__stockList = stocks.stream()
+                                                        .filter(e -> {
+
+                                                            boolean ztFlag = e.getKlineDTO().isZtFlag();
+                                                            boolean dtFlag = e.getKlineDTO().isDtFlag();
+                                                            double close = e.getKlineDTO().getClose();
+
+
+                                                            if (ztFlag || dtFlag) {
+                                                                log.warn("过滤 [涨跌停]个股     >>>     [{}-{}] , [{}]", e.getStkcode(), e.getStkname(), ztFlag ? "涨停" : "跌停");
+                                                                return false;
+                                                            }
+
+                                                            if (close <= 0) {
+                                                                log.warn("过滤 [无效/未上市]个股     >>>     [{}-{}]", e.getStkcode(), e.getStkname());
+                                                                return false;
+                                                            }
+
+
+                                                            return true;
+                                                        })
+                                                        .collect(Collectors.toList());
+
+
+        return filter_ztd__stockList;
+    }
+
+
+    /**
      * 一键清仓
      *
      * @param sellStockInfoList 清仓 个股列表
@@ -1552,7 +1592,7 @@ public class TradeServiceImpl implements TradeService {
     private double sellPriceStrategyPct(CcStockInfo e, double currPricePct, double prevPricePct) {
         if (prevPricePct != 0) {
             // 昨日收盘价
-            return e.getPrevClose() * (1 + prevPricePct * 0.01);
+            return e.getKlineDTO().getPrevClose() * (1 + prevPricePct * 0.01);
         }
         // 当前价格
         return e.getLastprice().doubleValue() * (1 + currPricePct * 0.01);

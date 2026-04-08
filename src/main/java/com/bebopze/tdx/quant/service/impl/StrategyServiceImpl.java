@@ -883,7 +883,7 @@ public class StrategyServiceImpl implements StrategyService {
                                      // 涨停股
                                      double zt_price = data.rt_stock_zt__codePriceMap.computeIfAbsent(stockCode,
                                                                                                       // 买5/卖5     ->     涨/跌停价
-                                                                                                      k -> KlineAPI.kline(stockCode).getZtPrice());
+                                                                                                      k -> KlineAPI.klineCache(stockCode).getZtPrice());
 
                                      // 盘中（不含 集合竞价时间） ->  过滤 涨停股（无法买入）
                                      if (isTradingTime() && price >= zt_price) {
@@ -912,7 +912,7 @@ public class StrategyServiceImpl implements StrategyService {
         buy__stockCodeList.forEach(stockCode -> {
 
 
-            StockSnapshotKlineDTO dto = KlineAPI.kline(stockCode);
+            StockSnapshotKlineDTO dto = KlineAPI.klineCache(stockCode);
             SleepUtils.randomSleep(0, 10);
 
 

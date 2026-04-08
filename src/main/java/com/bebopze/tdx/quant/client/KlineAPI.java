@@ -31,13 +31,19 @@ public class KlineAPI {
     public static final Cache<String, StockSnapshotKlineDTO> klineCache = Caffeine.newBuilder()
                                                                                   .maximumSize(1_000)
                                                                                   // .expireAfterWrite(10, TimeUnit.MINUTES)
-                                                                                  .expireAfterAccess(5, TimeUnit.MINUTES)
+                                                                                  .expireAfterAccess(5, TimeUnit.SECONDS)
                                                                                   .recordStats()
                                                                                   // .removalListener(createStatsRemovalListener("klineCache", () -> BacktestCache.marketCache))
                                                                                   .scheduler(Scheduler.systemScheduler())
                                                                                   .build();
 
 
+    /**
+     * 获取  指定个股/ETF  行情快照（缓存5s）
+     *
+     * @param stockCode
+     * @return
+     */
     public static StockSnapshotKlineDTO klineCache(String stockCode) {
         return klineCache.get(stockCode, k -> klineWait(stockCode));
     }
@@ -73,7 +79,7 @@ public class KlineAPI {
      * @return
      */
     public static List<StockSnapshotKlineDTO> kline(Collection<String> stockCodeList) {
-        return stockCodeList.parallelStream().map(stockCode -> kline(stockCode)).collect(Collectors.toList());
+        return stockCodeList.parallelStream().map(KlineAPI::klineCache).collect(Collectors.toList());
     }
 
 
