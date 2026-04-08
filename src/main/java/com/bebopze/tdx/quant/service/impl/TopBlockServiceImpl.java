@@ -819,7 +819,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
             TopChangePctDTO changePctDTO = e.getChangePctDTO();
             // 次日涨跌幅（今日 实时涨跌幅）
-            changePctDTO.setToday2Next_changePct(r.getChange_pct());
+            changePctDTO.setToday2Next_changePct(r.getChangePct());
             changePctDTO.setToday2Next_openPct(of(r.getOpen() / r.getPrevClose() * 100 - 100));
             changePctDTO.setToday2Next_highPct(of(r.getHigh() / r.getPrevClose() * 100 - 100));
             changePctDTO.setToday2Next_lowPct(of(r.getLow() / r.getPrevClose() * 100 - 100));

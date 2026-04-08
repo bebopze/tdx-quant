@@ -1570,10 +1570,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         entity.setVolume(e.getVol());
         entity.setAmount(of(e.getAmo()));
 
-        entity.setRangePct(of(e.getRange_pct()));
-        entity.setChangePct(of(e.getChange_pct()));
-        entity.setChangePrice(of(e.getChange_price()));
-        entity.setTurnoverPct(of(e.getTurnover_pct()));
+        entity.setRangePct(of(e.getRangePct()));
+        entity.setChangePct(of(e.getChangePct()));
+        entity.setChangePrice(of(e.getChangePrice()));
+        entity.setTurnoverPct(of(e.getTurnoverPct()));
 
 
         return entity;

@@ -190,10 +190,10 @@ public class BlockKlineFun {
             entity.setVolume(block_klineDTO.getVol());
             entity.setAmount(of2(block_klineDTO.getAmo()));
 
-            entity.setRangePct(of2(block_klineDTO.getRange_pct()));
-            entity.setChangePct(of2(block_klineDTO.getChange_pct()));
-            entity.setChangePrice(of2(block_klineDTO.getChange_price()));
-            entity.setTurnoverPct(of2(block_klineDTO.getTurnover_pct()));
+            entity.setRangePct(of2(block_klineDTO.getRangePct()));
+            entity.setChangePct(of2(block_klineDTO.getChangePct()));
+            entity.setChangePrice(of2(block_klineDTO.getChangePrice()));
+            entity.setTurnoverPct(of2(block_klineDTO.getTurnoverPct()));
 
 
             entity.setKlineHisStr(ConvertStockKline.dtoList2JsonStr(old_klineDTOList));
@@ -216,10 +216,10 @@ public class BlockKlineFun {
         klineDTO.setVol(stockDO.getVolume());
         klineDTO.setAmo(of(stockDO.getAmount()));
 
-        klineDTO.setRange_pct(of(stockDO.getRangePct()));
-        klineDTO.setChange_pct(of(stockDO.getChangePct()));
-        klineDTO.setChange_price(of(stockDO.getChangePrice()));
-        klineDTO.setTurnover_pct(of(stockDO.getTurnoverPct()));
+        klineDTO.setRangePct(of(stockDO.getRangePct()));
+        klineDTO.setChangePct(of(stockDO.getChangePct()));
+        klineDTO.setChangePrice(of(stockDO.getChangePrice()));
+        klineDTO.setTurnoverPct(of(stockDO.getTurnoverPct()));
 
 
         return klineDTO;
@@ -240,28 +240,28 @@ public class BlockKlineFun {
 
         // 涨幅 = 平均值
         double change_pct = list.stream()
-                                .mapToDouble(k -> Double.isNaN(k.getChange_pct()) ? 0 : k.getChange_pct())
+                                .mapToDouble(k -> Double.isNaN(k.getChangePct()) ? 0 : k.getChangePct())
                                 .average()
                                 .orElse(0);
         // 换手率 = 平均值
         double turnover_pct = list.stream()
-                                  .mapToDouble(k -> Double.isNaN(k.getTurnover_pct()) ? 0 : k.getTurnover_pct())
+                                  .mapToDouble(k -> Double.isNaN(k.getTurnoverPct()) ? 0 : k.getTurnoverPct())
                                   .average()
                                   .orElse(0);
 
 
         double open_change_ratio = list.stream()
-                                       .mapToDouble(k -> Double.isNaN(k.getOpen()) ? 0 : k.getOpen() / (k.getClose() - k.getChange_price()) - 1)
+                                       .mapToDouble(k -> Double.isNaN(k.getOpen()) ? 0 : k.getOpen() / (k.getClose() - k.getChangePrice()) - 1)
                                        .average()
                                        .orElse(0);
 
         double high_change_ratio = list.stream()
-                                       .mapToDouble(k -> Double.isNaN(k.getHigh()) ? 0 : k.getHigh() / (k.getClose() - k.getChange_price()) - 1)
+                                       .mapToDouble(k -> Double.isNaN(k.getHigh()) ? 0 : k.getHigh() / (k.getClose() - k.getChangePrice()) - 1)
                                        .average()
                                        .orElse(0);
 
         double low_change_ratio = list.stream()
-                                      .mapToDouble(k -> Double.isNaN(k.getLow()) ? 0 : k.getLow() / (k.getClose() - k.getChange_price()) - 1)
+                                      .mapToDouble(k -> Double.isNaN(k.getLow()) ? 0 : k.getLow() / (k.getClose() - k.getChangePrice()) - 1)
                                       .average()
                                       .orElse(0);
 
@@ -290,10 +290,10 @@ public class BlockKlineFun {
         dto.setVol(sumVol);
         dto.setAmo(sumAmo);
 
-        dto.setRange_pct(of(high / low * 100 - 100));
-        dto.setChange_pct(of(change_pct));
-        dto.setChange_price(of(close - prevClose));
-        dto.setTurnover_pct(turnover_pct);
+        dto.setRangePct(of(high / low * 100 - 100));
+        dto.setChangePct(of(change_pct));
+        dto.setChangePrice(of(close - prevClose));
+        dto.setTurnoverPct(turnover_pct);
 
         return dto;
     }

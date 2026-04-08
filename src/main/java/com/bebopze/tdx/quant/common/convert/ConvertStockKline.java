@@ -79,10 +79,10 @@ public class ConvertStockKline {
                 dto.getClose(),
                 dto.getVol(),
                 dto.getAmo(),
-                dto.getRange_pct(),
-                dto.getChange_pct(),
-                dto.getChange_price(),
-                dto.getTurnover_pct()
+                dto.getRangePct(),
+                dto.getChangePct(),
+                dto.getChangePrice(),
+                dto.getTurnoverPct()
         };
 
 
@@ -139,10 +139,10 @@ public class ConvertStockKline {
         dto.setVol(Long.valueOf(klineArr[i++]));
         dto.setAmo(of(klineArr[i++]));
 
-        dto.setRange_pct(of(klineArr[i++]));
-        dto.setChange_pct(of(klineArr[i++]));
-        dto.setChange_price(of(klineArr[i++]));
-        dto.setTurnover_pct(of(klineArr[i++]));
+        dto.setRangePct(of(klineArr[i++]));
+        dto.setChangePct(of(klineArr[i++]));
+        dto.setChangePrice(of(klineArr[i++]));
+        dto.setTurnoverPct(of(klineArr[i++]));
 
 
         return dto;

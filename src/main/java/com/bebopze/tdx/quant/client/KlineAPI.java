@@ -282,10 +282,10 @@ public class KlineAPI {
         dto.setAmo(realtimequote.getAmount());
 
 
-        dto.setRange_pct(realtimequote.getRangePct());
-        dto.setChange_pct(realtimequote.getZdf());
-        dto.setChange_price(realtimequote.getZd());
-        dto.setTurnover_pct(realtimequote.getTurnover());
+        dto.setRangePct(realtimequote.getRangePct());
+        dto.setChangePct(realtimequote.getZdf());
+        dto.setChangePrice(realtimequote.getZd());
+        dto.setTurnoverPct(realtimequote.getTurnover());
 
 
         return dto;

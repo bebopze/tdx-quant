@@ -868,7 +868,7 @@ public class DataAnalysisServiceImpl implements DataAnalysisService {
 
 
         dto.setName(fun.getName());
-        dto.setToday2Next_changePct(next_klineDTO.getChange_pct());
+        dto.setToday2Next_changePct(next_klineDTO.getChangePct());
         dto.setBuySignalExtDataDTO(today_extDataDTO);
 
 
