@@ -861,6 +861,15 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterXyjylx">信用交易类型：</label>
+                            <select id="filterXyjylx" class="form-select form-select-sm" style="width:auto">
+                                <option value="">全部</option>
+                                <option value="融资开仓">融资开仓</option>
+                                <option value="买入担保品">买入担保品</option>
+                                <option value="卖出担保品">卖出担保品</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="ordersStartDateInput" class="me-2">查询日期：</label>
                             <input type="date" id="ordersStartDateInput" class="form-control form-control-sm me-2"
                                    style="width: auto;" min="1990-01-01" max="">
@@ -2873,6 +2882,7 @@
         // 筛选
         const statusFilter = document.getElementById('filterOrdersStatus').value;
         const directionFilter = document.getElementById('filterDirection').value;
+        const xyjylxFilter = document.getElementById('filterXyjylx').value;
         let filteredOrders = orders;
         if (statusFilter) {
             // 未成交 -> 未报/已报/部成/正报/已报待撤
@@ -2888,6 +2898,9 @@
         }
         if (directionFilter) {
             filteredOrders = filteredOrders.filter(order => order.mmsm === directionFilter);
+        }
+        if (xyjylxFilter) {
+            filteredOrders = filteredOrders.filter(order => order.xyjylx === xyjylxFilter);
         }
 
 
@@ -4901,6 +4914,7 @@
         const ordersTab = document.getElementById('orders-tab');
         const filterOrdersStatus = document.getElementById('filterOrdersStatus');
         const filterDirection = document.getElementById('filterDirection');
+        const filterXyjylx = document.getElementById('filterXyjylx');
         const refreshOrdersButton = document.getElementById('refreshOrdersButton');
         const batchCancelOrdersButton = document.getElementById('batchCancelOrdersButton');
         const quickCancelOrdersButton = document.getElementById('quickCancelOrdersButton');
@@ -4921,7 +4935,7 @@
         }
 
 
-        if (ordersTab && filterOrdersStatus && filterDirection && refreshOrdersButton) {
+        if (ordersTab && filterOrdersStatus && filterDirection && filterXyjylx && refreshOrdersButton) {
             let hasLoadedOrders = false;
             ordersTab.addEventListener('shown.bs.tab', function (event) {
                 if (!hasLoadedOrders) {
@@ -4932,6 +4946,7 @@
             refreshOrdersButton.addEventListener('click', loadOrders);
             filterOrdersStatus.addEventListener('change', () => displayOrders(ordersData));
             filterDirection.addEventListener('change', () => displayOrders(ordersData));
+            filterXyjylx.addEventListener('change', () => displayOrders(ordersData));
             // --- 现有代码：当日委托按钮事件 ---
             if (batchCancelOrdersButton) {
                 batchCancelOrdersButton.addEventListener('click', handleBatchCancelOrders);
