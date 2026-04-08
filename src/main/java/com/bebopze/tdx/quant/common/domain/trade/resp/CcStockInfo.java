@@ -132,15 +132,13 @@ public class CcStockInfo implements Serializable {
     /**
      * 个股 当日K线行情 + 涨跌停计算
      */
-    StockSnapshotKlineDTO klineDTO;
+    private StockSnapshotKlineDTO klineDTO;
 
 
     public StockSnapshotKlineDTO getKlineDTO() {
-        if (klineDTO != null) {
-            return klineDTO;
+        if (klineDTO == null) {
+            klineDTO = KlineAPI.klineCache(stkcode);
         }
-
-        StockSnapshotKlineDTO klineDTO = KlineAPI.klineCache(stkcode);
         return klineDTO;
     }
 

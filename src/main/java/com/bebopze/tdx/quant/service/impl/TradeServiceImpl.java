@@ -830,12 +830,10 @@ public class TradeServiceImpl implements TradeService {
 
         // 4、从持仓个股中   过滤出   ->   非[涨跌停] 个股列表
         List<CcStockInfo> filter_ztd__stockList = filter_ztd__stockList(posResp.getStocks());
-        Set<String> filter_ztd__stockCodeSet = filter_ztd__stockList.stream().map(CcStockInfo::getStkcode).collect(Collectors.toSet());
 
 
         // 5、一键清仓
         quick__clearPosition(filter_ztd__stockList);
-//        quickClearPosition(filter_ztd__stockCodeSet);
 
 
         // 等待成交   ->   1.5s
@@ -843,7 +841,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 6、check/retry   =>   [一键清仓]-委托单 状态
-        checkAndRetry___clearPosition__OrdersStatus(3);
+        checkAndRetry___clearPosition__OrdersStatus(filter_ztd__stockList, 3);
 
 
         // 7、一键再买入
@@ -1433,7 +1431,7 @@ public class TradeServiceImpl implements TradeService {
 
                                                             boolean ztFlag = e.getKlineDTO().isZtFlag();
                                                             boolean dtFlag = e.getKlineDTO().isDtFlag();
-                                                            double close = e.getKlineDTO().getClose();
+                                                            double open = e.getKlineDTO().getOpen();
 
 
                                                             if (ztFlag || dtFlag) {
@@ -1441,8 +1439,8 @@ public class TradeServiceImpl implements TradeService {
                                                                 return false;
                                                             }
 
-                                                            if (close <= 0) {
-                                                                log.warn("过滤 [无效/未上市]个股     >>>     [{}-{}]", e.getStkcode(), e.getStkname());
+                                                            if (open <= 0) {
+                                                                log.warn("过滤 [无效/未上市/停牌]个股     >>>     [{}-{}]", e.getStkcode(), e.getStkname());
                                                                 return false;
                                                             }
 
@@ -1913,9 +1911,10 @@ public class TradeServiceImpl implements TradeService {
     /**
      * check/retry   =>   [一键清仓]-委托单 状态
      *
-     * @param retry 最大重试次数
+     * @param filter_ztd__stockList
+     * @param retry                 最大重试次数
      */
-    private void checkAndRetry___clearPosition__OrdersStatus(int retry) {
+    private void checkAndRetry___clearPosition__OrdersStatus(List<CcStockInfo> filter_ztd__stockList, int retry) {
         if (--retry < 0) {
             return;
         }
@@ -1956,10 +1955,12 @@ public class TradeServiceImpl implements TradeService {
         if (!flag) {
 
             // 先撤单 -> 再全部卖出
-            quickClearPosition();
+            quickCancelOrder();
+            quick__clearPosition(filter_ztd__stockList);
+
 
             // 再次 check
-            checkAndRetry___clearPosition__OrdersStatus(retry);
+            checkAndRetry___clearPosition__OrdersStatus(filter_ztd__stockList, retry);
         }
     }
 
