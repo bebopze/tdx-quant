@@ -782,6 +782,9 @@
                                 <th onclick="sortPositionsTable('curProfitratio')">当日盈亏比例<span class="sort-icon"
                                                                                                      id="sortCurProfitratio"></span>
                                 </th>
+                                <th onclick="sortPositionsTable('changePct')">涨跌幅<span class="sort-icon"
+                                                                                          id="sortChangePct"></span>
+                                </th>
                                 <th onclick="sortPositionsTable('posratio')">仓位占比<span class="sort-icon"
                                                                                            id="sortPosratio"></span>
                                 </th>
@@ -2069,8 +2072,22 @@
                     return;
                 }
 
+
                 const responseData = data.data;
-                positionsData = responseData.stocks;
+
+
+                // 处理数据，将 klineDTO 的字段平铺到主对象
+                positionsData = (responseData.stocks || []).map((stock, index) => ({
+                    rank: index + 1, // 添加序号
+                    ...stock,        // 先铺 stock 自身
+                    // 再铺 klineDTO
+                    ...Object.fromEntries(
+                        Object.entries(stock.klineDTO || {}).map(([k, v]) => [
+                            k,
+                            typeof v === 'number' ? (v || 0) : (v || '-')
+                        ])
+                    )
+                }));
 
 
                 // 展示账户资金
@@ -2240,13 +2257,14 @@
               <td>${item.stkname}</td>
               <td>${item.market}</td>
               <td>${Number(item.costprice).toFixed(3).replace(/\.?0+$/, '')}</td>
-              <td>${Number(item.prevClose).toFixed(3).replace(/\.?0+$/, '')}</td>
+              <td>${Number(item.klineDTO.prevClose).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${Number(item.lastprice).toFixed(3).replace(/\.?0+$/, '')}</td>
               <td>${item.mktval}</td>
               <td style="color: ${item.profit > 0 ? 'red' : item.profit < 0 ? 'teal' : 'black'}">${item.profit}</td>
               <td style="color: ${item.profitratio > 0 ? 'red' : item.profitratio < 0 ? 'teal' : 'black'}">${(item.profitratio * 100).toFixed(2)}%</td>
               <td style="color: ${item.curprofit > 0 ? 'red' : item.curprofit < 0 ? 'teal' : 'black'}">${item.curprofit?.toFixed(2) ?? '-'}</td>
               <td style="color: ${item.curProfitratio > 0 ? 'red' : item.curProfitratio < 0 ? 'teal' : 'black'}">${item.curProfitratio == null ? '-' : (item.curProfitratio * 100).toFixed(2) + '%'}</td>
+              <td style="color: ${item.klineDTO.changePct > 0 ? 'red' : item.klineDTO.changePct < 0 ? 'teal' : 'black'}">${item.klineDTO.changePct == null ? '-' : (item.klineDTO.changePct).toFixed(2) + '%'}</td>
               <td>${(item.posratio * 100).toFixed(2)}%</td>
               <td>${item.stkbal}</td>
               <td>${item.stkavl}</td>
@@ -2298,8 +2316,9 @@
             mktval: 0,         // 市值
             profit: 0,         // 持仓盈亏
             profitratio: 0,    // 持仓盈亏比例
-            curprofit: 0,      // 当日盈亏
-            curProfitratio: 0, // 当日盈亏比例
+            curprofit: 0,      // 当日盈亏额
+            curProfitratio: 0, // 当日盈亏比例 = 当日盈亏额 / 市值
+            changePct: 0,      // 当日涨跌幅
             posratio: 0,       // 仓位占比
         };
 
@@ -2309,9 +2328,14 @@
             if (typeof position.profit === 'number') sumValues.profit += position.profit;
             if (typeof position.profitratio === 'number') sumValues.profitratio += position.profitratio;
             if (typeof position.curprofit === 'number') sumValues.curprofit += position.curprofit;
-            if (typeof position.curProfitratio === 'number') sumValues.curProfitratio += position.curProfitratio;
+            if (typeof position.klineDTO.changePct === 'number') sumValues.changePct += position.klineDTO.changePct;
             if (typeof position.posratio === 'number') sumValues.posratio += position.posratio;
         });
+        // 当日盈亏比例 = 当日盈亏额 / 市值
+        sumValues.curProfitratio = sumValues.curprofit / sumValues.mktval;
+        // 均值列
+        sumValues.changePct = sumValues.changePct / sortedPositions.length;
+
 
         // 创建并插入合计行
         const sumRow = document.createElement('tr');
@@ -2345,24 +2369,28 @@
         sumRow.innerHTML += `<td>${sumValues.profitratio.toFixed(2)}%</td>`;
         // 索引 11: curprofit (当日盈亏) - 合计列
         sumRow.innerHTML += `<td>${sumValues.curprofit.toFixed(2)}</td>`;
-        // 索引 12: curProfitratio (当日盈亏比例) - 合计列
-        sumRow.innerHTML += `<td>${sumValues.curProfitratio.toFixed(2)}%</td>`;
-        // 索引 13: posratio (仓位占比) - 合计列
+        // 索引 12: curProfitratio (当日盈亏比例) - 合计列（均值）
+        sumRow.innerHTML += `<td>${Number(sumValues.curProfitratio * 100).toFixed(2)}%</td>`;
+        // 索引 13: changePct (当日涨跌幅) - 合计列（均值）
+        sumRow.innerHTML += `<td>${sumValues.changePct.toFixed(2)}%</td>`;
+        // 索引 14: posratio (仓位占比) - 合计列
         sumRow.innerHTML += `<td>${Number(sumValues.posratio * 100).toFixed(2)}%</td>`;
 
-        // 索引 14:  (持仓数量) - 非合计列
+        // 索引 15:  (持仓数量) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 15:  (可用数量) - 非合计列
+        // 索引 16:  (可用数量) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 16:  (行业) - 非合计列
+        // 索引 17:  (行业) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 17:  (主线个股) - 非合计列
+        // 索引 18:  (S信号) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 18:  (IN主线板块) - 非合计列
+        // 索引 19:  (主线个股) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 19:  (主线板块) - 非合计列
+        // 索引 20:  (IN主线板块) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 20: 操作 - 非合计列
+        // 索引 21:  (主线板块) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 22: 操作 - 非合计列
         sumRow.innerHTML += `<td></td>`;
 
         return sumRow;
