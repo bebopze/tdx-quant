@@ -55,10 +55,10 @@ public class ConvertStock {
             arrDTO.vol[i] = dto.getVol();
             arrDTO.amo[i] = dto.getAmo();
 
-            arrDTO.range_pct[i] = dto.getRange_pct();
-            arrDTO.change_pct[i] = dto.getChange_pct();
-            arrDTO.change_price[i] = dto.getChange_price();
-            arrDTO.turnover_pct[i] = of(dto.getTurnover_pct());
+            arrDTO.range_pct[i] = dto.getRangePct();
+            arrDTO.change_pct[i] = dto.getChangePct();
+            arrDTO.change_price[i] = dto.getChangePrice();
+            arrDTO.turnover_pct[i] = of(dto.getTurnoverPct());
 
 
             arrDTO.dateCloseMap.put(dto.getDate(), dto.getClose());

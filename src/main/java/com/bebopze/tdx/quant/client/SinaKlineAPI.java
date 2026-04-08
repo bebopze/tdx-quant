@@ -238,10 +238,10 @@ public class SinaKlineAPI {
                            dto.setVol(e.getVolume());
                            dto.setAmo(e.getAmount());
 
-                           dto.setRange_pct(e.getRangePct());
-                           dto.setChange_pct(e.getChangepercent());
-                           dto.setChange_price(e.getPricechange());
-                           dto.setTurnover_pct(e.getTurnoverratio());
+                           dto.setRangePct(e.getRangePct());
+                           dto.setChangePct(e.getChangepercent());
+                           dto.setChangePrice(e.getPricechange());
+                           dto.setTurnoverPct(e.getTurnoverratio());
 
 
                            return dto;

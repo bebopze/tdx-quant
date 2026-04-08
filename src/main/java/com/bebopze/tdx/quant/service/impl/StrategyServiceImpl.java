@@ -917,7 +917,7 @@ public class StrategyServiceImpl implements StrategyService {
 
 
             String stockName = dto.getStockName();
-            double change_pct = dto.getChange_pct();
+            double change_pct = dto.getChangePct();
             double currPrice = dto.getClose();
             double ztPrice = dto.getZtPrice();
             double dtPrice = dto.getDtPrice();

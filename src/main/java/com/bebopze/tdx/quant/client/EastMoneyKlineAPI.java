@@ -327,10 +327,10 @@ public class EastMoneyKlineAPI {
             dto.setVol(e.getF5());
             dto.setAmo(e.getF6());
 
-            dto.setRange_pct(e.getF7());
-            dto.setChange_pct(e.getF3());
-            dto.setChange_price(e.getF4());
-            dto.setTurnover_pct(e.getF8());
+            dto.setRangePct(e.getF7());
+            dto.setChangePct(e.getF3());
+            dto.setChangePrice(e.getF4());
+            dto.setTurnoverPct(e.getF8());
 
 
             return dto;
