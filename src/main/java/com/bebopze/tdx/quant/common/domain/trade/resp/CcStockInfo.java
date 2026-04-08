@@ -1,10 +1,11 @@
 package com.bebopze.tdx.quant.common.domain.trade.resp;
 
-import com.bebopze.tdx.quant.common.cache.PosStockCache;
+import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.constant.SellStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import lombok.Data;
@@ -128,37 +129,19 @@ public class CcStockInfo implements Serializable {
     // --------------------------------------------------- 个股 - 涨跌停 价格限制
 
 
-    // 涨停价
-    private BigDecimal ztPrice = BigDecimal.ZERO;
-    // 跌停价
-    private BigDecimal dtPrice = BigDecimal.ZERO;
+    /**
+     * 个股 当日K线行情 + 涨跌停计算
+     */
+    StockSnapshotKlineDTO klineDTO;
 
 
-    // 昨日收盘价
-    private Double prevClose;
-
-    public double getPrevClose() {
-        if (prevClose != null) {
-            return prevClose;
+    public StockSnapshotKlineDTO getKlineDTO() {
+        if (klineDTO != null) {
+            return klineDTO;
         }
 
-
-        Double prevClose = PosStockCache.getPrevClose(stkcode);
-        if (prevClose != null) {
-            return prevClose;
-        }
-
-
-        // --------------------------
-
-
-        // 盘后
-        if (curProfitratio == null && lastprice != null) {
-            return lastprice.doubleValue();
-        }
-
-        // 盘中     ->     昨日收盘价 = 收盘价 / 涨跌幅
-        return lastprice == null ? Double.NaN : lastprice.doubleValue() / (1 + curProfitratio.doubleValue());
+        StockSnapshotKlineDTO klineDTO = KlineAPI.klineCache(stkcode);
+        return klineDTO;
     }
 
 

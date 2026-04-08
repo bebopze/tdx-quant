@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.StockUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -79,7 +80,8 @@ public class GetOrdersDataResp implements Serializable {
     // 委托编号（5418）
     private String Wtbh;
     // 股东代码（E060000001）
-    private String Gddm;
+    @JsonIgnore
+    private transient String Gddm;
     // 信用交易类型（6-担保买入; 7-卖出; a-融资买入;   [A-融券卖出];）
     private String Xyjylx; // 历史委托列表 有值
     // -
