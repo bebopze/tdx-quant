@@ -572,7 +572,7 @@ public class TradeServiceImpl implements TradeService {
         posResp.getStocks().forEach(e -> {
 
             String stockCode = e.getStkcode();
-            double old_posPct = e.getPosratio().doubleValue() * 100;
+            double old_posPct = e.getPosratio() * 100;
 
 
             Double new_posPct = buy__code_posPct_map.getOrDefault(stockCode, 0.0);
@@ -586,7 +586,7 @@ public class TradeServiceImpl implements TradeService {
                 if (new_posPct < 0) {
 
                     // 减仓
-                    e.setPosratio(BigDecimal.valueOf(-1 * new_posPct));
+                    e.setPosratio(-1 * new_posPct);
                     sellList.add(e);
 
                     // 不再买入 新仓位
@@ -744,7 +744,7 @@ public class TradeServiceImpl implements TradeService {
             // ---------- 减仓数量
 
             // 减仓金额  =  当前市值 x sellRate
-            double sell_marketValue = e.getMktval().doubleValue() * sellRate;
+            double sell_marketValue = e.getMktval() * sellRate;
 
             // 减仓数量  =  减仓金额 / 价格
             int qty = (int) (sell_marketValue / price.doubleValue());
@@ -1432,6 +1432,7 @@ public class TradeServiceImpl implements TradeService {
                                                             boolean ztFlag = e.getKlineDTO().isZtFlag();
                                                             boolean dtFlag = e.getKlineDTO().isDtFlag();
                                                             double open = e.getKlineDTO().getOpen();
+                                                            double mktval = e.getMktval();
 
 
                                                             if (ztFlag || dtFlag) {
@@ -2142,7 +2143,7 @@ public class TradeServiceImpl implements TradeService {
                                   // 股票/ETF   ->   计算 price 精度
                                   stockInfo.setStktype_ex(StockUtil.stktype_ex(e.getStockCode(), e.getStockName()));
                                   // 市值
-                                  stockInfo.setMktval(e.getMarketValue());
+                                  stockInfo.setMktval(NumUtil.decimal2Double(e.getMarketValue()));
 
 
                                   return stockInfo;
@@ -2320,7 +2321,7 @@ public class TradeServiceImpl implements TradeService {
 
             CcStockInfo stockInfo = oldPosMap.get(e.getStockCode());
             if (stockInfo != null) {
-                old_posPct = stockInfo.getPosratio().doubleValue() * 100;
+                old_posPct = stockInfo.getPosratio() * 100;
             }
 
 

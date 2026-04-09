@@ -14,6 +14,7 @@ import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.util.ConvertUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
@@ -455,7 +456,7 @@ public class StrategyServiceImpl implements StrategyService {
                                                                .map(e -> {
                                                                    BtPositionRecordDO positionRecordDO = new BtPositionRecordDO();
                                                                    positionRecordDO.setStockCode(e.getStkcode());
-                                                                   positionRecordDO.setAvgCostPrice(e.getCostprice());
+                                                                   positionRecordDO.setAvgCostPrice(NumUtil.double2Decimal(e.getCostprice()));
                                                                    return positionRecordDO;
                                                                })
                                                                .collect(Collectors.toList());

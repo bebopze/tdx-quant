@@ -63,11 +63,11 @@ public class CcStockInfo implements Serializable {
 
 
     // 成本价
-    private BigDecimal costprice;
+    private Double costprice;
     // 当日盈亏比例（0.02030145   ->   2.030%）
-    private BigDecimal curProfitratio;
+    private Double curProfitratio;
     // 当日盈亏
-    private BigDecimal curprofit;
+    private Double curprofit;
     // 1
     private Integer isApplyStg;
     // 当前价
@@ -76,32 +76,33 @@ public class CcStockInfo implements Serializable {
     // 交易所（SA / HA / B）
     private String market;
     // 最新市值
-    private BigDecimal mktval;
+    private Double mktval;
     // -
     private Integer needGyjg;
     // -
     private Integer needJzd;
     // 个股仓位（0.0106592   ->   1.07%）
-    private BigDecimal posratio;
+    private Double posratio;
 
     // 持仓盈亏
-    private BigDecimal profit;
+    private Double profit;
     // 持仓盈亏比例
-    private BigDecimal profitratio;
+    private Double profitratio;
     // 0/1
     private String rzDebt;
     // 股东账号（ 0808088888 ）
     @JsonIgnore
     private transient String secuid;
-    // 持仓数量-融资（0 / --）
-    private String stkRzBal;
 
+    // 持仓数量-融资（0 / --）
+    private Integer stkRzBal;
     // 持仓数量-担保
     private Integer stkZyBal;
     // 可用数量
     private Integer stkavl;
     // 持仓数量
     private Integer stkbal;
+
     // 融资(E组 / F组 / G组、关注类)
     private String stkclasses;
     // 证券代码
