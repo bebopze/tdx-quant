@@ -95,7 +95,7 @@ public class CcStockInfo implements Serializable {
     private transient String secuid;
 
     // 持仓数量-融资（0 / --）
-    private Integer stkRzBal;
+    private String stkRzBal;
     // 持仓数量-担保
     private Integer stkZyBal;
     // 可用数量
