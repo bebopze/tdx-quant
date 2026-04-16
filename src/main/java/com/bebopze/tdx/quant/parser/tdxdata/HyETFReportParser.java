@@ -112,6 +112,10 @@ public class HyETFReportParser {
 
 
             String 细分行业 = e.细分行业;
+            Set<String> hy_affix_set = Sets.newHashSet("龙头", "精选", "主题", "产业", "指数");
+            for (String affix : hy_affix_set) {
+                细分行业 = 细分行业.replace(affix, "");
+            }
 
 
             // 国家ETF（美、日、德、法、亚）、原油LOF   ->   无 [细分行业]
@@ -147,9 +151,9 @@ public class HyETFReportParser {
             String name = e.name;
 
 
-            if (name.contains("原油")) {
-                log.debug("{} , {}", e.name, e.细分行业);
-            }
+//            if (name.contains("原油")) {
+//                log.debug("{} , {}", e.name, e.细分行业);
+//            }
 
 
             // 2、name -> 不完全相同（模糊匹配）
@@ -169,9 +173,9 @@ public class HyETFReportParser {
             }
 
             // 龙头
-            Set<String> lt_set = Sets.newHashSet("龙头", "主题", "产业");   // 光伏ETF/光伏龙头ETF广发、卫星ETF/卫星产业ETF
-            for (String lt : lt_set) {
-                name = name.replace(lt, "");
+            Set<String> affix_set = Sets.newHashSet("龙头", "主题", "产业");   // 光伏ETF/光伏龙头ETF广发、卫星ETF/卫星产业ETF
+            for (String affix : affix_set) {
+                name = name.replace(affix, "");
             }
 
 
@@ -421,9 +425,8 @@ public class HyETFReportParser {
 
     public static void main(String[] args) {
 
-
         // 通达信 - ETF [细分行业]
-        List<TdxETFDTO> tdx__rowList = parseAndDistinct_0();
+        List<TdxETFDTO> tdx__rowList = parseAndDistinct();
 
 
         System.out.println("\nsize : " + tdx__rowList.size() + "\n");
