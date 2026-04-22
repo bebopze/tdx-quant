@@ -832,8 +832,10 @@ public class TradeServiceImpl implements TradeService {
         List<CcStockInfo> filter_ztd__stockList = filter_ztd__stockList(posResp.getStocks());
 
 
-        // 5、一键清仓
-        quick__clearPosition(filter_ztd__stockList);
+        // 5、一键清仓（S顺序：最小持仓 -> 最大持仓）
+        // 仓位占比 正序（S顺序：最小持仓 -> 最大持仓）
+        List<CcStockInfo> ascSort__positionList = filter_ztd__stockList.stream().sorted(Comparator.comparing(CcStockInfo::getMktval)).collect(Collectors.toList());
+        quick__clearPosition(ascSort__positionList);
 
 
         // 等待成交   ->   1.5s
@@ -844,7 +846,7 @@ public class TradeServiceImpl implements TradeService {
         checkAndRetry___clearPosition__OrdersStatus(filter_ztd__stockList, 3);
 
 
-        // 7、一键再买入
+        // 7、一键再买入（B顺序：最大持仓 -> 最小持仓）
         quick__buyAgain(filter_ztd__stockList);
     }
 
@@ -1440,7 +1442,7 @@ public class TradeServiceImpl implements TradeService {
                                                                 return false;
                                                             }
 
-                                                            if (open <= 0) {
+                                                            if (mktval <= 0 || open <= 0) {
                                                                 log.warn("过滤 [无效/未上市/停牌]个股     >>>     [{}-{}]", e.getStkcode(), e.getStkname());
                                                                 return false;
                                                             }
@@ -1606,10 +1608,10 @@ public class TradeServiceImpl implements TradeService {
     private void quick__buyAgain(List<CcStockInfo> positionList) {
 
 
-        // 仓位占比 倒序
-        List<CcStockInfo> sort__positionList = positionList.stream()
-                                                           .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
-                                                           .collect(Collectors.toList());
+        // 仓位占比 倒序（B顺序：最大持仓 -> 最小持仓）
+        List<CcStockInfo> descSort__positionList = positionList.stream()
+                                                               .sorted(Comparator.comparing(CcStockInfo::getMktval).reversed())
+                                                               .collect(Collectors.toList());
 
 
         // --------------------------------------------------
@@ -1628,14 +1630,14 @@ public class TradeServiceImpl implements TradeService {
         // ------------------------------ 1、融资再买入
 
         // 融资买
-        buy_rz(sort__positionList, rzSucCodeList, rzFailCodeList);
+        buy_rz(descSort__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 2、担保再买入
 
 
         // 担保买
-        buy_zy(sort__positionList, rzSucCodeList, rzFailCodeList);
+        buy_zy(descSort__positionList, rzSucCodeList, rzFailCodeList);
 
 
         // ------------------------------ 3、新空余 担保资金
@@ -1647,7 +1649,7 @@ public class TradeServiceImpl implements TradeService {
         BigDecimal avalmoney = bsAfter__posResp.getAvalmoney();
 
 
-        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__positionList : {}", avalmoney, JSON.toJSONString(sort__positionList));
+        log.info("quick__buyAgain     >>>     avalmoney : {} , bsAfter__positionList : {}", avalmoney, JSON.toJSONString(descSort__positionList));
     }
 
 
