@@ -66,6 +66,8 @@ public class KlineTxtExportParser {
         } else {
 
             // String filePath_a = TDX_PATH + "/T0002/export/A股/SZ#000001.txt";
+            // String filePath_a = TDX_PATH + "/T0002/export/A股/31#00700.txt";
+            // String filePath_a = TDX_PATH + "/T0002/export/A股/74#SPY.txt";
             filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
         }
 
@@ -323,6 +325,10 @@ public class KlineTxtExportParser {
 
 
         List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
+//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("00700");
+//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("SPY");
+
+
         for (LdayParser.LdayDTO e : stockDataList) {
             String[] item = {e.getCode(), String.valueOf(e.getTradeDate()), String.format("%.2f", e.getOpen()), String.format("%.2f", e.getHigh()), String.format("%.2f", e.getLow()), String.format("%.2f", e.getClose()), String.valueOf(e.getAmount()), String.valueOf(e.getVol()), String.format("%.2f", e.getChangePct())};
             System.out.println(JSON.toJSONString(item));

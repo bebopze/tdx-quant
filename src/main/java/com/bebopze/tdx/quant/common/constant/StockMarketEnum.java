@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -15,6 +16,9 @@ import java.util.List;
  */
 @AllArgsConstructor
 public enum StockMarketEnum {
+
+
+    // ------------------- A股
 
 
     // 000	0
@@ -49,7 +53,25 @@ public enum StockMarketEnum {
 
 
     // 个股 - 92xxxx
-    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("9"));
+    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("9")),
+
+
+    // ------------------- 港股
+
+
+    // 00   01   02   03   04   05   06   07   09
+    // 8
+    HK_ZB("香港主板", 31, "31", "", "", Lists.newArrayList("00", "01", "02", "03", "04", "05", "06", "07", "09", "8")),
+
+
+    // 08
+    HK_CYB("香港创业板", 48, "48", "", "", Lists.newArrayList("08")),
+
+
+    // ------------------- 美股
+
+
+    US("美股", 74, "74", "", "", Lists.newArrayList());
 
 
     /**
@@ -90,15 +112,56 @@ public enum StockMarketEnum {
     private List<String> stockCodePrefixList;
 
 
-    public static StockMarketEnum getByStockCode(String stockCode) {
-        // 前1位
-        String codePrefix = stockCode.trim().substring(0, 1);
+    // -----------------------------------------------------------------------------------------------------------------
 
-        for (StockMarketEnum value : StockMarketEnum.values()) {
-            if (value.stockCodePrefixList.contains(codePrefix)) {
-                return value;
+
+    private static final List<StockMarketEnum> A_enums = Lists.newArrayList(SZ, SH, BJ);
+    private static final List<StockMarketEnum> HK_enums = Lists.newArrayList(HK_ZB, HK_CYB);
+
+    public static StockMarketEnum getByStockCode(String stockCode) {
+
+
+        // ---------- A股
+
+
+        if (StockTypeEnum.isAStock_ETF_block(stockCode)) {
+            // A股（前1位）
+            String codePrefix = stockCode.trim().substring(0, 1);
+
+            for (StockMarketEnum value : A_enums) {
+                if (value.stockCodePrefixList.contains(codePrefix)) {
+                    return value;
+                }
             }
         }
+
+
+        // ---------- 港美股
+
+
+        StockTypeEnum stockTypeEnum = StockTypeEnum.getByStockCode(stockCode);
+
+
+        // 港股
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.HK_STOCK)) {
+            // 港股（前2位）
+            String codePrefix_2 = stockCode.trim().substring(0, 2);
+            String codePrefix_1 = stockCode.trim().substring(0, 1);
+
+            for (StockMarketEnum value : HK_enums) {
+                if (value.stockCodePrefixList.contains(codePrefix_2) || value.stockCodePrefixList.contains(codePrefix_1)) {
+                    return value;
+                }
+            }
+        }
+
+
+        // 美股
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.US_STOCK)) {
+            return US;
+        }
+
+
         return null;
     }
 

@@ -62,17 +62,17 @@ public class BaseStockDO implements Serializable {
     private String name;
 
     /**
-     * 股票类型：1-A股；2-ETF；
+     * 股票类型：1-A股；2-ETF；11-港股；12-美股；
      */
     @TableField("type")
-    @Schema(description = "股票类型：1-A股；2-ETF；")
+    @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；")
     private Integer type;
 
     /**
-     * 通达信-市场类型：0-深交所；1-上交所；2-北交所；
+     * 通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；48-香港创业板；74-美股；
      */
     @TableField("tdx_market_type")
-    @Schema(description = "通达信-市场类型：0-深交所；1-上交所；2-北交所；")
+    @Schema(description = "通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；48-香港创业板；74-美股；")
     private Integer tdxMarketType;
 
     /**

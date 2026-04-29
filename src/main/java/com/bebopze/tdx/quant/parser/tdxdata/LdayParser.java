@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.StockTypeUtil;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
@@ -89,7 +90,7 @@ public class LdayParser {
     @SneakyThrows
     public static List<LdayDTO> parseByStockCode(String stockCode) {
 
-        // sz/sh/bj
+        // A股（sz/sh/bj）
         String market = StockMarketEnum.getMarketSymbol(stockCode);
         // 兼容   ->   板块（全部sh） / 指数（sh/sz）
         market = market == null ? "sh" : market;
@@ -97,6 +98,16 @@ public class LdayParser {
 
         // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
         String filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+
+
+        // 港美股（ds）
+        if (StockTypeEnum.isHkUsStock(stockCode)) {
+            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
+
+            // String filePath_a = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
+            // String filePath_a = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
+            filePath = TDX_PATH + String.format("/vipdoc/ds/lday/%s#%s.day", tdxMarketType, stockCode);
+        }
 
 
         // 指数：上证 / 深证
@@ -676,11 +687,12 @@ public class LdayParser {
         // stockCode : 002518 , idx : 3466 , date : 2025-03-13 , diffFields : {"vol":{"v1":"46390892","v2":"16293000"}}
         // stockCode : 601988 , idx : 1303 , date : 2015-06-09 , diffFields : {"vol":{"v1":"4795353100","v2":"47953531"}}
         // stockCode : 601988 , idx : 1323 , date : 2015-07-08 , diffFields : {"vol":{"v1":"5109897400","v2":"51098974"}}
-        // stockCode : 832149 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
+        // stockCode : 920249 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
 
 
-        List<LdayDTO> stockDataList = parseByStockCode("300059");
-        // List<LdayDTO> stockDataList = parseByStockCode("513120");
+        List<LdayDTO> stockDataList = parseByStockCode("SPY");
+//        List<LdayDTO> stockDataList = parseByStockCode("00700");
+//        List<LdayDTO> stockDataList = parseByStockCode("513120");
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));

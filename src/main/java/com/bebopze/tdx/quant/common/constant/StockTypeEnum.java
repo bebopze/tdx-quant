@@ -58,14 +58,7 @@ public enum StockTypeEnum {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public static String getDescByType(Integer type) {
-        for (StockTypeEnum value : StockTypeEnum.values()) {
-            if (value.type.equals(type)) {
-                return value.desc;
-            }
-        }
-        return null;
-    }
+    private static final List<StockTypeEnum> A_enums = Lists.newArrayList(A_STOCK, ETF, TDX_BLOCK);
 
 
     public static StockTypeEnum getByStockCode(String stockCode) {
@@ -74,12 +67,14 @@ public enum StockTypeEnum {
         // -------------------------------------------------- A股/ETF/板块
 
 
-        // 前1位
-        String codePrefix = stockCode.trim().substring(0, 1);
+        if (stockCode.length() == 6 && NumUtil.isNumber(stockCode)) {
+            // 前1位
+            String codePrefix = stockCode.trim().substring(0, 1);
 
-        for (StockTypeEnum value : StockTypeEnum.values()) {
-            if (value.stockCodePrefixList.contains(codePrefix)) {
-                return value;
+            for (StockTypeEnum value : A_enums) {
+                if (value.stockCodePrefixList.contains(codePrefix)) {
+                    return value;
+                }
             }
         }
 
@@ -88,14 +83,15 @@ public enum StockTypeEnum {
 
 
         // 港股（00700）
-        if (NumUtil.isNumber(stockCode) && stockCode.length() == 5) {
+        if (stockCode.length() == 5 && NumUtil.isNumber(stockCode)) {
             return StockTypeEnum.HK_STOCK;
         }
 
-        // 美股（NVDA）
+        // 美股（SPY）
         if (NumUtil.isPureEnglish(stockCode)) {
             return StockTypeEnum.US_STOCK;
         }
+
 
         return null;
     }
@@ -107,13 +103,18 @@ public enum StockTypeEnum {
     }
 
 
+    public static String getDescByType(Integer type) {
+        for (StockTypeEnum value : StockTypeEnum.values()) {
+            if (value.type.equals(type)) {
+                return value.desc;
+            }
+        }
+        return null;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
-
-    public static boolean isStock_ETF(String stockCode) {
-        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum);
-    }
 
     public static boolean isAStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
@@ -128,6 +129,36 @@ public enum StockTypeEnum {
     public static boolean isBlock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
         return TDX_BLOCK.equals(stockTypeEnum);
+    }
+
+
+    public static boolean isAStock_ETF(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum);
+    }
+
+
+    public static boolean isAStock_ETF_block(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum) || TDX_BLOCK.equals(stockTypeEnum);
+    }
+
+
+    public static boolean isHkStock(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return HK_STOCK.equals(stockTypeEnum);
+    }
+
+
+    public static boolean isUsStock(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return US_STOCK.equals(stockTypeEnum);
+    }
+
+
+    public static boolean isHkUsStock(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum);
     }
 
 
