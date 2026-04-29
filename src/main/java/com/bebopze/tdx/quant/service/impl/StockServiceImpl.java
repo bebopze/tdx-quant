@@ -42,7 +42,7 @@ public class StockServiceImpl implements StockService {
     public BaseStockDTO info(String stockCode) {
 
         BaseStockDO entity = null;
-        if (StockTypeEnum.isStock_ETF(stockCode)) {
+        if (StockTypeEnum.isAStock_ETF(stockCode)) {
 
             entity = baseStockService.getByCode(stockCode);
 
