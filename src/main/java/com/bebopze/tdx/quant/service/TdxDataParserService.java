@@ -36,6 +36,11 @@ public interface TdxDataParserService {
     void importETF();
 
 
+    void importHkStock();
+
+    void importUsStock();
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

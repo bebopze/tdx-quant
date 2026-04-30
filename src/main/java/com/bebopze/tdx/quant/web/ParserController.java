@@ -99,6 +99,22 @@ public class ParserController {
     }
 
 
+    @Operation(summary = "导入 - 自定义板块（港股）", description = "导入 - 自定义板块（港股）")
+    @GetMapping(value = "/import/hkStock")
+    public Result<Object> importHkStock() {
+        tdxDataParserService.importHkStock();
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "导入 - 自定义板块（美股）", description = "导入 - 自定义板块（美股）")
+    @GetMapping(value = "/import/usStock")
+    public Result<Object> importUsStock() {
+        tdxDataParserService.importUsStock();
+        return Result.SUC();
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

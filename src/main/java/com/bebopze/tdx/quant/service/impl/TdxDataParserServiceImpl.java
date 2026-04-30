@@ -141,10 +141,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         importBlockNewReport();
 
 
-        // ------------------------------------------------------------------------ 导入ETF
+        // ------------------------------------------------------------------------ 导入ETF/港股/美股
 
 
         importETF();
+
+
+        importHkStock();
+        importUsStock();
 
 
         // ------------------------------------------------------------------------ 大盘量化
@@ -1168,6 +1172,84 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // ETF - 板块  关联关系
         import___block_rela_ETF();
+    }
+
+
+    @TotalTime
+    @Override
+    public void importHkStock() {
+        import__hkOrUs_Stock(BlockPoolEnum.GG, StockTypeEnum.HK_STOCK);
+    }
+
+
+    @TotalTime
+    @Override
+    public void importUsStock() {
+        import__hkOrUs_Stock(BlockPoolEnum.MG, StockTypeEnum.US_STOCK);
+    }
+
+
+    private void import__hkOrUs_Stock(BlockPoolEnum GG, StockTypeEnum HK_STOCK) {
+
+
+        // ----------------------------------------- 港美股列表   解析
+
+
+        // 数据读取   ->   txt报表（自定义板块 报表）
+        List<BlockReportParser.ExportBlockDTO> zdy_dtoList = BlockReportParser.parse_zdy();
+
+
+        // ,港股(自动),00700,腾讯控股
+        // ,美股(自动),SPY,标普500 ETF-SPDR
+        List<BlockReportParser.ExportBlockDTO> hkStockList = zdy_dtoList.stream()
+                                                                        .filter(dto -> Objects.equals(dto.getBlockCode(), GG.getBlockNewCode()))
+                                                                        .sorted(Comparator.comparing(BlockReportParser.ExportBlockDTO::getStockCode))
+                                                                        .toList();
+
+
+        // ----------------------------------------- 港美股列表   save2DB
+
+
+        Map<String, Long> old__hkStock_codeIdMap = baseStockService.codeIdMap(HK_STOCK.type);
+
+
+        List<BaseStockDO> entityList = Lists.newArrayList();
+        hkStockList.forEach(hkStock -> {
+
+
+            String stockCode = hkStock.getStockCode();
+            String stockName = hkStock.getStockName();
+            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
+
+
+            // 港股
+            BaseStockDO entity = new BaseStockDO();
+            entity.setCode(stockCode);
+            entity.setName(stockName);
+            entity.setType(HK_STOCK.type);
+            entity.setTdxMarketType(tdxMarketType);
+
+
+            entity.setId(old__hkStock_codeIdMap.get(stockCode));
+            entityList.add(entity);
+        });
+
+
+        // insert new
+        baseStockService.batchInsertOrUpdate(entityList);
+
+
+        // --------------------------------------------------------
+
+
+        // DEL old（NOT IN -> new）
+        Set<String> new__hkStockCodeSet = entityList.stream().map(BaseStockDO::getCode).collect(Collectors.toSet());
+        old__hkStock_codeIdMap.forEach((code, id) -> {
+            if (!new__hkStockCodeSet.contains(code)) {
+                baseStockService.removeById(id);
+                log.warn("DEL old     >>>     code : {}", code);
+            }
+        });
     }
 
 

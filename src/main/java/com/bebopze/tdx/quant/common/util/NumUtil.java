@@ -1,7 +1,5 @@
 package com.bebopze.tdx.quant.common.util;
 
-import org.apache.commons.lang3.math.NumberUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -119,8 +117,15 @@ public class NumUtil {
 
 
     public static boolean isNumber(String str) {
-        return NumberUtils.isNumber(str);
+        try {
+            Integer.valueOf(str);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
+
 
     public static boolean isPureEnglish(String str) {
         if (str == null || str.isEmpty()) {
@@ -129,11 +134,21 @@ public class NumUtil {
 
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if ((c < 'A' || c > 'Z') && (c < 'a' || c > 'z')) {
+            if ((c < 'A' || c > 'Z') && (c < 'a' || c > 'z') && c != '.') {
                 return false;
             }
         }
         return true;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+        System.out.println(NumUtil.isNumber("00700"));
+        System.out.println(NumUtil.isPureEnglish("SPY"));
+    }
+
 
 }

@@ -132,9 +132,9 @@ public enum StockTypeEnum {
     }
 
 
-    public static boolean isAStock_ETF(String stockCode) {
+    public static boolean isStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum);
+        return A_STOCK.equals(stockTypeEnum) || ETF.equals(stockTypeEnum) || HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum);
     }
 
 
