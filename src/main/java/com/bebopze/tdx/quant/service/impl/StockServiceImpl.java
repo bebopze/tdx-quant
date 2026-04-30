@@ -42,17 +42,19 @@ public class StockServiceImpl implements StockService {
     public BaseStockDTO info(String stockCode) {
 
         BaseStockDO entity = null;
-        if (StockTypeEnum.isAStock_ETF(stockCode)) {
 
-            entity = baseStockService.getByCode(stockCode);
 
-        } else if (StockTypeEnum.isBlock(stockCode)) {
+        if (StockTypeEnum.isBlock(stockCode)) {
 
             BaseBlockDO blockDO = baseBlockService.getByCode(stockCode);
             if (blockDO != null) {
                 entity = new BaseStockDO();
                 BeanUtils.copyProperties(blockDO, entity);
             }
+
+
+        } else {
+            entity = baseStockService.getByCode(stockCode);
         }
 
 

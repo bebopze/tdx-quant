@@ -1414,7 +1414,7 @@ public class ExtDataServiceImpl implements ExtDataService {
             }
 
 
-            BaseStockDO stockDO = StockTypeEnum.isAStock_ETF(code) ? data.stockDOList.get(idx) : null;
+            BaseStockDO stockDO = StockTypeEnum.isStock(code) ? data.stockDOList.get(idx) : null;
             if (null != stockDO && Objects.equals(stockDO.getCode(), code)) {
                 earlyClearStockCache__OOM(stockDO);
 

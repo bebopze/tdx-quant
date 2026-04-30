@@ -50,7 +50,41 @@ public class HyETFReportParser {
 
 
     private static final String basePath = TDX_PATH + "/T0002/export";
-    private static final String fileName = "沪深基金";
+    private static final String ETF_fileName = "沪深基金";
+
+    private static final String hkStock_fileName = "港股";
+    private static final String usStock_fileName = "美股";
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static List<TdxETFDTO> parseHkStock() {
+
+        // 通达信 - 港股文件（行情报价 面板列表导出txt）
+        File file_ETF = SimpleFileMatcher.getLastETFFile(basePath, hkStock_fileName);
+
+
+        // 解析（全量港股   =>   系统板块[港股]）
+        List<TdxETFDTO> tdx_hkStock__rowList = parseByFilePath(file_ETF);
+
+
+        return tdx_hkStock__rowList;
+    }
+
+
+    public static List<TdxETFDTO> parseUsStock() {
+
+        // 通达信 - 美股文件（行情报价 面板列表导出txt）
+        File file_usStock = SimpleFileMatcher.getLastETFFile(basePath, usStock_fileName);
+
+
+        // 解析（全量美股   =>   系统板块[美股]）
+        List<TdxETFDTO> tdx_usStock__rowList = parseByFilePath(file_usStock);
+
+
+        return tdx_usStock__rowList;
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -86,7 +120,7 @@ public class HyETFReportParser {
     private static List<TdxETFDTO> parseAndDistinct_0() {
 
         // 通达信 - ETF文件（行情报价 面板列表导出txt）
-        File file_ETF = SimpleFileMatcher.getLastETFFile(basePath, fileName);
+        File file_ETF = SimpleFileMatcher.getLastETFFile(basePath, ETF_fileName);
 
 
         // 解析（全量ETF   =>   系统板块[ETF基金]）
@@ -426,7 +460,9 @@ public class HyETFReportParser {
     public static void main(String[] args) {
 
         // 通达信 - ETF [细分行业]
-        List<TdxETFDTO> tdx__rowList = parseAndDistinct();
+//        List<TdxETFDTO> tdx__rowList = parseAndDistinct();
+        List<TdxETFDTO> tdx__rowList = parseHkStock();
+//        List<TdxETFDTO> tdx__rowList = parseUsStock();
 
 
         System.out.println("\nsize : " + tdx__rowList.size() + "\n");

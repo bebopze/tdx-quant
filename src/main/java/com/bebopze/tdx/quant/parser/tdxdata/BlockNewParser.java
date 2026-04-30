@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +41,16 @@ public class BlockNewParser {
      */
     private static final String ETF_filePath = baseFilePath + "HYETF.blk";
 
+    /**
+     * 自定义板块 - 港股
+     */
+    private static final String HK_STOCK_filePath = baseFilePath + "GG.blk";
+
+    /**
+     * 自定义板块 - 美股
+     */
+    private static final String US_STOCK_filePath = baseFilePath + "MG.blk";
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -62,9 +72,9 @@ public class BlockNewParser {
             List<BlockNewDTO> dtoList = parse(blkFile.getAbsolutePath());
 
 
-            System.out.println(String.format("%s   -   %s",
-                                             absolutePath.replace("baseFilePath", ""),
-                                             JSON.toJSONString(dtoList)));
+            System.out.printf("%s   -   %s%n",
+                              absolutePath.replace("baseFilePath", ""),
+                              JSON.toJSONString(dtoList));
         }
 
     }
@@ -82,6 +92,28 @@ public class BlockNewParser {
 
         // 解析全量 [ETF基金] TXT报表   +   去重（细分行业）
         // return HyETFReportParser.parseAndDistinct();
+    }
+
+
+    /**
+     * 自定义板块 -> 港股
+     *
+     * @return
+     */
+    public static List<BlockNewDTO> parse_hkStock() {
+        // 直接读取   自定义板块 -> 行业ETF（GG）    中的全部 港股
+        return parse(HK_STOCK_filePath);
+    }
+
+
+    /**
+     * 自定义板块 -> 美股
+     *
+     * @return
+     */
+    public static List<BlockNewDTO> parse_usStock() {
+        // 直接读取   自定义板块 -> 行业ETF（MG）    中的全部 美股
+        return parse(US_STOCK_filePath);
     }
 
 
@@ -104,13 +136,51 @@ public class BlockNewParser {
                 String line = lines.get(i);
 
 
+                if (StringUtils.isBlank(line)) {
+                    log.warn("parse warn     >>>     filePath : {} , i : {} , line : {}", filePath.split("blocknew")[1], i, line);
+                    continue;
+                }
+
+
+                // ------------------------------ 港美股
+
+                // 31#00700
+                // 74#SPY
+
+
+                // 处理每一行
+                if (line.contains("#")) {
+
+
+                    try {
+
+                        String[] lineArr = line.split("#");
+                        // 31/48-港股；74-美股；
+                        Integer marketType = Integer.valueOf(lineArr[0]);
+                        // 个股code
+                        String stockCode = lineArr[1];
+
+
+                        BlockNewDTO dto = new BlockNewDTO(stockCode, null, marketType);
+                        dtoList.add(dto);
+
+
+                    } catch (Exception e) {
+                        log.error("parse ex     >>>     filePath : {} , i : {} , line : {} , exMsg : {}",
+                                  filePath.split("blocknew")[1], i, line, e.getMessage(), e);
+                    }
+                }
+
+
+                // ------------------------------ A股
+
                 // 1603985
                 // 0000631
                 // 0000605
 
 
                 // 处理每一行
-                if (StringUtils.hasText(line) && line.length() == 7) {
+                else if (line.length() == 7) {
 
 
                     try {
@@ -192,7 +262,9 @@ public class BlockNewParser {
         // parse(filePath);
 
 
-        List<BlockNewDTO> dtoList = parse_ETF();
+//        List<BlockNewDTO> dtoList = parse_ETF();
+//        List<BlockNewDTO> dtoList = parse_hkStock();
+        List<BlockNewDTO> dtoList = parse_usStock();
         dtoList.forEach(e -> System.out.println(JSON.toJSONString(e)));
 
 
