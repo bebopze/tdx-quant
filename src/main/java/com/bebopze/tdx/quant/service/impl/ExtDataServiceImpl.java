@@ -76,6 +76,12 @@ public class ExtDataServiceImpl implements ExtDataService {
         calcStockExtData(N, StockTypeEnum.ETF.type);
         // A股
         calcStockExtData(N, StockTypeEnum.A_STOCK.type);
+
+
+        // 港股
+        calcStockExtData(N, StockTypeEnum.HK_STOCK.type);
+        // 美股
+        calcStockExtData(N, StockTypeEnum.US_STOCK.type);
     }
 
 

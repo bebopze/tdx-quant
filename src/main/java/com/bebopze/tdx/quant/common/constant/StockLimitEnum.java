@@ -95,6 +95,12 @@ public enum StockLimitEnum {
 
 
     public static StockLimitEnum getByStockCode(String stockCode) {
+        // 仅🐶💩A股   ->   有杀猪 涨跌停
+        if (!StockTypeEnum.isAStock_ETF_block(stockCode)) {
+            return null;
+        }
+
+
         // 前2位
         String codePrefix = StringUtils.isBlank(stockCode) ? "" : stockCode.trim().substring(0, 2);
 

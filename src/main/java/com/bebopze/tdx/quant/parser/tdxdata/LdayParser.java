@@ -166,7 +166,7 @@ public class LdayParser {
             check(klineTxtReport__ldayDTOList, lday__ldayDTOList);
 
 
-            return merge(klineTxtReport__ldayDTOList, lday__ldayDTOList);
+            return merge(stockCode, klineTxtReport__ldayDTOList, lday__ldayDTOList);
 
 
         } catch (Exception e) {
@@ -554,7 +554,8 @@ public class LdayParser {
     }
 
 
-    private static List<LdayDTO> merge(List<LdayDTO> klineReport__ldayDTOList,
+    private static List<LdayDTO> merge(String stockCode,
+                                       List<LdayDTO> klineReport__ldayDTOList,
                                        List<LdayDTO> lday__ldayDTOList) {
 
 
@@ -572,8 +573,10 @@ public class LdayParser {
         // 盘后   ->   已下载  [盘后数据]     ->     以 xx.day 为准
 
 
-        // 盘中   ->   导出过  行情数据
+        // 盘中   ->   导出过  行情数据（A股）
         if (size1 == size2
+                // A股
+                && StockTypeEnum.isAStock(stockCode)
                 // 盘后（>=16点）   ->   已下载  [盘后数据]
                 && now.isAfter(LocalTime.of(16, 00))) {
 

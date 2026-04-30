@@ -12,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.NoSuchFileException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -75,33 +75,11 @@ public class KlineTxtExportParser {
         // 指数：上证 / 深证
         if (!new File(filePath).exists()) {
             market = "sz";
-            // filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
             filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
         }
 
 
-//        try {
         return parseTxtByFilePath(filePath);
-//        } catch (Exception e) {
-//
-//
-//            // 非 RPS指标 板块
-//            String filePath_RPS_BK = TDX_PATH + "/T0002/export/A股/SH#880515.txt";
-//            boolean PRS_BK__exists = new File(filePath_RPS_BK).exists();
-//            boolean BK__exists = StockTypeEnum.isBlock(stockCode) && new File(filePath).exists();
-//
-//
-//            if (PRS_BK__exists && !BK__exists) {
-//                // 忽略
-//                log.warn("parseTxtByFilePath - 当前板块 非RPS板块（无txt行情导出数据）    >>>     stockCode : {} , filePath : {}", stockCode, filePath);
-//            } else {
-//                log.error("parseTxtByFilePath   err     >>>     stockCode : {} , filePath : {} , exMsg : {}",
-//                          stockCode, filePath, e.getMessage(), e);
-//            }
-//        }
-//
-//
-//        return Lists.newArrayList();
     }
 
 
@@ -203,13 +181,15 @@ public class KlineTxtExportParser {
             }
 
 
-        } catch (FileNotFoundException e) {
+        } catch (NoSuchFileException e) {
 
 
+            // 通达信88（RPS指标   ->   是否可 正常读取 /new_tdx 目录）
             String filePath_RPS_BK = TDX_PATH + "/T0002/export/A股/SH#880515.txt";
+
             // 非 RPS指标 板块
             boolean PRS_BK__exists = new File(filePath_RPS_BK).exists();
-            boolean BK__exists = StockTypeEnum.isBlock(code) && new File(filePath).exists();
+            boolean BK__exists = StockTypeEnum.isBlock(code) && new File(filePath).exists(); // 指定 code 数据读取（读取失败  ->  非 RPS指标 板块[研究行业/风格板块/地区板块]）
 
 
             if (PRS_BK__exists && !BK__exists) {
@@ -324,7 +304,8 @@ public class KlineTxtExportParser {
         String stockCode_zs_sh = "880003";
 
 
-        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
+        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("881282");
+//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
 //        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("00700");
 //        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("SPY");
 

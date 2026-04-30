@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.dal.entity.BtDailyReturnDO;
 import com.bebopze.tdx.quant.dal.mapper.BtDailyReturnMapper;
 import com.bebopze.tdx.quant.dal.service.IBtDailyReturnService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -83,7 +84,7 @@ public class BtDailyReturnServiceImpl extends ServiceImpl<BtDailyReturnMapper, B
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public boolean retrySave(BtDailyReturnDO entity) {
