@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.dal.entity.QaTopBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.QaTopBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IQaTopBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -81,7 +82,7 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public int batchInsert(List<QaTopBlockDO> list) {
@@ -116,7 +117,7 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public int batchUpdate(List<QaTopBlockDO> list) {
@@ -152,7 +153,7 @@ public class QaTopBlockServiceImpl extends ServiceImpl<QaTopBlockMapper, QaTopBl
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public int batchInsertOrUpdate(List<QaTopBlockDO> list) {

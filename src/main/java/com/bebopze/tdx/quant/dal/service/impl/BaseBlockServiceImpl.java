@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.retry.annotation.Backoff;
@@ -184,7 +185,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public boolean updateById(BaseBlockDO entity) {
@@ -200,7 +201,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     public int batchInsert(List<BaseBlockDO> list) {
         log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
@@ -235,7 +236,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     public int batchInsertOrUpdate(List<BaseBlockDO> list) {
         log.info("batchInsertOrUpdate     >>>     size : {}", ListUtil.size(list));

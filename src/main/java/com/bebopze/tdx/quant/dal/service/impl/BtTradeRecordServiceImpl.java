@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.dal.entity.BtTradeRecordDO;
 import com.bebopze.tdx.quant.dal.mapper.BtTradeRecordMapper;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.dao.RecoverableDataAccessException;
@@ -98,7 +99,7 @@ public class BtTradeRecordServiceImpl extends ServiceImpl<BtTradeRecordMapper, B
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public boolean retryBatchSave(List<BtTradeRecordDO> entityList) {

@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.dal.mapper.BtPositionRecordMapper;
 import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.retry.annotation.Backoff;
@@ -72,7 +73,7 @@ public class BtPositionRecordServiceImpl extends ServiceImpl<BtPositionRecordMap
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public boolean retryBatchSave(List<BtPositionRecordDO> entityList) {

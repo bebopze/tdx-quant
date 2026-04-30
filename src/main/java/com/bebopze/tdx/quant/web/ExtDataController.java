@@ -42,7 +42,7 @@ public class ExtDataController {
     public Result<Void> calcStockExtData(@Schema(description = "N日行情数据（null 或者 <=0  ->  全量更新；  >0  ->  增量更新 最近N日行情数据）", example = "10")
                                          @RequestParam(required = false) Integer N,
 
-                                         @Schema(description = "股票类型：1-A股；2-ETF；", example = "1")
+                                         @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；", example = "1")
                                          @RequestParam Integer stockType) {
 
         extDataService.calcStockExtData(N, stockType);

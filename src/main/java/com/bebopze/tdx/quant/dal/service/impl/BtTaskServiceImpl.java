@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.bebopze.tdx.quant.dal.service.IBtTaskService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -169,7 +170,7 @@ public class BtTaskServiceImpl extends ServiceImpl<BtTaskMapper, BtTaskDO> imple
             maxAttempts = 5,   // 重试次数
             backoff = @Backoff(delay = 5000, multiplier = 2, random = true, maxDelay = 30000),   // 最大30秒延迟
             noRetryFor = {IllegalArgumentException.class, IllegalStateException.class,
-                    SQLIntegrityConstraintViolationException.class}   // 排除业务异常
+                    MysqlDataTruncation.class, SQLIntegrityConstraintViolationException.class}   // 排除业务异常
     )
     @Override
     public void delBacktestDataByTaskIdAndDate(Long taskId, LocalDate startDate, LocalDate endDate) {
