@@ -149,7 +149,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         Map<String, ExtDataDTO> stock_extData_map = Maps.newConcurrentMap();
         Map<String, Set<String>> stock_topBlockCodeSet_map = Maps.newConcurrentMap();
 
-        data.stockDOList.parallelStream().forEach(stockDO -> {
+        data.A_stockDOList.parallelStream().forEach(stockDO -> {
             String stockCode = stockDO.getCode();
             stockDO.getExtDataDTOList()
                    .forEach(e -> {
@@ -1124,7 +1124,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // 遍历计算   =>   每日 - 均线极多头（个股code 列表）
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -1300,7 +1300,7 @@ public class TopBlockServiceImpl implements TopBlockService {
         // 机选 主线列表（主线板块/个股）（逐日计算筛选 topList   ->   顺带计算 涨跌幅、B/S信号、...）
         Map<LocalDate, List<TopChangePctDTO>> auto___date_topBlockList_Map = autoType___date_topList_Map(data.blockDOList, topSortListAll);
         Map<LocalDate, List<TopChangePctDTO>> auto___date_topETFList_Map = autoType___date_topList_Map(data.ETF_stockDOList, topSortListAll);
-        Map<LocalDate, List<TopChangePctDTO>> auto___date_topStockList_Map = autoType___date_topList_Map(data.stockDOList, topSortListAll);
+        Map<LocalDate, List<TopChangePctDTO>> auto___date_topStockList_Map = autoType___date_topList_Map(data.A_stockDOList, topSortListAll);
 
 
         // ------------------------------------------ date - topList（精选  ->  从 机选 中 2次筛选[策略]）
@@ -2714,7 +2714,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 结果（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -2834,7 +2834,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 百日新高（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -2890,7 +2890,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 涨幅榜（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -2971,7 +2971,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - RPS红（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3022,7 +3022,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 二阶段（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3082,7 +3082,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 大均线多头（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3133,7 +3133,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 均线大多头（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3184,7 +3184,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 均线极多头（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3235,7 +3235,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 均线极多头（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {
@@ -3286,7 +3286,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
         // 遍历计算   =>   每日 - 跌停（个股code 列表）
         // ✅ 使用分片并行处理：每片 200 个股票
-        ParallelCalcUtil.chunkForEachWithProgress(data.stockDOList, 200, chunk -> {
+        ParallelCalcUtil.chunkForEachWithProgress(data.A_stockDOList, 200, chunk -> {
 
 
             chunk.forEach(stockDO -> {

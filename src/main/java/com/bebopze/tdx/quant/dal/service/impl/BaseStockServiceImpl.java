@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -358,7 +359,13 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     )
     @Override
     public boolean updateById(BaseStockDO entity) {
-        return super.updateById(entity);
+        try {
+            return super.updateById(entity);
+        } catch (Exception e) {
+            log.error("updateById - err     >>>     id : {} , code : {} , name : {} , open : {} , entity : {}",
+                      entity.getId(), entity.getCode(), entity.getName(), entity.getOpen(), JSON.toJSONString(entity), e);
+            throw e;
+        }
     }
 
 
