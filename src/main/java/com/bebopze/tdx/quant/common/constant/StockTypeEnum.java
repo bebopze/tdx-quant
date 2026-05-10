@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -62,6 +63,9 @@ public enum StockTypeEnum {
 
 
     public static StockTypeEnum getByStockCode(String stockCode) {
+        if (StringUtils.isBlank(stockCode)) {
+            return null;
+        }
 
 
         // -------------------------------------------------- A股/ETF/板块

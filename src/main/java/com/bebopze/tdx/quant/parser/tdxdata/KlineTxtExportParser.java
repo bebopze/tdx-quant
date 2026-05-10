@@ -160,6 +160,9 @@ public class KlineTxtExportParser {
                     double rangePct = low == 0 ? 0 : (high / low - 1) * 100;
 
 
+                    // -------------------------------------------------------------------------------------------------
+
+
                     LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
 
 
@@ -167,9 +170,18 @@ public class KlineTxtExportParser {
 
 
                     // 成交额为0（停牌）
-                    if (amount.doubleValue() == 0) {
-                        log.error("parseTxtByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
-                        continue;
+                    if (amount.doubleValue() == 0 || vol == 0) {
+
+                        // 美股   ->   2018年以前 成交额 数据缺失（自己估算：price * vol）
+                        if (StockTypeEnum.isUsStock(code) && vol > 0) {
+
+                            double amount_d = (high + low + close) / 3 * vol;
+                            dto.setAmount(of(amount_d));
+
+                        } else {
+                            log.warn("parseTxtByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
+                            continue;
+                        }
                     }
 
 

@@ -59,8 +59,11 @@ public class BacktestCache {
     /**
      * 个股
      */
-    public List<BaseStockDO> stockDOList;
+    public List<BaseStockDO> allType_stockDOList;
+    public List<BaseStockDO> A_stockDOList;
     public List<BaseStockDO> ETF_stockDOList;
+    public List<BaseStockDO> HK_stockDOList;
+    public List<BaseStockDO> US_stockDOList;
     public Map<String, BaseStockDO> codeStockMap = Maps.newConcurrentMap();
     public Map<Long, String> stock__idCodeMap = Maps.newConcurrentMap();
     public Map<String, Long> stock__codeIdMap = Maps.newConcurrentMap();
@@ -281,9 +284,9 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public List<BaseStockDO> getStockDOList(Integer stockType) {
+    public List<BaseStockDO> getAllType_stockDOList(Integer stockType) {
         if (Objects.equals(stockType, StockTypeEnum.A_STOCK.type)) {
-            return stockDOList;
+            return allType_stockDOList;
         } else if (Objects.equals(stockType, StockTypeEnum.ETF.type)) {
             return ETF_stockDOList;
         }
@@ -303,8 +306,11 @@ public class BacktestCache {
                 ", endDate=" + endDate +
                 ", dateIndexMap=" + dateIndexMap.size() +
                 ", dateList=" + dateList.size() +
-                ", stockDOList=" + ListUtil.size(stockDOList) +
+                ", stockDOList=" + ListUtil.size(allType_stockDOList) +
+                ", A_stockDOList=" + ListUtil.size(A_stockDOList) +
                 ", ETF_stockDOList=" + ListUtil.size(ETF_stockDOList) +
+                ", HK_stockDOList=" + ListUtil.size(HK_stockDOList) +
+                ", US_stockDOList=" + ListUtil.size(US_stockDOList) +
                 ", codeStockMap=" + codeStockMap.size() +
                 ", stock__idCodeMap=" + stock__idCodeMap.size() +
                 ", stock__codeIdMap=" + stock__codeIdMap.size() +

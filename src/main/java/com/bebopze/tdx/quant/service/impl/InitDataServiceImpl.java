@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.common.tdxfun.BlockKlineLoader;
 import com.bebopze.tdx.quant.common.tdxfun.StockKlineLoader;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockRelaStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockRelaStockService;
@@ -253,10 +254,10 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // DB 数据加载（个股+ETF）
-        data.stockDOList = baseStockService.listAllKline(stockType, refresh);
+        data.allType_stockDOList = baseStockService.listAllKline(stockType, refresh);
         // 空数据 过滤
-        data.stockDOList = data.stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
-                                                            // TODO   基金北向
+        data.allType_stockDOList = data.allType_stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
+                                                                            // TODO   基金北向
                 /*&& e.getAmount().doubleValue() > 0.1 * 1_0000_0000*/).collect(Collectors.toList());
 
 
@@ -274,7 +275,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 优化  ->  idx边界定位[二分查找]  +  subList （避免 全量数据 遍历）
-        StockKlineLoader.loadAllStockKline(startDate, endDate, data.stockDOList, nMonth);
+        StockKlineLoader.loadAllStockKline(startDate, endDate, data.allType_stockDOList, nMonth);
 
 
 //        // -------------------------------------------------------------------------------------------------------------
@@ -346,13 +347,13 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 空行情 过滤（时间段内 -> 未上市）
-        data.stockDOList = data.stockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
+        data.allType_stockDOList = data.allType_stockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        data.stockDOList.parallelStream().forEach(e -> {
+        data.allType_stockDOList.parallelStream().forEach(e -> {
 
 
             String stockCode = e.getCode();
@@ -387,16 +388,36 @@ public class InitDataServiceImpl implements InitDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // A股
+        data.A_stockDOList = data.allType_stockDOList.parallelStream()
+                                                     .filter(e -> Objects.equals(e.getType(), StockTypeEnum.A_STOCK.type))
+                                                     .collect(Collectors.toList());
+
+
         // ETF
-        data.ETF_stockDOList = data.stockDOList.parallelStream()
-                                               .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
-                                               .collect(Collectors.toList());
+        data.ETF_stockDOList = data.allType_stockDOList.parallelStream()
+                                                       .filter(e -> Objects.equals(e.getType(), StockTypeEnum.ETF.type))
+                                                       .collect(Collectors.toList());
 
 
-        // 个股
-        data.stockDOList = data.stockDOList.parallelStream()
-                                           .filter(e -> Objects.equals(e.getType(), StockTypeEnum.A_STOCK.type))
-                                           .collect(Collectors.toList());
+        // 港股
+        data.HK_stockDOList = data.allType_stockDOList.parallelStream()
+                                                      .filter(e -> Objects.equals(e.getType(), StockTypeEnum.HK_STOCK.type))
+                                                      .collect(Collectors.toList());
+
+        // 美股
+        data.US_stockDOList = data.allType_stockDOList.parallelStream()
+                                                      .filter(e -> Objects.equals(e.getType(), StockTypeEnum.US_STOCK.type))
+                                                      .collect(Collectors.toList());
+
+
+//        // 全部个股
+//        data.allType_stockDOList = data.A_stockDOList;
+        data.allType_stockDOList = null;
+
+
+        log.info("loadAllStockKline     >>>     startDate : {}, endDate : {} , A_stockDOList size : {} , ETF_stockDOList size : {} , HK_stockDOList size : {} , US_stockDOList size : {} , allType_stockDOList size : {}",
+                 startDate, endDate, data.A_stockDOList.size(), data.ETF_stockDOList.size(), data.HK_stockDOList.size(), data.US_stockDOList.size(), ListUtil.size(data.allType_stockDOList));
     }
 
 

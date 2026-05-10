@@ -78,6 +78,12 @@ public class LdayParser {
 
 
     /**
+     * 股票价格 - 上限                           BRK.A   伯克希尔-哈撒韦A（max high：812855.00）
+     */
+    private static final double DB_HIGH_LIMIT = 1000_0000;
+
+
+    /**
      * tdx 盘后数据（xx.day）  -   解析器
      *
      *
@@ -230,7 +236,7 @@ public class LdayParser {
 
 
         List<LdayDTO> dtoList = Lists.newArrayList();
-        float preClose = Float.NaN;
+        float prevClose = Float.NaN;
 
 
         for (int i = 0; i < no; i++) {
@@ -352,8 +358,8 @@ public class LdayParser {
                 Assert.isTrue(DateTimeUtil.between(tradeDate, MARKET_START_DATE, LocalDate.now()), String.format("tradeDate=[%s]超出有效范围", tradeDate));
 
             } catch (Exception ex) {
-                log.error("parseLdayByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
-                          code, date, year, month, day);
+                log.warn("parseLdayByFilePath - 解析[tradeDate]异常     >>>     code : {} , date : {} , yyyy-mm-dd : {}-{}-{}",
+                         code, date, year, month, day);
                 continue;
             }
 
@@ -367,17 +373,20 @@ public class LdayParser {
             }
 
 
-            if (Float.isNaN(preClose)) {
-                preClose = close;
+            if (Float.isNaN(prevClose)) {
+                prevClose = close;
             }
 
-            float changePct = Math.round((close - preClose) / preClose * 100 * 100.0f) / 100.0f;
-            float changePrice = close - preClose;
-            preClose = close;
+            float changePct = Math.round((close - prevClose) / prevClose * 100 * 100.0f) / 100.0f;
+            float changePrice = close - prevClose;
+            prevClose = close;
 
 
             // 振幅       (H/L - 1) x 100%
             float rangePct = (high / low - 1) * 100;
+
+
+            // ---------------------------------------------------------------------------------------------------------
 
 
             LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
@@ -387,9 +396,18 @@ public class LdayParser {
 
 
             // 成交额为0（停牌）
-            if (amount.doubleValue() == 0) {
-                log.error("parseLdayByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
-                continue;
+            if (amount.doubleValue() == 0 || vol == 0) {
+
+                // 美股   ->   2018年以前 成交额 数据缺失（自己估算：price * vol）
+                if (StockTypeEnum.isUsStock(code) && vol > 0) {
+
+                    float amount_f = (high + low + close) / 3 * vol;
+                    dto.setAmount(of(amount_f));
+
+                } else {
+                    log.warn("parseLdayByFilePath - 成交额为0（停牌）    >>>     code : {} , date : {} , dto : {}", code, date, JSON.toJSONString(dto));
+                    continue;
+                }
             }
 
 
@@ -584,6 +602,26 @@ public class LdayParser {
             // 盘后   ->   已下载 [盘后数据]     ->     以 xx.day 为准（舍弃 盘中导出 行情数据）
             klineReport__ldayDTOList.removeLast();
             size1--;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        if (size2 > size1) {
+
+            // 真实 开始时间   ->   以 txt 导出为准
+            LocalDate txt_startDate = klineReport__ldayDTOList.getFirst().getTradeDate();    // VELO.txt（2025/08/19 起始）
+            //                                                                        美股  ->  VELO.day 文件解析异常（2021/04/19 起始）  ->   不复权数据
+
+
+            lday__ldayDTOList.removeIf(e -> e.getTradeDate().isBefore(txt_startDate)
+                    // 不复权 价格bug（尤其是 美股）
+                    || e.getHigh().doubleValue() > DB_HIGH_LIMIT);
+
+
+            size1 = size(klineReport__ldayDTOList);
+            size2 = size(lday__ldayDTOList);
         }
 
 

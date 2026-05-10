@@ -3466,8 +3466,8 @@ public class BacktestStrategy {
         tradeRecordList__cache.set(Lists.newArrayList());
 
 
-        log.info("--------------------------- data.stockDOList - before     >>>     size : {} , 线程 : {}",
-                 ListUtil.size(data.stockDOList), Thread.currentThread().getName());
+        log.info("--------------------------- data.allType_stockDOList - before     >>>     size : {} , 线程 : {}",
+                 ListUtil.size(data.allType_stockDOList), Thread.currentThread().getName());
 
 
         // 仅明确 回测ETF   ->   可只加载 ETF数据（回测个股 -> 有大盘极限底 ETF抄底策略）
@@ -3478,8 +3478,8 @@ public class BacktestStrategy {
         data = initDataService.initData(startDate, endDate, stockType, false, 0);
 
 
-        log.info("--------------------------- data.stockDOList - after      >>>     size : {} , 线程 : {}",
-                 ListUtil.size(data.stockDOList), Thread.currentThread().getName());
+        log.info("--------------------------- data.allType_stockDOList - after      >>>     size : {} , 线程 : {}",
+                 ListUtil.size(data.allType_stockDOList), Thread.currentThread().getName());
     }
 
 
