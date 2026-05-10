@@ -114,7 +114,7 @@ public class QaBlockNewRelaStockHisServiceImpl extends ServiceImpl<QaBlockNewRel
         log.info("batchInsert     >>>     size : {}", ListUtil.size(list));
 
 
-        int batchSize = 1000;
+        int batchSize = 500;
         if (list == null || list.isEmpty()) {
             return 0;
         }
