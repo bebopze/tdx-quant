@@ -218,6 +218,10 @@ public class TradeServiceImpl implements TradeService {
         List<GetOrdersDataResp> respList = EastMoneyTradeAPI.getOrdersData();
 
 
+        // -------------------- remove 打新申购（新股/新债  ->  配售申购/公开发行申购）
+        respList.removeIf(e -> "配售申购".equals(e.getMmsm()) || "公开发行申购".equals(e.getMmsm()) || e.getMmsm().contains("申购"));
+
+
         // -------------------- 仓位占比
         double netAsset = queryCreditNewPosV2().getNetasset().doubleValue();
         respList.forEach(e -> e.setNetAsset(netAsset));
@@ -1938,6 +1942,8 @@ public class TradeServiceImpl implements TradeService {
             // 已成交   ->   已撤/已成/废单
             // 未成交   ->   未报/已报/部成
             if ("未报".equals(wtzt) || "已报".equals(wtzt) || "部成".equals(wtzt)) {
+                log.warn("checkAndRetry___clearPosition__OrdersStatus  -  存在  [未成交]-[SELL委托单] -> [未报/已报/部成]     >>>     retry : {} , wtzt : {} , orderData : {}", retry, wtzt, JSON.toJSONString(e));
+
                 flag = false;
                 break;
             }
