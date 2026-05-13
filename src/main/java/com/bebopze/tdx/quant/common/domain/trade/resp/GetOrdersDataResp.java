@@ -60,7 +60,7 @@ public class GetOrdersDataResp implements Serializable {
     private String Zqdm;
     // 证券名称（科创ETF）
     private String Zqmc;
-    // 买卖说明【委托方向】（证券卖出）
+    // 买卖说明【委托方向】（证券买入/证券卖出/配售申购/公开发行申购）
     private String Mmsm;
 
 
