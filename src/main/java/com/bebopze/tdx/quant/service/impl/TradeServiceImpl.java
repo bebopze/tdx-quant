@@ -834,11 +834,13 @@ public class TradeServiceImpl implements TradeService {
 
         // 4、从持仓个股中   过滤出   ->   非[涨跌停] 个股列表
         List<CcStockInfo> filter_ztd__stockList = filter_ztd__stockList(posResp.getStocks());
+        // 仓位占比 正序（S顺序：最小持仓 -> 最大持仓）
+        List<CcStockInfo> ascSort__positionList = filter_ztd__stockList.stream().sorted(Comparator.comparing(CcStockInfo::getMktval)).collect(Collectors.toList());
 
 
         // 5、一键清仓（S顺序：最小持仓 -> 最大持仓）
-        // 仓位占比 正序（S顺序：最小持仓 -> 最大持仓）
-        List<CcStockInfo> ascSort__positionList = filter_ztd__stockList.stream().sorted(Comparator.comparing(CcStockInfo::getMktval)).collect(Collectors.toList());
+        // 先撤单 -> 再全部卖出
+        quickCancelOrder();
         quick__clearPosition(ascSort__positionList);
 
 
