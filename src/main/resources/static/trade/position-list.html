@@ -790,6 +790,10 @@
                                 </th>
                                 <th onclick="sortPositionsTable('stkbal')">持仓数量<span class="sort-icon"
                                                                                          id="sortStkbal"></span></th>
+                                <th onclick="sortPositionsTable('stkZyBal')">自有<span class="sort-icon"
+                                                                                       id="sortStkZyBal"></span></th>
+                                <th onclick="sortPositionsTable('stkRzBal')">融资<span class="sort-icon"
+                                                                                       id="sortStkRzBal"></span></th>
                                 <th onclick="sortPositionsTable('stkavl')">可用数量<span class="sort-icon"
                                                                                          id="sortStkavl"></span></th>
                                 <th onclick="sortPositionsTable('industry')">行业<span class="sort-icon"
@@ -2284,6 +2288,8 @@
               <td style="color: ${item.klineDTO.changePct > 0 ? 'red' : item.klineDTO.changePct < 0 ? 'teal' : 'black'}">${item.klineDTO.changePct == null ? '-' : (item.klineDTO.changePct).toFixed(2) + '%'}</td>
               <td>${(item.posratio * 100).toFixed(2)}%</td>
               <td>${item.stkbal}</td>
+              <td>${item.stkZyBal}</td>
+              <td>${item.stkRzBal}</td>
               <td>${item.stkavl}</td>
               <td>
                 ${(() => {
