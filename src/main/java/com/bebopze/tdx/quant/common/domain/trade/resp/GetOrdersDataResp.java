@@ -66,7 +66,7 @@ public class GetOrdersDataResp implements Serializable {
 
     // 委托数量（100）
     private int Wtsl;
-    // 委托状态（未报/已报/已撤/部成/已成/废单）
+    // 委托状态（未报/已报/已撤/部成/部撤/已成/废单）
     private String Wtzt;
     // 委托价格（12.340）
     private double Wtjg;

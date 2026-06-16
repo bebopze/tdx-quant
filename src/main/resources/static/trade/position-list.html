@@ -850,12 +850,13 @@
                             <label for="filterOrders_status">委托状态：</label>
                             <select id="filterOrders_status" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
-                                // 已成交 -> 已撤/已成/废单/正报/已报待撤
-                                // 未成交 -> 未报/已报/部成
+                                // 已成交 -> 已撤/已成/废单/部撤
+                                // 未成交 -> 未报/已报/部成/正报/已报待撤
                                 <option value="未成交">未成交</option>
                                 <option value="已成交">已成交</option>
                                 <option value="已成">已成</option>
                                 <option value="部成">部成</option>
+                                <option value="部撤">部撤</option>
                                 <option value="正报">正报</option>
                                 <option value="已报">已报</option>
                                 <option value="已报待撤">已报待撤</option>
@@ -2905,9 +2906,9 @@
             if (statusFilter === '未成交') {
                 filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成' || order.wtzt === '正报' || order.wtzt === '已报待撤');
             }
-            // 已成交 -> 已撤/已成/废单
+            // 已成交 -> 已撤/已成/废单/部撤
             else if (statusFilter === '已成交') {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === '已撤' || order.wtzt === '已成' || order.wtzt === '废单');
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '已撤' || order.wtzt === '已成' || order.wtzt === '废单' || order.wtzt === '部撤');
             } else {
                 filteredOrders = filteredOrders.filter(order => order.wtzt === statusFilter);
             }

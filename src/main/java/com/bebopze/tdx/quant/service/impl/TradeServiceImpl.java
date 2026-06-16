@@ -299,12 +299,13 @@ public class TradeServiceImpl implements TradeService {
         // 2、全部可撤单   ->   [未成交]
         List<GetOrdersDataResp> revokeList = ordersData.stream()
                                                        .filter(e -> {
-                                                           // 委托状态（未报/已报/已撤/部成/已成/废单）
+                                                           // 委托状态（未报/已报/已撤/部成/部撤/已成/废单）
                                                            String wtzt = e.getWtzt();
 
-                                                           // 已成交   ->   已撤/已成/废单
+
+                                                           // 已成交   ->   已撤/已成/废单/部撤
                                                            // 未成交   ->   未报/已报/部成
-                                                           return "未报".equals(wtzt) || "已报".equals(wtzt) || "部成".equals(wtzt);
+                                                           return BSOrderStatusEnum.unfilled(wtzt);
                                                        })
                                                        .collect(Collectors.toList());
 
@@ -849,7 +850,7 @@ public class TradeServiceImpl implements TradeService {
 
 
         // 6、check/retry   =>   [一键清仓]-委托单 状态
-        checkAndRetry___clearPosition__OrdersStatus(filter_ztd__stockList, 3);
+        checkAndRetry___clearPosition__OrdersStatus(3);
 
 
         // 7、一键再买入（B顺序：最大持仓 -> 最小持仓）
@@ -1920,10 +1921,9 @@ public class TradeServiceImpl implements TradeService {
     /**
      * check/retry   =>   [一键清仓]-委托单 状态
      *
-     * @param filter_ztd__stockList
-     * @param retry                 最大重试次数
+     * @param retry 最大重试次数
      */
-    private void checkAndRetry___clearPosition__OrdersStatus(List<CcStockInfo> filter_ztd__stockList, int retry) {
+    private void checkAndRetry___clearPosition__OrdersStatus(int retry) {
         if (--retry < 0) {
             return;
         }
@@ -1937,13 +1937,13 @@ public class TradeServiceImpl implements TradeService {
         boolean flag = true;
         for (GetOrdersDataResp e : ordersData) {
 
-            // 委托状态（未报/已报/已撤/部成/已成/废单）
+            // 委托状态（未报/已报/已撤/部成/部撤/已成/废单）
             String wtzt = e.getWtzt();
 
 
-            // 已成交   ->   已撤/已成/废单
+            // 已成交   ->   已撤/已成/废单/部撤
             // 未成交   ->   未报/已报/部成
-            if ("未报".equals(wtzt) || "已报".equals(wtzt) || "部成".equals(wtzt)) {
+            if (BSOrderStatusEnum.unfilled(wtzt)) {
                 log.warn("checkAndRetry___clearPosition__OrdersStatus  -  存在  [未成交]-[SELL委托单] -> [未报/已报/部成]     >>>     retry : {} , wtzt : {} , orderData : {}", retry, wtzt, JSON.toJSONString(e));
 
                 flag = false;
@@ -1965,13 +1965,37 @@ public class TradeServiceImpl implements TradeService {
         // 存在   [未成交]-[SELL委托单]   ->   retry
         if (!flag) {
 
-            // 先撤单 -> 再全部卖出
+
+            // ----------------- 全部撤单
+
+
+            // 0、先撤单 -> 再全部卖出
             quickCancelOrder();
-            quick__clearPosition(filter_ztd__stockList);
+
+
+            // ----------------- 再次拉取  最新持仓详情  ->  然后过滤
+
+
+            // 1、我的持仓
+            QueryCreditNewPosResp posResp = queryCreditNewPosV2();
+            // 4、从持仓个股中   过滤出   ->   非[涨跌停] 个股列表
+            List<CcStockInfo> filter_ztd__stockList = filter_ztd__stockList(posResp.getStocks());
+            // 仓位占比 正序（S顺序：最小持仓 -> 最大持仓）
+            List<CcStockInfo> ascSort__positionList = filter_ztd__stockList.stream().sorted(Comparator.comparing(CcStockInfo::getMktval)).collect(Collectors.toList());
+
+
+            // ----------------- 再次 卖出
+
+
+            // 5、一键清仓（S顺序：最小持仓 -> 最大持仓）
+            quick__clearPosition(ascSort__positionList);
+
+
+            // --------------------------------------------- 递归 check
 
 
             // 再次 check
-            checkAndRetry___clearPosition__OrdersStatus(filter_ztd__stockList, retry);
+            checkAndRetry___clearPosition__OrdersStatus(retry);
         }
     }
 
@@ -1989,12 +2013,12 @@ public class TradeServiceImpl implements TradeService {
         ordersData.forEach(e -> {
 
 
-            // 委托状态（未报/已报/已撤/部成/已成/废单）
+            // 委托状态（未报/已报/已撤/部成/部撤/已成/废单）
             String wtzt = e.getWtzt();
 
 
-            // 过滤  ->  已成/已撤/废单
-            if ("已成".equals(wtzt) || "已撤".equals(wtzt) || "废单".equals(wtzt)) {
+            // 过滤  已成交   ->   已撤/已成/废单/部撤
+            if (BSOrderStatusEnum.filled(wtzt)) {
                 return;
             }
 
@@ -2021,7 +2045,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
@@ -2047,7 +2071,7 @@ public class TradeServiceImpl implements TradeService {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
