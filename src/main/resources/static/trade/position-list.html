@@ -851,7 +851,7 @@
                             <select id="filterOrders_status" class="form-select form-select-sm" style="width:auto">
                                 <option value="">全部</option>
                                 // 已成交 -> 已撤/已成/废单/部撤
-                                // 未成交 -> 未报/已报/部成/正报/已报待撤
+                                // 未成交 -> 待报/未报/已报/部成/正报/已报待撤
                                 <option value="未成交">未成交</option>
                                 <option value="已成交">已成交</option>
                                 <option value="已成">已成</option>
@@ -860,6 +860,7 @@
                                 <option value="正报">正报</option>
                                 <option value="已报">已报</option>
                                 <option value="已报待撤">已报待撤</option>
+                                <option value="待报">待报</option>
                                 <option value="未报">未报</option>
                                 <option value="已撤">已撤</option>
                                 <option value="废单">废单</option>
@@ -2902,9 +2903,9 @@
 
         let filteredOrders = orders;
         if (statusFilter) {
-            // 未成交 -> 未报/已报/部成/正报/已报待撤
+            // 未成交 -> 待报/未报/已报/部成/正报/已报待撤
             if (statusFilter === '未成交') {
-                filteredOrders = filteredOrders.filter(order => order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成' || order.wtzt === '正报' || order.wtzt === '已报待撤');
+                filteredOrders = filteredOrders.filter(order => order.wtzt === '待报' || order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成' || order.wtzt === '正报' || order.wtzt === '已报待撤');
             }
             // 已成交 -> 已撤/已成/废单/部撤
             else if (statusFilter === '已成交') {
@@ -2962,9 +2963,9 @@
                 if (order.wtsj && order.wtsj.length === 6) {
                     formattedTime = `${order.wtsj.substring(0, 2)}:${order.wtsj.substring(2, 4)}:${order.wtsj.substring(4, 6)}`;
                 }
-                // 确定是否显示撤单按钮 (状态为 未报/已报/部成)
-                const isCancelable = (order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
-                // 确定是否允许批量勾选 (状态为 未报/已报/部成)
+                // 确定是否显示撤单按钮 (状态为 待报/未报/已报/部成)
+                const isCancelable = (order.wtzt === '待报' || order.wtzt === '未报' || order.wtzt === '已报' || order.wtzt === '部成');
+                // 确定是否允许批量勾选 (状态为 待报/未报/已报/部成)
                 const isBatchCancelable = isCancelable;
 
                 tr.innerHTML = `
@@ -3248,7 +3249,7 @@
 
     // 一键撤单
     function handleQuickCancelOrder() {
-        if (!confirm('您确定要 撤销所有【未报/已报/部成】状态的委托吗？')) {
+        if (!confirm('您确定要 撤销所有【待报/未报/已报/部成】状态的委托吗？')) {
             return;
         }
         const quickCancelBtn = document.getElementById('quickCancelOrdersButton');

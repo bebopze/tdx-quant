@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * 东方财富 委托单   -   委托状态（未报/已报/已撤/部成/部撤/已成/废单）
+ * 东方财富 委托单   -   委托状态（待报/未报/已报/已撤/部成/部撤/已成/废单）
  *
  * @author: bebopze
  * @date: 2026/6/16
@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 public enum BSOrderStatusEnum {
 
 
+    待报("待报"),
     未报("未报"),
+
 
     已报("已报"),
 
@@ -36,7 +38,7 @@ public enum BSOrderStatusEnum {
 
 
     @Getter
-    public String wtzt;
+    private final String wtzt;
 
 
     /**
@@ -50,7 +52,7 @@ public enum BSOrderStatusEnum {
     }
 
     /**
-     * 未成交   ->   未报/已报/部成
+     * 未成交   ->   待报/未报/已报/部成
      *
      * @param wtzt
      * @return
@@ -62,8 +64,8 @@ public enum BSOrderStatusEnum {
 
     public static boolean unfilled_2(String wtzt) {
         // 已成交   ->   已撤/已成/废单/部撤
-        // 未成交   ->   未报/已报/部成
-        return 未报.wtzt.equals(wtzt) || 已报.wtzt.equals(wtzt) || 部成.wtzt.equals(wtzt);
+        // 未成交   ->   待报/未报/已报/部成
+        return 待报.wtzt.equals(wtzt) || 未报.wtzt.equals(wtzt) || 已报.wtzt.equals(wtzt) || 部成.wtzt.equals(wtzt);
     }
 
 

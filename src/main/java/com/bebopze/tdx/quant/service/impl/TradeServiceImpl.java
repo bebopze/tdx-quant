@@ -304,7 +304,7 @@ public class TradeServiceImpl implements TradeService {
 
 
                                                            // 已成交   ->   已撤/已成/废单/部撤
-                                                           // 未成交   ->   未报/已报/部成
+                                                           // 未成交   ->   待报/未报/已报/部成
                                                            return BSOrderStatusEnum.unfilled(wtzt);
                                                        })
                                                        .collect(Collectors.toList());
@@ -1942,9 +1942,9 @@ public class TradeServiceImpl implements TradeService {
 
 
             // 已成交   ->   已撤/已成/废单/部撤
-            // 未成交   ->   未报/已报/部成
+            // 未成交   ->   待报/未报/已报/部成
             if (BSOrderStatusEnum.unfilled(wtzt)) {
-                log.warn("checkAndRetry___clearPosition__OrdersStatus  -  存在  [未成交]-[SELL委托单] -> [未报/已报/部成]     >>>     retry : {} , wtzt : {} , orderData : {}", retry, wtzt, JSON.toJSONString(e));
+                log.warn("checkAndRetry___clearPosition__OrdersStatus  -  存在  [未成交]-[SELL委托单] -> [待报/未报/已报/部成]     >>>     retry : {} , wtzt : {} , orderData : {}", retry, wtzt, JSON.toJSONString(e));
 
                 flag = false;
                 break;
