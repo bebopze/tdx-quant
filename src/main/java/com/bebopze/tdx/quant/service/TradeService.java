@@ -195,7 +195,7 @@ public interface TradeService {
 
 
     /**
-     * 一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单
+     * 一键撤单   =>   撤除所有 [未成交 -> 待报/未报/已报/部成] 委托单
      */
     void quickCancelOrder();
 

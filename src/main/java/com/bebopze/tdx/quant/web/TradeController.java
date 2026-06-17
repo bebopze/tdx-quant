@@ -245,7 +245,7 @@ public class TradeController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 未报/已报/部成] 委托单")
+    @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 待报/未报/已报/部成] 委托单")
     @GetMapping(value = "/quick/cancelOrder")
     public Result<Void> quickCancelOrder() {
         tradeService.quickCancelOrder();
