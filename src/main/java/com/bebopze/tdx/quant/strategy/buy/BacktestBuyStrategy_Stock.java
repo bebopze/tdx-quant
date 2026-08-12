@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
+import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
 
 
 /**
@@ -114,7 +116,7 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
-        //                                              个股 -> IN 主线板块
+        //                                                4、个股 -> IN 主线板块
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -124,6 +126,8 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
         log.info("BacktestBuyStrategy_Stock - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
+        // -------------------------------------------------------------------------------------------------------------
+        //                                                5、大盘极限底 -> 指数ETF 策略
         // -------------------------------------------------------------------------------------------------------------
 
 
@@ -137,6 +141,8 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
 
         // -------------------------------------------------------------------------------------------------------------
+        //                                                6、规则打分
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 按照 规则打分 -> sort
@@ -145,8 +151,13 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
         log.info("BacktestBuyStrategy_Stock - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
+        // 移除  ->  涨停B（隔日 开盘B）    =>     否则会作为 普通非涨停B（当日 收盘B  ->  收盘价买入 当日 涨停个股❌）
+        sort__stockCodeList.removeAll(btOpenBSDTO.get().open_B___stockCodeSet);
+
+
         return sort__stockCodeList;
     }
+
 
     private Set<String> buy__topStock__codeSet(Set<String> topBlockCodeSet,
                                                Set<String> buyConSet,
@@ -191,6 +202,9 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
                                    }
 
 
+                                   ExtDataDTO extDataDTO = fun.getExtDataDTOList().get(idx);
+
+
                                    // ----------------------------------------------------------------------------------
 
 
@@ -201,12 +215,61 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
 
                                    boolean 月多 = extDataArrDTO.月多[idx];
                                    boolean 均线预萌出 = extDataArrDTO.均线预萌出[idx];
-                                   boolean RPS红 = extDataArrDTO.RPS红[idx] && extDataArrDTO.rps50[idx] >= 90;
+                                   boolean RPS红 = extDataArrDTO.RPS红[idx] /*&& extDataArrDTO.rps50[idx] >= 90*/;
                                    boolean SSF多 = extDataArrDTO.SSF多[idx];
 
 
-                                   boolean signal_多头 = (月多 || 均线预萌出) && RPS红 && SSF多;
-                                   if (!signal_多头) {
+                                   boolean signal_pre_b1 = (月多 || 均线预萌出) && RPS红 && SSF多;
+
+
+                                   // ----------------------------------------------------------------------------------
+
+
+                                   boolean 百日新高 = extDataArrDTO.百日新高[idx];
+
+                                   boolean 上MA20 = extDataArrDTO.上MA20[idx];
+                                   boolean 上SSF = extDataArrDTO.上SSF[idx];
+
+
+                                   boolean signal_pre_b2 = (月多 || 均线预萌出) && 百日新高 && 上MA20 && 上SSF;
+
+
+                                   boolean signal_pre = signal_pre_b1 || signal_pre_b2;
+
+
+                                   // ----------------------------------------------------------------------------------
+
+
+                                   boolean 首次三线红 = extDataArrDTO.首次三线红[idx];
+                                   boolean 口袋支点 = extDataArrDTO.口袋支点[idx];
+
+
+                                   int 短期支撑线 = extDataArrDTO.短期支撑线[idx];
+                                   double C_SSF_偏离率 = extDataArrDTO.C_SSF_偏离率[idx];
+                                   double C_短期MA_偏离率 = extDataDTO.getC_短期MA_偏离率();
+
+
+                                   double C_MA10_偏离率 = extDataArrDTO.C_MA10_偏离率[idx];
+                                   double C_MA20_偏离率 = extDataArrDTO.C_MA20_偏离率[idx];
+                                   double C_MA50_偏离率 = extDataArrDTO.C_MA50_偏离率[idx];
+
+
+                                   boolean signal_b1 = (首次三线红 || 口袋支点) && C_SSF_偏离率 <= 15; // 突破买
+                                   boolean signal_b2 = 短期支撑线 <= 20 && (C_短期MA_偏离率 <= 5 || C_SSF_偏离率 <= 7); // 回踩买
+                                   boolean signal_b3 = (短期支撑线 == 50 || 短期支撑线 == 60) && C_MA50_偏离率 <= 5;    // 中期调整 左侧买
+
+
+                                   boolean signal_b = signal_b1 || signal_b2;
+
+
+                                   // ----------------------------------------------------------------------------------
+
+
+                                   // boolean signal_buy = signal_pre && signal_b;
+                                   boolean signal_buy = signal_pre && C_SSF_偏离率 <= btCompareDTO.get().getC_SSF_偏离率();
+
+
+                                   if (!signal_buy) {
                                        return null;
                                    }
 
@@ -231,7 +294,12 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
                                    if (一字板) {
                                        amo = amo * 50;
                                    } else if (涨停) {
-                                       amo = amo * 5;
+                                       amo = amo * 2;
+                                   }
+
+
+                                   if (ztFlag != null && !Objects.equals(ztFlag, 涨停)) {
+                                       return null;
                                    }
 
 
@@ -245,13 +313,14 @@ public class BacktestBuyStrategy_Stock implements BuyStrategy {
                                    // ----------------------------------------------------------------------------------
 
 
+                                   // 非涨停B  ->  按照 成交额 权重  ->  排序
                                    return new StockAmoDTO(stockCode, amo);
                                })
                                .filter(Objects::nonNull)
                                // 按照 成交额 降序 排序
                                .sorted(Comparator.comparing(dto -> -dto.amo))
                                // 取 前25名
-                               .limit(25)
+                               .limit(btCompareDTO.get().getScoreSortN())
                                // 提取 stockCode
                                .forEach(dto -> {
                                    String stockCode = dto.stockCode;

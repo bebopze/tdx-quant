@@ -132,7 +132,7 @@ public class TdxTask {
 
     @TotalTime
     @Async
-    @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
     public void execTask__refreshAll() {
 
@@ -229,7 +229,7 @@ public class TdxTask {
 
 
         // 本机（Mac系统），跳过执行（仅 服务器端 执行）
-        if (check && (!isTradeDateTime() || SystemUtils.IS_OS_MAC)) {
+        if (check /*&& (!isTradeDateTime() || SystemUtils.IS_OS_MAC)*/) {
             log.info("execTask__refreshKline__lastDay     >>>     非交易日/非交易时间段，跳过执行");
             return;
         }

@@ -252,7 +252,7 @@ public class EastMoneyTradeAPI {
 
 
         // 防误触   ->   全局校验：买入金额 < 总资金 * 20%   、  单笔买入 金额限制
-        buyCheck(req);
+        // buyCheck(req);
 
 
         // 量化限流

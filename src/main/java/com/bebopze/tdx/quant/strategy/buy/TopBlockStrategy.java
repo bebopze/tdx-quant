@@ -634,6 +634,7 @@ public class TopBlockStrategy {
 
 
         // 1、板块  涨停榜TOP1
+        Set<String> 涨停数_top1__lv3_topBlockCodeSet = Sets.newHashSet();
         topBlock__涨停数_Map.entrySet().stream()
                             .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                             .limit(topN)
@@ -641,10 +642,12 @@ public class TopBlockStrategy {
                                 String topBlockCode = entry.getKey();
                                 if (entry.getValue() >= zt_minN) {
                                     top1__lv3_topBlockCodeSet.add(topBlockCode);
+                                    涨停数_top1__lv3_topBlockCodeSet.add(topBlockCode);
                                 }
                             });
 
         // 2、板块  百日新高榜TOP1
+        Set<String> 百日新高_top1__lv3_topBlockCodeSet = Sets.newHashSet();
         topBlock__百日新高_Map.entrySet().stream()
                               .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                               .limit(1)
@@ -652,8 +655,26 @@ public class TopBlockStrategy {
                                   String topBlockCode = entry.getKey();
                                   if (entry.getValue() >= 20) {
                                       top1__lv3_topBlockCodeSet.add(topBlockCode);
+                                      百日新高_top1__lv3_topBlockCodeSet.add(topBlockCode);
                                   }
                               });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        if (top1TopBlockFlag) {
+            // 唯一真主线     ->     涨停榜TOP1 = 百日新高榜TOP1
+            if (top1__lv3_topBlockCodeSet.size() == 1 /*&& 涨停数_top1__lv3_topBlockCodeSet.size() == 1 && 百日新高_top1__lv3_topBlockCodeSet.size() == 1*/) {
+                log.info("topBlockCodeSet - top1真-主线板块（涨停榜TOP1 + 百日新高榜TOP1）  -   唯1·真主线（超级大行情）    >>>     [{}] , size={} , {}", tradeDate, top1__lv3_topBlockCodeSet.size(), JSON.toJSONString(top1__lv3_topBlockCodeSet));
+            } else {
+                log.warn("topBlockCodeSet - top1真-主线板块（涨停榜TOP1 + 百日新高榜TOP1）  -   非唯1·真主线（超级大行情）    >>>     [{}] , size={} , {}", tradeDate, top1__lv3_topBlockCodeSet.size(), JSON.toJSONString(top1__lv3_topBlockCodeSet));
+                top1__lv3_topBlockCodeSet.clear();
+            }
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         List<String> topBlock__codeNameSet = top1__lv3_topBlockCodeSet.stream().map(code -> code + "-" + data.block__codeNameMap.get(code) + "|涨停数=" + topBlock__涨停数_Map.get(code) + "|百日新高数=" + topBlock__百日新高_Map.get(code)).collect(Collectors.toList());
