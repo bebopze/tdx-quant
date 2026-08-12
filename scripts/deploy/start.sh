@@ -113,8 +113,8 @@ echo "🖥️  系统类型: $([ "$IS_MAC" = true ] && echo "Mac" || echo "Linux
 echo "📊 总内存: ${TOTAL_MEM}GB"
 
 
-# 基础内存计算 (95% 总内存)
-MAX_HEAP=$(( TOTAL_MEM * 95/100 ))
+# 基础内存计算 (90% 总内存)
+MAX_HEAP=$(( TOTAL_MEM * 90/100 ))
 
 
 # 应用边界限制
@@ -137,7 +137,7 @@ fi
 # Mac系统特殊处理：增加20%内存分配
 if [ "$IS_MAC" = true ]; then
     # 使用bc进行浮点数计算，然后取整
-    MAC_HEAP=$(echo "scale=0; $MAX_HEAP * 1.5 / 1" | bc)
+    MAC_HEAP=$(echo "scale=0; $MAX_HEAP * 0.90 / 1" | bc)
 
     # 重新应用边界限制 (Mac处理后可能超过50GB)
     if [ "$MAC_HEAP" -gt 50 ]; then
@@ -145,8 +145,8 @@ if [ "$IS_MAC" = true ]; then
         echo "⚠️  Mac内存调整后超过50GB，限制为50GB"
     fi
 
+    echo "🍎 Mac系统特殊处理: 基础内存 ${MAX_HEAP}GB * 0.90 = ${MAC_HEAP}GB"
     MAX_HEAP=$MAC_HEAP
-    echo "🍎 Mac系统特殊处理: 基础内存 ${MAX_HEAP}GB * 1.5 = ${MAC_HEAP}GB"
 fi
 
 
@@ -157,8 +157,8 @@ echo "✅ 最终MAX_HEAP配置: ${MAX_HEAP}GB"
 echo "----------------------------------------"
 echo "内存计算详情:"
 echo "  系统总内存: ${TOTAL_MEM}GB"
-echo "  95% 基础值: $(( TOTAL_MEM * 95 / 100 ))GB"
-echo "  Mac调整: $([ "$IS_MAC" = true ] && echo "✅ 启用 (×1.5)" || echo "❌ 未启用")"
+echo "  90% 基础值: $(( TOTAL_MEM * 90 / 100 ))GB"
+echo "  Mac调整: $([ "$IS_MAC" = true ] && echo "✅ 启用 (×0.90)" || echo "❌ 未启用")"
 echo "  边界限制: 1GB ≤ HEAP ≤ 50GB"
 echo "  最终分配: ${MAX_HEAP}GB"
 echo "  G1 Region: ${G1_REGION_SIZE}"
@@ -199,7 +199,7 @@ cd "$APP_HOME" || {
 # JVM 参数
 JAVA_OPTS=(
     # ========== 堆内存配置 ==========
-    -Xms8g
+    -Xms1g
     -Xmx${MAX_HEAP}g
     -XX:MaxDirectMemorySize=4g
     -XX:+AlwaysPreTouch
