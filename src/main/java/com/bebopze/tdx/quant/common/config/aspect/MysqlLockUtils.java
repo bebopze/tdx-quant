@@ -27,13 +27,13 @@ public class MysqlLockUtils {
 
 
     // 定时（自动续期）任务执行器
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     // 自动续期任务
-    private final ConcurrentHashMap<String, ScheduledFuture<?>> renewTasks = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ScheduledFuture<?>> renewTasks = new ConcurrentHashMap<>();
 
     // 本机唯一标识（每次JVM重启都会重新生成）
-    private final String machineUniqueId = MachineUtil.generateMachineUniqueId();
+    private static final String machineUniqueId = MachineUtil.generateMachineUniqueId();
 
 
     @Autowired
