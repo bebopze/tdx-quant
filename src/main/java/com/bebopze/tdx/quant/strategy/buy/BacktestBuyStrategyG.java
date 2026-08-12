@@ -163,7 +163,7 @@ public class BacktestBuyStrategyG extends AbstractBuyStrategy implements BuyStra
 
 
         Set<String> buy__topStock__codeSet = Sets.newHashSet();
-        data.getStockDOList(btCompareDTO.get().getStockType()).forEach(stockDO -> {
+        data.getAllType_stockDOList(btCompareDTO.get().getStockType()).forEach(stockDO -> {
 
             String stockCode = stockDO.getCode();
             StockFun fun = data.getOrCreateStockFun(stockDO);

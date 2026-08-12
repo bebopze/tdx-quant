@@ -88,6 +88,13 @@ public class BacktestCompareDTO {
     private double strategyPosRatio = 1.00;
 
 
+    /**
+     * C_SSF_偏离率
+     */
+    @Schema(description = "C_SSF_偏离率", example = "5.0")
+    private double C_SSF_偏离率 = 5.0;
+
+
     // -------------------------------------- 全局参数 上下文传递（不参与序列化）---------------------------------------------
 
 
