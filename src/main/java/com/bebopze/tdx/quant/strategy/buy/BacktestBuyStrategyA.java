@@ -97,7 +97,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
         List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.getStockDOList(btCompareDTO.get().getStockType()).parallelStream().forEach(stockDO -> {
+        data.getAllType_stockDOList(btCompareDTO.get().getStockType()).parallelStream().forEach(stockDO -> {
 
 
             try {
