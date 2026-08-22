@@ -210,6 +210,21 @@ mvn spring-boot:run \
 > [!IMPORTANT]
 > `/api/trade`、`/api/strategy` 和部分 `/api/task` 接口会改变交易或业务状态。不要把整个 `/api/**` 暴露到公网，也不要通过浏览器、监控探针或爬虫无差别调用。
 
+## 本机 Chrome 登录辅助
+
+项目提供 [`EastMoneyChromeLogin`](src/main/java/com/bebopze/tdx/quant/automation/EastMoneyChromeLogin.java)，
+可打开本机 Chrome、处理维护公告、填写配置中的资金账号和密码、选择 3 小时在线时间，
+并在用户手动输入验证码后提交登录。登录成功后会在当前浏览器会话中确认持仓接口加载成功，
+随后自动关闭本次工具启动的浏览器。
+
+```bash
+mvn exec:java \
+  -Dexec.mainClass=com.bebopze.tdx.quant.automation.EastMoneyChromeLogin
+```
+
+该工具不会自动识别验证码，也不会输出或返回 Cookie、validatekey 等认证凭据。完整说明见
+[`docs/eastmoney-chrome-login.md`](docs/eastmoney-chrome-login.md)。
+
 ## 大模型客户端
 
 项目提供统一的 [`OpenAiCompatibleLlmClient`](src/main/java/com/bebopze/tdx/quant/ai/OpenAiCompatibleLlmClient.java)，支持：
@@ -243,7 +258,19 @@ llm:
 ```java
 String captcha = llmClient.recognizeCaptcha(imageFile);
 String doubaoResult = llmClient.recognizeCaptcha("doubao", imageFile);
+
+// 固定使用 DeepSeek，模型与 API Key 仍从配置读取
+String deepSeekResult = deepSeekCaptchaRecognizer.recognize(
+        Path.of("src/main/java/com/bebopze/tdx/quant/ai/验证码.png"));
 ```
+
+使用项目自带的 `验证码.png` 调用 DeepSeek 真实接口：
+
+```bash
+mvn -Dtest=DeepSeekCaptchaOcrLiveTest -Ddeepseek.live-test=true test
+```
+
+在线测试默认跳过，只加载大模型相关 Bean，不会连接数据库或初始化交易模块。
 
 图片会发送到所选择的第三方模型服务。不要上传未获授权的交易截图、账户信息或其他敏感资料。
 
