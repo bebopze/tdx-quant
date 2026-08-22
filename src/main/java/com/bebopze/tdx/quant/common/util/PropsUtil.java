@@ -71,8 +71,20 @@ public class PropsUtil {
 
     public static String getProperty(String key) {
         String value = props.getProperty(key);
-        log.info("getProperty >>> key: {} , value: {}", key, value);
+
+        if (isSensitiveKey(key)) {
+            log.info("getProperty     >>>     key : {} , configured : {}", key, StringUtils.isNotBlank(value));
+        } else {
+            log.info("getProperty     >>>     key : {} , value : {}", key, value);
+        }
+
         return value;
+    }
+
+    private static boolean isSensitiveKey(String key) {
+        return StringUtils.containsAnyIgnoreCase(key,
+                                                 "username", "account", "password", "passwd", "pwd", "cookie",
+                                                 "validatekey", "api-key", "apikey", "secret", "token");
     }
 
 
@@ -102,6 +114,8 @@ public class PropsUtil {
     public static void refreshEastmoneySession(String validatekey, String cookie) {
         props.setProperty("eastmoney.validatekey", validatekey);
         props.setProperty("eastmoney.cookie", cookie);
+
+        log.info("refreshEastmoneySession     >>>     validatekey : {} , cookie : {}", validatekey, cookie);
     }
 
 
@@ -113,6 +127,5 @@ public class PropsUtil {
         getSid();
         getCookie();
     }
-
 
 }
