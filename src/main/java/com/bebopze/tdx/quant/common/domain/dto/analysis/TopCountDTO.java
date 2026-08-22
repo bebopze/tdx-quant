@@ -5,7 +5,7 @@ import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.glassfish.jersey.internal.guava.Sets;
+import com.google.common.collect.Sets;
 
 import java.time.LocalDate;
 import java.util.List;

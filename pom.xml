@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.10</version>
+        <version>4.1.1</version>
     </parent>
 
     <groupId>com.bebopze.tdx</groupId>
@@ -20,6 +20,30 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>25</java.version>
+
+        <!-- Spring 生态 BOM -->
+        <spring-cloud.version>2025.1.3</spring-cloud.version>
+        <spring-ai.version>2.0.1</spring-ai.version>
+
+        <!-- Spring Boot BOM 未管理的第三方组件：只使用稳定 GA 版本。 -->
+        <spring-boot-admin.version>4.1.2</spring-boot-admin.version>
+        <druid.version>1.2.28</druid.version>
+        <pagehelper.version>4.1.1</pagehelper.version>
+        <mybatis-plus.version>3.5.17</mybatis-plus.version>
+        <shardingsphere.version>5.5.3</shardingsphere.version>
+        <springdoc.version>3.1.0</springdoc.version>
+        <lombok.version>1.18.46</lombok.version>
+        <jna.version>5.19.1</jna.version>
+        <guava.version>33.7.1-jre</guava.version>
+        <fastjson2.version>2.0.64</fastjson2.version>
+        <unirest.version>4.10.1</unirest.version>
+        <okhttp.version>5.5.0</okhttp.version>
+        <okhttp-eventsource.version>4.3.0</okhttp-eventsource.version>
+        <commons-collections4.version>4.6.0</commons-collections4.version>
+        <lz4.version>1.11.2</lz4.version>
+        <zstd.version>1.5.7-15</zstd.version>
+        <tess4j.version>5.20.0</tess4j.version>
+        <playwright.version>1.62.0</playwright.version>
     </properties>
 
     <dependencyManagement>
@@ -28,7 +52,15 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2025.0.1</version>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring AI 2.x 基于 Spring Boot 4 / Spring Framework 7。 -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -37,9 +69,22 @@
 
     <dependencies>
 
+        <!-- 统一的 OpenAI Compatible 多模态 Chat 客户端（DeepSeek/Qwen/豆包/MiMo/GPT） -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai</artifactId>
+            <exclusions>
+                <!-- Maven 不解析 OkHttp 5 的 Gradle 多平台元数据，统一改用 okhttp-jvm。 -->
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -60,22 +105,22 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- spring-boot-admin 升级到 3.x -->
+        <!-- Spring Boot Admin 4.x -->
         <dependency>
             <groupId>de.codecentric</groupId>
             <artifactId>spring-boot-admin-starter-server</artifactId>
-            <version>3.4.5</version>
+            <version>${spring-boot-admin.version}</version>
         </dependency>
         <dependency>
             <groupId>de.codecentric</groupId>
             <artifactId>spring-boot-admin-starter-client</artifactId>
-            <version>3.4.5</version>
+            <version>${spring-boot-admin.version}</version>
         </dependency>
 
         <!-- aop -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
         <!-- test -->
@@ -105,8 +150,8 @@
         <!-- druid -->
         <dependency>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-3-starter</artifactId>
-            <version>1.2.27</version>
+            <artifactId>druid-spring-boot-4-starter</artifactId>
+            <version>${druid.version}</version>
         </dependency>
 
         <!-- mysql -->
@@ -115,33 +160,23 @@
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
-        <!-- pagehelper 升级到支持 Spring Boot 3 的版本 -->
+        <!-- PageHelper Spring Boot 4 starter -->
         <dependency>
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>2.1.0</version>
+            <version>${pagehelper.version}</version>
         </dependency>
 
         <!-- mybatis-plus -->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-            <version>3.5.15</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis-spring</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.5.19</version>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
-            <version>3.5.15</version>
+            <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>
             <groupId>org.freemarker</groupId>
@@ -149,11 +184,11 @@
             <version>2.3.34</version>
         </dependency>
 
-        <!-- sharding-jdbc 升级到 5.5.x 支持 Spring Boot 3 -->
+        <!-- ShardingSphere JDBC -->
         <dependency>
             <groupId>org.apache.shardingsphere</groupId>
             <artifactId>shardingsphere-jdbc</artifactId>
-            <version>5.5.2</version>
+            <version>${shardingsphere.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.shardingsphere</groupId>
@@ -161,11 +196,35 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- 5.5.3 起分片规则核心为可选插件；现有 YAML 使用 !SHARDING。 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-sharding-core</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        <!-- mode.repository.type=JDBC 对应的 Standalone 持久化仓库插件。 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-standalone-mode-repository-jdbc</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        <!-- 默认 ALL_PERMITTED 权限策略在 5.5.3 中也是可选插件。 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-authority-simple</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
+        <!-- 项目物理库为 MySQL，5.5.3 需显式加载 JDBC 方言及 SQL 解析器。 -->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-jdbc-dialect-mysql</artifactId>
+            <version>${shardingsphere.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>2.5</version>
+            <version>2.6</version>
         </dependency>
 
 
@@ -188,7 +247,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.42</version>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -196,34 +255,38 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
-            <version>5.15.0</version>
+            <version>${jna.version}</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
-            <version>5.15.0</version>
+            <version>${jna.version}</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-jpms</artifactId>
-            <version>5.15.0</version>
+            <version>${jna.version}</version>
         </dependency>
 
         <!-- guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.5.0-jre</version>
+            <version>${guava.version}</version>
         </dependency>
 
         <!-- json -->
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
-            <version>2.0.60</version>
+            <version>${fastjson2.version}</version>
         </dependency>
 
         <!-- cache -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
@@ -242,7 +305,7 @@
         <dependency>
             <groupId>com.konghq</groupId>
             <artifactId>unirest-java-core</artifactId>
-            <version>4.7.0</version>
+            <version>${unirest.version}</version>
         </dependency>
 
         <!-- For JAX-RS 2.1 SSE client -->
@@ -258,27 +321,33 @@
         <!-- OkHttp -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>5.3.2</version>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.launchdarkly</groupId>
             <artifactId>okhttp-eventsource</artifactId>
-            <version>4.1.1</version>
+            <version>${okhttp-eventsource.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- springdoc 升级到 2.x 支持 Spring Boot 3 -->
+        <!-- springdoc 3.x 支持 Spring Boot 4 -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.15</version>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <!-- util -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.5.0</version>
+            <version>${commons-collections4.version}</version>
         </dependency>
 
         <!-- pinyin4j -->
@@ -299,26 +368,26 @@
         <dependency>
             <groupId>at.yawk.lz4</groupId>
             <artifactId>lz4-java</artifactId>
-            <version>1.10.2</version>
+            <version>${lz4.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.luben</groupId>
             <artifactId>zstd-jni</artifactId>
-            <version>1.5.7-6</version>
+            <version>${zstd.version}</version>
         </dependency>
 
         <!-- tess4j -->
         <dependency>
             <groupId>net.sourceforge.tess4j</groupId>
             <artifactId>tess4j</artifactId>
-            <version>5.17.0</version>
+            <version>${tess4j.version}</version>
         </dependency>
 
         <!-- playwright -->
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
-            <version>1.57.0</version>
+            <version>${playwright.version}</version>
         </dependency>
 
         <!-- HikariCP 作为备选连接池 -->
@@ -352,7 +421,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.42</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

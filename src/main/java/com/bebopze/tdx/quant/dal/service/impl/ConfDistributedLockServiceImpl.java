@@ -3,7 +3,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.bebopze.tdx.quant.dal.entity.ConfDistributedLockDO;
 import com.bebopze.tdx.quant.dal.mapper.ConfDistributedLockMapper;
 import com.bebopze.tdx.quant.dal.service.IConfDistributedLockService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

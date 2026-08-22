@@ -6,7 +6,7 @@ import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.dal.entity.QaBlockNewRelaStockHisDO;
 import com.bebopze.tdx.quant.dal.mapper.QaBlockNewRelaStockHisMapper;
 import com.bebopze.tdx.quant.dal.service.IQaBlockNewRelaStockHisService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

@@ -2805,6 +2805,29 @@
     // ----------------------------------------- 当日委托 列表 -----------------------------------------------------------
 
 
+    // // Spring Boot 4 / Jackson 3 会保留部分旧 DTO 的首字母大写字段名。
+    // // 页面统一使用 lowerCamelCase，同时兼容服务未重启或缓存中的旧响应。
+    // function normalizeOrder(order) {
+    //     if (!order || typeof order !== 'object') {
+    //         return {};
+    //     }
+    //
+    //     const normalized = {...order};
+    //     const legacyFields = [
+    //         'wtrq', 'wtsj', 'zqdm', 'zqmc', 'mmsm',
+    //         'wtsl', 'wtzt', 'wtjg', 'cjsl', 'cjje',
+    //         'wtbh', 'xyjylx', 'dwc', 'cjjg', 'xyjylbbz', 'htxh'
+    //     ];
+    //     legacyFields.forEach(field => {
+    //         const legacyField = field.charAt(0).toUpperCase() + field.slice(1);
+    //         if (normalized[field] === undefined && order[legacyField] !== undefined) {
+    //             normalized[field] = order[legacyField];
+    //         }
+    //     });
+    //     return normalized;
+    // }
+
+
     // 加载
     function loadOrders() {
         let originalText = buttonIng('refreshOrdersButton');
@@ -2863,7 +2886,7 @@
                 if (!data.success) {
                     throw new Error(data.msg || '获取委托数据失败');
                 }
-                ordersData = data.data || []; // 更新全局数据
+                ordersData = (data.data || [])/*.map(normalizeOrder)*/; // 更新全局数据并统一字段契约
                 displayOrders(ordersData);
                 updateOrdersSortIcon();
             })

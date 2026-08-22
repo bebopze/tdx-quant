@@ -3,7 +3,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockNewDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockNewMapper;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockNewService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
