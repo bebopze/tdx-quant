@@ -3,7 +3,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 import com.bebopze.tdx.quant.dal.mapper.ConfAccountMapper;
 import com.bebopze.tdx.quant.dal.service.IConfAccountService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

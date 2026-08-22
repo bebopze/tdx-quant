@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -53,45 +54,62 @@ public class GetOrdersDataResp implements Serializable {
 
 
     // 委托日期（20250512）
+    @JsonProperty("wtrq")
     private String Wtrq;
     // 委托时间（060613  ->  06:06:13）
+    @JsonProperty("wtsj")
     private String Wtsj;
     // 证券代码（588050）
+    @JsonProperty("zqdm")
     private String Zqdm;
     // 证券名称（科创ETF）
+    @JsonProperty("zqmc")
     private String Zqmc;
     // 买卖说明【委托方向】（证券买入/证券卖出/配售申购/公开发行申购）
+    @JsonProperty("mmsm")
     private String Mmsm;
 
 
     // 委托数量（100）
+    @JsonProperty("wtsl")
     private int Wtsl;
     // 委托状态（未报/已报/已撤/部成/部撤/已成/废单）
+    @JsonProperty("wtzt")
     private String Wtzt;
     // 委托价格（12.340）
+    @JsonProperty("wtjg")
     private double Wtjg;
     // 成交数量（0）
+    @JsonProperty("cjsl")
     private int Cjsl;
     // 成交金额（0）
+    @JsonProperty("cjje")
     private double Cjje;
 
 
     // 交易所（HA）
+    @JsonProperty("market")
     private String Market;
     // 委托编号（5418）
+    @JsonProperty("wtbh")
     private String Wtbh;
     // 股东代码（E060000001）
     @JsonIgnore
+    @JsonProperty("gddm")
     private transient String Gddm;
     // 信用交易类型（6-担保买入; 7-卖出; a-融资买入;   [A-融券卖出];）
+    @JsonProperty("xyjylx")
     private String Xyjylx; // 历史委托列表 有值
     // -
+    @JsonProperty("dwc")
     private String Dwc;
 
 
     // 成交价格（0.000000）
+    @JsonProperty("cjjg")
     private double Cjjg;
     // 信用交易类型-备注【交易类别】（买入担保品、融资开仓、卖出担保品）
+    @JsonProperty("xyjylbbz")
     private String Xyjylbbz; // 今日委托列表 有值
 
 
@@ -114,6 +132,7 @@ public class GetOrdersDataResp implements Serializable {
 
 
     // 委托编号（长）
+    @JsonProperty("htxh")
     private String Htxh;
 
 

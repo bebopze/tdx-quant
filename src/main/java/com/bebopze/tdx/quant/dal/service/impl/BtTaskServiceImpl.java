@@ -7,7 +7,7 @@ import com.bebopze.tdx.quant.dal.mapper.BtTaskMapper;
 import com.bebopze.tdx.quant.dal.service.IBtDailyReturnService;
 import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
 import com.bebopze.tdx.quant.dal.service.IBtTaskService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bebopze.tdx.quant.dal.service.IBtTradeRecordService;
 import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.Synchronized;

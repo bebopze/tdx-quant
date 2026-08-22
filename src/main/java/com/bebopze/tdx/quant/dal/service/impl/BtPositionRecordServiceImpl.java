@@ -5,7 +5,7 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
 import com.bebopze.tdx.quant.dal.mapper.BtPositionRecordMapper;
 import com.bebopze.tdx.quant.dal.service.IBtPositionRecordService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

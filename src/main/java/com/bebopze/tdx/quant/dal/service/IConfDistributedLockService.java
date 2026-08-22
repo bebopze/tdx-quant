@@ -1,7 +1,7 @@
 package com.bebopze.tdx.quant.dal.service;
 
 import com.bebopze.tdx.quant.dal.entity.ConfDistributedLockDO;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 
 /**
  * <p>
