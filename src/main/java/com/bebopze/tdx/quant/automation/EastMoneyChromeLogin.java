@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
  * <p>图形验证码属于登录保护措施，本工具不会自动识别、猜测或绕过验证码；每次尝试都由
  * 用户查看 Chrome 中的图片并在终端输入。登录后只验证持仓接口已在当前浏览器会话内成功
  * 加载，不导出、不打印 Cookie、validatekey、Token 或 Session_Id。</p>
+ *
+ * @author: bebopze
+ * @date: 2026/8/23
  */
 @Slf4j
 public final class EastMoneyChromeLogin {

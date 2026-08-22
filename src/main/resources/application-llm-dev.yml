@@ -1,0 +1,63 @@
+# 通过环境变量注入 API Key
+# 一键切换默认供应商：只修改 llm.default-provider，Java 业务代码无需改动
+llm:
+  default-provider: qwen
+  max-image-bytes: 10485760 # 10 MiB
+
+
+  providers:
+
+    # 阿里云百炼中国区；若控制台提供了工作空间专属域名，请替换 base-url 与 path
+    qwen:
+      base-url: https://dashscope.aliyuncs.com
+      chat-completions-path: /compatible-mode/v1/chat/completions
+      api-key: ${DASHSCOPE_API_KEY:}
+      # model: qwen3.7-flash
+      model: qwen3.8-max
+      vision: true
+      temperature: 0.0
+      max-tokens: 128
+      extra-body:
+        enable_thinking: false
+
+
+    # DeepSeek 于 2026-08-21 上线的官方实验视觉模型，可直接识别图片
+    deepseek:
+      base-url: https://api.deepseek.com
+      chat-completions-path: /chat/completions
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: deepseek-v4-flash-vision-exp
+      vision: true
+      max-tokens: 128
+
+
+    # 火山方舟 Chat Completions 兼容接口
+    doubao:
+      base-url: https://ark.cn-beijing.volces.com
+      chat-completions-path: /api/v3/chat/completions
+      api-key: ${ARK_API_KEY:}
+      model: doubao-seed-2-0-lite-260215
+      vision: true
+      temperature: 0.0
+      max-tokens: 128
+
+
+    # 小米 MiMo-V2.5 支持 Base64 图片输入
+    mimo:
+      base-url: https://api.xiaomimimo.com
+      chat-completions-path: /v1/chat/completions
+      api-key: ${MIMO_API_KEY:}
+      model: mimo-v2.5
+      vision: true
+      temperature: 0.0
+      max-tokens: 128
+
+
+    # OpenAI API
+    openai:
+      base-url: https://api.openai.com
+      chat-completions-path: /v1/chat/completions
+      api-key: ${OPENAI_API_KEY:}
+      model: gpt-5.6-luna
+      vision: true
+      max-completion-tokens: 128

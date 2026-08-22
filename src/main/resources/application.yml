@@ -6,6 +6,10 @@ server.port: 7001
 spring.application.name: tdx-quant
 
 
+# 导入 LLM 公共配置；Spring Boot 会自动追加当前 Profile，加载 application-llm-{profile}.yml
+spring.config.import: optional:classpath:application-llm.yml
+
+
 # 允许 Swagger 静态资源访问
 spring.web.resources.add-mappings: true
 # 禁用 Spring Cloud 版本兼容性检查
