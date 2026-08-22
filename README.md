@@ -63,7 +63,10 @@ tdx-quant/
 ├── src/main/resources/
 │   ├── static/                     # 管理页面
 │   ├── application.yml             # 公共配置
-│   ├── application-*.yml           # Profile 配置
+│   ├── application-{profile}.yml   # 业务 Profile 配置
+│   ├── application-llm.yml         # LLM 公共配置与 Profile 加载入口
+│   ├── application-llm-dev.yml     # LLM 开发环境配置
+│   ├── application-llm-prod.yml    # LLM 生产环境配置（本机文件，不提交密钥）
 │   ├── shardingsphere-dev.yml      # 开发环境数据源与分片规则
 │   └── shardingsphere-prod.yml     # 生产环境数据源与分片规则
 └── src/test/                       # 单元测试和上下文测试
@@ -236,7 +239,8 @@ mvn exec:java \
 - DeepSeek
 - 其他兼容 OpenAI Chat Completions 的服务
 
-复制 [`application-llm-example.yml`](src/main/resources/application-llm-example.yml) 中需要的配置，并通过环境变量提供 API Key：
+Spring Boot 根据 `spring.profiles.active` 自动加载 `application-llm-dev.yml` 或 `application-llm-prod.yml`，无需修改 Java 代码。
+API Key 建议通过环境变量提供：
 
 ```bash
 export DASHSCOPE_API_KEY="..."
@@ -264,10 +268,12 @@ String deepSeekResult = deepSeekCaptchaRecognizer.recognize(
         Path.of("src/main/java/com/bebopze/tdx/quant/ai/验证码.png"));
 ```
 
-使用项目自带的 `验证码.png` 调用 DeepSeek 真实接口：
+使用项目自带的 `验证码.png` 和 `dev` 配置调用 Qwen 真实接口：
 
 ```bash
-mvn -Dtest=DeepSeekCaptchaOcrLiveTest -Ddeepseek.live-test=true test
+mvn -Dtest=QwenCaptchaOcrLiveTest \
+  -Dqwen.live-test=true \
+  -Dspring.profiles.active=dev test
 ```
 
 在线测试默认跳过，只加载大模型相关 Bean，不会连接数据库或初始化交易模块。
