@@ -161,23 +161,23 @@ public class TdxTask {
 
 
         try {
-            taskProgressManager.updateProgress(taskId, 20, "行情数据");
-            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
-
-
-            taskProgressManager.updateProgress(taskId, 30, "扩展（指标）计算");
-            extDataService.refreshExtDataAll(null);
-
-
-            taskProgressManager.updateProgress(taskId, 50, "主线板块");
-            topBlockService.refreshAll(UpdateTypeEnum.ALL);
-
-
-            taskProgressManager.updateProgress(taskId, 70, "大盘量化");
+            taskProgressManager.updateProgress(taskId, 10, "大盘量化 导入（更新）");
             marketService.importMarketMidCycle();
 
 
-            taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache");
+            taskProgressManager.updateProgress(taskId, 30, "行情数据 导入（更新）");
+            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
+
+
+            taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
+            extDataService.refreshExtDataAll(null);
+
+
+            taskProgressManager.updateProgress(taskId, 70, "主线板块 计算");
+            topBlockService.refreshAll(UpdateTypeEnum.ALL);
+
+
+            taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache 刷新");
             initDataService.refreshDiskCache();
 
 
