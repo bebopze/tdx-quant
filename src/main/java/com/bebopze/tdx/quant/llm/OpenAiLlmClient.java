@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.ai;
+package com.bebopze.tdx.quant.llm;
 
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 
 
 /**
- * 基于 Spring AI 的 OpenAI Chat Completions 兼容客户端。
+ * 基于 Spring AI 的 OpenAI Chat Completions 兼容客户端
  *
  *
  * DeepSeek、Qwen、豆包、MiMo、OpenAI 或其他兼容服务的差异全部由配置描述，业务代码只依赖本类。
@@ -33,8 +33,8 @@ import java.util.concurrent.ConcurrentMap;
  * @author: bebopze
  * @date: 2026/8/23
  */
-@Service
-public class OpenAiCompatibleLlmClient {
+@Component
+public class OpenAiLlmClient {
 
 
     /**
@@ -49,15 +49,15 @@ public class OpenAiCompatibleLlmClient {
 
 
     @Autowired
-    public OpenAiCompatibleLlmClient(LlmProviderProperties properties) {
-        this(properties, OpenAiCompatibleLlmClient::createChatModel);
+    public OpenAiLlmClient(LlmProviderProperties properties) {
+        this(properties, OpenAiLlmClient::createChatModel);
     }
 
 
     /**
      * 供单元测试替换真实网络模型。
      */
-    OpenAiCompatibleLlmClient(LlmProviderProperties properties, ChatModelFactory chatModelFactory) {
+    OpenAiLlmClient(LlmProviderProperties properties, ChatModelFactory chatModelFactory) {
         this.properties = Objects.requireNonNull(properties, "properties 不能为空");
         this.chatModelFactory = Objects.requireNonNull(chatModelFactory, "chatModelFactory 不能为空");
     }
