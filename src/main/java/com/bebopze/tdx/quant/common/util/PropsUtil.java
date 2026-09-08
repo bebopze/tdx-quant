@@ -27,7 +27,7 @@ public class PropsUtil {
 
 
         // 运行环境
-        String activeProfile = props.getProperty("spring.profiles.active");
+        String activeProfile = getProperty("spring.profiles.active");
 
 
         // 加载 运行环境-配置
@@ -70,13 +70,14 @@ public class PropsUtil {
 
 
     public static String getProperty(String key) {
-        String value = props.getProperty(key);
+        String value = System.getenv(key);
+        value = StringUtils.isBlank(value) ? props.getProperty(key) : value;
 
-        if (isSensitiveKey(key)) {
-            log.info("getProperty     >>>     key : {} , configured : {}", key, StringUtils.isNotBlank(value));
-        } else {
-            log.info("getProperty     >>>     key : {} , value : {}", key, value);
-        }
+//        if (isSensitiveKey(key)) {
+//            log.info("getProperty     >>>     key : {} , configured : {}", key, StringUtils.isNotBlank(value));
+//        } else {
+        log.info("getProperty     >>>     key : {} , value : {}", key, value);
+//        }
 
         return value;
     }
@@ -127,5 +128,6 @@ public class PropsUtil {
         getSid();
         getCookie();
     }
+
 
 }

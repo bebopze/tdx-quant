@@ -1,9 +1,9 @@
 # 东方财富 - 登录会话
 eastmoney:
-  # 资金账号
-  username: "567000000001"
+  # 资金账号（默认值，可被 命令行参数/系统环境变量/Nacos配置中心 自动覆盖）
+  username: '567000000001'
   # 资金密码
-  password: "123456"
+  password: '123456'
   # 登录cookie
   validatekey: 2fc312a2-2730-59fa-a71a-6daf309390f0
   cookie: st_si=7845973208075; st_asi=delete; b-user-id=5gfv23hw-d31c-3f53-99ce-e660u3jhgwe102de; st_pvi=69309129852821043795; st_sp=2025-05-01%2001%3A25%3A07; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn=01; st_psi=202505011000005345-11234501-282323; Yybdm=9527; Uid=XV%8dfe213safYqI7hg33522dDJSew%3D%3D; mobileimei=bda537db-b638-5d73-735ac913915f; Uuid=db7eb9edsd7603210ddfksd03093362097ad2
@@ -11,7 +11,7 @@ eastmoney:
 
 
 # 通达信-根目录
-tdx-path: "C:/soft/new_tdx"
+tdx-path: "C:/soft/new_tdx64"
 
 
 
