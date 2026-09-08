@@ -1,22 +1,21 @@
 package com.bebopze.tdx.quant.llm;
 
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Objects;
 
 
 /**
- * 使用 qwen 视觉模型识别验证码图片
- *
- * <p> 模型、接口地址和 API Key 均由 {@code llm.providers.qwen} 配置提供，本类不保存任何凭据 </p>
+ * 使用  视觉模型（默认：qwen） 识别验证码图片
  *
  * @author: bebopze
  * @date: 2026/8/23
  */
 @Component
+@AllArgsConstructor
 public class CaptchaRecognizer {
 
 
@@ -31,19 +30,53 @@ public class CaptchaRecognizer {
 
 
     /**
-     * 识别本地验证码图片，只返回模型识别出的验证码文本。
+     * 使用 默认供应商 识别验证码文件
+     *
+     * @param imageFile 验证码图片文件
+     * @return
      */
-    public String recognize(File imageFile) {
-        Objects.requireNonNull(imageFile, "imageFile 不能为空");
-        return recognize(imageFile.toPath());
+    public String recognizeCaptcha(File imageFile) {
+        return recognizeCaptcha(requireFile(imageFile));
+    }
+
+    /**
+     * 使用 默认供应商 识别验证码文件
+     *
+     * @param imagePath 验证码图片路径
+     * @return
+     */
+    public String recognizeCaptcha(Path imagePath) {
+        return recognizeCaptcha(null, imagePath);
+    }
+
+    /**
+     * 使用 指定供应商 识别验证码文件
+     *
+     * @param providerName 供应商名称
+     * @param imageFile    验证码图片文件
+     * @return
+     */
+    public String recognizeCaptcha(String providerName, File imageFile) {
+        return recognizeCaptcha(providerName, requireFile(imageFile));
+    }
+
+    /**
+     * 使用 指定供应商 识别验证码文件
+     *
+     * @param providerName 供应商名称
+     * @param imagePath    验证码图片路径
+     * @return
+     */
+    public String recognizeCaptcha(String providerName, Path imagePath) {
+        return llmClient.analyzeImage(providerName, imagePath, DEFAULT_CAPTCHA_OCR_PROMPT);
     }
 
 
-    /**
-     * 识别本地验证码图片，只返回模型识别出的验证码文本。
-     */
-    public String recognize(Path imagePath) {
-        return llmClient.recognizeCaptcha(imagePath);
+    private static Path requireFile(File imageFile) {
+        if (imageFile == null) {
+            throw new IllegalArgumentException("imageFile 不能为空");
+        }
+        return imageFile.toPath();
     }
 
 
