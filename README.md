@@ -217,7 +217,8 @@ mvn spring-boot:run \
 
 项目提供 [`EastMoneyChromeLogin`](src/main/java/com/bebopze/tdx/quant/automation/EastMoneyChromeLogin.java)，
 可打开本机 Chrome、处理维护公告、填写配置中的资金账号和密码、选择 3 小时在线时间，
-并在用户手动输入验证码后提交登录。登录成功后会在当前浏览器会话中确认持仓接口加载成功，
+将验证码保存为 `tdx_zip/验证码.png`，并在用户查看本地图片、手动输入验证码后提交登录。
+登录成功后会在当前浏览器会话中确认持仓接口加载成功，
 随后自动关闭本次工具启动的浏览器。
 
 ```bash
@@ -230,7 +231,7 @@ mvn exec:java \
 
 ## 大模型客户端
 
-项目提供统一的 [`OpenAiCompatibleLlmClient`](src/main/java/com/bebopze/tdx/quant/ai/OpenAiCompatibleLlmClient.java)，支持：
+项目提供统一的 [`OpenAiLlmClient`](src/main/java/com/bebopze/tdx/quant/llm/OpenAiLlmClient.java)，支持：
 
 - Qwen
 - 豆包
@@ -287,7 +288,7 @@ mvn -Dtest=QwenCaptchaOcrLiveTest \
 纯单元测试示例：
 
 ```bash
-mvn -Dtest=OpenAiCompatibleLlmClientTest,GetOrdersDataRespJsonTest test
+mvn -Dtest=OpenAiLlmClientTest,GetOrdersDataRespJsonTest test
 ```
 
 完整测试：

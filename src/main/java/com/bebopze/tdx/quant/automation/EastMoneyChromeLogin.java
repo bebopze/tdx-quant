@@ -3,16 +3,25 @@ package com.bebopze.tdx.quant.automation;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.llm.CaptchaRecognizer;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
+import com.bebopze.tdx.quant.service.DataService;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -32,14 +41,17 @@ import java.util.stream.Collectors;
  * @date: 2026/8/23
  */
 @Slf4j
+@Component
 public final class EastMoneyChromeLogin {
 
 
     private static final String LOGIN_URL = "https://jywg.18.cn/Login";
     private static final String BUY_URL = "https://jywg.18.cn/MarginTrade/Buy";
+    private static final String CAPTCHA_PATH = "/Login/YZM";
     private static final String AUTHENTICATION_PATH = "/Login/Authentication";
     private static final String POSITION_API_PATH = "/MarginSearch/queryCreditNewPosV1";
     private static final String RETRYABLE_INPUT_ERROR = "您输入的信息有误，请重新输入!";
+    private static final Path CAPTCHA_OUTPUT = Path.of("tdx_zip", "验证码.png");
 
 
     private static final String DEFAULT_ACCOUNT = PropsUtil.getProperty("eastmoney.username");
@@ -63,12 +75,39 @@ public final class EastMoneyChromeLogin {
     private static final double NOTICE_WAIT_MILLIS = 3_000;
 
 
+    @Autowired
+    private CaptchaRecognizer captchaRecognizer;
+
+    @Autowired
+    private DataService dataService;
+
+
     private EastMoneyChromeLogin() {
     }
 
 
-    public static void main(String[] args) {
+//    public static void main(String[] args) {
+//
+//        String account = envOrDefault("EM_ACCOUNT", DEFAULT_ACCOUNT);
+//        String password = envOrDefault("EM_PASSWORD", DEFAULT_PASSWORD);
+//
+//        try (BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
+//             Playwright playwright = Playwright.create()) {
+//            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+//                                                                   .setChannel("chrome")
+//                                                                   .setHeadless(false));
+//            try {
+//                runLoginWorkflow(browser.newPage(), account, password, console);
+//            } finally {
+//                browser.close();
+//            }
+//        } catch (IOException exception) {
+//            throw new IllegalStateException("读取终端输入失败", exception);
+//        }
+//    }
 
+
+    public void runLoginWorkflow() {
         String account = envOrDefault("EM_ACCOUNT", DEFAULT_ACCOUNT);
         String password = envOrDefault("EM_PASSWORD", DEFAULT_PASSWORD);
 
@@ -78,7 +117,7 @@ public final class EastMoneyChromeLogin {
                                                                    .setChannel("chrome")
                                                                    .setHeadless(false));
             try {
-                runLoginWorkflow(browser.newPage(), account, password, args, console);
+                runLoginWorkflow(browser.newPage(), account, password, console);
             } finally {
                 browser.close();
             }
@@ -88,20 +127,33 @@ public final class EastMoneyChromeLogin {
     }
 
 
-    static void runLoginWorkflow(Page page, String account, String password,
-                                 String[] args, BufferedReader console) throws IOException {
-        requireNonBlank(account, "资金账号");
-        requireNonBlank(password, "密码");
+    void runLoginWorkflow(Page page,
+                          String account,
+                          String password,
+                          BufferedReader console) throws IOException {
 
-        page.setDefaultTimeout(1_000);
-        page.setDefaultNavigationTimeout(3_000);
+        page.setDefaultTimeout(10_000);
+        page.setDefaultNavigationTimeout(15_000);
         page.navigate(LOGIN_URL);
         dismissMaintenanceNoticeIfPresent(page);
 
         AuthenticationResult result = null;
         for (int attempt = 1; attempt <= MAX_LOGIN_ATTEMPTS; attempt++) {
-            String captcha = captchaFrom(args, attempt, console);
+
+            // 下载 验证码图片
+            Path captchaFile = downloadFreshCaptcha(page);
+            // 识别验证码（手动识别/大模型识别）
+            // String captcha = captchaFrom(captchaFile, console);
+            String captcha = captchaRecognizer.recognizeCaptcha(captchaFile);
+            log.info("Qwen 验证码识别结果: {}", captcha);
+
+
+            // 填写控件、选择三小时在线时间，并等待登录接口响应
             result = fillSubmitAndReadResult(page, account, password, captcha);
+
+
+            // String captcha = captchaFrom(args, attempt, console);
+            // result = fillSubmitAndReadResult(page, account, password, captcha);
             if (result.successful()) {
                 break;
             }
@@ -119,12 +171,35 @@ public final class EastMoneyChromeLogin {
             refreshCaptcha(page);
         }
 
-        if (result == null || !result.successful()) {
+
+        if (!result.successful()) {
             throw new IllegalStateException("证券登录未完成");
         }
 
-        HoldingsProbe probe = openBuyPageAndProbePositions(page);
-        System.out.println("登录成功；持仓接口 HTTP " + probe.httpStatus() + "，认证参数已存在（未读取或输出其值）。");
+
+        refreshCookie(page);
+    }
+
+    private void refreshCookie(Page page) {
+
+        // HoldingsProbe probe = openBuyPageAndProbePositions(page);
+        // System.out.println("登录成功；持仓接口 HTTP " + probe.httpStatus() + "，认证参数已存在（未读取或输出其值）。");
+
+
+        Response response = openBuyPageAndProbePositions(page);
+
+
+        String url = response.request().url();
+        log.info("持仓接口请求: {}", url);
+
+        String validatekey = url.split("validatekey=")[1];
+        log.info("validatekey : {}", validatekey);
+
+
+        String cookies = getCookie(response);
+
+
+        dataService.eastmoneyRefreshSession(validatekey, cookies);
     }
 
 
@@ -152,9 +227,6 @@ public final class EastMoneyChromeLogin {
      */
     static AuthenticationResult fillSubmitAndReadResult(Page page, String account,
                                                         String password, String captcha) {
-        requireNonBlank(account, "资金账号");
-        requireNonBlank(password, "密码");
-        validateCaptcha(captcha);
 
         page.locator(ACCOUNT_SELECTOR).fill(account.trim());
         page.locator(PASSWORD_SELECTOR).fill(password);
@@ -173,25 +245,49 @@ public final class EastMoneyChromeLogin {
 
 
     /**
+     * 刷新当前浏览器会话的验证码，并将完全相同的图片保存为项目根目录下的 PNG 文件。
+     */
+    static Path downloadFreshCaptcha(Page page) {
+        Response response = page.waitForResponse(
+                candidate -> candidate.url().contains(CAPTCHA_PATH),
+                () -> page.locator(CAPTCHA_IMAGE_SELECTOR).click());
+        return saveCaptchaImage(CAPTCHA_OUTPUT, response.status(), response.body());
+    }
+
+
+    static Path saveCaptchaImage(Path output, int httpStatus, byte[] imageBytes) {
+        if (httpStatus < 200 || httpStatus >= 300) {
+            throw new IllegalStateException("验证码接口请求失败，HTTP " + httpStatus);
+        }
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new IllegalStateException("验证码接口返回了空图片");
+        }
+
+        Path normalized = output.toAbsolutePath().normalize();
+        try {
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+            if (image == null) {
+                throw new IllegalStateException("验证码接口返回内容不是有效图片");
+            }
+            Files.createDirectories(normalized.getParent());
+            if (!ImageIO.write(image, "png", normalized.toFile())) {
+                throw new IllegalStateException("当前 JDK 不支持写入 PNG 图片");
+            }
+            System.out.println("验证码图片已保存：" + normalized);
+            return normalized;
+        } catch (IOException exception) {
+            throw new IllegalStateException("保存验证码图片失败: " + normalized, exception);
+        }
+    }
+
+
+    /**
      * 登录成功后打开信用买入页，只确认持仓接口与认证参数存在，不提取认证参数值。
      */
-    static HoldingsProbe openBuyPageAndProbePositions(Page page) {
+    static Response openBuyPageAndProbePositions(Page page) {
         Response response = page.waitForResponse(
                 candidate -> candidate.url().contains(POSITION_API_PATH),
                 () -> page.navigate(BUY_URL));
-
-
-        String url = response.request().url();
-        log.info("持仓接口请求: {}", url);
-        String validatekey = url.split("validatekey=")[1];
-        log.info("validatekey : {}", validatekey);
-
-
-        String cookies = getCookie(response);
-
-
-        // dataService.eastmoneyRefreshSession(validatekey, cookies);
-        PropsUtil.refreshEastmoneySession(validatekey, cookies);
 
 
         if (!response.ok()) {
@@ -200,7 +296,9 @@ public final class EastMoneyChromeLogin {
         if (!hasNonBlankQueryParameter(response.url(), "validatekey")) {
             throw new IllegalStateException("持仓接口请求缺少认证参数");
         }
-        return new HoldingsProbe(response.status(), true);
+        // return new HoldingsProbe(response.status(), true);
+
+        return response;
     }
 
 
@@ -290,6 +388,13 @@ public final class EastMoneyChromeLogin {
         page.locator(CAPTCHA_SELECTOR).fill("");
         page.locator(CAPTCHA_IMAGE_SELECTOR).click();
         page.waitForTimeout(300);
+    }
+
+    private static String captchaFrom(Path captchaFile, BufferedReader console) throws IOException {
+        System.out.print("请查看本地图片 " + captchaFile + "，输入四位数字验证码：");
+        String captcha = console.readLine();
+        validateCaptcha(captcha);
+        return captcha;
     }
 
     private static String captchaFrom(String[] args, int attempt, BufferedReader console) throws IOException {
