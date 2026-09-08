@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.task;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.automation.EastMoneyChromeLogin;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
@@ -72,6 +73,10 @@ public class TdxTask {
 
     @Autowired
     private TaskProgressManager taskProgressManager;
+
+
+    @Autowired
+    private EastMoneyChromeLogin eastMoneyChromeLogin;
 
 
     /**
@@ -341,6 +346,23 @@ public class TdxTask {
 
 
         MacUtil.closeChrome(chromeAppName, url);
+
+
+        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Async
+    @TotalTime
+    @Scheduled(cron = "0 17 0/1 ? * *", zone = "Asia/Shanghai")
+    public void refreshEastmoneyCookie__chromeLogin() {
+        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
+
+
+        eastMoneyChromeLogin.runLoginWorkflow();
 
 
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");

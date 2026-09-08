@@ -114,6 +114,9 @@ public class TaskController {
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     /**
      * task_933
      *
@@ -122,6 +125,18 @@ public class TaskController {
     @GetMapping(value = "/933")
     public Result<Void> task_933() {
         TdxScript.task_933();
+        return Result.SUC();
+    }
+
+
+    /**
+     * refreshEastmoneyCookie__chromeLogin
+     *
+     * @return
+     */
+    @GetMapping(value = "/refreshEastmoneyCookie__chromeLogin")
+    public Result<Void> refreshEastmoneyCookie__chromeLogin() {
+        tdxTask.refreshEastmoneyCookie__chromeLogin();
         return Result.SUC();
     }
 
