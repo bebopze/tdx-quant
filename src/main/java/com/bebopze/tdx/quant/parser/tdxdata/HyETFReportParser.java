@@ -46,11 +46,11 @@ public class HyETFReportParser {
      * 行情报价（代码	名称	涨幅%	现价	开盘%	最高%	最低%	振幅%	换手%	开盘金额	总金额	一二级行业	[细分行业]	昨涨幅%	3日涨幅%	5日涨幅%	10日涨幅%	20日涨幅%	60日涨幅%	年初至今%	连涨天	）
      */
 //    private static final String filePath_ETF = TDX_PATH + "/T0002/export/ETF基金20260107.txt";
-    private static final String filePath_ETF = TDX_PATH + "/T0002/export/沪深基金20260107.txt";
+    private static final String filePath_ETF = TDX_PATH + "/T0002/export/沪深京基金20260107.txt";
 
 
     private static final String basePath = TDX_PATH + "/T0002/export";
-    private static final String ETF_fileName = "沪深基金";
+    private static final String ETF_fileName = "沪深京基金";
 
     private static final String hkStock_fileName = "港股";
     private static final String usStock_fileName = "美股";
@@ -376,7 +376,7 @@ public class HyETFReportParser {
         dto.setN20日涨幅(convertDoubleVal(row, "20日涨幅%"));
         dto.setN60日涨幅(convertDoubleVal(row, "60日涨幅%"));
         dto.set年初至今(convertDoubleVal(row, "年初至今%"));
-        dto.set连涨天((int) convertDoubleVal(row, "连涨天"));
+        // dto.set连涨天((int) convertDoubleVal(row, "连涨天"));
 
 
         return dto;
