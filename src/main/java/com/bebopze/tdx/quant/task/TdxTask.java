@@ -357,7 +357,7 @@ public class TdxTask {
 
     @Async
     @TotalTime
-    @Scheduled(cron = "0 17 0/1 ? * *", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 17 0/2 ? * *", zone = "Asia/Shanghai")
     public void refreshEastmoneyCookie__chromeLogin() {
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
 

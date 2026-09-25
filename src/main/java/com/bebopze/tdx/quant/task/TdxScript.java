@@ -19,7 +19,7 @@ import static java.awt.event.KeyEvent.*;
 
 
 /**
- * 通达信 - 执行脚本       .933 - [盘后数据下载]          .902 - [扩展数据管理器]          .921 - [自动选股设置]
+ * 通达信 - 执行脚本（必须运行在 windows 平台）       .933 - [盘后数据下载]          .902 - [扩展数据管理器]          .921 - [自动选股设置]
  * -
  * - 每日盘后   自定执行 task：   拉取数据 -> 刷新扩展数据 -> 自动选股
  *
@@ -348,12 +348,12 @@ public class TdxScript {
 
         // ---------- [多路并行 - 是(&Y)/否(&N)/取消] 按钮
         // 获取 [按钮]
-        WinDef.HWND button2 = WinUtils.findWindowsButton(lpClassName2, lpWindowName2, "是(&Y)");
+        WinDef.HWND button2 = WinUtils.findWindowsButton(lpClassName2, lpWindowName2, "否(&N)");
         // 窗口切换
         WinUtils.windowSwitcher(button2);
         // 点击 [按钮]
         WinUtils.clickMouseLeft(button2);
-        log.info("---------------------------- 点击 [扩展数据管理器 - 全部刷新  -  多路并行-是(Y)]");
+        log.info("---------------------------- 点击 [扩展数据管理器 - 全部刷新  -  多路并行-否(&N)]");
 
 
         winSleep();
@@ -897,7 +897,7 @@ public class TdxScript {
 
         // tdx
         // String appPath = "C:/soft/通达信/v_2024/跑数据专用/new_tdx/tdxw.exe";
-        String appPath = TDX_PATH + "/tdxw.exe";
+        String appPath = TDX_PATH + "/TdxW.exe";
         // tdx - 中信证券
         // String appPath2 = "C:/soft/通达信/中信证券/zd_zxzq_gm/TdxW.exe";
 
@@ -995,7 +995,7 @@ public class TdxScript {
         // String lpWindowName1 = "通达信金融终端V7.65 - [行情报价-中期信号]";
 
         String lpClassName2 = "#32770";
-        String lpWindowName2 = "通达信金融终端";
+        String lpWindowName2 = "通达信金融终端64";   // 通达信金融终端（32位）、通达信金融终端64（64位）
 
 
         // ---------- [关闭] 主界面-窗口
@@ -1026,7 +1026,7 @@ public class TdxScript {
      * kill   ->   [通达信] exe进程
      */
     private static void killTdx() {
-        WinUtils.killApp("tdxw.exe");
+        WinUtils.killApp("TdxW.exe");
     }
 
 

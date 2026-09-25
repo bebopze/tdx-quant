@@ -365,7 +365,8 @@ public class WinUtils {
 
         try {
             // 打开App
-            Process process = Runtime.getRuntime().exec(appPath);
+            // Process process = Runtime.getRuntime().exec(appPath);
+            Process process = new ProcessBuilder(appPath).start();
 
 
             // 等待5s
@@ -385,7 +386,7 @@ public class WinUtils {
     /**
      * kill App 进程
      *
-     * @param exeName 进程名称     如：tdxw.exe
+     * @param exeName 进程名称     如：TdxW.exe
      */
     public static void killApp(String exeName) {
 
