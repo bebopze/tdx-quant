@@ -31,11 +31,11 @@
         <pagehelper.version>4.1.1</pagehelper.version>
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
         <shardingsphere.version>5.5.3</shardingsphere.version>
-        <springdoc.version>3.1.0</springdoc.version>
+        <springdoc.version>3.1.1</springdoc.version>
         <lombok.version>1.18.46</lombok.version>
         <jna.version>5.19.1</jna.version>
         <guava.version>33.7.1-jre</guava.version>
-        <fastjson2.version>2.0.64</fastjson2.version>
+        <fastjson2.version>2.0.65</fastjson2.version>
         <unirest.version>4.10.1</unirest.version>
         <okhttp.version>5.5.0</okhttp.version>
         <okhttp-eventsource.version>4.3.0</okhttp-eventsource.version>
@@ -305,6 +305,11 @@
         <dependency>
             <groupId>com.konghq</groupId>
             <artifactId>unirest-java-core</artifactId>
+            <version>${unirest.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.konghq</groupId>
+            <artifactId>unirest-modules-gson</artifactId>
             <version>${unirest.version}</version>
         </dependency>
 
