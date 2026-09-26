@@ -45,7 +45,7 @@ public class ConvertUtil {
 
 
     /**
-     * 统一拆分逻辑，过滤 空值 与 null
+     * 逗号分割，去重、过滤 空值 与 null
      *
      * @param str
      * @return
@@ -54,7 +54,9 @@ public class ConvertUtil {
 
         return str == null ? Stream.empty() : Arrays.stream(str.split(","))
                                                     .map(String::trim)
-                                                    .filter(StringUtils::isNotBlank);
+                                                    .filter(StringUtils::isNotBlank)
+                                                    .distinct();
+
     }
 
 

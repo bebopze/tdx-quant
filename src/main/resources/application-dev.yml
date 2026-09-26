@@ -11,7 +11,9 @@ eastmoney:
 
 
 # 通达信-根目录
-tdx-path: "C:/soft/new_tdx64"
+tdx-path: "C:/soft/通达信/new_tdx64"
+# 通达信 TQ - 盘中实时行情
+tdx.tq.base-url: "http://127.0.0.1:17709/"
 
 
 

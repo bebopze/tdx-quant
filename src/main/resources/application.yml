@@ -6,8 +6,10 @@ server.port: 7001
 spring.application.name: tdx-quant
 
 
+
 # 导入 LLM 公共配置；Spring Boot 会自动追加当前 Profile，加载 application-llm-{profile}.yml
 spring.config.import: optional:classpath:application-llm.yml
+
 
 
 # 允许 Swagger 静态资源访问
@@ -18,6 +20,7 @@ spring.cloud.compatibility-verifier.enabled: false
 spring.threads.virtual.enabled: true
 
 
+
 # Actuator
 management.endpoints.web.exposure.include: '*'         # 开放所有     ->     暴露所有 Actuator 端点给 Admin Server (也就是它自己)
 management.endpoint.health.show-details: ALWAYS        # 显示详细的健康信息
@@ -25,12 +28,11 @@ management.endpoint.shutdown.access: unrestricted      # 如需 /shutdown
 management.prometheus.metrics.export.enabled: true     # 如需 /prometheus
 
 
+
 # Admin Client
 spring.boot.admin.client.url: http://localhost:7001                    # 注册到 Admin Server 的地址
 spring.boot.admin.client.instance.name: ${spring.application.name}     # 可选，指定实例名称
 spring.boot.admin.client.enabled: false                                # Client 开关（与 @EnableAdminServer 开关  保持一致）
-
-
 
 
 
@@ -74,8 +76,3 @@ springdoc.api-docs.path: "/v3/api-docs"
 springdoc.swagger-ui.path: "/swagger-ui.html"
 # 文档展开
 springdoc.swagger-ui.doc-expansion: none
-
-
-
-# 通达信-根目录
-tdx-path: "C:/soft/通达信/v_2024/跑数据专用/new_tdx"
