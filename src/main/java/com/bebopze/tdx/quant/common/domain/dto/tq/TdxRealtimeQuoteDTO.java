@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.dto.tq;
 
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 
 import java.io.Serializable;
@@ -19,12 +20,12 @@ public record TdxRealtimeQuoteDTO(String code,
                                   double high,
                                   double low,
                                   double close,
-                                  double vol,
+                                  long vol,
                                   double amo,
                                   double prevClose) implements Serializable {
 
 
-    public double getVol() {
+    public long getVol() {
         // 手 -> 股
         return vol * 100;
     }
@@ -46,5 +47,47 @@ public record TdxRealtimeQuoteDTO(String code,
         return !Double.isNaN(close) && !Double.isNaN(prevClose) ? NumUtil.of(getChangePrice() / prevClose * 100, 2) : Double.NaN;
     }
 
+
+    // 振幅（%）
+    public double getRangePct() {
+        // (high - low) / low * 100%
+        return !Double.isNaN(high) && !Double.isNaN(low) && low != 0 ? NumUtil.of((high - low) / low * 100, 2) : Double.NaN;
+    }
+
+
+    // DTO转换
+    public StockSnapshotKlineDTO toStockSnapshotKlineDTO() {
+
+
+        StockSnapshotKlineDTO dto = new StockSnapshotKlineDTO();
+
+        dto.setStockCode(code);
+        dto.setStockName(null);
+
+        dto.setPrevClose(prevClose);
+
+
+        // -------------------------------
+
+
+        dto.setDate(null);
+
+        dto.setOpen(open);
+        dto.setHigh(high);
+        dto.setLow(low);
+        dto.setClose(close);
+
+
+        dto.setVol(vol);
+        dto.setAmo(amo);
+
+        dto.setRangePct(getRangePct());
+        dto.setChangePct(getChangePct());
+        dto.setChangePrice(getChangePrice());
+        dto.setTurnoverPct(Double.NaN);
+
+
+        return dto;
+    }
 
 }

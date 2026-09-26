@@ -6,17 +6,15 @@ import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
 import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
+import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.dal.service.impl.BaseBlockServiceImpl;
 import com.bebopze.tdx.quant.dal.service.impl.BaseStockServiceImpl;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
-
-import javax.sql.DataSource;
 
 
 /**
@@ -34,19 +32,11 @@ public class MybatisPlusUtil {
     static {
 
         // 1. 数据源
-        // HikariConfig hk = new HikariConfig();
-        // hk.setJdbcUrl(PropsUtil.getProperty("spring.datasource.url"));
-        // hk.setUsername(PropsUtil.getProperty("spring.datasource.username"));
-        // hk.setPassword(PropsUtil.getProperty("spring.datasource.password"));
-        // hk.setDriverClassName(PropsUtil.getProperty("spring.datasource.driver-class-name"));
-        //
-        // DataSource ds1 = new HikariDataSource(hk);
-
         DruidDataSource ds = new DruidDataSource();
-        ds.setUrl(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.url"));
-        ds.setUsername(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.username"));
-        ds.setPassword(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.password"));
-        ds.setDriverClassName(PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.driver-class-name"));
+        ds.setUrl(PropsUtil.getProperty("dataSources.ds_common.url"));
+        ds.setUsername(PropsUtil.getProperty("dataSources.ds_common.username"));
+        ds.setPassword(PropsUtil.getProperty("dataSources.ds_common.password"));
+        ds.setDriverClassName(PropsUtil.getProperty("dataSources.ds_common.driverClassName"));
 
 
         // 2. 事务工厂（可换成 SpringManagedTransactionFactory）
@@ -77,16 +67,28 @@ public class MybatisPlusUtil {
         return SQL_SESSION_FACTORY;
     }
 
+
     // 获取 Mapper 实例
     public static <T> T getMapper(Class<T> mapperClass) {
         SqlSession session = SQL_SESSION_FACTORY.openSession();
         return session.getMapper(mapperClass);
     }
 
+
     public static IBaseStockService getBaseStockService() {
         BaseStockMapper mapper = getMapper(BaseStockMapper.class);
 
         BaseStockServiceImpl service = new BaseStockServiceImpl();
+        service.injectMapper(mapper);
+
+        return service;
+    }
+
+
+    public static IBaseBlockService getBaseBlockService() {
+        BaseBlockMapper mapper = getMapper(BaseBlockMapper.class);
+
+        BaseBlockServiceImpl service = new BaseBlockServiceImpl();
         service.injectMapper(mapper);
 
         return service;
@@ -122,4 +124,6 @@ public class MybatisPlusUtil {
 
         // session.commit();
     }
+
+
 }

@@ -59,7 +59,7 @@ public class TdxTqController {
     }
 
 
-    @Operation(summary = "按 股票类型，读取全部实时行情", description = "默认读取：个股、ETF、板块 和 重点大盘指数")
+    @Operation(summary = "按 股票类型（A股/ETF/港股/美股/板块），读取全部实时行情", description = "默认读取：个股、ETF、板块 和 重点大盘指数")
     @GetMapping("/snapshot/quote/all")
     public Result<List<TdxRealtimeQuoteDTO>> getAll(@Schema(description = "可选 股票类型，例如：A_STOCK,ETF,TDX_BLOCK（传空 -> 拉取全部类型）", example = "A_STOCK", implementation = StockTypeEnum.class)
                                                     @RequestParam(required = false) StockTypeEnum stockTypeEnum) {
