@@ -17,14 +17,17 @@ import java.util.regex.Pattern;
 public final class TdxFormatCodeUtil {
 
 
-    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700）
-    private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ|HK)([A-Z0-9]+)$");
+    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700 / BRK.A）
+    // 放宽前缀后的内容，允许包含 . 和 -
+    private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ|HK)([A-Z0-9.\\-]+)$");
 
-    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / NVDA.US）
-    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9]+)\\.(SH|SZ|BJ|HK|US)$");
+    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / BRK.A.US）
+    // 代码部分允许包含 . 和 -
+    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9.\\-]+)\\.(SH|SZ|BJ|HK|US)$");
 
-    // 裸代码（6位数字=A股 / 5位数字=港股 / 1~10位字母=美股）
-    private static final Pattern RAW_CODE = Pattern.compile("^(\\d{5,6}|[A-Z]{1,10})$");
+    // 裸代码（6位数字=A股 / 5位数字=港股 / 1~10位字母或含. -的美股代码）
+    // 允许字母数字混合，并可包含 . 和 -
+    private static final Pattern RAW_CODE = Pattern.compile("^(\\d{5,6}|[A-Z0-9]{1,10}([.\\-][A-Z0-9]{1,5})?)$");
 
 
     public static List<String> formatCodes(List<String> codes) {
@@ -85,6 +88,9 @@ public final class TdxFormatCodeUtil {
 
         System.out.println(formatCode("NVDA.US"));
         System.out.println(formatCode("NVDA"));
+
+        System.out.println(formatCode("BRK.A.US"));
+        System.out.println(formatCode("BRK.A"));
     }
 
 
