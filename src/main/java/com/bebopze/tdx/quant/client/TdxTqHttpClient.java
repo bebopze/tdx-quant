@@ -64,10 +64,12 @@ public class TdxTqHttpClient {
         JSONObject root = JSON.parseObject(body.toString());
         JSONObject result = root.containsKey("result") ? root.getJSONObject("result") : root;
 
-        checkResultErr(result);
 
         log.info("TdxTqHttpClient.call     >>>     method : {} , params : {} , result : {} , time : {}",
                  method, JSON.toJSONString(params), JSON.toJSONString(result), DateTimeUtil.formatNow2Hms(start));
+
+
+        checkResultErr(result);
         return result;
     }
 

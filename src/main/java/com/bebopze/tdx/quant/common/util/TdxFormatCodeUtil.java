@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * 通达信 TQ 证券代码 标准化工具（统一格式：600519.SH）
+ * 通达信 TQ 证券代码 标准化工具（统一格式：600519.SH / 00700.HK / NVDA.US）
  *
  * @author: bebopze
  * @date: 2026/9/26
@@ -17,12 +17,14 @@ import java.util.regex.Pattern;
 public final class TdxFormatCodeUtil {
 
 
-    // 前缀（SH000001）
-    private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ)(\\d{6})$");
-    // 后缀（000001.SH）
-    private static final Pattern SUFFIX_CODE = Pattern.compile("^(\\d{6})\\.(SH|SZ|BJ)$");
-    // 裸代码（000001）
-    private static final Pattern RAW_CODE = Pattern.compile("^\\d{6}$");
+    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700）
+    private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ|HK)([A-Z0-9]+)$");
+
+    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / NVDA.US）
+    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9]+)\\.(SH|SZ|BJ|HK|US)$");
+
+    // 裸代码（6位数字=A股 / 5位数字=港股 / 1~10位字母=美股）
+    private static final Pattern RAW_CODE = Pattern.compile("^(\\d{5,6}|[A-Z]{1,10})$");
 
 
     public static List<String> formatCodes(List<String> codes) {
@@ -61,7 +63,7 @@ public final class TdxFormatCodeUtil {
         }
 
         if (!RAW_CODE.matcher(up_code).matches()) {
-            throw new IllegalArgumentException("无效的通达信证券代码: " + code);
+            throw new IllegalArgumentException("无效的通达信证券代码 : [" + code + "]");
         }
 
 
@@ -73,9 +75,16 @@ public final class TdxFormatCodeUtil {
 
 
     public static void main(String[] args) {
-        System.out.println(formatCode("600519"));
+
         System.out.println(formatCode("600519.SH"));
         System.out.println(formatCode("SH600519"));
+        System.out.println(formatCode("600519"));
+
+        System.out.println(formatCode("00700.HK"));
+        System.out.println(formatCode("00700"));
+
+        System.out.println(formatCode("NVDA.US"));
+        System.out.println(formatCode("NVDA"));
     }
 
 

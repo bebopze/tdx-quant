@@ -61,17 +61,17 @@ public enum StockMarketEnum {
 
     // 00   01   02   03   04   05   06   07   09
     // 8
-    HK_ZB("香港主板", 31, "31", "", "", Lists.newArrayList("00", "01", "02", "03", "04", "05", "06", "07", "09", "8")),
+    HK_ZB("香港主板", 31, "HK", "", "", Lists.newArrayList("00", "01", "02", "03", "04", "05", "06", "07", "09", "8")),
 
 
     // 08
-    HK_CYB("香港创业板", 48, "48", "", "", Lists.newArrayList("08")),
+    HK_CYB("香港创业板", 48, "HK", "", "", Lists.newArrayList("08")),
 
 
     // ------------------- 美股
 
 
-    US("美股", 74, "74", "", "", Lists.newArrayList());
+    US("美股", 74, "US", "", "", Lists.newArrayList());
 
 
     /**

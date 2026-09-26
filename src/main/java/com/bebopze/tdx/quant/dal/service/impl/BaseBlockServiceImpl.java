@@ -38,6 +38,19 @@ import java.util.stream.Collectors;
 public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlockDO> implements IBaseBlockService {
 
 
+    /**
+     * 添加手动注入的方法（因为 baseMapper 是 protected）
+     *
+     * @param mapper
+     */
+    public void injectMapper(BaseBlockMapper mapper) {
+        this.baseMapper = mapper;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Override
     public Long getIdByCode(String code) {
         return baseMapper.getIdByCode(code);

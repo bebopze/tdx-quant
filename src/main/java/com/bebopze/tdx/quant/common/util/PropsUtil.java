@@ -4,8 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 
@@ -33,6 +36,9 @@ public class PropsUtil {
         // 加载 运行环境-配置
         if (StringUtils.isNotBlank(activeProfile)) {
             loadYamlIntoProps("application-" + activeProfile + ".yml");
+            loadYamlIntoProps("application-llm-" + activeProfile + ".yml");
+            // 需 特殊处理（非正常格式）
+            loadYamlIntoProps("shardingsphere-" + activeProfile + ".yml");
         }
     }
 
@@ -60,13 +66,70 @@ public class PropsUtil {
         yamlFactory.setResources(new ClassPathResource(yamlPath));
 
 
-        Properties p = yamlFactory.getObject();
+        Properties p;
+        try {
+            p = yamlFactory.getObject();
+        } catch (Exception e) {
+            log.warn("未找到或无法解析 YAML : {}，原因 : {}", yamlPath, e.getMessage());
+            // 特殊处理（shardingsphere-prod.yml）
+            p = loadLenient(yamlPath);
+        }
+
+
         if (p == null) {
             log.warn("未找到或无法解析 YAML：{}", yamlPath);
             return new Properties();
         }
         return p;
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 特殊处理（shardingsphere-prod.yml）：加载 YAML 全文内容  ->  去除 无法解析的部分
+     */
+    public static Properties loadLenient(String classpathYaml) {
+        // 从 ClassPath 加载 YAML
+        try (InputStream in = new ClassPathResource(classpathYaml).getInputStream()) {
+
+            // 读取 YAML 全文内容
+            String raw = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            // 去除 无法解析的部分
+            String cleaned = stripTags(raw);
+
+
+            // 解析 YAML 内容为 Properties
+            YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
+            factory.setResources(new ByteArrayResource(cleaned.getBytes(StandardCharsets.UTF_8)));
+
+
+            Properties p = factory.getObject();
+            return p == null ? new Properties() : p;
+        } catch (Exception e) {
+            log.warn("YAML 加载失败，已舍弃 : {}，原因 : {}", classpathYaml, e.getMessage());
+            return new Properties();
+        }
+    }
+
+    /**
+     * 逐行剥掉独立成词的 YAML tag，保留其内容为普通节点
+     *
+     * <p> 示例：
+     * <pre>
+     *   - !SINGLE          →  -
+     *     tables:               tables:
+     *       - "*.*"               - "*.*"
+     * </pre>
+     */
+    private static String stripTags(String yaml) {
+        yaml = yaml.split("rules:")[0];
+        return yaml;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public static String getProperty(String key) {

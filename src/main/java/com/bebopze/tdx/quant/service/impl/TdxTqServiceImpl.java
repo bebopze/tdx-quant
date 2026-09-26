@@ -49,6 +49,12 @@ public class TdxTqServiceImpl implements TdxTqService {
     private IBaseBlockService baseBlockService;
 
 
+    public TdxTqServiceImpl(IBaseStockService baseStockService, IBaseBlockService baseBlockService) {
+        this.baseStockService = baseStockService;
+        this.baseBlockService = baseBlockService;
+    }
+
+
     @Override
     public JSONObject call(String method, Map<String, Object> params) {
 //        if (method == null || NOT_ALLOW_METHODS.contains(method)) {
@@ -92,7 +98,7 @@ public class TdxTqServiceImpl implements TdxTqService {
                 NumUtil.of(result.getDouble("Max")),
                 NumUtil.of(result.getDouble("Min")),
                 NumUtil.of(result.getDouble("Now")),
-                NumUtil.of(result.getDouble("Volume")),
+                result.getLongValue("Volume", 0L),
                 NumUtil.of(result.getDouble("Amount")),
                 NumUtil.of(result.getDouble("LastClose"))
                 // LocalDateTime.now()
@@ -124,7 +130,7 @@ public class TdxTqServiceImpl implements TdxTqService {
                                     .collect(Collectors.toList());
         } else {
 
-            // 个股/ETF
+            // 个股/ETF/港股/美股
             codes = baseStockService.listAllSimple().stream()
                                     .filter(e -> Objects.equals(stockTypeEnum.getType(), e.getType()))
                                     .map(BaseStockDO::getCode)
@@ -212,7 +218,7 @@ public class TdxTqServiceImpl implements TdxTqService {
                                                              NumUtil.of(data.getDouble("Max")),
                                                              NumUtil.of(data.getDouble("Min")),
                                                              NumUtil.of(data.getDouble("Now")),
-                                                             NumUtil.of(data.getDouble("Volume")),
+                                                             result.getLongValue("Volume", 0L),
                                                              NumUtil.of(data.getDouble("Amount")),
                                                              NumUtil.of(data.getDouble("LastClose"))
                                                              // now.toLocalDate().atTime(DateTimeUtil.parseTime__HH_mm_ss(data.getString("RefreshTime")))

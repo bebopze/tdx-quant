@@ -185,6 +185,13 @@ public class KlineAPI {
 //        }
 
 
+        // 通达信 TQ
+        if (klineDTOList == null) {
+            log.info("pullAllETFSnapshotKline     >>>     使用 通达信TQ API");
+            klineDTOList = TdxTqKlineAPI.pullAllETFSnapshotKline();
+        }
+
+
         // 新浪财经
         if (klineDTOList == null) {
             log.info("pullAllETFSnapshotKline     >>>     使用 新浪财经 API");
