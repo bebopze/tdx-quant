@@ -5,10 +5,13 @@
 项目当前基于 Spring Boot 4、Java 25、MyBatis Plus 和 ShardingSphere JDBC，默认监听 `7001` 端口。
 
 > [!CAUTION]
-> 本项目包含真实下单、撤单、一键卖出、融资操作和定时任务代码。首次运行前必须检查启用的 Spring Profile、交易账户、数据库和任务配置。不要在真实账户环境中直接执行未经验证的接口或测试。
+> 本项目包含真实下单、撤单、一键卖出、融资操作和定时任务代码。
+> 首次运行前必须检查启用的 Spring Profile、交易账户、数据库和任务配置。
+> 不要在真实账户环境中直接执行未经验证的接口或测试。
 
 > [!WARNING]
-> 当前 `application.yml` 默认启用 `prod` Profile，并开放全部 Actuator 端点及 shutdown。仅应在可信内网使用；公开部署前必须增加认证、限制管理端点并关闭不需要的交易入口。
+> 当前 `application.yml` 默认启用 `prod` Profile，并开放全部 Actuator 端点及 shutdown，仅应在可信内网使用。
+> 公开部署前 必须增加认证、限制管理端点 并关闭不需要的交易入口。
 
 ## 功能概览
 
@@ -25,20 +28,20 @@
 
 ## 技术栈
 
-| 组件 | 版本/说明 |
-|---|---|
-| Java | 25 |
-| Spring Boot | 4.1.1 |
-| Spring Cloud | 2025.1.3 |
-| Spring AI | 2.0.1 |
-| Spring Boot Admin | 4.1.2，服务端和客户端开关默认关闭 |
-| MyBatis Plus | 3.5.17 |
-| PageHelper | 4.1.1 |
-| ShardingSphere JDBC | 5.5.3 |
-| Druid | 1.2.28，Spring Boot 4 Starter |
-| springdoc-openapi | 3.1.0 |
-| MySQL | 建议使用 8.x |
-| 前端 | 原生 HTML、CSS、JavaScript、Bootstrap |
+| 组件                  | 版本/说明                            |
+|---------------------|----------------------------------|
+| Java                | 25                               |
+| Spring Boot         | 4.1.1                            |
+| Spring Cloud        | 2025.1.3                         |
+| Spring AI           | 2.0.1                            |
+| Spring Boot Admin   | 4.1.2，服务端和客户端开关默认关闭              |
+| MyBatis Plus        | 3.5.17                           |
+| PageHelper          | 4.1.1                            |
+| ShardingSphere JDBC | 5.5.3                            |
+| Druid               | 1.2.28，Spring Boot 4 Starter     |
+| springdoc-openapi   | 3.1.0                            |
+| MySQL               | 建议使用 8.x                         |
+| 前端                  | 原生 HTML、CSS、JavaScript、Bootstrap |
 
 完整依赖版本以 [`pom.xml`](pom.xml) 为准。
 
@@ -47,29 +50,26 @@
 ```text
 tdx-quant/
 ├── docs/
-│   ├── DB/                         # 主库和回测分片建表脚本
-│   └── llm-client.md               # 通用大模型客户端文档
+│   ├── DB/                             # 主库和回测分片建表脚本
+│   └── llm-client.md                   # 通用大模型客户端文档
 ├── src/main/java/com/bebopze/tdx/quant/
-│   ├── ai/                         # Spring AI 通用客户端
-│   ├── client/                     # 行情、交易及第三方 API 客户端
-│   ├── common/                     # 配置、缓存、DTO、异常和工具类
-│   ├── dal/                        # Mapper、Entity、Service
-│   ├── indicator/                  # 技术指标
-│   ├── parser/                     # 通达信数据解析
-│   ├── service/                    # 业务服务
-│   ├── strategy/                   # 买卖策略与回测策略
-│   ├── task/                       # 定时任务和后台任务
-│   └── web/                        # HTTP Controller
+│   ├── client/                         # 行情、交易及第三方 API 客户端
+│   ├── common/                         # 配置、缓存、DTO、异常和工具类
+│   ├── dal/                            # Mapper、Entity、Service
+│   ├── indicator/                      # 技术指标
+│   ├── llm/                            # Spring AI 通用客户端
+│   ├── parser/                         # 通达信数据解析
+│   ├── service/                        # 业务服务
+│   ├── strategy/                       # 买卖策略与回测策略
+│   ├── task/                           # 定时任务和后台任务
+│   └── web/                            # HTTP Controller
 ├── src/main/resources/
-│   ├── static/                     # 管理页面
-│   ├── application.yml             # 公共配置
-│   ├── application-{profile}.yml   # 业务 Profile 配置
-│   ├── application-llm.yml         # LLM 公共配置与 Profile 加载入口
-│   ├── application-llm-dev.yml     # LLM 开发环境配置
-│   ├── application-llm-prod.yml    # LLM 生产环境配置（本机文件，不提交密钥）
-│   ├── shardingsphere-dev.yml      # 开发环境数据源与分片规则
-│   └── shardingsphere-prod.yml     # 生产环境数据源与分片规则
-└── src/test/                       # 单元测试和上下文测试
+│   ├── static/                         # 管理页面（HTML可视化界面）
+│   ├── application.yml                 # 公共配置
+│   ├── application-{profile}.yml       # 业务 Profile 环境配置
+│   ├── application-llm-{profile}.yml   # LLM Profile 环境配置
+│   ├── shardingsphere-{profile}.yml    # Profile 环境数据源与分片规则
+└── src/test/                           # 单元测试和上下文测试
 ```
 
 ## 环境要求
@@ -96,7 +96,8 @@ mysql --version
 创建公共数据库并导入基础表：
 
 ```sql
-CREATE DATABASE IF NOT EXISTS tdx
+CREATE
+DATABASE IF NOT EXISTS tdx
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_general_ci;
 ```
@@ -110,7 +111,8 @@ mysql -u root -p tdx < docs/DB/tdx.sql
 - `tdx_bt_0`
 - `tdx_bt_1`
 
-[`docs/DB/tdx_bt_shard.sql`](docs/DB/tdx_bt_shard.sql) 默认创建两个数据库，并在 `tdx_bt_0` 中创建 `bt_trade_record_0..99` 和 `bt_position_record_0..99`。执行一次后，将脚本中的 `USE tdx_bt_0` 改为 `USE tdx_bt_1`，再执行一次以初始化第二个分库。
+[`docs/DB/tdx_bt_shard.sql`](docs/DB/tdx_bt_shard.sql) 默认创建两个数据库，并在 `tdx_bt_0` 中创建 `bt_trade_record_0..99`
+和 `bt_position_record_0..99`。执行一次后，将脚本中的 `USE tdx_bt_0` 改为 `USE tdx_bt_1`，再执行一次以初始化第二个分库。
 
 脚本的 `@mode` 默认是 `1`，表示只创建不存在的表。将其改为 `2` 会先删除分表再重建，会丢失数据，请谨慎使用。
 
@@ -122,7 +124,8 @@ mysql -u root -p tdx < docs/DB/tdx.sql
 classpath:shardingsphere-{profile}.yml
 ```
 
-开发环境对应 [`shardingsphere-dev.yml`](src/main/resources/shardingsphere-dev.yml)，生产环境对应 [`shardingsphere-prod.yml`](src/main/resources/shardingsphere-prod.yml)。启动前至少检查：
+开发环境对应 [`shardingsphere-dev.yml`](src/main/resources/shardingsphere-dev.yml)，生产环境对应 [
+`shardingsphere-prod.yml`](src/main/resources/shardingsphere-prod.yml)。启动前至少检查：
 
 - `ds_common` 是否指向 `tdx`。
 - `ds_0`、`ds_1` 是否指向两个回测分库。
@@ -180,14 +183,14 @@ mvn spring-boot:run \
 
 ## 页面入口
 
-| 功能 | 地址 |
-|---|---|
-| 持仓与当日委托 | <http://localhost:7001/trade/position-list.html> |
-| 数据分析 | <http://localhost:7001/data-analysis/topList.html> |
-| 回测任务 | <http://localhost:7001/backtest/backtest-list.html> |
-| 主线板块 | <http://localhost:7001/topblock/topblock.html> |
-| 定时任务 | <http://localhost:7001/task/task.html> |
-| 股票 K 线 | <http://localhost:7001/stock/stock-kline.html> |
+| 功能      | 地址                                                  |
+|---------|-----------------------------------------------------|
+| 持仓与当日委托 | <http://localhost:7001/trade/position-list.html>    |
+| 数据分析    | <http://localhost:7001/data-analysis/topList.html>  |
+| 回测任务    | <http://localhost:7001/backtest/backtest-list.html> |
+| 主线板块    | <http://localhost:7001/topblock/topblock.html>      |
+| 定时任务    | <http://localhost:7001/task/task.html>              |
+| 股票 K 线  | <http://localhost:7001/stock/stock-kline.html>      |
 
 页面由 Spring Boot 直接提供静态资源。重新打包并重启服务后，如果浏览器仍显示旧页面，请执行强制刷新：
 
@@ -196,37 +199,38 @@ mvn spring-boot:run \
 
 ## API 概览
 
-| 前缀 | 功能 |
-|---|---|
-| `/api/trade` | 持仓、委托、撤单及快捷交易 |
-| `/api/backtest` | 回测执行、任务、分析和交易记录 |
-| `/api/parser/tdxdata` | 通达信数据导入和 K 线填充 |
-| `/api/topBlock` | 主线板块和主线个股计算 |
-| `/api/data/analysis` | 数据分析与榜单 |
-| `/api/task` | 数据刷新、后台任务和执行进度 |
-| `/api/strategy` | 买卖策略执行与信号列表 |
-| `/api/stock` | 股票详情和板块信息 |
-| `/api/block`、`/api/blockNew` | 板块及其成分股 |
-| `/api/market` | 市场周期数据 |
-| `/api/monitor` | 缓存及运行状态监控 |
+| 前缀                           | 功能              |
+|------------------------------|-----------------|
+| `/api/trade`                 | 持仓、委托、撤单及快捷交易   |
+| `/api/backtest`              | 回测执行、任务、分析和交易记录 |
+| `/api/parser/tdxdata`        | 通达信数据导入和 K 线填充  |
+| `/api/topBlock`              | 主线板块和主线个股计算     |
+| `/api/data/analysis`         | 数据分析与榜单         |
+| `/api/task`                  | 数据刷新、后台任务和执行进度  |
+| `/api/strategy`              | 买卖策略执行与信号列表     |
+| `/api/stock`                 | 股票详情和板块信息       |
+| `/api/block`、`/api/blockNew` | 板块及其成分股         |
+| `/api/market`                | 市场周期数据          |
+| `/api/monitor`               | 缓存及运行状态监控       |
 
 > [!IMPORTANT]
-> `/api/trade`、`/api/strategy` 和部分 `/api/task` 接口会改变交易或业务状态。不要把整个 `/api/**` 暴露到公网，也不要通过浏览器、监控探针或爬虫无差别调用。
+> `/api/trade`、`/api/strategy` 和部分 `/api/task` 接口会改变交易或业务状态。不要把整个 `/api/**`
+> 暴露到公网，也不要通过浏览器、监控探针或爬虫无差别调用。
 
 ## 本机 Chrome 登录辅助
 
 项目提供 [`EastMoneyChromeLogin`](src/main/java/com/bebopze/tdx/quant/automation/EastMoneyChromeLogin.java)，
 可打开本机 Chrome、处理维护公告、填写配置中的资金账号和密码、选择 3 小时在线时间，
-将验证码保存为 `tdx_zip/验证码.png`，并在用户查看本地图片、手动输入验证码后提交登录。
+将验证码保存为 `tdx_zip/验证码.png`，调用 LLM识别验证码，并自动填写验证码字段，然后提交登录。
 登录成功后会在当前浏览器会话中确认持仓接口加载成功，
 随后自动关闭本次工具启动的浏览器。
 
 ```bash
 mvn exec:java \
-  -Dexec.mainClass=com.bebopze.tdx.quant.automation.EastMoneyChromeLogin
+  -Dexec.mainClass=com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin
 ```
 
-该工具不会自动识别验证码，也不会输出或返回 Cookie、validatekey 等认证凭据。完整说明见
+该工具会自动识别验证码，也不会输出或返回 Cookie、validatekey 等认证凭据。完整说明见
 [`docs/eastmoney-chrome-login.md`](docs/eastmoney-chrome-login.md)。
 
 ## 大模型客户端
@@ -240,7 +244,8 @@ mvn exec:java \
 - DeepSeek
 - 其他兼容 OpenAI Chat Completions 的服务
 
-Spring Boot 根据 `spring.profiles.active` 自动加载 `application-llm-dev.yml` 或 `application-llm-prod.yml`，无需修改 Java 代码。
+Spring Boot 根据 `spring.profiles.active` 自动加载 `application-llm-dev.yml` 或 `application-llm-prod.yml`，无需修改 Java
+代码。
 API Key 建议通过环境变量提供：
 
 ```bash
@@ -261,12 +266,11 @@ llm:
 验证码识别示例：
 
 ```java
-String captcha = llmClient.recognizeCaptcha(imageFile);
-String doubaoResult = llmClient.recognizeCaptcha("doubao", imageFile);
+String captcha = captchaRecognizer.recognizeCaptcha(imageFile);
+String deepseekResult = captchaRecognizer.recognizeCaptcha("deepseek", imageFile);
 
-// 固定使用 DeepSeek，模型与 API Key 仍从配置读取
-String deepSeekResult = deepSeekCaptchaRecognizer.recognize(
-        Path.of("src/main/java/com/bebopze/tdx/quant/ai/验证码.png"));
+// 默认使用 Qwen，模型与 API Key 仍从配置读取
+String captcha = llmClient.analyzeImage(Path.of("tdx_zip/验证码.png"), DEFAULT_CAPTCHA_OCR_PROMPT);
 ```
 
 使用项目自带的 `验证码.png` 和 `dev` 配置调用 Qwen 真实接口：
@@ -298,7 +302,9 @@ mvn test
 ```
 
 > [!WARNING]
-> 当前 `TdxQuantAppTests` 会加载完整 Spring 上下文。由于默认 Profile 是 `prod`，它可能连接 MySQL、初始化交易会话并访问第三方接口。完整测试只能在已隔离的开发环境执行，不要使用真实交易账户。
+> 当前 `TdxQuantAppTests` 会加载完整 Spring 上下文。
+> 由于默认 Profile 是 `prod`，它可能连接 MySQL、初始化交易会话 并访问第三方接口。
+> 完整测试只能在已隔离的开发环境执行，不要使用真实交易账户。
 
 常用检查命令：
 
