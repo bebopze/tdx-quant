@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.task;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.automation.EastMoneyChromeLogin;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
@@ -15,9 +14,10 @@ import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.*;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
+import com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin;
+import com.bebopze.tdx.quant.task.script.TdxZipDownScript;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;

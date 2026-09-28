@@ -1,11 +1,11 @@
-package com.bebopze.tdx.quant.automation;
+package com.bebopze.tdx.quant.task.script;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.llm.CaptchaRecognizer;
-import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.bebopze.tdx.quant.service.DataService;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitForSelectorState;
@@ -88,6 +88,7 @@ public final class EastMoneyChromeLogin {
     private DataService dataService;
 
 
+    @TotalTime
     public void runLoginWorkflow() {
 
         try (Playwright playwright = Playwright.create()) {
@@ -108,9 +109,9 @@ public final class EastMoneyChromeLogin {
 
 
         // 设置超时时间
-        page.setDefaultTimeout(10_000);
+        page.setDefaultTimeout(5_000);
         // 设置页面导航超时时间
-        page.setDefaultNavigationTimeout(15_000);
+        page.setDefaultNavigationTimeout(10_000);
         // 导航到 登录页面
         Response response = page.navigate(LOGIN_URL);
         log.info("✅ [登录页面 {}] 加载完成，HTTP状态码 : {}", page.url(), response.status());
@@ -175,11 +176,11 @@ public final class EastMoneyChromeLogin {
 
 
             log.error("❌ 证券登录失败   >>>   errMsg : {} ", result.getString("Message"));
-            log.info("❌ 验证信息未通过，请查看刷新后的验证码后重试（{}/" + MAX_LOGIN_RETRY + "）", retry + 1);
+            log.warn("❌ 验证信息未通过，请查看刷新后的验证码后重试（{}/" + MAX_LOGIN_RETRY + "）", retry + 1);
         }
 
 
-        // suc
+        // fail
         if (result.getInteger("Status") != 0) {
             throw new IllegalStateException("❌ 证券登录失败   >>>   errMsg : " + result.getString("Message"));
         }
@@ -192,6 +193,7 @@ public final class EastMoneyChromeLogin {
         // 停留10秒方便查看效果，生产环境可删除
         // SleepUtils.winSleep(10_000);
     }
+
 
     private void refreshCookie(Page page) {
 

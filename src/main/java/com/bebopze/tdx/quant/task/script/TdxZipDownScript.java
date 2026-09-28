@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.task;
+package com.bebopze.tdx.quant.task.script;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
