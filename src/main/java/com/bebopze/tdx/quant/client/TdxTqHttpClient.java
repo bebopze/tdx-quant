@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
+import com.google.gson.Gson;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,15 @@ public class TdxTqHttpClient {
 
 
     /**
+     * 专用 Gson 实例（避免 num -> String）：
+     *
+     * 1、保持 num 原始类型：禁止将 params 中的 int -> Str  （避免 通达信 Python程序  ->  参数类型 异常报错：TPyth_TdxWServer_Main_New）
+     * 2、与项目全局 Fastjson2 配置完全隔离（避免 num -> String）
+     */
+    private static final Gson GSON = new Gson();
+
+
+    /**
      * 请求 ID 计数器
      */
     private static final AtomicLong requestId = new AtomicLong();
@@ -54,9 +64,22 @@ public class TdxTqHttpClient {
         );
 
 
+        // 通达信 TQ  ->  Python程序 int类型【传入String】 参数映射 BUG : 通达信 Python 服务  直接报错：TPyth_TdxWServer_Main_New
+
+
+        //  TdxTqHttpClient.call     >>>
+        //
+        //  method : get_stock_list ,
+        //
+        //  params : {"market":"103","list_type":"1"} ,   // list_type -> int （传 字符串 "1"  ->  通达信 Python 服务  直接报错：TPyth_TdxWServer_Main_New）
+        //
+        //  result : {"Error":"RPC处理异常:TPyth_TdxWServer_Main_New","ErrorId":"10","run_id":"-1"}
+
+
         JsonNode body = Unirest.post(TQ_BASE_URL)
                                .header("Content-Type", "application/json; charset=UTF-8")
-                               .body(JSON.toJSONString(rpcRequest))
+                               // ⚠️ 此处禁用 Fastjson2  =>  开启了 全局配置：num -> Str（通达信 TQ  ->  Python程序 int类型【传入String】 参数映射 BUG : TPyth_TdxWServer_Main_New）
+                               .body(GSON.toJson(rpcRequest))
                                .asJson()
                                .getBody();
 
@@ -66,7 +89,7 @@ public class TdxTqHttpClient {
 
 
         log.info("TdxTqHttpClient.call     >>>     method : {} , params : {} , result : {} , time : {}",
-                 method, JSON.toJSONString(params), JSON.toJSONString(result), DateTimeUtil.formatNow2Hms(start));
+                 method, GSON.toJson(params), GSON.toJson(result), DateTimeUtil.formatNow2Hms(start));
 
 
         checkResultErr(result);
