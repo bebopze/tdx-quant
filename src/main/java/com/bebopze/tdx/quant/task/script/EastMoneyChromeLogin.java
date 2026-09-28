@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public final class EastMoneyChromeLogin {
+public class EastMoneyChromeLogin {
 
 
     // 登录页面 URL
