@@ -66,9 +66,9 @@ tdx-quant/
 ├── src/main/resources/
 │   ├── static/                         # 管理页面（HTML可视化界面）
 │   ├── application.yml                 # 公共配置
-│   ├── application-{profile}.yml       # 业务 Profile 环境配置
-│   ├── application-llm-{profile}.yml   # LLM Profile 环境配置
-│   ├── shardingsphere-{profile}.yml    # Profile 环境数据源与分片规则
+│   ├── application-{profile}.yml       # 业务 环境配置
+│   ├── application-llm-{profile}.yml   # LLM 环境配置
+│   ├── shardingsphere-{profile}.yml    # 数据源与分片规则 环境配置
 └── src/test/                           # 单元测试和上下文测试
 ```
 

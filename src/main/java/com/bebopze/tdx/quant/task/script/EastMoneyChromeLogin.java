@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * 使用本机 Chrome 完成东方财富证券网页登录（LLM自动识别 图形验证码）
+ * 东方财富 登录方案2   ->   使用本机 Chrome 完成东方财富证券网页登录（LLM自动识别 图形验证码）
  *
  * @author: bebopze
  * @date: 2026/8/23
@@ -53,7 +53,7 @@ public class EastMoneyChromeLogin {
 
 
     // 验证码图片 保存路径
-    private static final Path CAPTCHA_IMAGE_PATH = Path.of("tdx_zip", "验证码.png");
+    static final Path CAPTCHA_IMAGE_PATH = Path.of("tdx_zip", "验证码.png");
 
 
     // 登录页面 表单选择器（资金账号、密码、验证码、在线时间、登录按钮、系统公告）
@@ -70,8 +70,8 @@ public class EastMoneyChromeLogin {
     /**
      * 重试次数
      */
-    private static final int MAX_LOGIN_RETRY = 5;
-    private static final double NOTICE_WAIT_MILLIS = 3_000;
+    static final int MAX_LOGIN_RETRY = 5;
+    static final double NOTICE_WAIT_MILLIS = 3_000;
 
 
     @Value("${eastmoney.username}")
@@ -129,17 +129,20 @@ public class EastMoneyChromeLogin {
 
             // 识别验证码（手动识别/大模型识别）
             // String captcha = inputCaptchaCode(captchaFile);
-            String captcha = captchaRecognizer.recognizeCaptcha(captchaFile);
-            log.info("✅ 大模型 验证码识别结果: {}", captcha);
+            String identifyCode = captchaRecognizer.recognizeCaptcha(captchaFile);
+            log.info("✅ 大模型 验证码识别结果: {}", identifyCode);
 
 
             // 校验
-            // validateCaptcha(captcha);
+            if (!validateCaptcha(identifyCode)) {
+                log.warn("❌ 验证码未通过，请查看刷新后的验证码后重试（{}/" + MAX_LOGIN_RETRY + "）", retry + 1);
+                continue;
+            }
 
 
             // 填写控件、选择3小时在线时间，并等待登录接口响应
-            result = fillSubmitAndReadResult(page, account, password, captcha);
-            log.info("✅ 登录接口   >>>   result : {}", result);
+            result = fillSubmitAndReadResult(page, account, password, identifyCode);
+            log.info("✅ 登录接口     >>>     result : {}", result);
 
 
             // suc
@@ -175,14 +178,14 @@ public class EastMoneyChromeLogin {
             }
 
 
-            log.error("❌ 证券登录失败   >>>   errMsg : {} ", result.getString("Message"));
+            log.error("❌ 证券登录失败     >>>     errMsg : {} ", result.getString("Message"));
             log.warn("❌ 验证信息未通过，请查看刷新后的验证码后重试（{}/" + MAX_LOGIN_RETRY + "）", retry + 1);
         }
 
 
         // fail
         if (result.getInteger("Status") != 0) {
-            throw new IllegalStateException("❌ 证券登录失败   >>>   errMsg : " + result.getString("Message"));
+            throw new IllegalStateException("❌ 证券登录失败     >>>     errMsg : " + result.getString("Message"));
         }
 
 
@@ -245,7 +248,7 @@ public class EastMoneyChromeLogin {
     /**
      * 填写控件、选择3小时在线时间，并等待登录接口响应
      */
-    static JSONObject fillSubmitAndReadResult(Page page, String account, String password, String captcha) {
+    static JSONObject fillSubmitAndReadResult(Page page, String account, String password, String identifyCode) {
         SleepUtils.randomSleep(100, 1_000);
 
 
@@ -254,7 +257,7 @@ public class EastMoneyChromeLogin {
         // 填写密码
         page.locator(PASSWORD_SELECTOR).fill(password);
         // 填写验证码
-        page.locator(CAPTCHA_SELECTOR).fill(captcha.trim().toUpperCase(Locale.ROOT));
+        page.locator(CAPTCHA_SELECTOR).fill(identifyCode.trim().toUpperCase(Locale.ROOT));
         // 选择3小时在线时间
         page.locator(ONLINE_3_HOURS_SELECTOR).check();
 
@@ -317,7 +320,7 @@ public class EastMoneyChromeLogin {
             if (!ImageIO.write(image, "png", normalized.toFile())) {
                 throw new IllegalStateException("当前 JDK 不支持写入 PNG 图片");
             }
-            System.out.println("验证码图片已保存：" + normalized);
+            log.info("验证码图片已保存 : {}", normalized);
             return normalized;
         } catch (IOException exception) {
             throw new IllegalStateException("保存验证码图片失败: " + normalized, exception);
@@ -373,7 +376,7 @@ public class EastMoneyChromeLogin {
 
         try {
             JSONObject json = JSON.parseObject(responseBody);
-            log.info("登录接口返回   >>>   resp: {}", responseBody);
+            log.info("登录接口返回     >>>     resp : {}", responseBody);
             if (json == null) {
                 throw new IllegalStateException("登录接口返回内容为空");
             }
@@ -422,10 +425,8 @@ public class EastMoneyChromeLogin {
     /**
      * 校验 验证码（4位纯数字）
      */
-    private static void validateCaptcha(String captcha) {
-        if (captcha == null || !captcha.trim().matches("[0-9]{4}")) {
-            throw new IllegalArgumentException("验证码必须为 4 位纯数字");
-        }
+    static boolean validateCaptcha(String captcha) {
+        return captcha != null && captcha.trim().matches("[0-9]{4}");
     }
 
 
