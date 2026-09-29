@@ -44,6 +44,7 @@
         <zstd.version>1.5.7-15</zstd.version>
         <tess4j.version>5.20.0</tess4j.version>
         <playwright.version>1.62.0</playwright.version>
+        <jsoup.version>1.23.2</jsoup.version>
     </properties>
 
     <dependencyManagement>
@@ -393,6 +394,13 @@
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
             <version>${playwright.version}</version>
+        </dependency>
+
+        <!-- jsoup -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
 
         <!-- HikariCP 作为备选连接池 -->
