@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.tq.DividendTypeEnum;
+import com.bebopze.tdx.quant.common.constant.tq.GetStockListEnum;
 import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
@@ -30,12 +31,13 @@ public class TdxTqAPI {
     public static void main(String[] args) {
 
 
-        System.out.println(get_stock_list(5));
+        System.out.println(get_stock_list(GetStockListEnum.A_STOCK));
         System.out.println(get_sector_list());
         System.out.println(get_stock_list_in_sector("880952", 1));
 
 
         System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
+
     }
 
 
@@ -47,7 +49,7 @@ public class TdxTqAPI {
      *
      * @param market 指定代码（5-全部A股；10-所有板块指数；35-所有沪深基金；102-港股；103-美股；）
      */
-    public static List<SimpleStockDTO> get_stock_list(int market) {
+    public static List<SimpleStockDTO> get_stock_list(GetStockListEnum market) {
 
 
         // 获取系统分类成份股 get_stock_list
@@ -62,7 +64,7 @@ public class TdxTqAPI {
 
         JSONObject result = TdxTqHttpClient.call("get_stock_list",
 
-                                                 Map.of("market", market,
+                                                 Map.of("market", market.market,
                                                         "list_type", 1));
 
 
@@ -167,7 +169,7 @@ public class TdxTqAPI {
 
         JSONObject result = TdxTqHttpClient.call("get_market_data",
 
-                                                 Map.of("stock_list", List.of(stockCode),
+                                                 Map.of("stock_list", List.of(TdxFormatCodeUtil.formatCode(stockCode)),
                                                         "field_list", List.of(),
                                                         "period", periodEnum.period,
                                                         "start_time", DateTimeUtil.format_yyyyMMdd(start_time),
