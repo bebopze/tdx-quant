@@ -415,12 +415,34 @@
 
     // 初始化所有模块为展开状态
     document.addEventListener('DOMContentLoaded', function () {
+
+        // 设置默认日期范围
+        setDefaultDateRange();
+
+
         // 默认所有模块都展开，所以不添加 collapsed 类
         const sections = document.querySelectorAll('.section-content');
         sections.forEach(section => {
             section.style.display = 'block';
         });
     });
+
+
+    // 默认日期范围：设置为最近5年
+    function setDefaultDateRange() {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear() - 5, 0, 1);
+
+        const formatDate = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+
+        document.getElementById('startDate').value = formatDate(startDate);
+        document.getElementById('endDate').value = formatDate(today);
+    }
 
 
     // 切换模块显示状态（展开/收起）
