@@ -34,8 +34,9 @@ public class KlineDTO implements Serializable {
     private double close;
 
 
+    // 成交量（股 = 手 x 100）
     private long vol;
-
+    // 成交额（元）
     private double amo;
 
 
@@ -47,4 +48,5 @@ public class KlineDTO implements Serializable {
     private double changePrice;
     // 换手率（%）
     private double turnoverPct;
+
 }
