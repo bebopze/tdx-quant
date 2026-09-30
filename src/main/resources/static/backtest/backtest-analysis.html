@@ -896,8 +896,7 @@
     // 默认日期范围：设置为最近10年
     function setDefaultDateRange() {
         const today = new Date();
-        const threeYearsAgo = new Date();
-        threeYearsAgo.setFullYear(today.getFullYear() - 10);
+        const startDate = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate());
 
         const formatDate = (d) => {
             const y = d.getFullYear();
@@ -906,7 +905,7 @@
             return `${y}-${m}-${day}`;
         };
 
-        document.getElementById('startDateInput').value = formatDate(threeYearsAgo);
+        document.getElementById('startDateInput').value = formatDate(startDate);
         document.getElementById('endDateInput').value = formatDate(today);
     }
 
