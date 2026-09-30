@@ -21,7 +21,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.service.impl.InitDataServiceImpl;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
 import com.bebopze.tdx.quant.strategy.buy.ScoreSort;
-import com.bebopze.tdx.quant.strategy.buy.TopBlockStrategy;
+import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

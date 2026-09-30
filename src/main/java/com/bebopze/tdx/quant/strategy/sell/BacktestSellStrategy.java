@@ -18,7 +18,7 @@ import com.bebopze.tdx.quant.service.MarketService;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyG;
 import com.bebopze.tdx.quant.strategy.buy.BuyStrategyFactory;
-import com.bebopze.tdx.quant.strategy.buy.TopBlockStrategy;
+import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

@@ -1,9 +1,10 @@
-package com.bebopze.tdx.quant.strategy.buy;
+package com.bebopze.tdx.quant.strategy;
 
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import com.bebopze.tdx.quant.service.MarketService;
+import com.bebopze.tdx.quant.strategy.buy.ScoreSort;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

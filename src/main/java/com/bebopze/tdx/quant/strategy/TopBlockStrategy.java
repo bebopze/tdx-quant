@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.strategy.buy;
+package com.bebopze.tdx.quant.strategy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
@@ -85,6 +85,14 @@ public class TopBlockStrategy {
             // 2026-01-20 ~ 2026-01-29（黄金/铜/铅锌/有色金属）
             else if (DateTimeUtil.between(date, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 29))) {
                 top1__topBlock__codeSetMap.computeIfAbsent(date, k -> Sets.newHashSet()).addAll(Sets.newHashSet("880328", "880325", "880327", "880329"));
+            }
+
+            // 2026-03-31 ~ 2026-06-30（半导体/元器件/通信设备  /  CPO/光通信/PCB  /  存储芯片/先进封装/芯片  /  消费电子）
+            else if (DateTimeUtil.between(date, LocalDate.of(2026, 3, 31), LocalDate.of(2026, 6, 30))) {
+                top1__topBlock__codeSetMap.computeIfAbsent(date, k -> Sets.newHashSet()).addAll(Sets.newHashSet("880491", "880492", "880490",
+                                                                                                                "880656", "880670", "880550",
+                                                                                                                "880672", "880635", "880952",
+                                                                                                                "880966"));
             }
         }
     }

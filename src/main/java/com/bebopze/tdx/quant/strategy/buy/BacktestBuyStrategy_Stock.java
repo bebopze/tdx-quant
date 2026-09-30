@@ -10,6 +10,8 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.indicator.StockFun;
+import com.bebopze.tdx.quant.strategy.MarketStrategy;
+import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
