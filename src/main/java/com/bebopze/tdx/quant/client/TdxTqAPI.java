@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.TdxFormatCodeUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,9 +30,9 @@ public class TdxTqAPI {
     public static void main(String[] args) {
 
 
-        System.out.println(get_stock_list(5, 1));
-        System.out.println(get_sector_list(1));
-        System.out.println(get_stock_list_in_sector("880952", 1, 1));
+        System.out.println(get_stock_list(5));
+        System.out.println(get_sector_list());
+        System.out.println(get_stock_list_in_sector("880952", 1));
 
 
         System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
@@ -44,10 +45,9 @@ public class TdxTqAPI {
     /**
      * 获取 市场分类 成份股
      *
-     * @param market    指定代码（5-全部A股；10-所有板块指数；35-所有沪深基金；102-港股；103-美股；）
-     * @param list_type 返回数据类型（0-只返回代码；1-返回代码和名称；）
+     * @param market 指定代码（5-全部A股；10-所有板块指数；35-所有沪深基金；102-港股；103-美股；）
      */
-    public static List<SimpleStockDTO> get_stock_list(int market, int list_type) {
+    public static List<SimpleStockDTO> get_stock_list(int market) {
 
 
         // 获取系统分类成份股 get_stock_list
@@ -63,7 +63,7 @@ public class TdxTqAPI {
         JSONObject result = TdxTqHttpClient.call("get_stock_list",
 
                                                  Map.of("market", market,
-                                                        "list_type", list_type));
+                                                        "list_type", 1));
 
 
         String data = result.getString("Value");
@@ -73,10 +73,8 @@ public class TdxTqAPI {
 
     /**
      * 获取A股 全部板块 代码列表
-     *
-     * @param list_type 返回数据类型（0-只返回代码；1-返回代码和名称；）
      */
-    public static List<SimpleStockDTO> get_sector_list(int list_type) {
+    public static List<SimpleStockDTO> get_sector_list() {
 
 
         // 获取A股板块代码列表 get_sector_list
@@ -90,7 +88,7 @@ public class TdxTqAPI {
 
         JSONObject result = TdxTqHttpClient.call("get_sector_list",
 
-                                                 Map.of("list_type", list_type));
+                                                 Map.of("list_type", 1));
 
 
         String data = result.getString("Value");
@@ -104,11 +102,8 @@ public class TdxTqAPI {
      * @param block_code 板块 code/name
      * @param block_type 板块类型（block_type=0 表示传入 系统板块   code/name【880952/芯片】）
      *                   -      （block_type=1 表示传入 自定义板块 code/name【YD/月多】）
-     * @param list_type  返回数据类型（0-只返回代码；1-返回代码和名称；）
      */
-    public static List<SimpleStockDTO> get_stock_list_in_sector(String block_code,
-                                                                int block_type,
-                                                                int list_type) {
+    public static List<SimpleStockDTO> get_stock_list_in_sector(String block_code, int block_type) {
 
 
         // 获取板块成份股 get_stock_list_in_sector
@@ -124,9 +119,9 @@ public class TdxTqAPI {
 
         JSONObject result = TdxTqHttpClient.call("get_stock_list_in_sector",
 
-                                                 Map.of("block_code", block_code,
+                                                 Map.of("block_code", TdxFormatCodeUtil.formatCode(block_code),
                                                         "block_type", block_type,
-                                                        "list_type", list_type));
+                                                        "list_type", 1));
 
 
         String data = result.getString("Value");
@@ -146,8 +141,6 @@ public class TdxTqAPI {
      * @param periodEnum 周期
      * @param start_time 起始时间（年月日：yyyyMMdd）
      * @param end_time   结束时间（年月日：yyyyMMdd）
-     * @param count      返回数据个数（每只股票）
-     * @param fill_data  是否向后填充空缺数据，多只股票一起取k线时使用
      * @return
      */
     public static List<KlineDTO> get_market_data(String stockCode,

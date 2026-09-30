@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
  * dividend_type 复权类型                   - https://help.tdx.com.cn/quant/docs/markdown/Dict.html#dividend_type复权类型
  *
  * @author: bebopze
- * @date: 2026/10/01
+ * @date: 2026/10/1
  */
 @AllArgsConstructor
 public enum DividendTypeEnum {
@@ -28,12 +28,12 @@ public enum DividendTypeEnum {
 
 
     /**
-     * 周期
+     * 复权类型
      */
     public final String type;
+
     /**
-     * 描述
+     * 类型描述
      */
     public final String desc;
-
 }
