@@ -7,6 +7,8 @@ import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.service.TopBlockService;
+import com.bebopze.tdx.quant.strategy.MarketStrategy;
+import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;

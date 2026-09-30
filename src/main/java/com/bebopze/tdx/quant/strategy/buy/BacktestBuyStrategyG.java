@@ -9,6 +9,8 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.indicator.StockFun;
+import com.bebopze.tdx.quant.strategy.MarketStrategy;
+import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
