@@ -15,6 +15,7 @@ import com.bebopze.tdx.quant.service.*;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin;
+import com.bebopze.tdx.quant.task.script.TdxScript;
 import com.bebopze.tdx.quant.task.script.TdxZipDownScript;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
