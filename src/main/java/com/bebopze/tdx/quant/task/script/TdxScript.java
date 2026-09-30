@@ -1,4 +1,4 @@
-package com.bebopze.tdx.quant.task;
+package com.bebopze.tdx.quant.task.script;
 
 import com.bebopze.tdx.quant.common.util.WinUtils;
 import com.bebopze.tdx.quant.common.util.WinUtils2;

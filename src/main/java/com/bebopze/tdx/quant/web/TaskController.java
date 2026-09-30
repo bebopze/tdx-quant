@@ -6,7 +6,7 @@ import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.service.InitDataService;
-import com.bebopze.tdx.quant.task.TdxScript;
+import com.bebopze.tdx.quant.task.script.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
