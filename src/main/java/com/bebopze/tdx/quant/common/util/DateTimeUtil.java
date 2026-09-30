@@ -172,6 +172,7 @@ public class DateTimeUtil {
      * @return
      */
     public static LocalTime parseTime_HHmmss(String timeStr) {
+        timeStr = "0".equals(timeStr) ? "000000" : timeStr;
         return LocalTime.parse(timeStr, HHmmss);
     }
 
@@ -189,9 +190,9 @@ public class DateTimeUtil {
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
-    //                                                  LocalDate
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
+//                                                  LocalDate
+// -----------------------------------------------------------------------------------------------------------------
 
 
     public static LocalDate parseDate_yyyyMMdd__slash(String dateStr) {
@@ -212,11 +213,11 @@ public class DateTimeUtil {
     }
 
     public static String format_yyyyMMdd(LocalDate date) {
-        return date.format(yyyyMMdd);
+        return date == null ? "" : date.format(yyyyMMdd);
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
 
     public static boolean inDateArr(LocalDate date, LocalDate[] dateArr) {
