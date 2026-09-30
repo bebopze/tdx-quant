@@ -1,9 +1,9 @@
 package com.bebopze.tdx.quant.client;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.MybatisPlusUtil;
 import com.bebopze.tdx.quant.service.TdxTqService;
@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -102,49 +101,7 @@ public class TdxTqKlineAPI {
      */
     @Deprecated
     public static List<StockSnapshotKlineDTO> listAllCode() {
-
-
-        // 获取系统分类成份股 get_stock_list
-        //
-        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhttn72svo/mindoc-1h10qo3uj48fg.html
-
-
-        // 参数          是否必选     参数类型        参数说明
-        // market         Y         str         指定代码（5-全部A股；10-所有板块指数；35-所有沪深基金；102-港股；103-美股；）
-        // list_type      Y         int         返回数据类型（0-只返回代码；1-返回代码和名称；）
-
-
-        JSONObject result_1 = TdxTqHttpClient.call("get_stock_list",
-                                                   Map.of("market", 5, "list_type", 1));
-
-
-        // 获取A股板块代码列表 get_sector_list
-        //
-        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhttn72svo/mindoc-1h10r5907noko.html
-
-
-        // 参数           是否必选    参数类型    参数说明
-        // list_type        Y        int      返回数据类型（0-只返回代码；1-返回代码和名称；）
-
-
-        JSONObject result_2 = TdxTqHttpClient.call("get_sector_list",
-                                                   Map.of("list_type", 1));
-
-
-        // 获取板块成份股 get_stock_list_in_sector
-        //
-        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhttn72svo/mindoc-1h10r92mchgug.html
-
-
-        //     参数     是否必选    参数类型       参数说明
-        // block_code    Y        str         板块代码（block_type=0 表示传入 系统板块 代码 或 名称【880952/芯片】）
-        // block_type    N        str         板块类型（block_type=1 表示传入 自定义板块简称【YD/月多】）
-        // list_type     Y        int         返回数据类型（0-只返回代码；1-返回代码和名称；）
-
-
-        JSONObject result_3 = TdxTqHttpClient.call("get_stock_list_in_sector",
-                                                   Map.of("block_code", "880952.SH", "block_type", 0, "list_type", 1));
-
+        List<SimpleStockDTO> sectorList = TdxTqAPI.get_sector_list();
         return null;
     }
 
