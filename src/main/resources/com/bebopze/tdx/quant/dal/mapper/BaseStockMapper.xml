@@ -111,8 +111,11 @@
         FROM base_stock
 
         <where>
-            <if test="type != null">
-                AND type = #{type}
+            <if test="typeSet != null and typeSet.size() > 0">
+                type IN
+                <foreach collection="typeSet" open="(" separator="," close=")" item="type">
+                    #{type}
+                </foreach>
             </if>
             <if test="lastId != null">
                 AND id > #{lastId}

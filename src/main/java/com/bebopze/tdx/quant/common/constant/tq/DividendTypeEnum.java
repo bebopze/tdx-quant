@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 
 
 /**
- * dividend_type 复权类型                   - https://help.tdx.com.cn/quant/docs/markdown/Dict.html#dividend_type复权类型
+ * dividend_type 复权类型                   - https://help.tdx.com.cn/quant/docs/markdown/Dict.html#dividend-type复权类型
  *
  * @author: bebopze
  * @date: 2026/10/1

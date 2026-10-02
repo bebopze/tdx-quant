@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -34,12 +35,12 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
     /**
      * 游标分页（非 OFFSET分页）
      *
-     * @param type
+     * @param typeSet
      * @param lastId
      * @param pageSize
      * @return
      */
-    List<BaseStockDO> listByCursor(@Param("type") Integer type,
+    List<BaseStockDO> listByCursor(@Param("typeSet") Set<Integer> typeSet,
                                    @Param("lastId") Long lastId,
                                    @Param("pageSize") int pageSize);
 

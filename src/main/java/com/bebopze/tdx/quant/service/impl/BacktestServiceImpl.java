@@ -250,7 +250,7 @@ public class BacktestServiceImpl implements BacktestService {
             BtTaskDO new_batchNoEntity = new BtTaskDO();
 
             new_batchNoEntity.setBatchNo(lastBatchNo + 1);
-            new_batchNoEntity.setStockType(btCompareDTO.getStockType());
+            new_batchNoEntity.setStockType(btCompareDTO.getBtStockType());
             new_batchNoEntity.setStatus(1);
             new_batchNoEntity.setStartDate(startDate);
             new_batchNoEntity.setEndDate(endDate);

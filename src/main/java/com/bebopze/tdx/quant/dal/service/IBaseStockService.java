@@ -38,14 +38,16 @@ public interface IBaseStockService extends IService<BaseStockDO> {
 
     List<BaseStockDO> listAllKline(Integer type);
 
+    List<BaseStockDO> listAllKline(Set<Integer> typeSet);
+
     /**
      * 从 Cache 中获取   全部个股/ETF
      *
-     * @param type    股票类型：1-A股；2-ETF；  null：全部（A股 + ETF）
+     * @param typeSet 股票类型：null-全部；1-A股；2-ETF；11-港股；12-美股；
      * @param refresh 是否刷新缓存：true/false
      * @return
      */
-    List<BaseStockDO> listAllKline(Integer type, boolean refresh);
+    List<BaseStockDO> listAllKline(Set<Integer> typeSet, boolean refresh);
 
     List<BaseStockDO> listAllETFKline();
 

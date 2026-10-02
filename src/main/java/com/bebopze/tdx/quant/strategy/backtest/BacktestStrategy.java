@@ -482,7 +482,7 @@ public class BacktestStrategy {
         // 任务批次号
         taskDO.setBatchNo(batchNo);
         // 回测股票类型
-        taskDO.setStockType(btCompareDTO.get().getStockType());
+        taskDO.setStockType(btCompareDTO.get().getBtStockType());
         // 任务状态
         taskDO.setStatus(1);
 
@@ -751,8 +751,8 @@ public class BacktestStrategy {
 
         // double ztRatio = btCompareDTO.get().ztFlag_true() || btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 0.7 : 1.0;
         double ztRatio = btCompareDTO.get().ztFlag_true() ? 0.7 : 1.0;
-        ztRatio = btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 0.5 : ztRatio;
-        int min_diff = btCompareDTO.get().getStockType() == StockTypeEnum.ETF.type ? 500 : 70;
+        ztRatio = btCompareDTO.get().getBtStockType() == StockTypeEnum.ETF.type ? 0.5 : ztRatio;
+        int min_diff = btCompareDTO.get().getBtStockType() == StockTypeEnum.ETF.type ? 500 : 70;
 
 
         LocalDate startDate = taskDO.getStartDate();
@@ -3470,12 +3470,23 @@ public class BacktestStrategy {
                  ListUtil.size(data.allType_stockDOList), Thread.currentThread().getName());
 
 
-        // 仅明确 回测ETF   ->   可只加载 ETF数据（回测个股 -> 有大盘极限底 ETF抄底策略）
-        Integer stockType = Objects.equals(btCompareDTO.get().getStockType(), StockTypeEnum.ETF.type) ? StockTypeEnum.ETF.type : null;
+        // ----------------------------- btStockTypeSet（个股数据 加载范围）-----------------------------------------------
+
+
+        Set<Integer> btStockTypeSet = btCompareDTO.get().getBtStockType() == 1 ?
+
+                // 回测 1-A股   ->   需加载 A股+ETF（有大盘极限底  ->  ETF 抄底策略）
+                Set.of(StockTypeEnum.A_STOCK.type, StockTypeEnum.ETF.type) :
+
+                // 回测 2-ETF / 11-港股 / 12-美股   ->   仅需加载 其自身 即可
+                Set.of(btCompareDTO.get().getBtStockType());
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 全量行情
-        data = initDataService.initData(startDate, endDate, stockType, false, 0);
+        data = initDataService.initData(startDate, endDate, btStockTypeSet, false, 0);
 
 
         log.info("--------------------------- data.allType_stockDOList - after      >>>     size : {} , 线程 : {}",

@@ -92,31 +92,35 @@ public class InitDataServiceImpl implements InitDataService {
 
 
     @Override
-    public BacktestCache initData(LocalDate startDate, LocalDate endDate, Integer stockType, boolean refresh) {
-        return initData(startDate, endDate, stockType, refresh, 0);
+    public BacktestCache initData(LocalDate startDate,
+                                  LocalDate endDate,
+                                  Set<Integer> btStockTypeSet,
+                                  boolean refresh) {
+
+        return initData(startDate, endDate, btStockTypeSet, refresh, 0);
     }
 
 
     /**
      * 初始化  全量行情 Cache（全A + 全板块）
      *
-     * @param startDate 内存16G以下   ->   一次截取3年
-     *                  内存32G以下   ->   一次截取5年
-     *                  内存64G以下   ->   一次截取10年
-     *                  内存128G以下  ->   一次截取20年
+     * @param startDate      内存16G以下   ->   一次截取3年
+     *                       内存32G以下   ->   一次截取5年
+     *                       内存64G以下   ->   一次截取10年
+     *                       内存128G以下  ->   一次截取20年
      * @param endDate
-     * @param stockType 股票类型：null-全部（A股+ETF）；1-A股；2-ETF；
+     * @param btStockTypeSet 股票类型：null-全部；1-A股；2-ETF；11-港股；12-美股；
      * @param refresh
-     * @param nMonth    往前倒推  N 月（多加载 N月数据，默认：0）    // TODO：并无任何计算 需要往前倒推 N月数据（EXT_DATA [RPS250/MA250/月多/...] 指标计算   ->   有独立的 DataDTO  数据拉取实现，与 BacktestCache 毫不相干！！！）
-     *                  后续考虑 彻底废弃此参数！！！
+     * @param nMonth         往前倒推  N 月（多加载 N月数据，默认：0）    // TODO：并无任何计算 需要往前倒推 N月数据（EXT_DATA [RPS250/MA250/月多/...] 指标计算   ->   有独立的 DataDTO  数据拉取实现，与 BacktestCache 毫不相干！！！）
+     *                       后续考虑 彻底废弃此参数！！！
      * @return
      */
     @TotalTime
     @Synchronized
     @Override
-    public BacktestCache initData(LocalDate startDate, LocalDate endDate, Integer stockType, boolean refresh,
+    public BacktestCache initData(LocalDate startDate, LocalDate endDate, Set<Integer> btStockTypeSet, boolean refresh,
                                   int nMonth) {
-        log.info("initData     >>>     startDate : {}, endDate : {}, stockType : {} , refresh : {}, nMonth : {}", startDate, endDate, stockType, refresh, nMonth);
+        log.info("initData     >>>     startDate : {}, endDate : {}, btStockTypeSet : {} , refresh : {}, nMonth : {}", startDate, endDate, btStockTypeSet, refresh, nMonth);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -151,7 +155,7 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // 加载   全量行情数据 - 个股+ETF
-        loadAllStockKline(startDate, endDate, stockType, refresh, nMonth);
+        loadAllStockKline(startDate, endDate, btStockTypeSet, refresh, nMonth);
 
 
         // 加载   全量行情数据 - 板块
@@ -240,21 +244,24 @@ public class InitDataServiceImpl implements InitDataService {
      *
      * @return
      */
-    private void loadAllStockKline(LocalDate startDate, LocalDate endDate, Integer stockType, boolean refresh,
+    private void loadAllStockKline(LocalDate startDate,
+                                   LocalDate endDate,
+                                   Set<Integer> btStockTypeSet,
+                                   boolean refresh,
                                    int nMonth) {
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        log.info("loadAllStockKline     >>>     startDate : {}, endDate : {} , stockType : {}", startDate, endDate, stockType);
+        log.info("loadAllStockKline     >>>     startDate : {}, endDate : {} , btStockTypeSet : {}", startDate, endDate, btStockTypeSet);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // DB 数据加载（个股+ETF）
-        data.allType_stockDOList = baseStockService.listAllKline(stockType, refresh);
+        data.allType_stockDOList = baseStockService.listAllKline(btStockTypeSet, refresh);
         // 空数据 过滤
         data.allType_stockDOList = data.allType_stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && CollectionUtils.isNotEmpty(e.getKlineDTOList())
                                                                             // TODO   基金北向
