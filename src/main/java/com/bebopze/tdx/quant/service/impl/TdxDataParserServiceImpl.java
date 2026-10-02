@@ -1726,21 +1726,21 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             klines = klinesFromTdx(stockCode);
         }
 
-        // 2、东方财富 API
-        else if (apiType == 2) {
-
-            if (updateTypeEnum == UpdateTypeEnum.ALL) {
-
-                // 全量更新     =>     全量 K线数据
-                StockKlineHisResp resp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-                klines = resp.getKlines();
-
-            } else {
-
-                // 增量更新     =>     最后一日  实时行情数据
-                klines = EastMoneyKlineAPI.stockKlineLastN(stockCode);
-            }
-        }
+//        // 2、东方财富 API
+//        else if (apiType == 2) {
+//
+//            if (updateTypeEnum == UpdateTypeEnum.ALL) {
+//
+//                // 全量更新     =>     全量 K线数据
+//                StockKlineHisResp resp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
+//                klines = resp.getKlines();
+//
+//            } else {
+//
+//                // 增量更新     =>     最后一日  实时行情数据
+//                klines = EastMoneyKlineAPI.stockKlineLastN(stockCode);
+//            }
+//        }
 
 
         // 3、同花顺 API

@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.client;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.tq.DividendTypeEnum;
 import com.bebopze.tdx.quant.common.constant.tq.GetStockListEnum;
 import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
@@ -215,6 +216,7 @@ public class TdxTqAPI {
                       KlineDTO dto = new KlineDTO();
 
                       dto.setDate(DateTimeUtil.parseDate_yyyyMMdd(date_arr.getString(i)));
+                      // 分笔/分钟 级别
                       // dto.setTime(DateTimeUtil.parseTime_HHmmss(time_arr.getString(i)));
 
                       dto.setOpen(open_arr.getDouble(i));
@@ -222,8 +224,19 @@ public class TdxTqAPI {
                       dto.setLow(low_arr.getDouble(i));
                       dto.setClose(close_arr.getDouble(i));
 
-                      dto.setVol(volume_arr.getLong(i));
-                      dto.setAmo(amount_arr.getDouble(i));
+
+                      // 股（A股、ETF、美股）
+                      long vol = volume_arr.getLong(i);
+                      // 手（板块、港股）
+                      if (StockTypeEnum.isBlock(code) || StockTypeEnum.isHkStock(code)) {
+                          // 股 = 手 x 100
+                          vol *= 100;
+                      }
+                      dto.setVol(vol);
+
+
+                      // 万元 -> 元
+                      dto.setAmo(amount_arr.getDouble(i) * 1_0000);
 
 
 //                      // ---------- 股本（换手率、流通市值、总市值）

@@ -168,7 +168,7 @@ public class LdayParser {
             checkReport__lastKline(klineTxtReport__ldayDTOList);
 
 
-            // -----------------------
+            // ---------------------------------------------------------------------------------------------------------
 
 
             // TODO   后续：所有 kline 数据   ->   全部 切换到 TQ API
@@ -184,7 +184,7 @@ public class LdayParser {
             }
 
 
-            // -----------------------
+            // ---------------------------------------------------------------------------------------------------------
 
 
 //            // 往期数据  ->  报表
@@ -283,9 +283,10 @@ public class LdayParser {
 
 
                 // 非板块标的 计算换手率
-                if (isNotBlock && e.getLtgb() > 0) {
+                if (isNotBlock && e.getLtgb() >= 0 && e.getZgb() > 0) {
                     // 换手率 = vol / 流通股本  x 100%
-                    e.setTurnoverPct(NumUtil.num2Decimal((double) e.getVol() / e.getLtgb() * 100));
+                    long gb = e.getLtgb() > 0 ? e.getLtgb() : e.getZgb(); // 港美股  ->  无 流通股本（取 总股本）
+                    e.setTurnoverPct(NumUtil.num2Decimal((double) e.getVol() / gb * 100));
                 }
             }
         });
