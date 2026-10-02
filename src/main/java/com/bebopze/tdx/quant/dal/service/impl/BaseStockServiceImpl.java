@@ -154,25 +154,30 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
     @Override
     public List<BaseStockDO> listAllKline(Integer type) {
-        return listAllKline(type, false);
+        return listAllKline(Set.of(type), false);
+    }
+
+    @Override
+    public List<BaseStockDO> listAllKline(Set<Integer> typeSet) {
+        return listAllKline(typeSet, false);
     }
 
 
     @TotalTime
     @Override
-    public List<BaseStockDO> listAllKline(Integer type, boolean refresh) {
-        return listAllKline_0(type, refresh)
+    public List<BaseStockDO> listAllKline(Set<Integer> typeSet, boolean refresh) {
+        return listAllKline_0(typeSet, refresh)
                 .stream()
-                .filter(e -> type == null || Objects.equals(type, e.getType()))
+                .filter(e -> CollectionUtils.isEmpty(typeSet) || typeSet.contains(e.getType()))
                 .collect(Collectors.toList());
     }
 
-    private List<BaseStockDO> listAllKline_0(Integer type, boolean refresh) {
-        log.info("listAllKline     >>>     type : {} , refresh : {}", type, refresh);
+    private List<BaseStockDO> listAllKline_0(Set<Integer> typeSet, boolean refresh) {
+        log.info("listAllKline     >>>     typeSet : {} , refresh : {}", typeSet, refresh);
 
 
         // listAllFromDiskCache >>> totalTime :6.9 s
-        return listAllFromDiskCache(type, refresh);
+        return listAllFromDiskCache(typeSet, refresh);
 
 
         // listByCursor     >>>     totalTime : 52.4s
@@ -242,7 +247,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
      *
      * @return
      */
-    private List<BaseStockDO> listAllFromDiskCache(Integer type, boolean refresh) {
+    private List<BaseStockDO> listAllFromDiskCache(Set<Integer> typeSet, boolean refresh) {
         long start = System.currentTimeMillis();
 
 
@@ -250,7 +255,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         List<BaseStockDO> list = JsonFileWriterAndReader.readLargeListFromFile___stock_listAllKline();
 
         if (CollectionUtils.isEmpty(list) || list.size() < 5500 || refresh) {
-            list = listByCursor(type);
+            list = listByCursor(typeSet);
 
 
             // write Cache
@@ -268,7 +273,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     }
 
 
-    private List<BaseStockDO> listByCursor(Integer type) {
+    private List<BaseStockDO> listByCursor(Set<Integer> typeSet) {
         long start = System.currentTimeMillis();
 
 
@@ -283,7 +288,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             long start_1 = System.currentTimeMillis();
 
 
-            List<BaseStockDO> pageList = baseMapper.listByCursor(type, lastId, pageSize);
+            List<BaseStockDO> pageList = baseMapper.listByCursor(typeSet, lastId, pageSize);
             if (pageList.isEmpty()) {
                 break;
             }

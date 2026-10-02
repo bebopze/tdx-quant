@@ -284,14 +284,14 @@ public class BacktestCache {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public List<BaseStockDO> getAllType_stockDOList(Integer stockType) {
-        if (Objects.equals(stockType, StockTypeEnum.A_STOCK.type)) {
+    public List<BaseStockDO> getAllType_stockDOList(Integer btStockType) {
+        if (Objects.equals(btStockType, StockTypeEnum.A_STOCK.type)) {
             return allType_stockDOList;
-        } else if (Objects.equals(stockType, StockTypeEnum.ETF.type)) {
+        } else if (Objects.equals(btStockType, StockTypeEnum.ETF.type)) {
             return ETF_stockDOList;
         }
 
-        throw new BizException("未知的 stockType : " + stockType);
+        throw new BizException("未知的 btStockType : " + btStockType);
     }
 
 

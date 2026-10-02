@@ -21,10 +21,10 @@ public class BacktestCompareDTO {
 
 
     /**
-     * 回测股票类型：1-A股；2-ETF；3-板块；
+     * 回测股票类型：1-A股；2-ETF；3-板块；11-港股；12-美股；
      */
-    @Schema(description = "回测股票类型：1-A股；2-ETF；3-板块；", example = "1")
-    private int stockType = 1;
+    @Schema(description = "回测股票类型：1-A股；2-ETF；3-板块；11-港股；12-美股；", example = "1")
+    private Integer btStockType = 1;
 
 
     /**
