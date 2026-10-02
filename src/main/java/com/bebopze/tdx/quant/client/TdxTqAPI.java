@@ -15,7 +15,6 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.TdxFormatCodeUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,16 +34,18 @@ public class TdxTqAPI {
     public static void main(String[] args) {
 
 
-        System.out.println(get_stock_list(GetStockListEnum.A_STOCK));
-        System.out.println(get_sector_list());
-        System.out.println(get_stock_list_in_sector("880952", 1));
-
-
-        System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
-        System.out.println(get_market_snapshot("880003.SH"));
-
-
-        System.out.println(get_gb_info_by_date("000001.SZ", LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_stock_list(GetStockListEnum.A_STOCK));
+//        System.out.println(get_sector_list());
+//        System.out.println(get_stock_list_in_sector("880952", 1));
+//
+//
+//        System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_market_snapshot("880003.SH"));
+//
+//
+//        System.out.println(get_gb_info_by_date("000001.SZ", LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_gb_info_by_date("880515.SH", LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_gb_info_by_date("300783.SZ", LocalDate.of(2019, 7, 12), LocalDate.of(2026, 9, 30)));
     }
 
 
@@ -147,9 +148,9 @@ public class TdxTqAPI {
      * 根据股票，获取 历史行情
      *
      * @param stockCode  证券代码
-     * @param periodEnum 周期
-     * @param start_time 起始时间（年月日：yyyyMMdd）
-     * @param end_time   结束时间（年月日：yyyyMMdd）
+     * @param periodEnum 周期（笔/分钟/日/周/月）
+     * @param start_time 起始时间
+     * @param end_time   结束时间
      * @return
      */
     public static List<KlineDTO> get_market_data(String stockCode,
@@ -166,7 +167,7 @@ public class TdxTqAPI {
         // 参数          是否必选     参数类型            参数说明
         // stock_list     Y         List[str]     证券代码列表
         // field_list     N         List[str]     字段筛选，传空则返回全部
-        // period         Y         str           周期
+        // period         Y         str           周期（笔/分钟/日/周/月）
         // start_time     N         str           起始时间（年月日：yyyyMMdd）
         // end_time       N         str           结束时间（年月日：yyyyMMdd）
         // count          N         int           返回数据个数（每只股票）
@@ -187,7 +188,7 @@ public class TdxTqAPI {
 
 
         // 每日股本
-        List<GetGbInfoDTO> gbInfoDTOList = get_gb_info_by_date(stockCode, start_time, end_time);
+        // List<GetGbInfoDTO> gbInfoDTOList = get_gb_info_by_date(stockCode, start_time, end_time);
 
 
         List<KlineDTO> dtoList = Lists.newArrayList();
@@ -225,29 +226,32 @@ public class TdxTqAPI {
                       dto.setAmo(amount_arr.getDouble(i));
 
 
-                      // ---------- 股本（换手率、流通市值、总市值）
-                      GetGbInfoDTO gbDTO = gbInfoDTOList.get(i);
-
-                      LocalDate date = gbDTO.getDate();
-                      Long ltgb = gbDTO.getLtgb();
-                      Long zgb = gbDTO.getZgb();
-
-
-                      // 换手率 = (成交量 / 流通股本) * 100
-                      dto.setTurnoverPct(NumUtil.of(dto.getVol() / ltgb * 100));
-
-                      // 流通市值
-                      double ltMarketValue = NumUtil.of(dto.getClose() * ltgb);
-                      // 总市值
-                      double totalMarketValue = NumUtil.of(dto.getClose() * zgb);
-
-
-                      Assert.isTrue(date.isEqual(dto.getDate()), String.format("K线.date[%s] != 股本.date[%s]", dto.getDate(), gbDTO.getDate()));
+//                      // ---------- 股本（换手率、流通市值、总市值）
+//                      GetGbInfoDTO gbDTO = gbInfoDTOList.get(i);
+//
+//                      LocalDate date = gbDTO.getDate();
+//                      Long ltgb = gbDTO.getLtgb();
+//                      Long zgb = gbDTO.getZgb();
+//
+//
+//                      // 换手率 = (成交量 / 流通股本) * 100
+//                      dto.setTurnoverPct(ltgb > 0 ? NumUtil.of(dto.getVol() / ltgb * 100) : Double.NaN);
+//
+//                      // 流通市值
+//                      // double ltMarketValue = NumUtil.of(dto.getClose() * ltgb);
+//                      // 总市值
+//                      // double totalMarketValue = NumUtil.of(dto.getClose() * zgb);
+//
+//
+//                      Assert.isTrue(date.isEqual(dto.getDate()), String.format("K线.date[%s] != 股本.date[%s]", dto.getDate(), gbDTO.getDate()));
 
 
                       dtoList.add(dto);
                   }
               });
+
+
+        // LdayParser.fill_gbInfo(stockCode, dtoList);
 
 
         return dtoList;
@@ -335,8 +339,11 @@ public class TdxTqAPI {
     }
 
 
+    //
+
+
     /**
-     * 根据时间段 获取 股本数据     get_gb_info_by_date
+     * 根据时间段 获取 股本数据     get_gb_info_by_date（每日 股本   ->   计算每日   换手率、流通市值、总市值）
      *
      * @param stock_code 股票代码
      * @param start_date 开始日期
@@ -364,7 +371,7 @@ public class TdxTqAPI {
 
 
         String data = result.getString("Value");
-        return JSON.parseArray(data, GetGbInfoDTO.class); // 必须将 Date     int -> String
+        return JSON.parseArray(data, GetGbInfoDTO.class);
     }
 
 }

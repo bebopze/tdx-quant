@@ -70,7 +70,7 @@ public final class TdxFormatCodeUtil {
         }
 
 
-        return up_code + "." + StockMarketEnum.getMarketSymbol(up_code).toUpperCase(Locale.ROOT);
+        return up_code + "." + StockMarketEnum.getTdxTqMarket(up_code).toUpperCase(Locale.ROOT);
     }
 
 

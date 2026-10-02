@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -55,10 +56,13 @@ public class ConvertStock {
             arrDTO.vol[i] = dto.getVol();
             arrDTO.amo[i] = dto.getAmo();
 
-            arrDTO.range_pct[i] = dto.getRangePct();
-            arrDTO.change_pct[i] = dto.getChangePct();
-            arrDTO.change_price[i] = dto.getChangePrice();
-            arrDTO.turnover_pct[i] = of(dto.getTurnoverPct());
+            arrDTO.rangePct[i] = dto.getRangePct();
+            arrDTO.changePct[i] = dto.getChangePct();
+            arrDTO.changePrice[i] = dto.getChangePrice();
+            arrDTO.turnoverPct[i] = of(dto.getTurnoverPct());
+
+            arrDTO.ltgb[i] = of(dto.getLtgb());
+            arrDTO.zgb[i] = of(dto.getZgb());
 
 
             arrDTO.dateCloseMap.put(dto.getDate(), dto.getClose());
@@ -401,6 +405,15 @@ public class ConvertStock {
 
 
             // ---------------------------------------------------
+
+
+            arrDTO.ltsz[i] = of(dto.getLtsz());
+            arrDTO.zsz[i] = of(dto.getZsz());
+
+
+            // ---------------------------------------------------
+
+
         }
 
 
@@ -410,6 +423,10 @@ public class ConvertStock {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+
+    private static long of(Long value) {
+        return null == value ? 0 : value;
+    }
 
     private static int of(Integer value) {
         return null == value ? 0 : value;

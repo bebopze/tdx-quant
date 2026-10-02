@@ -46,50 +46,57 @@ public class BlockFun extends StockFun {
 
 
         // K线数据
-        klineDTOList = blockDO.getKlineDTOList();
+        this.klineDTOList = blockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
-        extDataDTOList = blockDO.getExtDataDTOList();
+        this.extDataDTOList = blockDO.getExtDataDTOList();
 
 
         // -----------------------------------------------
 
 
-        klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
-        extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
+        this.klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
+        this.extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
 
 
         // -----------------------------------------------
 
-        date = klineArrDTO.date;
+        this.date = klineArrDTO.date;
 
-        open = klineArrDTO.open;
-        high = klineArrDTO.high;
-        low = klineArrDTO.low;
-        close = klineArrDTO.close;
+        this.open = klineArrDTO.open;
+        this.high = klineArrDTO.high;
+        this.low = klineArrDTO.low;
+        this.close = klineArrDTO.close;
 
-        vol = klineArrDTO.vol;
-        amo = klineArrDTO.amo;
-
-
-        // -----------------------------------------------
-
-
-        rps10 = extDataArrDTO.rps10;
-        rps20 = extDataArrDTO.rps20;
-        rps50 = extDataArrDTO.rps50;
-        rps120 = extDataArrDTO.rps120;
-        rps250 = extDataArrDTO.rps250;
+        this.vol = klineArrDTO.vol;
+        this.amo = klineArrDTO.amo;
 
 
         // -----------------------------------------------
 
 
-        dateIndexMap = Maps.newHashMap();
+        this.rps10 = extDataArrDTO.rps10;
+        this.rps20 = extDataArrDTO.rps20;
+        this.rps50 = extDataArrDTO.rps50;
+        this.rps120 = extDataArrDTO.rps120;
+        this.rps250 = extDataArrDTO.rps250;
+
+
+        // -----------------------------------------------
+
+
+        this.ltgb = klineArrDTO.ltgb;
+        this.zgb = klineArrDTO.zgb;
+
+
+        // -----------------------------------------------
+
+
+        this.dateIndexMap = Maps.newHashMap();
         for (int i = 0; i < date.length; i++) {
-            dateIndexMap.put(date[i], i);
+            this.dateIndexMap.put(date[i], i);
         }
 
-        maxIdx = Math.max(0, date.length - 1);
+        this.maxIdx = Math.max(0, date.length - 1);
 
 
         // --------------------------- init data

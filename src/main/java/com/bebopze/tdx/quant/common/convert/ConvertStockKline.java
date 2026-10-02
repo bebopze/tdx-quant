@@ -82,7 +82,9 @@ public class ConvertStockKline {
                 dto.getRangePct(),
                 dto.getChangePct(),
                 dto.getChangePrice(),
-                dto.getTurnoverPct()
+                dto.getTurnoverPct(),
+                dto.getLtgb(),
+                dto.getZgb()
         };
 
 
@@ -136,13 +138,17 @@ public class ConvertStockKline {
         dto.setClose(of(klineArr[i++]));
 
 
-        dto.setVol(Long.valueOf(klineArr[i++]));
+        dto.setVol(Long.parseLong(klineArr[i++]));
         dto.setAmo(of(klineArr[i++]));
 
         dto.setRangePct(of(klineArr[i++]));
         dto.setChangePct(of(klineArr[i++]));
         dto.setChangePrice(of(klineArr[i++]));
         dto.setTurnoverPct(of(klineArr[i++]));
+
+
+        dto.setLtgb(Long.parseLong(klineArr[i++]));
+        dto.setZgb(Long.parseLong(klineArr[i++]));
 
 
         return dto;
@@ -160,7 +166,7 @@ public class ConvertStockKline {
     }
 
     private static Double of(String valStr) {
-        return StringUtils.isBlank(valStr) ? Double.NaN : NumUtil.of(new Double(valStr));
+        return StringUtils.isBlank(valStr) ? Double.NaN : NumUtil.of(Double.parseDouble(valStr));
     }
 
 

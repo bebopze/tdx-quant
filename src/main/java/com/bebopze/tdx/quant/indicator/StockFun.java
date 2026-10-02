@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.indicator;
 
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
+import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.domain.dto.fun.MidAdjustResult;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
@@ -86,6 +87,10 @@ public class StockFun {
     double[] rps250;
 
 
+    long[] ltgb;
+    long[] zgb;
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -108,50 +113,57 @@ public class StockFun {
 
 
         // K线数据
-        klineDTOList = stockDO.getKlineDTOList();
+        this.klineDTOList = stockDO.getKlineDTOList();
         // 扩展数据（预计算 指标）
-        extDataDTOList = stockDO.getExtDataDTOList();
+        this.extDataDTOList = stockDO.getExtDataDTOList();
 
 
         // -----------------------------------------------
 
 
-        klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
-        extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
+        this.klineArrDTO = ConvertStock.kline__dtoList2Arr(klineDTOList);
+        this.extDataArrDTO = ConvertStock.extData__dtoList2Arr(extDataDTOList);
 
 
         // -----------------------------------------------
 
-        date = klineArrDTO.date;
+        this.date = klineArrDTO.date;
 
-        open = klineArrDTO.open;
-        high = klineArrDTO.high;
-        low = klineArrDTO.low;
-        close = klineArrDTO.close;
+        this.open = klineArrDTO.open;
+        this.high = klineArrDTO.high;
+        this.low = klineArrDTO.low;
+        this.close = klineArrDTO.close;
 
-        vol = klineArrDTO.vol;
-        amo = klineArrDTO.amo;
-
-
-        // -----------------------------------------------
-
-
-        rps10 = extDataArrDTO.rps10;
-        rps20 = extDataArrDTO.rps20;
-        rps50 = extDataArrDTO.rps50;
-        rps120 = extDataArrDTO.rps120;
-        rps250 = extDataArrDTO.rps250;
+        this.vol = klineArrDTO.vol;
+        this.amo = klineArrDTO.amo;
 
 
         // -----------------------------------------------
 
 
-        dateIndexMap = Maps.newHashMap();
+        this.rps10 = extDataArrDTO.rps10;
+        this.rps20 = extDataArrDTO.rps20;
+        this.rps50 = extDataArrDTO.rps50;
+        this.rps120 = extDataArrDTO.rps120;
+        this.rps250 = extDataArrDTO.rps250;
+
+
+        // -----------------------------------------------
+
+
+        this.ltgb = klineArrDTO.ltgb;
+        this.zgb = klineArrDTO.zgb;
+
+
+        // -----------------------------------------------
+
+
+        this.dateIndexMap = Maps.newHashMap();
         for (int i = 0; i < date.length; i++) {
-            dateIndexMap.put(date[i], i);
+            this.dateIndexMap.put(date[i], i);
         }
 
-        maxIdx = Math.max(0, date.length - 1);
+        this.maxIdx = Math.max(0, date.length - 1);
 
 
         // --------------------------- init data
@@ -164,7 +176,7 @@ public class StockFun {
         this.shszQuoteSnapshotResp = null;
 
 
-        ssf = extDataArrDTO.SSF;
+        this.ssf = extDataArrDTO.SSF;
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -407,6 +419,88 @@ public class StockFun {
     public int[] klineType() {
         return TdxExtFun.klineType(close);
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+//    /**
+//     * 换手率
+//     *
+//     * @param isBlock
+//     * @return
+//     */
+//    public double[] hsl(boolean isBlock) {
+//        double[] hsl = new double[close.length];
+//
+//        for (int i = 0; i < close.length; i++) {
+//            // 换手率 = vol / ltgb * 100%
+//            hsl[i] = (double) vol[i] * 100 / ltgb[i] * 100;
+//        }
+//        return hsl;
+//    }
+
+
+    /**
+     * 流通市值
+     *
+     * @return
+     */
+    public double[] ltsz() {
+        double[] ltsz = new double[close.length];
+
+
+        if (code.equals("000001")) {
+            log.info("{}", ltsz);
+        }
+
+
+        // 板块  成交量/成交额/股本/市值   ->   板块内 个股   成交量/成交额/股本/市值   累加
+        if (StockTypeEnum.isBlock(code)) {
+            // TODO   板块市值 ->  板块内 个股市值累加
+
+        } else {
+            for (int i = 0; i < close.length; i++) {
+                // 流通市值 = ltgb * close
+                ltsz[i] = ltgb[i] * close[i];
+            }
+        }
+
+
+        return ltsz;
+    }
+
+    /**
+     * 总市值
+     *
+     * @return
+     */
+    public double[] zsz() {
+        double[] zsz = new double[close.length];
+
+
+        if (code.equals("000001")) {
+            log.info("{}", zsz);
+        }
+
+
+        // 板块  成交量/成交额/股本/市值   ->   板块内 个股   成交量/成交额/股本/市值   累加
+        if (StockTypeEnum.isBlock(code)) {
+            // TODO   板块市值 ->  板块内 个股市值累加
+
+        } else {
+            for (int i = 0; i < close.length; i++) {
+                // 总市值 = zgb * close
+                zsz[i] = zgb[i] * close[i];
+            }
+        }
+
+
+        return zsz;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     // -----------------------------------------------------------------------------------------------------------------
