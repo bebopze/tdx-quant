@@ -418,11 +418,6 @@ public class InitDataServiceImpl implements InitDataService {
                                                       .collect(Collectors.toList());
 
 
-//        // 全部个股
-//        data.allType_stockDOList = data.A_stockDOList;
-        data.allType_stockDOList = null;
-
-
         log.info("loadAllStockKline     >>>     startDate : {}, endDate : {} , A_stockDOList size : {} , ETF_stockDOList size : {} , HK_stockDOList size : {} , US_stockDOList size : {} , allType_stockDOList size : {}",
                  startDate, endDate, data.A_stockDOList.size(), data.ETF_stockDOList.size(), data.HK_stockDOList.size(), data.US_stockDOList.size(), ListUtil.size(data.allType_stockDOList));
     }
