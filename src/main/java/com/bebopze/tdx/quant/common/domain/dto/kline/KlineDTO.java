@@ -49,4 +49,9 @@ public class KlineDTO implements Serializable {
     // 换手率（%）
     private double turnoverPct;
 
+
+    // 流通股本（股）
+    private long ltgb;
+    // 总股本（股）
+    private long zgb;
 }

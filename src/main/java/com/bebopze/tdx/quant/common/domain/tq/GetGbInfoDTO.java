@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 
@@ -14,14 +15,15 @@ import java.time.LocalDate;
  * @author: bebopze
  * @date: 2026/10/1
  */
+@Slf4j
 @Data
 public class GetGbInfoDTO {
 
     /**
      * 日期
      */
-    @JSONField(format = "yyyyMMdd")   // 仅对 String 有效     ->     解析成 int（会被识别为 时间戳） 自动转换 失败
-    @JsonFormat(pattern = "yyyyMMdd")
+    // @JSONField(format = "yyyyMMdd")   // 仅对 String 有效     ->     解析成 int（会被识别为 时间戳） 自动转换 失败
+    // @JsonFormat(pattern = "yyyyMMdd")
     private String Date;
 
     /**
@@ -39,8 +41,12 @@ public class GetGbInfoDTO {
 
 
     public LocalDate getDate() {
-        return DateTimeUtil.parseDate_yyyyMMdd(Date);
+        try {
+            return DateTimeUtil.parseDate_yyyyMMdd(Date);
+        } catch (Exception ex) {
+            log.error("parseDate_yyyyMMdd - err     >>>     Date : {}", Date);
+            return null;
+        }
     }
-
 
 }

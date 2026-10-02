@@ -234,6 +234,13 @@ public class ExtDataArrDTO implements Serializable {
     // ---------------------------------------------------
 
 
+    public double[] ltsz;
+    public double[] zsz;
+
+
+    // ---------------------------------------------------
+
+
     public boolean 月空(int idx) {
         return !月多[idx];
     }
@@ -465,6 +472,13 @@ public class ExtDataArrDTO implements Serializable {
 
 
         this.klineType = new int[size];
+
+
+        // ---------------------------------------------------
+
+
+        this.ltsz = new double[size];
+        this.zsz = new double[size];
 
 
         // ---------------------------------------------------

@@ -3329,7 +3329,7 @@ public class BacktestStrategy {
             return 0.0;
         }
 
-        return klineArrDTO.change_pct[idx];
+        return klineArrDTO.changePct[idx];
     }
 
 

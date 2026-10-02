@@ -92,13 +92,21 @@ public class TdxTqServiceImpl implements TdxTqService {
                                  Map.of("stock_code", formatCode, "field_list", SNAPSHOT_FIELDS));
 
 
+        long vol = result.getLongValue("Volume", 0L);
+        // 对于 沪深京 品种   ->   Volume、NowVol 的 单位为：手
+        if (StockTypeEnum.isAStock(code)) {
+            // 股 = 手 x 100
+            vol *= 100;
+        }
+
+
         return new TdxRealtimeQuoteDTO(
                 code,
                 NumUtil.of(result.getDouble("Open")),
                 NumUtil.of(result.getDouble("Max")),
                 NumUtil.of(result.getDouble("Min")),
                 NumUtil.of(result.getDouble("Now")),
-                result.getLongValue("Volume", 0L),
+                vol,
                 NumUtil.of(result.getDouble("Amount")),
                 NumUtil.of(result.getDouble("LastClose"))
                 // LocalDateTime.now()

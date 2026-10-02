@@ -2,17 +2,25 @@ package com.bebopze.tdx.quant.parser.tdxdata;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.StockTypeUtil;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
@@ -28,7 +36,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 import static com.bebopze.tdx.quant.parser.tdxdata.KlineTxtExportParser.TDX_SHIT_BUG___REPEAT_KLINE;
@@ -83,6 +93,18 @@ public class LdayParser {
     private static final double DB_HIGH_LIMIT = 1000_0000;
 
 
+    public static List<LdayDTO> parseByStockCode(String stockCode) {
+
+        // xx.lday 文件   ->   解析
+        List<LdayDTO> dtoList = exec_parseByStockCode(stockCode);
+
+        // 每日股本（流通股本、总股本、换手率）
+        fill_gbInfo(stockCode, dtoList);
+
+        return dtoList;
+    }
+
+
     /**
      * tdx 盘后数据（xx.day）  -   解析器
      *
@@ -94,7 +116,7 @@ public class LdayParser {
      * @return
      */
     @SneakyThrows
-    public static List<LdayDTO> parseByStockCode(String stockCode) {
+    public static List<LdayDTO> exec_parseByStockCode(String stockCode) {
 
         // A股（sz/sh/bj）
         String market = StockMarketEnum.getMarketSymbol(stockCode);
@@ -149,6 +171,22 @@ public class LdayParser {
             // -----------------------
 
 
+            // TODO   后续：所有 kline 数据   ->   全部 切换到 TQ API
+
+            // TQ   -替换->   无 导出txt
+            if (CollectionUtils.isEmpty(klineTxtReport__ldayDTOList)) {
+                log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - start     >>>     code : {} , klineTxtReport__ldayDTOList : {} ", stockCode, ListUtil.size(klineTxtReport__ldayDTOList));
+
+                List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, KLINE_START_DATE, null);
+                klineTxtReport__ldayDTOList = tq_klineDTOList.stream().map(LdayDTO::of).collect(Collectors.toList());
+
+                log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - end       >>>     code : {} , tq_klineDTOList : {} ", stockCode, ListUtil.size(tq_klineDTOList));
+            }
+
+
+            // -----------------------
+
+
 //            // 往期数据  ->  报表
 //            // klineTxtReport__ldayDTOList = Lists.newArrayList();
 //            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
@@ -190,6 +228,67 @@ public class LdayParser {
 
 
         return Lists.newArrayList();
+    }
+
+
+    /**
+     * 每日股本（流通股本、总股本、换手率）
+     *
+     * @param stockCode
+     * @param dtoList
+     */
+    public static void fill_gbInfo(String stockCode, List<LdayDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return;
+        }
+
+
+        LocalDate startDate = dtoList.getFirst().tradeDate;
+        LocalDate endDate = dtoList.getLast().tradeDate;
+
+
+        // 补充info
+        List<GetGbInfoDTO> gbList = TdxTqAPI.get_gb_info_by_date(stockCode, startDate, endDate);
+
+
+        // gbList_size  >=  dtoList_size
+        //
+        // TQ 股本API          ->   保留了 停牌日的数据
+        // xx.lday / xx.txt   ->   均剔除了 停牌日的数据
+        Assert.isTrue(ListUtil.size(gbList) >= ListUtil.size(dtoList),
+                      String.format("股本信息异常：[请 check 是否开启了 tdx客户端（TQ服务）]     >>>     stockCode : %s , startDate : %s , endDate : %s , dtoList.size() : %s , gbList.size() : %s",
+                                    stockCode, startDate, endDate, ListUtil.size(dtoList), ListUtil.size(gbList)));
+
+
+        // 直接构建 日期 -> GbInfoDTO 的映射
+        Map<LocalDate, GetGbInfoDTO> date_gb_map = Maps.newHashMapWithExpectedSize(gbList.size());
+        for (GetGbInfoDTO gb : gbList) {
+            date_gb_map.put(gb.getDate(), gb);
+        }
+
+
+        // 循环外提前判断，只计算一次（板块  成交量/成交额/股本/市值   ->   板块内 个股   成交量/成交额/股本/市值   累加）
+        boolean isNotBlock = !StockTypeEnum.isBlock(stockCode);
+
+
+        dtoList.forEach(e -> {
+
+            GetGbInfoDTO gbDTO = date_gb_map.get(e.tradeDate);
+            if (null != gbDTO) {
+
+                // 流通股本
+                e.setLtgb(gbDTO.getLtgb());
+                // 总股本
+                e.setZgb(gbDTO.getZgb());
+
+
+                // 非板块标的 计算换手率
+                if (isNotBlock && e.getLtgb() > 0) {
+                    // 换手率 = vol / 流通股本  x 100%
+                    e.setTurnoverPct(NumUtil.num2Decimal((double) e.getVol() / e.getLtgb() * 100));
+                }
+            }
+        });
     }
 
 
@@ -334,6 +433,21 @@ public class LdayParser {
             }
 
 
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // xx.lday  解析正常  ->  股（A股、ETF、美股）
+
+            // 手（板块、港股）
+            if (StockTypeEnum.isBlock(code) || StockTypeEnum.isHkStock(code)) {
+                // 股 = 手 x 100
+                vol *= 100;
+            }
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
             // 保留字段
             int unUsed = byteBuffer.getInt();
 //            if (unUsed != 0) {
@@ -389,7 +503,7 @@ public class LdayParser {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
+            LdayDTO dto = new LdayDTO(code, tradeDate, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null, 0L, 0L);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -494,8 +608,8 @@ public class LdayParser {
                     if (diffFields.containsKey("vol")) {
 
                         // vol/amo 不等 -> 数据异常
-                        log.error("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
-                                  stockCode, i, dto1.tradeDate, diffFields.toJSONString());
+                        log.warn("check err     >>>     stockCode : {} , idx : {} , date : {} , diffFields : {}",
+                                 stockCode, i, dto1.tradeDate, diffFields.toJSONString());
                     } else {
 
                         // vol/amo 相等 -> 复权 bug
@@ -558,7 +672,7 @@ public class LdayParser {
 
             if ("vol".equals(key)) {
                 if (!v1.equals(v2)) {
-                    log.error("vol - err     >>>     v1={}, v2={}", v1, v2);
+                    log.warn("vol - err     >>>     v1={}, v2={}", v1, v2);
                 } else {
                     log.debug("vol - suc     >>>     v1={}, v2={}", v1, v2);
                 }
@@ -579,6 +693,27 @@ public class LdayParser {
 
         int size1 = size(klineReport__ldayDTOList);
         int size2 = size(lday__ldayDTOList);
+
+
+        // ----------------------------------- VOL（手/股 check） DEBUG -------------------------------------------------
+
+
+        LdayDTO last_txt = ListUtil.last(klineReport__ldayDTOList);
+        LdayDTO last_ldy = ListUtil.last(lday__ldayDTOList);
+
+
+        if (last_txt != null) {
+
+            String vol_msg = String.format("vol对比     >>>     last_txt : %s , last_ldy : %s", last_txt.vol, last_ldy.vol);
+            // System.out.println(vol_msg);
+
+
+            if (!Objects.equals(last_txt.vol, last_ldy.vol)) {
+                log.error(vol_msg);
+            }
+
+            // Assert.isTrue(Objects.equals(last_txt.vol, last_ldy.vol), vol_msg);
+        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -608,7 +743,7 @@ public class LdayParser {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        if (size2 > size1) {
+        if (size2 > size1 && size1 > 0) {
 
             // 真实 开始时间   ->   以 txt 导出为准
             LocalDate txt_startDate = klineReport__ldayDTOList.getFirst().getTradeDate();    // VELO.txt（2025/08/19 起始）
@@ -662,18 +797,46 @@ public class LdayParser {
         private BigDecimal low;
         private BigDecimal close;
         private BigDecimal amount;
+        // 成交量（股）
         private Long vol;
         private BigDecimal changePct;
-        // 涨跌额       C - pre_C          |          今日收盘价 × 涨跌幅 / (1+涨跌幅)
+        // 涨跌额       C - prev_C          |          今日收盘价 × 涨跌幅 / (1+涨跌幅)
         private BigDecimal changePrice;
         // 振幅       H/L   x100-100
         private BigDecimal rangePct;
 
+
         // ----------------------------------- 自动计算 字段
 
 
-        // 换手率
+        // 换手率 = (vol / ltgb) x 100%
         private BigDecimal turnoverPct;
+
+
+        // 流通股本（股）
+        private long ltgb; // 可计算  ->  流通市值 = 流通股本 x 收盘价
+        // 总股本（股）
+        private long zgb;  // 可计算  ->  总市值   = 总股本  x 收盘价
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        public static LdayDTO of(KlineDTO dto) {
+
+            return new LdayDTO(null, dto.getDate(), val(dto.getOpen()), val(dto.getHigh()), val(dto.getLow()), val(dto.getClose()),
+                               val(dto.getAmo()), dto.getVol(), val(dto.getChangePct()), val(dto.getChangePrice()), val(dto.getRangePct()),
+                               val(dto.getTurnoverPct()), dto.getLtgb(), dto.getZgb());
+        }
+
+        private static BigDecimal val(double v) {
+            return NumUtil.double2Decimal(v);
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
     }
 
 
@@ -731,9 +894,11 @@ public class LdayParser {
         // stockCode : 920249 , idx : 2250 , date : 2025-02-13 , diffFields : {"vol":{"v1":"26171562","v2":"9244100"}}
 
 
-        List<LdayDTO> stockDataList = parseByStockCode("SPY");
+//        List<LdayDTO> stockDataList = parseByStockCode("NVDA");
 //        List<LdayDTO> stockDataList = parseByStockCode("00700");
 //        List<LdayDTO> stockDataList = parseByStockCode("513120");
+//        List<LdayDTO> stockDataList = parseByStockCode("300059");
+        List<LdayDTO> stockDataList = parseByStockCode("600519");
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));

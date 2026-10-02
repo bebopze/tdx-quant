@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -21,39 +22,29 @@ public enum StockMarketEnum {
     // ------------------- A股
 
 
-    // 000	0
-    // 001	0
-    // 002	0
-    // 003	0
-    // 300	0
-    // 301	0
+    // 个股 - 00xxxx
+    // 个股 - 30xxxx
 
-
-    // 个股 - 0xxxxx
-    // 个股 - 3xxxxx
     // ETF - 15xxxx
-    SZ("深交所", 0, "sz", "SA", "SZ", Lists.newArrayList("0", "3", "1")),
+    // ETF - 16xxxx
+    // ETF - 18xxxx
+    SZ("深交所", 0, "sz", "SA", "SZ", "SZ", Set.of("00", "30", "15", "16", "18")),
 
 
-    // 600	1
-    // 601	1
-    // 603	1
-    // 605	1
-    // 688	1
-    // 689	1
+    // 个股 - 60xxxx
+    // 个股 - 68xxxx
 
+    // ETF - 51xxxx
+    // ETF - 52xxxx
+    // ETF - 56xxxx
+    // ETF - 58xxxx
 
-    // 个股 - 6xxxxx
-    // ETF - 5xxxxx
     // 板块 - 88xxxx
-    SH("上交所", 1, "sh", "HA", "SH", Lists.newArrayList("6", "5", "8")),
-
-
-    // 92   2
+    SH("上交所", 1, "sh", "HA", "SH", "SH", Set.of("60", "68", "51", "52", "56", "58", "88")),
 
 
     // 个股 - 92xxxx
-    BJ("北交所", 2, "bj", "B", "BJ", Lists.newArrayList("9")),
+    BJ("北交所", 2, "bj", "B", "BJ", "BJ", Set.of("92")),
 
 
     // ------------------- 港股
@@ -61,17 +52,17 @@ public enum StockMarketEnum {
 
     // 00   01   02   03   04   05   06   07   09
     // 8
-    HK_ZB("香港主板", 31, "HK", "", "", Lists.newArrayList("00", "01", "02", "03", "04", "05", "06", "07", "09", "8")),
+    HK_ZB("香港主板", 31, "31", "", "HK", "HK", Set.of("00", "01", "02", "03", "04", "05", "06", "07", "09", "8")),
 
 
     // 08
-    HK_CYB("香港创业板", 48, "HK", "", "", Lists.newArrayList("08")),
+    HK_CYB("香港创业板", 48, "48", "", "HK", "HK", Set.of("08")),
 
 
     // ------------------- 美股
 
 
-    US("美股", 74, "US", "", "", Lists.newArrayList());
+    US("美股", 74, "74", "", "US", "US", Set.of());
 
 
     /**
@@ -103,13 +94,18 @@ public enum StockMarketEnum {
      */
     @Getter
     private String xueqiuMarket;
+    /**
+     * 通达信TQ - 交易所 类型
+     */
+    @Getter
+    private String tdxTqMarket;
 
 
     /**
      * A股 - 股票代码 前缀（前2位）
      */
     @Getter
-    private List<String> stockCodePrefixList;
+    private Set<String> stockCodePrefixSet;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -125,11 +121,11 @@ public enum StockMarketEnum {
 
 
         if (StockTypeEnum.isAStock_ETF_block(stockCode)) {
-            // A股（前1位）
-            String codePrefix = stockCode.trim().substring(0, 1);
+            // A股（前2位）
+            String codePrefix = stockCode.trim().substring(0, 2);
 
             for (StockMarketEnum value : A_enums) {
-                if (value.stockCodePrefixList.contains(codePrefix)) {
+                if (value.stockCodePrefixSet.contains(codePrefix)) {
                     return value;
                 }
             }
@@ -149,7 +145,7 @@ public enum StockMarketEnum {
             String codePrefix_1 = stockCode.trim().substring(0, 1);
 
             for (StockMarketEnum value : HK_enums) {
-                if (value.stockCodePrefixList.contains(codePrefix_2) || value.stockCodePrefixList.contains(codePrefix_1)) {
+                if (value.stockCodePrefixSet.contains(codePrefix_2) || value.stockCodePrefixSet.contains(codePrefix_1)) {
                     return value;
                 }
             }
@@ -196,6 +192,11 @@ public enum StockMarketEnum {
     public static String getXueqiuMarket(String stockCode) {
         StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
         return stockMarketEnum == null ? null : stockMarketEnum.xueqiuMarket;
+    }
+
+    public static String getTdxTqMarket(String stockCode) {
+        StockMarketEnum stockMarketEnum = getByStockCode(stockCode);
+        return stockMarketEnum == null ? null : stockMarketEnum.tdxTqMarket;
     }
 
     public static String getMarketSymbol(Integer tdxMarketType) {

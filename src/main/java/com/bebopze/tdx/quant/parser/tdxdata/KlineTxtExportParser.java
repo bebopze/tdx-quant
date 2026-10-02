@@ -132,8 +132,17 @@ public class KlineTxtExportParser {
                     double low = Double.parseDouble(strArr[3]);
                     // 收盘价
                     double close = Double.parseDouble(strArr[4]);
-                    // 成交量（A股、ETF：N股 -> 非N手）
+
+
+                    // 成交量（股）         txt导出  ->  股（A股、ETF、美股）
                     long vol = Long.parseLong(strArr[5]);
+                    // txt导出  ->  手（板块、港股）
+                    if (StockTypeEnum.isBlock(code) || StockTypeEnum.isHkStock(code)) {
+                        // 股 = 手 x 100
+                        vol *= 100;
+                    }
+
+
                     // 成交额（元）
                     BigDecimal amount = new BigDecimal(strArr[6]);
 
@@ -163,7 +172,7 @@ public class KlineTxtExportParser {
                     // -------------------------------------------------------------------------------------------------
 
 
-                    LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null);
+                    LdayParser.LdayDTO dto = new LdayParser.LdayDTO(code, date, of(open), of(high), of(low), of(close), of(amount), vol, of(changePct), of(changePrice), of(rangePct), null, 0L, 0L);
 
 
                     // -------------------------------------------------------------------------------------------------

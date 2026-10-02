@@ -11,10 +11,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineArrDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.tdxfun.TdxExtDataFun;
-import com.bebopze.tdx.quant.common.util.DateTimeUtil;
-import com.bebopze.tdx.quant.common.util.ListUtil;
-import com.bebopze.tdx.quant.common.util.ParallelCalcUtil;
-import com.bebopze.tdx.quant.common.util.StockUtil;
+import com.bebopze.tdx.quant.common.util.*;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
@@ -987,6 +984,15 @@ public class ExtDataServiceImpl implements ExtDataService {
         // ---------------------------------------------------
 
 
+        // 流通市值
+        double[] ltsz = fun.ltsz();
+        // 总市值
+        double[] zsz = fun.zsz();
+
+
+        // ---------------------------------------------------
+
+
         // ---------------------------- 2、convert（序列   ->   列表）
 
 
@@ -1200,6 +1206,15 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
             // ---------------------------------------------------
+
+
+            dto.setLtsz(ltsz[i]);
+            dto.setZsz(zsz[i]);
+
+
+            // ---------------------------------------------------
+
+
         }
     }
 

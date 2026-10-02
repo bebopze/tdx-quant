@@ -29,13 +29,22 @@ public class KlineArrDTO implements Serializable {
 
 
     // 振幅（%）       H/L   x100-100
-    public double[] range_pct;
+    public double[] rangePct;
     // 涨跌幅（%）     C/prev_C   x100-100
-    public double[] change_pct;
+    public double[] changePct;
     // 涨跌额         C - prev_C
-    public double[] change_price;
+    public double[] changePrice;
     // 换手率（%）
-    public double[] turnover_pct;
+    public double[] turnoverPct;
+
+
+    // 流通股本（股）
+    public long[] ltgb;
+    // 总股本（股）
+    public long[] zgb;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     public KlineArrDTO(int size) {
@@ -47,10 +56,13 @@ public class KlineArrDTO implements Serializable {
         this.vol = new long[size];
         this.amo = new double[size];
 
-        this.range_pct = new double[size];
-        this.change_pct = new double[size];
-        this.change_price = new double[size];
-        this.turnover_pct = new double[size];
+        this.rangePct = new double[size];
+        this.changePct = new double[size];
+        this.changePrice = new double[size];
+        this.turnoverPct = new double[size];
+
+        this.ltgb = new long[size];
+        this.zgb = new long[size];
     }
 
 

@@ -25,11 +25,6 @@ public record TdxRealtimeQuoteDTO(String code,
                                   double prevClose) implements Serializable {
 
 
-    public long getVol() {
-        // 手 -> 股
-        return vol * 100;
-    }
-
     public double amo() {
         // 万元 -> 元
         return NumUtil.of(amo * 1_0000, 2);
@@ -89,5 +84,6 @@ public record TdxRealtimeQuoteDTO(String code,
 
         return dto;
     }
+
 
 }

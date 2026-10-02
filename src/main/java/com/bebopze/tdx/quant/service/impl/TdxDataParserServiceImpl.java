@@ -4,12 +4,14 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.client.KlineAPI;
+import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
+import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -31,6 +33,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -50,6 +53,7 @@ import java.util.stream.Collectors;
  * @date: 2025/5/7
  */
 @Slf4j
+@Primary
 @Service
 public class TdxDataParserServiceImpl implements TdxDataParserService {
 
@@ -151,10 +155,23 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         importUsStock();
 
 
+        // ------------------------------------------------------------------------ 补充info（股本/流通市值/总市值）
+
+
+        // fillMoreInfo();
+
+
         // ------------------------------------------------------------------------ 大盘量化
 
 
         // marketService.importMarketMidCycle();
+    }
+
+
+    private void fillMoreInfo() {
+
+
+        // List<GetGbInfoDTO> gbDTOList = TdxTqAPI.get_gb_info_by_date("000001", LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31));
     }
 
 
@@ -239,6 +256,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         // -------------------------------------------------------------------------------------------------------------
         allStockCodeSet.addAll(stockCode_blockCodeSet_map.keySet());
+
+
+        // 排除 B股
+        allStockCodeSet.removeIf(stockCode -> !StockTypeEnum.isAStock_ETF_block(stockCode));
+        stockCode_blockCodeSet_map.keySet().removeIf(key -> !StockTypeEnum.isAStock_ETF_block(key));
 
 
         log.info("all 板块code     >>>     板块size : {}", tdxzs3DTOList.size());
@@ -1391,11 +1413,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
-            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本
 
-            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本]）
             List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
-                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null);
+                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null, x.getLtgb(), x.getZgb());
 
 
             String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
@@ -1528,33 +1550,42 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         codeIdMap.keySet().parallelStream().forEach(stockCode -> {
-            Long stockId = codeIdMap.get(stockCode);
+            try {
+                Long stockId = codeIdMap.get(stockCode);
 
 
-            // -------------------------------------------
+                // -------------------------------------------
 
 
-            int apiType = apiType(null, UpdateTypeEnum.ALL);
+                int apiType = apiType(null, UpdateTypeEnum.ALL);
 
 
-            fillStockKline(stockCode, stockId, apiType, UpdateTypeEnum.ALL);
+                fillStockKline(stockCode, stockId, apiType, UpdateTypeEnum.ALL);
 
 
-            // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
+                // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
 
 
-            int countVal = count.incrementAndGet();
-            long time = System.currentTimeMillis() - start[0];
+                int countVal = count.incrementAndGet();
+                long time = System.currentTimeMillis() - start[0];
 
 
-            long r1 = time / countVal;
-            long r2 = countVal * 1000 / time;
-            String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+                long r1 = time / countVal;
+                long r2 = countVal * 1000 / time;
+                String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
-            // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
-            log.info("fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     stockCode, stockId, countVal, r1, r2, r3);
+                // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
+                log.info("fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         stockCode, stockId, countVal, r1, r2, r3);
+
+
+            } catch (Exception ex) {
+
+                // 不要影响 其他正常个股
+                log.error("fillStockKlineAll error     >>>     stockCode : {}, stockId : {} , count : {}",
+                          stockCode, codeIdMap.get(stockCode), count.incrementAndGet(), ex);
+            }
         });
     }
 
@@ -1850,12 +1881,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
             // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
-            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率
+            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本
 
-            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本]）
 
             List<Object> kline = Lists.newArrayList(String.valueOf(e.getTradeDate()), e.getOpen(), e.getHigh(), e.getLow(), e.getClose(), e.getVol(), e.getAmount(),
-                                                    e.getRangePct(), e.getChangePct(), e.getChangePrice(), null);
+                                                    e.getRangePct(), e.getChangePct(), e.getChangePrice(), e.getTurnoverPct(), e.getLtgb(), e.getZgb());
 
 
             String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
