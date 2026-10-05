@@ -164,7 +164,7 @@ public class StockKlineLoader {
     }
 
 
-// ============================== 二分查找函数 ==============================
+    // ============================== 二分查找函数 ==============================
 
     private static int lowerBoundForKline(List<KlineDTO> list, LocalDate target) {
         int l = 0, r = list.size() - 1, ans = list.size();

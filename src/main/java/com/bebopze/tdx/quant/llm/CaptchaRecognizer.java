@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.llm;
 
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +14,6 @@ import java.nio.file.Path;
  * @date: 2026/8/23
  */
 @Component
-@AllArgsConstructor
 public class CaptchaRecognizer {
 
 
