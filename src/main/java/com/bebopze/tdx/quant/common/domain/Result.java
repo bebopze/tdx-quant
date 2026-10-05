@@ -8,7 +8,7 @@ import java.util.Collection;
 
 
 /**
- * 统一返回 Result类
+ * 统一返回 Result 类
  *
  * @author: bebopze
  * @date: 2025/5/7
@@ -22,9 +22,9 @@ public class Result<T> implements Serializable {
     // 数据明细
     private T data;
 
-    private Boolean success;
+    private boolean success;
 
-    private Integer code;
+    private int code;
 
     private String msg;
 
@@ -45,62 +45,58 @@ public class Result<T> implements Serializable {
     private Integer totalPage;
 
 
-    public static <T> Result<T> of(T data,
-                                   boolean success,
-                                   BaseExEnum baseExEnum) {
-        if (null != baseExEnum) {
-            return of(data, success, baseExEnum.getCode(), baseExEnum.getMsg());
-        } else {
-            return of(data, success, null, null);
+    public static <T> Result<T> of(T data, boolean success, BaseExEnum baseExEnum) {
+        if (null == baseExEnum) {
+            baseExEnum = success ? BaseExEnum.SUC : BaseExEnum.ERR;
         }
+
+        return of(data, success, baseExEnum.getCode(), baseExEnum.getMsg());
     }
 
-    public static <T> Result<T> of(T data,
-                                   boolean success,
-                                   Integer code,
-                                   String msg) {
+    public static <T> Result<T> of(T data, boolean success, int code, String msg) {
         Result<T> result = new Result<>();
         result.setData(data);
         result.setSuccess(success);
         result.setCode(code);
         result.setMsg(msg);
         if (data instanceof Collection) {
-            result.setTotalNum(((Collection) data).size());
+            result.setTotalNum(((Collection<?>) data).size());
         }
         return result;
     }
 
-    public static <T> Result<T> of(T data,
-                                   boolean success,
-                                   BaseExEnum baseExEnum,
-                                   Integer totalNum,
-                                   Integer pageIndex,
-                                   Integer pageSize) {
+
+    public static <T> Result<T> of(T data, boolean success, BaseExEnum baseExEnum,
+                                   Integer totalNum, Integer pageIndex, Integer pageSize) {
+
         return of(data, success, baseExEnum, totalNum, pageIndex, pageSize, null);
     }
 
-    public static <T> Result<T> of(T data,
-                                   boolean success,
-                                   BaseExEnum baseExEnum,
-                                   Integer totalNum,
-                                   Integer pageIndex,
-                                   Integer pageSize,
+    public static <T> Result<T> of(T data, boolean success, BaseExEnum baseExEnum,
+                                   Integer totalNum, Integer pageIndex, Integer pageSize,
                                    String msg) {
+
         Result<T> result = new Result<>();
+
         result.setData(data);
         result.setSuccess(success);
+
         if (null != baseExEnum) {
             result.setCode(baseExEnum.getCode());
             result.setMsg(baseExEnum.getMsg());
         }
+
         if (data instanceof Collection && null == totalNum) {
             totalNum = ((Collection<?>) data).size();
         }
+
         result.setTotalNum(totalNum);
         result.setPageIndex(pageIndex);
         result.setPageSize(pageSize);
         result.setTotalPage((pageSize == null || pageSize == 0) ? null : (totalNum % pageSize == 0 ? totalNum / pageSize : (totalNum / pageSize + 1)));
+
         result.setMsg(msg);
+
         return result;
     }
 
@@ -113,30 +109,23 @@ public class Result<T> implements Serializable {
         return of(data, true, BaseExEnum.SUC);
     }
 
-    public static <T> Result<T> SUC(T data,
-                                    Integer totalNum,
-                                    Integer pageIndex,
-                                    Integer pageSize,
-                                    String msg) {
-        return of(data, true, BaseExEnum.SUC, totalNum, pageIndex, pageSize, msg);
-    }
-
-    public static <T> Result<T> SUC(T data,
-                                    Integer totalNum,
-                                    Integer pageIndex,
-                                    Integer pageSize) {
+    public static <T> Result<T> SUC(T data, Integer totalNum, Integer pageIndex, Integer pageSize) {
         return of(data, true, BaseExEnum.SUC, totalNum, pageIndex, pageSize);
     }
 
-    public static <T> Result<T> SUC(T data,
-                                    BaseExEnum baseExEnum) {
+    public static <T> Result<T> SUC(T data, Integer totalNum, Integer pageIndex, Integer pageSize, String msg) {
+        return of(data, true, BaseExEnum.SUC, totalNum, pageIndex, pageSize, msg);
+    }
+
+
+    public static <T> Result<T> SUC(T data, BaseExEnum baseExEnum) {
         return of(data, true, baseExEnum);
     }
 
-    public static <T> Result<T> SUC(T data,
-                                    String msg) {
+    public static <T> Result<T> SUC(T data, String msg) {
         return of(data, true, BaseExEnum.SUC.getCode(), msg);
     }
+
 
     public static <T> Result<T> ERR(BaseExEnum baseExEnum) {
         Result<T> result = new Result<>();
