@@ -47,9 +47,6 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
     @Autowired
     private BacktestBuyStrategyD backtestBuyStrategyD;
 
-    @Autowired
-    private BuyStrategy__ConCombiner__TopStock buyStrategy__conCombiner__topStock;
-
 
     @Override
     public String key() {
@@ -97,7 +94,7 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
 
         long start_1 = System.currentTimeMillis();
         Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
-        log.info("BacktestBuyStrategy_Stock - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+        log.info("topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -108,13 +105,13 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
 //        // B策略   ->   强势个股
 //        long start_2 = System.currentTimeMillis();
 //        Set<String> buy__topStock__codeSet = buy__topStock__codeSet(buyConSet, data, tradeDate, buy_infoMap, ztFlag);
-//        log.info("BacktestBuyStrategy_Stock - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
+//        log.info("buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
         // B策略   ->   主线板块内 成交额TOP25
         long start_2 = System.currentTimeMillis();
         Set<String> buy__topStock__codeSet = buy__topStock__codeSet(topBlockCodeSet, buyConSet, data, tradeDate, buy_infoMap, ztFlag);
-        log.info("BacktestBuyStrategy_Stock - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
+        log.info("buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -125,7 +122,7 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
         Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
-        log.info("BacktestBuyStrategy_Stock - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+        log.info("inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -136,10 +133,10 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
         // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
 
         long start_4 = System.currentTimeMillis();
-        if (/*CollectionUtils.isEmpty(inTopBlock__stockCodeSet) || */inTopBlock__stockCodeSet.size() < 25) { // ETF策略  ->  只有在 无个股可买 时 才触发
+        if (inTopBlock__stockCodeSet.size() < 25) { // ETF策略  ->  只有在 无个股可买 时 才触发
             topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
         }
-        log.info("BacktestBuyStrategy_Stock - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
+        log.info("buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -150,7 +147,7 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
         List<String> sort__stockCodeList = ScoreSort.scoreSort__AMO_RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
-        log.info("BacktestBuyStrategy_Stock - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
+        log.info("scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
         // 移除  ->  涨停B（隔日 开盘B）    =>     否则会作为 普通非涨停B（当日 收盘B  ->  收盘价买入 当日 涨停个股❌）
