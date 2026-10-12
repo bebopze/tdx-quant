@@ -88,21 +88,14 @@ public class TdxTqKlineAPI {
 
 
     /**
-     * 以下API   通达信   TQ HTTP服务   暂不可用
-     *
-     *
-     * - TdxTqHttpClient - TdxTqHttpClient.call     >>>     method : get_stock_list ,
-     *
-     * -        params : {"market":"5","list_type":"1"} ,
-     *
-     * -        result : {"Error":"RPC处理异常:TPyth_TdxWServer_Main_New","ErrorId":"10","run_id":"-1"} , time : 58ms
+     * 获取A股 全部板块 代码列表
      *
      * @return
      */
     @Deprecated
-    public static List<StockSnapshotKlineDTO> listAllCode() {
+    public static List<SimpleStockDTO> listAllCode() {
         List<SimpleStockDTO> sectorList = TdxTqAPI.get_sector_list();
-        return null;
+        return sectorList;
     }
 
 

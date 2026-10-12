@@ -58,6 +58,7 @@ public class BacktestBuyStrategyD extends AbstractBuyStrategy implements BuyStra
      * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
+    @Override
     public Set<String> buy__topStock__codeSet(Set<String> buyConSet,
                                               BacktestCache data,
                                               LocalDate tradeDate,
