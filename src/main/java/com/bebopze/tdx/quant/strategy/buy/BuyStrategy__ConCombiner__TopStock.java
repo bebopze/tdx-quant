@@ -25,7 +25,6 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +42,9 @@ import static com.bebopze.tdx.quant.service.impl.ExtDataServiceImpl.earlyClearSt
 public class BuyStrategy__ConCombiner__TopStock {
 
 
+    /**
+     * 牛股   ->   B策略 组合Map 列表
+     */
     private static volatile List<Map<String, Boolean>> buyStrategy__conMap__list = null;
 
 
@@ -50,7 +52,51 @@ public class BuyStrategy__ConCombiner__TopStock {
     private IBaseStockService baseStockService;
 
 
-    public void init__buy_strategy__conMap__list() {
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public boolean anyMatch__buyStrategy(ExtDataDTO extDataDTO) {
+        Map<String, Boolean> extData__conMap = convertExtDataDTO(extDataDTO);
+        return anyMatch__buyStrategy(extData__conMap);
+    }
+
+
+    /**
+     * 检查 extData__conMap  是否 完全匹配（buyStrategy__conMap__list 中的）  任一 B策略组合
+     *
+     * @param extData__conMap 待匹配组合
+     * @return
+     */
+    public boolean anyMatch__buyStrategy(Map<String, Boolean> extData__conMap) {
+
+
+        // 仅初始化 1次
+        init__buy_strategy__conMap__list();
+
+
+        // 检查   extData__conMap   是否 完全匹配   buyStrategy__conMap__list   中的 任一组合
+        return buyStrategy__conMap__list.stream().anyMatch(b_conMap -> b_conMap.equals(extData__conMap));
+
+
+//        // 遍历 组合列表
+//        for (Map<String, Boolean> b_conMap : buyStrategy__conMap__list) {
+//            // 完全匹配 任一组合
+//            if (b_conMap.equals(extData__conMap)) {
+//                return true;
+//            }
+//        }
+//        return false;
+
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 仅初始化 1次
+     */
+    private void init__buy_strategy__conMap__list() {
         if (CollectionUtils.isNotEmpty(buyStrategy__conMap__list)) {
             return;
         }
@@ -67,86 +113,45 @@ public class BuyStrategy__ConCombiner__TopStock {
     }
 
 
-    public boolean anyMatch__buyStrategy(ExtDataDTO extDataDTO) {
-        Map<String, Boolean> extData__conMap = convertExtDataDTO(extDataDTO);
-        return anyMatch__buyStrategy(extData__conMap);
-    }
-
-
-    /**
-     * 检查 extData__conMap  是否 完全匹配（buyStrategy__conMap__list 中的）  任一 B策略组合
-     *
-     * @param extData__conMap
-     * @return
-     */
-    public boolean anyMatch__buyStrategy(Map<String, Boolean> extData__conMap) {
-        return anyMatch__buyStrategy(buyStrategy__conMap__list, extData__conMap);
-    }
-
-    /**
-     * 检查 extData__conMap  是否 完全匹配 buyStrategy__conMap__list 中的 任一组合
-     *
-     * @param buyStrategy__conMap__list
-     * @param extData__conMap
-     * @return
-     */
-    public boolean anyMatch__buyStrategy(List<Map<String, Boolean>> buyStrategy__conMap__list,
-                                         Map<String, Boolean> extData__conMap) {
-
-
-        // 仅初始化1次
-        init__buy_strategy__conMap__list();
-
-
-        // 检查 extData__conMap  是否 完全匹配 buyStrategy__conMap__list 中的 任一组合
-        return extData__conMap.entrySet()
-                              .stream()
-                              .allMatch(entry -> buyStrategy__conMap__list.stream()
-                                                                          .anyMatch(b_conMap -> b_conMap.containsKey(entry.getKey())
-                                                                                  && Objects.equals(b_conMap.get(entry.getKey()), entry.getValue())));
-    }
-
-
-    public List<Map<String, Boolean>> generate() {
+    private List<Map<String, Boolean>> generate() {
         List<Map<String, Boolean>> conMapList = Lists.newArrayList();
 
 
-        // 1、从缓存中获取指定日期的股票
-        Map<String, Set<LocalDate>> topStock__buy___codeDateSetMap = read();
+        // 1、从 txt文件 读取   ->   牛股-买点日期列表
+        Map<String, Set<LocalDate>> topStockCode___buyDateSet__Map = read();
 
 
-        // 2、获取指定的股票（扩展数据）
+        // 2、加载 股票（扩展数据）
         // tips：data.stockDOList  ->  经过date截取  不能用（数据不完整）  =>   这里必须重新加载 原始数据（未被date 截取过的）
-        List<BaseStockDO> stockDOList = baseStockService.listByCodeList(topStock__buy___codeDateSetMap.keySet());
+        List<BaseStockDO> stockDOList = baseStockService.listByCodeList(topStockCode___buyDateSet__Map.keySet());
+        Map<String, BaseStockDO> code_stockDO_Map = stockDOList.stream().collect(Collectors.toMap(BaseStockDO::getCode, stockDO -> stockDO));
 
 
-        // 3、遍历股票，获取指定日期的扩展数据   ->   并转换为 组合Map
-        topStock__buy___codeDateSetMap.forEach((stockCode, dateSet) -> {
+        // 3、遍历股票，获取 买点日期的扩展数据   ->   并转换为 组合Map
+        topStockCode___buyDateSet__Map.forEach((stockCode, dateSet) -> {
 
-            stockDOList.parallelStream()
-                       .filter(stockDO -> Objects.equals(stockDO.getCode(), stockCode))
-                       .forEach(stockDO -> {
-                           StockFun fun = new StockFun(stockDO);
-
-                           fun.getExtDataDTOList()
-                              .parallelStream()
-                              .filter(e -> dateSet.contains(e.getDate()))
-                              .forEach(extDataDTO -> {
-
-                                  Map<String, Boolean> conMap = convertExtDataDTO(extDataDTO);
-                                  // 强制
-                                  conMap.put("XZZB", true);
-                                  conMap.put("SSF多", true);
-//                                  conMap.put("MA200多", true);
-//                                  conMap.put("RPS红", true);
-
-                                  conMapList.add(conMap);
+            BaseStockDO stockDO = code_stockDO_Map.get(stockCode);
+            StockFun fun = new StockFun(stockDO);
 
 
-                                  // OOM  ->  提前清理
-                                  earlyClearStockCache__OOM(stockDO);
-                              });
-                       });
+            fun.getExtDataDTOList()
+               .stream()
+               .filter(e -> dateSet.contains(e.getDate()))
+               .forEach(extDataDTO -> {
+
+                   Map<String, Boolean> conMap = convertExtDataDTO(extDataDTO);
+                   // 强制
+                   conMap.put("XZZB", true);
+                   conMap.put("SSF多", true);
+                   // conMap.put("MA200多", true);
+                   // conMap.put("RPS红", true);
+
+                   conMapList.add(conMap);
+               });
+
+
+            // OOM  ->  提前清理
+            earlyClearStockCache__OOM(stockDO);
         });
 
 
@@ -154,8 +159,13 @@ public class BuyStrategy__ConCombiner__TopStock {
     }
 
 
+    /**
+     * 从 txt文件 读取   ->   牛股-买点日期列表
+     *
+     * @return
+     */
     private static Map<String, Set<LocalDate>> read() {
-        Map<String, Set<LocalDate>> codeDateMap = Maps.newHashMap();
+        Map<String, Set<LocalDate>> topStockCode___buyDateSet__Map = Maps.newHashMap();
 
         try {
             String filePath = System.getProperty("user.dir") + "/src/main/resources/txt/牛市__topStock__B_signal___code_date_map.txt";
@@ -165,7 +175,7 @@ public class BuyStrategy__ConCombiner__TopStock {
                      .forEach(line -> {
                          // 300502|2025-08-11,2025-08-12
                          String[] split = line.split("\\|");
-                         Set<LocalDate> dateSet = codeDateMap.computeIfAbsent(split[0], k -> Sets.newHashSet());
+                         Set<LocalDate> dateSet = topStockCode___buyDateSet__Map.computeIfAbsent(split[0], k -> Sets.newHashSet());
                          dateSet.addAll(Lists.newArrayList(split[1].split(",")).stream().map(LocalDate::parse).collect(Collectors.toSet()));
                      });
         } catch (IOException e) {
@@ -174,7 +184,7 @@ public class BuyStrategy__ConCombiner__TopStock {
         }
 
 
-        return codeDateMap;
+        return topStockCode___buyDateSet__Map;
     }
 
 
@@ -544,7 +554,7 @@ public class BuyStrategy__ConCombiner__TopStock {
     }
 
 
-// -----------------------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
     public static void main(String[] args) {
 
