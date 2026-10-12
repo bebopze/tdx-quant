@@ -30,6 +30,20 @@ public class MapUtil {
 
 
     /**
+     * 根据 value   ->   正序（小 -> 大）
+     *
+     * @param map
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        // 正序
+        return sortByValue(map, Comparator.naturalOrder());
+    }
+
+
+    /**
      * 根据 value 排序
      *
      * @param map
@@ -52,6 +66,5 @@ public class MapUtil {
                           LinkedHashMap::new    // 保持排序顺序
                   ));
     }
-
 
 }

@@ -64,6 +64,13 @@ public enum SellStrategyEnum {
     S91(91, "大盘仓位限制->等比减仓"),
 
 
+    // ----------------------------------------------------- 微盘股 S策略
+
+
+    // 微盘股 S策略
+    微盘股_S(101, "微盘股_S"),
+
+
     ;
 
 
@@ -80,7 +87,6 @@ public enum SellStrategyEnum {
         }
         return null;
     }
-
 
     public static String getDescByType(Integer type) {
         SellStrategyEnum topBlockStrategyEnum = getByType(type);

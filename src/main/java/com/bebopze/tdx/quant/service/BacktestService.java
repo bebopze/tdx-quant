@@ -55,6 +55,7 @@ public interface BacktestService {
     @Async("taskExecutor")
     void backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
                    Set<String> buyConSet,
+                   Set<String> sellConSet,
                    LocalDate startDate,
                    LocalDate endDate,
                    boolean resume,

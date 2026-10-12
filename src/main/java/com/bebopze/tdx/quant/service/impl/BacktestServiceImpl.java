@@ -166,6 +166,7 @@ public class BacktestServiceImpl implements BacktestService {
     @Override
     public void backtest2(TopBlockStrategyEnum topBlockStrategyEnum,
                           Set<String> buyConSet,
+                          Set<String> sellConSet,
                           LocalDate startDate,
                           LocalDate endDate,
                           boolean resume,
@@ -175,7 +176,7 @@ public class BacktestServiceImpl implements BacktestService {
 
         // Sell策略 ： 暂时固定
         // List<String> sellConList = Lists.newArrayList("月空_MA20空", "SSF空", "高位爆量上影大阴", "C_SSF_偏离率>25%");
-        Set<String> sellConSet = Sets.newHashSet("个股S", "板块S", "主线S");
+        // sellConSet = Sets.newHashSet("个股S", "板块S", "主线S");
 
 
         // -------------------------------------------------------------------------------------------------------------

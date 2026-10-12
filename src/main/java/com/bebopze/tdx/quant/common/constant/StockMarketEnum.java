@@ -211,4 +211,15 @@ public enum StockMarketEnum {
     }
 
 
+    /**
+     * 是否 北交所
+     *
+     * @param stockCode
+     * @return
+     */
+    public static boolean isBJ(String stockCode) {
+        return Objects.equals(StockMarketEnum.getByStockCode(stockCode), StockMarketEnum.BJ);
+    }
+
+
 }
