@@ -802,9 +802,9 @@ public class BacktestSellStrategy implements SellStrategy {
      * @param data
      * @param tradeDate
      */
-    private void sellStrategy_ETF(Set<String> sell__stockCodeSet,
-                                  BacktestCache data,
-                                  LocalDate tradeDate) {
+    protected void sellStrategy_ETF(Set<String> sell__stockCodeSet,
+                                    BacktestCache data,
+                                    LocalDate tradeDate) {
 
         if (CollectionUtils.isEmpty(sell__stockCodeSet)) {
             return;

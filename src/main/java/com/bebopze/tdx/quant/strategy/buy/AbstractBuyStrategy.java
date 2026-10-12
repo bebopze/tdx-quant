@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.strategy.buy;
 
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
+import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.strategy.MarketStrategy;
@@ -47,6 +48,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
      * @param ztFlag               是否涨停（打板）
      * @return
      */
+    @TotalTime
     @Override
     public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
                              Set<String> buyConSet,
@@ -74,7 +76,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
 
         long start_1 = System.currentTimeMillis();
         Set<String> topBlockCodeSet = topBlockStrategy.topBlock(topBlockStrategyEnum, data, tradeDate, btCompareDTO.get().isTop1TopBlockFlag());
-        log.info("AbstractBuyStrategy - topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
+        log.info("topBlock     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_1));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -85,7 +87,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
         // B策略   ->   强势个股
         long start_2 = System.currentTimeMillis();
         Set<String> buy__topStock__codeSet = buy__topStock__codeSet(buyConSet, data, tradeDate, buy_infoMap, ztFlag);
-        log.info("AbstractBuyStrategy - buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
+        log.info("buy__topStock__codeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_2));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -96,7 +98,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
         // 强势个股   ->   IN 主线板块
         long start_3 = System.currentTimeMillis();
         Set<String> inTopBlock__stockCodeSet = topBlockStrategy.inTopBlock__stockCodeSet(topBlockCodeSet, buy__topStock__codeSet, data, tradeDate);
-        log.info("AbstractBuyStrategy - inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
+        log.info("inTopBlock__stockCodeSet     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_3));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -108,7 +110,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
 
         long start_4 = System.currentTimeMillis();
         topBlockStrategy.buyStrategy_ETF(inTopBlock__stockCodeSet, data, tradeDate, buy_infoMap, posRate);
-        log.info("AbstractBuyStrategy - buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
+        log.info("buyStrategy_ETF     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_4));
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -119,7 +121,7 @@ public abstract class AbstractBuyStrategy implements BuyStrategy {
         // 按照 规则打分 -> sort
         long start_5 = System.currentTimeMillis();
         List<String> sort__stockCodeList = ScoreSort.scoreSort__AMO_RPS(inTopBlock__stockCodeSet, data, tradeDate, btCompareDTO.get().getScoreSortN());
-        log.info("AbstractBuyStrategy - scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
+        log.info("scoreSort     >>>     totalTime : {}", DateTimeUtil.formatNow2Hms(start_5));
 
 
         return sort__stockCodeList;
