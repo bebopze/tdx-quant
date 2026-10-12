@@ -34,7 +34,7 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
  *
  * -    最新版本 通达信    已废弃 此缓存文件（block_gn.dat / block_fg.dat / block_zs.dat）
  *
- * -    替代方案  @ExportBlockParser   ->   板块数据导出   解析
+ * -    替代方案  @BlockReportParser   ->   板块数据导出   解析
  *
  * @author: bebopze
  * @date: 2025/5/6

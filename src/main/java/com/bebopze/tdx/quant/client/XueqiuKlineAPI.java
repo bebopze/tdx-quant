@@ -109,4 +109,5 @@ public class XueqiuKlineAPI {
         return url;
     }
 
+
 }
