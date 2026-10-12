@@ -2,23 +2,15 @@ package com.bebopze.tdx.quant.strategy.buy;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
-import com.bebopze.tdx.quant.common.constant.BlockNewIdEnum;
-import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataArrDTO;
 import com.bebopze.tdx.quant.indicator.StockFun;
-import com.bebopze.tdx.quant.service.TopBlockService;
-import com.bebopze.tdx.quant.strategy.MarketStrategy;
-import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 
@@ -31,17 +23,7 @@ import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompare
  */
 @Slf4j
 @Component
-public class BacktestBuyStrategyA implements BuyStrategy {
-
-
-    @Autowired
-    private MarketStrategy marketStrategy;
-
-    @Autowired
-    private TopBlockStrategy topBlockStrategy;
-
-    @Autowired
-    private TopBlockService topBlockService;
+public class BacktestBuyStrategyA extends AbstractBuyStrategy implements BuyStrategy {
 
 
     @Override
@@ -51,60 +33,28 @@ public class BacktestBuyStrategyA implements BuyStrategy {
 
 
     /**
-     * 买入策略   =   大盘（70%） +  主线板块（25%） +  个股买点（5%）
+     * B策略   ->   强势个股
      *
+     * @param buyConSet   B策略
      * @param data
      * @param tradeDate
      * @param buy_infoMap
-     * @param posRate
+     * @param ztFlag      个股是否涨停： true-是；false-否（默认）；null-不过滤；
      * @return
      */
     @Override
-    public List<String> rule(TopBlockStrategyEnum topBlockStrategyEnum,
-                             Set<String> buyConSet,
-                             BacktestCache data,
-                             LocalDate tradeDate,
-                             Map<String, String> buy_infoMap,
-                             double posRate,
-                             Boolean ztFlag) {
+    public Set<String> buy__topStock__codeSet(Set<String> buyConSet,
+                                              BacktestCache data,
+                                              LocalDate tradeDate,
+                                              Map<String, String> buy_infoMap,
+                                              Boolean ztFlag) {
 
 
-        // -------------------------------------------------------------------------------------------------------------
-        //                                                1、大盘牛熊
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        if (marketStrategy.marketBear(data, tradeDate)) {
-            return marketStrategy.bearRule(data, tradeDate, buy_infoMap, posRate);
-        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                                2、主线板块
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 主线板块
-        Map<String, Integer> blockCode_count_Map = topBlockService.topBlockRate(BlockNewIdEnum.百日新高.getBlockNewId(), tradeDate, 2, 10);
-        // Set<String> filter__blockCodeSet = blockCode_count_Map.keySet().stream().map(e -> e.split("-")[0]).collect(Collectors.toSet());
-
-        // 仅取 TOP1 板块
-        Set<String> filter__blockCodeSet = MapUtils.isEmpty(blockCode_count_Map) ? Sets.newHashSet() :
-                Sets.newHashSet(blockCode_count_Map.keySet().iterator().next().split("-")[0]);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-        //                                                3、（强势）个股
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        List<String> filter__stockCodeList = Collections.synchronizedList(Lists.newArrayList());
-        data.getAllType_stockDOList(btCompareDTO.get().getBtStockType()).parallelStream().forEach(stockDO -> {
+        Set<String> filter__stockCodeSet = Sets.newHashSet();
+        data.getAllType_stockDOList(btCompareDTO.get().getBtStockType()).forEach(stockDO -> {
 
 
             try {
-
-
                 String stockCode = stockDO.getCode();
 
 
@@ -220,7 +170,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
                 boolean signal_B = con_1 && con_2 && con_3 && con_4 && con_5 && con_6 && con_7;
                 if (signal_B) {
 
-                    filter__stockCodeList.add(stockCode);
+                    filter__stockCodeSet.add(stockCode);
 
 
                     // ----------------------------------------------------- info
@@ -268,53 +218,7 @@ public class BacktestBuyStrategyA implements BuyStrategy {
         });
 
 
-        // -------------------------------------------------------------------------------------------------------------
-        //                                              个股 -> IN 主线板块
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 个股   ->   IN 主线板块
-        Set<String> filter__stockCodeSet2 = filter__stockCodeList/*.parallelStream()*/.stream().filter(stockCode -> {
-            Set<String> blockCodeSet = data.stockCode_blockCodeSet_Map.getOrDefault(stockCode, Sets.newHashSet());
-
-
-            // B（主线板块）
-            boolean block_B = false;
-            for (String blockCode : blockCodeSet) {
-
-                block_B = filter__blockCodeSet.contains(blockCode);
-                if (block_B) {
-                    log.debug("个股 -> IN 主线板块     >>>     {} , [{}-{}] , [{}-{}]", tradeDate,
-                              stockCode, data.stock__codeNameMap.get(stockCode),
-                              blockCode, data.block__codeNameMap.get(blockCode));
-                    break;
-                }
-            }
-
-
-            return block_B;
-        }).collect(Collectors.toSet());
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 大盘极限底（按照正常策略  ->  将无股可买）      =>       指数ETF 策略（分批买入 50% -> 100%）
-        topBlockStrategy.buyStrategy_ETF(filter__stockCodeSet2, data, tradeDate, buy_infoMap, posRate);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // 按照 规则打分 -> sort
-        List<String> filterSort__stockCodeList = ScoreSort.scoreSort__AMO_RPS(filter__stockCodeSet2, data, tradeDate, btCompareDTO.get().getScoreSortN());
-        // List<String> filterSort__stockCodeList = filter__stockCodeSet2.stream().limit(20).collect(Collectors.toList());
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        return filterSort__stockCodeList;
+        return filter__stockCodeSet;
     }
 
 
