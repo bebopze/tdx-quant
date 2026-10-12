@@ -493,6 +493,11 @@ public class LdayParser {
             }
 
             float changePct = Math.round((close - prevClose) / prevClose * 100 * 100.0f) / 100.0f;
+            // 复权BUG  ->  边界[-9999.99 , 9999.99]
+            changePct = Math.min(changePct, 9999.99f);
+            changePct = Math.max(changePct, -9999.99f);
+
+
             float changePrice = close - prevClose;
             prevClose = close;
 

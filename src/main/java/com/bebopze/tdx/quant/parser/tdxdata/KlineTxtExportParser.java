@@ -161,6 +161,11 @@ public class KlineTxtExportParser {
                     }
 
                     double changePct = Math.round((close - prevClose) / prevClose * 100 * 100.0f) / 100.0f;
+                    // 复权BUG  ->  边界[-9999.99 , 9999.99]
+                    changePct = Math.min(changePct, 9999.99);
+                    changePct = Math.max(changePct, -9999.99);
+
+
                     double changePrice = close - prevClose;
                     prevClose = close;
 
