@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 
@@ -42,8 +43,28 @@ public class BlockReportParser {
     private static final String filePath_gn = SYS_BLOCK_PATH + "概念板块.txt";
     private static final String filePath_fg = SYS_BLOCK_PATH + "风格板块.txt";
     private static final String filePath_dq = SYS_BLOCK_PATH + "地区板块.txt";
-    private static final String filePath_zs = SYS_BLOCK_PATH + "指数板块.txt";
+    private static final String filePath_zs = SYS_BLOCK_PATH + "指数板块.txt";   // 无用指数太多（当前总数：100个）
     private static final String filePath_zdy = SYS_BLOCK_PATH + "自定义板块.txt";
+
+
+//    private static final Map<String, String> ZS_Map = Map.ofEntries(
+//            Map.entry("999999", "上证指数"),
+//            Map.entry("399106", "深证综指"),
+//
+//            Map.entry("399006", "创业板指"),
+//            Map.entry("000688", "科创50"),
+//            Map.entry("899050", "北证50"),
+//
+//            Map.entry("880003", "平均股价"),
+//            // Map.entry("880008", "全A等权"),
+//
+//            Map.entry("000016", "上证50"),
+//            Map.entry("000300", "沪深300"),
+//            Map.entry("000905", "中证500"),
+//            Map.entry("000852", "中证1000"),
+//            Map.entry("399303", "国证2000")
+//            // Map.entry("932000", "中证2000")
+//    );
 
 
     public static void main(String[] args) {
@@ -208,13 +229,13 @@ public class BlockReportParser {
 
         } catch (IOException e) {
 
-            log.error("ExportBlockParser#parse err     >>>     filePath : {} , blockTypeEnum : {} , errMsg : {}", filePath, blockTypeEnum.getDesc(), e.getMessage(), e);
+            log.error("parse err     >>>     filePath : {} , blockTypeEnum : {} , errMsg : {}", filePath, blockTypeEnum.getDesc(), e.getMessage(), e);
             // 不能吞异常（快速失败）
             throw new RuntimeException(e);
         }
 
 
-        log.info("ExportBlockParser#parse suc     >>>     filePath : {} , blockTypeEnum : {} , totalNum : {} , dtoList : {}", filePath, blockTypeEnum.getDesc(), dtoList.size(), JSON.toJSONString(dtoList));
+        log.info("parse suc     >>>     filePath : {} , blockTypeEnum : {} , totalNum : {} , dtoList : {}", filePath, blockTypeEnum.getDesc(), dtoList.size(), JSON.toJSONString(dtoList));
         return dtoList;
     }
 
