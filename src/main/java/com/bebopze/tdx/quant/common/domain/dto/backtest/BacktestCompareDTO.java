@@ -165,6 +165,12 @@ public class BacktestCompareDTO {
     // -------------------------------------- temp（TEST） --------------------------------------------------------------
 
 
+    /**
+     * 检查 当日待买入个股列表 的 extData__conMap  是否 完全匹配（buyStrategy__conMap__list 中的）  任一 B策略组合
+     */
+    private boolean anyMatch__topStock_buyStrategy = false;
+
+
     @JSONField(serialize = false)
     private transient int con2_num_1 = 1;
 
