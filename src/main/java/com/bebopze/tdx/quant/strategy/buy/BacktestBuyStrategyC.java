@@ -233,11 +233,11 @@ public class BacktestBuyStrategyC extends AbstractBuyStrategy implements BuyStra
      * @param idx
      * @param conMap
      */
-    private void buySignalInfo(Map<String, String> buy_infoMap,
-                               String stockCode,
-                               BacktestCache data,
-                               Integer idx,
-                               Map<String, Boolean> conMap) {
+    public static void buySignalInfo(Map<String, String> buy_infoMap,
+                                     String stockCode,
+                                     BacktestCache data,
+                                     Integer idx,
+                                     Map<String, Boolean> conMap) {
 
 
         // 动态收集所有为 true 的信号名称，按固定顺序拼接

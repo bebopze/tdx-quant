@@ -35,7 +35,7 @@ import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSD
  */
 @Slf4j
 @Component
-public class BacktestBuyStrategy_BullStock implements BuyStrategy {
+public class BacktestBuyStrategyE implements BuyStrategy {
 
 
     @Autowired
@@ -50,7 +50,7 @@ public class BacktestBuyStrategy_BullStock implements BuyStrategy {
 
     @Override
     public String key() {
-        return "BULL_STOCK";
+        return "E";
     }
 
 

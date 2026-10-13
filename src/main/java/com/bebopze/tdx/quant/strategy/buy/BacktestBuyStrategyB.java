@@ -149,6 +149,7 @@ public class BacktestBuyStrategyB extends AbstractBuyStrategy implements BuyStra
             if (signal_B) {
 
                 filter__stockCodeSet.add(stockCode);
+                // buySignalInfo(buy_infoMap, stockCode, data, idx, conMap);
 
 
                 // ----------------------------------------------------- info

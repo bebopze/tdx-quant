@@ -12,7 +12,6 @@ import com.bebopze.tdx.quant.indicator.StockFun;
 import com.bebopze.tdx.quant.strategy.MarketStrategy;
 import com.bebopze.tdx.quant.strategy.TopBlockStrategy;
 import com.bebopze.tdx.quant.strategy.sell.BacktestSellStrategy;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +25,7 @@ import java.util.*;
 import static com.bebopze.tdx.quant.common.constant.BuyStrategyEnum.涨停_SSF多_月多;
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btCompareDTO;
 import static com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy.btOpenBSDTO;
+import static com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyC.buySignalInfo;
 
 
 /**
@@ -50,7 +50,7 @@ public class BacktestBuyStrategyG extends AbstractBuyStrategy implements BuyStra
     private BacktestSellStrategy backtestSellStrategy;
 
     @Autowired
-    private BuyStrategy__ConCombiner__TopStock buyStrategy__conCombiner__topStock;
+    private BacktestBuyStrategyD backtestBuyStrategyD;
 
 
     @Override
@@ -226,7 +226,7 @@ public class BacktestBuyStrategyG extends AbstractBuyStrategy implements BuyStra
 
 
             // B   +   anyMatch__buyStrategy          // ❌❌❌ 年收益率 从100%  ->  10% ❌❌❌（废弃！）
-            // signal_B = signal_B && buyStrategy__conCombiner__topStock.anyMatch__buyStrategy(extDataDTO);
+            signal_B = backtestBuyStrategyD.anyMatch__buyStrategy(signal_B, extDataDTO);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -469,63 +469,6 @@ public class BacktestBuyStrategyG extends AbstractBuyStrategy implements BuyStra
 
 
         return conMap;
-    }
-
-
-    /**
-     * buySignalInfo
-     *
-     * @param buy_infoMap
-     * @param stockCode
-     * @param data
-     * @param idx
-     * @param conMap
-     */
-    private void buySignalInfo(Map<String, String> buy_infoMap,
-                               String stockCode,
-                               BacktestCache data,
-                               Integer idx,
-                               Map<String, Boolean> conMap) {
-
-
-        // 动态收集所有为 true 的信号名称，按固定顺序拼接
-        List<String> signalInfoList = Lists.newArrayList();
-
-
-        // ---------------------------------------------------------------------------
-
-
-        // 行业板块
-        String pthyLv2 = data.getPthyLv2(stockCode);
-        String getYjhyLv1 = data.getYjhyLv1(stockCode);
-        signalInfoList.add(pthyLv2);
-        signalInfoList.add(getYjhyLv1 + "|");
-
-
-        // ---------------------------------------------------------------------------
-
-        // conList
-        conMap.forEach((k, v) -> {
-
-            // "N60日新高" - true/false
-
-            if (v) {
-                signalInfoList.add(k);
-            }
-        });
-
-
-        // ---------------------------------------------------------------------------
-
-
-        signalInfoList.add("|idx-" + idx);
-
-
-        // ---------------------------------------------------------------------------
-
-
-        // stockCode - infoList
-        buy_infoMap.put(stockCode, String.join(",", signalInfoList));
     }
 
 

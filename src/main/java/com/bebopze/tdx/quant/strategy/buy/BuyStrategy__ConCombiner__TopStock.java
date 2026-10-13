@@ -76,17 +76,6 @@ public class BuyStrategy__ConCombiner__TopStock {
 
         // 检查   extData__conMap   是否 完全匹配   buyStrategy__conMap__list   中的 任一组合
         return buyStrategy__conMap__list.stream().anyMatch(b_conMap -> b_conMap.equals(extData__conMap));
-
-
-//        // 遍历 组合列表
-//        for (Map<String, Boolean> b_conMap : buyStrategy__conMap__list) {
-//            // 完全匹配 任一组合
-//            if (b_conMap.equals(extData__conMap)) {
-//                return true;
-//            }
-//        }
-//        return false;
-
     }
 
 
