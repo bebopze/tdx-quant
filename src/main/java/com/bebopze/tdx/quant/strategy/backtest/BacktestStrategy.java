@@ -771,27 +771,27 @@ public class BacktestStrategy {
             if (diff > min_diff) {
 
                 long N = diff / 30;
-                if (N >= 2 && N <= 3 && nav < 1 + (0.015 * N * ztRatio)) {
+                if (N >= 2 && N <= 3 && nav < 1 + (0.001 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 4 && N <= 6 && nav < 1 + (0.025 * N * ztRatio)) {
+                if (N >= 4 && N <= 6 && nav < 1 + (0.005 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 7 && N <= 12 && nav < 1 + (0.035 * N * ztRatio)) {
+                if (N >= 7 && N <= 12 && nav < 1 + (0.010 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 13 && N <= 24 && nav < 1 + (0.045 * N * ztRatio)) {
+                if (N >= 13 && N <= 24 && nav < 1 + (0.020 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
                 }
-                if (N >= 25 && nav < 1 + (0.055 * N * ztRatio)) {
+                if (N >= 25 && nav < 1 + (0.025 * N * ztRatio)) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
@@ -807,7 +807,7 @@ public class BacktestStrategy {
 
             } else {
 
-                if (nav < 0.95) {
+                if (diff > 100 && nav < 0.90) {
                     log.warn("failFast     >>>     taskId : {} , startDate : {} , endDate : {} , tradeDate : {} , nav : {}",
                              taskDO.getId(), startDate, endDate, tradeDate, nav);
                     return true;
@@ -1565,11 +1565,11 @@ public class BacktestStrategy {
 
 
             // 收盘价
-            BigDecimal close = NumUtil.double2Decimal(getClosePrice(stockCode, tradeDate));
-            buy_tradeRecordDO.setPrice(close);
+            double close = getClosePrice(stockCode, tradeDate);
+            buy_tradeRecordDO.setPrice(NumUtil.double2Decimal(close));
 
             // 买入数量   =   可买仓位 / 收盘价                                  （忽略 🐶💩共产主义特色   ->   100股 bug）
-            double qty = amount / close.doubleValue();
+            double qty = close <= 0 ? 0 : amount / close; // 复权BUG  ->  close<=0
             buy_tradeRecordDO.setQuantity((int) qty);
 
             // 成交额 = 价格 x 数量
@@ -1589,18 +1589,33 @@ public class BacktestStrategy {
             // ---------------------------------------------------------------------------------------------------------
 
 
+            // 复权BUG  ->  changePct>35% （ 601699-潞安环能     2020-07-03     涨幅：2650%[全复权] / 8.95%[不复权] ）
+            double changePct = getChangePct(stockCode, tradeDate);
+            if (changePct > 35) {
+                log.warn("createAndSave__BUY_TradeRecord  -  涨跌幅>35%（复权BUG : B_record -> 直接剔除 当前个股）     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
+                         taskId, tradeDate, stockCode, close, amount, qty);
+
+                // 简单处理  ->  当日 BUY_TradeRecord   直接剔除 当前个股
+                continue;
+            }
+
+
+            // 复权BUG  ->  close<=0
+            if (close <= 0.0) {
+                log.warn("createAndSave__BUY_TradeRecord  -  买入价格<=0（复权BUG : B_record -> 直接剔除 当前个股）     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
+                         taskId, tradeDate, stockCode, close, amount, qty);
+
+                // 简单处理  ->  当日 BUY_TradeRecord   直接剔除 当前个股
+                continue;
+                // throw new BizException("买入价格<=0");
+            }
+
+
             // 买入0股（     amount -> (0,1)     ）
             if (qty < 1) {
                 log.warn("createAndSave__BUY_TradeRecord  -  买入数量<1股     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
                          taskId, tradeDate, stockCode, close, amount, qty);
                 continue;
-            }
-
-            if (close.doubleValue() <= 0.0) {
-                log.error("createAndSave__BUY_TradeRecord  -  买入价格<=0     >>>     taskId : {} , tradeDate : {} , stockCode : {} , closePrice : {} , amount : {} , qty : {}",
-                          taskId, tradeDate, stockCode, close, amount, qty);
-
-                throw new BizException("买入价格<=0");
             }
 
 
@@ -1878,6 +1893,12 @@ public class BacktestStrategy {
         }
 
 
+        if (idx >= data.dateList.size() - 1) {
+            // 返回一个超过 endDate 的日期，让外层 while 结束
+            return tradeDate.plusDays(1);
+        }
+
+
         // 下一个
         return data.dateList.get(idx + 1);
     }
@@ -1895,6 +1916,12 @@ public class BacktestStrategy {
             if (!DateTimeUtil.between(tradeDate, data.startDate(), data.endDate())) {
                 throw new BizException(String.format("[日期：%s]非法，超出有效交易日范围", tradeDate));
             }
+        }
+
+
+        // 已经是第一个交易日，没有前一个交易日
+        if (idx <= 0) {
+            return null;
         }
 
 
@@ -3322,6 +3349,7 @@ public class BacktestStrategy {
         Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
         KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
 
+
         Integer idx = dateIndexMap.get(tradeDate);
         // TODO   当日停牌 -> 无法BS    （605255   2025-09-11）
         if (null == idx || idx <= 0) {
@@ -3329,7 +3357,21 @@ public class BacktestStrategy {
             return 0.0;
         }
 
-        return klineArrDTO.changePct[idx];
+
+        double changePct = klineArrDTO.changePct[idx];
+
+
+        // -------------------------------------------------------- TODO   复权BUG（后续可 DEL -> 已经在 kline导入源头 控制min/max）
+        if (changePct < -9999.99 || changePct > 9999.99) {
+            log.error("getChangePct - err   [复权BUG -> change_pct]     >>>     stockCode : {} , tradeDate : {} , changePct : {}", stockCode, tradeDate, changePct);
+
+            changePct = Math.min(changePct, 9999.99);
+            changePct = Math.max(changePct, -9999.99);
+        }
+        // --------------------------------------------------------
+
+
+        return changePct;
     }
 
 
@@ -3342,24 +3384,13 @@ public class BacktestStrategy {
      */
     private double getPrevClosePrice(String stockCode, LocalDate tradeDate) {
         LocalDate prev_date = tradeDateDecr(tradeDate);
-        return getActClosePrice(stockCode, prev_date);
 
-//        StockFun fun = data.getFun(stockCode);
-//        Map<LocalDate, Integer> dateIndexMap = fun.getDateIndexMap();
-//        KlineArrDTO klineArrDTO = fun.getKlineArrDTO();
-//
-//        Integer idx = dateIndexMap.get(tradeDate);
-//        if (idx == null || idx <= 0) {
-//            return 0.0;
-//        }
-//
-//
-//        double prev_close = klineArrDTO.close[idx - 1];
-//        return prev_close;
-//
-//
-//        LocalDate prev_date = klineArrDTO.date[idx - 1];
-//        return getClosePrice(stockCode, prev_date);
+
+        // 首日无前收，用当日收盘价兜底，避免返回0   ->   持仓被跳过
+        prev_date = prev_date == null ? tradeDate : prev_date; // 实际不可能 首日（BS策略 已经做了   ->   新股过滤[MA50>0] ）
+
+
+        return getActClosePrice(stockCode, prev_date);
     }
 
 
@@ -3414,7 +3445,7 @@ public class BacktestStrategy {
 
         // 停牌（603039 -> 2023-04-03）
         int count = 0;
-        while (openPrice == null && count++ < 500) {
+        while (tradeDate != null && openPrice == null && count++ < 500) {
             // 交易日 往前一位
             tradeDate = tradeDateDecr(tradeDate);
             openPrice = data.stock__dateOpenMap.get(stockCode).get(tradeDate);
@@ -3442,7 +3473,7 @@ public class BacktestStrategy {
 
         // 停牌（603039 -> 2023-04-03）
         int count = 0;
-        while (closePrice == null && count++ < 500) {
+        while (tradeDate != null && closePrice == null && count++ < 500) {
             // 交易日 往前一位
             tradeDate = tradeDateDecr(tradeDate);
             closePrice = data.stock__dateCloseMap.get(stockCode).get(tradeDate);
