@@ -3422,7 +3422,7 @@ public class BacktestStrategy {
         }
 
         double close = getActClosePrice(stockCode, tradeDate);
-        log.info("getClosePrice - close     >>>     stockCode : {} , tradeDate : {} , close=close[{}]", stockCode, tradeDate, close);
+        // log.info("getClosePrice - close     >>>     stockCode : {} , tradeDate : {} , close=close[{}]", stockCode, tradeDate, close);
         return close;
     }
 

@@ -51,6 +51,16 @@ public class ThreadPoolRegistry {
                                      .build());
 
 
+        // 回测 task 池：CPU + 分配密集 -> 并发度贴近核数（默认 核数×2）
+        registerPool(ThreadPoolType.BACKTEST,
+                     ThreadPoolConfig.builder()
+                                     .name("Backtest-Pool")
+                                     .corePoolSize(processors * 2)
+                                     .maxPoolSize(processors * 3)
+                                     .queueCapacity(2000)
+                                     .build());
+
+
         registerPool(ThreadPoolType.IO_INTENSIVE,
                      ThreadPoolConfig.builder()
                                      .name("IO-Intensive-Pool")
@@ -95,6 +105,7 @@ public class ThreadPoolRegistry {
                                      .maxPoolSize(10)
                                      .queueCapacity(500)
                                      .build());
+
     }
 
 
