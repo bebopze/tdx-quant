@@ -131,7 +131,7 @@ public class BacktestServiceImpl implements BacktestService {
         // 并行执行所有任务
         ParallelCalcUtil.forEach(taskList,
                                  Runnable::run,  // 直接执行 Runnable
-                                 ThreadPoolType.IO_INTENSIVE
+                                 ThreadPoolType.BACKTEST
         );
     }
 

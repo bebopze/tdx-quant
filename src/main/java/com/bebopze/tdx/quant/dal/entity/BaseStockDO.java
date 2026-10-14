@@ -385,6 +385,26 @@ public class BaseStockDO implements Serializable {
     }
 
 
+    /**
+     * 是否含 K 线数据（<b>不触发</b>全历史 DTO 惰性转换）
+     *
+     * <p>
+     * 用于 {@code InitDataServiceImpl} 的空数据过滤：原先用 {@code CollectionUtils.isNotEmpty(e.getKlineDTOList())}
+     * 判空，会把 5370 只股票的<b>全历史</b>对象图（约 9.6 GB）全部建出来 —— 即使随后只截取 1 年窗口。
+     */
+    public boolean hasKlineData() {
+        return klineHis != null || klineDTOList != null;
+    }
+
+
+    /**
+     * 是否含扩展数据（<b>不触发</b>全历史 DTO 惰性转换）
+     */
+    public boolean hasExtData() {
+        return extDataHis != null || extDataDTOList != null;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

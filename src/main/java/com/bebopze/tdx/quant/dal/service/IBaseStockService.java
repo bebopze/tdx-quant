@@ -52,6 +52,16 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     List<BaseStockDO> listAllETFKline();
 
 
+    /**
+     * 游标分页（非 OFFSET 分页）-> 流式读取（因子挖掘 窗口加载）
+     *
+     * @param typeSet  股票类型
+     * @param lastId   上一页最后一条 id（首页传 0）
+     * @param pageSize 页大小
+     */
+    List<BaseStockDO> listByCursor(Set<Integer> typeSet, Long lastId, int pageSize);
+
+
     List<BaseStockDO> listAllSimple();
 
     Map<String, Long> codeIdMap(Integer type);

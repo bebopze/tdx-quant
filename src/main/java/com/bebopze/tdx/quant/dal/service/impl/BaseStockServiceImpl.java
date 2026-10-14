@@ -200,6 +200,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
+    public List<BaseStockDO> listByCursor(Set<Integer> typeSet, Long lastId, int pageSize) {
+        return baseMapper.listByCursor(typeSet, lastId, pageSize);
+    }
+
+
+    @Override
     public List<BaseStockDO> listAllSimple() {
         return baseMapper.listAllSimple();
     }
@@ -259,7 +265,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
             // write Cache
-//  TODO   先注释掉，等后面再开启           JsonFileWriterAndReader.writeLargeListToFile___stock_listAllKline(list);
+            //  TODO   先注释掉，等后面再开启           JsonFileWriterAndReader.writeLargeListToFile___stock_listAllKline(list);
         }
 
 
