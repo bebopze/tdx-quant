@@ -40,12 +40,12 @@ import java.util.Objects;
 public class EastMoneyTradeAPI {
 
 
-    private static /*final*/ String SID = PropsUtil.getSid();
+    /*private*/ static /*final*/ String SID = PropsUtil.getSid();
 
-    private static /*final*/ String COOKIE = PropsUtil.getCookie();
+    /*private*/ static /*final*/ String COOKIE = PropsUtil.getCookie();
 
 
-    private static final Map<String, String> headers = Maps.newHashMap();
+    /*private*/ static final Map<String, String> headers = Maps.newHashMap();
 
     static {
         headers.put("Cookie", COOKIE);
@@ -74,19 +74,6 @@ public class EastMoneyTradeAPI {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-//    /**
-//     * 登录
-//     * <p>
-//     * https://jywg.eastmoneysec.com/Login/Authentication?validatekey=
-//     *
-//     * @param validatekey
-//     * @return
-//     */
-//    @PostMapping("/Login/Authentication")
-//    JSONObject login(@RequestParam String validatekey,
-//                     @RequestBody LoginReqDTO reqDTO);
 
 
     /**
