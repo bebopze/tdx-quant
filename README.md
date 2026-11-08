@@ -219,7 +219,7 @@ mvn spring-boot:run \
 
 ## 本机 Chrome 登录辅助
 
-项目提供 [`EastMoneyChromeLogin`](src/main/java/com/bebopze/tdx/quant/automation/EastMoneyChromeLogin.java)，
+项目提供 [`EastMoneyChromeLogin`](src/main/java/com/bebopze/tdx/quant/task/script/EastMoneyChromeLogin.java)，
 可打开本机 Chrome、处理维护公告、填写配置中的资金账号和密码、选择 3 小时在线时间，
 将验证码保存为 `tdx_zip/验证码.png`，调用 LLM识别验证码，并自动填写验证码字段，然后提交登录。
 登录成功后会在当前浏览器会话中确认持仓接口加载成功，
@@ -230,7 +230,7 @@ mvn exec:java \
   -Dexec.mainClass=com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin
 ```
 
-该工具会自动识别验证码，也不会输出或返回 Cookie、validatekey 等认证凭据。完整说明见
+该工具会自动识别验证码，获取 Cookie、validatekey 等认证凭据。完整说明见
 [`docs/eastmoney-chrome-login.md`](docs/eastmoney-chrome-login.md)。
 
 ## 大模型客户端
