@@ -5,28 +5,26 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.aspect.StockTradingRateLimiter;
-import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionPriceTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetHisOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetTodayOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionSubmitTradeReq;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.GetHisOrdersResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetGGQQPositionResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetHisOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetLastSettlementSheetResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
-import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.req.SubmitTradeV2Req;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
-import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
-import org.springframework.util.Assert;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 
 import static com.bebopze.tdx.quant.client.EastMoneyTradeAPI.SID;
 import static com.bebopze.tdx.quant.client.EastMoneyTradeAPI.headers;
@@ -45,15 +43,221 @@ public class EastMoneyOptionTradeAPI {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    /**
-//     * 当前账户 实时总资金
-//     */
-//    private static double TOTAL_CAP = 1_0000;
-//
+    /**
+     * 当前账户 实时总资金
+     */
+    private static double TOTAL_CAP = 1_0000;
+
 //    /**
 //     * 单笔买入 金额限制：50万
 //     */
 //    private static final double PER_BUY_AMOUNT_LIMIT = 50_0000;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * ETF期权   -   账户资金（汇总）
+     * -
+     * -
+     * - https://jywg.18.cn/StockOptionTrade/GetAccountFunds?validatekey=f68791ef-a002-4be6-878e-a974e491c8d0
+     *
+     * @param
+     * @return
+     */
+    public static OptionGetAccountFundsResp getAccountFunds() {
+
+
+        String url = "https://jywg.18.cn/StockOptionTrade/GetAccountFunds?validatekey=" + SID;
+
+
+        String result = HttpUtil.doPost(url, null, headers);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("Status") == 0) {
+            log.info("/StockOptionTrade/GetAccountFunds   suc     >>>     result : {}", result);
+        }
+
+
+        JSONObject data = resultJson.getJSONArray("Data").getJSONObject(0);
+
+
+        // ----------------------------- 资金持仓 汇总
+        OptionGetAccountFundsResp resp = data.toJavaObject(OptionGetAccountFundsResp.class);
+
+
+        // 实时总资金
+        TOTAL_CAP = resp.getZczz();
+
+
+        return resp;
+    }
+
+
+    /**
+     * ETF期权   -   期权持仓 列表
+     * -
+     * -
+     * - https://jywg.18.cn/StockOptionTrade/GetGGQQPosition?validatekey=f68791ef-a002-4be6-878e-a974e491c8d0
+     *
+     * @param
+     * @return
+     */
+    public static List<OptionGetGGQQPositionResp> getGGQQPosition() {
+
+
+        String url = "https://jywg.18.cn/StockOptionTrade/GetGGQQPosition?validatekey=" + SID;
+
+
+        // 分页参数（qqhs：页面大小、dwc：当前页码）
+        OptionGetTodayOrdersReq req = new OptionGetTodayOrdersReq(500, 1);
+
+
+        // --------------
+
+
+        List<OptionGetGGQQPositionResp> dataList = Lists.newArrayList();
+
+
+        boolean haxNext = true;
+        while (haxNext) {
+
+
+            JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
+            String result = HttpUtil.doPost(url, formData, headers);
+
+
+            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+            if (resultJson.getInteger("Status") == 0) {
+                log.info("/StockOptionTrade/GetGGQQPosition   suc     >>>     result : {}", result);
+            }
+
+
+            // ----------------------------- 当日委托 列表
+            List<OptionGetGGQQPositionResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetGGQQPositionResp.class);
+            dataList.addAll(pageDataList);
+
+
+            // 下一页
+            haxNext = pageDataList.size() >= req.getQqhs();
+            if (haxNext) {
+                req.setDwc(req.getDwc() + 1);
+            }
+        }
+
+
+        return dataList;
+    }
+
+
+    /**
+     * ETF期权   -   客户结单-资金明细
+     * -
+     * -
+     * - https://jywg.18.cn/StockOptionTrade/GetLastSettlementSheet?validatekey=f68791ef-a002-4be6-878e-a974e491c8d0
+     *
+     * @param
+     * @return
+     */
+    public static OptionGetLastSettlementSheetResp getLastSettlementSheet() {
+
+
+        String url = "https://jywg.18.cn/StockOptionTrade/GetLastSettlementSheet?validatekey=" + SID;
+
+
+        // 不区分   Request Method
+
+
+        // String result = HttpUtil.doGet(url, headers);
+        String result = HttpUtil.doPost(url, null, headers);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        if (resultJson.getInteger("Status") == 0) {
+            log.info("/StockOptionTrade/GetLastSettlementSheet   suc     >>>     result : {}", result);
+        }
+
+
+        JSONObject data = resultJson.getJSONArray("Data").getJSONObject(0);
+
+
+        // ----------------------------- 资金持仓 汇总
+        OptionGetLastSettlementSheetResp resp = data.toJavaObject(OptionGetLastSettlementSheetResp.class);
+
+
+        // ----------------------------- 持股详情 列表
+        // List<CcStockInfo> stockDTOList = resp.getStocks();
+
+
+        // 实时总资金
+//        TOTAL_CAP = resp.getMax_TotalCap();
+
+
+        return resp;
+    }
+
+
+    /**
+     * ETF期权   -   实时行情：买5 / 卖5
+     * -
+     * - https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?id=10012265&DC_APP_KEY=dcquotes-service-tweb&DC_TIMESTAMP=1793990910101&DC_SIGN=2883AA88F6D1
+     *
+     * @param stockOptionCode ETF期权 合约编码（如：10012265）
+     * @return
+     */
+    public static SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockOptionCode) {
+        // 通用
+        return EastMoneyTradeAPI.SHSZQuoteSnapshot(stockOptionCode);
+    }
+
+
+    /**
+     * ETF期权   -   历史委托 列表
+     * -
+     * - https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=fc5b25d1-8169-4986-b657-444822a25204
+     *
+     * @return
+     */
+    public static List<OptionGetHisOrderResp> getHisOrders(OptionGetHisOrdersReq req) {
+
+
+        String url = "https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=" + SID;
+
+
+        List<OptionGetHisOrderResp> dataList = Lists.newArrayList();
+
+
+        boolean haxNext = true;
+        while (haxNext) {
+
+
+            JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
+            String result = HttpUtil.doPost(url, formData, headers);
+
+
+            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+            if (resultJson.getInteger("Status") == 0) {
+                log.info("/StockOptionTrade/GetHisOrders   suc     >>>     result : {}", result);
+            }
+
+
+            // ----------------------------- 历史委托 列表
+            List<OptionGetHisOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetHisOrderResp.class);
+            dataList.addAll(pageDataList);
+
+
+            // 下一页
+            haxNext = pageDataList.size() >= req.getQqhs();
+            if (haxNext) {
+                req.setPage(req.getPage() + 1);
+            }
+        }
+
+
+        return dataList;
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -111,160 +315,6 @@ public class EastMoneyOptionTradeAPI {
 
 
         return data;
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-//    /**
-//     * ETF期权   -   持仓详情 列表
-//     * -
-//     * -
-//     * - https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=fc5b25d1-8169-4986-b657-444822a25204
-//     *
-//     * @param
-//     * @return
-//     */
-//    public static QueryCreditNewPosResp queryCreditNewPosV2() {
-//
-//
-//        String url = "https://jywg.18.cn/MarginSearch/queryCreditNewPosV2?validatekey=" + SID;
-//
-//
-//        // 不区分   Request Method
-//
-//
-//        // String result = HttpUtil.doGet(url, headers);
-//        String result = HttpUtil.doPost(url, null, headers);
-//
-//
-//        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-//        if (resultJson.getInteger("Status") == 0) {
-//            log.info("/MarginSearch/queryCreditNewPosV2   suc     >>>     result : {}", result);
-//        }
-//
-//
-//        JSONObject data = resultJson.getJSONArray("Data").getJSONObject(0);
-//
-//
-//        // ----------------------------- 资金持仓 汇总
-//        QueryCreditNewPosResp resp = data.toJavaObject(QueryCreditNewPosResp.class);
-//
-//
-//        // ----------------------------- 持股详情 列表
-//        // List<CcStockInfo> stockDTOList = resp.getStocks();
-//
-//
-//        // 实时总资金
-//        TOTAL_CAP = resp.getMax_TotalCap();
-//
-//
-//        return resp;
-//    }
-
-
-    /**
-     * ETF期权   -   实时行情：买5 / 卖5
-     * -
-     * - https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?id=10012265&DC_APP_KEY=dcquotes-service-tweb&DC_TIMESTAMP=1793990910101&DC_SIGN=2883AA88F6D1
-     *
-     * @param code ETF期权 合约code
-     * @return
-     */
-    public static SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String code) {
-
-        String url = "https://emhsmarketwgmix.eastmoneysec.com/api/SHSZQuoteSnapshot?" +
-
-                // 合约code（10012265）
-                "id=" + code +
-
-                "&DC_APP_KEY=dcquotes-service-tweb" +
-                "&DC_TIMESTAMP=" + System.currentTimeMillis() +
-                "&DC_SIGN=";
-
-
-        String result = null;
-
-
-        try {
-            result = HttpUtil.doGet(url, null);
-
-
-            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("status") == 0) {
-                log.info("/api/SHSZQuoteSnapshot   suc     >>>     code : {} , result : {}", code, result);
-            }
-
-
-            // ----------------------------- 个股信息
-            SHSZQuoteSnapshotResp resp = JSON.parseObject(result, SHSZQuoteSnapshotResp.class);
-
-
-            // ----------------------------- 买5 / 卖5
-            SHSZQuoteSnapshotResp.FivequoteDTO fivequoteDTO = resp.getFivequote();
-
-
-            // ----------------------------- 实时报价
-            SHSZQuoteSnapshotResp.RealtimequoteDTO realtimequoteDTO = resp.getRealtimequote();
-
-
-            return resp;
-
-
-        } catch (Exception e) {
-
-            log.error("SHSZQuoteSnapshot err     >>>     code : {} , result : {} , exMsg : {}", code, result, e.getMessage(), e);
-
-            throw new BizException(e.getMessage());
-        }
-    }
-
-
-    /**
-     * ETF期权   -   历史委托 列表
-     * -
-     * - https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=fc5b25d1-8169-4986-b657-444822a25204
-     *
-     * @return
-     */
-    public static List<GetHisOrdersResp> getHisOrders(OptionGetHisOrdersReq req) {
-
-
-        String url = "https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=" + SID;
-
-
-        List<GetHisOrdersResp> dataList = Lists.newArrayList();
-
-
-        boolean haxNext = true;
-        while (haxNext) {
-
-
-            JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
-            String result = HttpUtil.doPost(url, formData, headers);
-
-
-            JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("Status") == 0) {
-                log.info("/StockOptionTrade/GetHisOrders   suc     >>>     result : {}", result);
-            }
-
-
-            // ----------------------------- 历史委托 列表
-            List<GetHisOrdersResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(GetHisOrdersResp.class);
-            dataList.addAll(pageDataList);
-
-
-            // 下一页
-            haxNext = pageDataList.size() >= req.getQqhs();
-            if (haxNext) {
-                req.setPage(req.getPage() + 1);
-            }
-        }
-
-
-        return dataList;
     }
 
 
@@ -374,13 +424,13 @@ public class EastMoneyOptionTradeAPI {
      *
      * @return
      */
-    public static List<GetHisOrdersResp> getTodayOrders() {
+    public static List<OptionGetHisOrderResp> getTodayOrders() {
 
 
         String url = "https://jywg.18.cn/StockOptionTrade/GetTodayOrders?validatekey=" + SID;
 
 
-        List<GetHisOrdersResp> dataList = Lists.newArrayList();
+        List<OptionGetHisOrderResp> dataList = Lists.newArrayList();
 
 
         // 分页参数（qqhs：页面大小、dwc：当前页码）
@@ -402,7 +452,7 @@ public class EastMoneyOptionTradeAPI {
 
 
             // ----------------------------- 当日委托 列表
-            List<GetHisOrdersResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(GetHisOrdersResp.class);
+            List<OptionGetHisOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetHisOrderResp.class);
             dataList.addAll(pageDataList);
 
 
@@ -530,6 +580,21 @@ public class EastMoneyOptionTradeAPI {
     public static void main(String[] args) {
 
 
+        List<OptionGetGGQQPositionResp> ggqqPosition = getGGQQPosition();
+
+        System.out.println(ggqqPosition.size() + "     " + ggqqPosition);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        OptionGetAccountFundsResp accountFunds = getAccountFunds();
+        System.out.println(accountFunds);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
         SHSZQuoteSnapshotResp shszQuoteSnapshotResp = SHSZQuoteSnapshot("10012265");
         System.out.println(shszQuoteSnapshotResp);
 
@@ -575,7 +640,7 @@ public class EastMoneyOptionTradeAPI {
         req_1.setEt(LocalDate.of(2026, 11, 6));
         req_1.setQqhs(100);
 
-        List<GetHisOrdersResp> resp_1 = getHisOrders(req_1);
+        List<OptionGetHisOrderResp> resp_1 = getHisOrders(req_1);
 
 
         System.out.println(resp_1.size());
@@ -657,7 +722,7 @@ public class EastMoneyOptionTradeAPI {
 //
 
         // --------------------------------- 当日委托单 列表
-        List<GetHisOrdersResp> ordersDataRespList = getTodayOrders();
+        List<OptionGetHisOrderResp> ordersDataRespList = getTodayOrders();
         System.out.println(JSON.toJSONString(ordersDataRespList));
 
 
