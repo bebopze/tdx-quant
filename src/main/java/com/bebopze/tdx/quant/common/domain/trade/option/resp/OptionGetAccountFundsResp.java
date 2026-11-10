@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
 import lombok.Data;
 
+import java.util.List;
+
 
 /**
  * ETF期权   -   账户资金（汇总）
@@ -22,16 +24,16 @@ public class OptionGetAccountFundsResp {
     //         "Ccyk": "-2890.6060",         //
     //         "Dfzj": "0.0000",             //
     //         "Dtzybzj": "0.0000",          //
-    //         "Fdyk": "-2890.6060",         // 浮动盈亏
+    //         "Fdyk": "-2890.6060",         // 账户 浮动总盈亏
     //         "Hbdm": "0",
     //         "Khdm": "",                   // 客户代码（信用账户邮箱）
     //         "Nbjg": "5408",
-    //         "Sz": "146073.3840",           // 市值
+    //         "Sz": "146073.3840",           // 账户 持仓总市值
     //         "Xqsdbzj": "0.0000",
     //         "Xqzjdjje": "0.0000",
     //         "Yjfzlx": "0.0000",
     //         "Zczh": "",                     // 期权账号
-    //         "Zczz": "182479.2440",          // 总资产
+    //         "Zczz": "182479.2440",          // 账户总资产
     //         "Zjdjje": "0.0000",
     //         "Zjdtky": "36405.8600",         //
     //         "Zjfydjje": "0.0000",
@@ -57,18 +59,32 @@ public class OptionGetAccountFundsResp {
     private double Ccyk;
     private double Dfzj;
     private double Dtzybzj;
+
+
+    // 账户 浮动总盈亏
     private double Fdyk;
+
+
     private double Hbdm;
     private double Khdm;
 
     private String Nbjg;
 
+
+    // 账户 持仓总市值
     private double Sz;
+
+
     private double Xqsdbzj;
     private double Xqzjdjje;
     private double Yjfzlx;
     private double Zczh;
+
+
+    // 账户总资产
     private double Zczz;
+
+
     private double Zjdjje;
     private double Zjdtky;
     private double Zjfydjje;
@@ -78,7 +94,12 @@ public class OptionGetAccountFundsResp {
     private double Zjjyzcje;
     private double Zjjyztje;
     private double Zjkqje;
+
+
+    // 可用资金（现金资产/可取金额）
     private double Zjkyje;
+
+
     private double Zjsjky;
     private double Zjye;
     private double Zjzc;
@@ -86,6 +107,30 @@ public class OptionGetAccountFundsResp {
     private double Zjzt;
     private double Zybzj;
     private double ZybzjEX;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // ------------- 自定义 扩展字段
+
+
+    /**
+     * 期权持仓 - 详情列表
+     */
+    private List<OptionGetGGQQPositionResp> optionPositionList;
+
+
+    /**
+     * 期权持仓 总持仓比例 = 持仓总市值 / 账户总资产
+     */
+    private double totalAccount__actTotalPosRatio = Sz / Zczz;
+
+
+    /**
+     * 剩余 可买仓位（%）  =   可用总资金  /  账户总资产
+     */
+    private double max_buyPosPct = Zjkyje / Zczz * 100;
 
 
 }

@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 
 
 /**
+ * 股票 - BS
+ *
  * @author: bebopze
  * @date: 2025/5/10
  */
@@ -49,6 +51,5 @@ public class TradeBSParam implements Serializable {
      */
     @Schema(description = "市场（HA：沪A / SA：深A / B：北交所）", example = "HA", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String market;
-
 
 }

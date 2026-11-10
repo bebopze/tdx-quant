@@ -86,7 +86,7 @@ public class QueryCreditNewPosResp implements Serializable {
     private List<CcStockInfo> stocks;
 
 
-    // 总资产
+    // 总资产 = 净资产 + 总负债 = 总市值 + 可用资金
     private BigDecimal totalasset;
     // 总负债
     private BigDecimal totalliability;

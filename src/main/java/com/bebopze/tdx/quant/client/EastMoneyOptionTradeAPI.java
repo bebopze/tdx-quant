@@ -7,13 +7,15 @@ import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.aspect.StockTradingRateLimiter;
 import com.bebopze.tdx.quant.common.constant.option.OptionPriceTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetHisOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetTodayOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionSubmitTradeReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetGGQQPositionResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetHisOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetLastSettlementSheetResp;
+import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
@@ -22,8 +24,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.client.EastMoneyTradeAPI.SID;
@@ -38,6 +43,11 @@ import static com.bebopze.tdx.quant.client.EastMoneyTradeAPI.headers;
  */
 @Slf4j
 public class EastMoneyOptionTradeAPI {
+
+
+    static {
+        bootMark("T3_CLASS_INIT_BEGIN");
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -77,7 +87,7 @@ public class EastMoneyOptionTradeAPI {
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
         if (resultJson.getInteger("Status") == 0) {
-            log.info("/StockOptionTrade/GetAccountFunds   suc     >>>     result : {}", result);
+            log.debug("/StockOptionTrade/GetAccountFunds   suc     >>>     result : {}", result);
         }
 
 
@@ -131,7 +141,7 @@ public class EastMoneyOptionTradeAPI {
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
             if (resultJson.getInteger("Status") == 0) {
-                log.info("/StockOptionTrade/GetGGQQPosition   suc     >>>     result : {}", result);
+                log.debug("/StockOptionTrade/GetGGQQPosition   suc     >>>     result : {}", result);
             }
 
 
@@ -176,7 +186,7 @@ public class EastMoneyOptionTradeAPI {
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
         if (resultJson.getInteger("Status") == 0) {
-            log.info("/StockOptionTrade/GetLastSettlementSheet   suc     >>>     result : {}", result);
+            log.debug("/StockOptionTrade/GetLastSettlementSheet   suc     >>>     result : {}", result);
         }
 
 
@@ -220,13 +230,13 @@ public class EastMoneyOptionTradeAPI {
      *
      * @return
      */
-    public static List<OptionGetHisOrderResp> getHisOrders(OptionGetHisOrdersReq req) {
+    public static List<OptionGetOrderResp> getHisOrders(OptionGetHisOrdersReq req) {
 
 
         String url = "https://jywg.18.cn/StockOptionTrade/GetHisOrders?validatekey=" + SID;
 
 
-        List<OptionGetHisOrderResp> dataList = Lists.newArrayList();
+        List<OptionGetOrderResp> dataList = Lists.newArrayList();
 
 
         boolean haxNext = true;
@@ -239,12 +249,12 @@ public class EastMoneyOptionTradeAPI {
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
             if (resultJson.getInteger("Status") == 0) {
-                log.info("/StockOptionTrade/GetHisOrders   suc     >>>     result : {}", result);
+                log.debug("/StockOptionTrade/GetHisOrders   suc     >>>     result : {}", result);
             }
 
 
             // ----------------------------- 历史委托 列表
-            List<OptionGetHisOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetHisOrderResp.class);
+            List<OptionGetOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetOrderResp.class);
             dataList.addAll(pageDataList);
 
 
@@ -307,7 +317,7 @@ public class EastMoneyOptionTradeAPI {
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
         if (resultJson.getInteger("code") == 0) {
-            log.info("/SHSZOption/searchPage   suc     >>>     result : {}", result);
+            log.debug("/SHSZOption/searchPage   suc     >>>     result : {}", result);
         }
 
 
@@ -364,8 +374,8 @@ public class EastMoneyOptionTradeAPI {
                     // TODO ...
 
 
-                    log.info("ETF期权-[{}]   suc     >>>     url : {} , formData : {} , 委托编号 : {}",
-                             req.getOptionTradeTypeEnum().getDesc(), url, formData, wtbh);
+                    log.debug("ETF期权-[{}]   suc     >>>     url : {} , formData : {} , 委托编号 : {}",
+                              req.getOptionTradeTypeEnum().getDesc(), url, formData, wtbh);
 
 
                     return wtbh;
@@ -424,13 +434,13 @@ public class EastMoneyOptionTradeAPI {
      *
      * @return
      */
-    public static List<OptionGetHisOrderResp> getTodayOrders() {
+    public static List<OptionGetOrderResp> getTodayOrders() {
 
 
         String url = "https://jywg.18.cn/StockOptionTrade/GetTodayOrders?validatekey=" + SID;
 
 
-        List<OptionGetHisOrderResp> dataList = Lists.newArrayList();
+        List<OptionGetOrderResp> dataList = Lists.newArrayList();
 
 
         // 分页参数（qqhs：页面大小、dwc：当前页码）
@@ -447,12 +457,12 @@ public class EastMoneyOptionTradeAPI {
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
             if (resultJson.getInteger("Status") == 0) {
-                log.info("/StockOptionTrade/GetTodayOrders   suc     >>>     result : {}", result);
+                log.debug("/StockOptionTrade/GetTodayOrders   suc     >>>     result : {}", result);
             }
 
 
             // ----------------------------- 当日委托 列表
-            List<OptionGetHisOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetHisOrderResp.class);
+            List<OptionGetOrderResp> pageDataList = resultJson.getJSONArray("Data").toJavaList(OptionGetOrderResp.class);
             dataList.addAll(pageDataList);
 
 
@@ -468,83 +478,86 @@ public class EastMoneyOptionTradeAPI {
     }
 
 
-//    /**
-//     * 批量撤单
-//     * -
-//     * - https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
-//     *
-//     * @param req
-//     * @param wtbh_stockCode_Map
-//     * @return
-//     */
-//    // @BSLimiter
-//    public static List<RevokeOrderResultDTO> revokeOrders(RevokeOrdersReq req, Map<String, String> wtbh_stockCode_Map) {
-//
-//
-//        // 量化限流
-//        Arrays.stream(req.getRevokes().split(",")).forEach(e -> {
-//            // 委托日期_委托编号
-//            String stockCode = wtbh_stockCode_Map.getOrDefault(e, "-1");
-//            limiter(stockCode);
-//        });
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
-//        String url = "https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=" + SID;
-//
-//
-//        JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
-//
-//
-//        String result = HttpUtil.doPost(url, formData, headers);
-//
-//
-//        // 20250511: 您的撤单委托已提交，可至当日委托查看撤单结果   20250511: 撤单失败，该笔委托已经全部成交或全部撤单   20250511: 委托序号与委托人不符
-//
-//
-//        // 20250506: 您的撤单委托已提交，可至当日委托查看撤单结果
-//        // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
-//        // 20250511: 委托序号与委托人不符
-//
-//
-//        String[] revokeArr = req.getRevokes().split(",");
-//        String[] resultArr = result.split("   ");
-//
-//
-//        List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
-//        for (int i = 0; i < resultArr.length; i++) {
-//
-//            String revoke = revokeArr[i];
-//            String revoke_r = resultArr[i];
-//
-//
-//            RevokeOrderResultDTO dto = new RevokeOrderResultDTO();
-//            dto.setRevoke(revoke);
-//            dto.setResultDesc(revoke_r);
-//
-//
-//            boolean suc;
-//            if (revoke_r.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
-//                suc = true;
-//            } else if (revoke_r.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
-//                suc = false;
-//            } else if (revoke_r.contains("委托序号与委托人不符")) {
-//                suc = false;
-//            } else {
-//                suc = false;
-//            }
-//            dto.setSuc(suc);
-//
-//
-//            dtoList.add(dto);
-//        }
-//
-//
-//        return dtoList;
-//    }
+    /**
+     * 批量撤单
+     *
+     *
+     * - 页面 ： https://jywg.18.cn/StockOptionTrade/Revoke
+     *
+     * - https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+     *
+     * @param req
+     * @param wtbh_stockCode_Map
+     * @return
+     */
+    // @BSLimiter
+    public static List<RevokeOrderResultDTO> revokeOrders(RevokeOrdersReq req, Map<String, String> wtbh_stockCode_Map) {
+
+
+        // 量化限流
+        Arrays.stream(req.getRevokes().split(",")).forEach(e -> {
+            // 委托日期_委托编号
+            String stockCode = wtbh_stockCode_Map.getOrDefault(e, "-1");
+            limiter(stockCode);
+        });
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+        String url = "https://jywg.18.cn/MarginTrade/RevokeOrders?validatekey=" + SID;
+
+
+        JSONObject formData = JSON.parseObject(JSON.toJSONString(req));
+
+
+        String result = HttpUtil.doPost(url, formData, headers);
+
+
+        // 20250511: 您的撤单委托已提交，可至当日委托查看撤单结果   20250511: 撤单失败，该笔委托已经全部成交或全部撤单   20250511: 委托序号与委托人不符
+
+
+        // 20250506: 您的撤单委托已提交，可至当日委托查看撤单结果
+        // 20250504: 撤单失败，该笔委托已经全部成交或全部撤单
+        // 20250511: 委托序号与委托人不符
+
+
+        String[] revokeArr = req.getRevokes().split(",");
+        String[] resultArr = result.split("   ");
+
+
+        List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
+        for (int i = 0; i < resultArr.length; i++) {
+
+            String revoke = revokeArr[i];
+            String revoke_r = resultArr[i];
+
+
+            RevokeOrderResultDTO dto = new RevokeOrderResultDTO();
+            dto.setRevoke(revoke);
+            dto.setResultDesc(revoke_r);
+
+
+            boolean suc;
+            if (revoke_r.contains("您的撤单委托已提交，可至当日委托查看撤单结果")) {
+                suc = true;
+            } else if (revoke_r.contains("撤单失败，该笔委托已经全部成交或全部撤单")) {
+                suc = false;
+            } else if (revoke_r.contains("委托序号与委托人不符")) {
+                suc = false;
+            } else {
+                suc = false;
+            }
+            dto.setSuc(suc);
+
+
+            dtoList.add(dto);
+        }
+
+
+        return dtoList;
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -565,62 +578,88 @@ public class EastMoneyOptionTradeAPI {
 
         // 获取当前速率信息
         StockTradingRateLimiter.RateInfo rateInfo = limiter.getRateInfo(stockCode);
-        log.info("[" + stockCode + "] " + rateInfo.toString());
+        log.debug("[" + stockCode + "] " + rateInfo.toString());
 
 
         // 限流 -> 等待许可后执行交易
         limiter.tryAcquireWithTimeout(stockCode, 60 * 1000);
-        log.info("[" + stockCode + "] 执行交易耗时：" + DateTimeUtil.formatNow2Hms(start));
+        log.debug("[" + stockCode + "] 执行交易耗时：" + DateTimeUtil.formatNow2Hms(start));
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    static {
+        bootMark("T3_STATIC_FIELDS_DONE");
+    }
+
+
+    private static void bootMark(String name) {
+
+        System.err.printf(
+                "[BOOT-MARK] %-25s | %s | nano=%d%n",
+                name,
+                java.time.Instant.now(),
+                System.nanoTime()
+        );
+    }
+
     public static void main(String[] args) {
 
 
+        bootMark("T4_MAIN_ENTER");
+
+
+//        System.err.println(
+//                "[ORIGINAL] MAIN_ENTER = " + Instant.now()
+//        );
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 账户资金
+        OptionGetAccountFundsResp accountFunds = getAccountFunds();
+        // System.out.println(accountFunds);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 持仓列表
         List<OptionGetGGQQPositionResp> ggqqPosition = getGGQQPosition();
 
-        System.out.println(ggqqPosition.size() + "     " + ggqqPosition);
+        System.out.println(ggqqPosition.size() + "     " /*+ ggqqPosition*/);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        OptionGetAccountFundsResp accountFunds = getAccountFunds();
-        System.out.println(accountFunds);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
+        // 实时行情（买5/卖5）
         SHSZQuoteSnapshotResp shszQuoteSnapshotResp = SHSZQuoteSnapshot("10012265");
-        System.out.println(shszQuoteSnapshotResp);
+        // System.out.println(shszQuoteSnapshotResp);
 
 
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 合约搜索（支持 keyword 模糊搜索）
         JSONArray optionList = SHSZOptionSearchPage("588000");
 
 
         System.out.println(optionList.size());
-        System.out.println(optionList);
+        // System.out.println(optionList);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-//        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = SHSZQuoteSnapshot("10012265");
-//
-//        System.out.println(shszQuoteSnapshotResp);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
+        // 期权BS
         OptionSubmitTradeReq req = new OptionSubmitTradeReq();
-        req.setHybh("10012265");
+        req.setHybh("10011565");
         req.setAmount(1);
-        req.setPrice(0.0123);
+        req.setPrice(new BigDecimal("0.0001"));
 
 
         req.setOptionTradeTypeEnum(OptionTradeTypeEnum.BUY_OPEN);
@@ -635,117 +674,27 @@ public class EastMoneyOptionTradeAPI {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 历史委托 列表
         OptionGetHisOrdersReq req_1 = new OptionGetHisOrdersReq();
         req_1.setSt(LocalDate.of(2026, 11, 1));
         req_1.setEt(LocalDate.of(2026, 11, 6));
         req_1.setQqhs(100);
 
-        List<OptionGetHisOrderResp> resp_1 = getHisOrders(req_1);
+        List<OptionGetOrderResp> resp_1 = getHisOrders(req_1);
 
 
         System.out.println(resp_1.size());
-        System.out.println(resp_1);
+        // System.out.println(resp_1);
 
 
-        // -------------------------------------------------------------------------------------------------------------
-
-
-//        for (int i = 0; i < 10; i++) {
-//
-//            SubmitTradeV2Req req = new SubmitTradeV2Req();
-//            req.setStockCode("588000");
-//            req.setStockName("科创50ETF");
-//            req.setPrice(new BigDecimal("0.123"));
-//            req.setAmount(100);
-//
-//
-//            req.setTradeTypeEnum(TradeTypeEnum.ZY_BUY);
-//            req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
-//            req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
-//
-//            String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
-//            req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
-//
-//
-//            Integer wtbh1 = submitTradeV2(req);
-//        }
-
-
-//        // --------------------------------- 我的持仓   -   信用账户
-//
-//        QueryCreditNewPosV2Resp queryCreditNewPosV2Resp = queryCreditNewPosV2();
-//        System.out.println(JSON.toJSONString(queryCreditNewPosV2Resp));
-//
-//
-//        // stockCode: 000063
-//        // stockName: 中兴通讯
-//        // price: 123.45
-//        // amount: 100
-//        // tradeType: S
-//        // xyjylx: 7
-//        // market: SA
-//        SubmitTradeV2Req req = new SubmitTradeV2Req();
-//        req.setStockCode("000063");
-//        req.setStockName("中兴通讯");
-//        req.setPrice(new BigDecimal("123.45"));
-//        req.setAmount(100);
-//
-//
-//        req.setStockCode("001696");
-//        req.setStockName("宗申动力");
-//        req.setPrice(new BigDecimal("123.45"));
-//        req.setAmount(100);
-//
-//
-//        req.setStockCode("588000");
-//        req.setStockName("科创50ETF");
-//        req.setPrice(new BigDecimal("0.123"));
-//        req.setAmount(100);
-//
-//
-//        req.setTradeTypeEnum(TradeTypeEnum.SELL);
-//        req.setTradeType(req.getTradeTypeEnum().getEastMoneyTradeType());
-//        req.setXyjylx(req.getTradeTypeEnum().getXyjylx());
-//
-//        String market = StockMarketEnum.getEastMoneyMarketByStockCode(req.getStockCode());
-//        req.setMarket(market == null ? StockMarketEnum.SH.getEastMoneyMarket() : market);
-//
-//        Integer wtbh1 = submitTradeV2(req);
-//
-//        System.out.println();
-//
-//
-////        reqDTO.setPrice("2.066");
-////        Integer wtbh2 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-////        reqDTO.setPrice("2.077");
-////        Integer wtbh3 = submitTradeV2(null, TradeTypeEnum.DANBAO_SELL, reqDTO);
-//
-
-        // --------------------------------- 当日委托单 列表
-        List<OptionGetHisOrderResp> ordersDataRespList = getTodayOrders();
+        // 当日委托单 列表
+        List<OptionGetOrderResp> ordersDataRespList = getTodayOrders();
         System.out.println(JSON.toJSONString(ordersDataRespList));
 
 
-        // --------------------------------- 撤单
+        // 撤单
 
 
-//        //
-//        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-//
-//        RevokeOrdersReqDTO revokeOrdersReqDTO = new RevokeOrdersReqDTO();
-//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh1);
-//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
-//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh2);
-//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
-//        revokeOrdersReqDTO.setRevokes(today + "_" + wtbh3);
-//        revokeOrders("", TradeTypeEnum.DANBAO_SELL, revokeOrdersReqDTO);
-
-
-        // --------------------------------- 买5/卖5
-
-
-        // SHSZQuoteSnapshotResp resp = SHSZQuoteSnapshot("300059");
-        // System.out.println(JSON.toJSONString(resp));
     }
 
 

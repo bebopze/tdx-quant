@@ -1,0 +1,311 @@
+package com.bebopze.tdx.quant.web;
+
+import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
+import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.service.OptionTradeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+
+/**
+ * ETF期权   -   交易（BS/撤单/持仓/...）
+ *
+ * @author: bebopze
+ * @date: 2026/11/11
+ */
+@RestController
+@RequestMapping("/api/option/trade")
+@Tag(name = "ETF期权 - 交易（BS/撤单/持仓/...）", description = "ETF期权 - 交易（BS/撤单/持仓/...）")
+public class OptionTradeController {
+
+
+    @Autowired
+    private OptionTradeService optionTradeService;
+
+
+    @Operation(summary = "我的持仓  ->  账户资金（汇总）+ 持仓列表", description = "我的持仓  ->  账户资金（汇总）+ 持仓列表")
+    @GetMapping(value = "/getAccountFundsAndPositions")
+    public Result<OptionGetAccountFundsResp> getAccountFundsAndPositions() {
+        return Result.SUC(optionTradeService.getAccountFundsAndPositions());
+    }
+
+
+    @Operation(summary = "实时行情：买5/卖5", description = "实时行情：买5/卖5")
+    @GetMapping(value = "/SHSZQuoteSnapshot")
+    public Result<SHSZQuoteSnapshotResp> SHSZQuoteSnapshot(@Schema(description = "合约代码", example = "10011566")
+                                                           @RequestParam String optionCode) {
+
+        return Result.SUC(optionTradeService.SHSZQuoteSnapshot(optionCode));
+    }
+
+
+    @Operation(summary = "买入/卖出", description = "买入/卖出")
+    @PostMapping(value = "/bs")
+    public Result<Integer> bs(@RequestBody OptionTradeBSParam param) {
+        return Result.SUC(optionTradeService.bs(param));
+    }
+
+
+    @Operation(summary = "当日 委托单列表", description = "当日 委托单列表")
+    @GetMapping(value = "/getTodayOrders")
+    public Result<List<OptionGetOrderResp>> getTodayOrders() {
+        return Result.SUC(optionTradeService.getTodayOrders());
+    }
+
+
+    @Operation(summary = "历史 委托单列表（含当日）", description = "历史 委托单列表（含当日）")
+    @GetMapping(value = "/getHisOrders")
+    public Result<List<OptionGetOrderResp>> getHisOrders(@Schema(description = "查询 - 开始日期", example = "2025-10-01")
+                                                         @RequestParam LocalDate startDate,
+
+                                                         @Schema(description = "查询 - 结束日期", example = "2025-10-31")
+                                                         @RequestParam LocalDate endDate) {
+
+        return Result.SUC(optionTradeService.getHisOrders(startDate, endDate));
+    }
+
+
+    @Operation(summary = "全部 可撤单列表", description = "全部 可撤单列表")
+    @GetMapping(value = "/getRevokeList")
+    public Result<List<OptionGetOrderResp>> getRevokeList() {
+        // https://jywg.18.cn/MarginTrade/GetRevokeList?validatekey=e0a3e79f-5868-4668-946a-bfd33a70801d
+        return Result.SUC(optionTradeService.getRevokeList());
+    }
+
+
+    @Operation(summary = "批量撤单", description = "批量撤单")
+    @PostMapping(value = "/revokeOrders")
+    public Result<List<RevokeOrderResultDTO>> revokeOrders(@RequestBody List<TradeRevokeOrdersParam> paramList) {
+        return Result.SUC(optionTradeService.revokeOrders(paramList));
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                        tips：以下均为  融资账户（特别是 BUY！！！）            暂不考虑 普通账户 BS逻辑
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "一键清仓", description = "一键清仓")
+    @GetMapping(value = "/quick/clearPosition")
+    public Result<Void> quickClearPosition() {
+        optionTradeService.quickClearPosition();
+        return Result.SUC();
+    }
+
+
+//    @Operation(summary = "一键 等比卖出 - 支持勾选", description = "一键 等比卖出 - 支持勾选")
+//    @GetMapping(value = "/quick/sellPosition")
+//    public Result<Void> quickSellPosition(@Schema(description = "卖出 个股code列表（逗号分隔）", example = "1,2,3")
+//                                          @RequestParam String sellStockCodeList,
+//
+//                                          @Schema(description = "卖出 持仓比例%（100% -> 清仓，50% -> 减半仓）", example = "100.0")
+//                                          @RequestParam(required = false, defaultValue = "100.0") double sellPosPct,
+//
+//                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，5% -> 当前价格x105% 挂S单）", example = "0.0")
+//                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+//
+//                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
+//                                          @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
+//
+//
+//        Set<String> sellStockCodeSet = ConvertUtil.str2Set(sellStockCodeList);
+//
+//        tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, prevPricePct);
+//        return Result.SUC();
+//    }
+//
+//
+//    // -----------------------------------------------------------------------------------------------------------------
+//
+//
+//    @Deprecated
+//    @Operation(summary = "一键买入（调仓换股）", description = "一键买入（调仓换股）  =>   清仓（old） ->  买入（new）")
+//    @GetMapping(value = "/quick/buyNewPosition")
+//    public Result<Void> quickBuyNewPosition(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+//                                            @RequestParam String buyStockCodeList) {
+//
+//
+//        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
+//
+//        // tradeService.quickClearAndBuyNewPosition(buyStockCodeSet);
+//        return Result.SUC();
+//    }
+//
+//    @Operation(summary = "一键 等比买入（调仓换股）- 支持勾选", description = "一键 等比买入（调仓换股）  =>   清仓（old） ->  买入（new）")
+//    @GetMapping(value = "/quick/eqRatio/buyNewPosition")
+//    public Result<Void> avgBuyNewPosition(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+//                                          @RequestParam String buyStockCodeList,
+//
+//                                          @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+//                                          @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+//
+//                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+//                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+//
+//                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+//                                          @RequestParam(required = false, defaultValue = "0.0") double changePricePct) {
+//
+//
+//        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
+//
+//        tradeService.quickClearAndAvgBuyNewPosition(buyStockCodeSet);
+//        return Result.SUC();
+//    }
+//
+//
+//    @Operation(summary = "一键 等比买入（调仓换股）-> 降低手续费", description = "一键 等比买入（调仓换股）  =>   清仓（不存在） +  保留/减仓（已存在） ->  买入（new）")
+//    @GetMapping(value = "/quick/eqRatio/keepExistBuyNew")
+//    public Result<Void> keepExistBuyNew(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+//                                        @RequestParam String buyStockCodeList,
+//
+//                                        @Schema(description = "买入 持仓比例%（ = 买入总市值 / 净资产）    ->     普通账户：0~100% / 融资账户：0~200%", example = "100.0")
+//                                        @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+//
+//                                        @Schema(description = "单只个股 最大仓位比例%（ = 个股持仓市值 / 净资产）    ->     5~20%", example = "10.0")
+//                                        @RequestParam(required = false, defaultValue = "10.0") double singleStockMaxPosPct,
+//
+//                                        @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+//                                        @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+//
+//                                        @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+//                                        @RequestParam(required = false, defaultValue = "0.0") double prevPricePct,
+//
+//                                        @Schema(description = "", example = "1")
+//                                        @RequestParam(required = false, defaultValue = "1") Integer sell) {
+//
+//
+//        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
+//
+//        tradeService.keepExistBuyNew(buyStockCodeSet, buyPosPct, singleStockMaxPosPct, currPricePct, prevPricePct);
+//        return Result.SUC();
+//    }
+//
+//
+//    @Operation(summary = "成本估算", description = "成本估算")
+//    @GetMapping(value = "/quick/eqRatio/buyCost")
+//    public Result<Object> buyCost(@Schema(description = "买入 个股code列表（逗号分隔）", example = "1,2,3")
+//                                  @RequestParam String buyStockCodeList,
+//
+//                                  @Schema(description = "买入 持仓比例%（100% -> 满仓，50% -> 买入半仓）", example = "100.0")
+//                                  @RequestParam(required = false, defaultValue = "100.0") double buyPosPct,
+//
+//                                  @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，-5% -> 当前价格x95% 挂B单）", example = "0.0")
+//                                  @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+//
+//                                  @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，-1%/-5%/10% -> 跌停价 挂B单）", example = "0.0")
+//                                  @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
+//
+//
+//        Set<String> buyStockCodeSet = ConvertUtil.str2Set(buyStockCodeList);
+//
+//        return Result.SUC(tradeService.buyCost(buyStockCodeSet, buyPosPct, currPricePct, prevPricePct));
+//    }
+//
+//
+//    // -----------------------------------------------------------------------------------------------------------------
+//
+//
+//    @Operation(summary = "账户总仓位（以此刻 融+担=净x2 为100%基准）  ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）")
+//    @GetMapping(value = "/quick/totalAccount/eqRatio/sellPosition")
+//    public Result<Void> totalAccount__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+//                                                          @RequestParam(defaultValue = "1") double newPositionRate) {
+//
+//        tradeService.totalAccount__eqRatioSellPosition(newPositionRate);
+//        return Result.SUC();
+//    }
+//
+//
+//    @Operation(summary = "当前持仓   ->   一键 等比减仓（等比卖出）", description = "将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位")
+//    @GetMapping(value = "/quick/currPos/eqRatio/sellPosition")
+//    public Result<Void> currPos__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+//                                                     @RequestParam(defaultValue = "1") double newPositionRate) {
+//
+//        tradeService.currPos__eqRatioSellPosition(newPositionRate);
+//        return Result.SUC();
+//    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "一键撤单", description = "一键撤单   =>   撤除所有 [未成交 -> 待报/未报/已报/部成] 委托单")
+    @GetMapping(value = "/quick/cancelOrder")
+    public Result<Void> quickCancelOrder() {
+        optionTradeService.quickCancelOrder();
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+//    @Operation(summary = "一键再融资", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金")
+//    @GetMapping(value = "/quick/resetFinancing")
+//    public Result<Void> quickResetFinancing() {
+//        tradeService.quickResetFinancing();
+//        return Result.SUC();
+//    }
+
+
+//    @Operation(summary = "一键取款（担保比例 >= 300%     ->     隔日 可取款）    // 已替换成 一键【等比减仓】（减免 先清仓 -> 2次再融资 -> 交易费）",
+//            description = "计算 新仓位   ->   一键 等比减仓   =>   手动【现金还款】  ->   担保比例 >= 300%" + "   \r\n   " +
+//                    "等比减仓（只涉及到 SELL   ->   无2次重复买入     =>     减免2次BS的 交易费）")
+//    // @Operation(summary = "已替换成 一键 等比减仓（减免 再融资 -> 手续费）  // 一键取款（担保比例 >= 300%     ->     隔日 可取款）",
+//    //        description = "控制担保比例 -> 计算 最大融资额   =>   一键清仓  ->  limit_融资 再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
+//    @GetMapping(value = "/quick/lowerFinancing")
+//    public Result<Void> quickLowerFinancing(@Schema(description = "取款金额（T+1 隔日7点可取）", example = "50000")
+//                                            @RequestParam double transferAmount) {
+//
+//        tradeService.quickLowerFinancing(transferAmount);
+//        return Result.SUC();
+//    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                      快捷下单
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "快捷下单   ->   按照 指定价格区间", description = "快捷下单   ->   按照 指定价格区间，逐档 梯次等比下单")
+    @GetMapping(value = "/quick/quickETF")
+    public Result<Void> quickETF(@Schema(description = "证券代码", example = "588000")
+                                 @RequestParam String stockCode,
+
+                                 @Schema(description = "合约编码", example = "10011565")
+                                 @RequestParam String hybm,
+
+                                 @Schema(description = "价格间隔（%）", example = "10")
+                                 @RequestParam double priceRangePct,
+
+                                 @Schema(description = "价格间隔 -> 总档数", example = "10")
+                                 @RequestParam int rangeTotal,
+
+                                 @Schema(description = "每档 买入/卖出金额", example = "1000")
+                                 @RequestParam double amount,
+
+                                 @Schema(description = "交易类型（BUY_OPEN-400-买入开仓；SELL_CLOSE-401-卖出平仓；SELL_OPEN-402-卖出开仓；BUY_CLOSE-403-买入平仓；）", example = "BUY_OPEN")
+                                 @RequestParam OptionTradeTypeEnum optionTradeTypeEnum) {
+
+
+        optionTradeService.quickETF(stockCode, hybm, priceRangePct, rangeTotal, amount, optionTradeTypeEnum);
+
+        return Result.SUC();
+    }
+
+
+}

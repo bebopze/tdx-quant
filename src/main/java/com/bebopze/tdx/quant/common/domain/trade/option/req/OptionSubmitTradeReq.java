@@ -6,6 +6,8 @@ import com.bebopze.tdx.quant.common.constant.option.OptionPriceTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 
 /**
  * ETF期权 - BS交易
@@ -17,9 +19,10 @@ import lombok.Data;
 public class OptionSubmitTradeReq {
 
 
-    // Hybh     10012265
+    // Hybh     10011565
     // Amount   1
-    // Price    0.0185
+    // Price    0.0033
+    //
     // Zqyw     400
     // Ywxw     130
     // Jybk     15
@@ -32,25 +35,23 @@ public class OptionSubmitTradeReq {
     private int Amount;
 
     // 委托价格
-    private double Price;
+    private BigDecimal Price;
 
 
     // 交易类型（400-买入开仓；401-卖出平仓；402-卖出开仓；403-买入平仓；）
     private int Zqyw;
 
-
     // 报价方式（130-LMT限价；131-LOK限价即全成否则撤；132-FAL市价剩转限价；133-FOK市价即全成否则撤；134-FAK市价即成剩撤；）
     private int Ywxw;
-
 
     // 交易所（05-深交所；15-上交所；）
     private String Jybk;
 
 
-    // -------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
 
 
-    // ETF代码（标的证券）
+    // 标的证券code（ETF代码：588000）
     private transient String etfCode;
 
 
@@ -76,6 +77,7 @@ public class OptionSubmitTradeReq {
 
     public String getJybk() {
 
+        // 根据 ETF代码  ->  获取 交易所
         StockMarketEnum stockMarketEnum = StockMarketEnum.getByStockCode(etfCode);
         optionMarketTypeEnum = stockMarketEnum == StockMarketEnum.SH ? OptionMarketTypeEnum.SH : OptionMarketTypeEnum.SZ;
 

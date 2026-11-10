@@ -22,22 +22,24 @@ public class OptionGetGGQQPositionResp {
     //        "Bdbz": "非备兑合约",            // 备兑描述
     //        "Bdgfsl": "0",                 //
     //        "Bzj": "0.0000",               //
-    //        "Ccfx": "权利仓",               // 持仓方向
+    //        "Ccfx": "权利仓",               // 持仓方向（权利仓/义务仓）
     //        "Drljkqsl": "0",
     //        "Drpcyk": "0.0000",
     //        "Dwc": "",
     //        "Fdyk": "-585.0000",           // 浮动盈亏
     //        "Hbdm": "0",
-    //        "Hybm": "10011486",            // 合约编码
+    //
+    //	  	  "Hybm": "10011565",            // 合约编码
+    //	  	  "Hydm": "588000C2612M01900",   // 合约代码
+    //	  	  "Hyjc": "科创50购12月1900",     // 合约名称
+    //
     //        "Hydjsl": "0",
-    //        "Hydm": "588000C2612M01700",   // 合约代码
-    //        "Hyjc": "科创50购12月1700",     // 合约名称
     //        "Hyjdsl": "0",
     //        "Hyjydjsl": "0",
     //        "Hyjyjdsl": "0",
     //        "Hyjyzcsl": "0",
     //        "Hyjyztsl": "0",
-    //        "Hykysl": "22",              // 可用数量
+    //        "Hykysl": "21",              // 可用数量
     //        "Hylx": "认购",               // 合约类别
     //        "Hymrcb": "3335.0000",       // 合约买入成本
     //        "Hymrcbss": "3335.0000",     //
@@ -45,16 +47,16 @@ public class OptionGetGGQQPositionResp {
     //        "Hyqsdjsl": "0",
     //        "Hyqsjdsl": "0",
     //        "Hyqsztsl": "0",
-    //        "Hysjcc": "22",               // 持仓数量
-    //        "Hysz": "2750.0000",          // 市值
-    //        "Hyye": "22",                 //
+    //        "Hysjcc": "21",               // 持仓数量
+    //        "Hysz": "2750.0000",          // 合约市值
+    //        "Hyye": "21",                 //
     //        "Hyykje": "0.0000",
     //        "Hyykjess": "0.0000",
-    //        "Hyzrye": "22",                //
-    //        "Jybk": "15",                  // 交易版块code
-    //        "Jybkmc": "上海个股期权",        // 交易版块name
-    //        "Jydy": "34081",
-    //        "Jysc": "上海交易所",            // 交易所
+    //        "Hyzrye": "21",                //
+    //        "Jybk": "15",                  // 交易版块code（固定）
+    //        "Jybkmc": "上海个股期权",        // 交易版块name（固定）
+    //        "Jydy": "34081",               // 交易dy（固定）
+    //        "Jysc": "上海交易所",            // 交易所（固定）
     //        "Kcjj": "151.59",              //
     //        "Ljpcyk": "0.0000",
     //        "Mm": "买",                    // 买卖方向
@@ -63,10 +65,10 @@ public class OptionGetGGQQPositionResp {
     //        "Yzhhysl": "0",
     //        "Zqzhzbm": "888",               //
     //        "Zyk": "-585.0000",             // 总盈亏
-    //        "bdzqdm": "588000",             // ETF代码
+    //        "bdzqdm": "588000",             // 标的证券code（ETF代码）
     //        "hydw": "10000",                //
     //        "qqxqr": "20261223",            // 行权日
-    //        "syts": "44",                   // 到期天数（自然日）
+    //        "syts": "39",                   // 到期天数（自然日）
     //        "xqj": "1.7000"                 // 行权价
     //      }
     //    ]
@@ -84,13 +86,20 @@ public class OptionGetGGQQPositionResp {
     private double Drpcyk;
     private double Dwc;
     private double Fdyk;
-    private double Hbdm;
-    private double Hybm;
-    private double Hydjsl;
 
+
+    private String Hbdm;
+
+
+    // 合约编码
+    private String Hybm;
+    // 合约代码
     private String Hydm;
+    // 合约名称
     private String Hyjc;
 
+
+    private double Hydjsl;
     private double Hyjdsl;
     private double Hyjydjsl;
     private double Hyjyjdsl;
@@ -100,6 +109,8 @@ public class OptionGetGGQQPositionResp {
 
     private String Hylx;
 
+
+    // 合约买入成本
     private double Hymrcb;
     private double Hymrcbss;
     private double Hypcgdsl;
@@ -107,8 +118,11 @@ public class OptionGetGGQQPositionResp {
     private double Hyqsjdsl;
     private double Hyqsztsl;
 
+
+    // 持仓数量
     private int Hysjcc;
 
+    // 合约市值
     private double Hysz;
 
     private int Hyye;
@@ -143,14 +157,48 @@ public class OptionGetGGQQPositionResp {
 
     private double Zyk;
 
+
+    // 标的证券code（ETF代码）
     private String bdzqdm;
 
     private double hydw;
 
-    private String qqxqr;
-    private int syts;
 
+    // 行权日
+    private String qqxqr;
+    // 到期天数（自然日）
+    private int syts;
+    // 行权价
     private double xqj;
 
+
+    // ---------------------------------------------- 自定义 字段---------------------------------------------------------
+
+
+    // 买入单价 = 合约买入成本 / 持仓数量
+    private double buyPrice;
+    // 当前价格 = 合约市值 / 持仓数量
+    private double currentPrice;
+
+    // 持仓比例 = 合约市值 / 账户总资金
+    private double posRatio;
+    // 账户总资金
+    private double accountAssets;
+
+
+    public double getBuyPrice() {
+        buyPrice = Hymrcb / Hysjcc;
+        return buyPrice;
+    }
+
+    public double getCurrentPrice() {
+        currentPrice = Hysz / Hysjcc;
+        return currentPrice;
+    }
+
+    public double getPosRatio() {
+        posRatio = Hysz / accountAssets;
+        return posRatio;
+    }
 
 }

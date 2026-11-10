@@ -1,0 +1,222 @@
+package com.bebopze.tdx.quant.service;
+
+import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
+import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
+import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
+import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+
+
+/**
+ * ETF期权 - BS
+ *
+ * @author: bebopze
+ * @date: 2026/11/11
+ */
+public interface OptionTradeService {
+
+
+    /**
+     * 我的持仓  ->  账户资金（汇总）+ 持仓列表
+     */
+    OptionGetAccountFundsResp getAccountFundsAndPositions();
+
+
+    /**
+     * 持仓个股 code列表
+     *
+     * @param checkLogin 是否检查登录状态：true/false
+     * @return
+     */
+    Set<String> getPosStockCodeSet(boolean checkLogin);
+
+
+    /**
+     * 实时行情
+     *
+     * @param stockCode
+     * @return
+     */
+    SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode);
+
+    /**
+     * 下单 - B/S
+     *
+     * @param param
+     * @return
+     */
+    Integer bs(OptionTradeBSParam param);
+
+
+    /**
+     * 当日委托单 列表
+     *
+     * @return
+     */
+    List<OptionGetOrderResp> getTodayOrders();
+
+    /**
+     * 历史委托单 列表
+     *
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    List<OptionGetOrderResp> getHisOrders(LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 全部 可撤单列表
+     *
+     * @return
+     */
+    List<OptionGetOrderResp> getRevokeList();
+
+
+    /**
+     * 批量撤单
+     *
+     * @param paramList
+     * @return
+     */
+    List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 一键清仓     =>     先撤单（如果有[未成交]-[卖单]） ->  再全部卖出
+     */
+    void quickClearPosition();
+
+
+    // --------------------------------------------
+
+
+    /**
+     * 一键 等比卖出     =>     指定 个股列表
+     *
+     * @param sellStockCodeSet 指定卖出 个股列表
+     * @param sellPosPct       指定卖出 持仓比例（%）
+     * @param currPricePct     （当前价格）涨跌幅比例%
+     * @param prevPricePct     （昨日收盘价）涨跌幅比例%
+     */
+    void quickSellPosition(Set<String> sellStockCodeSet, double sellPosPct, double currPricePct, double prevPricePct);
+
+    /**
+     * 一键清仓     =>     指定 个股列表
+     *
+     * @param clearStockCodeSet 指定清仓 个股列表
+     */
+    void quickClearPosition(Set<String> clearStockCodeSet);
+
+
+    /**
+     * 一键买入     =>     指定 个股列表          ->          当前 剩余资金 买入（不清仓 -> old）
+     *
+     * @param newPositionList 指定买入 个股列表
+     */
+    void quickBuyPosition(List<QuickBuyPositionParam> newPositionList);
+
+
+    /**
+     * 一键买入（调仓换股）    =>     清仓（old） ->  买入（new）
+     *
+     * @param newPositionList
+     */
+    void quickClearAndBuyNewPosition(List<QuickBuyPositionParam> newPositionList);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 一键 等比买入（调仓换股）    =>     清仓（old） ->  买入（new）
+     *
+     * @param buyStockCodeSet
+     */
+    void quickClearAndAvgBuyNewPosition(Set<String> buyStockCodeSet);
+
+
+    /**
+     * 一键 等比买入（调仓换股）    =>     降低手续费（保留exist  ->  买入new）
+     *
+     * @param buyStockCodeSet
+     * @param buyPosPct            买入 持仓比例%（ = 买入总市值 / 净资产）    ->     普通账户：0~100% / 融资账户：0~200%
+     * @param singleStockMaxPosPct 单只个股 最大仓位比例%（ = 个股持仓市值 / 净资产）    ->     5~20%
+     * @param currPricePct
+     * @param prevPricePct
+     */
+    void keepExistBuyNew(Set<String> buyStockCodeSet,
+                         double buyPosPct,
+                         double singleStockMaxPosPct,
+                         double currPricePct,
+                         double prevPricePct);
+
+
+    /**
+     * 成本估算
+     *
+     * @param buyStockCodeSet
+     * @param buyPosPct
+     * @param currPricePct
+     * @param prevPricePct
+     */
+    Object buyCost(Set<String> buyStockCodeSet, double buyPosPct, double currPricePct, double prevPricePct);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 总账户（以此刻   融+担 = 净x2   ->   为100%基准）   =>   一键 等比减仓（等比卖出）
+     *
+     * @param newPositionRate 新仓位
+     */
+    void totalAccount__eqRatioSellPosition(double newPositionRate);
+
+    /**
+     * 当前持仓（以 此刻持仓市值 为100%基准）   =>   一键 等比减仓（等比卖出）
+     *
+     * @param newPositionRate 新仓位
+     */
+    void currPos__eqRatioSellPosition(double newPositionRate);
+
+
+    /**
+     * 一键撤单   =>   撤除所有 [未成交 -> 待报/未报/已报/部成] 委托单
+     */
+    void quickCancelOrder();
+
+
+//    /**
+//     * 一键再融资（   一键清仓 -> 重置融资     =>     一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金   ）
+//     */
+//    void quickResetFinancing();
+//
+//    /**
+//     * 一键取款（   担保比例 >= 300%     ->     隔日 可取款   ）
+//     *
+//     * @param transferAmount 取款金额（T+1 隔日7点可取）
+//     */
+//    void quickLowerFinancing(double transferAmount);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    void quickETF(String stockCode,
+                  String hybm,
+                  double priceRangePct,
+                  int rangeTotal,
+                  double amount,
+                  OptionTradeTypeEnum optionTradeTypeEnum);
+}

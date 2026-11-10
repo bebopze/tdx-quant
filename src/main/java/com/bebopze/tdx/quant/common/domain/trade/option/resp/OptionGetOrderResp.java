@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
 
 
@@ -10,7 +11,7 @@ import lombok.Data;
  * @date: 2026/11/7
  */
 @Data
-public class OptionGetHisOrderResp {
+public class OptionGetOrderResp {
 
 
     //   {
@@ -22,9 +23,9 @@ public class OptionGetHisOrderResp {
     //	  	    "Bdqwtdjsl": "0",
     //	  	    "Bdqwtjdsl": "0",
     //	  	    "Bdqycdsl": "0",
-    //	  	    "Bdzqdm": "588000",
-    //	  	    "Bdzqlb": "ETF基金",
-    //	  	    "Bdzqmc": "科创50",            // 标的证券名称
+    //	  	    "Bdzqdm": "588000",           // 标的证券code（ETF代码）
+    //	  	    "Bdzqlb": "ETF基金",          // 标的证券类型（ETF基金/个股/指数）
+    //	  	    "Bdzqmc": "科创50ETF华夏",     // 标的证券name（ETF名称）
     //	  	    "Bs": "非备兑",                // 备兑描述
     //	  	    "Cdbz": "F",
     //	  	    "Cfehybm": "",
@@ -35,9 +36,9 @@ public class OptionGetHisOrderResp {
     //	  	    "Dwc": "1",
     //	  	    "Hbdm": "0",
     //	  	    "Htxh": "9000012345",          // 合同编号
-    //	  	    "Hybm": "10011479",            // 合约编号
-    //	  	    "Hydm": "588000C2612M01350",   // 合约交易代码
-    //	  	    "Hyjc": "科创50购12月1350",     // 合约名称
+    //	  	    "Hybm": "10011565",            // 合约编码
+    //	  	    "Hydm": "588000C2612M01900",   // 合约代码
+    //	  	    "Hyjc": "科创50购12月1900",     // 合约名称
     //	  	    "Hylx": "认购",
     //	  	    "Jlxh": "1",
     //	  	    "Jybk": "15",                // 交易版块code
@@ -84,8 +85,12 @@ public class OptionGetHisOrderResp {
     private double Bdqwtjdsl;
     private double Bdqycdsl;
 
+
+    // 标的证券code（ETF代码）
     private String Bdzqdm;
+    // 标的证券类型（ETF基金/个股/指数）
     private String Bdzqlb;
+    // 标的证券name（ETF名称）
     private String Bdzqmc;
     private String Bs;
     private String Cdbz;
@@ -98,10 +103,19 @@ public class OptionGetHisOrderResp {
     private double Dwc;
 
     private String Hbdm;
+
+
+    // 合同编号（9000012345）
     private String Htxh;
+
+
+    // 合约编码（10011565）
     private String Hybm;
+    // 合约代码（588000C2612M01900）
     private String Hydm;
+    // 合约名称（科创50购12月1900）
     private String Hyjc;
+
 
     private String Hylx;
     private String Jlxh;
@@ -112,7 +126,7 @@ public class OptionGetHisOrderResp {
     private String Jysc;
     private String Khdm;
 
-    private double Kp;
+    private String Kp;
 
     private String Mm;
     private String Nbjg;
@@ -120,6 +134,7 @@ public class OptionGetHisOrderResp {
     private String Sbfhxx;
     private String Sbsj;
 
+    // 数量
     private int Sbsl;
 
     private double Wtdjje;
@@ -150,6 +165,28 @@ public class OptionGetHisOrderResp {
     private String Zqywxw;
     private String Zqzh;
     private String Zqzhzbm;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    // ------------------------ 自定义
+
+
+    /**
+     * 仓位占比（仅 当日委托单有效）
+     */
+    private Double posPct;
+    // 期权账户 总资产（仅 当日委托单有效）
+    private double accountAssets;
+
+
+    public Double getPosPct() {
+        // 金额
+        double amount = getWtje();
+        // 仓位占比
+        return accountAssets == 0 || Double.isNaN(accountAssets) ? null : NumUtil.of(amount / accountAssets * 100, 2);
+    }
 
 
 }
