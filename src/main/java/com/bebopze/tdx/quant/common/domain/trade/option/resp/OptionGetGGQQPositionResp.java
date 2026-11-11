@@ -53,8 +53,8 @@ public class OptionGetGGQQPositionResp {
     //        "Hyykje": "0.0000",
     //        "Hyykjess": "0.0000",
     //        "Hyzrye": "21",                //
-    //        "Jybk": "15",                  // 交易版块code（固定）
-    //        "Jybkmc": "上海个股期权",        // 交易版块name（固定）
+    //        "Jybk": "15",                  // 交易版块code（05-深交所；15-上交所；）
+    //        "Jybkmc": "上海个股期权",        // 交易版块name（深交所/上交所）
     //        "Jydy": "34081",               // 交易dy（固定）
     //        "Jysc": "上海交易所",            // 交易所（固定）
     //        "Kcjj": "151.59",              //
@@ -91,11 +91,11 @@ public class OptionGetGGQQPositionResp {
     private String Hbdm;
 
 
-    // 合约编码
+    // 合约编码（10011565）
     private String Hybm;
-    // 合约代码
+    // 合约代码（588000C2612M01900）
     private String Hydm;
-    // 合约名称
+    // 合约名称（合约名称）
     private String Hyjc;
 
 
@@ -132,7 +132,10 @@ public class OptionGetGGQQPositionResp {
 
     private int Hyzrye;
 
+
+    // 交易版块code（05-深交所；15-上交所；）
     private String Jybk;
+    // 交易版块name（深交所/上交所）
     private String Jybkmc;
     private String Jydy;
     private String Jysc;
@@ -158,7 +161,7 @@ public class OptionGetGGQQPositionResp {
     private double Zyk;
 
 
-    // 标的证券code（ETF代码）
+    // 标的证券code（ETF代码：588000）
     private String bdzqdm;
 
     private double hydw;

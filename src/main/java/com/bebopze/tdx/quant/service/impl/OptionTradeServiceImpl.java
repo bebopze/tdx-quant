@@ -12,13 +12,8 @@ import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
-import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetHisOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionRevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionSubmitTradeReq;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetGGQQPositionResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.trade.option.req.*;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.*;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -27,7 +22,6 @@ import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.service.OptionTradeService;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -95,9 +89,22 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
     @Override
+    public List<SearchOptionDictResp> searchOptionDict(String targetCode, String callOrPut, String id) {
+        List<SearchOptionDictResp> optionList = EastMoneyOptionTradeAPI.searchOptionDict(new SearchOptionDictReq(targetCode, callOrPut, id));
+        return optionList;
+    }
+
+
+    @Override
     public SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
         SHSZQuoteSnapshotResp dto = EastMoneyOptionTradeAPI.SHSZQuoteSnapshot(stockCode);
         return dto;
+    }
+
+    @Override
+    public OptionGetMaxTradeCountResp getMaxTradeCount(OptionGetMaxTradeCountReq req) {
+        OptionGetMaxTradeCountResp resp = EastMoneyOptionTradeAPI.getMaxTradeCount(req);
+        return resp;
     }
 
 
@@ -217,24 +224,6 @@ public class OptionTradeServiceImpl implements OptionTradeService {
     public List<OptionRevokeOrderResultDTO> revokeOrders(List<OptionTradeRevokeOrdersParam> paramList) {
 
 
-        // 限流用（当日委托单列表 -> map）
-        Map<String, String> wtbh_stockCode_Map = Maps.newHashMap();
-        getTodayOrders().forEach(e -> {
-
-            // 委托编号/合同编号（9000012345）
-            String Htxh = e.getHtxh();
-            String Jybk = e.getJybk();
-            // 标的证券code（ETF代码）
-            String zqdm = e.getBdzqdm();
-
-            // 委托编号-交易所   -   股票代码
-            wtbh_stockCode_Map.put(Htxh + "-" + Jybk, zqdm);
-        });
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
         // 总撤单数
         int size = paramList.size();
         // 1次 N单
@@ -250,7 +239,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
             // 批量撤单
             OptionRevokeOrdersReq req = convert2Req(subParamList);
-            List<OptionRevokeOrderResultDTO> resultDTOS = EastMoneyOptionTradeAPI.revokeOrders(req, wtbh_stockCode_Map);
+            List<OptionRevokeOrderResultDTO> resultDTOS = EastMoneyOptionTradeAPI.revokeOrders(req);
             log.info("revokeOrders     >>>     paramList : {} , resultDTOS : {}", JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
 
 
@@ -739,16 +728,16 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
     @Override
-    public void quickETF(String stockCode,
-                         String hybm,
-                         double priceRangePct,
-                         int rangeTotal,
-                         double amount,
-                         OptionTradeTypeEnum optionTradeTypeEnum) {
+    public void quickOption(String stockCode,
+                            String hybm,
+                            double priceRangePct,
+                            int rangeTotal,
+                            double amount,
+                            OptionTradeTypeEnum optionTradeTypeEnum) {
 
 
         // 实时行情：买5 / 卖5
-        SHSZQuoteSnapshotResp resp = EastMoneyOptionTradeAPI.SHSZQuoteSnapshot(stockCode);
+        SHSZQuoteSnapshotResp resp = EastMoneyOptionTradeAPI.SHSZQuoteSnapshot(hybm);
         String stockName = resp.getName();
         double buy1 = resp.getFivequote().getBuy1();
 
@@ -1418,7 +1407,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
      */
     private double sellPriceStrategyPct(OptionGetGGQQPositionResp e, double currPricePct, double prevPricePct) {
         // 实时行情
-        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = SHSZQuoteSnapshot(e.getBdzqdm());
+        SHSZQuoteSnapshotResp shszQuoteSnapshotResp = SHSZQuoteSnapshot(e.getHybm());
 
         if (prevPricePct != 0) {
             // 昨日收盘价
@@ -1940,9 +1929,6 @@ public class OptionTradeServiceImpl implements OptionTradeService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 可用总资金（融资上限） 计算   ❌❌❌❌❌
-//        double maxBuyCap = maxBuyCap(old_posResp, clearPosition);
-
         // 净资产   ->   所有的仓位%  都是针对 [净资产] 进行计算的❗❗❗
         double netasset = old_posResp.getZczz();
 
@@ -2099,37 +2085,6 @@ public class OptionTradeServiceImpl implements OptionTradeService {
         log.info("check__newPositionList - 重新校验计算后     >>>     待买入总仓位=[{}%] , 可买仓位=[{}%] , newPositionList : {}",
                  of(new_preBuy_totalPosPct), of(max_buyPosPct), JSON.toJSONString(newPositionList));
     }
-
-
-//    /**
-//     * 可用总资金
-//     *
-//     * @param old_posResp   （old）已买入 持仓详情
-//     * @param clearPosition 是否清仓
-//     * @return
-//     */
-//    private double maxBuyCap(QueryCreditNewPosResp old_posResp, boolean clearPosition) {
-//
-//        // 可用总资金
-//        double maxBuyCap;
-//
-//
-//        if (clearPosition) {
-//
-//            // （清仓）总资金  =  融资上限 = 净资产 x 2.1                理论上最大融资比例 125%  ->  这里取 110%（实际最大可融比例 110%~115%）
-//            // maxBuyCap = old_posResp.getNetasset().doubleValue() * MAX_RZ_RATE;
-//            maxBuyCap = old_posResp.getMax_TotalCap();
-//
-//        } else {
-//
-//            // （当前）总资金  =  可用保证金（可融）  +   可用资金（担）
-//            // maxBuyCap = old_posResp.getMarginavl().doubleValue() + old_posResp.getAvalmoney().doubleValue();
-//            maxBuyCap = old_posResp.getMax_buyCap();
-//        }
-//
-//
-//        return maxBuyCap;
-//    }
 
 
     /**

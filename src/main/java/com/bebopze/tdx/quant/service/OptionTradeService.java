@@ -4,9 +4,8 @@ import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetMaxTradeCountReq;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.*;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
 import java.time.LocalDate;
@@ -39,12 +38,33 @@ public interface OptionTradeService {
 
 
     /**
+     * ETF期权 - 可用合约列表 检索（id字段 -> 支持 [合约编码/合约名称] 模糊搜索）
+     *
+     * @param targetCode 标的证券code（588000-科创50ETF；159915-创业板ETF；510500-中证500ETF；...）
+     * @param callOrPut  合约类型：C-认购；P-认沽；
+     * @param id         合约编码（支持 [合约编码/合约名称] 关键词 模糊搜索：10011565/科创50购12月1900）
+     * @return
+     */
+    List<SearchOptionDictResp> searchOptionDict(String targetCode, String callOrPut, String id);
+
+
+    /**
      * 实时行情
      *
      * @param stockCode
      * @return
      */
     SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode);
+
+
+    /**
+     * ETF期权 - 最大可交易数量
+     *
+     * @param req
+     * @return
+     */
+    OptionGetMaxTradeCountResp getMaxTradeCount(OptionGetMaxTradeCountReq req);
+
 
     /**
      * 下单 - B/S
@@ -212,12 +232,10 @@ public interface OptionTradeService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    void quickETF(String stockCode,
-                  String hybm,
-                  double priceRangePct,
-                  int rangeTotal,
-                  double amount,
-                  OptionTradeTypeEnum optionTradeTypeEnum);
-
-
+    void quickOption(String stockCode,
+                     String hybm,
+                     double priceRangePct,
+                     int rangeTotal,
+                     double amount,
+                     OptionTradeTypeEnum optionTradeTypeEnum);
 }

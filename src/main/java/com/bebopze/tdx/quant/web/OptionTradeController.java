@@ -4,9 +4,8 @@ import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
-import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
+import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetMaxTradeCountReq;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.*;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.OptionTradeService;
@@ -44,12 +43,34 @@ public class OptionTradeController {
     }
 
 
+    @Operation(summary = "ETF期权 - 可用合约列表 检索（id字段 -> 支持 [合约编码/合约名称] 模糊搜索）", description = "ETF期权 - 可用合约列表 检索")
+    @GetMapping(value = "/searchOptionDict")
+    public Result<List<SearchOptionDictResp>> searchOptionDict(@Schema(description = "标的证券code（588000-科创50ETF；159915-创业板ETF；510500-中证500ETF；...）", example = "588000")
+                                                               @RequestParam(required = false) String targetCode,
+
+                                                               @Schema(description = "合约类型：C-认购；P-认沽；", example = "C")
+                                                               @RequestParam(required = false) String callOrPut,
+
+                                                               @Schema(description = "合约编码（支持 [合约编码/合约名称] 关键词 模糊搜索：10011565/科创50购12月1900）", example = "1900")
+                                                               @RequestParam(required = false) String id) {
+
+        return Result.SUC(optionTradeService.searchOptionDict(targetCode, callOrPut, id));
+    }
+
+
     @Operation(summary = "实时行情：买5/卖5", description = "实时行情：买5/卖5")
     @GetMapping(value = "/SHSZQuoteSnapshot")
     public Result<SHSZQuoteSnapshotResp> SHSZQuoteSnapshot(@Schema(description = "合约代码", example = "10011565")
                                                            @RequestParam String optionCode) {
 
         return Result.SUC(optionTradeService.SHSZQuoteSnapshot(optionCode));
+    }
+
+
+    @Operation(summary = "ETF期权 - 最大可交易数量", description = "ETF期权 - 最大可交易数量")
+    @PostMapping(value = "/getMaxTradeCount")
+    public Result<OptionGetMaxTradeCountResp> getMaxTradeCount(@RequestBody OptionGetMaxTradeCountReq req) {
+        return Result.SUC(optionTradeService.getMaxTradeCount(req));
     }
 
 
@@ -249,57 +270,32 @@ public class OptionTradeController {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-//    @Operation(summary = "一键再融资", description = "一键清仓 -> 重置融资   =>   一键融资再买入 -> 一键担保再买入   =>   新剩余 担保资金")
-//    @GetMapping(value = "/quick/resetFinancing")
-//    public Result<Void> quickResetFinancing() {
-//        tradeService.quickResetFinancing();
-//        return Result.SUC();
-//    }
-
-
-//    @Operation(summary = "一键取款（担保比例 >= 300%     ->     隔日 可取款）    // 已替换成 一键【等比减仓】（减免 先清仓 -> 2次再融资 -> 交易费）",
-//            description = "计算 新仓位   ->   一键 等比减仓   =>   手动【现金还款】  ->   担保比例 >= 300%" + "   \r\n   " +
-//                    "等比减仓（只涉及到 SELL   ->   无2次重复买入     =>     减免2次BS的 交易费）")
-//    // @Operation(summary = "已替换成 一键 等比减仓（减免 再融资 -> 手续费）  // 一键取款（担保比例 >= 300%     ->     隔日 可取款）",
-//    //        description = "控制担保比例 -> 计算 最大融资额   =>   一键清仓  ->  limit_融资 再买入 -> 一键担保再买入   =>   新剩余 担保资金（-> 可取金额）")
-//    @GetMapping(value = "/quick/lowerFinancing")
-//    public Result<Void> quickLowerFinancing(@Schema(description = "取款金额（T+1 隔日7点可取）", example = "50000")
-//                                            @RequestParam double transferAmount) {
-//
-//        tradeService.quickLowerFinancing(transferAmount);
-//        return Result.SUC();
-//    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
     //                                                      快捷下单
     // -----------------------------------------------------------------------------------------------------------------
 
 
     @Operation(summary = "快捷下单   ->   按照 指定价格区间", description = "快捷下单   ->   按照 指定价格区间，逐档 梯次等比下单")
-    @GetMapping(value = "/quick/quickETF")
-    public Result<Void> quickETF(@Schema(description = "证券代码", example = "588000")
-                                 @RequestParam String stockCode,
+    @GetMapping(value = "/quick/quickETFOption")
+    public Result<Void> quickOption(@Schema(description = "证券代码", example = "588000")
+                                    @RequestParam String stockCode,
 
-                                 @Schema(description = "合约编码", example = "10011565")
-                                 @RequestParam String hybm,
+                                    @Schema(description = "合约编码", example = "10011565")
+                                    @RequestParam String hybm,
 
-                                 @Schema(description = "价格间隔（%）", example = "10")
-                                 @RequestParam double priceRangePct,
+                                    @Schema(description = "价格间隔（%）", example = "10")
+                                    @RequestParam double priceRangePct,
 
-                                 @Schema(description = "价格间隔 -> 总档数", example = "10")
-                                 @RequestParam int rangeTotal,
+                                    @Schema(description = "价格间隔 -> 总档数", example = "10")
+                                    @RequestParam int rangeTotal,
 
-                                 @Schema(description = "每档 买入/卖出金额", example = "1000")
-                                 @RequestParam double amount,
+                                    @Schema(description = "每档 买入/卖出金额", example = "1000")
+                                    @RequestParam double amount,
 
-                                 @Schema(description = "交易类型（BUY_OPEN-400-买入开仓；SELL_CLOSE-401-卖出平仓；SELL_OPEN-402-卖出开仓；BUY_CLOSE-403-买入平仓；）", example = "BUY_OPEN")
-                                 @RequestParam OptionTradeTypeEnum optionTradeTypeEnum) {
+                                    @Schema(description = "交易类型（BUY_OPEN-400-买入开仓；SELL_CLOSE-401-卖出平仓；SELL_OPEN-402-卖出开仓；BUY_CLOSE-403-买入平仓；）", example = "BUY_OPEN")
+                                    @RequestParam OptionTradeTypeEnum optionTradeTypeEnum) {
 
 
-        optionTradeService.quickETF(stockCode, hybm, priceRangePct, rangeTotal, amount, optionTradeTypeEnum);
+        optionTradeService.quickOption(stockCode, hybm, priceRangePct, rangeTotal, amount, optionTradeTypeEnum);
 
         return Result.SUC();
     }
