@@ -1,13 +1,12 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.constant.TradeTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
-import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 
 import java.time.LocalDate;
@@ -86,7 +85,7 @@ public interface OptionTradeService {
      * @param paramList
      * @return
      */
-    List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList);
+    List<OptionRevokeOrderResultDTO> revokeOrders(List<OptionTradeRevokeOrdersParam> paramList);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -219,4 +218,6 @@ public interface OptionTradeService {
                   int rangeTotal,
                   double amount,
                   OptionTradeTypeEnum optionTradeTypeEnum);
+
+
 }

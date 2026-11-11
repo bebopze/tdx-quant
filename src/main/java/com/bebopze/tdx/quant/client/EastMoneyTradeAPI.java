@@ -103,9 +103,8 @@ public class EastMoneyTradeAPI {
 
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("Status") == 0) {
-            log.info("/MarginSearch/queryCreditNewPosV2   suc     >>>     result : {}", result);
-        }
+        log.info("/MarginSearch/queryCreditNewPosV2   suc     >>>     result : {}", result);
+        Assert.isTrue(resultJson.getInteger("Status") == 0, result);
 
 
         JSONObject data = resultJson.getJSONArray("Data").getJSONObject(0);
@@ -146,9 +145,8 @@ public class EastMoneyTradeAPI {
 
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getString("code").equals(stockCode)) {
-                log.info("/api/SHSZQuoteSnapshot   suc     >>>     stockCode : {} , result : {}", stockCode, result);
-            }
+            log.info("/api/SHSZQuoteSnapshot   suc     >>>     stockCode : {} , result : {}", stockCode, result);
+            Assert.isTrue(resultJson.getString("code").equals(stockCode), result);
 
 
             // ----------------------------- 个股信息
@@ -201,9 +199,8 @@ public class EastMoneyTradeAPI {
             String result = HttpUtil.doPost(url, formData, headers);
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("Status") == 0) {
-                log.info("/MarginSearch/queryCreditHisOrderV2   suc     >>>     result : {}", result);
-            }
+            log.info("/MarginSearch/queryCreditHisOrderV2   suc     >>>     formData : {} , result : {}", JSON.toJSONString(formData), result);
+            Assert.isTrue(resultJson.getInteger("Status") == 0, result);
 
 
             // ----------------------------- 历史委托 列表
@@ -347,9 +344,8 @@ public class EastMoneyTradeAPI {
 
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("Status") == 0) {
-            log.info("/MarginSearch/GetOrdersData   suc     >>>     result : {}", result);
-        }
+        log.info("/MarginSearch/GetOrdersData   suc     >>>     result : {}", result);
+        Assert.isTrue(resultJson.getInteger("Status") == 0, result);
 
 
         List<GetOrdersDataResp> respList = JSON.parseArray(resultJson.getString("Data"), GetOrdersDataResp.class);
@@ -389,6 +385,7 @@ public class EastMoneyTradeAPI {
 
 
         String result = HttpUtil.doPost(url, formData, headers);
+        log.info("/MarginTrade/RevokeOrders   suc     >>>     formData : {} , result : {}", JSON.toJSONString(formData), result);
 
 
         // 20250511: 您的撤单委托已提交，可至当日委托查看撤单结果   20250511: 撤单失败，该笔委托已经全部成交或全部撤单   20250511: 委托序号与委托人不符

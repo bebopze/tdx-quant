@@ -8,18 +8,17 @@ import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.constant.option.OptionPriceTypeEnum;
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.BaseExEnum;
-import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
-import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionGetHisOrdersReq;
+import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionRevokeOrdersReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.req.OptionSubmitTradeReq;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetGGQQPositionResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
-import com.bebopze.tdx.quant.common.domain.trade.req.RevokeOrdersReq;
-import com.bebopze.tdx.quant.common.domain.trade.resp.GetOrdersDataResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -28,10 +27,10 @@ import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import com.bebopze.tdx.quant.service.OptionTradeService;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -161,7 +160,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
         OptionGetHisOrdersReq req = new OptionGetHisOrdersReq();
         req.setSt(startDate);
         req.setEt(endDate);
-        req.setQqhs(500);
+        req.setQqhs(50);
 
 
         List<OptionGetOrderResp> respList = EastMoneyOptionTradeAPI.getHisOrders(req);
@@ -215,51 +214,51 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
     @Override
-    public List<RevokeOrderResultDTO> revokeOrders(List<TradeRevokeOrdersParam> paramList) {
+    public List<OptionRevokeOrderResultDTO> revokeOrders(List<OptionTradeRevokeOrdersParam> paramList) {
 
 
-//        // 限流用（当日委托单列表 -> map）
-//        Map<String, String> wtbh_stockCode_Map = Maps.newHashMap();
-//        getTodayOrders().forEach(e -> {
-//            String wtrq = e.getWtrq();
-//            String wtbh = e.getWtbh();
-//            String zqdm = e.getZqdm();
-//
-//            // 委托日期_委托编号   -   股票代码
-//            wtbh_stockCode_Map.put(wtrq + "_" + wtbh, zqdm);
-//        });
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // 总撤单数
-//        int size = paramList.size();
-//        // 1次 N单
-//        int N = 5;
-//
-//
-//        List<RevokeOrderResultDTO> dtoList = Lists.newArrayList();
-//        for (int i = 0; i < size; ) {
-//
-//            // 1次 N单
-//            List<TradeRevokeOrdersParam> subParamList = paramList.subList(i, Math.min(i += N, size));
-//
-//
-//            // 批量撤单
-//            RevokeOrdersReq req = convert2Req(subParamList);
-//            List<RevokeOrderResultDTO> resultDTOS = EastMoneyOptionTradeAPI.revokeOrders(req, wtbh_stockCode_Map);
-//            log.info("revokeOrders     >>>     paramList : {} , resultDTOS : {}", JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
-//
-//
-//            dtoList.addAll(resultDTOS);
-//        }
-//
-//
-//        return dtoList;
+        // 限流用（当日委托单列表 -> map）
+        Map<String, String> wtbh_stockCode_Map = Maps.newHashMap();
+        getTodayOrders().forEach(e -> {
+
+            // 委托编号/合同编号（9000012345）
+            String Htxh = e.getHtxh();
+            String Jybk = e.getJybk();
+            // 标的证券code（ETF代码）
+            String zqdm = e.getBdzqdm();
+
+            // 委托编号-交易所   -   股票代码
+            wtbh_stockCode_Map.put(Htxh + "-" + Jybk, zqdm);
+        });
 
 
-        return Collections.emptyList();
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // 总撤单数
+        int size = paramList.size();
+        // 1次 N单
+        int N = 5;
+
+
+        List<OptionRevokeOrderResultDTO> dtoList = Lists.newArrayList();
+        for (int i = 0; i < size; ) {
+
+            // 1次 N单
+            List<OptionTradeRevokeOrdersParam> subParamList = paramList.subList(i, Math.min(i += N, size));
+
+
+            // 批量撤单
+            OptionRevokeOrdersReq req = convert2Req(subParamList);
+            List<OptionRevokeOrderResultDTO> resultDTOS = EastMoneyOptionTradeAPI.revokeOrders(req, wtbh_stockCode_Map);
+            log.info("revokeOrders     >>>     paramList : {} , resultDTOS : {}", JSON.toJSONString(subParamList), JSON.toJSONString(resultDTOS));
+
+
+            dtoList.addAll(resultDTOS);
+        }
+
+
+        return dtoList;
     }
 
 
@@ -724,7 +723,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
         // 2、convert   撤单paramList
-        List<TradeRevokeOrdersParam> paramList = convert2ParamList(ordersData);
+        List<OptionTradeRevokeOrdersParam> paramList = convert2ParamList(ordersData);
 
 
         // 3、批量撤单
@@ -1718,10 +1717,10 @@ public class OptionTradeServiceImpl implements OptionTradeService {
      * @param ordersData
      * @return
      */
-    private List<TradeRevokeOrdersParam> convert2ParamList(List<OptionGetOrderResp> ordersData) {
+    private List<OptionTradeRevokeOrdersParam> convert2ParamList(List<OptionGetOrderResp> ordersData) {
 
         // 2、convert   撤单paramList
-        List<TradeRevokeOrdersParam> paramList = Lists.newArrayList();
+        List<OptionTradeRevokeOrdersParam> paramList = Lists.newArrayList();
         ordersData.forEach(e -> {
 
 
@@ -1742,11 +1741,11 @@ public class OptionTradeServiceImpl implements OptionTradeService {
             // -----------------------------------------
 
 
-            TradeRevokeOrdersParam param = new TradeRevokeOrdersParam();
-            // 日期（20250511）
-            param.setDate(e.getWtrq());
+            OptionTradeRevokeOrdersParam param = new OptionTradeRevokeOrdersParam();
+            // 交易所（05-深交所；15-上交所；）
+            param.setJybk(e.getJybk());
             // 委托编号
-            param.setWtdh(e.getHtxh());
+            param.setHtxh(e.getHtxh());
 
 
             paramList.add(param);
@@ -1820,24 +1819,21 @@ public class OptionTradeServiceImpl implements OptionTradeService {
      * @param paramList
      * @return
      */
-    private RevokeOrdersReq convert2Req(List<TradeRevokeOrdersParam> paramList) {
+    private OptionRevokeOrdersReq convert2Req(List<OptionTradeRevokeOrdersParam> paramList) {
         List<String> revokeList = Lists.newArrayList();
 
 
-        for (TradeRevokeOrdersParam param : paramList) {
+        for (OptionTradeRevokeOrdersParam param : paramList) {
 
-            // 委托日期
-            String date = StringUtils.isEmpty(param.getDate()) ? DateTimeUtil.format_yyyyMMdd(LocalDate.now()) : param.getDate();
-
-            // 委托日期_委托编号
-            String revoke = date + "_" + param.getWtdh();
+            // 委托编号-交易所
+            String revoke = param.getJybk() + "-" + param.getHtxh();
 
             revokeList.add(revoke);
         }
 
 
-        RevokeOrdersReq req = new RevokeOrdersReq();
-        req.setRevokes(String.join(",", revokeList));
+        OptionRevokeOrdersReq req = new OptionRevokeOrdersReq();
+        req.setWtbhs(String.join(",", revokeList));
 
         return req;
     }

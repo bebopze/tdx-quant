@@ -36,38 +36,6 @@ import java.util.stream.Collectors;
 public class EastMoneyKlineAPI {
 
 
-    public static void main(String[] args) {
-
-        String stockCode = "300059";
-
-
-        long start = System.currentTimeMillis();
-
-
-        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
-        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllETFSnapshotKline();
-
-        System.out.println(stockSnapshotKlineDTOS.size());
-
-        // 19s
-        System.out.println(DateTimeUtil.formatNow2Hms(start));
-
-
-        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockSnapshotKline();
-        // System.out.println(stockSnapshotKlineDTOS);
-
-
-        // StockKlineHisResp stockKlineHisResp = stockKlineHis(KlineTypeEnum.DAY, stockCode);
-        // System.out.println(stockKlineHisResp);
-
-
-        // StockKlineTrendResp stockKlineTrends = stockKlineTrends(stockCode);
-        // System.out.println(stockKlineTrends);
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
     /**
      * 东方财富   ->   批量拉取  全A（ETF） 实时行情          // Tips：专供 盘中刷新行情Task 使用（每500ms 拉取 100只股票）
      *
@@ -134,9 +102,8 @@ public class EastMoneyKlineAPI {
 
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("rc") == 0) {
-                log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
-            }
+            log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
+            Assert.isTrue(resultJson.getInteger("rc") == 0, result);
 
 
             JSONArray jsonArray = resultJson.getJSONObject("data").getJSONArray("diff");
@@ -225,9 +192,8 @@ public class EastMoneyKlineAPI {
 
 
             JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-            if (resultJson.getInteger("rc") == 0) {
-                log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
-            }
+            log.info("/api/qt/clist/get   suc     >>>     pageNum : {} , pageSize : {} , result : {}", pageNum - 1, pageSize, result);
+            Assert.isTrue(resultJson.getInteger("rc") == 0, result);
 
 
             JSONArray jsonArray = resultJson.getJSONObject("data").getJSONArray("diff");
@@ -384,10 +350,8 @@ public class EastMoneyKlineAPI {
 
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("rc") == 0) {
-            log.info("/api/qt/stock/kline/get   suc     >>>     klineType : {} , stockCode : {} , result : {}",
-                     klineTypeEnum.getDesc(), stockCode, result);
-        }
+        log.info("/api/qt/stock/kline/get   suc     >>>     klineType : {} , stockCode : {} , result : {}", klineTypeEnum.getDesc(), stockCode, result);
+        Assert.isTrue(resultJson.getInteger("rc") == 0, result);
 
 
         StockKlineHisResp resp = resultJson.getJSONObject("data").toJavaObject(StockKlineHisResp.class);
@@ -477,11 +441,8 @@ public class EastMoneyKlineAPI {
 
 
         JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
-        if (resultJson.getInteger("rc") == 0) {
-            log.info(
-                    "/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}",
-                    "分时", ndays, stockCode, result);
-        }
+        log.info("/api/qt/stock/trends2/sse   suc     >>>     klineType : {} , ndays : {} , stockCode : {} , result : {}", "分时", ndays, stockCode, result);
+        Assert.isTrue(resultJson.getInteger("rc") == 0, result);
 
 
         StockKlineTrendResp resp = JSON.toJavaObject(resultJson.getJSONObject("data"), StockKlineTrendResp.class);
@@ -731,6 +692,40 @@ public class EastMoneyKlineAPI {
 
 
         return url;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+
+        String stockCode = "300059";
+
+
+        long start = System.currentTimeMillis();
+
+
+        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockETFSnapshotKline();
+        List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = pullAllETFSnapshotKline();
+
+        System.out.println(stockSnapshotKlineDTOS.size());
+
+        // 19s
+        System.out.println(DateTimeUtil.formatNow2Hms(start));
+
+
+        // List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = allStockSnapshotKline();
+        // System.out.println(stockSnapshotKlineDTOS);
+
+
+        // StockKlineHisResp stockKlineHisResp = stockKlineHis(KlineTypeEnum.DAY, stockCode);
+        // System.out.println(stockKlineHisResp);
+
+
+        // StockKlineTrendResp stockKlineTrends = stockKlineTrends(stockCode);
+        // System.out.println(stockKlineTrends);
     }
 
 

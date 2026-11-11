@@ -124,7 +124,7 @@ public class HttpUtil {
                     throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
                 }
 
-                log.info("doGet     >>>     url : {} , result length : {}", url, result == null ? 0 : result.length());
+                log.info("doGet     >>>     url : {} , result : {}", url, result);
                 return result;
 
             } catch (Exception ex) {
@@ -190,7 +190,7 @@ public class HttpUtil {
                     log.error("doGet2     cookie过期，请重新登录！   >>>     url : {}, result : {}", url, result);
                     throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
                 }
-                log.info("doGet2     >>>     url : {} , result length : {}", url, result == null ? 0 : result.length());
+                log.info("doGet2     >>>     url : {} , result : {}", url, result);
                 return result;
 
             } catch (Exception ex) {
@@ -239,7 +239,7 @@ public class HttpUtil {
                 log.error("doPost     cookie过期，请重新登录！   >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), result);
                 throw new BizException(BaseExEnum.TREAD_EM_COOKIE_EXPIRED);
             } else {
-                log.info("doPost     >>>     url : {} , formData : {}, result length : {}", url, JSON.toJSONString(formData), result.length());
+                log.info("doPost     >>>     url : {} , formData : {}, result : {}", url, JSON.toJSONString(formData), result);
             }
 
             return result;

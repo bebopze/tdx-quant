@@ -41,8 +41,8 @@ public class OptionGetOrderResp {
     //	  	    "Hyjc": "科创50购12月1900",     // 合约名称
     //	  	    "Hylx": "认购",
     //	  	    "Jlxh": "1",
-    //	  	    "Jybk": "15",                // 交易版块code
-    //	  	    "Jybkmc": "上海个股期权",      // 交易版块名称
+    //	  	    "Jybk": "15",                // 交易版块code（05-深交所；15-上交所；）
+    //	  	    "Jybkmc": "上海个股期权",      // 交易版块name
     //	  	    "Jydy": "34081",             // 交易
     //	  	    "Jyrq": "20261029",          // 交易日期
     //	  	    "Jysc": "上海交易所",          // 交易所
@@ -73,7 +73,7 @@ public class OptionGetOrderResp {
     //	  	    "Zhcldm": "",
     //	  	    "Zqyw": "买入开仓|非备兑|开仓| ",     // 证券业务
     //	  	    "Zqywcode": "400",                 // 证券业务code
-    //	  	    "Zqywxw": "限价GFD",                // 证券业务xw
+    //	  	    "Zqywxw": "限价GFD",                // 报价方式
     //	  	    "Zqzh": "A123456",                 // 期权合约账户
     //	  	    "Zqzhzbm": "888"                   // 证券账户子编码
     //         }
@@ -119,7 +119,10 @@ public class OptionGetOrderResp {
 
     private String Hylx;
     private String Jlxh;
+
+    // 交易版块code（05-深交所；15-上交所；）
     private String Jybk;
+    // 交易版块name
     private String Jybkmc;
     private String Jydy;
     private String Jyrq;
@@ -162,6 +165,7 @@ public class OptionGetOrderResp {
     private String Zhcldm;
     private String Zqyw;
     private String Zqywcode;
+    // 报价方式
     private String Zqywxw;
     private String Zqzh;
     private String Zqzhzbm;

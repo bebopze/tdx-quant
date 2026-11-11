@@ -4,9 +4,11 @@ import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
+import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
+import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.service.OptionTradeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +46,7 @@ public class OptionTradeController {
 
     @Operation(summary = "实时行情：买5/卖5", description = "实时行情：买5/卖5")
     @GetMapping(value = "/SHSZQuoteSnapshot")
-    public Result<SHSZQuoteSnapshotResp> SHSZQuoteSnapshot(@Schema(description = "合约代码", example = "10011566")
+    public Result<SHSZQuoteSnapshotResp> SHSZQuoteSnapshot(@Schema(description = "合约代码", example = "10011565")
                                                            @RequestParam String optionCode) {
 
         return Result.SUC(optionTradeService.SHSZQuoteSnapshot(optionCode));
@@ -67,10 +69,10 @@ public class OptionTradeController {
 
     @Operation(summary = "历史 委托单列表（含当日）", description = "历史 委托单列表（含当日）")
     @GetMapping(value = "/getHisOrders")
-    public Result<List<OptionGetOrderResp>> getHisOrders(@Schema(description = "查询 - 开始日期", example = "2025-10-01")
+    public Result<List<OptionGetOrderResp>> getHisOrders(@Schema(description = "查询 - 开始日期", example = "2026-11-01")
                                                          @RequestParam LocalDate startDate,
 
-                                                         @Schema(description = "查询 - 结束日期", example = "2025-10-31")
+                                                         @Schema(description = "查询 - 结束日期", example = "2026-11-05")
                                                          @RequestParam LocalDate endDate) {
 
         return Result.SUC(optionTradeService.getHisOrders(startDate, endDate));
@@ -87,7 +89,7 @@ public class OptionTradeController {
 
     @Operation(summary = "批量撤单", description = "批量撤单")
     @PostMapping(value = "/revokeOrders")
-    public Result<List<RevokeOrderResultDTO>> revokeOrders(@RequestBody List<TradeRevokeOrdersParam> paramList) {
+    public Result<List<OptionRevokeOrderResultDTO>> revokeOrders(@RequestBody List<OptionTradeRevokeOrdersParam> paramList) {
         return Result.SUC(optionTradeService.revokeOrders(paramList));
     }
 
