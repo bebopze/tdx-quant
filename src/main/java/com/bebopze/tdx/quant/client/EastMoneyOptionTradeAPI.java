@@ -12,8 +12,11 @@ import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
@@ -22,6 +25,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.bebopze.tdx.quant.client.EastMoneyTradeAPI.SID;
@@ -254,6 +258,76 @@ public class EastMoneyOptionTradeAPI {
 
 
     // -----------------------------------------------------------------------------------------------------------------
+
+
+    private static List<SearchTargetDictResp> ETF_DICT_LIST__CACHE;
+
+    public static final Map<String, String> ETF_DICT__CODE_NAME_MAP__CACHE = Maps.newHashMap();
+
+
+    /**
+     * ETF期权 - ETF标的证券 列表
+     * -
+     *
+     * - 页面（买入开仓）：https://jywg.18.cn/StockOptionTrade/BuyOpen
+     * -
+     * -
+     * - API：https://emhsmarketwgmix.eastmoneysec.com/api/SHSZOption/searchTargetDict?id=&DC_APP_KEY=dcquotes-service-tweb&DC_TIMESTAMP=1794426234000&DC_SIGN=
+     *
+     * @param
+     * @return
+     */
+    @Synchronized
+    public static List<SearchTargetDictResp> searchTargetDict() {
+        if (CollectionUtils.isNotEmpty(ETF_DICT_LIST__CACHE) && MapUtils.isNotEmpty(ETF_DICT__CODE_NAME_MAP__CACHE)) {
+            return ETF_DICT_LIST__CACHE;
+        }
+
+
+        // --------------------------------------
+
+
+        String url = "https://emhsmarketwgmix.eastmoneysec.com/api/SHSZOption/searchTargetDict?" +
+
+                "id=" +
+
+                "&DC_APP_KEY=dcquotes-service-tweb" +
+                // 时间戳
+                "&DC_TIMESTAMP=" + System.currentTimeMillis() +
+                // 签名
+                "&DC_SIGN=";
+
+
+        // --------------------------------------
+
+
+        String result = HttpUtil.doGet(url);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        Assert.isTrue(resultJson.getInteger("code") == 0, result);
+
+
+        List<SearchTargetDictResp> optionList = resultJson.getJSONArray("data").toJavaList(SearchTargetDictResp.class);
+
+
+        // -------------------------------------- Cache
+
+
+        ETF_DICT_LIST__CACHE = optionList;
+
+
+        // code-name Map
+        ETF_DICT_LIST__CACHE.forEach(item -> {
+            ETF_DICT__CODE_NAME_MAP__CACHE.put(item.getUm(), item.getUn());
+        });
+
+
+        // --------------------------------------
+
+
+        return ETF_DICT_LIST__CACHE;
+    }
 
 
     /**

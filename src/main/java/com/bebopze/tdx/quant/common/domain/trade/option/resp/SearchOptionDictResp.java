@@ -47,10 +47,9 @@ public class SearchOptionDictResp {
     // ETF行权价格（1.9000）
     private String ep;
 
-    // 报价方式？（1）
+
+    // ETF标的证券 市场类型：0-深交所；1-上交所；
     private String um;
-
-
     // 标的证券code（588000）
     private String us;
     // 标的证券name（科创50ETF华夏）

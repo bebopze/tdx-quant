@@ -89,11 +89,16 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
     @Override
+    public List<SearchTargetDictResp> searchTargetDict() {
+        List<SearchTargetDictResp> etfList = EastMoneyOptionTradeAPI.searchTargetDict();
+        return etfList;
+    }
+
+    @Override
     public List<SearchOptionDictResp> searchOptionDict(String targetCode, String callOrPut, String id) {
         List<SearchOptionDictResp> optionList = EastMoneyOptionTradeAPI.searchOptionDict(new SearchOptionDictReq(targetCode, callOrPut, id));
         return optionList;
     }
-
 
     @Override
     public SHSZQuoteSnapshotResp SHSZQuoteSnapshot(String stockCode) {
@@ -1394,8 +1399,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
                 }
 
 
-                // [ERROR] 2025-11-03 08:17:12.738 [http-nio-7001-exec-2] TradeServiceImpl - 担保再买入 - [担保买入]   =>   下单FAIL     >>>     stock : [300175-ST朗源] , posStock : {"costprice":"0","curProfitratio":"0","curprofit":"0","dtPrice":"0","inTopBlock":"false","isApplyStg":"0","lastprice":"6.389","market":"","mktval":"5750.084","needGyjg":"0","needJzd":"0","posratio":"0","preClose":"6.389","profit":"0","profitratio":"0","rzDebt":"","stkRzBal":"","stkZyBal":"0","stkavl":"900","stkbal":"0","stkclasses":"","stkcode":"300175","stkname":"ST朗源","stktype":"","stktype_ex":"0","topBlockList":[],"topStock":"false","ztPrice":"0"} , param : {"amount":"900","market":"","price":"6.42","stockCode":"300175","stockName":"ST朗源","tradeType":"2"} , errMsg : 下单异常：该证券账户[0606068888]无此权限[04 开通风险警示证券买入权限]
-                //com.bebopze.tdx.quant.common.config.BizException: 下单异常：该证券账户[0606068888]无此权限[04 开通风险警示证券买入权限]
+                throw new BizException(errMsg);
             }
 
         });

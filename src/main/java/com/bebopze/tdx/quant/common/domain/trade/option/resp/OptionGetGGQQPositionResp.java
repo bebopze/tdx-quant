@@ -2,6 +2,8 @@ package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
 import lombok.Data;
 
+import static com.bebopze.tdx.quant.client.EastMoneyOptionTradeAPI.ETF_DICT__CODE_NAME_MAP__CACHE;
+
 
 /**
  * ETF期权   -   期权持仓（列表）
@@ -176,6 +178,18 @@ public class OptionGetGGQQPositionResp {
 
 
     // ---------------------------------------------- 自定义 字段---------------------------------------------------------
+
+
+    // 标的证券name（ETF名称）
+    private String bdzqmc;
+
+    public String getBdzqmc() {
+        bdzqmc = ETF_DICT__CODE_NAME_MAP__CACHE.get(bdzqdm);
+        return bdzqmc;
+    }
+
+
+    // ------------------------------------
 
 
     // 买入单价 = 合约买入成本 / 持仓数量

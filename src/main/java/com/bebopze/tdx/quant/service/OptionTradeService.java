@@ -38,6 +38,14 @@ public interface OptionTradeService {
 
 
     /**
+     * ETF期权 - ETF标的证券 列表
+     *
+     * @return
+     */
+    List<SearchTargetDictResp> searchTargetDict();
+
+
+    /**
      * ETF期权 - 可用合约列表 检索（id字段 -> 支持 [合约编码/合约名称] 模糊搜索）
      *
      * @param targetCode 标的证券code（588000-科创50ETF；159915-创业板ETF；510500-中证500ETF；...）
