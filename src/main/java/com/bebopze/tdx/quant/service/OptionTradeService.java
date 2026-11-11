@@ -101,14 +101,14 @@ public interface OptionTradeService {
 
 
     /**
-     * 一键 等比卖出     =>     指定 个股列表
+     * 一键 等比卖出     =>     指定 合约列表
      *
-     * @param sellStockCodeSet 指定卖出 个股列表
-     * @param sellPosPct       指定卖出 持仓比例（%）
-     * @param currPricePct     （当前价格）涨跌幅比例%
-     * @param prevPricePct     （昨日收盘价）涨跌幅比例%
+     * @param sellHybmSet  指定卖出 合约列表
+     * @param sellPosPct   指定卖出 持仓比例（%）
+     * @param currPricePct （当前价格）涨跌幅比例%
+     * @param prevPricePct （昨日收盘价）涨跌幅比例%
      */
-    void quickSellPosition(Set<String> sellStockCodeSet, double sellPosPct, double currPricePct, double prevPricePct);
+    void quickSellPosition(Set<String> sellHybmSet, double sellPosPct, double currPricePct, double prevPricePct);
 
     /**
      * 一键清仓     =>     指定 个股列表
@@ -176,7 +176,7 @@ public interface OptionTradeService {
 
 
     /**
-     * 总账户（以此刻   融+担 = 净x2   ->   为100%基准）   =>   一键 等比减仓（等比卖出）
+     * 期权总账户   =>   一键 等比减仓（等比卖出）
      *
      * @param newPositionRate 新仓位
      */

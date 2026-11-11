@@ -2,14 +2,13 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.constant.option.OptionTradeTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
-import com.bebopze.tdx.quant.common.domain.dto.trade.RevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeBSParam;
 import com.bebopze.tdx.quant.common.domain.param.OptionTradeRevokeOrdersParam;
-import com.bebopze.tdx.quant.common.domain.param.TradeRevokeOrdersParam;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetAccountFundsResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionGetOrderResp;
 import com.bebopze.tdx.quant.common.domain.trade.option.resp.OptionRevokeOrderResultDTO;
 import com.bebopze.tdx.quant.common.domain.trade.resp.SHSZQuoteSnapshotResp;
+import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.OptionTradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -110,28 +110,28 @@ public class OptionTradeController {
     }
 
 
-//    @Operation(summary = "一键 等比卖出 - 支持勾选", description = "一键 等比卖出 - 支持勾选")
-//    @GetMapping(value = "/quick/sellPosition")
-//    public Result<Void> quickSellPosition(@Schema(description = "卖出 个股code列表（逗号分隔）", example = "1,2,3")
-//                                          @RequestParam String sellStockCodeList,
-//
-//                                          @Schema(description = "卖出 持仓比例%（100% -> 清仓，50% -> 减半仓）", example = "100.0")
-//                                          @RequestParam(required = false, defaultValue = "100.0") double sellPosPct,
-//
-//                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，5% -> 当前价格x105% 挂S单）", example = "0.0")
-//                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
-//
-//                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
-//                                          @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
-//
-//
-//        Set<String> sellStockCodeSet = ConvertUtil.str2Set(sellStockCodeList);
-//
-//        tradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, prevPricePct);
-//        return Result.SUC();
-//    }
-//
-//
+    @Operation(summary = "一键 等比卖出 - 支持勾选", description = "一键 等比卖出 - 支持勾选")
+    @GetMapping(value = "/quick/sellPosition")
+    public Result<Void> quickSellPosition(@Schema(description = "卖出 合约code列表（逗号分隔）", example = "1,2,3")
+                                          @RequestParam String sellStockCodeList,
+
+                                          @Schema(description = "卖出 持仓比例%（100% -> 清仓，50% -> 减半仓）", example = "100.0")
+                                          @RequestParam(required = false, defaultValue = "100.0") double sellPosPct,
+
+                                          @Schema(description = "（当前价格）涨跌幅比例%（0% -> 实时价格，5% -> 当前价格x105% 挂S单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double currPricePct,
+
+                                          @Schema(description = "（昨日收盘价）涨跌幅比例%（0% -> 昨日收盘价，10%/20%/30% -> 涨停价 挂S单）", example = "0.0")
+                                          @RequestParam(required = false, defaultValue = "0.0") double prevPricePct) {
+
+
+        Set<String> sellStockCodeSet = ConvertUtil.str2Set(sellStockCodeList);
+
+        optionTradeService.quickSellPosition(sellStockCodeSet, sellPosPct, currPricePct, prevPricePct);
+        return Result.SUC();
+    }
+
+
 //    // -----------------------------------------------------------------------------------------------------------------
 //
 //
@@ -220,26 +220,26 @@ public class OptionTradeController {
 //
 //
 //    // -----------------------------------------------------------------------------------------------------------------
-//
-//
-//    @Operation(summary = "账户总仓位（以此刻 融+担=净x2 为100%基准）  ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）")
-//    @GetMapping(value = "/quick/totalAccount/eqRatio/sellPosition")
-//    public Result<Void> totalAccount__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位（以此刻 融+担=净x2 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
-//                                                          @RequestParam(defaultValue = "1") double newPositionRate) {
-//
-//        tradeService.totalAccount__eqRatioSellPosition(newPositionRate);
-//        return Result.SUC();
-//    }
-//
-//
-//    @Operation(summary = "当前持仓   ->   一键 等比减仓（等比卖出）", description = "将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位")
-//    @GetMapping(value = "/quick/currPos/eqRatio/sellPosition")
-//    public Result<Void> currPos__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
-//                                                     @RequestParam(defaultValue = "1") double newPositionRate) {
-//
-//        tradeService.currPos__eqRatioSellPosition(newPositionRate);
-//        return Result.SUC();
-//    }
+
+
+    @Operation(summary = "账户总仓位   ->   一键 等比减仓（等比卖出）", description = "将 账户总仓位   -降至->   指定仓位（0~1）")
+    @GetMapping(value = "/quick/totalAccount/eqRatio/sellPosition")
+    public Result<Void> totalAccount__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 账户总仓位   -降至->   指定仓位（0~1）", example = "1")
+                                                          @RequestParam(defaultValue = "1") double newPositionRate) {
+
+        optionTradeService.totalAccount__eqRatioSellPosition(newPositionRate);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "当前持仓   ->   一键 等比减仓（等比卖出）", description = "将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位")
+    @GetMapping(value = "/quick/currPos/eqRatio/sellPosition")
+    public Result<Void> currPos__eqRatioSellPosition(@Schema(description = "新仓位     =>     将 当前持仓（以 此刻持仓市值 为100%基准）  -降至->   指定仓位（0~1）", example = "1")
+                                                     @RequestParam(defaultValue = "1") double newPositionRate) {
+
+        optionTradeService.currPos__eqRatioSellPosition(newPositionRate);
+        return Result.SUC();
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

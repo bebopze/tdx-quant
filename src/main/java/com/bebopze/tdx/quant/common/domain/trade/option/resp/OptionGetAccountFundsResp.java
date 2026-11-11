@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class OptionGetAccountFundsResp {
     //     "Errcode": 0,
     //     "Data": [
     //       {
-    //         "Ccyk": "-2890.6060",         //
+    //         "Ccyk": "-2890.6060",         // 持仓盈亏
     //         "Dfzj": "0.0000",             //
     //         "Dtzybzj": "0.0000",          //
     //         "Fdyk": "-2890.6060",         // 账户 浮动总盈亏
@@ -66,8 +67,9 @@ public class OptionGetAccountFundsResp {
 
 
     private double Hbdm;
-    private double Khdm;
 
+
+    private String Khdm;
     private String Nbjg;
 
 
@@ -124,13 +126,22 @@ public class OptionGetAccountFundsResp {
     /**
      * 期权持仓 总持仓比例 = 持仓总市值 / 账户总资产
      */
-    private double totalAccount__actTotalPosRatio = Sz / Zczz;
+    private double totalAccount__actTotalPosRatio;
+
+    public double getTotalAccount__actTotalPosRatio() {
+        totalAccount__actTotalPosRatio = NumUtil.of(Sz / Zczz);
+        return totalAccount__actTotalPosRatio;
+    }
 
 
     /**
      * 剩余 可买仓位（%）  =   可用总资金  /  账户总资产
      */
-    private double max_buyPosPct = Zjkyje / Zczz * 100;
+    private double max_buyPosPct;
 
+    public double getMax_buyPosPct() {
+        max_buyPosPct = NumUtil.of(Zjkyje / Zczz * 100);
+        return max_buyPosPct;
+    }
 
 }

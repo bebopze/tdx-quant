@@ -307,13 +307,13 @@ public class OptionTradeServiceImpl implements OptionTradeService {
     /**
      * 一键 等比卖出     =>     指定 合约列表
      *
-     * @param sellStockCodeSet 指定卖出 合约列表
-     * @param sellPosPct       指定卖出 持仓比例
-     * @param currPricePct     （当前价格）涨跌幅比例%
-     * @param prevPricePct     （昨日收盘价）涨跌幅比例%
+     * @param sellHybmSet  指定卖出 合约列表
+     * @param sellPosPct   指定卖出 持仓比例
+     * @param currPricePct （当前价格）涨跌幅比例%
+     * @param prevPricePct （昨日收盘价）涨跌幅比例%
      */
     @Override
-    public void quickSellPosition(Set<String> sellStockCodeSet,
+    public void quickSellPosition(Set<String> sellHybmSet,
                                   double sellPosPct,
                                   double currPricePct,
                                   double prevPricePct) {
@@ -331,7 +331,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
         // 2、从持仓个股中   过滤出   ->   卖出 合约列表
-        List<OptionGetGGQQPositionResp> sell__stockInfoList = posResp.getOptionPositionList().stream().filter(e -> sellStockCodeSet.contains(e.getHybm())).collect(Collectors.toList());
+        List<OptionGetGGQQPositionResp> sell__stockInfoList = posResp.getOptionPositionList().stream().filter(e -> sellHybmSet.contains(e.getHybm())).collect(Collectors.toList());
 
 
         // 3、一键减仓
@@ -570,7 +570,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
         OptionGetAccountFundsResp posResp = getAccountFundsAndPositions();
 
 
-        // 2、check     ->     两融账户 等比减仓
+        // 2、check     ->     等比减仓
         check___totalAccount__equalRatioSellPosition(posResp, newPositionRate);
 
 
@@ -694,7 +694,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
     /**
-     * check     ->     两融账户 等比减仓
+     * check     ->     期权账户 等比减仓
      *
      * @param posResp
      * @param newPositionRate
@@ -705,12 +705,12 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
         // 实际总仓位（融+担）     0.9567123   ->   95.67%
         double actTotalPosRatio = posResp.getTotalAccount__actTotalPosRatio();
-        Assert.isTrue(actTotalPosRatio < newPositionRate, String.format("当前两融账户（融+担=净x2）： 实际总仓位=[%s] < new总仓位=[%s] ， 无需减仓！", actTotalPosRatio, newPositionRate));
+        Assert.isTrue(actTotalPosRatio < newPositionRate, String.format("当前期权账户：实际总仓位=[%s] < new总仓位=[%s] ， 无需减仓！", actTotalPosRatio, newPositionRate));
 
 
         // 减仓差值  >=  5%（一次减仓   最少5%）
         double rate_diff = actTotalPosRatio - newPositionRate;
-        Assert.isTrue(rate_diff > 0.05, String.format("当前两融账户（融+担=净x2）： 实际总仓位=[%s]，new总仓位=[%s]，减仓比例=[%s]过小，需大于5%%", actTotalPosRatio, newPositionRate, rate_diff));
+        Assert.isTrue(rate_diff > 0.05, String.format("当前期权账户：实际总仓位=[%s]，new总仓位=[%s]，减仓比例=[%s]过小，需大于5%%", actTotalPosRatio, newPositionRate, rate_diff));
     }
 
 
