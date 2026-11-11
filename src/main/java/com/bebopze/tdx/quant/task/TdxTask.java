@@ -15,6 +15,7 @@ import com.bebopze.tdx.quant.service.*;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin;
+import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
 import com.bebopze.tdx.quant.task.script.TdxScript;
 import com.bebopze.tdx.quant.task.script.TdxZipDownScript;
 import com.google.common.collect.Sets;
@@ -75,6 +76,9 @@ public class TdxTask {
     @Autowired
     private TaskProgressManager taskProgressManager;
 
+
+    @Autowired
+    private EastMoneyLogin eastMoneyLogin;
 
     @Autowired
     private EastMoneyChromeLogin eastMoneyChromeLogin;
@@ -360,10 +364,22 @@ public class TdxTask {
     @TotalTime
     @Scheduled(cron = "0 17 0/2 ? * *", zone = "Asia/Shanghai")
     public void refreshEastmoneyCookie__chromeLogin() {
-        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
+        refreshEastmoneyCookie__chromeLogin(2);
+    }
 
 
-        eastMoneyChromeLogin.runLoginWorkflow();
+    @Async
+    @TotalTime
+    public void refreshEastmoneyCookie__chromeLogin(int loginType) {
+        log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start     >>>     loginType : {}", loginType);
+
+
+        // 登录方案（1-API登录；2-Chrome登录；）
+        if (loginType == 1) {
+            eastMoneyLogin.login();
+        } else {
+            eastMoneyChromeLogin.runLoginWorkflow();
+        }
 
 
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 end");
