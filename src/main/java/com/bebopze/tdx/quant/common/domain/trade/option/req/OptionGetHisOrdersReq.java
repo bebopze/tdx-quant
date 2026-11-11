@@ -45,9 +45,9 @@ public class OptionGetHisOrdersReq {
 
 
     /**
-     * 最大条数 = 页面大小 x 当前页码
+     * 起始条数 = 页面大小 x (当前页码 - 1)
      */
-    private int dwc = qqhs * page;
+    private int dwc;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ public class OptionGetHisOrdersReq {
 
 
     public int getDwc() {
-        return qqhs * page;
+        return page > 1 ? qqhs * (page - 1) : 0;
     }
 
 

@@ -172,7 +172,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
         OptionGetHisOrdersReq req = new OptionGetHisOrdersReq();
         req.setSt(startDate);
         req.setEt(endDate);
-        req.setQqhs(50);
+        req.setQqhs(1000);
 
 
         List<OptionGetOrderResp> respList = EastMoneyOptionTradeAPI.getHisOrders(req);

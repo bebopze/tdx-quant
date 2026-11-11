@@ -262,7 +262,7 @@ public class EastMoneyOptionTradeAPI {
 
     private static List<SearchTargetDictResp> ETF_DICT_LIST__CACHE;
 
-    public static final Map<String, String> ETF_DICT__CODE_NAME_MAP__CACHE = Maps.newHashMap();
+    public static final Map<String, String> ETF_DICT__CODE_NAME_MAP__CACHE = Maps.newConcurrentMap();
 
 
     /**
@@ -318,9 +318,8 @@ public class EastMoneyOptionTradeAPI {
 
 
         // code-name Map
-        ETF_DICT_LIST__CACHE.forEach(item -> {
-            ETF_DICT__CODE_NAME_MAP__CACHE.put(item.getUm(), item.getUn());
-        });
+        ETF_DICT__CODE_NAME_MAP__CACHE.clear();
+        ETF_DICT_LIST__CACHE.forEach(e -> ETF_DICT__CODE_NAME_MAP__CACHE.put(e.getUs(), e.getUn()));
 
 
         // --------------------------------------
@@ -748,8 +747,8 @@ public class EastMoneyOptionTradeAPI {
         req.setEtfCode("588000");
 
 
-        Integer wtdh = submitTrade(req);
-        System.out.println(wtdh);
+//        Integer wtdh = submitTrade(req);
+//        System.out.println(wtdh);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -757,9 +756,9 @@ public class EastMoneyOptionTradeAPI {
 
         // 历史委托 列表
         OptionGetHisOrdersReq req_1 = new OptionGetHisOrdersReq();
-        req_1.setSt(LocalDate.of(2026, 11, 1));
-        req_1.setEt(LocalDate.of(2026, 11, 6));
-        req_1.setQqhs(10);
+        req_1.setSt(LocalDate.of(2026, 10, 10));
+        req_1.setEt(LocalDate.of(2026, 11, 12));
+        req_1.setQqhs(500);
 
         List<OptionGetOrderResp> resp_1 = getHisOrders(req_1);
 
