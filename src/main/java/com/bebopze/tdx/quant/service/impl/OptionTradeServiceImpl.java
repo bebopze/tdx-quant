@@ -632,6 +632,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
             // 个股   ->   价格 2位小数
             // ETF   ->   价格 3位小数
+            // 期权   ->   价格 4位小数
             int scale = 4;
             // int scale = priceScale(e.getStktype_ex());
 
@@ -747,8 +748,11 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
         double price = buy1;
 
-        // A股/ETF   ->   价格精度
-        int priceScale = StockUtil.priceScale(stockCode);
+        // 个股   ->   价格 2位小数
+        // ETF   ->   价格 3位小数
+        // 期权   ->   价格 4位小数
+        int priceScale = 4;
+        // int priceScale = StockUtil.priceScale(stockCode);
 
 
         // S -> 价格正向（阶梯 加价卖出）；B -> 价格负向（阶梯 降价买入）；
@@ -1319,9 +1323,10 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
             // -------------------------------------------------- 价格精度
 
-            // 个股      ->    价格 2位小数
-            // ETF      ->    价格 3位小数
-            // ETF期权   ->   价格 4位小数
+            // 个股   ->   价格 2位小数
+            // ETF   ->   价格 3位小数
+            // 期权   ->   价格 4位小数
+
             int scale = 4;
             // int scale = priceScale(e.getStktype_ex());
 
@@ -1506,7 +1511,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
             // 个股   ->   价格 2位小数
             // ETF   ->   价格 3位小数
-            // 期权  ->   价格 4位小数
+            // 期权   ->   价格 4位小数
             int scale = 4;
             // int scale = priceScale(e.getStktype_ex());
 
@@ -2161,6 +2166,5 @@ public class OptionTradeServiceImpl implements OptionTradeService {
     public static String ofStr(Number value) {
         return NumUtil.str(value);
     }
-
 
 }

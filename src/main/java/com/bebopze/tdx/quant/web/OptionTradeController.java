@@ -275,7 +275,7 @@ public class OptionTradeController {
 
 
     @Operation(summary = "快捷下单   ->   按照 指定价格区间", description = "快捷下单   ->   按照 指定价格区间，逐档 梯次等比下单")
-    @GetMapping(value = "/quick/quickETFOption")
+    @GetMapping(value = "/quick/quickOption")
     public Result<Void> quickOption(@Schema(description = "证券代码", example = "588000")
                                     @RequestParam String stockCode,
 
