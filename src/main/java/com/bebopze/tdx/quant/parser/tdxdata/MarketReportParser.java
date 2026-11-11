@@ -23,13 +23,13 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.TDX_PATH;
 
 
 /**
- * 通达信   报表导出（大盘指标   =>   880003 - 平均股价）   -   解析
+ * 通达信   报表导出（大盘顶底TXT   =>   880003 - 平均股价）   -   解析
  * -
- * -   34（数据导出）   ->   大盘指标EXCEL   ->   格式文本文件
+ * -   34（数据导出）   ->   大盘顶底TXT   ->   格式文本文件
  *
  *
  *
- * -   大盘指标（MA50占比 / 月多占比 / 板块-月多占比 / 新高-新低 / 板块-BS占比（左侧试仓/左侧买/右侧买/强势卖出/左侧卖/右侧卖） / ... / 大盘顶底）
+ * -   大盘顶底TXT（MA50占比 / 月多占比 / 板块-月多占比 / 新高-新低 / 板块-BS占比（左侧试仓/左侧买/右侧买/强势卖出/左侧卖/右侧卖） / ... / 大盘顶底）
  *
  *
  *
@@ -43,7 +43,7 @@ public class MarketReportParser {
 
 
     /**
-     * 大盘指标（MA50占比 / 月多占比 / 板块-月多占比 / 新高-新低 / 板块-BS占比（左侧试仓/左侧买/右侧买/强势卖出/左侧卖/右侧卖） / ... / 大盘顶底）
+     * 大盘顶底TXT（MA50占比 / 月多占比 / 板块-月多占比 / 新高-新低 / 板块-BS占比（左侧试仓/左侧买/右侧买/强势卖出/左侧卖/右侧卖） / ... / 大盘顶底）
      */
     private static final String filePath = TDX_PATH + "/T0002/export/880003.txt";
 
@@ -94,7 +94,7 @@ public class MarketReportParser {
 
             // 第3行   ->   标题
             String title = lines.get(2);
-            String[] titleArr = title.trim().replaceAll(" ", "").replaceAll("大盘指标EXCEL.", "").split("\t");
+            String[] titleArr = title.trim().replaceAll(" ", "").replaceAll("大盘顶底TXT.", "").split("\t");
 
             int length = titleArr.length;
 

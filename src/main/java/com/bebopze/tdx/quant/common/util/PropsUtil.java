@@ -136,11 +136,11 @@ public class PropsUtil {
         String value = System.getenv(key);
         value = StringUtils.isBlank(value) ? props.getProperty(key) : value;
 
-//        if (isSensitiveKey(key)) {
-//            log.info("getProperty     >>>     key : {} , configured : {}", key, StringUtils.isNotBlank(value));
-//        } else {
-        log.info("getProperty     >>>     key : {} , value : {}", key, value);
-//        }
+        if (isSensitiveKey(key)) {
+            log.info("getProperty     >>>     key : {} , configured : {}", key, StringUtils.isNotBlank(value));
+        } else {
+            log.info("getProperty     >>>     key : {} , value : {}", key, value);
+        }
 
         return value;
     }
