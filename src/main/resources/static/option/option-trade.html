@@ -1,12 +1,38 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light" data-theme-mode="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="light dark">
     <title>ETF 期权交易工作台 | tdx-quant</title>
     <!-- 项目共享环境/API 配置：提供 window.APP_CONFIG / window.ApiUtils（ENV、API_HOST、buildUrl） -->
     <script src="../js/config.js"></script>
+    <!-- 主题引导：在 CSS 解析前设置 data-theme，避免首屏闪烁。
+         仅保存主题偏好（tdx.option.theme），不涉及任何交易数据/凭据。 -->
+    <script>
+        (function () {
+            var KEY = 'tdx.option.theme';
+            var MODES = ['light', 'dark', 'midnight', 'eye', 'auto'];
+            var mode = 'light';
+            var resolved = 'light';
+            try {
+                mode = localStorage.getItem(KEY) || 'light';
+                if (MODES.indexOf(mode) < 0) mode = 'light';
+                if (mode === 'auto') {
+                    resolved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                        ? 'dark' : 'light';
+                } else {
+                    resolved = mode;
+                }
+            } catch (e) {
+                mode = 'light';
+                resolved = 'light';
+            }
+            document.documentElement.setAttribute('data-theme', resolved);
+            document.documentElement.setAttribute('data-theme-mode', mode);
+            document.documentElement.style.colorScheme = (resolved === 'light' || resolved === 'eye') ? 'light' : 'dark';
+        })();
+    </script>
     <style>
         /* =====================================================================
            tdx-quant · ETF 期权真实交易前端（原生 HTML5 + CSS + JS 单文件）
@@ -14,9 +40,189 @@
            注意：不引用任何外部字体 / CDN；仅引用项目内共享的 ../js/config.js（环境与 API 地址）。
         ===================================================================== */
 
+        /* ============================================================
+           主题变量：明亮（默认，light） / 暗黑（dark） / 午夜蓝（midnight） / 护眼（eye）
+           data-theme 由 <head> 中的引导脚本在首屏渲染前设置
+           ============================================================ */
         :root {
+            /* ---------- 明亮（默认）基础色 ---------- */
+            --bg: #f2f5f9;
+            --bg-grad: #e9eef6;
+            --body-bg: radial-gradient(1200px 520px at 18% -140px, rgba(31, 111, 235, .07), transparent 62%),
+            radial-gradient(900px 420px at 100% 0, rgba(15, 143, 111, .05), transparent 60%),
+            var(--bg);
+            --panel: #ffffff;
+            --panel-2: #f4f7fb;
+            --panel-3: #f8fafd;
+            --border: #e1e8f0;
+            --border-2: #cbd7e5;
+            --text: #1b2634;
+            --text-2: #3e4d60;
+            --muted: #6b7d92;
+            --dim: #8b9aac;
+            --accent: #1f6feb;
+            --accent-2: #1a5fd0;
+            --up: #d92b2b; /* A股习惯：涨 / 正数为红 */
+            --down: #0f8f4d; /* A股习惯：跌 / 负数为绿 */
+            --warn: #b7791f;
+            --danger: #c62828;
+            --danger-2: #a11d1d;
+            --ok: #0f8f6f;
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            --radius: 11px;
+            --shadow: 0 12px 32px rgba(23, 43, 77, .10);
+
+            /* ---------- 结构性变量 ---------- */
+            --topbar-bg: linear-gradient(180deg, rgba(242, 245, 249, .97) 62%, rgba(242, 245, 249, 0));
+            --panel-bg: #ffffff;
+            --panel-shadow: 0 1px 2px rgba(23, 43, 77, .05), 0 10px 26px rgba(23, 43, 77, .05);
+            --strong-text: #101b28;
+            --table-head-bg: #eef3f9;
+            --table-head-text: #4a5a6c;
+            --row-border: #e8edf4;
+            --row-even-bg: #fafcff;
+            --row-hover-bg: #eef5ff;
+            --row-selected-bg: #e2eeff;
+            --link: #1f6feb;
+            --link-hover: #0b4fb3;
+            --book-head-bg: #f4f7fb;
+            --quote-sell: #c62828;
+            --quote-buy: #0f8f4d;
+            --contract-summary-bg: #eef5ff;
+            --mt-item-bg: #f7f9fc;
+            --badge-bg: rgba(27, 38, 52, .04);
+            --badge-text: #3e4d60;
+            --badge-border: #cbd7e5;
+
+            /* ---------- 状态色（软背景） ---------- */
+            --ok-soft-text: #0b6b4f;
+            --ok-soft-border: #a9dcc9;
+            --ok-soft-bg: #e8f7f1;
+            --warn-soft-text: #8a5a00;
+            --warn-soft-border: #ecd39a;
+            --warn-soft-bg: #fff8e6;
+            --danger-soft-text: #a11d1d;
+            --danger-soft-border: #f0c2c2;
+            --danger-soft-bg: #fff1f1;
+            --info-soft-text: #1a4f9c;
+            --info-soft-border: #c3d8fb;
+            --info-soft-bg: #eaf2ff;
+            --purple-soft-text: #5b3fa8;
+            --purple-soft-border: #d6c9f5;
+            --purple-soft-bg: #f3efff;
+            --orange-soft-text: #8a4a00;
+            --orange-soft-border: #f0cfa5;
+            --orange-soft-bg: #fff5e8;
+            --danger-text: #b42318;
+
+            /* ---------- 其他组件 ---------- */
+            --session-bg: #fff6df;
+            --session-border: #ecd39a;
+            --session-text: #8a5a00;
+            --ghost-hover: #eef3f9;
+            --btn-bg: linear-gradient(180deg, #ffffff, #f1f5fa);
+            --btn-border: #cbd7e5;
+            --btn-hover-border: #9fb2c8;
+            --input-bg: #ffffff;
+            --placeholder: #93a2b4;
+            --code-bg: #eef3f9;
+            --code-text: #29384a;
+            --dialog-shadow: 0 24px 70px rgba(23, 43, 77, .25);
+            --backdrop: rgba(15, 25, 40, .45);
+            --danger-zone-border: #f0c2c2;
+            --danger-zone-bg: linear-gradient(180deg, rgba(198, 40, 40, .05), rgba(255, 255, 255, 0) 46%), var(--panel);
+            --dot-halo: rgba(23, 43, 77, .08);
+            --max-trade-ok-border: #a9dcc9;
+            --max-trade-err-border: #f0c2c2;
+            --max-trade-loading-border: #ecd39a;
+            --tab-active-bg: var(--panel);
+            --tab-active-text: #101b28;
+            --scroll-thumb: rgba(23, 43, 77, .18);
+            --selection-bg: #cfe3ff;
+            --selection-text: #101b28;
+        }
+
+        html[data-theme="light"] {
+            color-scheme: light;
+        }
+
+        /* ============================================================
+           暗黑 / 午夜蓝：共用深色结构变量
+           ============================================================ */
+        html[data-theme="dark"],
+        html[data-theme="midnight"] {
+            color-scheme: dark;
+            --topbar-bg: linear-gradient(180deg, rgba(10, 14, 19, .96) 62%, rgba(10, 14, 19, 0));
+            --panel-bg: linear-gradient(180deg, rgba(255, 255, 255, .022), rgba(255, 255, 255, 0) 42%), var(--panel);
+            --panel-shadow: 0 1px 0 rgba(255, 255, 255, .02) inset;
+            --strong-text: #eaf2ff;
+            --table-head-bg: #17222f;
+            --table-head-text: #a9bacd;
+            --row-border: rgba(255, 255, 255, .055);
+            --row-even-bg: rgba(255, 255, 255, .014);
+            --row-hover-bg: rgba(77, 141, 255, .07);
+            --row-selected-bg: rgba(77, 141, 255, .11);
+            --link: #93c0ff;
+            --link-hover: #c3ddff;
+            --book-head-bg: rgba(255, 255, 255, .02);
+            --quote-sell: #ffb1b1;
+            --quote-buy: #a8f0c8;
+            --contract-summary-bg: rgba(77, 141, 255, .045);
+            --mt-item-bg: rgba(255, 255, 255, .025);
+            --badge-bg: rgba(255, 255, 255, .03);
+            --badge-text: #b6c4d4;
+            --badge-border: #2d4054;
+            --ok-soft-text: #9ff5df;
+            --ok-soft-border: #1c6d59;
+            --ok-soft-bg: rgba(45, 212, 167, .10);
+            --warn-soft-text: #ffdf9a;
+            --warn-soft-border: #7a5c17;
+            --warn-soft-bg: rgba(240, 180, 41, .12);
+            --danger-soft-text: #ffb3b5;
+            --danger-soft-border: #7c2b2f;
+            --danger-soft-bg: rgba(229, 72, 77, .14);
+            --info-soft-text: #b9d3ff;
+            --info-soft-border: #2b5a96;
+            --info-soft-bg: rgba(77, 141, 255, .12);
+            --purple-soft-text: #d9c2ff;
+            --purple-soft-border: #4b3a75;
+            --purple-soft-bg: rgba(140, 100, 240, .14);
+            --orange-soft-text: #ffd0a3;
+            --orange-soft-border: #7a4a17;
+            --orange-soft-bg: rgba(240, 140, 41, .12);
+            --danger-text: #ff8a8a;
+            --session-bg: #2a210f;
+            --session-border: #6b4a12;
+            --session-text: #ffd98a;
+            --ghost-hover: rgba(255, 255, 255, .045);
+            --btn-bg: linear-gradient(180deg, #1a2635, #141c27);
+            --btn-border: #2d4054;
+            --btn-hover-border: #3c5671;
+            --input-bg: #0e1520;
+            --placeholder: #5d6f83;
+            --code-bg: rgba(255, 255, 255, .05);
+            --code-text: #cfdcee;
+            --dialog-shadow: 0 30px 90px rgba(0, 0, 0, .7);
+            --backdrop: rgba(2, 5, 10, .74);
+            --danger-zone-border: #4a2326;
+            --danger-zone-bg: linear-gradient(180deg, rgba(229, 72, 77, .06), rgba(255, 255, 255, 0) 46%), var(--panel);
+            --dot-halo: rgba(255, 255, 255, .04);
+            --max-trade-ok-border: #1f5f4e;
+            --max-trade-err-border: #6d2a2d;
+            --max-trade-loading-border: #5c4a1a;
+            --tab-active-bg: var(--panel-2);
+            --tab-active-text: #ffffff;
+            --scroll-thumb: rgba(255, 255, 255, .18);
+            --selection-bg: rgba(77, 141, 255, .35);
+            --selection-text: #ffffff;
+        }
+
+        html[data-theme="dark"] {
             --bg: #0a0e13;
             --bg-grad: #0d131b;
+            --body-bg: radial-gradient(1200px 520px at 18% -140px, rgba(45, 90, 160, .20), transparent 62%),
+            radial-gradient(900px 420px at 100% 0, rgba(30, 120, 110, .12), transparent 60%),
+            var(--bg);
             --panel: #111823;
             --panel-2: #141d2a;
             --panel-3: #0e1520;
@@ -28,15 +234,151 @@
             --dim: #66798e;
             --accent: #4d8dff;
             --accent-2: #1f6feb;
-            --up: #ff5f5f; /* A股习惯：涨 / 正数为红 */
-            --down: #2ecc71; /* A股习惯：跌 / 负数为绿 */
+            --up: #ff5f5f;
+            --down: #2ecc71;
             --warn: #f0b429;
             --danger: #e5484d;
             --danger-2: #b8272c;
             --ok: #2dd4a7;
-            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-            --radius: 11px;
             --shadow: 0 12px 32px rgba(0, 0, 0, .35);
+        }
+
+        html[data-theme="midnight"] {
+            --bg: #050b15;
+            --bg-grad: #081221;
+            --body-bg: radial-gradient(1200px 520px at 18% -140px, rgba(40, 90, 200, .22), transparent 62%),
+            radial-gradient(900px 420px at 100% 0, rgba(40, 150, 190, .10), transparent 60%),
+            var(--bg);
+            --panel: #0b1524;
+            --panel-2: #0f1d31;
+            --panel-3: #091320;
+            --border: #1a2b42;
+            --border-2: #26405e;
+            --text: #d7e4f5;
+            --text-2: #a8bed8;
+            --muted: #7c92ad;
+            --dim: #5d7490;
+            --accent: #5b9dff;
+            --accent-2: #2f6fce;
+            --up: #ff6b6b;
+            --down: #2fcf8f;
+            --warn: #f2bb4a;
+            --danger: #e2545a;
+            --danger-2: #b23a40;
+            --ok: #37d6b0;
+            --shadow: 0 12px 32px rgba(0, 0, 0, .45);
+            --topbar-bg: linear-gradient(180deg, rgba(5, 11, 21, .96) 62%, rgba(5, 11, 21, 0));
+            --panel-bg: linear-gradient(180deg, rgba(120, 170, 255, .03), rgba(255, 255, 255, 0) 42%), var(--panel);
+            --table-head-bg: #0f1e31;
+            --table-head-text: #9fb6d2;
+            --row-border: rgba(160, 190, 230, .08);
+            --row-even-bg: rgba(120, 170, 255, .02);
+            --row-hover-bg: rgba(91, 157, 255, .09);
+            --row-selected-bg: rgba(91, 157, 255, .14);
+            --strong-text: #e6f0ff;
+            --book-head-bg: rgba(120, 170, 255, .035);
+            --contract-summary-bg: rgba(91, 157, 255, .06);
+            --mt-item-bg: rgba(120, 170, 255, .035);
+            --link: #8fc0ff;
+            --link-hover: #bcd9ff;
+        }
+
+        /* ============================================================
+           护眼（浅色豆沙绿）
+           ============================================================ */
+        html[data-theme="eye"] {
+            color-scheme: light;
+            --bg: #e9f0e1;
+            --bg-grad: #e2ebd7;
+            --body-bg: radial-gradient(1200px 520px at 18% -140px, rgba(63, 125, 58, .08), transparent 62%),
+            radial-gradient(900px 420px at 100% 0, rgba(90, 140, 70, .06), transparent 60%),
+            var(--bg);
+            --panel: #f7fbf2;
+            --panel-2: #eef5e6;
+            --panel-3: #f3f8ed;
+            --border: #d2dfc7;
+            --border-2: #bacda9;
+            --text: #26331f;
+            --text-2: #40503a;
+            --muted: #6b7a60;
+            --dim: #8b9a80;
+            --accent: #3f7d3a;
+            --accent-2: #326b2e;
+            --up: #c0392b;
+            --down: #2e7d32;
+            --warn: #8a6100;
+            --danger: #b23a3a;
+            --danger-2: #8f2b2b;
+            --ok: #2e7d5b;
+            --shadow: 0 12px 32px rgba(50, 70, 40, .12);
+            --topbar-bg: linear-gradient(180deg, rgba(233, 240, 225, .97) 62%, rgba(233, 240, 225, 0));
+            --panel-bg: var(--panel);
+            --panel-shadow: 0 1px 2px rgba(50, 70, 40, .06), 0 10px 26px rgba(50, 70, 40, .05);
+            --strong-text: #1e2a18;
+            --table-head-bg: #e8f0dd;
+            --table-head-text: #4f5f45;
+            --row-border: #dfe8d6;
+            --row-even-bg: #f4f8ee;
+            --row-hover-bg: #e7f0dc;
+            --row-selected-bg: #dcebd0;
+            --link: #2f6b2a;
+            --link-hover: #1f4f1b;
+            --book-head-bg: #eef5e6;
+            --quote-sell: #b23a3a;
+            --quote-buy: #2e7d32;
+            --contract-summary-bg: #eef5e6;
+            --mt-item-bg: #f2f7ec;
+            --badge-bg: rgba(38, 51, 31, .04);
+            --badge-text: #40503a;
+            --badge-border: #bacda9;
+            --ok-soft-text: #1f5f43;
+            --ok-soft-border: #b5d8c2;
+            --ok-soft-bg: #e8f5ec;
+            --warn-soft-text: #6b4a00;
+            --warn-soft-border: #e2cf9a;
+            --warn-soft-bg: #fbf5e2;
+            --danger-soft-text: #8f2b2b;
+            --danger-soft-border: #e8c0c0;
+            --danger-soft-bg: #fbecec;
+            --info-soft-text: #2f5f8f;
+            --info-soft-border: #c2d6e6;
+            --info-soft-bg: #eaf2f8;
+            --purple-soft-text: #55407f;
+            --purple-soft-border: #d6cbe8;
+            --purple-soft-bg: #f3eff8;
+            --orange-soft-text: #7a4700;
+            --orange-soft-border: #e5cca6;
+            --orange-soft-bg: #fbf2e4;
+            --danger-text: #a13232;
+            --session-bg: #f6efd9;
+            --session-border: #e2cf9a;
+            --session-text: #6b4a00;
+            --ghost-hover: #e7efdd;
+            --btn-bg: linear-gradient(180deg, #fbfdf8, #f0f5e9);
+            --btn-border: #bacda9;
+            --btn-hover-border: #9fb58c;
+            --input-bg: #fbfdf8;
+            --placeholder: #8b9a80;
+            --code-bg: #eaf1e2;
+            --code-text: #33422c;
+            --dialog-shadow: 0 24px 70px rgba(50, 70, 40, .22);
+            --backdrop: rgba(35, 45, 30, .45);
+            --danger-zone-border: #e8c0c0;
+            --danger-zone-bg: linear-gradient(180deg, rgba(178, 58, 58, .05), rgba(255, 255, 255, 0) 46%), var(--panel);
+            --dot-halo: rgba(38, 51, 31, .08);
+            --max-trade-ok-border: #b5d8c2;
+            --max-trade-err-border: #e8c0c0;
+            --max-trade-loading-border: #e2cf9a;
+            --tab-active-bg: var(--panel);
+            --tab-active-text: #1e2a18;
+            --scroll-thumb: rgba(50, 70, 40, .18);
+            --selection-bg: #d7e8c8;
+            --selection-text: #1e2a18;
+        }
+
+        ::selection {
+            background: var(--selection-bg);
+            color: var(--selection-text);
         }
 
         * {
@@ -48,10 +390,12 @@
             padding: 0
         }
 
+        html {
+            background: var(--bg)
+        }
+
         body {
-            background: radial-gradient(1200px 520px at 18% -140px, rgba(45, 90, 160, .20), transparent 62%),
-            radial-gradient(900px 420px at 100% 0, rgba(30, 120, 110, .12), transparent 60%),
-            var(--bg);
+            background: var(--body-bg);
             color: var(--text);
             font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
             "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
@@ -102,7 +446,7 @@
         }
 
         .danger-text {
-            color: #ff8a8a
+            color: var(--danger-text)
         }
 
         .ok-text {
@@ -140,7 +484,7 @@
             flex-wrap: wrap;
             padding: 11px 4px 10px;
             margin-bottom: 6px;
-            background: linear-gradient(180deg, rgba(10, 14, 19, .96) 62%, rgba(10, 14, 19, 0));
+            background: var(--topbar-bg);
             backdrop-filter: blur(6px);
         }
 
@@ -227,12 +571,12 @@
         }
 
         .panel {
-            background: linear-gradient(180deg, rgba(255, 255, 255, .022), rgba(255, 255, 255, 0) 42%), var(--panel);
+            background: var(--panel-bg);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 13px 15px 14px;
             min-width: 0;
-            box-shadow: 0 1px 0 rgba(255, 255, 255, .02) inset;
+            box-shadow: var(--panel-shadow);
         }
 
         .panel-head {
@@ -267,12 +611,12 @@
         }
 
         .danger-zone {
-            border-color: #4a2326;
-            background: linear-gradient(180deg, rgba(229, 72, 77, .06), rgba(255, 255, 255, 0) 46%), var(--panel)
+            border-color: var(--danger-zone-border);
+            background: var(--danger-zone-bg)
         }
 
         .danger-zone .panel-head h2 {
-            color: #ffb3b5
+            color: var(--danger-soft-text)
         }
 
         /* ------------------------------------------------------------------ 组件：按钮 */
@@ -284,7 +628,7 @@
             padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid var(--border-2);
-            background: linear-gradient(180deg, #1a2635, #141c27);
+            background: var(--btn-bg);
             color: var(--text);
             cursor: pointer;
             white-space: nowrap;
@@ -294,7 +638,7 @@
 
         .btn:hover:not(:disabled) {
             filter: brightness(1.18);
-            border-color: #3c5671
+            border-color: var(--btn-hover-border)
         }
 
         .btn:active:not(:disabled) {
@@ -348,7 +692,7 @@
         }
 
         .btn-ghost:hover:not(:disabled) {
-            background: rgba(255, 255, 255, .045)
+            background: var(--ghost-hover)
         }
 
         .btn-sm {
@@ -419,7 +763,7 @@
             height: 7px;
             border-radius: 50%;
             background: var(--dim);
-            box-shadow: 0 0 0 2px rgba(255, 255, 255, .04)
+            box-shadow: 0 0 0 2px var(--dot-halo)
         }
 
         .pill.is-ok .dot {
@@ -438,9 +782,9 @@
         }
 
         .pill.is-session {
-            border-color: #6b4a12;
-            background: #2a210f;
-            color: #ffd98a
+            border-color: var(--session-border);
+            background: var(--session-bg);
+            color: var(--session-text)
         }
 
         .pill-ghost {
@@ -461,33 +805,33 @@
             border-radius: 5px;
             font-size: 11px;
             border: 1px solid var(--border-2);
-            background: rgba(255, 255, 255, .03);
+            background: var(--badge-bg);
             color: var(--text-2);
             white-space: nowrap
         }
 
         .badge-ok {
-            color: #9ff5df;
-            border-color: #1c6d59;
-            background: rgba(45, 212, 167, .10)
+            color: var(--ok-soft-text);
+            border-color: var(--ok-soft-border);
+            background: var(--ok-soft-bg)
         }
 
         .badge-warn {
-            color: #ffdf9a;
-            border-color: #7a5c17;
-            background: rgba(240, 180, 41, .12)
+            color: var(--warn-soft-text);
+            border-color: var(--warn-soft-border);
+            background: var(--warn-soft-bg)
         }
 
         .badge-danger {
-            color: #ffb3b5;
-            border-color: #7c2b2f;
-            background: rgba(229, 72, 77, .14)
+            color: var(--danger-soft-text);
+            border-color: var(--danger-soft-border);
+            background: var(--danger-soft-bg)
         }
 
         .badge-info {
-            color: #b9d3ff;
-            border-color: #2b5a96;
-            background: rgba(77, 141, 255, .12)
+            color: var(--info-soft-text);
+            border-color: var(--info-soft-border);
+            background: var(--info-soft-bg)
         }
 
         .badge-muted {
@@ -541,21 +885,21 @@
         }
 
         .banner-error {
-            border-color: #6d2a2d;
-            background: rgba(229, 72, 77, .10);
-            color: #ffc2c4
+            border-color: var(--danger-soft-border);
+            background: var(--danger-soft-bg);
+            color: var(--danger-soft-text)
         }
 
         .banner-warn {
-            border-color: #6b521a;
-            background: rgba(240, 180, 41, .09);
-            color: #ffe1a3
+            border-color: var(--warn-soft-border);
+            background: var(--warn-soft-bg);
+            color: var(--warn-soft-text)
         }
 
         .banner-info {
-            border-color: #274b7c;
-            background: rgba(77, 141, 255, .08);
-            color: #c4d9ff
+            border-color: var(--info-soft-border);
+            background: var(--info-soft-bg);
+            color: var(--info-soft-text)
         }
 
         /* ------------------------------------------------------------------ 组件：表单 */
@@ -577,7 +921,7 @@
             padding: 0 8px;
             border-radius: 7px;
             border: 1px solid var(--border-2);
-            background: var(--panel-3);
+            background: var(--input-bg);
             color: var(--text);
             min-width: 0;
             outline: none;
@@ -589,7 +933,7 @@
         }
 
         .field input::placeholder {
-            color: #5d6f83
+            color: var(--placeholder)
         }
 
         .field-grow {
@@ -666,7 +1010,8 @@
             padding: 0 6px;
             border-radius: 6px;
             border: 1px solid var(--border-2);
-            background: var(--panel-3)
+            background: var(--input-bg);
+            color: var(--text)
         }
 
         input[type=number]::-webkit-outer-spin-button,
@@ -685,7 +1030,7 @@
             border: 1px solid var(--border);
             border-radius: 9px;
             padding: 9px 11px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, 0) 70%), var(--panel-3);
+            background: var(--panel-3);
             min-width: 0;
         }
 
@@ -733,6 +1078,8 @@
 
         .table-scroll {
             overflow: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll-thumb) transparent;
             border: 1px solid var(--border);
             border-radius: 9px;
             background: var(--panel-3)
@@ -740,6 +1087,22 @@
 
         .table-scroll.tall {
             max-height: 460px
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 10px;
+            height: 10px
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: var(--scroll-thumb);
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: content-box
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: transparent
         }
 
         .table-scroll.mid {
@@ -755,7 +1118,7 @@
 
         table.data th, table.data td {
             padding: 6px 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, .055);
+            border-bottom: 1px solid var(--row-border);
             text-align: left;
             white-space: nowrap;
             vertical-align: middle
@@ -765,8 +1128,8 @@
             position: sticky;
             top: 0;
             z-index: 2;
-            background: #17222f;
-            color: #a9bacd;
+            background: var(--table-head-bg);
+            color: var(--table-head-text);
             font-weight: 600;
             font-size: 11px;
             border-bottom: 1px solid var(--border-2);
@@ -779,7 +1142,7 @@
         }
 
         table.data thead th.sortable:hover {
-            color: #fff
+            color: var(--strong-text)
         }
 
         table.data thead th .sort-ind {
@@ -788,15 +1151,15 @@
         }
 
         table.data tbody tr:nth-child(even) {
-            background: rgba(255, 255, 255, .014)
+            background: var(--row-even-bg)
         }
 
         table.data tbody tr:hover {
-            background: rgba(77, 141, 255, .07)
+            background: var(--row-hover-bg)
         }
 
         table.data tbody tr.is-selected {
-            background: rgba(77, 141, 255, .11)
+            background: var(--row-selected-bg)
         }
 
         table.data tbody tr.is-blocked {
@@ -843,7 +1206,7 @@
         }
 
         .cell-strong {
-            color: #eaf2ff;
+            color: var(--strong-text);
             font-weight: 600
         }
 
@@ -870,14 +1233,14 @@
         }
 
         .link-cell {
-            color: #93c0ff;
+            color: var(--link);
             cursor: pointer;
             text-decoration: underline;
             text-underline-offset: 2px
         }
 
         .link-cell:hover {
-            color: #c3ddff
+            color: var(--link-hover)
         }
 
         .checkbox-cell {
@@ -991,7 +1354,7 @@
             color: var(--muted);
             padding: 5px 9px;
             border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, .02);
+            background: var(--book-head-bg);
             font-weight: 600;
             display: flex;
             justify-content: space-between
@@ -1006,7 +1369,7 @@
 
         .book td {
             padding: 3px 9px;
-            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            border-bottom: 1px solid var(--row-border);
             white-space: nowrap
         }
 
@@ -1031,7 +1394,7 @@
         }
 
         .book tr.best td {
-            background: rgba(77, 141, 255, .10)
+            background: var(--row-selected-bg)
         }
 
         .book tr.clickable {
@@ -1039,15 +1402,15 @@
         }
 
         .book tr.clickable:hover td {
-            background: rgba(255, 255, 255, .06)
+            background: var(--row-hover-bg)
         }
 
         .book-sell .px {
-            color: #ffb1b1
+            color: var(--quote-sell)
         }
 
         .book-buy .px {
-            color: #a8f0c8
+            color: var(--quote-buy)
         }
 
         .quote-note {
@@ -1088,7 +1451,7 @@
             border-radius: 9px;
             padding: 8px 10px;
             margin-bottom: 10px;
-            background: rgba(77, 141, 255, .045);
+            background: var(--contract-summary-bg);
             font-size: 12px;
             color: var(--text-2);
             min-height: 44px;
@@ -1096,7 +1459,7 @@
 
         .contract-summary .cs-title {
             font-size: 13px;
-            color: #eaf2ff;
+            color: var(--strong-text);
             font-weight: 600
         }
 
@@ -1151,7 +1514,7 @@
         }
 
         .mt-grid .mt-item {
-            background: rgba(255, 255, 255, .025);
+            background: var(--mt-item-bg);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 5px 7px
@@ -1175,21 +1538,21 @@
         }
 
         .mt-limit b {
-            color: #fff;
+            color: var(--strong-text);
             font-family: var(--mono)
         }
 
         .max-trade.is-ok {
-            border-color: #1f5f4e
+            border-color: var(--max-trade-ok-border)
         }
 
         .max-trade.is-err {
-            border-color: #6d2a2d;
-            background: rgba(229, 72, 77, .06)
+            border-color: var(--max-trade-err-border);
+            background: var(--danger-soft-bg)
         }
 
         .max-trade.is-loading {
-            border-color: #5c4a1a
+            border-color: var(--max-trade-loading-border)
         }
 
         /* ------------------------------------------------------------------ 组件：统计行 / 快捷交易 */
@@ -1220,9 +1583,9 @@
 
         .risk-list {
             font-size: 11.5px;
-            color: #ffc9cb;
-            background: rgba(229, 72, 77, .07);
-            border: 1px solid #58262a;
+            color: var(--danger-soft-text);
+            background: var(--danger-soft-bg);
+            border: 1px solid var(--danger-soft-border);
             border-radius: 8px;
             padding: 7px 9px;
             margin-top: 9px;
@@ -1239,18 +1602,18 @@
         }
 
         .blocked-note {
-            border: 1px solid #6d2a2d;
-            background: rgba(229, 72, 77, .08);
+            border: 1px solid var(--danger-soft-border);
+            background: var(--danger-soft-bg);
             border-radius: 8px;
             padding: 8px 10px;
             font-size: 11.5px;
-            color: #ffc2c4;
+            color: var(--danger-soft-text);
             line-height: 1.55;
             margin-top: 8px
         }
 
         .blocked-note b {
-            color: #fff
+            color: var(--strong-text)
         }
 
         .ratio-block {
@@ -1268,7 +1631,7 @@
         .ratio-block h3 {
             font-size: 13px;
             margin-bottom: 7px;
-            color: #e9f1fb;
+            color: var(--strong-text);
             display: flex;
             align-items: center;
             gap: 7px
@@ -1292,7 +1655,7 @@
 
         .ratio-preview b {
             font-family: var(--mono);
-            color: #fff;
+            color: var(--strong-text);
             font-weight: 600
         }
 
@@ -1312,7 +1675,7 @@
 
         .quick-sell-head h3 {
             font-size: 13px;
-            color: #e9f1fb
+            color: var(--strong-text)
         }
 
         .radio-row {
@@ -1363,10 +1726,10 @@
         }
 
         .tab.active {
-            color: #fff;
-            background: var(--panel-2);
+            color: var(--tab-active-text);
+            background: var(--tab-active-bg);
             border-color: var(--border-2);
-            border-bottom: 1px solid var(--panel-2)
+            border-bottom: 1px solid var(--tab-active-bg)
         }
 
         .tab .count {
@@ -1397,39 +1760,39 @@
         }
 
         .log-success {
-            color: #9ff5df;
-            border-color: #1c6d59;
-            background: rgba(45, 212, 167, .10)
+            color: var(--ok-soft-text);
+            border-color: var(--ok-soft-border);
+            background: var(--ok-soft-bg)
         }
 
         .log-error {
-            color: #ffb3b5;
-            border-color: #7c2b2f;
-            background: rgba(229, 72, 77, .14)
+            color: var(--danger-soft-text);
+            border-color: var(--danger-soft-border);
+            background: var(--danger-soft-bg)
         }
 
         .log-pending {
-            color: #ffdf9a;
-            border-color: #7a5c17;
-            background: rgba(240, 180, 41, .12)
+            color: var(--warn-soft-text);
+            border-color: var(--warn-soft-border);
+            background: var(--warn-soft-bg)
         }
 
         .log-warn {
-            color: #ffd0a3;
-            border-color: #7a4a17;
-            background: rgba(240, 140, 41, .12)
+            color: var(--orange-soft-text);
+            border-color: var(--orange-soft-border);
+            background: var(--orange-soft-bg)
         }
 
         .log-blocked {
-            color: #d9c2ff;
-            border-color: #4b3a75;
-            background: rgba(140, 100, 240, .14)
+            color: var(--purple-soft-text);
+            border-color: var(--purple-soft-border);
+            background: var(--purple-soft-bg)
         }
 
         .log-info {
-            color: #b9d3ff;
-            border-color: #2b5a96;
-            background: rgba(77, 141, 255, .12)
+            color: var(--info-soft-text);
+            border-color: var(--info-soft-border);
+            background: var(--info-soft-bg)
         }
 
         /* ------------------------------------------------------------------ 组件：说明 / 文档 */
@@ -1445,7 +1808,7 @@
             padding: 10px 2px;
             font-size: 13px;
             font-weight: 600;
-            color: #dbe7f5;
+            color: var(--strong-text);
             list-style: none
         }
 
@@ -1489,10 +1852,10 @@
         .doc-body code {
             font-family: var(--mono);
             font-size: 11px;
-            background: rgba(255, 255, 255, .05);
+            background: var(--code-bg);
             padding: 1px 5px;
             border-radius: 4px;
-            color: #cfdcee
+            color: var(--code-text)
         }
 
         .doc-body .kv {
@@ -1523,27 +1886,27 @@
         }
 
         .sev-p0 {
-            color: #ffb3b5;
-            border-color: #7c2b2f;
-            background: rgba(229, 72, 77, .16)
+            color: var(--danger-soft-text);
+            border-color: var(--danger-soft-border);
+            background: var(--danger-soft-bg)
         }
 
         .sev-p1 {
-            color: #ffdf9a;
-            border-color: #7a5c17;
-            background: rgba(240, 180, 41, .14)
+            color: var(--warn-soft-text);
+            border-color: var(--warn-soft-border);
+            background: var(--warn-soft-bg)
         }
 
         .sev-p2 {
-            color: #b9d3ff;
-            border-color: #2b5a96;
-            background: rgba(77, 141, 255, .12)
+            color: var(--info-soft-text);
+            border-color: var(--info-soft-border);
+            background: var(--info-soft-bg)
         }
 
         .sev-new {
-            color: #d9c2ff;
-            border-color: #4b3a75;
-            background: rgba(140, 100, 240, .14)
+            color: var(--purple-soft-text);
+            border-color: var(--purple-soft-border);
+            background: var(--purple-soft-bg)
         }
 
         /* ------------------------------------------------------------------ 组件：Toast / Dialog */
@@ -1639,7 +2002,7 @@
             padding: 0;
             width: min(760px, 94vw);
             max-height: 88vh;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, .7);
+            box-shadow: var(--dialog-shadow);
         }
 
         dialog.modal.modal-wide {
@@ -1647,7 +2010,7 @@
         }
 
         dialog.modal::backdrop {
-            background: rgba(2, 5, 10, .74);
+            background: var(--backdrop);
             backdrop-filter: blur(2px)
         }
 
@@ -1704,7 +2067,7 @@
 
         .confirm-rows td {
             padding: 5px 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, .06);
+            border-bottom: 1px solid var(--row-border);
             vertical-align: top
         }
 
@@ -1720,9 +2083,9 @@
         }
 
         .confirm-warning {
-            border: 1px solid #6d2a2d;
-            background: rgba(229, 72, 77, .10);
-            color: #ffc9cb;
+            border: 1px solid var(--danger-soft-border);
+            background: var(--danger-soft-bg);
+            color: var(--danger-soft-text);
             border-radius: 8px;
             padding: 9px 11px;
             font-size: 11.5px;
@@ -1731,17 +2094,17 @@
         }
 
         .confirm-warning b {
-            color: #fff
+            color: var(--strong-text)
         }
 
         .confirm-text input {
             width: 100%;
             height: 32px;
             border-radius: 7px;
-            border: 1px solid #7c2b2f;
-            background: #0e141d;
+            border: 1px solid var(--danger-soft-border);
+            background: var(--input-bg);
             padding: 0 9px;
-            color: #fff;
+            color: var(--text);
             font-family: var(--mono);
             letter-spacing: .08em;
             margin-top: 6px
@@ -1753,7 +2116,7 @@
             align-items: flex-start;
             margin-top: 10px;
             font-size: 11.5px;
-            color: #ffd9da;
+            color: var(--danger-soft-text);
             line-height: 1.5
         }
 
@@ -1765,7 +2128,7 @@
         }
 
         .confirm-error {
-            color: #ff8a8a;
+            color: var(--danger-text);
             font-size: 11.5px;
             margin-top: 6px;
             min-height: 16px
@@ -1802,19 +2165,19 @@
             border-radius: 999px;
             border: 1px solid var(--border-2);
             color: var(--muted);
-            background: rgba(255, 255, 255, .02)
+            background: var(--badge-bg)
         }
 
         .flow-chip.active {
-            color: #fff;
+            color: var(--strong-text);
             border-color: var(--accent);
-            background: rgba(77, 141, 255, .14)
+            background: var(--info-soft-bg)
         }
 
         .flow-chip.done {
-            color: #9ff5df;
-            border-color: #1c6d59;
-            background: rgba(45, 212, 167, .10)
+            color: var(--ok-soft-text);
+            border-color: var(--ok-soft-border);
+            background: var(--ok-soft-bg)
         }
 
         /* ------------------------------------------------------------------ 响应式 */
@@ -1924,6 +2287,16 @@
             <span class="pill is-load" id="busy-pill" hidden><span class="dot"></span><span id="busy-text">处理中</span></span>
         </div>
         <div class="topbar-actions">
+            <label class="field-inline">主题
+                <select id="theme-select" title="页面主题：明亮（默认）/ 暗黑 / 午夜蓝 / 护眼 / 跟随系统"
+                        aria-label="页面主题">
+                    <option value="light">明亮</option>
+                    <option value="dark">暗黑</option>
+                    <option value="midnight">午夜蓝</option>
+                    <option value="eye">护眼</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </label>
             <label class="field-inline">轮询
                 <select id="sel-poll" title="仅在页面可见且已选中合约时轮询行情快照">
                     <option value="0">关闭</option>
@@ -2399,7 +2772,7 @@
             <div class="panel-head">
                 <h2 id="log-title">操作记录 · API 反馈</h2>
                 <div class="panel-actions">
-                    <span class="muted">仅保留本次页面会话，不写入任何本地存储</span>
+                    <span class="muted">仅当前会话；仅主题偏好持久化，不含交易数据/凭据</span>
                     <button class="btn btn-ghost btn-sm" id="btn-clear-log" type="button">清空记录</button>
                 </div>
             </div>
@@ -2444,7 +2817,7 @@
 <div id="toasts" aria-live="polite" aria-atomic="false"></div>
 
 <noscript>
-    <div style="padding:20px;color:#ffb3b5">本页面需要启用 JavaScript 才能连接真实交易 API。</div>
+    <div style="padding:20px;color:#c62828">本页面需要启用 JavaScript 才能连接真实交易 API。</div>
 </noscript>
 
 <script>
@@ -3875,8 +4248,8 @@
             badge.textContent = '校验失败';
             replaceNode(body,
                 el('p', {
-                    class: 'hint',
-                    style: 'margin-top:6px;color:#ffb3b5',
+                    class: 'hint danger-text',
+                    style: 'margin-top:6px',
                     text: `校验失败：${ms.error || '未知错误'}`
                 }),
                 el('p', {class: 'hint', text: '请求失败时禁止提交委托，不会用前端本地资金/持仓替代后端最大数量。'}));
@@ -6852,6 +7225,66 @@
         document.addEventListener('visibilitychange', onVisibilityChange);
     }
 
+    /* ------------------------------------------------------------------ 29. 主题切换 */
+    const THEME_KEY = 'tdx.option.theme';
+    const THEME_MODES = ['light', 'dark', 'midnight', 'eye', 'auto'];
+    const THEME_LABELS = {light: '明亮', dark: '暗黑', midnight: '午夜蓝', eye: '护眼', auto: '跟随系统'};
+
+    function currentThemeMode() {
+        const attr = document.documentElement.getAttribute('data-theme-mode');
+        return THEME_MODES.indexOf(attr) >= 0 ? attr : 'light';
+    }
+
+    function resolveThemeMode(mode) {
+        if (mode !== 'auto') return mode;
+        try {
+            return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        } catch (err) {
+            return 'light';
+        }
+    }
+
+    function applyTheme(mode, options) {
+        const opts = options || {};
+        const next = THEME_MODES.indexOf(mode) >= 0 ? mode : 'light';
+        const resolved = resolveThemeMode(next);
+        const root = document.documentElement;
+        root.setAttribute('data-theme', resolved);
+        root.setAttribute('data-theme-mode', next);
+        root.style.colorScheme = (resolved === 'light' || resolved === 'eye') ? 'light' : 'dark';
+        if (opts.persist !== false) {
+            try {
+                localStorage.setItem(THEME_KEY, next);
+            } catch (err) {
+                /* 隐私模式 / 存储被禁用时忽略，仅当前会话生效 */
+            }
+        }
+        const sel = $('#theme-select');
+        if (sel && sel.value !== next) sel.value = next;
+    }
+
+    function initTheme() {
+        const sel = $('#theme-select');
+        const mode = currentThemeMode();
+        if (sel) {
+            sel.value = mode;
+            sel.addEventListener('change', () => {
+                applyTheme(sel.value);
+                toast('info', `主题已切换：${THEME_LABELS[sel.value] || sel.value}`, 1800);
+            });
+        }
+        const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        if (mq) {
+            const onSystemSchemeChange = () => {
+                if (currentThemeMode() === 'auto') applyTheme('auto', {persist: false});
+            };
+            if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onSystemSchemeChange);
+            else if (typeof mq.addListener === 'function') mq.addListener(onSystemSchemeChange);
+        }
+        applyTheme(mode, {persist: false});
+    }
+
+
     function loadInitial() {
         state.apiStatus = 'loading';
         state.contracts = null;
@@ -6885,6 +7318,8 @@
         if ($('#order-trade-type')) $('#order-trade-type').value = 'BUY_OPEN';
         if ($('#order-price-type')) $('#order-price-type').value = 'LMT';
         if ($('#qo-type')) $('#qo-type').value = 'BUY_OPEN';
+
+        initTheme();
 
         const today = todayStr();
         if ($('#his-end')) $('#his-end').value = today;
