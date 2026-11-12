@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
     <title>ETF 期权交易工作台 | tdx-quant</title>
+    <!-- 项目共享环境/API 配置：提供 window.APP_CONFIG / window.ApiUtils（ENV、API_HOST、buildUrl） -->
+    <script src="../js/config.js"></script>
     <style>
         /* =====================================================================
-   tdx-quant · ETF 期权真实交易前端（原生 HTML5 + CSS + JS 单文件）
-   设计目标：专业桌面交易终端；高信息密度；危险操作强视觉隔离。
-   注意：本文件不引用任何外部字体 / 脚本 / 样式 / CDN。
-   ===================================================================== */
+           tdx-quant · ETF 期权真实交易前端（原生 HTML5 + CSS + JS 单文件）
+           设计目标：专业桌面交易终端；高信息密度；危险操作强视觉隔离。
+           注意：不引用任何外部字体 / CDN；仅引用项目内共享的 ../js/config.js（环境与 API 地址）。
+        ===================================================================== */
 
         :root {
             --bg: #0a0e13;
@@ -1908,13 +1910,15 @@
             <span class="brand-mark">TDX</span>
             <div>
                 <div class="brand-title">ETF 期权交易工作台</div>
-                <div class="brand-sub">沪深 ETF 期权 · 真实后端 API · 同源调用 · 无模拟数据</div>
+                <div class="brand-sub">沪深 ETF 期权 · 真实后端 API · 环境由 config.js 配置 · 无模拟数据</div>
             </div>
         </div>
         <div class="topbar-status">
       <span class="pill is-load" id="api-status-pill">
         <span class="dot"></span><span id="api-status-text">API 检查中</span>
       </span>
+            <span class="pill pill-ghost" id="env-pill" title="环境与 API 地址来自 static/js/config.js">环境 <b
+                    id="env-name">—</b></span>
             <span class="pill pill-ghost">最近刷新 <b id="last-refresh">—</b></span>
             <span class="pill pill-ghost">行情 <b id="quote-poll-label">3 秒</b></span>
             <span class="pill is-load" id="busy-pill" hidden><span class="dot"></span><span id="busy-text">处理中</span></span>
@@ -2419,7 +2423,9 @@
         </section>
 
         <footer class="hint" style="text-align:center;padding:6px 0 0">
-            tdx-quant ETF 期权交易工作台 · 所有数据来自本项目后端 <code class="mono">/api/option/trade/**</code> ·
+            tdx-quant ETF 期权交易工作台 · 所有数据来自 <code class="mono" id="api-base-label"
+                                                              style="word-break:break-all">/api/option/trade</code>
+            （环境 <b id="footer-env">—</b>）·
             浏览器不接触、不保存任何券商凭据 · 页面初始化与轮询绝不调用任何快捷交易接口
         </footer>
     </main>
@@ -2444,7 +2450,7 @@
 <script>
     /* =====================================================================================
  * tdx-quant · ETF 期权交易工作台
- * 单文件原生实现；不引用任何外部依赖。
+ * 单 HTML 页面（原生实现）；仅额外引入项目共享的 static/js/config.js 以读取环境与 API 地址。
  *
  * 事实依据（已按本仓库当前源码 + 运行中后端实测核对）：
  *   - Spring Boot 4.1 / Jackson 3 的 JSON 绑定使用「字段声明名且大小写敏感」。
@@ -2458,8 +2464,38 @@
     'use strict';
 
     /* ------------------------------------------------------------------ 1. 配置 */
+    /* 1.1 环境与 API 地址：优先读取 static/js/config.js 的 ENV / API_HOST / ApiUtils */
+    const RUNTIME_CONFIG = (function resolveRuntimeConfig() {
+        const apiUtils = window.ApiUtils;
+        const appConfig = window.APP_CONFIG || {};
+        const env = (apiUtils && typeof apiUtils.getEnv === 'function')
+            ? String(apiUtils.getEnv() || 'unknown')
+            : 'same-origin';
+        const apiHost = appConfig.API_HOST || window.location.host;
+        let apiBase = '/api/option/trade';
+        let source = '同源回退';
+        if (apiUtils && typeof apiUtils.buildUrl === 'function') {
+            try {
+                const built = apiUtils.buildUrl('/api/option/trade');
+                const isHttpUrl = typeof built === 'string' && /^https?:\/\/[^/]+/i.test(built) && built.indexOf('undefined') < 0;
+                const noMixedContent = window.location.protocol !== 'https:' || /^https:\/\//i.test(built || '');
+                if (isHttpUrl && noMixedContent) {
+                    apiBase = built;
+                    source = 'static/js/config.js';
+                }
+            } catch (err) {
+                apiBase = '/api/option/trade';
+                source = '同源回退';
+            }
+        }
+        return {env, apiHost, apiBase, source};
+    })();
+
     const CONFIG = Object.freeze({
-        API_BASE: '/api/option/trade',
+        API_BASE: RUNTIME_CONFIG.apiBase,
+        ENV: RUNTIME_CONFIG.env,
+        API_HOST: RUNTIME_CONFIG.apiHost,
+        CONFIG_SOURCE: RUNTIME_CONFIG.source,
         READ_TIMEOUT_MS: 20000,
         ACCOUNT_TIMEOUT_MS: 25000,
         ORDER_LIST_TIMEOUT_MS: 35000,
@@ -3409,6 +3445,20 @@
         if (last) last.textContent = state.lastRefreshAt ? fmt.clock(state.lastRefreshAt) : '—';
         const pollLabel = $('#quote-poll-label');
         if (pollLabel) pollLabel.textContent = state.pollOn ? `${Math.round(state.pollMs / 1000)} 秒` : '关闭';
+
+        const envName = $('#env-name');
+        if (envName) envName.textContent = CONFIG.ENV || 'same-origin';
+        const envPill = $('#env-pill');
+        if (envPill) {
+            envPill.title = `环境：${CONFIG.ENV}\nAPI：${CONFIG.API_BASE}\n配置来源：${CONFIG.CONFIG_SOURCE}`;
+        }
+        const footerEnv = $('#footer-env');
+        if (footerEnv) footerEnv.textContent = CONFIG.ENV || 'same-origin';
+        const apiBaseLabel = $('#api-base-label');
+        if (apiBaseLabel) {
+            apiBaseLabel.textContent = CONFIG.API_BASE;
+            apiBaseLabel.title = `环境 ${CONFIG.ENV} · 来源 ${CONFIG.CONFIG_SOURCE}`;
+        }
     }
 
     function bannerButton(label, handler, cls) {
@@ -4657,7 +4707,7 @@
             replaceNode(coverage,
                 el('p', {
                     class: 'hint',
-                    text: 'API Base：/api/option/trade（同源）。以下为 16 个 Controller 有效路由与页面入口的逐项映射。'
+                    text: `API Base：${CONFIG.API_BASE}（环境 ${CONFIG.ENV} · 来源 ${CONFIG.CONFIG_SOURCE}）。以下为 16 个 Controller 有效路由与页面入口的逐项映射。`
                 }),
                 el('div', {class: 'table-scroll'}, el('table', {class: 'data'},
                     el('thead', {}, el('tr', {},
