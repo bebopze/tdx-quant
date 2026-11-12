@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -11,6 +10,7 @@ import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.DataService;
+import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +82,10 @@ public class DataServiceImpl implements DataService {
         EastMoneyTradeAPI.refreshEastmoneySession();
 
 
+        // [期权模块] 独立登录模块   ->   会话 初始化
+        EastMoneyLogin.initOptionSession(validatekey, cookie);
+
+
         // 写入DB
         if (save2DB) {
             ConfAccountDO entity = new ConfAccountDO();
@@ -101,8 +105,8 @@ public class DataServiceImpl implements DataService {
             QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
             log.info("application-{}.yml     >>>     session 有效", activeProfile);
 
-        } catch (BizException e) {
-            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMsg());
+        } catch (Exception e) {
+            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
 
             ConfAccountDO entity = confAccountService.getById(1L);
             eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);

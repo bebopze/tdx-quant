@@ -4,17 +4,21 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.bebopze.tdx.quant.llm.CaptchaRecognizer;
 import com.bebopze.tdx.quant.service.DataService;
+import com.google.common.collect.Maps;
 import jakarta.annotation.PostConstruct;
 import kong.unirest.core.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import javax.crypto.Cipher;
 import java.nio.charset.StandardCharsets;
@@ -302,6 +306,70 @@ public class EastMoneyLogin {
         // [0, 1)
         return ThreadLocalRandom.current().nextDouble();
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * [期权模块] 独立登录模块   ->   会话 初始化          - 期权交易模块  https://jywg.18.cn/StockOptionTrade/StockLock
+     *
+     *
+     *
+     * <p>
+     * 东方财富的 [期权交易] 是 独立登录模块：
+     *
+     * -    常规  /Login/Authentication  登录成功后   ->   仅 [股票交易] 模块   Session 已登录
+     *
+     *
+     * -    [期权交易] 模块 Session 未登录   ->   此时直接调用 期权API：/StockOptionTrade/**
+     * -                                       会返回：{"Status":-1,"Message":"CODE:309190,MSG:账号状态异常"}
+     *
+     *
+     *
+     * -    [期权交易] 模块 会话初始化   ->   调用1次   https://jywg.18.cn/StockOptionTrade/CheckStatusV3?validatekey=
+     *
+     *
+     * -        网页端点击 [股票期权] 模块时，会先调用 /StockOptionTrade/CheckStatusV3（必要时再走 GGQQLogin）
+     *
+     *
+     * -        自动登录脚本（EastMoneyLogin / EastMoneyChromeLogin）  ->   必须   调用此接口   ->   激活 [期权模块] 登录会话
+     *
+     * -                                                                 否则   validatekey / cookie   ->   无法访问 期权API
+     *
+     *
+     * -
+     *
+     * @param validatekey 登录后获取的 validatekey
+     * @param cookie      登录后获取的 cookie
+     */
+    public static void initOptionSession(String validatekey, String cookie) {
+        if (StringUtils.isBlank(validatekey) || StringUtils.isBlank(cookie)) {
+            log.warn("[期权模块] 会话初始化 - 跳过     >>>     validatekey/cookie 为空");
+            return;
+        }
+
+
+        String url = "https://jywg.18.cn/StockOptionTrade/CheckStatusV3?validatekey=" + validatekey;
+
+
+        Map<String, String> headers = Maps.newHashMap();
+        headers.put("Cookie", cookie);
+
+
+        String result = HttpUtil.doPost(url, null, headers);
+
+
+        JSONObject resultJson = JSON.parseObject(result, JSONObject.class);
+        Assert.isTrue(resultJson.getInteger("Status") == 0,
+                      "[期权模块] 会话初始化 - fail     >>>     期权 API 可能返回 309190，请人工完成股票期权登录！   result : " + result);
+
+
+        log.info("[期权模块] 会话初始化 - suc     >>>     result : {}", result);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
 }

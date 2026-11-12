@@ -40,12 +40,12 @@ import java.util.Objects;
 public class EastMoneyTradeAPI {
 
 
-    /*private*/ static /*final*/ String SID = PropsUtil.getSid();
+    /*private*/ static volatile String SID = PropsUtil.getSid();
 
-    /*private*/ static /*final*/ String COOKIE = PropsUtil.getCookie();
+    /*private*/ static volatile String COOKIE = PropsUtil.getCookie();
 
 
-    /*private*/ static final Map<String, String> headers = Maps.newHashMap();
+    /*private*/ static final Map<String, String> headers = Maps.newConcurrentMap();
 
     static {
         headers.put("Cookie", COOKIE);
