@@ -130,15 +130,15 @@ public class TaskController {
 
 
     /**
-     * refreshEastmoneyCookie__chromeLogin
+     * refreshEastmoneyCookie
      *
      * @return
      */
-    @GetMapping(value = "/refreshEastmoneyCookie__chromeLogin")
-    public Result<Void> refreshEastmoneyCookie__chromeLogin(@Schema(description = "登录方案（1-API登录；2-Chrome登录；）", example = "2")
-                                                            @RequestParam(required = false, defaultValue = "2") Integer loginType) {
+    @GetMapping(value = "/refreshEastmoneyCookie")
+    public Result<Void> refreshEastmoneyCookie(@Schema(description = "登录方案（1-API登录；2-Chrome登录；）", example = "1")
+                                               @RequestParam(required = false, defaultValue = "1") Integer loginType) {
 
-        tdxTask.refreshEastmoneyCookie__chromeLogin(loginType);
+        tdxTask.refreshEastmoneyCookie(loginType);
         return Result.SUC();
     }
 

@@ -339,7 +339,7 @@ public class TdxTask {
     @Scheduled(cron = "0 15 0/1 ? * *", zone = "Asia/Shanghai")
 //    @Scheduled(fixedRateString = "PT1H", zone = "Asia/Shanghai")
 //    @Scheduled(cron = "0/15 * * * * ? ", zone = "Asia/Shanghai")
-    public void refreshEastmoneyCookie() {
+    public void refreshEastmoneyCookie__chrome() {
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start");
 
 
@@ -363,14 +363,14 @@ public class TdxTask {
     @Async
     @TotalTime
     @Scheduled(cron = "0 17 0/2 ? * *", zone = "Asia/Shanghai")
-    public void refreshEastmoneyCookie__chromeLogin() {
-        refreshEastmoneyCookie__chromeLogin(2);
+    public void refreshEastmoneyCookie() {
+        refreshEastmoneyCookie(1);
     }
 
 
     @Async
     @TotalTime
-    public void refreshEastmoneyCookie__chromeLogin(int loginType) {
+    public void refreshEastmoneyCookie(int loginType) {
         log.info("---------------------------- 任务 [refresh cookie - 交易账户 Cookie Expires]   执行 start     >>>     loginType : {}", loginType);
 
 
