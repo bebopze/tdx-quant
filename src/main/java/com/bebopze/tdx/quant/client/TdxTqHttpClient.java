@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -84,12 +85,21 @@ public class TdxTqHttpClient {
                                                .asString();
 
 
+        // ----------------------
+
+
         int status = response.getStatus();
-        Assert.isTrue(status == 200, String.format("TdxTqHttpClient.call - [通达信TQ] 服务不可用     >>>     status : %s , method : %s , params : %s , result : %s , time : %s",
-                                                   status, method, GSON.toJson(params), response.getBody(), DateTimeUtil.formatNow2Hms(start)));
+        Assert.isTrue(status == 200, "[通达信TQ] 服务 HTTP 异常: " + response.getStatus());
 
 
-        JSONObject root = JSON.parseObject(response.getBody());
+        String rawBody = response.getBody();
+        Assert.isTrue(StringUtils.isNotBlank(rawBody), "[通达信TQ] 服务未返回数据，请检查 [TQ服务] 是否已开启");
+
+
+        // ----------------------
+
+
+        JSONObject root = JSON.parseObject(rawBody);
         JSONObject result = root.containsKey("result") ? root.getJSONObject("result") : root;
 
 
@@ -121,6 +131,7 @@ public class TdxTqHttpClient {
                 result.getString("message"),
                 "未知错误"
         );
+
         throw new BizException("通达信 TQ 业务异常[" + errorId + "]: " + msg);
     }
 
@@ -131,6 +142,7 @@ public class TdxTqHttpClient {
                 return value;
             }
         }
+
         return null;
     }
 
