@@ -236,6 +236,156 @@
             /* 注意：覆盖 .form-control 的样式需要足够 specificity 或使用 !important (不推荐) */
         }
 
+        /* --- 担保比例警示（分界线：200% / 150% / 130%） --- */
+        #collapseContent .ratio-value {
+            font-weight: 600;
+        }
+
+        #collapseContent .ratio-value.level-safe {
+            border-color: #198754;
+            background-color: #f0fff7;
+            color: #146c43;
+        }
+
+        #collapseContent .ratio-value.level-watch {
+            border-color: #ffc107;
+            background-color: #fffbf0;
+            color: #8a6d00;
+        }
+
+        #collapseContent .ratio-value.level-warn {
+            border-color: #fd7e14;
+            background-color: #fff6ec;
+            color: #a34a00;
+        }
+
+        #collapseContent .ratio-value.level-danger {
+            border-color: #dc3545;
+            background-color: #fff1f2;
+            color: #b02a37;
+        }
+
+        .ratio-warning {
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+
+        .ratio-warning:empty {
+            display: none;
+        }
+
+        .ratio-warning::before {
+            content: '●';
+            margin-right: 3px;
+        }
+
+        .ratio-warning.level-safe {
+            color: #198754;
+        }
+
+        .ratio-warning.level-watch {
+            color: #8a6d00;
+        }
+
+        .ratio-warning.level-warn {
+            color: #a34a00;
+        }
+
+        .ratio-warning.level-danger {
+            color: #b02a37;
+        }
+
+        .guarantee-alert {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .guarantee-alert.level-safe {
+            border-color: #badbcc;
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .guarantee-alert.level-watch {
+            border-color: #ffecb5;
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .guarantee-alert.level-warn {
+            border-color: #fecba1;
+            background-color: #fff3e6;
+            color: #8a4b00;
+        }
+
+        .guarantee-alert.level-danger {
+            border-color: #f5c2c7;
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .guarantee-alert-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .guarantee-badge {
+            border: 1px solid currentColor;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 18px;
+        }
+
+        .guarantee-alert-text {
+            margin-top: 3px;
+        }
+
+        .guarantee-scale {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .guarantee-scale span {
+            opacity: .82;
+        }
+
+        .guarantee-scale span.is-current {
+            opacity: 1;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .guarantee-scale span[data-level="safe"] {
+            color: #198754;
+        }
+
+        .guarantee-scale span[data-level="watch"] {
+            color: #8a6d00;
+        }
+
+        .guarantee-scale span[data-level="warn"] {
+            color: #a34a00;
+        }
+
+        .guarantee-scale span[data-level="danger"] {
+            color: #b02a37;
+        }
+
         /* --- 新增：一键取款 样式优化 --- */
         /* 调整模态框大小和内边距 */
         #quickLowerFinancingModal .modal-dialog {
@@ -490,6 +640,19 @@
             <span class="collapse-btn" onclick="toggleCollapse()">展开/折叠</span>
         </div>
         <div class="card-body collapse-content" id="collapseContent">
+            <div id="guaranteeRatioAlert" class="guarantee-alert d-none" role="alert" aria-live="polite">
+                <div class="guarantee-alert-head">
+                    <span id="guaranteeRatioTitle">担保比例警示</span>
+                    <span id="guaranteeRatioBadge" class="guarantee-badge"></span>
+                </div>
+                <div id="guaranteeRatioText" class="guarantee-alert-text"></div>
+                <div class="guarantee-scale" id="guaranteeRatioScale">
+                    <span data-level="safe"><b>≥200%</b> 安全</span>
+                    <span data-level="watch"><b>150%~200%</b> 关注</span>
+                    <span data-level="warn"><b>130%~150%</b> 警戒</span>
+                    <span data-level="danger"><b>&lt;130%</b> 平仓风险</span>
+                </div>
+            </div>
             <form>
                 <div class="row">
                     <div class="col-md-4">
@@ -535,8 +698,12 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-md-4">
-                        <label for="marginRates" class="form-label">维持担保比例</label>
-                        <input type="text" class="form-control" id="marginRates" readonly>
+                        <label for="marginRates"
+                               class="form-label d-flex justify-content-between align-items-center">
+                            <span>维持担保比例</span>
+                            <span id="marginRatesWarning" class="ratio-warning"></span>
+                        </label>
+                        <input type="text" class="form-control ratio-value" id="marginRates" readonly>
                     </div>
                     <div class="col-md-4">
                         <label for="ftotaldebts" class="form-label">融资负债</label>
@@ -549,8 +716,12 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-md-4">
-                        <label for="realrate" class="form-label">实时担保比例</label>
-                        <input type="text" class="form-control" id="realrate" readonly>
+                        <label for="realrate"
+                               class="form-label d-flex justify-content-between align-items-center">
+                            <span>实时担保比例</span>
+                            <span id="realrateWarning" class="ratio-warning"></span>
+                        </label>
+                        <input type="text" class="form-control ratio-value" id="realrate" readonly>
                     </div>
                     <div class="col-md-4">
                         <label for="dtotaldebts" class="form-label">融券负债</label>
@@ -2142,6 +2313,87 @@
     }
 
 
+    // ----------------------------------------- 担保比例警示（分界线：200% / 150% / 130%） ---------------------------------------
+    function guaranteeRatioPct(raw) {
+        if (raw === null || raw === undefined || raw === '') return NaN;
+        const value = Number(raw);
+        return Number.isFinite(value) ? value * 100 : NaN;
+    }
+
+    function guaranteeRatioMeta(percent) {
+        if (!Number.isFinite(percent)) return null;
+        if (percent >= 200) return {key: 'safe', label: '安全', hint: '≥200%'};
+        if (percent >= 150) return {key: 'watch', label: '关注', hint: '低于200%'};
+        if (percent >= 130) return {key: 'warn', label: '警戒', hint: '低于150%'};
+        return {key: 'danger', label: '危险', hint: '低于130%'};
+    }
+
+    function setGuaranteeFieldWarning(inputId, warningId, percent) {
+        const input = document.getElementById(inputId);
+        const warning = document.getElementById(warningId);
+        if (!input || !warning) return;
+
+        input.classList.remove('level-safe', 'level-watch', 'level-warn', 'level-danger');
+        warning.classList.remove('level-safe', 'level-watch', 'level-warn', 'level-danger');
+
+        const meta = guaranteeRatioMeta(percent);
+        if (!meta) {
+            warning.textContent = '';
+            return;
+        }
+        input.classList.add('level-' + meta.key);
+        warning.classList.add('level-' + meta.key);
+        warning.textContent = `${meta.label} · ${meta.hint}`;
+    }
+
+    function renderGuaranteeRatioWarning(marginRates, realRate) {
+        const marginPct = guaranteeRatioPct(marginRates);
+        const realPct = guaranteeRatioPct(realRate);
+
+        setGuaranteeFieldWarning('marginRates', 'marginRatesWarning', marginPct);
+        setGuaranteeFieldWarning('realrate', 'realrateWarning', realPct);
+
+        const alert = document.getElementById('guaranteeRatioAlert');
+        const title = document.getElementById('guaranteeRatioTitle');
+        const badge = document.getElementById('guaranteeRatioBadge');
+        const text = document.getElementById('guaranteeRatioText');
+        if (!alert || !title || !badge || !text) return;
+
+        const candidates = [];
+        if (Number.isFinite(marginPct)) candidates.push({name: '维持担保比例', pct: marginPct});
+        if (Number.isFinite(realPct)) candidates.push({name: '实时担保比例', pct: realPct});
+        if (!candidates.length) {
+            alert.classList.add('d-none');
+            return;
+        }
+
+        const worst = candidates.reduce((a, b) => (a.pct <= b.pct ? a : b));
+        const meta = guaranteeRatioMeta(worst.pct);
+
+        alert.classList.remove('d-none', 'level-safe', 'level-watch', 'level-warn', 'level-danger');
+        alert.classList.add('level-' + meta.key);
+        title.textContent = meta.key === 'safe' ? '担保比例正常' : '担保比例警示';
+        badge.textContent = meta.label;
+
+        const ratios = candidates.map(c => `${c.name} ${c.pct.toFixed(2)}%`).join('，');
+        let advice;
+        if (meta.key === 'safe') {
+            advice = '当前担保比例 ≥200%，处于安全区间。';
+        } else if (meta.key === 'watch') {
+            advice = `最低担保比例低于 200%，处于 150%~200% 关注区间；低于 150% 将进入警戒区间（距警戒线 ${(worst.pct - 150).toFixed(2)} 个百分点）。`;
+        } else if (meta.key === 'warn') {
+            advice = `最低担保比例低于 150%，处于 130%~150% 警戒区间；低于 130% 将触发平仓风险（距平仓线 ${(worst.pct - 130).toFixed(2)} 个百分点）。`;
+        } else {
+            advice = `最低担保比例低于 130% 平仓线（低 ${(130 - worst.pct).toFixed(2)} 个百分点），存在强制平仓风险，请立即补充担保品或降低负债！`;
+        }
+        text.textContent = `${ratios}。${advice}`;
+
+        document.querySelectorAll('#guaranteeRatioScale span[data-level]').forEach((el) => {
+            el.classList.toggle('is-current', el.dataset.level === meta.key);
+        });
+    }
+
+
     // 展示账户资金
     function displayPositionCapital(responseData) {
 
@@ -2195,6 +2447,8 @@
         document.getElementById('acreditavl').value = responseData.acreditavl.toLocaleString('en-US', {minimumFractionDigits: 2});
         // 持仓个股数量
         document.getElementById('holdingStockCount').value = (positionsData ? positionsData.length : 0).toLocaleString('en-US');
+        // 担保比例警示（200% / 150% / 130%）
+        renderGuaranteeRatioWarning(responseData.marginrates, responseData.realrate);
     }
 
     // 展示持仓列表
