@@ -6,9 +6,10 @@ import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.google.gson.Gson;
-import kong.unirest.core.JsonNode;
+import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -76,15 +77,19 @@ public class TdxTqHttpClient {
         //  result : {"Error":"RPC处理异常:TPyth_TdxWServer_Main_New","ErrorId":"10","run_id":"-1"}
 
 
-        JsonNode body = Unirest.post(TQ_BASE_URL)
-                               .header("Content-Type", "application/json; charset=UTF-8")
-                               // ⚠️ 此处禁用 Fastjson2  =>  开启了 全局配置：num -> Str（通达信 TQ  ->  Python程序 int类型【传入String】 参数映射 BUG : TPyth_TdxWServer_Main_New）
-                               .body(GSON.toJson(rpcRequest))
-                               .asJson()
-                               .getBody();
+        HttpResponse<String> response = Unirest.post(TQ_BASE_URL)
+                                               .header("Content-Type", "application/json; charset=UTF-8")
+                                               // ⚠️ 此处禁用 Fastjson2  =>  开启了 全局配置：num -> Str（通达信 TQ  ->  Python程序 int类型【传入String】 参数映射 BUG : TPyth_TdxWServer_Main_New）
+                                               .body(GSON.toJson(rpcRequest))
+                                               .asString();
 
 
-        JSONObject root = JSON.parseObject(body.toString());
+        int status = response.getStatus();
+        Assert.isTrue(status == 200, String.format("TdxTqHttpClient.call - [通达信TQ] 服务不可用     >>>     status : %s , method : %s , params : %s , result : %s , time : %s",
+                                                   status, method, GSON.toJson(params), response.getBody(), DateTimeUtil.formatNow2Hms(start)));
+
+
+        JSONObject root = JSON.parseObject(response.getBody());
         JSONObject result = root.containsKey("result") ? root.getJSONObject("result") : root;
 
 
@@ -102,21 +107,18 @@ public class TdxTqHttpClient {
      *
      * @param result
      */
-    private static void checkResultErr(Object result) {
-        if (!(result instanceof JSONObject json)) {
-            return;
-        }
+    private static void checkResultErr(JSONObject result) {
 
-        String errorId = firstNonBlank(json.getString("ErrorId"), json.getString("errorId"));
+        String errorId = firstNonBlank(result.getString("ErrorId"), result.getString("errorId"));
         if (errorId == null || "0".equals(errorId)) {
             return;
         }
 
         String msg = firstNonBlank(
-                json.getString("Msg"),
-                json.getString("Error"),
-                json.getString("ErrorMsg"),
-                json.getString("message"),
+                result.getString("Msg"),
+                result.getString("Error"),
+                result.getString("ErrorMsg"),
+                result.getString("message"),
                 "未知错误"
         );
         throw new BizException("通达信 TQ 业务异常[" + errorId + "]: " + msg);

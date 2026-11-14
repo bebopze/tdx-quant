@@ -105,6 +105,21 @@ public class KlineAPI {
         }
 
 
+        // 东方财富
+        try {
+            SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
+            klineDTO = convert2DTO__eastmoney(resp);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+
+
+        // 通达信 TQ
+        if (klineDTO == null) {
+            klineDTO = TdxTqAPI.get_market_snapshot(stockCode);
+        }
+
+
         // 同花顺
         if (klineDTO == null) {
 
@@ -144,23 +159,35 @@ public class KlineAPI {
 //        }
 
 
+        // 通达信 TQ
+        if (klineDTOList == null) {
+            log.info("pullAllStockSnapshotKline     >>>     使用 [通达信TQ] API");
+
+            try {
+                klineDTOList = TdxTqKlineAPI.pullAllStockSnapshotKline();
+            } catch (Exception e) {
+                log.error("pullAllStockSnapshotKline - 使用 [通达信TQ] API - 异常     >>>     errMsg : " + e.getMessage(), e);
+            }
+        }
+
+
         // 新浪财经
         if (klineDTOList == null) {
-            log.info("pullAllStockSnapshotKline     >>>     使用 新浪财经 API");
+            log.info("pullAllStockSnapshotKline     >>>     使用 [新浪财经] API");
             klineDTOList = SinaKlineAPI.pullAllStockSnapshotKline();
         }
 
 
         // 雪球
         if (klineDTOList == null) {
-            log.info("pullAllStockSnapshotKline     >>>     使用 雪球 API");
+            log.info("pullAllStockSnapshotKline     >>>     使用 [雪球] API");
 
         }
 
 
         // ...
         if (klineDTOList == null) {
-            log.info("pullAllStockSnapshotKline     >>>     使用 xxx API");
+            log.info("pullAllStockSnapshotKline     >>>     使用 [xxx] API");
 
         }
 
@@ -187,28 +214,33 @@ public class KlineAPI {
 
         // 通达信 TQ
         if (klineDTOList == null) {
-            log.info("pullAllETFSnapshotKline     >>>     使用 通达信TQ API");
-            klineDTOList = TdxTqKlineAPI.pullAllETFSnapshotKline();
+            log.info("pullAllETFSnapshotKline     >>>     使用 [通达信TQ] API");
+
+            try {
+                klineDTOList = TdxTqKlineAPI.pullAllETFSnapshotKline();
+            } catch (Exception e) {
+                log.error("pullAllETFSnapshotKline - 使用 [通达信TQ] API - 异常     >>>     errMsg : " + e.getMessage(), e);
+            }
         }
 
 
         // 新浪财经
         if (klineDTOList == null) {
-            log.info("pullAllETFSnapshotKline     >>>     使用 新浪财经 API");
+            log.info("pullAllETFSnapshotKline     >>>     使用 [新浪财经] API");
             klineDTOList = SinaKlineAPI.pullAllETFSnapshotKline();
         }
 
 
         // 雪球
         if (klineDTOList == null) {
-            log.info("pullAllETFSnapshotKline     >>>     使用 雪球 API");
+            log.info("pullAllETFSnapshotKline     >>>     使用 [雪球] API");
 
         }
 
 
         // ...
         if (klineDTOList == null) {
-            log.info("pullAllETFSnapshotKline     >>>     使用 xxx API");
+            log.info("pullAllETFSnapshotKline     >>>     使用 [xxx] API");
 
         }
 
@@ -296,6 +328,17 @@ public class KlineAPI {
 
 
         return dto;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+        // pullAllStockETFSnapshotKline();
+
+        // pullAllStockSnapshotKline();
+        // pullAllETFSnapshotKline();
     }
 
 
