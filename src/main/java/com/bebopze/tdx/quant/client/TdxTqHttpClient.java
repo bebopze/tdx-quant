@@ -89,7 +89,7 @@ public class TdxTqHttpClient {
 
 
         int status = response.getStatus();
-        Assert.isTrue(status == 200, "[通达信TQ] 服务 HTTP 异常: " + response.getStatus());
+        Assert.isTrue(status == 200, String.format("[通达信TQ] 服务 [HTTP:%s] 异常，请检查 [TQ服务] 是否已开启", response.getStatus()));
 
 
         String rawBody = response.getBody();
