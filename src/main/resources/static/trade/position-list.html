@@ -730,6 +730,16 @@
                             </select>
                         </div>
                         <div class="d-flex align-items-center me-3">
+                            <label for="filterPositions_zyRz">自有融资：</label>
+                            <select id="filterPositions_zyRz" class="form-select form-select-sm"
+                                    style="width:auto"
+                                    title="全部 / 自有（无融资持仓） / 融资（含融资持仓，混合持仓也归入融资）">
+                                <option value="">全部</option>
+                                <option value="zy">自有</option>
+                                <option value="rz">融资</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
                             <label for="filterPositions_changePct__min"
                                    class="me-2">涨跌幅(%):</label>
                             <input type="number" id="filterPositions_changePct__min"
@@ -2202,6 +2212,7 @@
         let inTopBlockFlag = document.getElementById('filterPositions_inTopBlockFlag').value;
         let posFlag = document.getElementById('filterPositions_posFlag').value;
         let sellSignalFlag = document.getElementById('filterPositions_sellSignalFlag').value;
+        let zyRz = document.getElementById('filterPositions_zyRz').value;
         let changePct__min = document.getElementById('filterPositions_changePct__min').value;
         let changePct__max = document.getElementById('filterPositions_changePct__max').value;
 
@@ -2225,6 +2236,19 @@
         if (sellSignalFlag) {
             sellSignalFlag = toBoolean(sellSignalFlag);
             filterPositions = filterPositions.filter(position => position.sellSignalFlag === sellSignalFlag);
+        }
+        if (zyRz) {
+            filterPositions = filterPositions.filter(position => {
+                const zyBal = toNumber(position.stkZyBal);
+                const rzBal = toNumber(position.stkRzBal);
+                if (zyRz === 'zy') {
+                    // 自有：无融资持仓（融资数量为 0 或 "--"）
+                    return !(rzBal > 0) && zyBal > 0;
+                } else if (zyRz === 'rz') {
+                    // 融资：含融资持仓（自有 + 融资混合持仓也归入融资）
+                    return rzBal > 0;
+                }
+            });
         }
         if (changePct__min) {
             changePct__min = toNumber(changePct__min);
@@ -2403,19 +2427,23 @@
 
         // 索引 15:  (持仓数量) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 16:  (可用数量) - 非合计列
+        // 索引 16:  (自有) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 17:  (行业) - 非合计列
+        // 索引 17:  (融资) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 18:  (S信号) - 非合计列
+        // 索引 18:  (可用数量) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 19:  (主线个股) - 非合计列
+        // 索引 19:  (行业) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 20:  (IN主线板块) - 非合计列
+        // 索引 20:  (S信号) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 21:  (主线板块) - 非合计列
+        // 索引 21:  (主线个股) - 非合计列
         sumRow.innerHTML += `<td></td>`;
-        // 索引 22: 操作 - 非合计列
+        // 索引 22:  (IN主线板块) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 23:  (主线板块) - 非合计列
+        sumRow.innerHTML += `<td></td>`;
+        // 索引 24: 操作 - 非合计列
         sumRow.innerHTML += `<td></td>`;
 
         return sumRow;
@@ -4773,6 +4801,7 @@
         document.getElementById('filterPositions_topStockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_inTopBlockFlag').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_posFlag').addEventListener('change', () => displayPositionRecords(positionsData));
+        document.getElementById('filterPositions_zyRz').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_changePct__min').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_changePct__max').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions());
