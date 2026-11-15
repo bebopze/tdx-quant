@@ -1,17 +1,14 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.client.KlineAPI;
-import com.bebopze.tdx.quant.client.TdxTqAPI;
+import com.bebopze.tdx.quant.client.TdxIncrClient;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
-import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -86,6 +83,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @Autowired
     private TdxTask tdxTask;
+
+    @Autowired
+    private TdxIncrClient tdxIncrClient;
 
     @Autowired
     private BlockKlineFun blockKlineFun;
@@ -1368,6 +1368,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void refreshKlineAll(UpdateTypeEnum updateTypeEnum) {
 
+        // 增量：个股/ETF 走 TQ 实时快照，板块由个股实时计算（不再读本地 TDX 板块文件）
+        if (updateTypeEnum == UpdateTypeEnum.INCR) {
+            fillStockKlineAll(UpdateTypeEnum.INCR);
+            calcAndFillBlockKlineAll();
+            return;
+        }
+
+
         // 行情-板块
         Future<?> task1 = Executors.newSingleThreadExecutor().submit(() -> {
             // refresh  ->  block kline
@@ -1529,13 +1537,99 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             fullUpdate__fillStockKlineAll(codeIdMap);
         }
 
-        // 2-增量更新（实时行情）
+        // 2-增量更新（实时行情，最后 1 日）
         else if (updateTypeEnum == UpdateTypeEnum.INCR) {
-            incrUpdate__fillStockKlineAll(codeIdMap);
+            fillStockKlineLastNDaysInternal(1);
         }
 
 
         initDataService.deleteDiskCache();
+    }
+
+    @Override
+    public void fillStockKlineLastNDays(int days) {
+        Assert.isTrue(days >= 1 && days <= 250, "增量更新天数必须在 1~250 之间：" + days);
+
+        fillStockKlineLastNDaysInternal(days);
+        initDataService.deleteDiskCache();
+    }
+
+
+    /**
+     * 15s 级实时快照：只更新 base_stock 实时字段（小字段 update），不读/写 kline_his。
+     *
+     * <p>K线历史由 5min 扩展链路、N 日补偿或盘后全量链路负责；这样实时链路不会被
+     * “每只股票读取+重写全历史 JSON”拖到分钟级。</p>
+     */
+    @Override
+    public void fillStockRealtimeSnapshot() {
+
+        Map<String, Long> allCodeIdMap = baseStockService.codeIdMap((Integer) null);
+        Map<String, Long> codeIdMap = allCodeIdMap.entrySet().stream()
+                                                  .filter(e -> StockTypeEnum.isAStock(e.getKey()) || StockTypeEnum.isETF(e.getKey()))
+                                                  .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
+        if (codeIdMap.isEmpty()) {
+            return;
+        }
+
+        List<StockSnapshotKlineDTO> snapshotList = KlineAPI.pullAllStockETFSnapshotKline();
+        if (CollectionUtils.isEmpty(snapshotList)) {
+            throw new IllegalStateException("TQ 实时快照为空，无法实时刷新");
+        }
+
+        LocalDate tradeDate = latestTradingDate();
+        List<BaseStockDO> entities = snapshotList.parallelStream().map(snapshot -> {
+            if (snapshot == null || snapshot.getStockCode() == null) {
+                return null;
+            }
+            Long stockId = codeIdMap.get(snapshot.getStockCode());
+            if (stockId == null) {
+                return null;
+            }
+            if (!(snapshot.getOpen() > 0) || !(snapshot.getHigh() > 0)
+                    || !(snapshot.getLow() > 0) || !(snapshot.getClose() > 0)) {
+                return null;
+            }
+            if (snapshot.getHigh() < Math.max(snapshot.getOpen(), snapshot.getClose())
+                    || snapshot.getLow() > Math.min(snapshot.getOpen(), snapshot.getClose())
+                    || snapshot.getVol() < 0 || !Double.isFinite(snapshot.getAmo()) || snapshot.getAmo() < 0) {
+                return null;
+            }
+
+            BaseStockDO entity = new BaseStockDO();
+            entity.setId(stockId);
+            entity.setTradeDate(tradeDate);
+
+            if (snapshot.getPrevClose() > 0) {
+                entity.setPrevClose(BigDecimal.valueOf(snapshot.getPrevClose()));
+            }
+            entity.setOpen(of(snapshot.getOpen()));
+            entity.setHigh(of(snapshot.getHigh()));
+            entity.setLow(of(snapshot.getLow()));
+            entity.setClose(of(snapshot.getClose()));
+            entity.setVolume(snapshot.getVol());
+            entity.setAmount(of(snapshot.getAmo()));
+
+            if (Double.isFinite(snapshot.getRangePct())) {
+                entity.setRangePct(of(snapshot.getRangePct()));
+            }
+            if (Double.isFinite(snapshot.getChangePct())) {
+                entity.setChangePct(of(snapshot.getChangePct()));
+            }
+            if (Double.isFinite(snapshot.getChangePrice())) {
+                entity.setChangePrice(of(snapshot.getChangePrice()));
+            }
+            return entity;
+        }).filter(Objects::nonNull).toList();
+
+        int batchSize = 500;
+        for (int from = 0; from < entities.size(); from += batchSize) {
+            int to = Math.min(from + batchSize, entities.size());
+            baseStockService.updateBatchById(entities.subList(from, to), batchSize);
+        }
+
+        log.info("fillStockRealtimeSnapshot     >>>     tradeDate : {} , snapshot : {} , update : {}",
+                 tradeDate, snapshotList.size(), entities.size());
     }
 
 
@@ -1592,68 +1686,309 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     /**
      * 2-增量更新
      *
-     * @param codeIdMap
+     * @param days
      */
-    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
+    private void fillStockKlineLastNDaysInternal(int days) {
+        Map<String, Long> allCodeIdMap = baseStockService.codeIdMap((Integer) null);
+        Map<String, Long> codeIdMap = allCodeIdMap.entrySet().stream()
+                                                  .filter(e -> StockTypeEnum.isAStock(e.getKey()) || StockTypeEnum.isETF(e.getKey()))
+                                                  .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
+        if (codeIdMap.isEmpty()) {
+            log.warn("fillStockKlineLastNDaysInternal     >>>     无 A股/ETF 基础数据，跳过");
+            return;
+        }
 
-        // 东方财富   ->   批量拉取  全A（ETF） 实时行情
-        List<StockSnapshotKlineDTO> stockSnapshotList = KlineAPI.pullAllStockETFSnapshotKline();
-        log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
+        if (days == 1) {
+            // 盘中：TQ 批量快照 -> 最后 1 日实时行情
+            fillStockKlineBySnapshot(codeIdMap);
+            return;
+        }
 
+        // 自定义最近 N 日：TQ 批量日线（含日期）
+        fillStockKlineByDailyBars(codeIdMap, days);
 
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        AtomicInteger count = new AtomicInteger(0);
-
-
-        stockSnapshotList.parallelStream().forEach(e -> {
-
-
-            // 股票代码     000001
-            String stockCode = e.getStockCode();
-            // 股票名称（平安银行）
-            String stockName = e.getStockName();
-
-
-            Long stockId = codeIdMap.get(stockCode);
-            if (null == stockId) {
-                return;
-            }
-
-
-            // --------------------- kline_his
-
-
-            KlineDTO klineDTO = new KlineDTO();
-            BeanUtils.copyProperties(e, klineDTO);
-
-
-            List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(klineDTO));
-            klines = klineHis__updateType(stockId, klines, UpdateTypeEnum.INCR);
-
-
-            // --------------------- entity -> 实时行情
-
-            if (CollectionUtils.isEmpty(klines)) {
-                return;
-            }
-
-            // 实时行情
-            BaseStockDO entity = convertStockDO(stockId, stockName, klines, e);
-            entity.setPrevClose(BigDecimal.valueOf(e.getPrevClose()));
-
-
-            // --------------------- DB
-
-            baseStockService.updateById(entity);
-
-
-            log.info("incrUpdate__fillStockKlineAll suc     >>>     [{}-{}] , count : {}", stockCode, stockName, count.incrementAndGet());
-        });
+        // 再叠加一次实时快照，保证 N>1 时最后 1 日也是盘中最新价；快照失败不回滚已写入的日线
+        try {
+            fillStockKlineBySnapshot(codeIdMap);
+        } catch (Exception e) {
+            log.warn("fillStockKlineLastNDaysInternal snapshot overlay fail     >>>     days : {} , err : {}", days, e.getMessage(), e);
+        }
     }
 
+
+    /**
+     * TQ 实时快照 -> 最后 1 日。
+     *
+     * <p>TQ 快照本身不带日期，日期必须从 TQ 交易日历获取；禁止使用本机日期。</p>
+     */
+    private void fillStockKlineBySnapshot(Map<String, Long> codeIdMap) {
+
+        List<StockSnapshotKlineDTO> snapshotList = KlineAPI.pullAllStockETFSnapshotKline();
+        if (CollectionUtils.isEmpty(snapshotList)) {
+            throw new IllegalStateException("TQ 实时快照为空，无法增量更新");
+        }
+
+        LocalDate tradeDate = latestTradingDate();
+        AtomicInteger success = new AtomicInteger();
+        AtomicInteger skip = new AtomicInteger();
+        AtomicInteger fail = new AtomicInteger();
+
+        snapshotList.parallelStream().forEach(snapshot -> {
+            if (snapshot == null || snapshot.getStockCode() == null) {
+                skip.incrementAndGet();
+                return;
+            }
+            Long stockId = codeIdMap.get(snapshot.getStockCode());
+            if (stockId == null) {
+                skip.incrementAndGet();
+                return;
+            }
+
+            KlineDTO bar = new KlineDTO();
+            BeanUtils.copyProperties(snapshot, bar);
+            bar.setDate(tradeDate);
+
+            if (!validKline(bar)) {
+                skip.incrementAndGet();
+                return;
+            }
+
+            try {
+                boolean updated = updateStockKlineIncr(stockId, snapshot.getStockName(), List.of(bar), snapshot.getPrevClose());
+                if (updated) {
+                    success.incrementAndGet();
+                } else {
+                    skip.incrementAndGet();
+                }
+            } catch (Exception e) {
+                fail.incrementAndGet();
+                log.warn("fillStockKlineBySnapshot fail     >>>     stockCode : {} , err : {}", snapshot.getStockCode(), e.getMessage());
+            }
+        });
+
+        log.info("fillStockKlineBySnapshot     >>>     tradeDate : {} , total : {} , success : {} , skip : {} , fail : {}",
+                 tradeDate, snapshotList.size(), success.get(), skip.get(), fail.get());
+    }
+
+
+    /**
+     * TQ 批量日线 -> 最近 N 个交易日（含日期、成交量/成交额单位已标准化）。
+     */
+    private void fillStockKlineByDailyBars(Map<String, Long> codeIdMap, int days) {
+
+        List<LocalDate> tradeDates = latestTradingDates(days);
+        LocalDate startDate = tradeDates.getFirst();
+        LocalDate endDate = tradeDates.getLast();
+
+        List<String> stockCodes = new ArrayList<>(codeIdMap.keySet());
+        int batchSize = 500;
+
+        AtomicInteger success = new AtomicInteger();
+        AtomicInteger skip = new AtomicInteger();
+        AtomicInteger fail = new AtomicInteger();
+
+        for (int from = 0; from < stockCodes.size(); from += batchSize) {
+            int to = Math.min(from + batchSize, stockCodes.size());
+            List<String> batchCodes = stockCodes.subList(from, to);
+
+            Map<String, List<KlineDTO>> barsMap = tdxIncrClient.dailyBars(batchCodes, startDate, endDate);
+            barsMap.entrySet().parallelStream().forEach(entry -> {
+                String stockCode = entry.getKey();
+                List<KlineDTO> bars = entry.getValue();
+                Long stockId = codeIdMap.get(stockCode);
+
+                if (stockId == null || CollectionUtils.isEmpty(bars)) {
+                    skip.incrementAndGet();
+                    return;
+                }
+                try {
+                    boolean updated = updateStockKlineIncr(stockId, null, bars, null);
+                    if (updated) {
+                        success.incrementAndGet();
+                    } else {
+                        skip.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    fail.incrementAndGet();
+                    log.warn("fillStockKlineByDailyBars fail     >>>     stockCode : {} , err : {}", stockCode, e.getMessage());
+                }
+            });
+        }
+
+        log.info("fillStockKlineByDailyBars     >>>     range : {} ~ {} , days : {} , total : {} , success : {} , skip : {} , fail : {}",
+                 startDate, endDate, days, stockCodes.size(), success.get(), skip.get(), fail.get());
+    }
+
+
+    /**
+     * 按日期合并增量 K 线；保留旧数据中未被新数据覆盖的日期，避免停牌/缺失导致历史丢失。
+     */
+    private boolean updateStockKlineIncr(Long stockId, String stockName,
+                                         List<KlineDTO> newBars, Double snapshotPrevClose) {
+
+        if (stockId == null || CollectionUtils.isEmpty(newBars)) {
+            return false;
+        }
+
+        BaseStockDO old = baseStockService.getById(stockId);
+        if (old == null) {
+            return false;
+        }
+
+        List<KlineDTO> oldBars = old.getKlineDTOList() == null ? List.of() : old.getKlineDTOList();
+        TreeMap<LocalDate, KlineDTO> merged = new TreeMap<>();
+        for (KlineDTO oldBar : oldBars) {
+            if (oldBar != null && oldBar.getDate() != null) {
+                merged.put(oldBar.getDate(), oldBar);
+            }
+        }
+
+        int applied = 0;
+        for (KlineDTO bar : newBars) {
+            if (!validKline(bar)) {
+                continue;
+            }
+
+            KlineDTO oldBar = merged.get(bar.getDate());
+
+            // 快照/日线不提供股本、换手率：保留旧值，避免被 0 覆盖
+            if (oldBar != null) {
+                if (bar.getLtgb() <= 0) {
+                    bar.setLtgb(oldBar.getLtgb());
+                }
+                if (bar.getZgb() <= 0) {
+                    bar.setZgb(oldBar.getZgb());
+                }
+                if (!Double.isFinite(bar.getTurnoverPct()) || bar.getTurnoverPct() == 0) {
+                    bar.setTurnoverPct(oldBar.getTurnoverPct());
+                }
+            }
+            if (!Double.isFinite(bar.getTurnoverPct())) {
+                bar.setTurnoverPct(0);
+            }
+            if (bar.getLtgb() < 0) {
+                bar.setLtgb(0);
+            }
+            if (bar.getZgb() < 0) {
+                bar.setZgb(0);
+            }
+
+            if (!Double.isFinite(bar.getRangePct()) || (bar.getRangePct() == 0 && bar.getHigh() > bar.getLow())) {
+                bar.setRangePct(calcRangePct(bar));
+            }
+
+            Double prevClose = null;
+            Map.Entry<LocalDate, KlineDTO> lower = merged.lowerEntry(bar.getDate());
+            if (lower != null) {
+                prevClose = lower.getValue().getClose();
+            }
+            if (snapshotPrevClose != null && snapshotPrevClose > 0) {
+                prevClose = snapshotPrevClose;
+            }
+
+            if (prevClose != null && prevClose > 0) {
+                boolean needChange = !Double.isFinite(bar.getChangePrice())
+                        || !Double.isFinite(bar.getChangePct())
+                        || (bar.getChangePrice() == 0 && Math.abs(bar.getClose() - prevClose) > 0.005);
+                if (needChange) {
+                    bar.setChangePrice(NumUtil.of(bar.getClose() - prevClose));
+                    bar.setChangePct(NumUtil.of((bar.getClose() - prevClose) / prevClose * 100));
+                }
+            } else {
+                if (!Double.isFinite(bar.getChangePrice())) {
+                    bar.setChangePrice(0);
+                }
+                if (!Double.isFinite(bar.getChangePct())) {
+                    bar.setChangePct(0);
+                }
+            }
+
+            merged.put(bar.getDate(), bar);
+            applied++;
+        }
+
+        if (applied == 0) {
+            return false;
+        }
+
+        List<KlineDTO> all = new ArrayList<>(merged.values());
+        all.sort(Comparator.comparing(KlineDTO::getDate));
+        KlineDTO last = all.getLast();
+
+        List<String> klines = ConvertStockKline.dtoList2StrList(all);
+        BaseStockDO entity = convertStockDO(stockId,
+                                            StringUtils.isNotBlank(stockName) ? stockName : old.getName(),
+                                            klines, last);
+
+        // 前收：优先实时快照的 LastClose，其次倒数第二根 K 线
+        if (snapshotPrevClose != null && snapshotPrevClose > 0) {
+            entity.setPrevClose(BigDecimal.valueOf(snapshotPrevClose));
+        } else if (all.size() >= 2) {
+            entity.setPrevClose(of(all.get(all.size() - 2).getClose()));
+        } else if (old.getPrevClose() != null) {
+            entity.setPrevClose(old.getPrevClose());
+        }
+
+        entity.setTradeDate(last.getDate());
+        baseStockService.updateById(entity);
+        return true;
+    }
+
+
+    private boolean validKline(KlineDTO bar) {
+        if (bar == null || bar.getDate() == null) {
+            return false;
+        }
+        if (!(bar.getOpen() > 0) || !(bar.getHigh() > 0) || !(bar.getLow() > 0) || !(bar.getClose() > 0)) {
+            return false;
+        }
+        if (bar.getHigh() < Math.max(bar.getOpen(), bar.getClose())
+                || bar.getLow() > Math.min(bar.getOpen(), bar.getClose())) {
+            return false;
+        }
+        return bar.getVol() >= 0 && Double.isFinite(bar.getAmo()) && bar.getAmo() >= 0;
+    }
+
+    private static double calcRangePct(KlineDTO bar) {
+        return bar.getLow() > 0 ? NumUtil.of((bar.getHigh() - bar.getLow()) / bar.getLow() * 100) : 0;
+    }
+
+    private LocalDate latestTradingDate() {
+        try {
+            return tdxIncrClient.tradingDates(LocalDate.now(), 1).getLast();
+        } catch (Exception e) {
+            LocalDate fallback = KlineAPI.lastTradeDate();
+            if (fallback == null) {
+                throw new IllegalStateException("无法获取最新交易日", e);
+            }
+            log.warn("TQ 交易日历不可用，回退本地最新交易日 : {} , err : {}", fallback, e.getMessage());
+            return fallback;
+        }
+    }
+
+    private List<LocalDate> latestTradingDates(int days) {
+        try {
+            return tdxIncrClient.tradingDates(LocalDate.now(), days);
+        } catch (Exception e) {
+            LocalDate fallback = KlineAPI.lastTradeDate();
+            if (fallback == null) {
+                throw new IllegalStateException("无法获取最近 " + days + " 个交易日", e);
+            }
+            log.warn("TQ 交易日历不可用，回退本地最近交易日 : {} , days : {} , err : {}", fallback, days, e.getMessage());
+            List<LocalDate> dates = new ArrayList<>();
+            LocalDate date = fallback;
+            while (dates.size() < days) {
+                if (date.getDayOfWeek() != java.time.DayOfWeek.SATURDAY
+                        && date.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
+                    dates.add(date);
+                }
+                date = date.minusDays(1);
+            }
+            dates.sort(Comparator.naturalOrder());
+            return dates;
+        }
+    }
 
     private BaseStockDO convertStockDO(Long stockId, String stockName, List<String> klines, KlineDTO e) {
 

@@ -126,6 +126,16 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
+    public void fillStockKlineLastNDays(int days) {
+        // TQ 数据导入实现为预留空实现；生产使用 @Primary TdxDataParserServiceImpl
+    }
+
+    @Override
+    public void fillStockRealtimeSnapshot() {
+        // TQ 数据导入实现为预留空实现；生产使用 @Primary TdxDataParserServiceImpl
+    }
+
+    @Override
     public Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N) {
         return Map.of();
     }

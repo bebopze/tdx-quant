@@ -62,6 +62,21 @@ public interface TdxDataParserService {
     void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
+    /**
+     * 增量更新 最近 N 个交易日（N=1 走 TQ 实时快照；N>1 走 TQ 批量日线）。
+     *
+     * @param days 最近 N 个交易日（1~250）
+     */
+    void fillStockKlineLastNDays(int days);
+
+
+    /**
+     * 超快实时链路：仅更新 base_stock 的实时行情字段（开/高/低/收/量/额/涨跌），
+     * 不读取、不重写全历史 kline_his；用于 15s 级盘中刷新。
+     */
+    void fillStockRealtimeSnapshot();
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

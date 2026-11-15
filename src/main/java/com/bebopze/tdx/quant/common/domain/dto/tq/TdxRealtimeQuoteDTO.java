@@ -73,8 +73,11 @@ public record TdxRealtimeQuoteDTO(String code,
         dto.setClose(close);
 
 
+        // 成交量统一为“股”；TQ 快照原始单位为“手”，转换在 TdxTqServiceImpl 完成
         dto.setVol(vol);
-        dto.setAmo(amo);
+
+        // TQ Amount 原始单位为“万元”，KlineDTO.amo 统一为“元”
+        dto.setAmo(amo());
 
         dto.setRangePct(getRangePct());
         dto.setChangePct(getChangePct());

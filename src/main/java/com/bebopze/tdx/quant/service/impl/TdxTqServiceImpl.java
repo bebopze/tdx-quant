@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.client.TdxTqHttpClient;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -93,8 +94,8 @@ public class TdxTqServiceImpl implements TdxTqService {
 
 
         long vol = result.getLongValue("Volume", 0L);
-        // 对于 沪深京 品种   ->   Volume、NowVol 的 单位为：手
-        if (StockTypeEnum.isAStock(code)) {
+        // 对于 沪深京 个股/ETF   ->   Volume、NowVol 的 单位为：手
+        if (StockTypeEnum.isAStock(code) || StockTypeEnum.isETF(code)) {
             // 股 = 手 x 100
             vol *= 100;
         }
@@ -116,7 +117,74 @@ public class TdxTqServiceImpl implements TdxTqService {
 
     @Override
     public List<TdxRealtimeQuoteDTO> getBatch(List<String> codes) {
-        return codes.stream().map(this::get).toList();
+        return getBatchByApi(codes);
+    }
+
+    /**
+     * 批量快照（TQ 单次 HTTP 请求，取代逐只 get_market_snapshot）。
+     *
+     * <p>旧实现 getBatch_2 使用 stock_code 参数、且从外层 result 读取 Volume，实际成交量恒为 0；
+     * 这里统一修正为 stock_list + 单个证券 data 读取。</p>
+     */
+    private List<TdxRealtimeQuoteDTO> getBatchByApi(List<String> codes) {
+
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> formatCodes = TdxFormatCodeUtil.formatCodes(codes);
+
+        JSONObject result = call("get_market_snapshot_batch",
+                                 Map.of("stock_list", formatCodes,
+                                        "field_list", SNAPSHOT_FIELDS,
+                                        "return_df", false));
+
+        JSONObject values;
+        Object valueObj = result.get("Value");
+        if (valueObj instanceof JSONObject jsonObject) {
+            values = jsonObject;
+        } else if (valueObj instanceof String text) {
+            values = JSON.parseObject(text);
+        } else {
+            values = result;
+        }
+        if (values == null) {
+            throw new IllegalStateException("[通达信TQ] get_market_snapshot_batch 返回缺少 Value");
+        }
+
+        List<TdxRealtimeQuoteDTO> quotes = new ArrayList<>(codes.size());
+        for (String rawCode : codes) {
+            String formatCode = TdxFormatCodeUtil.formatCode(rawCode);
+            JSONObject data = values.getJSONObject(formatCode);
+            if (data == null) {
+                data = values.getJSONObject(rawCode);
+            }
+            // 停牌/退市/指数缺失：跳过单只，不影响其他证券
+            if (data == null || data.isEmpty()) {
+                continue;
+            }
+
+            long vol = data.getLongValue("Volume", 0L);
+            if (StockTypeEnum.isAStock(rawCode) || StockTypeEnum.isETF(rawCode)) {
+                vol *= 100;
+            }
+
+            quotes.add(new TdxRealtimeQuoteDTO(
+                    rawCode,
+                    NumUtil.of(data.getDouble("Open")),
+                    NumUtil.of(data.getDouble("Max")),
+                    NumUtil.of(data.getDouble("Min")),
+                    NumUtil.of(data.getDouble("Now")),
+                    vol,
+                    NumUtil.of(data.getDouble("Amount")),
+                    NumUtil.of(data.getDouble("LastClose"))
+            ));
+        }
+
+        if (quotes.isEmpty()) {
+            throw new IllegalStateException("[通达信TQ] get_market_snapshot_batch 未返回任何有效行情，codes=" + codes.size());
+        }
+        return quotes;
     }
 
 
@@ -146,97 +214,27 @@ public class TdxTqServiceImpl implements TdxTqService {
         }
 
 
-        // 27s / 1.6s / 3.7s
-        // return ParallelCalcUtil.map(codes, this::get, ThreadPoolType.IO_INTENSIVE);
+        if (codes.isEmpty()) {
+            return List.of();
+        }
 
-        // 27s / 1.6s / 3.7s
-        return codes.parallelStream().map(this::get).toList();
-    }
-
-
-    public List<TdxRealtimeQuoteDTO> getBatch_2(List<String> codes) {
-
-
-        List<String> formatCodes = TdxFormatCodeUtil.formatCodes(codes);
-
-
-        // 批量获取快照数据get_market_snapshot_batch
-        //
-        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhthaq5qmg/mindoc-1hlnpjm512efk.html
-
-
-        // 参数          是否必选     参数类型          参数说明
-        // stock_list     Y	      list[str]     证券代码列表，须带市场后缀，例如 ["600000.SH", "688318.SH"]
-        // field_list     N	      list[str]     指定返回字段，为空 [] 返回全部字段，未知字段静默忽略
-        // return_df      N	      bool	        为 True 且已安装 pandas 时返回 DataFrame（行索引为证券代码），否则返回 dict
-
-
-        JSONObject result = call("get_market_snapshot_batch",
-
-                                 Map.of("stock_code", formatCodes,
-                                        "field_list", SNAPSHOT_FIELDS,
-                                        "return_df", false));
-
-
-        // {
-        //   "600000.SH": {
-        //   "Amount": "46996.94",
-        //   "Average": "9.08",
-        //   "Before5MinNow": "9.09",
-        //   "Buyp": ["9.07", "9.06", "9.05", "9.04", "9.03"],
-        //   "Buyv": ["4467", "11048", "7788", "5161", "4586"],
-        //   "DownHome": "0",
-        //   "InOutFlag": "2",
-        //   "Inside": "247892",
-        //   "ItemNum": "3716",
-        //   "Jjjz": "3330583.75",
-        //   "LastClose": "9.06",
-        //   "Max": "9.15",
-        //   "Min": "9.00",
-        //   "Now": "9.07",
-        //   "NowVol": "53978",
-        //   "Open": "9.05",
-        //   "Outside": "269701",
-        //   "RefreshTime": "153058",
-        //   "Sellp": ["9.08", "9.09", "9.10", "9.11", "9.12"],
-        //   "Sellv": ["2564", "1316", "2574", "5680", "6306"],
-        //   "TickDiff": "0.00",
-        //   "UpHome": "0",
-        //   "Volume": "517592",
-        //   "XsFlag": "2",
-        //   "ZAFPre3": "1.01",
-        //   "Zangsu": "-0.22"
-        //   }
-        // }
-
-
-        LocalDateTime now = LocalDateTime.now();
-
-
-        List<TdxRealtimeQuoteDTO> quotes = result.entrySet()
-                                                 .stream()
-                                                 .map(entry -> {
-
-                                                     String code = entry.getKey();
-                                                     JSONObject data = (JSONObject) entry.getValue();
-
-                                                     return new TdxRealtimeQuoteDTO(
-                                                             code,
-                                                             NumUtil.of(data.getDouble("Open")),
-                                                             NumUtil.of(data.getDouble("Max")),
-                                                             NumUtil.of(data.getDouble("Min")),
-                                                             NumUtil.of(data.getDouble("Now")),
-                                                             result.getLongValue("Volume", 0L),
-                                                             NumUtil.of(data.getDouble("Amount")),
-                                                             NumUtil.of(data.getDouble("LastClose"))
-                                                             // now.toLocalDate().atTime(DateTimeUtil.parseTime__HH_mm_ss(data.getString("RefreshTime")))
-                                                     );
-                                                 })
-                                                 .toList();
-
-
+        // TQ 批量快照：每批 500 只，避免单次响应过大；批次失败才退化为逐只请求。
+        final int batchSize = 500;
+        List<TdxRealtimeQuoteDTO> quotes = new ArrayList<>(codes.size());
+        for (int from = 0; from < codes.size(); from += batchSize) {
+            int to = Math.min(from + batchSize, codes.size());
+            List<String> batch = codes.subList(from, to);
+            try {
+                quotes.addAll(getBatchByApi(batch));
+            } catch (Exception e) {
+                log.warn("TdxTqServiceImpl.getAll batch fallback     >>>     from : {} , to : {} , err : {}",
+                         from, to, e.getMessage());
+                quotes.addAll(batch.parallelStream().map(this::get).toList());
+            }
+        }
         return quotes;
     }
+
 
 
 }
