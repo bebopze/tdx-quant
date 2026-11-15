@@ -628,11 +628,1056 @@
         }
 
 
+        /* ================================================================================ */
+        /* 企业级账户风控预警：常驻横幅 + 常驻浮标 + 分级弹框 + 关注 toast                    */
+        /* ================================================================================ */
+
+        :root {
+            --risk-safe-color: #15803d;
+            --risk-safe-bg: #f0fdf4;
+            --risk-safe-border: #bbf7d0;
+            --risk-safe-text: #166534;
+
+            --risk-watch-color: #b45309;
+            --risk-watch-bg: #fffbeb;
+            --risk-watch-border: #fde68a;
+            --risk-watch-text: #92400e;
+
+            --risk-warn-color: #c2410c;
+            --risk-warn-bg: #fff7ed;
+            --risk-warn-border: #fdba74;
+            --risk-warn-text: #9a3412;
+
+            --risk-critical-color: #b91c1c;
+            --risk-critical-bg: #fef2f2;
+            --risk-critical-border: #fecaca;
+            --risk-critical-text: #991b1b;
+
+            --risk-unknown-color: #475569;
+            --risk-unknown-bg: #f8fafc;
+            --risk-unknown-border: #cbd5e1;
+            --risk-unknown-text: #334155;
+        }
+
+        .risk-level-safe {
+            --risk-color: var(--risk-safe-color);
+            --risk-bg: var(--risk-safe-bg);
+            --risk-border: var(--risk-safe-border);
+            --risk-text: var(--risk-safe-text);
+        }
+
+        .risk-level-watch {
+            --risk-color: var(--risk-watch-color);
+            --risk-bg: var(--risk-watch-bg);
+            --risk-border: var(--risk-watch-border);
+            --risk-text: var(--risk-watch-text);
+        }
+
+        .risk-level-warn {
+            --risk-color: var(--risk-warn-color);
+            --risk-bg: var(--risk-warn-bg);
+            --risk-border: var(--risk-warn-border);
+            --risk-text: var(--risk-warn-text);
+        }
+
+        .risk-level-critical {
+            --risk-color: var(--risk-critical-color);
+            --risk-bg: var(--risk-critical-bg);
+            --risk-border: var(--risk-critical-border);
+            --risk-text: var(--risk-critical-text);
+        }
+
+        .risk-level-unknown {
+            --risk-color: var(--risk-unknown-color);
+            --risk-bg: var(--risk-unknown-bg);
+            --risk-border: var(--risk-unknown-border);
+            --risk-text: var(--risk-unknown-text);
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body.account-risk-modal-open {
+            overflow: hidden;
+        }
+
+        .account-risk-banner {
+            position: relative;
+            margin: 0 0 16px;
+            padding: 13px 16px 12px;
+            border: 1px solid var(--risk-border, #cbd5e1);
+            border-left: 6px solid var(--risk-color, #475569);
+            border-radius: 10px;
+            background: var(--risk-bg, #f8fafc);
+            box-shadow: 0 4px 18px rgba(15, 23, 42, .06);
+            color: #0f172a;
+        }
+
+        .account-risk-banner.risk-level-critical {
+            box-shadow: 0 0 0 1px rgba(185, 28, 28, .20), 0 8px 26px rgba(185, 28, 28, .12);
+        }
+
+        .account-risk-banner.is-loading {
+            opacity: .92;
+        }
+
+        .account-risk-banner-main {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .account-risk-badge {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: var(--risk-color);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .3px;
+            white-space: nowrap;
+        }
+
+        .account-risk-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: .95;
+        }
+
+        .risk-level-critical .account-risk-dot {
+            animation: accountRiskBlink 1.1s ease-in-out infinite;
+        }
+
+        .account-risk-head {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .account-risk-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .account-risk-title-row h3 {
+            margin: 0;
+            font-size: 16px;
+            line-height: 22px;
+            font-weight: 800;
+            color: var(--risk-text);
+        }
+
+        .account-risk-score {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 2px;
+            padding: 1px 8px;
+            border: 1px solid var(--risk-border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .7);
+            color: var(--risk-text);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .account-risk-score small {
+            font-size: 10px;
+            font-weight: 600;
+            opacity: .7;
+        }
+
+        .account-risk-tag {
+            display: inline-flex;
+            align-items: center;
+            height: 18px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .06);
+            color: #475569;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .account-risk-tag.is-stale {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .account-risk-summary {
+            margin: 4px 0 0;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--risk-text);
+            font-weight: 600;
+        }
+
+        .account-risk-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .account-risk-actions {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            padding-top: 1px;
+        }
+
+        .account-risk-actions .btn {
+            font-size: 12px;
+            padding: 3px 9px;
+            white-space: nowrap;
+        }
+
+        .risk-btn {
+            border: 1px solid var(--risk-color);
+            background: #fff;
+            color: var(--risk-color);
+            font-weight: 700;
+        }
+
+        .risk-btn:hover,
+        .risk-btn:focus {
+            border-color: var(--risk-color);
+            background: var(--risk-bg);
+            color: var(--risk-text);
+        }
+
+        .risk-btn-primary {
+            border: 1px solid var(--risk-color);
+            background: var(--risk-color);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .risk-btn-primary:hover,
+        .risk-btn-primary:focus {
+            border-color: var(--risk-color);
+            background: var(--risk-color);
+            color: #fff;
+            filter: brightness(.9);
+        }
+
+        .risk-btn-primary:disabled,
+        .risk-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .account-risk-metrics,
+        .risk-modal-metrics {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .risk-metric {
+            min-width: 0;
+            padding: 7px 9px 6px;
+            border: 1px solid var(--risk-border, #e2e8f0);
+            border-top: 3px solid var(--risk-color, #64748b);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .86);
+        }
+
+        .risk-metric-label {
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .risk-metric-value {
+            margin-top: 1px;
+            color: var(--risk-color);
+            font-size: 17px;
+            line-height: 1.25;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .risk-metric-sub {
+            margin-top: 1px;
+            color: #64748b;
+            font-size: 10px;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .account-risk-warnings {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .risk-warning-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 1px solid var(--risk-border, #e2e8f0);
+            border-left: 3px solid var(--risk-color, #64748b);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .9);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .risk-warning-level {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            height: 18px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--risk-color);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .risk-warning-main {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .risk-warning-head {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .risk-warning-metric {
+            color: var(--risk-text);
+            font-weight: 800;
+        }
+
+        .risk-warning-code {
+            color: #94a3b8;
+            font-size: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .risk-warning-msg {
+            color: #334155;
+            margin-top: 1px;
+        }
+
+        .risk-warning-value {
+            flex: 0 0 auto;
+            color: var(--risk-text);
+            font-size: 11px;
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .account-risk-advice {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 7px;
+            border-top: 1px dashed var(--risk-border);
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .account-risk-advice strong {
+            color: var(--risk-text);
+            white-space: nowrap;
+        }
+
+        .risk-safe-line {
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .72);
+            color: var(--risk-text);
+            font-size: 12px;
+        }
+
+        .risk-empty {
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .7);
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .risk-error-box {
+            padding: 10px 12px;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .risk-error-box b {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* 常驻浮标 */
+        .account-risk-dock {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: min(360px, calc(100vw - 36px));
+            padding: 8px 11px;
+            border: 1px solid rgba(255, 255, 255, .34);
+            border-radius: 999px;
+            background: var(--risk-color);
+            color: #fff;
+            box-shadow: 0 8px 26px rgba(15, 23, 42, .28);
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .account-risk-dock:hover,
+        .account-risk-dock:focus-visible {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .34);
+            outline: 2px solid rgba(255, 255, 255, .85);
+            outline-offset: 2px;
+        }
+
+        .account-risk-dock.risk-level-critical {
+            animation: accountRiskDockPulse 1.9s ease-in-out infinite;
+        }
+
+        .account-risk-dock-dot {
+            flex: 0 0 auto;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, .22);
+        }
+
+        .risk-level-critical .account-risk-dock-dot {
+            animation: accountRiskBlink 1.1s ease-in-out infinite;
+        }
+
+        .account-risk-dock-body {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            line-height: 1.2;
+        }
+
+        .account-risk-dock-label {
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .account-risk-dock-metric {
+            font-size: 10px;
+            opacity: .9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .account-risk-dock-score {
+            flex: 0 0 auto;
+            min-width: 32px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 关注 toast */
+        .account-risk-toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1600;
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            width: min(430px, calc(100vw - 32px));
+            padding: 11px 12px;
+            border: 1px solid var(--risk-border);
+            border-left: 5px solid var(--risk-color);
+            border-radius: 9px;
+            background: var(--risk-bg);
+            box-shadow: 0 12px 34px rgba(15, 23, 42, .2);
+        }
+
+        .account-risk-toast-icon {
+            flex: 0 0 auto;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--risk-color);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .account-risk-toast-body {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .account-risk-toast-title {
+            display: block;
+            color: var(--risk-text);
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .account-risk-toast-text {
+            display: block;
+            margin-top: 2px;
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .account-risk-toast .btn {
+            flex: 0 0 auto;
+            font-size: 11px;
+            padding: 2px 7px;
+            white-space: nowrap;
+        }
+
+        .account-risk-toast-close {
+            flex: 0 0 auto;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #64748b;
+            font-size: 18px;
+            line-height: 20px;
+            cursor: pointer;
+        }
+
+        /* 弹框 */
+        .account-risk-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .account-risk-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, .58);
+            backdrop-filter: blur(2px);
+        }
+
+        .account-risk-modal-dialog {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: min(900px, 100%);
+            max-height: calc(100vh - 32px);
+            overflow: hidden;
+            border: 1px solid var(--risk-border);
+            border-top: 5px solid var(--risk-color);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, .4);
+            outline: none;
+        }
+
+        .account-risk-modal-dialog.is-shake {
+            animation: accountRiskShake .32s ease-in-out;
+        }
+
+        .account-risk-modal-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 14px 16px 11px;
+            border-bottom: 1px solid #e2e8f0;
+            background: var(--risk-bg);
+        }
+
+        .account-risk-modal-icon {
+            flex: 0 0 auto;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--risk-color);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .account-risk-modal-titles {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .account-risk-modal-kicker {
+            color: var(--risk-text);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
+
+        .account-risk-modal-title {
+            margin: 1px 0 0;
+            color: var(--risk-text);
+            font-size: 20px;
+            line-height: 1.3;
+            font-weight: 900;
+        }
+
+        .account-risk-modal-sub {
+            margin-top: 3px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .account-risk-modal-close {
+            flex: 0 0 auto;
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .65);
+            color: #475569;
+            font-size: 20px;
+            line-height: 26px;
+            cursor: pointer;
+        }
+
+        .account-risk-modal-close:hover {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .account-risk-modal-body {
+            overflow-y: auto;
+            padding: 13px 16px 14px;
+        }
+
+        .risk-modal-hero {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--risk-border);
+            border-radius: 9px;
+            background: var(--risk-bg);
+        }
+
+        .risk-modal-score {
+            flex: 0 0 auto;
+            width: 66px;
+            height: 60px;
+            border-radius: 10px;
+            background: var(--risk-color);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .risk-modal-score strong {
+            font-size: 25px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .risk-modal-score span {
+            margin-top: 3px;
+            font-size: 10px;
+            opacity: .88;
+        }
+
+        .risk-modal-hero-text {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .risk-modal-hero-title {
+            color: var(--risk-text);
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .risk-modal-hero-sub {
+            margin-top: 3px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .risk-modal-section {
+            margin-top: 13px;
+        }
+
+        .risk-modal-section h4 {
+            margin: 0 0 6px;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .risk-modal-section h4 .risk-section-count {
+            margin-left: 4px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .risk-modal-actions {
+            margin: 0;
+            padding-left: 20px;
+            color: #334155;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .risk-modal-actions li + li {
+            margin-top: 2px;
+        }
+
+        .risk-account-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .risk-account-item {
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        .risk-account-label {
+            color: #64748b;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .risk-account-value {
+            margin-top: 1px;
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .risk-positions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .risk-positions-table th,
+        .risk-positions-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .risk-positions-table th {
+            color: #64748b;
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
+        .risk-positions-table th:nth-child(1),
+        .risk-positions-table td:nth-child(1),
+        .risk-positions-table th:nth-child(2),
+        .risk-positions-table td:nth-child(2) {
+            text-align: left;
+        }
+
+        .risk-positions-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .risk-level-pill {
+            display: inline-flex;
+            align-items: center;
+            height: 17px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: var(--risk-color);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .risk-modal-notes {
+            padding: 8px 9px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .risk-modal-notes b {
+            color: #334155;
+        }
+
+        .risk-data-issues {
+            margin: 4px 0 0;
+            padding-left: 18px;
+            color: #92400e;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .account-risk-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px 16px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .account-risk-modal-footer .btn {
+            font-size: 12px;
+            padding: 4px 12px;
+        }
+
+        .risk-force-box {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .risk-force-hint {
+            color: #991b1b;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .risk-force-ack {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.5;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .risk-force-ack input {
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            accent-color: var(--risk-color);
+        }
+
+        .risk-force-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .risk-toast-btn {
+            border: 1px solid var(--risk-color);
+            background: #fff;
+            color: var(--risk-text);
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .risk-toast-btn:hover {
+            background: #fff;
+            color: var(--risk-text);
+        }
+
+        @keyframes accountRiskBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .35; }
+        }
+
+        @keyframes accountRiskDockPulse {
+            0%, 100% { box-shadow: 0 8px 26px rgba(15, 23, 42, .28), 0 0 0 0 rgba(185, 28, 28, .38); }
+            50% { box-shadow: 0 8px 26px rgba(15, 23, 42, .28), 0 0 0 8px rgba(185, 28, 28, 0); }
+        }
+
+        @keyframes accountRiskShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        @media (max-width: 1100px) {
+            .account-risk-metrics,
+            .risk-modal-metrics {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .risk-account-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .account-risk-banner-main {
+                flex-wrap: wrap;
+            }
+
+            .account-risk-actions {
+                width: 100%;
+                margin-left: 0;
+                justify-content: flex-end;
+            }
+
+            .account-risk-metrics,
+            .risk-modal-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .account-risk-dock {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .account-risk-toast {
+                top: 8px;
+                right: 8px;
+                width: calc(100vw - 16px);
+            }
+
+            .account-risk-modal {
+                padding: 8px;
+            }
+
+            .account-risk-modal-dialog {
+                max-height: calc(100vh - 16px);
+            }
+
+            .risk-account-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .risk-positions-table th,
+            .risk-positions-table td {
+                padding: 3px 4px;
+            }
+        }
+
+
     </style>
 </head>
 <body>
 <div class="container mt-4">
     <h2>我的持仓</h2>
+
+    <!-- 企业级账户风控预警：页面常驻警示 -->
+    <section id="accountRiskBanner" class="account-risk-banner risk-level-unknown" role="region"
+             aria-label="账户风控预警" aria-live="polite">
+        <div class="account-risk-banner-main">
+            <div class="account-risk-badge" id="accountRiskBadge">
+                <span class="account-risk-dot" aria-hidden="true"></span>
+                <span id="accountRiskLevelText">检测中</span>
+            </div>
+            <div class="account-risk-head">
+                <div class="account-risk-title-row">
+                    <h3 id="accountRiskTitle">企业级账户风控预警</h3>
+                    <span class="account-risk-score" id="accountRiskScore">-- / 100</span>
+                    <span class="account-risk-tag">常驻监控</span>
+                    <span class="account-risk-tag is-stale" id="accountRiskStale" hidden>数据可能过期</span>
+                </div>
+                <p class="account-risk-summary" id="accountRiskSummary">正在获取股票融资账户风控快照…</p>
+                <div class="account-risk-meta">
+                    <span id="accountRiskAsOf">截至 —</span>
+                    <span id="accountRiskSource">数据源 —</span>
+                    <span id="accountRiskModel">模型 —</span>
+                    <span id="accountRiskDataState">数据状态 —</span>
+                </div>
+            </div>
+            <div class="account-risk-actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="accountRiskRefresh">重新检测</button>
+                <button type="button" class="btn btn-sm risk-btn-primary" id="accountRiskDetail">查看详情</button>
+            </div>
+        </div>
+        <div class="account-risk-metrics" id="accountRiskMetrics"></div>
+        <div class="account-risk-warnings" id="accountRiskWarnings"></div>
+        <div class="account-risk-advice" id="accountRiskAdvice"></div>
+    </section>
+
     <!-- 资金持仓表单 (保持不动) -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center" onclick="toggleCollapse()">
@@ -1865,6 +2910,48 @@
                 <button type="button" class="btn btn-primary" id="confirmSyncBtn" disabled>确认同步</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- 企业级账户风控：常驻浮标（滚动时仍可见） -->
+<button type="button" class="account-risk-dock risk-level-unknown" id="accountRiskDock"
+        aria-label="账户风控常驻提醒，点击查看详情">
+    <span class="account-risk-dock-dot" aria-hidden="true"></span>
+    <span class="account-risk-dock-body">
+        <span class="account-risk-dock-label" id="accountRiskDockLabel">风控检测中</span>
+        <span class="account-risk-dock-metric" id="accountRiskDockMetric">正在获取账户快照…</span>
+    </span>
+    <span class="account-risk-dock-score" id="accountRiskDockScore">--</span>
+</button>
+
+<!-- 企业级账户风控：关注级别 toast -->
+<div class="account-risk-toast risk-level-watch" id="accountRiskToast" role="status" aria-live="polite" hidden>
+    <div class="account-risk-toast-icon" aria-hidden="true">!</div>
+    <div class="account-risk-toast-body">
+        <strong class="account-risk-toast-title" id="accountRiskToastTitle">账户风险关注</strong>
+        <span class="account-risk-toast-text" id="accountRiskToastText"></span>
+    </div>
+    <button type="button" class="btn risk-toast-btn" id="accountRiskToastDetail">详情</button>
+    <button type="button" class="account-risk-toast-close" id="accountRiskToastClose" aria-label="关闭关注提示">×</button>
+</div>
+
+<!-- 企业级账户风控：分级弹框 -->
+<div class="account-risk-modal risk-level-unknown" id="accountRiskModal" hidden>
+    <div class="account-risk-modal-backdrop" id="accountRiskModalBackdrop"></div>
+    <div class="account-risk-modal-dialog" id="accountRiskModalDialog" role="dialog" aria-modal="true"
+         aria-labelledby="accountRiskModalTitle" tabindex="-1">
+        <div class="account-risk-modal-head">
+            <div class="account-risk-modal-icon" id="accountRiskModalIcon" aria-hidden="true">!</div>
+            <div class="account-risk-modal-titles">
+                <div class="account-risk-modal-kicker" id="accountRiskModalKicker">企业级账户风控 · 常驻监控</div>
+                <h3 class="account-risk-modal-title" id="accountRiskModalTitle">账户风控预警</h3>
+                <div class="account-risk-modal-sub" id="accountRiskModalSub"></div>
+            </div>
+            <button type="button" class="account-risk-modal-close" id="accountRiskModalClose"
+                    aria-label="关闭风控弹框">×</button>
+        </div>
+        <div class="account-risk-modal-body" id="accountRiskModalBody"></div>
+        <div class="account-risk-modal-footer" id="accountRiskModalFooter"></div>
     </div>
 </div>
 
@@ -4997,6 +6084,1033 @@
     }
 
 
+
+    // ================================================================================
+    // 企业级账户风控预警：常驻横幅 + 常驻浮标 + 分级弹框 + 关注 toast
+    // ================================================================================
+
+    const ACCOUNT_RISK_API = '/api/strategy/bsTrade/accountWarn';
+    const ACCOUNT_RISK_STORAGE_PREFIX = 'tdx-account-risk-v1:';
+    const ACCOUNT_RISK_LEVELS = ['SAFE', 'WATCH', 'WARN', 'CRITICAL'];
+
+    const ACCOUNT_RISK_META = {
+        SAFE: {label: '正常', shortLabel: '风控正常', title: '账户风控正常', icon: '✓', baseScore: 0},
+        WATCH: {label: '关注', shortLabel: '风险关注', title: '账户风险关注', icon: '!', baseScore: 30},
+        WARN: {label: '预警', shortLabel: '风险预警', title: '账户风控预警', icon: '!', baseScore: 60},
+        CRITICAL: {label: '严重', shortLabel: '严重风险', title: '账户风控严重预警', icon: '!!', baseScore: 100},
+        UNKNOWN: {label: '未知', shortLabel: '风控未知', title: '账户风控数据不可用', icon: '?', baseScore: 0}
+    };
+
+    const accountRiskState = {
+        data: null,
+        loading: false,
+        error: null,
+        stale: false,
+        acknowledgedFingerprint: '',
+        modalOpen: false,
+        modalMode: null,
+        modalForced: false,
+        lastFocus: null,
+        countdownTimer: null,
+        toastTimer: null
+    };
+
+
+    // ------------------------------------------------------------------ 基础工具
+
+    function accountRiskSessionGet(key) {
+        try {
+            return window.sessionStorage.getItem(ACCOUNT_RISK_STORAGE_PREFIX + key);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function accountRiskSessionSet(key, value) {
+        try {
+            window.sessionStorage.setItem(ACCOUNT_RISK_STORAGE_PREFIX + key, value);
+        } catch (e) {
+            // sessionStorage 不可用时退化为本次页面内存行为
+        }
+    }
+
+    function accountRiskSessionRemove(key) {
+        try {
+            window.sessionStorage.removeItem(ACCOUNT_RISK_STORAGE_PREFIX + key);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    function accountRiskEsc(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function accountRiskNumber(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function accountRiskFmtMoney(value) {
+        const n = accountRiskNumber(value);
+        return n === null ? '—' : n.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function accountRiskFmtPct(value, digits) {
+        const n = accountRiskNumber(value);
+        return n === null ? '—' : `${n.toFixed(digits === undefined ? 2 : digits)}%`;
+    }
+
+    function accountRiskFmtRatioPct(value) {
+        const n = accountRiskNumber(value);
+        return n === null ? '—' : `${(n * 100).toFixed(2)}%`;
+    }
+
+    function accountRiskFmtPt(value) {
+        const n = accountRiskNumber(value);
+        return n === null ? '—' : `${n.toFixed(2)}pt`;
+    }
+
+    function accountRiskNormalizeLevel(level) {
+        const normalized = String(level || '').toUpperCase();
+        return ACCOUNT_RISK_LEVELS.includes(normalized) ? normalized : 'UNKNOWN';
+    }
+
+    function accountRiskMeta(level) {
+        return ACCOUNT_RISK_META[accountRiskNormalizeLevel(level)] || ACCOUNT_RISK_META.UNKNOWN;
+    }
+
+    function accountRiskLevelClass(level) {
+        return 'risk-level-' + accountRiskNormalizeLevel(level).toLowerCase();
+    }
+
+    function accountRiskMaxLevel(a, b) {
+        const rank = {SAFE: 0, WATCH: 1, WARN: 2, CRITICAL: 3, UNKNOWN: 0};
+        return (rank[a] || 0) >= (rank[b] || 0) ? a : b;
+    }
+
+    function accountRiskScoreForLevel(level) {
+        return accountRiskMeta(level).baseScore;
+    }
+
+    function accountRiskSetLevelClass(el, level) {
+        if (!el) return;
+        el.classList.remove('risk-level-safe', 'risk-level-watch', 'risk-level-warn', 'risk-level-critical', 'risk-level-unknown');
+        el.classList.add(accountRiskLevelClass(level));
+    }
+
+    function accountRiskFingerprint(data) {
+        if (!data) return '';
+        const warningCodes = (data.warnings || []).map(w => w.code || '').filter(Boolean).sort().join(',');
+        return [data.riskLevel, data.riskScore, warningCodes, data.dataComplete ? '1' : '0'].join('|');
+    }
+
+    function accountRiskNormalize(raw) {
+        if (!raw || typeof raw !== 'object' || !raw.riskLevel) return null;
+
+        const warnings = (Array.isArray(raw.warnings) ? raw.warnings : []).map((w) => ({
+            code: String(w.code || ''),
+            level: accountRiskNormalizeLevel(w.level),
+            metric: String(w.metric || ''),
+            value: w.value,
+            threshold: w.threshold,
+            unit: String(w.unit || ''),
+            message: String(w.message || ''),
+            action: String(w.action || '')
+        }));
+
+        let level = accountRiskNormalizeLevel(raw.riskLevel);
+        warnings.forEach((w) => {
+            if (w.level !== 'UNKNOWN') level = accountRiskMaxLevel(level, w.level);
+        });
+        // 数据不完整时，不能显示为“安全”
+        if (raw.dataComplete === false && level === 'SAFE') level = 'WARN';
+
+        const rawScore = accountRiskNumber(raw.riskScore);
+        const data = {
+            riskLevel: level,
+            riskLevelLabel: raw.riskLevelLabel || accountRiskMeta(level).label,
+            riskScore: rawScore === null ? accountRiskScoreForLevel(level) : Math.max(0, Math.min(100, Math.round(rawScore))),
+            riskSummary: String(raw.riskSummary || ''),
+            asOf: String(raw.asOf || ''),
+            source: String(raw.source || ''),
+            modelVersion: String(raw.modelVersion || ''),
+            dataComplete: raw.dataComplete !== false,
+            dataIssues: Array.isArray(raw.dataIssues) ? raw.dataIssues.map(String) : [],
+            warnings,
+            actions: Array.isArray(raw.actions) ? raw.actions.map(String).filter(Boolean) : [],
+            account: raw.account || {},
+            guarantee: raw.guarantee || {},
+            leverage: raw.leverage || {},
+            concentration: raw.concentration || {},
+            liquidity: raw.liquidity || {},
+            topPositions: Array.isArray(raw.topPositions) ? raw.topPositions : [],
+            config: raw.config || {}
+        };
+        if (!data.riskSummary) {
+            data.riskSummary = warnings.length ? warnings[0].message : accountRiskMeta(level).title;
+        }
+        data.fingerprint = accountRiskFingerprint(data);
+        return data;
+    }
+
+
+    // ------------------------------------------------------------------ 指标等级 / 指标卡
+
+    function accountRiskGuaranteeLevel(g) {
+        if (!g) return 'UNKNOWN';
+        if (g.applicable === false) return 'SAFE';
+        const zone = String(g.zone || '').toUpperCase();
+        if (zone === 'NO_LIABILITY') return 'SAFE';
+        if (ACCOUNT_RISK_LEVELS.includes(zone)) return zone;
+        const rate = accountRiskNumber(g.realRate);
+        if (rate === null) return 'UNKNOWN';
+        if (rate >= 2.0) return 'SAFE';
+        if (rate >= 1.5) return 'WATCH';
+        if (rate >= 1.3) return 'WARN';
+        return 'CRITICAL';
+    }
+
+    function accountRiskLeverageLevel(l) {
+        if (!l) return 'UNKNOWN';
+        const pos = accountRiskNumber(l.positionRatioPct);
+        const max = accountRiskNumber(l.maxPositionPct);
+        if (pos === null || max === null || max <= 0) return 'UNKNOWN';
+        if (pos > max) return 'CRITICAL';
+        if (pos >= max * 0.9) return 'WARN';
+        if (pos >= max * 0.8) return 'WATCH';
+        return 'SAFE';
+    }
+
+    function accountRiskConcentrationLevel(c) {
+        if (!c) return 'UNKNOWN';
+        const max = accountRiskNumber(c.maxSingleStockRatioPct);
+        const limit = accountRiskNumber(c.singleStockLimitPct);
+        if (max === null || limit === null || limit <= 0) return 'UNKNOWN';
+        if (max > limit * 1.5) return 'CRITICAL';
+        if (max > limit) return 'WARN';
+        if (max > limit * 0.8) return 'WATCH';
+        return 'SAFE';
+    }
+
+    function accountRiskLiquidityLevel(liq, account) {
+        if (!liq) return 'UNKNOWN';
+        const coverage = accountRiskNumber(liq.marginCoveragePct);
+        const available = accountRiskNumber(liq.availableBuyPct);
+        const liability = accountRiskNumber(account && account.totalLiability);
+        if (coverage !== null && liability !== 0) {
+            if (coverage < 0) return 'CRITICAL';
+            if (coverage < 5) return 'WARN';
+            if (coverage < 10) return 'WATCH';
+        }
+        if (available === null) return 'UNKNOWN';
+        if (available < 0) return 'CRITICAL';
+        if (available < 5) return 'WARN';
+        if (available < 10) return 'WATCH';
+        return 'SAFE';
+    }
+
+    function accountRiskPnlLevel(account) {
+        if (!account) return 'UNKNOWN';
+        const profit = accountRiskNumber(account.profitRatioPct);
+        if (profit === null) return 'UNKNOWN';
+        if (profit < -100) return 'CRITICAL';
+        if (profit < -50) return 'WARN';
+        if (profit < -20) return 'WATCH';
+        return 'SAFE';
+    }
+
+    function accountRiskBuildMetrics(data) {
+        if (!data) {
+            return [
+                {label: '担保比例', value: '—', sub: '等待数据', level: 'UNKNOWN'},
+                {label: '总仓位', value: '—', sub: '等待数据', level: 'UNKNOWN'},
+                {label: '最大单票', value: '—', sub: '等待数据', level: 'UNKNOWN'},
+                {label: '可买/负债', value: '—', sub: '等待数据', level: 'UNKNOWN'},
+                {label: '持仓盈亏', value: '—', sub: '等待数据', level: 'UNKNOWN'}
+            ];
+        }
+
+        const g = data.guarantee || {};
+        const l = data.leverage || {};
+        const c = data.concentration || {};
+        const liq = data.liquidity || {};
+        const a = data.account || {};
+        const gApplicable = g.applicable !== false;
+
+        const guaranteeSub = gApplicable
+            ? `预警 ${accountRiskFmtRatioPct(g.warningLine || 1.5)} · 平仓 ${accountRiskFmtRatioPct(g.closeLine || 1.3)}`
+            : '无融资负债，不适用';
+        const guaranteeValue = gApplicable
+            ? (g.realRate === null || g.realRate === undefined ? '—' : accountRiskFmtRatioPct(g.realRate))
+            : '不适用';
+
+        return [
+            {
+                label: '担保比例',
+                value: guaranteeValue,
+                sub: gApplicable && g.distanceToClosePct !== null && g.distanceToClosePct !== undefined
+                    ? `距平仓线 ${accountRiskFmtPt(g.distanceToClosePct)}`
+                    : guaranteeSub,
+                level: accountRiskGuaranteeLevel(g)
+            },
+            {
+                label: '总仓位',
+                value: accountRiskFmtPct(l.positionRatioPct),
+                sub: `上限 ${accountRiskFmtPct(l.maxPositionPct)} · 利用率 ${accountRiskFmtPct(l.utilizationPct)}`,
+                level: accountRiskLeverageLevel(l)
+            },
+            {
+                label: '最大单票',
+                value: accountRiskFmtPct(c.maxSingleStockRatioPct),
+                sub: `上限 ${accountRiskFmtPct(c.singleStockLimitPct)} · Top1 ${accountRiskFmtPct(c.top1WeightPct)}`,
+                level: accountRiskConcentrationLevel(c)
+            },
+            {
+                label: '可买/负债',
+                value: liq.marginCoveragePct === null || liq.marginCoveragePct === undefined ? '—' : accountRiskFmtPct(liq.marginCoveragePct),
+                sub: `可买占净资产 ${accountRiskFmtPct(liq.availableBuyPct)}`,
+                level: accountRiskLiquidityLevel(liq, a)
+            },
+            {
+                label: '持仓盈亏',
+                value: accountRiskFmtPct(a.profitRatioPct),
+                sub: `盈亏 ${accountRiskFmtMoney(a.profit)}`,
+                level: accountRiskPnlLevel(a)
+            }
+        ];
+    }
+
+    function accountRiskMetricsHtml(data) {
+        return accountRiskBuildMetrics(data).map((m) => `
+            <div class="risk-metric ${accountRiskLevelClass(m.level)}">
+                <div class="risk-metric-label">${accountRiskEsc(m.label)}</div>
+                <div class="risk-metric-value">${accountRiskEsc(m.value)}</div>
+                <div class="risk-metric-sub">${accountRiskEsc(m.sub)}</div>
+            </div>
+        `).join('');
+    }
+
+    function accountRiskWarningValue(value, threshold, unit) {
+        const format = (v) => {
+            const n = accountRiskNumber(v);
+            if (n === null) return '—';
+            if (unit === '%') return `${n.toFixed(2)}%`;
+            if (unit === '元') return `¥${accountRiskFmtMoney(n)}`;
+            return `${n}${unit || ''}`;
+        };
+        if (value === null || value === undefined) return '';
+        if (threshold === null || threshold === undefined) return format(value);
+        return `${format(value)} / ${format(threshold)}`;
+    }
+
+    function accountRiskWarningHtml(w) {
+        const meta = accountRiskMeta(w.level);
+        const valueText = accountRiskWarningValue(w.value, w.threshold, w.unit);
+        return `
+            <div class="risk-warning-item ${accountRiskLevelClass(w.level)}">
+                <span class="risk-warning-level">${accountRiskEsc(meta.label)}</span>
+                <div class="risk-warning-main">
+                    <div class="risk-warning-head">
+                        <span class="risk-warning-metric">${accountRiskEsc(w.metric || '风险项')}</span>
+                        ${w.code ? `<span class="risk-warning-code">${accountRiskEsc(w.code)}</span>` : ''}
+                    </div>
+                    <div class="risk-warning-msg">${accountRiskEsc(w.message || '')}</div>
+                </div>
+                ${valueText ? `<div class="risk-warning-value">${accountRiskEsc(valueText)}</div>` : ''}
+            </div>
+        `;
+    }
+
+    function accountRiskWarningsHtml(data, limit) {
+        if (!data) return '<div class="risk-empty">等待风控数据…</div>';
+        const warnings = data.warnings || [];
+        if (!warnings.length) {
+            if (data.riskLevel === 'SAFE') {
+                return '<div class="risk-safe-line">✓ 未发现风险项，账户风控指标处于正常区间。</div>';
+            }
+            return '<div class="risk-empty">当前风险等级下未返回风险项明细，请查看详情或重新检测。</div>';
+        }
+        const shown = limit ? warnings.slice(0, limit) : warnings;
+        let html = shown.map(accountRiskWarningHtml).join('');
+        if (limit && warnings.length > limit) {
+            html += `<div class="risk-empty">还有 ${warnings.length - limit} 项风险，点击“查看详情”查看全部。</div>`;
+        }
+        return html;
+    }
+
+    function accountRiskAdviceHtml(data) {
+        if (!data) {
+            return '<strong>建议：</strong><span>风控数据不可用时禁止新增融资买入，检查券商会话/接口后重新检测。</span>';
+        }
+        const actions = data.actions || [];
+        if (actions.length) {
+            return `<strong>建议：</strong><span>${accountRiskEsc(actions.slice(0, 2).join('；'))}</span>`;
+        }
+        const fallback = {
+            SAFE: '保持当前仓位与担保比例，定期复核。',
+            WATCH: '控制新增仓位，关注担保比例与集中度变化。',
+            WARN: '降低仓位或补充担保品，暂停新增融资。',
+            CRITICAL: '立即降低风险敞口，补充担保品/降低负债，优先化解平仓风险。'
+        };
+        return `<strong>建议：</strong><span>${accountRiskEsc(fallback[data.riskLevel] || fallback.WARN)}</span>`;
+    }
+
+
+    // ------------------------------------------------------------------ 常驻横幅 / 浮标
+
+    function accountRiskSetButtons() {
+        const refresh = document.getElementById('accountRiskRefresh');
+        const detail = document.getElementById('accountRiskDetail');
+        if (refresh) {
+            refresh.disabled = accountRiskState.loading;
+            refresh.textContent = accountRiskState.loading ? '检测中…' : '重新检测';
+        }
+        if (detail) {
+            detail.disabled = accountRiskState.loading && !accountRiskState.data && !accountRiskState.error;
+        }
+    }
+
+    function accountRiskRenderLoading() {
+        const banner = document.getElementById('accountRiskBanner');
+        if (!banner) return;
+        accountRiskSetLevelClass(banner, 'UNKNOWN');
+        banner.classList.add('is-loading');
+        banner.setAttribute('aria-live', 'polite');
+        document.getElementById('accountRiskLevelText').textContent = '检测中';
+        document.getElementById('accountRiskTitle').textContent = '企业级账户风控预警';
+        document.getElementById('accountRiskScore').textContent = '-- / 100';
+        document.getElementById('accountRiskSummary').textContent = '正在获取股票融资账户风控快照…';
+        document.getElementById('accountRiskAsOf').textContent = '截至 —';
+        document.getElementById('accountRiskSource').textContent = '数据源 —';
+        document.getElementById('accountRiskModel').textContent = '模型 —';
+        document.getElementById('accountRiskDataState').textContent = '数据状态 检测中';
+        document.getElementById('accountRiskStale').hidden = true;
+        document.getElementById('accountRiskMetrics').innerHTML = accountRiskMetricsHtml(null);
+        document.getElementById('accountRiskWarnings').innerHTML = '<div class="risk-empty">正在检测担保比例、总仓位、单票集中度与流动性…</div>';
+        document.getElementById('accountRiskAdvice').innerHTML = '<strong>提示：</strong><span>风控检测完成前，请勿新增融资买入。</span>';
+        accountRiskRenderDock('UNKNOWN', null, '正在获取账户快照…', '--');
+        accountRiskSetButtons();
+    }
+
+    function accountRiskRenderUnavailable() {
+        const banner = document.getElementById('accountRiskBanner');
+        if (!banner) return;
+        accountRiskSetLevelClass(banner, 'UNKNOWN');
+        banner.classList.remove('is-loading');
+        banner.setAttribute('aria-live', 'assertive');
+        document.getElementById('accountRiskLevelText').textContent = '未知';
+        document.getElementById('accountRiskTitle').textContent = '账户风控数据不可用';
+        document.getElementById('accountRiskScore').textContent = '— / 100';
+        document.getElementById('accountRiskSummary').textContent = `无法获取账户风控数据：${accountRiskState.error || '未知错误'}。数据恢复前禁止新增融资买入。`;
+        document.getElementById('accountRiskAsOf').textContent = '截至 —';
+        document.getElementById('accountRiskSource').textContent = '数据源 /api/strategy/bsTrade/accountWarn';
+        document.getElementById('accountRiskModel').textContent = '模型 —';
+        document.getElementById('accountRiskDataState').textContent = '数据状态 无法确认';
+        document.getElementById('accountRiskStale').hidden = true;
+        document.getElementById('accountRiskMetrics').innerHTML = accountRiskMetricsHtml(null);
+        document.getElementById('accountRiskWarnings').innerHTML = `<div class="risk-error-box"><b>风控接口不可用</b>${accountRiskEsc(accountRiskState.error || '未知错误')}</div>`;
+        document.getElementById('accountRiskAdvice').innerHTML = '<strong>建议：</strong><span>检查券商登录会话或接口状态，点击“重新检测”；数据恢复前禁止加仓。</span>';
+        accountRiskRenderDock('UNKNOWN', null, '无法确认担保比例/仓位', '--');
+        accountRiskSetButtons();
+    }
+
+    function accountRiskRenderData() {
+        const data = accountRiskState.data;
+        if (!data) return;
+        const meta = accountRiskMeta(data.riskLevel);
+        const banner = document.getElementById('accountRiskBanner');
+        if (!banner) return;
+
+        accountRiskSetLevelClass(banner, data.riskLevel);
+        banner.classList.toggle('is-loading', accountRiskState.loading);
+        banner.setAttribute('aria-live', data.riskLevel === 'CRITICAL' ? 'assertive' : 'polite');
+
+        document.getElementById('accountRiskLevelText').textContent = meta.label;
+        document.getElementById('accountRiskTitle').textContent = meta.title;
+        document.getElementById('accountRiskScore').textContent = `${data.riskScore} / 100`;
+
+        const stalePrefix = accountRiskState.stale ? '刷新失败，展示上次结果。' : '';
+        document.getElementById('accountRiskSummary').textContent = stalePrefix + data.riskSummary;
+        document.getElementById('accountRiskAsOf').textContent = `截至 ${data.asOf || '—'}`;
+        document.getElementById('accountRiskSource').textContent = `数据源 ${data.source || '—'}`;
+        document.getElementById('accountRiskModel').textContent = `模型 ${data.modelVersion || '—'}`;
+        document.getElementById('accountRiskDataState').textContent = data.dataComplete
+            ? '数据完整'
+            : `数据不完整${data.dataIssues.length ? `（${data.dataIssues.length}项）` : ''}`;
+
+        const stale = document.getElementById('accountRiskStale');
+        stale.hidden = !accountRiskState.stale;
+
+        document.getElementById('accountRiskMetrics').innerHTML = accountRiskMetricsHtml(data);
+        document.getElementById('accountRiskWarnings').innerHTML = accountRiskWarningsHtml(data, 3);
+        document.getElementById('accountRiskAdvice').innerHTML = accountRiskAdviceHtml(data);
+
+        const g = data.guarantee || {};
+        const l = data.leverage || {};
+        const dockMetric = [
+            g.applicable === false ? '无负债' : `担保 ${accountRiskFmtRatioPct(g.realRate)}`,
+            `仓位 ${accountRiskFmtPct(l.positionRatioPct)}`
+        ].join(' · ');
+        accountRiskRenderDock(data.riskLevel, data.riskScore, dockMetric, data.riskLevel === 'SAFE' ? '0' : String(data.riskScore));
+        accountRiskSetButtons();
+    }
+
+    function accountRiskRenderDock(level, score, metric, scoreText) {
+        const dock = document.getElementById('accountRiskDock');
+        if (!dock) return;
+        accountRiskSetLevelClass(dock, level);
+        const meta = accountRiskMeta(level);
+        const label = document.getElementById('accountRiskDockLabel');
+        const metricEl = document.getElementById('accountRiskDockMetric');
+        const scoreEl = document.getElementById('accountRiskDockScore');
+        if (label) label.textContent = level === 'UNKNOWN' ? meta.shortLabel : `${meta.shortLabel}`;
+        if (metricEl) metricEl.textContent = metric || '点击查看风控详情';
+        if (scoreEl) scoreEl.textContent = scoreText === undefined || scoreText === null ? '--' : String(scoreText);
+        dock.setAttribute('aria-label', `账户风控${meta.label}，点击查看详情`);
+    }
+
+
+    // ------------------------------------------------------------------ 弹框内容
+
+    function accountRiskAccountHtml(data) {
+        const a = data.account || {};
+        const liq = data.liquidity || {};
+        const items = [
+            ['总资产', `¥${accountRiskFmtMoney(a.totalAsset)}`],
+            ['净资产', `¥${accountRiskFmtMoney(a.netAsset)}`],
+            ['总负债', `¥${accountRiskFmtMoney(a.totalLiability)}`],
+            ['总市值', `¥${accountRiskFmtMoney(a.totalMarketValue)}`],
+            ['可用资金(担)', `¥${accountRiskFmtMoney(liq.availableCash)}`],
+            ['可用保证金', `¥${accountRiskFmtMoney(liq.availableMargin)}`],
+            ['融资负债', `¥${accountRiskFmtMoney(liq.financingDebt)}`],
+            ['剩余授信', `¥${accountRiskFmtMoney(liq.remainingCredit)}`]
+        ];
+        return `<div class="risk-account-grid">${items.map(([label, value]) => `
+            <div class="risk-account-item">
+                <div class="risk-account-label">${accountRiskEsc(label)}</div>
+                <div class="risk-account-value">${accountRiskEsc(value)}</div>
+            </div>
+        `).join('')}</div>`;
+    }
+
+    function accountRiskPositionsHtml(data) {
+        const positions = (data.topPositions || []).slice(0, 10);
+        if (!positions.length) {
+            return '<div class="risk-empty">暂无持仓集中度明细。</div>';
+        }
+        return `
+            <table class="risk-positions-table">
+                <thead>
+                <tr>
+                    <th>代码</th>
+                    <th>名称</th>
+                    <th>市值</th>
+                    <th>权重</th>
+                    <th>单票仓位</th>
+                    <th>盈亏</th>
+                    <th>风险</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${positions.map(p => `
+                    <tr>
+                        <td>${accountRiskEsc(p.code || '—')}</td>
+                        <td>${accountRiskEsc(p.name || '—')}</td>
+                        <td>¥${accountRiskFmtMoney(p.marketValue)}</td>
+                        <td>${accountRiskFmtPct(p.weightPct)}</td>
+                        <td>${accountRiskFmtPct(p.positionRatioPct)}</td>
+                        <td>${accountRiskFmtMoney(p.profit)}</td>
+                        <td><span class="risk-level-pill ${accountRiskLevelClass(p.riskLevel)}">${accountRiskEsc(accountRiskMeta(p.riskLevel).label)}</span></td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function accountRiskNotesHtml(data) {
+        const c = data.config || {};
+        const issues = data.dataIssues || [];
+        const guaranteeThresholds = `担保 ${accountRiskFmtRatioPct(c.guaranteeWatchLine || 2)} / ${accountRiskFmtRatioPct(c.guaranteeWarningLine || 1.5)} / ${accountRiskFmtRatioPct(c.guaranteeCloseLine || 1.3)}`;
+        return `
+            <div class="risk-modal-notes">
+                <b>阈值与口径：</b>${accountRiskEsc(guaranteeThresholds)}（关注/预警/平仓）；账户仓位上限 ${accountRiskFmtPct(c.positionLimitPct)}；单票上限 ${accountRiskFmtPct(c.singleStockLimitPct)}。<br>
+                <b>数据：</b>${accountRiskEsc(data.source || '—')} · 模型 ${accountRiskEsc(data.modelVersion || '—')} · 截至 ${accountRiskEsc(data.asOf || '—')}。<br>
+                <b>说明：</b>本预警为账户当前快照的规则风控，不含历史 VaR/最大回撤；数据异常或过期时禁止新增融资买入，最终以券商实时数据为准。
+                ${issues.length ? `<ul class="risk-data-issues">${issues.map(i => `<li>${accountRiskEsc(i)}</li>`).join('')}</ul>` : ''}
+            </div>
+        `;
+    }
+
+    function accountRiskModalBodyHtml(data) {
+        const meta = accountRiskMeta(data.riskLevel);
+        return `
+            <div class="risk-modal-hero ${accountRiskLevelClass(data.riskLevel)}">
+                <div class="risk-modal-score">
+                    <strong>${data.riskScore}</strong>
+                    <span>风险分</span>
+                </div>
+                <div class="risk-modal-hero-text">
+                    <div class="risk-modal-hero-title">${accountRiskEsc(meta.title)} · ${accountRiskEsc(meta.label)}</div>
+                    <div class="risk-modal-hero-sub">${accountRiskEsc(data.riskSummary)}</div>
+                </div>
+            </div>
+            <div class="risk-modal-metrics">${accountRiskMetricsHtml(data)}</div>
+            <div class="risk-modal-section">
+                <h4>风险项 <span class="risk-section-count">${data.warnings.length} 项</span></h4>
+                ${accountRiskWarningsHtml(data, null)}
+            </div>
+            <div class="risk-modal-section">
+                <h4>建议动作</h4>
+                ${data.actions.length
+                    ? `<ul class="risk-modal-actions">${data.actions.map(a => `<li>${accountRiskEsc(a)}</li>`).join('')}</ul>`
+                    : `<div class="risk-empty">${accountRiskEsc(accountRiskAdviceHtml(data).replace(/<[^>]+>/g, ''))}</div>`}
+            </div>
+            <div class="risk-modal-section">
+                <h4>账户快照</h4>
+                ${accountRiskAccountHtml(data)}
+            </div>
+            <div class="risk-modal-section">
+                <h4>Top 持仓</h4>
+                ${accountRiskPositionsHtml(data)}
+            </div>
+            <div class="risk-modal-section">
+                ${accountRiskNotesHtml(data)}
+            </div>
+        `;
+    }
+
+    function accountRiskModalFooterHtml(mode, forced, hasData, level) {
+        if (forced) {
+            return `
+                <div class="risk-force-box">
+                    <div class="risk-force-hint" id="accountRiskForceHint">严重风险：请先阅读上方风险项，倒计时结束后勾选确认。</div>
+                    <label class="risk-force-ack">
+                        <input type="checkbox" id="accountRiskForceAck" disabled>
+                        <span>我已知晓上述账户风险，仍要继续查看（只读）；确认不会解除风控，也不代表风险已消除。</span>
+                    </label>
+                    <div class="risk-force-actions">
+                        <button type="button" class="btn risk-btn-primary" id="accountRiskForceContinue"
+                                data-risk-action="ack" disabled>请阅读风险（3s）</button>
+                    </div>
+                </div>
+            `;
+        }
+        if (!hasData) {
+            return `
+                <button type="button" class="btn risk-btn" data-risk-action="close">知道了</button>
+                <button type="button" class="btn risk-btn-primary" data-risk-action="retry">重新检测</button>
+            `;
+        }
+        if (mode === 'warn') {
+            return `
+                <button type="button" class="btn risk-btn" data-risk-action="close">知道了，继续查看</button>
+                <button type="button" class="btn risk-btn-primary" data-risk-action="retry">重新检测</button>
+            `;
+        }
+        return `
+            <button type="button" class="btn risk-btn" data-risk-action="close">关闭</button>
+            <button type="button" class="btn risk-btn-primary" data-risk-action="retry">重新检测</button>
+        `;
+    }
+
+    function accountRiskErrorModalBodyHtml() {
+        return `
+            <div class="risk-error-box">
+                <b>无法获取账户风控数据</b>
+                ${accountRiskEsc(accountRiskState.error || '未知错误')}
+            </div>
+            <div class="risk-modal-section">
+                <h4>处理建议</h4>
+                <ul class="risk-modal-actions">
+                    <li>检查券商登录会话是否有效，确认后端风控接口已部署并重启。</li>
+                    <li>点击“重新检测”重试；数据恢复前禁止新增融资买入。</li>
+                    <li>不要仅凭页面其他行情/持仓数据判断账户风险。</li>
+                </ul>
+            </div>
+            <div class="risk-modal-section">
+                <div class="risk-modal-notes">风控接口：<b>${ACCOUNT_RISK_API}</b>；调用失败时前端会保持“未知”状态，不会降级为绿色安全。</div>
+            </div>
+        `;
+    }
+
+
+    // ------------------------------------------------------------------ 弹框开关 / 焦点
+
+    function accountRiskOpenModal(mode) {
+        const modal = document.getElementById('accountRiskModal');
+        if (!modal) return;
+        if (accountRiskState.loading && !accountRiskState.data) return;
+
+        const data = accountRiskState.data;
+        if (!data) mode = 'unknown';
+
+        const level = data ? data.riskLevel : 'UNKNOWN';
+        const meta = accountRiskMeta(level);
+
+        // CRITICAL：未确认前，任何入口都进入强制弹框
+        let forced = !!data && level === 'CRITICAL' && accountRiskState.acknowledgedFingerprint !== data.fingerprint;
+        if (level === 'CRITICAL' && accountRiskState.acknowledgedFingerprint === (data && data.fingerprint) && mode === 'force') {
+            forced = false;
+        }
+
+        accountRiskState.modalOpen = true;
+        accountRiskState.modalMode = mode;
+        accountRiskState.modalForced = forced;
+        accountRiskState.lastFocus = document.activeElement;
+
+        accountRiskSetLevelClass(modal, level);
+        modal.hidden = false;
+        modal.classList.toggle('is-static', forced);
+        document.body.classList.add('account-risk-modal-open');
+
+        const close = document.getElementById('accountRiskModalClose');
+        if (close) close.hidden = forced;
+
+        document.getElementById('accountRiskModalKicker').textContent = `企业级账户风控 · ${level === 'CRITICAL' ? '严重风险' : '常驻监控'}`;
+        document.getElementById('accountRiskModalTitle').textContent = data ? meta.title : '账户风控数据不可用';
+        document.getElementById('accountRiskModalIcon').textContent = data ? meta.icon : '?';
+        document.getElementById('accountRiskModalSub').textContent = data
+            ? `截至 ${data.asOf || '—'} · 评分 ${data.riskScore}/100 · ${data.dataComplete ? '数据完整' : '数据不完整'}`
+            : '无法确认担保比例/仓位等关键指标';
+
+        document.getElementById('accountRiskModalBody').innerHTML = data
+            ? accountRiskModalBodyHtml(data)
+            : accountRiskErrorModalBodyHtml();
+        document.getElementById('accountRiskModalFooter').innerHTML = accountRiskModalFooterHtml(mode, forced, !!data, level);
+
+        // 隐藏 toast，避免和弹框叠加
+        accountRiskHideToast();
+
+        const dialog = document.getElementById('accountRiskModalDialog');
+        requestAnimationFrame(() => {
+            if (dialog) dialog.focus();
+        });
+
+        if (forced) {
+            accountRiskStartCountdown(3);
+        } else {
+            accountRiskClearCountdown();
+        }
+    }
+
+    function accountRiskCloseModal(reason) {
+        const modal = document.getElementById('accountRiskModal');
+        if (!modal || !accountRiskState.modalOpen) return false;
+
+        if (accountRiskState.modalForced && reason !== 'ack') {
+            accountRiskShakeModal();
+            return false;
+        }
+
+        if (reason === 'ack' && accountRiskState.modalForced && accountRiskState.data) {
+            accountRiskState.acknowledgedFingerprint = accountRiskState.data.fingerprint;
+        }
+
+        accountRiskClearCountdown();
+        modal.hidden = true;
+        modal.classList.remove('is-static');
+        document.body.classList.remove('account-risk-modal-open');
+        accountRiskState.modalOpen = false;
+        accountRiskState.modalForced = false;
+
+        const previous = accountRiskState.lastFocus;
+        accountRiskState.lastFocus = null;
+        if (previous && typeof previous.focus === 'function') {
+            try {
+                previous.focus();
+            } catch (e) {
+                // ignore
+            }
+        }
+        return true;
+    }
+
+    function accountRiskShakeModal() {
+        const dialog = document.getElementById('accountRiskModalDialog');
+        if (!dialog) return;
+        dialog.classList.remove('is-shake');
+        void dialog.offsetWidth;
+        dialog.classList.add('is-shake');
+        window.setTimeout(() => dialog.classList.remove('is-shake'), 360);
+    }
+
+    function accountRiskClearCountdown() {
+        if (accountRiskState.countdownTimer) {
+            window.clearInterval(accountRiskState.countdownTimer);
+            accountRiskState.countdownTimer = null;
+        }
+    }
+
+    function accountRiskStartCountdown(seconds) {
+        accountRiskClearCountdown();
+        let remaining = seconds;
+        const ack = document.getElementById('accountRiskForceAck');
+        const button = document.getElementById('accountRiskForceContinue');
+        const hint = document.getElementById('accountRiskForceHint');
+
+        if (ack) ack.disabled = true;
+        if (button) {
+            button.disabled = true;
+            button.textContent = `请阅读风险（${remaining}s）`;
+        }
+        if (hint) hint.textContent = `严重风险：请先阅读上方风险项，${remaining} 秒后可勾选确认。`;
+
+        accountRiskState.countdownTimer = window.setInterval(() => {
+            remaining -= 1;
+            if (remaining > 0) {
+                if (button) button.textContent = `请阅读风险（${remaining}s）`;
+                if (hint) hint.textContent = `严重风险：请先阅读上方风险项，${remaining} 秒后可勾选确认。`;
+                return;
+            }
+
+            accountRiskClearCountdown();
+            if (ack) ack.disabled = false;
+            if (button) {
+                button.textContent = '我已知晓，继续查看（只读）';
+                button.disabled = !ack || !ack.checked;
+            }
+            if (hint) hint.textContent = '请勾选下方确认项，方可继续查看（只读）；常驻风控警示会一直保留。';
+        }, 1000);
+    }
+
+    function accountRiskTrapFocus(e) {
+        if (!accountRiskState.modalOpen || e.key !== 'Tab') return;
+        const dialog = document.getElementById('accountRiskModalDialog');
+        if (!dialog) return;
+        const focusables = Array.from(dialog.querySelectorAll(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null || el === document.activeElement);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
+
+    function accountRiskHandleKeydown(e) {
+        if (!accountRiskState.modalOpen) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            if (accountRiskState.modalForced) {
+                accountRiskShakeModal();
+            } else {
+                accountRiskCloseModal('escape');
+            }
+            return;
+        }
+        accountRiskTrapFocus(e);
+    }
+
+
+    // ------------------------------------------------------------------ 关注 toast
+
+    function accountRiskShowToast(level, title, text) {
+        const toast = document.getElementById('accountRiskToast');
+        if (!toast) return;
+        accountRiskSetLevelClass(toast, level);
+        document.getElementById('accountRiskToastTitle').textContent = title;
+        document.getElementById('accountRiskToastText').textContent = text;
+        toast.hidden = false;
+        if (accountRiskState.toastTimer) window.clearTimeout(accountRiskState.toastTimer);
+        accountRiskState.toastTimer = window.setTimeout(() => accountRiskHideToast(), 8000);
+    }
+
+    function accountRiskHideToast() {
+        if (accountRiskState.toastTimer) {
+            window.clearTimeout(accountRiskState.toastTimer);
+            accountRiskState.toastTimer = null;
+        }
+        const toast = document.getElementById('accountRiskToast');
+        if (toast) toast.hidden = true;
+    }
+
+
+    // ------------------------------------------------------------------ 加载 / 自动提醒
+
+    async function loadAccountRisk(manual) {
+        if (accountRiskState.loading) return;
+
+        accountRiskState.loading = true;
+        accountRiskState.error = null;
+        if (!accountRiskState.data) {
+            accountRiskRenderLoading();
+        } else {
+            accountRiskSetButtons();
+            const banner = document.getElementById('accountRiskBanner');
+            if (banner) banner.classList.add('is-loading');
+        }
+
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 12000);
+
+        try {
+            const response = await ApiUtils.fetch(ACCOUNT_RISK_API, {
+                method: 'GET',
+                headers: {Accept: 'application/json'},
+                signal: controller.signal
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!payload || payload.success === false) throw new Error((payload && payload.msg) || '接口返回失败');
+            if (!payload.data || !payload.data.riskLevel) throw new Error('风控接口返回空数据');
+
+            const data = accountRiskNormalize(payload.data);
+            if (!data) throw new Error('风控数据解析失败');
+
+            accountRiskState.data = data;
+            accountRiskState.error = null;
+            accountRiskState.stale = false;
+            accountRiskState.loading = false;
+            accountRiskSessionRemove('unknown');
+
+            accountRiskRenderData();
+            accountRiskMaybeAutoShow();
+        } catch (error) {
+            accountRiskState.loading = false;
+            accountRiskState.error = error && error.name === 'AbortError'
+                ? '请求超时（12 秒）'
+                : (error && error.message ? error.message : '未知错误');
+            accountRiskState.stale = !!accountRiskState.data;
+
+            if (accountRiskState.data) {
+                accountRiskRenderData();
+                accountRiskShowToast('UNKNOWN', '风控刷新失败', '仍展示上次风控结果，数据可能已过期；请重新检测。');
+                accountRiskSetButtons();
+            } else {
+                accountRiskRenderUnavailable();
+                accountRiskMaybeAutoShowUnknown();
+            }
+        } finally {
+            window.clearTimeout(timeout);
+            accountRiskSetButtons();
+        }
+    }
+
+    function accountRiskMaybeAutoShow() {
+        const data = accountRiskState.data;
+        if (!data || accountRiskState.loading || accountRiskState.modalOpen) return;
+
+        if (data.riskLevel === 'CRITICAL') {
+            accountRiskHideToast();
+            if (accountRiskState.acknowledgedFingerprint !== data.fingerprint) {
+                accountRiskOpenModal('force');
+            }
+            return;
+        }
+
+        if (data.riskLevel === 'WARN') {
+            accountRiskHideToast();
+            const key = `warn:${data.fingerprint}`;
+            if (!accountRiskSessionGet(key)) {
+                accountRiskSessionSet(key, '1');
+                accountRiskOpenModal('warn');
+            }
+            return;
+        }
+
+        if (data.riskLevel === 'WATCH') {
+            const key = `watch:${data.fingerprint}`;
+            if (!accountRiskSessionGet(key)) {
+                accountRiskSessionSet(key, '1');
+                accountRiskShowToast('WATCH', '账户风险关注', data.riskSummary);
+            }
+            return;
+        }
+
+        if (data.riskLevel === 'SAFE') {
+            accountRiskHideToast();
+            return;
+        }
+
+        // 数据等级未知时按普通风险提示，不做强制弹框
+        accountRiskHideToast();
+        accountRiskShowToast('UNKNOWN', '账户风控状态未知', data.riskSummary);
+    }
+
+    function accountRiskMaybeAutoShowUnknown() {
+        if (accountRiskState.data || accountRiskState.loading) return;
+        if (accountRiskSessionGet('unknown')) return;
+        accountRiskSessionSet('unknown', '1');
+        accountRiskOpenModal('unknown');
+    }
+
+
+    // ------------------------------------------------------------------ 事件绑定
+
+    function initAccountRiskUI() {
+        const refresh = document.getElementById('accountRiskRefresh');
+        const detail = document.getElementById('accountRiskDetail');
+        const dock = document.getElementById('accountRiskDock');
+        const close = document.getElementById('accountRiskModalClose');
+        const backdrop = document.getElementById('accountRiskModalBackdrop');
+        const footer = document.getElementById('accountRiskModalFooter');
+        const toastDetail = document.getElementById('accountRiskToastDetail');
+        const toastClose = document.getElementById('accountRiskToastClose');
+
+        if (refresh) refresh.addEventListener('click', () => loadAccountRisk(true));
+        if (detail) detail.addEventListener('click', () => accountRiskOpenModal('detail'));
+        if (dock) dock.addEventListener('click', () => accountRiskOpenModal('detail'));
+
+        if (close) close.addEventListener('click', () => accountRiskCloseModal('close'));
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                if (!accountRiskState.modalForced) accountRiskCloseModal('backdrop');
+            });
+        }
+
+        if (footer) {
+            footer.addEventListener('change', (e) => {
+                if (e.target && e.target.id === 'accountRiskForceAck') {
+                    const button = document.getElementById('accountRiskForceContinue');
+                    if (button) button.disabled = !e.target.checked;
+                }
+            });
+            footer.addEventListener('click', (e) => {
+                const actionEl = e.target && e.target.closest ? e.target.closest('[data-risk-action]') : null;
+                if (!actionEl) return;
+                const action = actionEl.getAttribute('data-risk-action');
+                if (action === 'close') {
+                    accountRiskCloseModal('close');
+                } else if (action === 'retry') {
+                    accountRiskCloseModal('retry');
+                    loadAccountRisk(true);
+                } else if (action === 'ack') {
+                    const ack = document.getElementById('accountRiskForceAck');
+                    if (!ack || !ack.checked || ack.disabled) {
+                        accountRiskShakeModal();
+                        return;
+                    }
+                    accountRiskCloseModal('ack');
+                }
+            });
+        }
+
+        if (toastDetail) {
+            toastDetail.addEventListener('click', () => {
+                accountRiskHideToast();
+                accountRiskOpenModal('detail');
+            });
+        }
+        if (toastClose) toastClose.addEventListener('click', accountRiskHideToast);
+
+        document.addEventListener('keydown', accountRiskHandleKeydown);
+
+        accountRiskRenderLoading();
+    }
+
     // ----------------------------------------- 按钮事件 ---------------------------------------------------------------
 
 
@@ -5058,7 +7172,10 @@
         document.getElementById('filterPositions_zyRz').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_changePct__min').addEventListener('change', () => displayPositionRecords(positionsData));
         document.getElementById('filterPositions_changePct__max').addEventListener('change', () => displayPositionRecords(positionsData));
-        document.getElementById('refreshPositionsButton').addEventListener('click', () => loadPositions());
+        document.getElementById('refreshPositionsButton').addEventListener('click', () => {
+            loadPositions();
+            loadAccountRisk(true);
+        });
 
 
         // -------------------------- 一键同步（持仓->通达信）
@@ -5338,6 +7455,10 @@
         loadPositions();
         // 查询配置
         loadConfAccount();
+
+        // 企业级账户风控：常驻检测 + 分级弹框
+        initAccountRiskUI();
+        loadAccountRisk();
     });
 
 
