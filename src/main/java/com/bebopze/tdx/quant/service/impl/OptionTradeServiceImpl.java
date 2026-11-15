@@ -698,9 +698,9 @@ public class OptionTradeServiceImpl implements OptionTradeService {
                                                               double newPositionRate) {
 
 
-        // 实际总仓位（融+担）     0.9567123   ->   95.67%
+        // 实际总仓位     0.9567123   ->   95.67%
         double actTotalPosRatio = posResp.getTotalAccount__actTotalPosRatio();
-        Assert.isTrue(actTotalPosRatio < newPositionRate, String.format("当前期权账户：实际总仓位=[%s] < new总仓位=[%s] ， 无需减仓！", actTotalPosRatio, newPositionRate));
+        Assert.isTrue(actTotalPosRatio > newPositionRate, String.format("当前期权账户：实际总仓位=[%s] <= new总仓位=[%s] ， 无需减仓！", actTotalPosRatio, newPositionRate));
 
 
         // 减仓差值  >=  5%（一次减仓   最少5%）
