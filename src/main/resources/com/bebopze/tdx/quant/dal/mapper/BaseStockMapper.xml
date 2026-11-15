@@ -178,6 +178,7 @@
         trade_date, open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
+        kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
         )
 
@@ -189,6 +190,7 @@
             #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineNd}, #{item.klineNdRawLen}, #{item.extDataNd}, #{item.extDataNdRawLen},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
             )
         </foreach>
@@ -203,6 +205,7 @@
         trade_date, open, high, low, close, prev_close,
         volume, amount,
         range_pct, change_pct, change_price, turnover_pct,
+        kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
         kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
         )
 
@@ -214,6 +217,7 @@
             #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
             #{item.volume}, #{item.amount},
             #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineNd}, #{item.klineNdRawLen}, #{item.extDataNd}, #{item.extDataNdRawLen},
             #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
             )
         </foreach>
@@ -243,6 +247,12 @@
         change_pct = COALESCE(VALUES(change_pct), change_pct),
         change_price = COALESCE(VALUES(change_price), change_price),
         turnover_pct = COALESCE(VALUES(turnover_pct), turnover_pct),
+
+
+        kline_nd = COALESCE(VALUES(kline_nd), kline_nd),
+        kline_nd_raw_len = COALESCE(VALUES(kline_nd_raw_len), kline_nd_raw_len),
+        ext_data_nd = COALESCE(VALUES(ext_data_nd), ext_data_nd),
+        ext_data_nd_raw_len = COALESCE(VALUES(ext_data_nd_raw_len), ext_data_nd_raw_len),
 
         kline_his = COALESCE(VALUES(kline_his), kline_his),
         kline_his_raw_len = COALESCE(VALUES(kline_his_raw_len), kline_his_raw_len),
