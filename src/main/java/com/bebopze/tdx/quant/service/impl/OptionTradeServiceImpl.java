@@ -625,7 +625,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
             // 可用数量
-            int stkavl = e.getHysjcc();
+            int stkavl = e.getHykysl();
             if (stkavl == 0) {
                 log.debug("equalRatio_sellPosition - 忽略     >>>     [{} {}-{}-{}]可用数量为：{}", etfCode, hybm, hydm, hyjc, stkavl);
                 return;
@@ -664,7 +664,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
             // 减仓数量  =  减仓金额 / 价格
             int qty = (int) (sell_marketValue / price.doubleValue());
 
-            qty = StockUtil.quantity(qty, stkavl);
+            // qty = StockUtil.quantity(qty, stkavl);
             param.setAmount(qty);
 
 
@@ -783,7 +783,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
             int qty = (int) (amount / price);
-            int quantity = StockUtil.quantity(qty, stockName);
+            // int quantity = StockUtil.quantity(qty, stockName);
 
 
             // -----------------------------------------------------------
@@ -793,7 +793,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
             param.setEtfCode(stockCode);
             param.setEtfName(stockName);
             param.setHybh(hybm);
-            param.setAmount(quantity);
+            param.setAmount(qty);
             param.setPrice(NumUtil.double2Decimal(price, priceScale));
 
 
@@ -1319,11 +1319,6 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
             // 可用数量
             Integer stkavl = e.getHysjcc();
-//            // 当日 新买入   ->   忽略
-//            if (stkavl == 0) {
-//                log.debug("quick__clearPosition - 当日[新买入]/当日[已挂单] -> 忽略     >>>     stock : [{}-{}]", etfCode, etfName);
-//                return;
-//            }
 
 
             // -------------------------------------------------- 价格精度
@@ -1538,7 +1533,8 @@ public class OptionTradeServiceImpl implements OptionTradeService {
             param.setPrice(price);
 
             // 数量（B数量 = S数量 -> 可用数量）
-            param.setAmount(StockUtil.quantity(e.getHykysl(), stockCode));
+            // param.setAmount(StockUtil.quantity(e.getHykysl(), stockCode));
+            param.setAmount(e.getHykysl());
 
 
             // 买入开仓
@@ -2123,7 +2119,7 @@ public class OptionTradeServiceImpl implements OptionTradeService {
 
 
             // qty 规则计算
-            qty = StockUtil.quantity(qty, e.getStockCode());
+            // qty = StockUtil.quantity(qty, e.getStockCode());
             e.setQuantity(qty);
 
 

@@ -68,7 +68,7 @@ public class OptionGetGGQQPositionResp {
     //        "Zqzhzbm": "888",               //
     //        "Zyk": "-585.0000",             // 总盈亏
     //        "bdzqdm": "588000",             // 标的证券code（ETF代码）
-    //        "hydw": "10000",                //
+    //        "hydw": "10000",                // 合约单位（10000份）
     //        "qqxqr": "20261223",            // 行权日
     //        "syts": "39",                   // 到期天数（自然日）
     //        "xqj": "1.7000"                 // 行权价
@@ -107,6 +107,9 @@ public class OptionGetGGQQPositionResp {
     private double Hyjyjdsl;
     private double Hyjyzcsl;
     private double Hyjyztsl;
+
+
+    // 可用数量
     private int Hykysl;
 
     private String Hylx;
@@ -166,6 +169,7 @@ public class OptionGetGGQQPositionResp {
     // 标的证券code（ETF代码：588000）
     private String bdzqdm;
 
+    // 合约单位（10000份）
     private double hydw;
 
 
