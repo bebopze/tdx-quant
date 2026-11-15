@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.AccountWarnDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.service.StrategyService;
@@ -143,6 +144,13 @@ public class StrategyController {
     @GetMapping(value = "/bsTrade/sellList")
     public Result<List<StockSnapshotKlineDTO>> sellList() {
         return Result.SUC(strategyService.sellList());
+    }
+
+
+    @Operation(summary = "策略交易 - 账户风控预警", description = "策略交易 - 账户风控预警")
+    @GetMapping(value = "/bsTrade/accountWarn")
+    public Result<AccountWarnDTO> accountWarn() {
+        return Result.SUC(strategyService.accountWarn());
     }
 
 

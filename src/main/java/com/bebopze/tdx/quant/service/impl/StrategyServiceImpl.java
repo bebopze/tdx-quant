@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.domain.dto.backtest.BacktestCompareDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopPoolAvgPctDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.topblock.TopStockPoolDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.AccountWarnDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.param.QuickBuyPositionParam;
 import com.bebopze.tdx.quant.common.domain.trade.resp.CcStockInfo;
@@ -17,11 +18,9 @@ import com.bebopze.tdx.quant.common.util.ConvertUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.SleepUtils;
 import com.bebopze.tdx.quant.dal.entity.BtPositionRecordDO;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
 import com.bebopze.tdx.quant.parser.writer.TdxBlockNewReaderWriter;
-import com.bebopze.tdx.quant.service.InitDataService;
-import com.bebopze.tdx.quant.service.StrategyService;
-import com.bebopze.tdx.quant.service.TopBlockService;
-import com.bebopze.tdx.quant.service.TradeService;
+import com.bebopze.tdx.quant.service.*;
 import com.bebopze.tdx.quant.strategy.backtest.BacktestStrategy;
 import com.bebopze.tdx.quant.strategy.buy.BacktestBuyStrategyD;
 import com.bebopze.tdx.quant.strategy.sell.SellStrategyFactory;
@@ -69,6 +68,9 @@ public class StrategyServiceImpl implements StrategyService {
     private TradeService tradeService;
 
     @Autowired
+    private AccountService accountService;
+
+    @Autowired
     private BacktestBuyStrategyD backtestBuyStrategyD;
 
     @Autowired
@@ -79,6 +81,10 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Autowired
     private TopBlockService topBlockService;
+
+
+    @Autowired
+    private MarketService marketService;
 
 
     @Override
@@ -720,6 +726,46 @@ public class StrategyServiceImpl implements StrategyService {
         List<StockSnapshotKlineDTO> klineList = KlineAPI.kline(sellCodeList);
         return klineList;
     }
+
+
+    @Override
+    public AccountWarnDTO accountWarn() {
+
+        // 股票融资账户快照（券商实时返回）
+        QueryCreditNewPosResp posResp = tradeService.queryCreditNewPosV2();
+
+
+        // 账户风控配置（DB id=1，缺失则回落到全局常量）
+        ConfAccountDO conf = accountService.info(1L);
+
+        boolean rzAccount = conf == null || conf.getRzAccount() == null
+                ? AccountConst.RZ_ACCOUNT
+                : conf.getRzAccount() == 1;
+
+        double maxRzPct = conf != null && conf.getMaxRzPct() != null
+                ? conf.getMaxRzPct().doubleValue()
+                : (rzAccount ? AccountConst.MAX_RZ_RATE : 1.0);
+
+        double posLimitPct = conf != null && conf.getPosLimitPct() != null
+                ? conf.getPosLimitPct().doubleValue()
+                : (rzAccount ? AccountConst.ACCOUNT__POS_PCT_LIMIT : 100.0);
+
+        double stockPosLimitPct = conf != null && conf.getStockPosLimitPct() != null
+                ? conf.getStockPosLimitPct().doubleValue()
+                : AccountConst.STOCK__POS_PCT_LIMIT;
+
+
+        AccountWarnDTO warnDTO = AccountRiskCalculator.calc(posResp, rzAccount, maxRzPct, posLimitPct, stockPosLimitPct);
+
+        log.info("accountWarn     >>>     riskLevel : {} , riskScore : {} , warnings : {}",
+                 warnDTO.getRiskLevel(), warnDTO.getRiskScore(),
+                 warnDTO.getWarnings() == null ? 0 : warnDTO.getWarnings().size());
+
+        return warnDTO;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
 
 
     /**
