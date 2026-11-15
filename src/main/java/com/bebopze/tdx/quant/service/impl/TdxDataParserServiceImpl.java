@@ -1578,60 +1578,55 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         }
 
         LocalDate tradeDate = latestTradingDate();
-        List<BaseStockDO> entities = snapshotList.parallelStream()
-                                                 .map(snapshot -> {
-                                                     if (snapshot == null || snapshot.getStockCode() == null) {
-                                                         return null;
-                                                     }
-                                                     Long stockId = codeIdMap.get(snapshot.getStockCode());
-                                                     if (stockId == null) {
-                                                         return null;
-                                                     }
-                                                     if (!(snapshot.getOpen() > 0) || !(snapshot.getHigh() > 0)
-                                                             || !(snapshot.getLow() > 0) || !(snapshot.getClose() > 0)) {
-                                                         return null;
-                                                     }
-                                                     if (snapshot.getHigh() < Math.max(snapshot.getOpen(), snapshot.getClose())
-                                                             || snapshot.getLow() > Math.min(snapshot.getOpen(), snapshot.getClose())
-                                                             || snapshot.getVol() < 0 || !Double.isFinite(snapshot.getAmo()) || snapshot.getAmo() < 0) {
-                                                         return null;
-                                                     }
+        List<BaseStockDO> entities = snapshotList.parallelStream().map(snapshot -> {
+            if (snapshot == null || snapshot.getStockCode() == null) {
+                return null;
+            }
+            Long stockId = codeIdMap.get(snapshot.getStockCode());
+            if (stockId == null) {
+                return null;
+            }
+            if (!(snapshot.getOpen() > 0) || !(snapshot.getHigh() > 0)
+                    || !(snapshot.getLow() > 0) || !(snapshot.getClose() > 0)) {
+                return null;
+            }
+            if (snapshot.getHigh() < Math.max(snapshot.getOpen(), snapshot.getClose())
+                    || snapshot.getLow() > Math.min(snapshot.getOpen(), snapshot.getClose())
+                    || snapshot.getVol() < 0 || !Double.isFinite(snapshot.getAmo()) || snapshot.getAmo() < 0) {
+                return null;
+            }
 
-                                                     BaseStockDO entity = new BaseStockDO();
-                                                     entity.setId(stockId);
-                                                     entity.setCode(snapshot.getStockCode());
-                                                     entity.setTradeDate(tradeDate);
+            BaseStockDO entity = new BaseStockDO();
+            entity.setId(stockId);
+            entity.setTradeDate(tradeDate);
 
-                                                     if (snapshot.getPrevClose() > 0) {
-                                                         entity.setPrevClose(BigDecimal.valueOf(snapshot.getPrevClose()));
-                                                     }
-                                                     entity.setOpen(of(snapshot.getOpen()));
-                                                     entity.setHigh(of(snapshot.getHigh()));
-                                                     entity.setLow(of(snapshot.getLow()));
-                                                     entity.setClose(of(snapshot.getClose()));
-                                                     entity.setVolume(snapshot.getVol());
-                                                     entity.setAmount(of(snapshot.getAmo()));
+            if (snapshot.getPrevClose() > 0) {
+                entity.setPrevClose(BigDecimal.valueOf(snapshot.getPrevClose()));
+            }
+            entity.setOpen(of(snapshot.getOpen()));
+            entity.setHigh(of(snapshot.getHigh()));
+            entity.setLow(of(snapshot.getLow()));
+            entity.setClose(of(snapshot.getClose()));
+            entity.setVolume(snapshot.getVol());
+            entity.setAmount(of(snapshot.getAmo()));
 
-                                                     if (Double.isFinite(snapshot.getRangePct())) {
-                                                         entity.setRangePct(of(snapshot.getRangePct()));
-                                                     }
-                                                     if (Double.isFinite(snapshot.getChangePct())) {
-                                                         entity.setChangePct(of(snapshot.getChangePct()));
-                                                     }
-                                                     if (Double.isFinite(snapshot.getChangePrice())) {
-                                                         entity.setChangePrice(of(snapshot.getChangePrice()));
-                                                     }
+            if (Double.isFinite(snapshot.getRangePct())) {
+                entity.setRangePct(of(snapshot.getRangePct()));
+            }
+            if (Double.isFinite(snapshot.getChangePct())) {
+                entity.setChangePct(of(snapshot.getChangePct()));
+            }
+            if (Double.isFinite(snapshot.getChangePrice())) {
+                entity.setChangePrice(of(snapshot.getChangePrice()));
+            }
+            return entity;
+        }).filter(Objects::nonNull).toList();
 
-                                                     return entity;
-                                                 })
-                                                 .filter(Objects::nonNull)
-                                                 .toList();
-
-
-        // 关键：不能逐行/逐条 update（base_stock 含大字段，实测单行 2~5s）；
-        // 使用现有批量 upsert，COALESCE(NULL, old) 保留 kline_his/ext_data_his。
-        baseStockService.batchInsertOrUpdate(entities);
-
+        int batchSize = 500;
+        for (int from = 0; from < entities.size(); from += batchSize) {
+            int to = Math.min(from + batchSize, entities.size());
+            baseStockService.updateBatchById(entities.subList(from, to), batchSize);
+        }
 
         log.info("fillStockRealtimeSnapshot     >>>     tradeDate : {} , snapshot : {} , update : {}",
                  tradeDate, snapshotList.size(), entities.size());

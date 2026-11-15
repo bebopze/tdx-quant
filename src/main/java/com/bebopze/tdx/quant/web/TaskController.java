@@ -56,7 +56,7 @@ public class TaskController {
     public Result<Void> refreshAll__lastDay(@Schema(description = "是否持久化 K 线历史；false=只刷 base_stock 实时字段（15s 快链路）", example = "false")
                                             @RequestParam(required = false, defaultValue = "false") boolean withHistory) {
         if (withHistory) {
-            tdxTask.execTask__refreshKline__lastNDays(1, true, false);
+            tdxTask.execTask__refreshKline__lastNDays(1, false);
         } else {
             tdxTask.execTask__refreshKline__lastDay(false);
         }
@@ -69,19 +69,16 @@ public class TaskController {
      *
      * @return
      */
-    @Operation(summary = "refreshAll - 增量更新最近N日", description = "盘中增量：N=1 实时快照；N>1 TQ 日线 + 最后1日快照；ext_data/topBlock 可选")
+    @Operation(summary = "refreshAll - 增量更新最近N日", description = "盘中增量：N=1 实时快照；N>1 TQ 日线 + 最后1日快照；topBlock 可选")
     @GetMapping(value = "/refreshAll__lastNDays")
     public Result<Void> refreshAll__lastNDays(@Schema(description = "最近 N 个交易日（1~250）", example = "5")
                                               @RequestParam(required = false, defaultValue = "5") int days,
 
-                                              @Schema(description = "是否计算 板块/ETF/个股 扩展数据", example = "true")
-                                              @RequestParam(required = false, defaultValue = "true") boolean withExtData,
-
-                                              @Schema(description = "是否执行 极耗时的 主线板块计算", example = "false")
+                                              @Schema(description = "是否执行极耗时的 topBlockService.refreshAll(INCR)", example = "false")
                                               @RequestParam(required = false, defaultValue = "false") boolean withTopBlock) {
 
 
-        tdxTask.execTask__refreshKline__lastNDays(days, withExtData, withTopBlock);
+        tdxTask.execTask__refreshKline__lastNDays(days, withTopBlock);
         return Result.SUC();
     }
 
