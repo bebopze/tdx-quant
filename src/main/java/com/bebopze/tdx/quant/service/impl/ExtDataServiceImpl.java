@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
@@ -514,8 +515,8 @@ public class ExtDataServiceImpl implements ExtDataService {
         DataDTO data = new DataDTO();
 
 
-        data.blockDOList = baseBlockService.listAllRpsKline();
-        data.blockDOList = data.blockDOList.stream().filter(e -> CollectionUtils.isNotEmpty(e.getKlineDTOList())).collect(Collectors.toList());
+        data.blockDOList = baseBlockService.listAllRpsKline(KlineDataEnum.HIS);
+        data.blockDOList = data.blockDOList.stream().filter(BaseBlockDO::hasKlineData).collect(Collectors.toList());
 
 
         // -------------------------------------------------------------------------------------------------------------

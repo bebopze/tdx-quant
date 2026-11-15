@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -342,7 +343,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
             // OFFSET  =>  全表顺序读 + 丢弃
             PageHelper.startPage(pageNum++, pageSize);
-            List<BaseStockDO> pageList = baseMapper.listAllKline();
+            List<BaseStockDO> pageList = baseMapper.listAllKline(KlineDataEnum.ALL.getType());
 
             list.addAll(pageList);
 

@@ -28,7 +28,7 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     List<BaseStockDO> listAllSimple();
 
-    List<BaseStockDO> listAllKline();
+    List<BaseStockDO> listAllKline(@Param("klineDataType") Integer klineDataType);
 
     List<BaseStockDO> listAllETFKline();
 
