@@ -2653,7 +2653,7 @@
                 </div>
 
                 <div class="ratio-block">
-                    <h3>账户总仓位等比减仓 <span class="badge badge-danger">已阻断 P0-01</span></h3>
+                    <h3>账户总仓位等比减仓 <span class="badge badge-ok">P0-01 已修复</span></h3>
                     <div class="ratio-grid">
                         <label class="field" style="flex:0 0 170px">
                             <span>目标总仓位（%）</span>
@@ -2663,19 +2663,14 @@
                         <span class="hint" style="flex:1 1 220px;padding-bottom:4px">
               请求参数 <code class="mono">newPositionRate</code> 为 0～1 小数（页面百分比 ÷ 100 后提交）。
             </span>
-                        <button class="btn btn-danger" id="btn-total-execute" data-trade="total-account" type="button"
-                                disabled>执行（已阻断）
+                        <button class="btn btn-danger" id="btn-total-execute" data-trade="total-account" type="button">
+                            执行账户总仓位减仓
                         </button>
                     </div>
                     <div class="ratio-preview" id="total-ratio-preview"></div>
-                    <div class="blocked-note">
-                        <b>P0-01 后端阻断：</b>服务层 <code
-                            class="mono">check___totalAccount__equalRatioSellPosition()</code> 先断言
-                        “实际总仓位 &lt; 目标仓位”，随后又要求 “实际总仓位 − 目标仓位 &gt; 0.05”，正常数值无法同时成立，
-                        该接口按当前代码不能作为可用减仓功能。<b>前端保留 UI 与接口映射，但不发出真实请求。</b>
-                        后端修复并完成边界/方向测试后，将本文件 <code
-                            class="mono">CONFIG.BLOCKERS.totalAccountEqRatio</code>
-                        置为 <code class="mono">false</code> 方可解除。
+                    <div class="hint" style="margin-top:8px">
+                        后端已修复 P0-01：实际总仓位必须大于目标总仓位，且减仓差需大于 <b>5%</b>（5% 本身不通过）；
+                        不满足时后端会拒绝。前端在执行前同步校验。
                     </div>
                 </div>
 
@@ -2696,12 +2691,8 @@
                     </div>
                     <div class="ratio-preview" id="curr-ratio-preview"></div>
                     <div class="risk-list">
-                        <b>P0-02 / P0-04 风险（后端未修复）：</b>
+                        <b>P0-04 / P1-02 风险（后端未修复）：</b>
                         <ul>
-                            <li><code class="mono">equalRatio_sellPosition()</code> 使用 <code class="mono">StockUtil.quantity(qty,
-                                avail)</code>
-                                股票 100 股取整规则，小于 100 张的期权持仓可能被取整为 0 或 100，比例偏差明显。
-                            </li>
                             <li>等比减仓固定使用 <code class="mono">SELL_CLOSE</code>，未按持仓 <code
                                     class="mono">Ccfx</code>
                                 区分权利仓/义务仓；对义务仓可能方向错误。
@@ -2716,7 +2707,7 @@
             <section class="panel" id="quick-option-panel" aria-labelledby="qo-title">
                 <div class="panel-head">
                     <h2 id="qo-title">快捷分档下单</h2>
-                    <span class="badge badge-warn">P0-03 / P0-05 / P0-06</span>
+                    <span class="badge badge-warn">P0-05 / P0-06</span>
                     <span class="badge badge-muted">GET /quick/quickOption</span>
                 </div>
                 <div class="field-grid">
@@ -2760,8 +2751,8 @@
                 </div>
                 <div class="risk-list">
                     <b>已登记后端风险：</b>起始价固定取 <code class="mono">fivequote.buy1</code>；仅 SELL_CLOSE 使用正向阶梯，
-                    其余交易类型反向阶梯；每档数量经 <code class="mono">StockUtil.quantity()</code> 股票规则取整；
-                    金额换算未显式处理合约单位；接口返回 <code class="mono">Void</code>，无法确认逐档受理结果。
+                    其余交易类型反向阶梯；每档数量按“金额 / 价格”向下取整为期权张数（P0-03 已修复，不再使用股票 100 股取整）；
+                    金额换算未显式处理合约单位（P0-06）；接口返回 <code class="mono">Void</code>，无法确认逐档受理结果。
                     执行后必须刷新委托核对，超时不得重发整组请求。
                 </div>
             </section>
@@ -2790,7 +2781,7 @@
         <!-- ============================== 风险清单 ============================== -->
         <section class="panel">
             <details class="doc" id="blockers-details" open>
-                <summary>后端阻断项与前端保护措施（发布前必读）</summary>
+                <summary>后端风险登记与前端保护措施（发布前必读）</summary>
                 <div class="doc-body" id="blockers-body"></div>
             </details>
         </section>
@@ -2881,10 +2872,6 @@
         MAX_QUICK_LEVELS: 50,
         MAX_LOG_ENTRIES: 120,
         PRICE_SCALE: 4,
-        // 后端缺陷阻断开关：仅在对应后端修复并通过验收后修改，详见页面“后端阻断项”。
-        BLOCKERS: Object.freeze({
-            totalAccountEqRatio: true,   // P0-01：校验条件矛盾，执行入口被阻断
-        }),
     });
 
     const ENDPOINTS = Object.freeze({
@@ -4925,7 +4912,8 @@
                 el('span', {}, '目标总仓位：', el('b', {}, targetRatio === null ? '—' : fmt.ratioPct(targetRatio, 2))),
                 el('span', {}, '预计减仓差：', el('b', {}, diff === null ? '—' : fmt.ratioPct(diff, 2))),
                 el('span', {}, '影响范围：', el('b', {}, `账户级操作 · ${state.positions.length} 个持仓合约`)),
-                el('span', {class: 'danger-text'}, '后端校验条件矛盾，执行已阻断'));
+                el('span', {class: diff !== null && diff <= 0.05 ? 'danger-text' : 'hint'},
+                    diff !== null && diff <= 0.05 ? '减仓差需大于 5%（后端校验）' : '后端要求：减仓差 > 5%'));
         }
 
         const sz = toNum(pick(state.account || {}, 'Sz'));
@@ -4941,8 +4929,8 @@
         }
         const totalBtn = $('#btn-total-execute');
         if (totalBtn) {
-            totalBtn.textContent = CONFIG.BLOCKERS.totalAccountEqRatio ? '执行（已阻断）' : '执行账户总仓位减仓';
-            totalBtn.title = CONFIG.BLOCKERS.totalAccountEqRatio ? 'P0-01 后端校验条件矛盾，执行已阻断' : '';
+            totalBtn.textContent = '执行账户总仓位减仓';
+            totalBtn.title = '后端 P0-01 已修复：实际总仓位 > 目标总仓位，且减仓差 > 5%';
         }
     }
 
@@ -5015,7 +5003,7 @@
         ['9', '批量撤单', 'POST', '/revokeOrders', '可撤/当日委托勾选 + 批量撤单', '逐笔展示 Errcode / Errmsg / suc，随后刷新'],
         ['10', '一键清仓', 'GET', '/quick/clearPosition', '快捷交易 · 一键清仓', 'CLEAR 确认 → 执行 → 刷新账户/持仓/委托/可撤'],
         ['11', '指定合约一键等比卖出', 'GET', '/quick/sellPosition', '持仓面板 · 选中持仓等比卖出', '生成预览 → 强确认 → 执行 → 刷新'],
-        ['12', '账户总仓位一键等比减仓', 'GET', '/quick/totalAccount/eqRatio/sellPosition', '仓位控制 · 账户总仓位', 'UI 与接口映射保留；P0-01 阻断，不发出请求'],
+        ['12', '账户总仓位一键等比减仓', 'GET', '/quick/totalAccount/eqRatio/sellPosition', '仓位控制 · 账户总仓位', '后端 P0-01 已修复；执行前校验目标 < 当前且减仓差 > 5%'],
         ['13', '当前持仓一键等比减仓', 'GET', '/quick/currPos/eqRatio/sellPosition', '仓位控制 · 当前持仓', '风险确认 → 强确认 → 执行 → 刷新'],
         ['14', '一键撤销全部未成交委托', 'GET', '/quick/cancelOrder', '快捷交易 · 一键撤单', '展示可撤列表 → 强确认 → 执行 → 刷新核对'],
         ['15', '快捷分档下单', 'GET', '/quick/quickOption', '快捷交易 · 分档下单', '计划预览 → 风险确认 → 执行 → 刷新委托核对'],
@@ -5023,15 +5011,15 @@
     ];
 
     const BLOCKER_ROWS = [
-        ['P0-01', '阻断', 'OptionTradeServiceImpl.check___totalAccount__equalRatioSellPosition()',
-            '当前仓位校验条件互相矛盾：先要求实际仓位 < 目标仓位，又要求实际仓位 − 目标仓位 > 0.05。',
-            '正常减仓请求无法通过。前端保留 UI/接口映射，执行按钮阻断；后端修复并补单元/集成测试后将 CONFIG.BLOCKERS.totalAccountEqRatio 置 false。'],
-        ['P0-02', '阻断', 'equalRatio_sellPosition() → StockUtil.quantity(qty, avail)',
-            '期权张数复用股票 100 股取整规则（最小 100、按 100 取整）。',
-            '等比减仓数量偏差，买卖张数可能被取整为 0 或 100。前端在“当前持仓等比减仓”展示风险并要求显式确认。'],
-        ['P0-03', '阻断', 'quickOption() → StockUtil.quantity(qty, stockName)',
-            '分档数量复用股票取整规则，且传入的是合约名称而非代码。',
-            '分档数量可能为 0 或按 100 取整。前端预览明确标注“前端估算”，不宣称准确数量。'],
+        ['P0-01', '已修复', 'OptionTradeServiceImpl.check___totalAccount__equalRatioSellPosition()',
+            '已修复：原先校验条件互相矛盾（要求实际仓位 < 目标仓位，又要求实际仓位 − 目标仓位 > 0.05）。',
+            '后端已改为要求实际总仓位 > 目标总仓位，且减仓差 > 0.05；前端已解除阻断，并在执行前同步校验 5% 阈值。'],
+        ['P0-02', '已修复', 'equalRatio_sellPosition() → 期权张数取整',
+            '已修复：原先使用 StockUtil.quantity(qty, avail) 的股票 100 股取整规则（最小 100、按 100 取整）。',
+            '后端已改为“当前市值 × 减仓比例 / 价格”后向下取整为期权张数；前端已移除股票取整警告。'],
+        ['P0-03', '已修复', 'quickOption() → 分档数量取整',
+            '已修复：原先复用 StockUtil.quantity(qty, stockName) 的股票取整规则，且传入的是合约名称。',
+            '后端已改为“金额 / 价格”向下取整为期权张数；前端预览按同口径展示，不再按 100 取整。'],
         ['P0-04', '阻断', 'quickClearPosition / quickSellPosition / equalRatio_sellPosition',
             '固定使用 SELL_CLOSE，未按持仓 Ccfx 区分权利仓/义务仓。',
             '义务仓平仓方向可能错误（会变成卖出开仓）。前端保护：存在义务仓时禁用一键清仓；等比卖出仅允许权利仓。'],
@@ -5095,28 +5083,34 @@
 
         const blockers = $('#blockers-body');
         if (blockers) {
+            const docStatusClass = (status) => status === '已修复' ? 'badge-ok'
+                : status === '阻断' ? 'badge-danger'
+                    : status === '高' ? 'badge-warn'
+                        : status === '中' ? 'badge-muted' : 'badge-info';
             const rows = BLOCKER_ROWS.map((r) => el('tr', {},
                 el('td', {class: 'center'}, el('span', {
                     class: 'sev ' + (r[0].indexOf('P0') === 0 ? 'sev-p0' : r[0].indexOf('P1') === 0 ? 'sev-p1' : r[0] === '新发现' ? 'sev-new' : 'sev-p2'),
                     text: r[0]
                 })),
+                el('td', {class: 'center'}, el('span', {class: 'badge ' + docStatusClass(r[1]), text: r[1]})),
                 el('td', {class: 'mono', text: r[2]}),
                 el('td', {class: 'cell-wrap', text: r[3]}),
                 el('td', {class: 'cell-wrap', text: r[4]})));
             replaceNode(blockers,
                 el('p', {
                     class: 'hint',
-                    text: '以下问题来自现有后端源码调用链，不属于前端可以自行修复的 UI 问题。前端不绕过、不伪造、不隐藏：保留入口与接口映射，能安全执行的保留，存在方向/数量风险的加确认或阻断。'
+                    text: '以下为后端风险登记与当前状态：P0-01 / P0-02 / P0-03 已由后端修复，前端对应解除阻断、移除股票取整警告；P0-04 / P0-05 / P0-06 等仍未修复项继续保留确认或阻断。前端不绕过、不伪造、不隐藏。'
                 }),
                 el('div', {class: 'table-scroll'}, el('table', {class: 'data'},
                     el('thead', {}, el('tr', {},
                         el('th', {class: 'center', text: '编号'}),
+                        el('th', {class: 'center', text: '状态'}),
                         el('th', {text: '位置'}),
                         el('th', {text: '当前问题'}),
                         el('th', {text: '风险 / 前端处理'}))),
                     el('tbody', {}, rows))),
                 el('p', {class: 'hint', style: 'margin-top:8px'},
-                    '后端整改验收建议：不同持仓方向的平仓方向选择；1/2/10/99/100/101 张边界；分档金额与合约单位换算；四种交易类型的价格阶梯方向；账户仓位低于/等于/高于目标仓位；快捷操作逐笔成功/失败/部分成功。'));
+                    '已修复项回归建议：账户仓位低于/等于/高于目标仓位、减仓差 = 5%；1/2/10/99/100/101 张边界；分档金额/价格取整。未修复项：不同持仓方向的平仓方向选择、分档金额与合约单位换算、四种交易类型的价格阶梯方向、快捷操作逐笔成功/失败/部分成功。'));
         }
     }
 
@@ -5147,7 +5141,6 @@
         $$('[data-trade]').forEach((btn) => {
             const action = btn.dataset.trade;
             let extra = false;
-            if (action === 'total-account') extra = CONFIG.BLOCKERS.totalAccountEqRatio === true;
             if (action === 'clear-position') extra = state.positions.length === 0 || state.positions.some(isShortPosition);
             if (action === 'submit-order') {
                 btn.disabled = state.busy || state.sessionLost || !canSubmitOrder();
@@ -6300,12 +6293,6 @@
 
     /* ------------------------------------------------------------------ 25. 仓位控制（等比减仓） */
     async function executeTotalAccountEqRatio() {
-        if (CONFIG.BLOCKERS.totalAccountEqRatio) {
-            const msg = 'P0-01 后端阻断：账户总仓位校验条件矛盾，前端禁止发出真实请求';
-            logAction('账户总仓位减仓', 'blocked', msg);
-            toast('error', msg, 9000);
-            return;
-        }
         if (state.busy) {
             toast('warn', '已有交易操作进行中');
             return;
@@ -6329,6 +6316,10 @@
             toast('warn', '目标仓位应低于当前总仓位（减仓）');
             return;
         }
+        if (current - targetRatio <= 0.05) {
+            toast('warn', `减仓差必须大于 5%（后端校验）：当前 ${fmt.ratioPct(current, 2)}，目标 ${fmt.ratioPct(targetRatio, 2)}`, 9000);
+            return;
+        }
         const res = await openConfirmDialog({
             title: '确认账户总仓位等比减仓',
             subtitle: 'GET /api/option/trade/quick/totalAccount/eqRatio/sellPosition',
@@ -6339,8 +6330,8 @@
                 ['减仓差', fmt.ratioPct(current - targetRatio, 2)],
                 ['newPositionRate', String(targetRatio)],
             ],
-            warnings: ['该操作作用于账户全部持仓；后端数量使用股票取整规则、平仓固定 SELL_CLOSE，结果需刷新核对。'],
-            checkLabel: '我已知晓后端 P0-02 / P0-04 风险并确认执行',
+            warnings: ['该操作作用于账户全部持仓；后端固定使用 SELL_CLOSE，未按持仓 Ccfx 区分权利仓/义务仓（P0-04）；单笔失败可能被吞掉（P1-02）；执行后需刷新核对。'],
+            checkLabel: '我已知晓 P0-04 / P1-02 风险并确认执行',
             confirmLabel: '确认执行',
         });
         if (!res.ok) return;
@@ -6400,11 +6391,10 @@
                 ['合约编码', '合约名称', '方向', '持仓', '可用', '市值'],
                 state.positions.map((p) => [p.hybm, p.hyjc, p.ccfx, fmt.qty(p.qty), fmt.qty(p.avail), fmt.num(p.marketValue, 2)])),
             warnings: [
-                '后端 <code>equalRatio_sellPosition()</code> 使用 <b>StockUtil.quantity()</b> 的股票 100 股取整规则，小于 100 张的期权持仓可能被取整为 0 或 100。',
-                '后端固定使用 <b>SELL_CLOSE</b>，未按持仓方向区分权利仓/义务仓；义务仓可能方向错误。',
-                '接口返回 Void，逐笔失败可能被吞掉；执行后必须刷新持仓与委托核对。',
+                '后端固定使用 <b>SELL_CLOSE</b>，未按持仓方向区分权利仓/义务仓；义务仓可能方向错误（P0-04）。',
+                '接口返回 Void，逐笔失败可能被吞掉；执行后必须刷新持仓与委托核对（P1-02）。',
             ],
-            checkLabel: '我已知晓 P0-02 / P0-04 风险，确认提交真实等比减仓委托',
+            checkLabel: '我已知晓 P0-04 / P1-02 风险，确认提交真实等比减仓委托',
             confirmLabel: '确认执行等比减仓',
             footNote: '执行后将刷新账户、持仓、当日委托与可撤列表',
         });
@@ -6427,7 +6417,7 @@
                     ['刷新后持仓合约数', `${state.positions.length} 个`],
                     ['刷新后可撤委托', `${(state.revokeList || []).filter((o) => o.unfilled).length} 笔`],
                 ],
-                notice: '数量可能因后端股票取整规则与预期不同；请核对持仓与委托。',
+                notice: '后端按当前市值 × 减仓比例 / 价格计算每张数量；请核对刷新后的持仓与委托。',
             });
         } catch (err) {
             if (err instanceof ApiError && err.isTransportFailure) {
@@ -6632,13 +6622,6 @@
     }
 
     /* ------------------------------------------------------------------ 27. 快捷分档下单 */
-    function stockQuantityMirror(val) {
-        // 与后端 StockUtil.quantity(val, stockCode) 的 kcb=false 分支保持一致的“前端预览”推算。
-        let v = Math.trunc(Number(val) || 0);
-        v = v >= 100 ? v : (v > 70 ? 100 : 0);
-        return v - (v % 100);
-    }
-
     function quickPlanSignature(plan) {
         if (!plan) return '';
         return [plan.hybm, plan.type, plan.levels, plan.pct, plan.amount, plan.stockCode].join('|');
@@ -6696,12 +6679,10 @@
             for (let i = 0; i < levels; i += 1) {
                 if (i > 0) price *= (1 + sign * pct * 0.01);
                 const displayPrice = roundHalfUp(price, CONFIG.PRICE_SCALE);
-                const rawQty = Math.trunc(amount / price);
-                const qty = stockQuantityMirror(rawQty);
+                const qty = Math.max(0, Math.trunc(amount / price));
                 rows.push({
                     level: i + 1,
                     price: displayPrice,
-                    rawQty,
                     qty,
                     amount: unit ? displayPrice * qty * unit : null,
                 });
@@ -6738,8 +6719,7 @@
             el('th', {class: 'num', text: '档位'}),
             el('th', {class: 'num', text: '价格'}),
             el('th', {class: 'num', text: '相对买一'}),
-            el('th', {class: 'num', text: '原始数量（金额/价格）'}),
-            el('th', {class: 'num', text: '股票取整后（P0-03）'}),
+            el('th', {class: 'num', text: '数量（张，金额/价格取整）'}),
             el('th', {class: 'num', text: '预估金额'}),
             el('th', {text: '说明'})));
         const rows = plan.rows.map((r) => {
@@ -6751,12 +6731,11 @@
                     class: 'num ' + (rel >= 0 ? 'up' : 'down'),
                     text: `${rel >= 0 ? '+' : ''}${rel.toFixed(2)}%`
                 }),
-                el('td', {class: 'num', text: fmt.qty(r.rawQty)}),
                 el('td', {class: 'num', text: fmt.qty(r.qty)}),
                 el('td', {class: 'num', text: r.amount === null ? '—' : fmt.num(r.amount, 2)}),
                 el('td', {
                     class: 'hint',
-                    text: r.qty === 0 ? '股票取整后为 0（后端可能提交 0 张）' : (r.rawQty !== r.qty ? '后端将按 100 取整' : '')
+                    text: r.qty === 0 ? '金额/价格不足 1 张（后端可能提交 0 张）' : '按金额/价格向下取整'
                 }));
         });
         const totalAmount = plan.rows.reduce((s, r) => s + (r.amount || 0), 0);
@@ -6765,7 +6744,7 @@
             el('div', {class: 'hint', style: 'padding:8px 9px'},
                 `起始价 = fivequote.buy1 = ${fmt.price(plan.buy1)}；方向：${plan.sign > 0 ? '正向加价' : '反向降价'}（仅 SELL_CLOSE 正向）；` +
                 `间隔 ${plan.pct}%、${plan.levels} 档、每档 ${fmt.num(plan.amount, 2)} 元；预估总金额 ${totalAmount ? fmt.num(totalAmount, 2) + ' 元' : '合约单位未知'}。` +
-                ' 以上为前端推算，后端会重新取行情并用 StockUtil.quantity 处理数量，实际以委托单为准。'),
+                ' 以上为前端推算，后端会重新取行情并按“金额 / 价格”向下取整为期权张数（不再按股票 100 股取整），实际以委托单为准。'),
             totalAmount > plan.amount * plan.levels * 5
                 ? el('div', {class: 'risk-list'},
                     `⚠ 预估总金额约为每档输入金额合计的 ${Math.round(totalAmount / (plan.amount * plan.levels))} 倍：后端金额换算未显式乘入合约单位（P0-06），` +
@@ -6811,7 +6790,7 @@
             ],
             warnings: [
                 '该接口会按档位<b>连续提交多个真实委托</b>（LMT 限价，档间随机等待约 500ms），返回 <b>Void</b>，不提供逐档委托号或错误明细。',
-                '每档数量经后端 <code>StockUtil.quantity()</code> 股票规则取整（P0-03），金额/合约单位口径未核验（P0-06）；起始价与方向见 P0-05。',
+                '每档数量按“金额 / 价格”向下取整为期权张数（P0-03 已修复，不再按股票 100 股取整）；金额/合约单位口径未核验（P0-06）；起始价与方向见 P0-05。',
                 '若请求超时，<b>禁止直接重发整组请求</b>，必须先刷新当日委托核对，避免产生重复委托。',
             ],
             checkLabel: '我已知晓上述风险，确认逐档提交真实委托',
