@@ -103,13 +103,8 @@ public class TdxTqHttpClient {
         JSONObject result = root.containsKey("result") ? root.getJSONObject("result") : root;
 
 
-        // 高频批量快照（500只/批）不能每次 info 打印完整 result，否则日志会成为秒级链路的瓶颈
-        log.info("TdxTqHttpClient.call     >>>     method : {} , time : {}",
-                 method, DateTimeUtil.formatNow2Hms(start));
-        if (log.isDebugEnabled()) {
-            log.debug("TdxTqHttpClient.call detail     >>>     method : {} , params : {} , result : {}",
-                      method, GSON.toJson(params), GSON.toJson(result));
-        }
+        log.info("TdxTqHttpClient.call     >>>     method : {} , params : {} , result : {} , time : {}",
+                 method, GSON.toJson(params), GSON.toJson(result), DateTimeUtil.formatNow2Hms(start));
 
 
         checkResultErr(result);
