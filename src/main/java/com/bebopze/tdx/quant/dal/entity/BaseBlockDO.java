@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -274,6 +276,26 @@ public class BaseBlockDO implements Serializable {
     @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtModify;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public void setKlineStr(String klineStr, KlineDataEnum klineDataEnum) {
+        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+            setKlineNdStr(klineStr);
+        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+            setKlineHisStr(klineStr);
+        }
+    }
+
+    public void setExtDataStr(String extDataStr, KlineDataEnum klineDataEnum) {
+        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+            setExtDataNdStr(extDataStr);
+        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+            setExtDataHisStr(extDataStr);
+        }
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

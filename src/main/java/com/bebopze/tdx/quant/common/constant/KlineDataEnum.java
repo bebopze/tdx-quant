@@ -15,13 +15,32 @@ import lombok.Getter;
 public enum KlineDataEnum {
 
 
-    N_DAY(1, "N日K线"),
-    HIS(2, "历史K线"),
-    ALL(3, "全部K线");
+    N_DAY(1, "nd", "近N日更新", "拉取近N日K线（短期）-> 用于[近N日更新]"),
+
+    HIS(2, "his", "历史更新", "拉取历史K线（长期）-> 用于[历史更新]"),
+
+    ALL(3, "all", "暂不支持[全部更新（近N日更新 + 历史更新）]", "拉取全部K线（his + nd）-> 用于[回测]");
 
 
-    private final int type;
+    /**
+     * 更新类型
+     */
+    private final int updateType;
 
-    private final String desc;
+    /**
+     * 字段flag
+     */
+    private final String klineField;
+
+    /**
+     * 更新说明
+     */
+    private final String updateDesc;
+
+    /**
+     * 用途说明
+     */
+    private final String klineDesc;
+
 
 }

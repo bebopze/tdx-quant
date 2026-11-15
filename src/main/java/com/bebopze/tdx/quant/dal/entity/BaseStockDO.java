@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.dal.entity;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.*;
+import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -297,6 +299,26 @@ public class BaseStockDO implements Serializable {
     @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtModify;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public void setKlineStr(String klineStr, KlineDataEnum klineDataEnum) {
+        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+            setKlineNdStr(klineStr);
+        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+            setKlineHisStr(klineStr);
+        }
+    }
+
+    public void setExtDataStr(String extDataStr, KlineDataEnum klineDataEnum) {
+        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+            setExtDataNdStr(extDataStr);
+        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+            setExtDataHisStr(extDataStr);
+        }
+    }
 
 
     // -----------------------------------------------------------------------------------------------------------------

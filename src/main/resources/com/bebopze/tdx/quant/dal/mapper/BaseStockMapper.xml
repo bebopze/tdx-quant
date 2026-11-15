@@ -91,7 +91,7 @@
     </select>
 
 
-    <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+    <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
         <where>
@@ -132,9 +132,37 @@
     </select>
 
     <select id="listByCursor" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
-        SELECT *
+        SELECT
+
+        <where>
+            <if test="klineDataType == 1">
+                id, code, name, type, tdx_market_type, block_name,
+                trade_date, open, high, low, close, prev_close,
+                volume, amount,
+                range_pct, change_pct, change_price, turnover_pct,
+
+                kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
+
+                gmt_create, gmt_modify
+            </if>
+            <if test="klineDataType == 2">
+                id, code, name, type, tdx_market_type, block_name,
+                trade_date, open, high, low, close, prev_close,
+                volume, amount,
+                range_pct, change_pct, change_price, turnover_pct,
+
+                kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
+
+                gmt_create, gmt_modify
+            </if>
+            <if test="klineDataType == 3">
+                *
+            </if>
+        </where>
+
 
         FROM base_stock
+
 
         <where>
             <if test="typeSet != null and typeSet.size() > 0">

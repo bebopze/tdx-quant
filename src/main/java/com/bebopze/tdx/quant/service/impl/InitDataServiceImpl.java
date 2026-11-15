@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.cache.BacktestCache;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -232,7 +233,7 @@ public class InitDataServiceImpl implements InitDataService {
         baseBlockService.listAllKline(true);
 
         // refresh  ->  stockCache
-        baseStockService.listAllKline(null, true);
+        baseStockService.listAllKline(KlineDataEnum.ALL, null, true);
 
 
         init = false;
@@ -261,11 +262,11 @@ public class InitDataServiceImpl implements InitDataService {
 
 
         // DB 数据加载（个股+ETF）
-        data.allType_stockDOList = baseStockService.listAllKline(btStockTypeSet, refresh);
+        data.allType_stockDOList = baseStockService.listAllKline(KlineDataEnum.ALL, btStockTypeSet, refresh);
         // 空数据 过滤
         // 注意：这里用 hasKlineData()（不触发全历史 DTO 转换）而不是 getKlineDTOList()，
         //       后者会把 5370 只股票的全历史对象图（约 9.6 GB）全部建出来，即使随后只截取 1 年窗口。
-        data.allType_stockDOList = data.allType_stockDOList.stream().filter(e -> StringUtils.isNotBlank(e.getName()) && e.hasKlineData()
+        data.allType_stockDOList = data.allType_stockDOList.stream().filter(e -> e.hasKlineData()
                                                                             // TODO   基金北向
                 /*&& e.getAmount().doubleValue() > 0.1 * 1_0000_0000*/).collect(Collectors.toList());
 

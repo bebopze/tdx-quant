@@ -152,33 +152,37 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         return code_id_map;
     }
 
-
     @Override
-    public List<BaseStockDO> listAllKline(Integer type) {
-        return listAllKline(Set.of(type), false);
+    public List<BaseStockDO> listAllRpsKline(KlineDataEnum klineDataEnum, Integer stockType) {
+        return baseMapper.listAllRpsKline(klineDataEnum.getUpdateType(), stockType);
     }
 
     @Override
-    public List<BaseStockDO> listAllKline(Set<Integer> typeSet) {
-        return listAllKline(typeSet, false);
+    public List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Integer type) {
+        return listAllKline(klineDataEnum, Set.of(type), false);
+    }
+
+    @Override
+    public List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Set<Integer> typeSet) {
+        return listAllKline(klineDataEnum, typeSet, false);
     }
 
 
     @TotalTime
     @Override
-    public List<BaseStockDO> listAllKline(Set<Integer> typeSet, boolean refresh) {
-        return listAllKline_0(typeSet, refresh)
+    public List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Set<Integer> typeSet, boolean refresh) {
+        return listAllKline_0(klineDataEnum, typeSet, refresh)
                 .stream()
                 .filter(e -> CollectionUtils.isEmpty(typeSet) || typeSet.contains(e.getType()))
                 .collect(Collectors.toList());
     }
 
-    private List<BaseStockDO> listAllKline_0(Set<Integer> typeSet, boolean refresh) {
-        log.info("listAllKline     >>>     typeSet : {} , refresh : {}", typeSet, refresh);
+    private List<BaseStockDO> listAllKline_0(KlineDataEnum klineDataEnum, Set<Integer> typeSet, boolean refresh) {
+        log.info("listAllKline     >>>     klineDataEnum : {} , typeSet : {} , refresh : {}", klineDataEnum, typeSet, refresh);
 
 
         // listAllFromDiskCache >>> totalTime :6.9 s
-        return listAllFromDiskCache(typeSet, refresh);
+        return listAllFromDiskCache(klineDataEnum, typeSet, refresh);
 
 
         // listByCursor     >>>     totalTime : 52.4s
@@ -201,8 +205,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
-    public List<BaseStockDO> listByCursor(Set<Integer> typeSet, Long lastId, int pageSize) {
-        return baseMapper.listByCursor(typeSet, lastId, pageSize);
+    public List<BaseStockDO> listByCursor(KlineDataEnum klineDataEnum,
+                                          Set<Integer> typeSet,
+                                          Long lastId,
+                                          int pageSize) {
+
+        return baseMapper.listByCursor(klineDataEnum.getUpdateType(), typeSet, lastId, pageSize);
     }
 
 
@@ -254,7 +262,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
      *
      * @return
      */
-    private List<BaseStockDO> listAllFromDiskCache(Set<Integer> typeSet, boolean refresh) {
+    private List<BaseStockDO> listAllFromDiskCache(KlineDataEnum klineDataEnum, Set<Integer> typeSet, boolean refresh) {
         long start = System.currentTimeMillis();
 
 
@@ -262,7 +270,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
         List<BaseStockDO> list = JsonFileWriterAndReader.readLargeListFromFile___stock_listAllKline();
 
         if (CollectionUtils.isEmpty(list) || list.size() < 5500 || refresh) {
-            list = listByCursor(typeSet);
+            list = listByCursor(klineDataEnum, typeSet);
 
 
             // write Cache
@@ -280,7 +288,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     }
 
 
-    private List<BaseStockDO> listByCursor(Set<Integer> typeSet) {
+    private List<BaseStockDO> listByCursor(KlineDataEnum klineDataEnum, Set<Integer> typeSet) {
         long start = System.currentTimeMillis();
 
 
@@ -295,7 +303,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
             long start_1 = System.currentTimeMillis();
 
 
-            List<BaseStockDO> pageList = baseMapper.listByCursor(typeSet, lastId, pageSize);
+            List<BaseStockDO> pageList = listByCursor(klineDataEnum, typeSet, lastId, pageSize);
             if (pageList.isEmpty()) {
                 break;
             }
@@ -343,7 +351,7 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
             // OFFSET  =>  全表顺序读 + 丢弃
             PageHelper.startPage(pageNum++, pageSize);
-            List<BaseStockDO> pageList = baseMapper.listAllKline(KlineDataEnum.ALL.getType());
+            List<BaseStockDO> pageList = listAllRpsKline(KlineDataEnum.ALL, null);
 
             list.addAll(pageList);
 

@@ -161,7 +161,7 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
     @Override
     public List<BaseBlockDO> listAllRpsKline(KlineDataEnum klineDataEnum) {
-        return baseMapper.listAllRpsKline(klineDataEnum.getType());
+        return baseMapper.listAllRpsKline(klineDataEnum.getUpdateType());
     }
 
 
