@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 
@@ -41,6 +44,22 @@ public class TdxTqServiceImpl implements TdxTqService {
 
 
     public static final List<String> SNAPSHOT_FIELDS = List.of("LastClose", "Open", "Max", "Min", "Now", "Volume", "Amount");
+
+    /**
+     * 当前 TQ 版本可能不支持 get_market_snapshot_batch（例如返回 -32601）；
+     * 探测到后固定走单只 get_market_snapshot，避免每批都重复失败。
+     */
+    private volatile boolean batchSnapshotUnsupported = false;
+
+    /**
+     * 真实 TQ 不支持批量快照，单只 TQ 本地接口实测 20 并发约 1.5s/500只；
+     * 固定 24 个 IO 线程，避免 common ForkJoin 并发过低导致 5000+ 只耗时 30s。
+     */
+    private static final ExecutorService TQ_SNAPSHOT_POOL = Executors.newFixedThreadPool(24, r -> {
+        Thread t = new Thread(r, "tdx-tq-snapshot");
+        t.setDaemon(true);
+        return t;
+    });
 
 
     @Autowired
@@ -93,12 +112,9 @@ public class TdxTqServiceImpl implements TdxTqService {
                                  Map.of("stock_code", formatCode, "field_list", SNAPSHOT_FIELDS));
 
 
-        long vol = result.getLongValue("Volume", 0L);
-        // 对于 沪深京 个股/ETF   ->   Volume、NowVol 的 单位为：手
-        if (StockTypeEnum.isAStock(code) || StockTypeEnum.isETF(code)) {
-            // 股 = 手 x 100
-            vol *= 100;
-        }
+        // TQ Volume 可能带小数（ETF），直接 long 截断会少几十股；按 double 乘 100 后四舍五入
+        double rawVol = result.getDoubleValue("Volume");
+        long vol = Math.round(rawVol * ((StockTypeEnum.isAStock(code) || StockTypeEnum.isETF(code)) ? 100 : 1));
 
 
         return new TdxRealtimeQuoteDTO(
@@ -117,7 +133,68 @@ public class TdxTqServiceImpl implements TdxTqService {
 
     @Override
     public List<TdxRealtimeQuoteDTO> getBatch(List<String> codes) {
-        return getBatchByApi(codes);
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+
+        // 真实 TQ 当前版本不支持 get_market_snapshot_batch
+        if (!batchSnapshotUnsupported) {
+            try {
+                return getBatchByApi(codes);
+            } catch (Exception e) {
+                if (isBatchUnsupported(e)) {
+                    batchSnapshotUnsupported = true;
+                    log.info("TdxTqServiceImpl batch snapshot unsupported, fallback to get_market_snapshot     >>>     reason : {}", e.getMessage());
+                } else {
+                    log.warn("TdxTqServiceImpl batch snapshot fail, fallback to get_market_snapshot     >>>     err : {}", e.getMessage());
+                }
+            }
+        }
+
+        return getPerCode(codes);
+    }
+
+
+    /**
+     * 单只快照并发拉取。TQ 不限速，使用并行流提高吞吐；
+     * 单只失败/非法代码只跳过该只。
+     */
+    private List<TdxRealtimeQuoteDTO> getPerCode(List<String> codes) {
+        List<Future<TdxRealtimeQuoteDTO>> futures = codes.stream()
+                                                         .map(code -> TQ_SNAPSHOT_POOL.submit(() -> {
+                                                             try {
+                                                                 return get(code);
+                                                             } catch (Exception e) {
+                                                                 log.debug("TdxTqServiceImpl.getPerCode skip     >>>     code : {} , err : {}", code, e.getMessage());
+                                                                 return null;
+                                                             }
+                                                         }))
+                                                         .toList();
+
+        List<TdxRealtimeQuoteDTO> quotes = new ArrayList<>(codes.size());
+        for (Future<TdxRealtimeQuoteDTO> future : futures) {
+            try {
+                TdxRealtimeQuoteDTO quote = future.get();
+                if (quote != null) {
+                    quotes.add(quote);
+                }
+            } catch (Exception e) {
+                log.debug("TdxTqServiceImpl.getPerCode future fail     >>>     err : {}", e.getMessage());
+            }
+        }
+        return quotes;
+    }
+
+    private boolean isBatchUnsupported(Throwable e) {
+        Throwable cur = e;
+        while (cur != null) {
+            String msg = cur.getMessage();
+            if (msg != null && (msg.contains("不支持") || msg.contains("32601") || msg.contains("方法名"))) {
+                return true;
+            }
+            cur = cur.getCause();
+        }
+        return false;
     }
 
     /**
@@ -164,10 +241,8 @@ public class TdxTqServiceImpl implements TdxTqService {
                 continue;
             }
 
-            long vol = data.getLongValue("Volume", 0L);
-            if (StockTypeEnum.isAStock(rawCode) || StockTypeEnum.isETF(rawCode)) {
-                vol *= 100;
-            }
+            double rawVol = data.getDoubleValue("Volume");
+            long vol = Math.round(rawVol * ((StockTypeEnum.isAStock(rawCode) || StockTypeEnum.isETF(rawCode)) ? 100 : 1));
 
             quotes.add(new TdxRealtimeQuoteDTO(
                     rawCode,
@@ -218,19 +293,16 @@ public class TdxTqServiceImpl implements TdxTqService {
             return List.of();
         }
 
-        // TQ 批量快照：每批 500 只，避免单次响应过大；批次失败才退化为逐只请求。
+        if (batchSnapshotUnsupported) {
+            return getPerCode(codes);
+        }
+
+        // 批量不支持时 getBatch 会自动标记并退化为单只并发；每批 500 只
         final int batchSize = 500;
         List<TdxRealtimeQuoteDTO> quotes = new ArrayList<>(codes.size());
         for (int from = 0; from < codes.size(); from += batchSize) {
             int to = Math.min(from + batchSize, codes.size());
-            List<String> batch = codes.subList(from, to);
-            try {
-                quotes.addAll(getBatchByApi(batch));
-            } catch (Exception e) {
-                log.warn("TdxTqServiceImpl.getAll batch fallback     >>>     from : {} , to : {} , err : {}",
-                         from, to, e.getMessage());
-                quotes.addAll(batch.parallelStream().map(this::get).toList());
-            }
+            quotes.addAll(getBatch(codes.subList(from, to)));
         }
         return quotes;
     }

@@ -26,7 +26,7 @@ import java.util.*;
 public class TdxIncrClient {
 
 
-    protected static JSONObject call(String method, Map<String, Object> params) {
+    protected JSONObject call(String method, Map<String, Object> params) {
         return TdxTqHttpClient.call(method, params);
     }
 
@@ -40,7 +40,11 @@ public class TdxIncrClient {
                                                              "end_time", DateTimeUtil.format_yyyyMMdd(end),
                                                              "count", count));
 
-        JSONArray values = result.getJSONArray("Value");
+        // 真实 TQ 返回 Date；兼容部分版本返回 Value
+        JSONArray values = result.getJSONArray("Date");
+        if (values == null) {
+            values = result.getJSONArray("Value");
+        }
         Assert.notEmpty(values, "TQ 交易日历为空，请下载上证指数盘后数据");
 
 
@@ -64,22 +68,41 @@ public class TdxIncrClient {
         Assert.isTrue(start != null && end != null && !start.isAfter(end), "TQ 日线日期区间非法");
 
 
-        JSONObject response = call("get_market_data",
+        // 真实 TQ 的 get_market_data 按股票分页（stock_page_size=100），必须翻页合并
+        JSONObject allValues = new JSONObject();
+        int pageIndex = 0;
+        int pageCount = 0;
+        while (true) {
+            JSONObject response = call("get_market_data",
 
-                                   Map.of("stock_list", TdxFormatCodeUtil.formatCodes(codes),
-                                          "field_list", List.of(),
-                                          "period", "1d",
-                                          "start_time", DateTimeUtil.format_yyyyMMdd(start),
-                                          "end_time", DateTimeUtil.format_yyyyMMdd(end),
-                                          // TDX 本地日线为【不复权】；增量必须保持同一复权口径，否则会污染历史序列
-                                          "count", 0,
-                                          "dividend_type", "none",
-                                          "fill_data", false));
+                                       Map.of("stock_list", TdxFormatCodeUtil.formatCodes(codes),
+                                              "field_list", List.of(),
+                                              "period", "1d",
+                                              "start_time", DateTimeUtil.format_yyyyMMdd(start),
+                                              "end_time", DateTimeUtil.format_yyyyMMdd(end),
+                                              // TDX 本地日线为【不复权】；增量必须保持同一复权口径，否则会污染历史序列
+                                              "count", 0,
+                                              "dividend_type", "none",
+                                              "fill_data", false,
+                                              "stock_page_index", pageIndex));
 
+            JSONObject values = response.getJSONObject("Value");
+            if (values != null) {
+                values.forEach(allValues::put);
+            }
 
-        // TdxTqAPI.get_market_data(codes, PeriodEnum.DAY, start, end);
+            boolean hasMore = response.getBooleanValue("has_more");
+            int nextPage = response.getIntValue("next_stock_page_index");
+            pageCount++;
+            if (!hasMore || nextPage <= pageIndex || pageCount > 200) {
+                break;
+            }
+            pageIndex = nextPage;
+        }
 
-        return parseDailyBars(response, codes, start, end);
+        JSONObject merged = new JSONObject();
+        merged.put("Value", allValues);
+        return parseDailyBars(merged, codes, start, end);
     }
 
 
@@ -140,7 +163,7 @@ public class TdxIncrClient {
                     double volume = number(data, "Volume", i);
                     // 日线 A股/ETF 为股；板块为手。与 snapshot 的总手口径不同。
                     if (StockTypeEnum.isBlock(raw)) volume *= 100;
-                    bar.setVol((long) volume);
+                    bar.setVol(Math.round(volume));
                     bar.setAmo(number(data, "Amount", i) * 10_000);
 
                     if (bar.getOpen() == 0 && bar.getClose() == 0 && volume == 0) continue;

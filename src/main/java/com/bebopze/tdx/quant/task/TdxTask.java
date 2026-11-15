@@ -234,8 +234,8 @@ public class TdxTask {
     @Async
     @TotalTime
     @DistributedLock(value = 120, autoRenew = true, renewInterval = 30, keyPrefix = "execTask__refreshKline__kline")
-    // 交易时段：9:00~11:59 / 13:00~14:59，每 15 秒；另补 15:00~15:04
-    @Scheduled(cron = "0/15 * 9-11,13-14 * * 1-5")
+    // 交易时段：9:00~11:59 / 13:00~14:59；实测全A+ETF约34s，采用30s调度，锁保证不重叠
+    @Scheduled(cron = "0/30 * 9-11,13-14 * * 1-5")
     @Scheduled(cron = "0 0-4 15 * * 1-5")
     public void execTask__refreshKline__lastDay() {
         refreshKlineIncr(1, false, false, true, false, false);
@@ -260,10 +260,10 @@ public class TdxTask {
     @Async
     @TotalTime
     @DistributedLock(value = 1800, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshKline__kline")
-    public void execTask__refreshKline__lastNDays(int days, boolean withTopBlock) {
+    public void execTask__refreshKline__lastNDays(int days, boolean withExtData, boolean withTopBlock) {
         Assert.isTrue(days >= 1 && days <= 250, "增量更新天数必须在 1~250 之间：" + days);
 
-        refreshKlineIncr(days, true, withTopBlock, false, true, true);
+        refreshKlineIncr(days, withExtData, withTopBlock, false, true, true);
     }
 
     /**
@@ -285,21 +285,21 @@ public class TdxTask {
      * 增量更新统一编排。
      *
      * @param days         最近 N 个交易日；0 表示本链路不更新行情
-     * @param withExt      是否计算板块/ETF/个股扩展数据
+     * @param withExtData  是否计算 板块/ETF/个股 扩展数据
      * @param withTopBlock 是否执行极耗时的 topBlockService.refreshAll(INCR)
      * @param check        是否校验交易日/交易时段
      * @param progress     是否创建 TaskProgress（15s 快链路不创建，避免任务刷屏）
      * @param persistKline 是否持久化 kline_his；false=仅刷新 base_stock 实时字段（15s 快链路）
      */
-    private void refreshKlineIncr(int days, boolean withExt, boolean withTopBlock,
+    private void refreshKlineIncr(int days, boolean withExtData, boolean withTopBlock,
                                   boolean check, boolean progress, boolean persistKline) {
 
         if (check && !isTradeDateTime()) {
-            log.info("refreshKlineIncr     >>>     非交易日/非交易时间段，跳过执行     days : {} , withExt : {} , withTopBlock : {}",
-                     days, withExt, withTopBlock);
+            log.info("refreshKlineIncr     >>>     非交易日/非交易时间段，跳过执行     days : {} , withExtData : {} , withTopBlock : {}",
+                     days, withExtData, withTopBlock);
             return;
         }
-        if (days <= 0 && !withExt && !withTopBlock) {
+        if (days <= 0 && !withExtData && !withTopBlock) {
             return;
         }
 
@@ -309,8 +309,8 @@ public class TdxTask {
                 ? taskProgressManager.createAndStartTask(taskId, days > 0 ? "盘中-增量更新" : "盘中-增量扩展")
                 : null;
 
-        log.info("---------------------------- 任务 [refreshKlineIncr - 盘中增量]   执行 start     days : {} , withExt : {} , withTopBlock : {} , progress : {}",
-                 days, withExt, withTopBlock, progress);
+        log.info("---------------------------- 任务 [refreshKlineIncr - 盘中增量]   执行 start     days : {} , withExtData : {} , withTopBlock : {} , progress : {}",
+                 days, withExtData, withTopBlock, progress);
 
         try {
             int p = 10;
@@ -334,7 +334,7 @@ public class TdxTask {
                 }
             }
 
-            if (withExt) {
+            if (withExtData) {
                 String blockKlineTask = "板块实时 行情数据";
                 if (taskProgress != null) {
                     taskProgressManager.updateProgress(taskId, p + 5, blockKlineTask);
@@ -383,8 +383,8 @@ public class TdxTask {
             if (taskProgress != null) {
                 taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
             }
-            log.error("refreshKlineIncr 任务执行失败     >>>     days : {} , withExt : {} , withTopBlock : {}",
-                      days, withExt, withTopBlock, e);
+            log.error("refreshKlineIncr 任务执行失败     >>>     days : {} , withExtData : {} , withTopBlock : {}",
+                      days, withExtData, withTopBlock, e);
         }
     }
 
