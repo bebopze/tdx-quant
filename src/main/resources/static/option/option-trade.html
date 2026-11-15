@@ -1147,7 +1147,12 @@
 
         table.data thead th .sort-ind {
             color: var(--accent);
-            margin-left: 2px
+            margin-left: 2px;
+            opacity: .45
+        }
+
+        table.data thead th .sort-ind.active {
+            opacity: 1
         }
 
         table.data tbody tr:nth-child(even) {
@@ -1164,6 +1169,41 @@
 
         table.data tbody tr.is-blocked {
             opacity: .62
+        }
+
+        table.data tbody tr.total-row,
+        table.data tbody tr.total-row:nth-child(even),
+        table.data tbody tr.total-row:hover {
+            background: var(--row-selected-bg)
+        }
+
+        table.data tbody tr.total-row td {
+            font-weight: 700;
+            color: var(--strong-text);
+            border-top: 1px solid var(--border-2);
+            border-bottom: 1px solid var(--border-2)
+        }
+
+        table.data tbody tr.total-row td.total-empty {
+            color: var(--dim);
+            font-weight: 400
+        }
+
+        table.data tbody tr.total-row .total-label {
+            color: var(--accent);
+            font-weight: 700
+        }
+
+        .total-count {
+            display: inline-flex;
+            align-items: center;
+            height: 18px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--info-soft-bg);
+            color: var(--info-soft-text);
+            font-size: 11px;
+            font-weight: 700
         }
 
         table.data td.num, table.data th.num {
@@ -3379,6 +3419,7 @@
 
         posFilter: {etf: '', hylx: '', ccfx: '', onlyAvail: false},
         posSort: {key: 'marketValue', dir: 'desc'},
+        orderSort: {key: 'amount', dir: 'desc'},
         posSelected: new Set(),        // 以 hybm 为键
         revokeSelected: new Set(),     // 以 jybk|htxh 为键
         recentlyRevoked: new Map(),    // jybk|htxh -> 提交时间（防重复撤单冷却，2 分钟）
@@ -3420,6 +3461,16 @@
             costAmount: toNum(pick(raw, 'Hymrcb')),
             costPrice: toNum(pick(raw, 'buyPrice')),
             currentPrice: toNum(pick(raw, 'currentPrice')),
+            costPrem: (() => {
+                const u = toNum(pick(raw, 'hydw'));
+                const v = toNum(pick(raw, 'buyPrice'));
+                return u && u > 0 && v !== null ? v / u : v;
+            })(),
+            currentPrem: (() => {
+                const u = toNum(pick(raw, 'hydw'));
+                const v = toNum(pick(raw, 'currentPrice'));
+                return u && u > 0 && v !== null ? v / u : v;
+            })(),
             posRatio: toNum(pick(raw, 'posRatio')),
             strike: toNum(pick(raw, 'xqj')),
             expiry: String(pick(raw, 'qqxqr', '')),
@@ -3452,6 +3503,7 @@
             status: String(pick(raw, 'Wtzt', '')),
             date: String(pick(raw, 'Wtrq', '')),
             time: String(pick(raw, 'Wtsj', '')),
+            sortTime: `${String(pick(raw, 'Wtrq', ''))}${String(pick(raw, 'Wtsj', ''))}`,
             posPct: toNum(pick(raw, 'posPct')),
             accountAssets: toNum(pick(raw, 'accountAssets')),
         };
@@ -4372,6 +4424,22 @@
     }
 
     /* ------------------------------------------------------------------ 14. 渲染：持仓 */
+    function sortByState(list, sort) {
+        const key = sort.key;
+        const dir = sort.dir === 'asc' ? 1 : -1;
+        return list.slice().sort((a, b) => {
+            let va = a[key];
+            let vb = b[key];
+            if (va === null || va === undefined || va === '') va = null;
+            if (vb === null || vb === undefined || vb === '') vb = null;
+            if (va === null && vb === null) return 0;
+            if (va === null) return 1;
+            if (vb === null) return -1;
+            if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+            return String(va).localeCompare(String(vb), 'zh-CN', {numeric: true, sensitivity: 'base'}) * dir;
+        });
+    }
+
     function filteredPositions() {
         const f = state.posFilter;
         const arr = state.positions.filter((p) => {
@@ -4381,33 +4449,116 @@
             if (f.onlyAvail && !(p.avail > 0)) return false;
             return true;
         });
-        const key = state.posSort.key;
-        const dir = state.posSort.dir === 'asc' ? 1 : -1;
-        arr.sort((a, b) => {
-            const va = a[key];
-            const vb = b[key];
-            if (va === null || va === undefined) return 1;
-            if (vb === null || vb === undefined) return -1;
-            if (typeof va === 'string') return va.localeCompare(vb) * dir;
-            return (va - vb) * dir;
-        });
-        return arr;
+        return sortByState(arr, state.posSort);
     }
 
-    function sortHeader(label, key, numeric) {
-        const active = state.posSort.key === key;
-        const ind = active ? (state.posSort.dir === 'asc' ? '▲' : '▼') : '';
+    function sortHeader(label, key, numeric, align, kind) {
+        const target = kind === 'orders' ? state.orderSort : state.posSort;
+        const active = target.key === key;
+        const ind = active ? (target.dir === 'asc' ? '▲' : '▼') : '↕';
+        const cls = [numeric ? 'num' : '', align === 'center' ? 'center' : '', 'sortable']
+            .filter(Boolean).join(' ');
         return el('th', {
-            class: (numeric ? 'num ' : '') + 'sortable',
+            class: cls,
+            'data-sort': key,
             onclick: () => {
-                if (state.posSort.key === key) state.posSort.dir = state.posSort.dir === 'asc' ? 'desc' : 'asc';
+                if (target.key === key) target.dir = target.dir === 'asc' ? 'desc' : 'asc';
                 else {
-                    state.posSort.key = key;
-                    state.posSort.dir = 'desc';
+                    target.key = key;
+                    target.dir = 'desc';
                 }
-                renderPositions();
+                if (kind === 'orders') renderOrders();
+                else renderPositions();
             },
-        }, label, ind ? el('span', {class: 'sort-ind', text: ind}) : null);
+        }, label, el('span', {class: 'sort-ind' + (active ? ' active' : ''), text: ind}));
+    }
+
+    function sumBy(rows, key) {
+        let sum = 0;
+        let count = 0;
+        rows.forEach((row) => {
+            const v = toNum(row[key]);
+            if (v !== null) {
+                sum += v;
+                count += 1;
+            }
+        });
+        return count ? sum : null;
+    }
+
+    function weightedBy(rows, key, weightKey) {
+        let sum = 0;
+        let weight = 0;
+        rows.forEach((row) => {
+            const v = toNum(row[key]);
+            const w = toNum(row[weightKey]);
+            if (v !== null && w !== null && w > 0) {
+                sum += v * w;
+                weight += w;
+            }
+        });
+        return weight ? sum / weight : null;
+    }
+
+    function buildPositionsTotalRow(list) {
+        const qty = sumBy(list, 'qty');
+        const avail = sumBy(list, 'avail');
+        const marketValue = sumBy(list, 'marketValue');
+        const floatPnl = sumBy(list, 'floatPnl');
+        const totalPnl = sumBy(list, 'totalPnl');
+        const cost = weightedBy(list, 'costPrem', 'qty');
+        const current = weightedBy(list, 'currentPrem', 'qty');
+        const posRatio = sumBy(list, 'posRatio');
+        const strike = weightedBy(list, 'strike', 'qty');
+        const days = weightedBy(list, 'daysLeft', 'qty');
+        return el('tr', {class: 'total-row', title: `共 ${list.length} 个合约`},
+            el('td', {class: 'checkbox-cell'}, el('span', {class: 'total-label', text: '合计'})),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'num', text: fmt.qty(qty)}),
+            el('td', {class: 'num', text: fmt.qty(avail)}),
+            el('td', {class: 'num', text: fmt.num(marketValue, 2)}),
+            el('td', {class: 'num ' + pnlClass(floatPnl), text: fmt.signed(floatPnl, 2)}),
+            el('td', {class: 'num ' + pnlClass(totalPnl), text: fmt.signed(totalPnl, 2)}),
+            el('td', {class: 'num', text: fmt.price(cost)}),
+            el('td', {class: 'num', text: fmt.price(current)}),
+            el('td', {class: 'num', text: fmt.ratioPct(posRatio, 2)}),
+            el('td', {class: 'num', text: fmt.price(strike)}),
+            el('td', {class: 'total-empty', text: '—'}),
+            el('td', {class: 'num', text: days === null ? '—' : `${days.toFixed(1)} 天`}),
+            el('td', {class: 'total-empty', text: '—'}));
+    }
+
+    function buildOrdersTotalRow(list, showCheckbox) {
+        const price = weightedBy(list, 'price', 'qty');
+        const qty = sumBy(list, 'qty');
+        const filledQty = sumBy(list, 'filledQty');
+        const remaining = sumBy(list, 'remaining');
+        const amount = sumBy(list, 'amount');
+        const filledAmount = sumBy(list, 'filledAmount');
+        const posPct = sumBy(list, 'posPct');
+        const cells = [];
+        if (showCheckbox) {
+            cells.push(el('td', {class: 'checkbox-cell'}, el('span', {class: 'total-label', text: '合计'})));
+            cells.push(el('td', {class: 'total-empty', text: '—'}));
+        } else {
+            cells.push(el('td', {class: 'mono'}, el('span', {class: 'total-label', text: '合计'})));
+        }
+        for (let i = 0; i < 7; i += 1) cells.push(el('td', {class: 'total-empty', text: '—'}));
+        cells.push(el('td', {class: 'num', text: fmt.price(price)}));
+        cells.push(el('td', {class: 'num', text: fmt.qty(qty)}));
+        cells.push(el('td', {class: 'num', text: fmt.qty(filledQty)}));
+        cells.push(el('td', {class: 'num', text: fmt.qty(remaining)}));
+        cells.push(el('td', {class: 'num', text: fmt.num(amount, 2)}));
+        cells.push(el('td', {class: 'num', text: fmt.num(filledAmount, 2)}));
+        cells.push(el('td', {class: 'center'}, el('span', {class: 'total-count', text: `${list.length} 笔`})));
+        cells.push(el('td', {class: 'num', text: posPct === null ? '—' : fmt.pct(posPct, 2)}));
+        cells.push(el('td', {class: 'total-empty', text: '—'}));
+        return el('tr', {class: 'total-row', title: `共 ${list.length} 笔`}, cells);
     }
 
     function renderPositions() {
@@ -4446,22 +4597,22 @@
         const list = filteredPositions();
         const head = el('thead', {}, el('tr', {},
             el('th', {class: 'checkbox-cell', text: ''}),
-            el('th', {text: '标的 ETF'}),
-            el('th', {text: '合约编码'}),
-            el('th', {text: '合约代码'}),
-            el('th', {text: '合约名称'}),
-            el('th', {class: 'center', text: '类型'}),
-            el('th', {class: 'center', text: '方向'}),
-            el('th', {class: 'num', text: '持仓数量'}),
-            el('th', {class: 'num', text: '可用数量'}),
+            sortHeader('标的 ETF', 'etfCode'),
+            sortHeader('合约编码', 'hybm'),
+            sortHeader('合约代码', 'hydm'),
+            sortHeader('合约名称', 'hyjc'),
+            sortHeader('类型', 'hylx', false, 'center'),
+            sortHeader('方向', 'ccfx', false, 'center'),
+            sortHeader('持仓数量', 'qty', true),
+            sortHeader('可用数量', 'avail', true),
             sortHeader('持仓市值', 'marketValue', true),
             sortHeader('浮动盈亏', 'floatPnl', true),
             sortHeader('总盈亏', 'totalPnl', true),
-            el('th', {class: 'num', text: '成本价'}),
-            el('th', {class: 'num', text: '现价'}),
-            el('th', {class: 'num', text: '仓位比例'}),
-            el('th', {class: 'num', text: '行权价'}),
-            el('th', {text: '行权日'}),
+            sortHeader('成本价', 'costPrem', true),
+            sortHeader('现价', 'currentPrem', true),
+            sortHeader('仓位比例', 'posRatio', true),
+            sortHeader('行权价', 'strike', true),
+            sortHeader('行权日', 'expiry'),
             sortHeader('剩余天数', 'daysLeft', true),
             el('th', {class: 'center', text: '操作'})));
 
@@ -4552,7 +4703,8 @@
                     }, canSell ? '选择' : '不可卖')));
         });
 
-        replaceNode(wrap, el('table', {class: 'data'}, head, el('tbody', {}, rows)));
+        const totalRow = list.length ? buildPositionsTotalRow(list) : null;
+        replaceNode(wrap, el('table', {class: 'data'}, head, el('tbody', {}, totalRow, rows)));
         renderSellPreview();
         updatePositionMeta();
     }
@@ -4678,12 +4830,7 @@
             }
             return true;
         });
-        out.sort((a, b) => {
-            const ka = `${a.date} ${a.time}`;
-            const kb = `${b.date} ${b.time}`;
-            return kb.localeCompare(ka);
-        });
-        return out;
+        return sortByState(out, state.orderSort);
     }
 
     function renderOrders() {
@@ -4739,22 +4886,22 @@
 
         const head = el('thead', {}, el('tr', {},
             showCheckbox ? el('th', {class: 'checkbox-cell', text: ''}) : null,
-            el('th', {text: '委托时间'}),
-            el('th', {text: '委托号'}),
-            el('th', {text: '交易所'}),
-            el('th', {text: '标的 ETF'}),
-            el('th', {text: '合约编码'}),
-            el('th', {text: '合约名称'}),
-            el('th', {class: 'center', text: '买卖开平'}),
-            el('th', {text: '报价方式'}),
-            el('th', {class: 'num', text: '委托价'}),
-            el('th', {class: 'num', text: '委托数量'}),
-            el('th', {class: 'num', text: '已成交'}),
-            el('th', {class: 'num', text: '剩余（计算）'}),
-            el('th', {class: 'num', text: '委托金额'}),
-            el('th', {class: 'num', text: '成交金额'}),
-            el('th', {class: 'center', text: '状态'}),
-            el('th', {class: 'num', text: '仓位占比'}),
+            sortHeader('委托时间', 'sortTime', false, '', 'orders'),
+            sortHeader('委托号', 'htxh', false, '', 'orders'),
+            sortHeader('交易所', 'jybk', false, '', 'orders'),
+            sortHeader('标的 ETF', 'etfCode', false, '', 'orders'),
+            sortHeader('合约编码', 'hybm', false, '', 'orders'),
+            sortHeader('合约名称', 'hyjc', false, '', 'orders'),
+            sortHeader('买卖开平', 'mm', false, 'center', 'orders'),
+            sortHeader('报价方式', 'priceTypeText', false, '', 'orders'),
+            sortHeader('委托价', 'price', true, '', 'orders'),
+            sortHeader('委托数量', 'qty', true, '', 'orders'),
+            sortHeader('已成交', 'filledQty', true, '', 'orders'),
+            sortHeader('剩余（计算）', 'remaining', true, '', 'orders'),
+            sortHeader('委托金额', 'amount', true, '', 'orders'),
+            sortHeader('成交金额', 'filledAmount', true, '', 'orders'),
+            sortHeader('状态', 'status', false, 'center', 'orders'),
+            sortHeader('仓位占比', 'posPct', true, '', 'orders'),
             el('th', {class: 'center', text: '操作'})));
 
         const rows = list.map((o) => {
@@ -4818,7 +4965,8 @@
                             : el('span', {class: 'hint', text: '终态'}))));
         });
 
-        replaceNode(wrap, el('table', {class: 'data'}, head, el('tbody', {}, rows)));
+        const totalRow = buildOrdersTotalRow(list, showCheckbox);
+        replaceNode(wrap, el('table', {class: 'data'}, head, el('tbody', {}, totalRow, rows)));
     }
 
     function updateRevokeSelectionUI() {
