@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -166,38 +167,72 @@ public class BaseStockDO implements Serializable {
     @Schema(description = "换手率（%）")
     private BigDecimal turnoverPct;
 
+
+    // -------------------------- 近N日（默认：近500日） ->  每日 更新1次（盘中 -> 可 每分钟 更新1次）
+
+
     /**
-     * K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+     * 近N日K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
+     */
+    @JsonIgnore
+    @TableField(value = "kline_nd")
+    @Schema(description = "近N日K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
+    private byte[] klineNd;
+
+    /**
+     * 近N日K线数据-JSON（byte[]）压缩前长度（解压算法参数）
+     */
+    @TableField(value = "kline_nd_raw_len")
+    @Schema(description = "近N日K线数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    private Integer klineNdRawLen;
+
+    /**
+     * 近N日扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
+     */
+    @JsonIgnore
+    @TableField(value = "ext_data_nd")
+    @Schema(description = "近N日扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
+    private byte[] extDataNd;
+
+    /**
+     * 近N日扩展数据-JSON（byte[]）压缩前长度（解压算法参数）
+     */
+    @TableField(value = "ext_data_nd_raw_len")
+    @Schema(description = "近N日扩展数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    private Integer extDataNdRawLen;
+
+
+    // -------------------------- 全量  ->  最长可 1年 更新1次
+
+
+    /**
+     * 全量K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）
      */
     @JsonIgnore
     @TableField(value = "kline_his"/*, typeHandler = KlineListTypeHandler.class*/)
-    @Schema(description = "K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
+    @Schema(description = "全量K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率]）")
     private byte[] klineHis;
-    // private String klineHis;
-    // private List<KlineDTO> klineHis;
 
     /**
-     * K线数据-JSON（byte[]）压缩前长度（解压算法参数）
+     * 全量K线数据-JSON（byte[]）压缩前长度（解压算法参数）
      */
     @TableField(value = "kline_his_raw_len")
-    @Schema(description = "K线数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    @Schema(description = "全量K线数据-JSON（byte[]）压缩前长度（解压算法参数）")
     private Integer klineHisRawLen;
 
     /**
-     * 扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
+     * 全量扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）
      */
     @JsonIgnore
     @TableField(value = "ext_data_his"/*, typeHandler = KlineListTypeHandler.class*/)
-    @Schema(description = "扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
+    @Schema(description = "全量扩展数据-JSON（[日期,RPS10,RPS20,RPS50,RPS120,RPS250]）")
     private byte[] extDataHis;
-    // private String extDataHis;
-    // private List<ExtDataDTO> extDataHis;
 
     /**
-     * 扩展数据-JSON（byte[]）压缩前长度（解压算法参数）
+     * 全量扩展数据-JSON（byte[]）压缩前长度（解压算法参数）
      */
     @TableField(value = "ext_data_his_raw_len")
-    @Schema(description = "扩展数据-JSON（byte[]）压缩前长度（解压算法参数）")
+    @Schema(description = "全量扩展数据-JSON（byte[]）压缩前长度（解压算法参数）")
     private Integer extDataHisRawLen;
 
 
@@ -270,6 +305,53 @@ public class BaseStockDO implements Serializable {
     /**
      * 自动压缩 K线数据（String  ->  byte[]）
      *
+     * @param klineNdStr K线数据-JSON字符串
+     */
+    public void setKlineNdStr(String klineNdStr) {
+        byte[] raw = klineNdStr == null ? null : klineNdStr.getBytes(StandardCharsets.UTF_8);
+        this.klineNd = CompressUtil.zstdCompress(raw);
+        this.klineNdRawLen = klineNdStr == null ? null : raw.length;
+    }
+
+    /**
+     * 自动解压 K线数据（byte[]  ->  String）
+     *
+     * @return K线数据-JSON字符串
+     */
+    public String getKlineNdStr() {
+        byte[] decompressed = CompressUtil.zstdDecompress(klineNd, klineNdRawLen);
+        return decompressed == null ? null : new String(decompressed, StandardCharsets.UTF_8);
+    }
+
+
+    /**
+     * 自动压缩 扩展数据（String  ->  byte[]）
+     *
+     * @param extDataNdStr 扩展数据-JSON字符串
+     */
+    public void setExtDataNdStr(String extDataNdStr) {
+        byte[] raw = extDataNdStr == null ? null : extDataNdStr.getBytes(StandardCharsets.UTF_8);
+        this.extDataNd = CompressUtil.zstdCompress(raw);
+        this.extDataNdRawLen = extDataNdStr == null ? null : raw.length;
+    }
+
+    /**
+     * 自动解压 扩展数据（byte[]  ->  String）
+     *
+     * @return 扩展数据-JSON字符串
+     */
+    public String getExtDataNdStr() {
+        byte[] decompressed = CompressUtil.zstdDecompress(extDataNd, extDataNdRawLen);
+        return decompressed == null ? null : new String(decompressed, StandardCharsets.UTF_8);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * 自动压缩 K线数据（String  ->  byte[]）
+     *
      * @param klineHisStr K线数据-JSON字符串
      */
     public void setKlineHisStr(String klineHisStr) {
@@ -323,13 +405,23 @@ public class BaseStockDO implements Serializable {
     private List<ExtDataDTO> extDataDTOList;
 
 
+    public List<KlineDTO> getKlineDTOList() {
+        return getKlineDTOList(true);
+    }
+
+    public List<ExtDataDTO> getExtDataDTOList() {
+        return getExtDataDTOList(true);
+    }
+
+
     /**
      * K线数据-JSON字符串  ->  K线数据-DTO列表         （延迟加载）
      *
+     * @param all 是否全历史数据：true-全历史（his + nd），false-近N日（nd）
      * @return K线数据-DTO列表
      */
     @Schema(description = "K线数据-JSON字符串  ->  K线数据-DTO列表")
-    public List<KlineDTO> getKlineDTOList() {
+    public List<KlineDTO> getKlineDTOList(boolean all) {
         // 手动set过的，直接返回（只转换1次）
         if (klineDTOList != null) {
             return klineDTOList;
@@ -340,10 +432,46 @@ public class BaseStockDO implements Serializable {
             // 双重检测
             if (klineDTOList == null && klineHis != null) {
 
-                // 只转换1次
-                klineDTOList = ConvertStockKline.str2DTOList(getKlineHisStr());
+
+                if (all) {
+
+                    List<KlineDTO> klineDTOS_his = ConvertStockKline.str2DTOList(getKlineHisStr());
+                    List<KlineDTO> klineDTOS_nd = ConvertStockKline.str2DTOList(getKlineNdStr());
+
+
+                    // 去重 + add
+                    if (CollectionUtils.isNotEmpty(klineDTOS_his)) {
+
+                        LocalDate his_end_date = klineDTOS_his.getLast().getDate();
+                        for (KlineDTO nd : klineDTOS_nd) {
+                            if (nd.getDate().isAfter(his_end_date)) {
+                                klineDTOS_his.add(nd);
+                            }
+                        }
+
+                    } else {
+                        klineDTOS_his = klineDTOS_nd;
+                    }
+
+
+                    // 只转换1次
+                    klineDTOList = klineDTOS_his;
+
+
+                } else {
+
+                    // 只转换1次
+                    klineDTOList = ConvertStockKline.str2DTOList(getKlineNdStr());
+                }
+
+
+                // -------------------------
+
 
                 // Str -> null（否则，会同时存在2份【klineHis + klineDTOList】 ->  OOM）
+                klineNd = null;
+                klineNdRawLen = null;
+
                 klineHis = null;
                 klineHisRawLen = null;
             }
@@ -357,10 +485,11 @@ public class BaseStockDO implements Serializable {
     /**
      * 扩展数据-JSON字符串  ->  扩展数据-DTO列表         （延迟加载）
      *
+     * @param all 是否全历史数据：true-全历史（his + nd），false-近N日（nd）
      * @return 扩展数据-DTO列表
      */
     @Schema(description = "扩展数据-JSON字符串  -> 扩展数据-DTO列表")
-    public List<ExtDataDTO> getExtDataDTOList() {
+    public List<ExtDataDTO> getExtDataDTOList(boolean all) {
         // 手动set过的，直接返回（只转换1次）
         if (extDataDTOList != null) {
             return extDataDTOList;
@@ -371,10 +500,46 @@ public class BaseStockDO implements Serializable {
             // 双重检测
             if (extDataDTOList == null && extDataHis != null) {
 
-                // 只转换1次
-                extDataDTOList = ConvertStockExtData.extDataHis2DTOList(getExtDataHisStr());
+
+                if (all) {
+
+                    List<ExtDataDTO> extDataDTOS_his = ConvertStockExtData.extDataHis2DTOList(getExtDataHisStr());
+                    List<ExtDataDTO> extDataDTOS_nd = ConvertStockExtData.extDataHis2DTOList(getExtDataNdStr());
+
+
+                    // 去重 + add
+                    if (CollectionUtils.isNotEmpty(extDataDTOS_his)) {
+
+                        LocalDate his_end_date = extDataDTOS_his.getLast().getDate();
+                        for (ExtDataDTO nd : extDataDTOS_nd) {
+                            if (nd.getDate().isAfter(his_end_date)) {
+                                extDataDTOS_his.add(nd);
+                            }
+                        }
+
+                    } else {
+                        extDataDTOS_his = extDataDTOS_nd;
+                    }
+
+
+                    // 只转换1次
+                    extDataDTOList = extDataDTOS_his;
+
+
+                } else {
+
+                    // 只转换1次
+                    extDataDTOList = ConvertStockExtData.extDataHis2DTOList(getExtDataNdStr());
+                }
+
+
+                // -------------------------
+
 
                 // Str -> null（否则，会同时存在2份【extDataHis + extDataDTOList】 ->  OOM）
+                extDataNd = null;
+                extDataNdRawLen = null;
+
                 extDataHis = null;
                 extDataHisRawLen = null;
             }
@@ -425,5 +590,6 @@ public class BaseStockDO implements Serializable {
     public boolean is20CM() {
         return StockLimitEnum.is20CM(code, name);
     }
+
 
 }
