@@ -183,7 +183,7 @@ public class ConvertStockKline {
 
     public static List<KlineDTO> str2DTOList(String klineHis) {
         List<String> klineList = JSON.parseArray(klineHis, String.class);
-        return klines2DTOList(klineList, klineList.size());
+        return klines2DTOList(klineList, ListUtil.size(klineList));
     }
 
     public static List<KlineDTO> str2DTOList(String klineHis, Integer limit) {

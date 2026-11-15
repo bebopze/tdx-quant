@@ -430,7 +430,7 @@ public class BaseStockDO implements Serializable {
 
         synchronized (this) {
             // 双重检测
-            if (klineDTOList == null && klineHis != null) {
+            if (klineDTOList == null && (klineHis != null || klineNd != null)) {
 
 
                 if (all) {
@@ -498,7 +498,7 @@ public class BaseStockDO implements Serializable {
 
         synchronized (this) {
             // 双重检测
-            if (extDataDTOList == null && extDataHis != null) {
+            if (extDataDTOList == null && (extDataHis != null || extDataNd != null)) {
 
 
                 if (all) {
