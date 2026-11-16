@@ -15,15 +15,15 @@ import lombok.Getter;
 public enum UpdateTypeEnum {
 
 
-    ALL(1, "全量更新"),
+    HIS(1, "历史行情", 250 * 100),
 
-    INCR(2, "增量更新（实时行情）"),
+    N_DAY(2, "近N日行情", 250 * 2),
 
 
     // ------------------------------------------------- 全量更新   =>   OOM优化  ->  分段执行
 
 
-    ALL_RANGE(100, "全量更新（分段执行）"),
+    ALL_RANGE(100, "全量更新（分段执行）", -1),
 
 
     ;
@@ -32,6 +32,11 @@ public enum UpdateTypeEnum {
     public final Integer type;
 
     public final String desc;
+
+    /**
+     * 更新数据天数  ->  近多少天的数据（交易日）
+     */
+    public final int days;
 
 
     public static UpdateTypeEnum getByType(Integer type) {

@@ -115,7 +115,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // 1. 加载数据
-        initCache(UpdateTypeEnum.ALL);
+        initCache(UpdateTypeEnum.HIS);
 
 
         // 2. 并行计算主线板块代码（线程安全）
@@ -1351,17 +1351,17 @@ public class TopBlockServiceImpl implements TopBlockService {
 
             // old != null     +     new = null     +     INCR_UPDATE
             if (StringUtils.isNotBlank(e.getTopBlockCodeSet()) && CollectionUtils.isEmpty(auto___topBlockList)
-                    && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+                    && Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum)) {
                 return;
             }
 
             if (StringUtils.isNotBlank(e.getTopEtfCodeSet()) && CollectionUtils.isEmpty(auto___topETFList)
-                    && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+                    && Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum)) {
                 return;
             }
 
             if (StringUtils.isNotBlank(e.getTopStockCodeSet()) && CollectionUtils.isEmpty(auto___topStockList)
-                    && Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+                    && Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum)) {
                 return;
             }
 
@@ -2445,7 +2445,7 @@ public class TopBlockServiceImpl implements TopBlockService {
     public List<TopBlock2DTO> topBlockRateInfo(int blockNewId, LocalDate date, int resultType, int N) {
 
 
-        initCache(UpdateTypeEnum.ALL);
+        initCache(UpdateTypeEnum.HIS);
 
 
         // -----------------------------------------
@@ -2606,18 +2606,18 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
     private void initCache_0(UpdateTypeEnum updateTypeEnum) {
-        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+        if (Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
-        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+        } else if (Objects.equals(UpdateTypeEnum.HIS, updateTypeEnum)) {
             data = initDataService.initData();
         }
     }
 
 
     private void initCache(UpdateTypeEnum updateTypeEnum) {
-        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum)) {
+        if (Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum)) {
             data = initDataService.incrUpdateInitData();
-        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+        } else if (Objects.equals(UpdateTypeEnum.HIS, updateTypeEnum)) {
             data = initDataService.initData();
         } else if (Objects.equals(UpdateTypeEnum.ALL_RANGE, updateTypeEnum)) {
             log.info("initCache - ALL_RANGE     >>>     ALL_RANGE 初始化数据 特殊处理（AOP）");
@@ -2752,7 +2752,7 @@ public class TopBlockServiceImpl implements TopBlockService {
 
 
         // --------------------------------------------------- 按 板块 分类
-        blockSum__delOld__saveNew(date_stockCodeSet_topMap, blockNewId, UpdateTypeEnum.ALL);
+        blockSum__delOld__saveNew(date_stockCodeSet_topMap, blockNewId, UpdateTypeEnum.HIS);
     }
 
 
@@ -3662,9 +3662,9 @@ public class TopBlockServiceImpl implements TopBlockService {
         long start = System.currentTimeMillis();
 
 
-        if (Objects.equals(UpdateTypeEnum.INCR, updateTypeEnum) || Objects.equals(UpdateTypeEnum.ALL_RANGE, updateTypeEnum)) {
+        if (Objects.equals(UpdateTypeEnum.N_DAY, updateTypeEnum) || Objects.equals(UpdateTypeEnum.ALL_RANGE, updateTypeEnum)) {
             qaBlockNewRelaStockHisService.deleteByDateSet(blockNewId, dateSet);
-        } else if (Objects.equals(UpdateTypeEnum.ALL, updateTypeEnum)) {
+        } else if (Objects.equals(UpdateTypeEnum.HIS, updateTypeEnum)) {
             qaBlockNewRelaStockHisService.deleteAll(blockNewId, null);
         } else {
             throw new BizException("updateTypeEnum 异常：" + updateTypeEnum);

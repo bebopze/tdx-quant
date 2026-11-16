@@ -177,7 +177,7 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 30, "行情数据 导入（更新）");
-            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.ALL);
+            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.HIS);
 
 
             taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
@@ -185,7 +185,7 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 70, "主线板块 计算");
-            topBlockService.refreshAll(UpdateTypeEnum.ALL);
+            topBlockService.refreshAll(UpdateTypeEnum.HIS);
 
 
             taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache 刷新");
@@ -277,7 +277,7 @@ public class TdxTask {
 
             taskProgressManager.updateProgress(taskId, 30, "个股/ETF实时 行情数据");
             // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
-            tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.INCR);
+            tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.N_DAY);
 
 
             taskProgressManager.updateProgress(taskId, 40, "板块实时 行情数据");
@@ -304,7 +304,7 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 90, "主线板块");
-            topBlockService.refreshAll(UpdateTypeEnum.INCR);
+            topBlockService.refreshAll(UpdateTypeEnum.N_DAY);
 
 
             taskProgressManager.completeSubTask(taskId, "主线板块", "任务执行完成");

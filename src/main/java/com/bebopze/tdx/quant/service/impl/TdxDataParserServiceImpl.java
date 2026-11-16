@@ -1,17 +1,11 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.client.EastMoneyKlineAPI;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
-import com.bebopze.tdx.quant.client.KlineAPI;
-import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
-import com.bebopze.tdx.quant.common.domain.kline.StockKlineHisResp;
-import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -31,7 +25,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -112,7 +105,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ------------------------------------------------------------------------ 行情（通达信-行情数据 / 东方财富/同花顺/雪球-API）
 
 
-        refreshKlineAll(UpdateTypeEnum.ALL);
+        refreshKlineAll(UpdateTypeEnum.HIS);
 
         extDataService.refreshExtDataAll(null);
 
@@ -1524,15 +1517,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         Map<String, Long> codeIdMap = baseStockService.codeIdMap((Integer) null);
 
 
-        // 1-全量更新
-        if (updateTypeEnum == UpdateTypeEnum.ALL) {
-            fullUpdate__fillStockKlineAll(codeIdMap);
-        }
-
-        // 2-增量更新（实时行情）
-        else if (updateTypeEnum == UpdateTypeEnum.INCR) {
-            incrUpdate__fillStockKlineAll(codeIdMap);
-        }
+        update__fillStockKlineAll(codeIdMap, updateTypeEnum);
 
 
         initDataService.deleteDiskCache();
@@ -1540,11 +1525,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     /**
-     * 1-全量更新
+     * 1-历史更新
      *
      * @param codeIdMap
+     * @param updateTypeEnum
      */
-    private void fullUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
+    private void update__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
         AtomicInteger count = new AtomicInteger(0);
 
@@ -1557,10 +1543,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 // -------------------------------------------
 
 
-                // int apiType = apiType(null, UpdateTypeEnum.ALL);
-
-
-                fillStockKline(stockCode, stockId, UpdateTypeEnum.ALL);
+                fillStockKline(stockCode, stockId, updateTypeEnum);
 
 
                 // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
@@ -1576,93 +1559,95 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
                 // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
-                log.info("fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                log.info("update__fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                          stockCode, stockId, countVal, r1, r2, r3);
 
 
             } catch (Exception ex) {
 
                 // 不要影响 其他正常个股
-                log.error("fillStockKlineAll error     >>>     stockCode : {}, stockId : {} , count : {}",
+                log.error("update__fillStockKlineAll error     >>>     stockCode : {}, stockId : {} , count : {}",
                           stockCode, codeIdMap.get(stockCode), count.incrementAndGet(), ex);
             }
         });
     }
 
-    /**
-     * 2-增量更新
-     *
-     * @param codeIdMap
-     */
-    private void incrUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
+
+//    /**
+//     * 2-近N日更新
+//     *
+//     * @param codeIdMap
+//     */
+//    private void ndUpdate__fillStockKlineAll(Map<String, Long> codeIdMap) {
+//
+//
+//        // 东方财富   ->   批量拉取  全A（ETF） 实时行情
+//        List<StockSnapshotKlineDTO> stockSnapshotList = KlineAPI.pullAllStockETFSnapshotKline();
+//        log.info("ndUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        AtomicInteger count = new AtomicInteger(0);
+//
+//
+//        stockSnapshotList.parallelStream().forEach(e -> {
+//
+//
+//            // 股票代码     000001
+//            String stockCode = e.getStockCode();
+//            // 股票名称（平安银行）
+//            String stockName = e.getStockName();
+//
+//
+//            Long stockId = codeIdMap.get(stockCode);
+//            if (null == stockId) {
+//                return;
+//            }
+//
+//
+//            // --------------------- kline_his
+//
+//
+//            KlineDTO klineDTO = new KlineDTO();
+//            BeanUtils.copyProperties(e, klineDTO);
+//
+//
+//            List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(klineDTO));
+//            klines = klineHis__updateType(stockId, klines, UpdateTypeEnum.N_DAY);
+//
+//
+//            // --------------------- entity -> 实时行情
+//
+//            if (CollectionUtils.isEmpty(klines)) {
+//                return;
+//            }
+//
+//            // 实时行情
+//            BaseStockDO entity = convertStockDO(stockId, stockName, klines, e, UpdateTypeEnum.N_DAY);
+//            entity.setPrevClose(BigDecimal.valueOf(e.getPrevClose()));
+//
+//
+//            // --------------------- DB
+//
+//            baseStockService.updateById(entity);
+//
+//
+//            log.info("incrUpdate__fillStockKlineAll suc     >>>     [{}-{}] , count : {}", stockCode, stockName, count.incrementAndGet());
+//        });
+//    }
 
 
-        // 东方财富   ->   批量拉取  全A（ETF） 实时行情
-        List<StockSnapshotKlineDTO> stockSnapshotList = KlineAPI.pullAllStockETFSnapshotKline();
-        log.info("incrUpdate__fillStockKlineAll     >>>     stockSnapshotList.size : {}", stockSnapshotList.size());
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        AtomicInteger count = new AtomicInteger(0);
-
-
-        stockSnapshotList.parallelStream().forEach(e -> {
-
-
-            // 股票代码     000001
-            String stockCode = e.getStockCode();
-            // 股票名称（平安银行）
-            String stockName = e.getStockName();
-
-
-            Long stockId = codeIdMap.get(stockCode);
-            if (null == stockId) {
-                return;
-            }
-
-
-            // --------------------- kline_his
-
-
-            KlineDTO klineDTO = new KlineDTO();
-            BeanUtils.copyProperties(e, klineDTO);
-
-
-            List<String> klines = ConvertStockKline.dtoList2StrList(Lists.newArrayList(klineDTO));
-            klines = klineHis__updateType(stockId, klines, UpdateTypeEnum.INCR);
-
-
-            // --------------------- entity -> 实时行情
-
-            if (CollectionUtils.isEmpty(klines)) {
-                return;
-            }
-
-            // 实时行情
-            BaseStockDO entity = convertStockDO(stockId, stockName, klines, e);
-            entity.setPrevClose(BigDecimal.valueOf(e.getPrevClose()));
-
-
-            // --------------------- DB
-
-            baseStockService.updateById(entity);
-
-
-            log.info("incrUpdate__fillStockKlineAll suc     >>>     [{}-{}] , count : {}", stockCode, stockName, count.incrementAndGet());
-        });
-    }
-
-
-    private BaseStockDO convertStockDO(Long stockId, String stockName, List<String> klines, KlineDTO e) {
+    private BaseStockDO convertStockDO(Long stockId, String stockName, List<String> klines, KlineDTO e,
+                                       UpdateTypeEnum updateTypeEnum) {
 
         BaseStockDO entity = new BaseStockDO();
         entity.setId(stockId);
         entity.setName(stockName);
 
         // K线数据
-        entity.setKlineHisStr(JSON.toJSONString(klines));
+        entity.setKlineStr(JSON.toJSONString(klines), updateTypeEnum);
 
 
         // 昨日
@@ -1716,45 +1701,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ---------------------  拉取数据     ->     通达信-本地读取   /   东方财富 API
 
 
-        List<String> klines = null;
-
-
         // 1、通达信   本地读取
-        klines = klinesFromTdx(stockCode);
-
-
-//        if (apiType == null || apiType == 1) {
-//
-//            klines = klinesFromTdx(stockCode);
-//        }
-//
-//        // 2、东方财富 API
-//        else if (apiType == 2) {
-//
-//            if (updateTypeEnum == UpdateTypeEnum.ALL) {
-//
-//                // 全量更新     =>     全量 K线数据
-//                StockKlineHisResp resp = EastMoneyKlineAPI.stockKlineHis(stockCode, KlineTypeEnum.DAY);
-//                klines = resp.getKlines();
-//
-//            } else {
-//
-//                // 增量更新     =>     最后一日  实时行情数据
-//                klines = EastMoneyKlineAPI.stockKlineLastN(stockCode);
-//            }
-//        }
-
-
-        // 3、同花顺 API
-        // 4、雪球 API
-        // 5、新浪 API
+        List<String> klines = klinesFromTdx(stockCode, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
         // klineHis   ->   全量更新 / 增量更新
-        klines = klineHis__updateType(stockId, klines, updateTypeEnum);
+        // klines = klineHis__updateType(stockId, klines, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1772,7 +1727,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情
-        BaseStockDO entity = convertStockDO(stockId, null, klines, lastKlineDTO);
+        BaseStockDO entity = convertStockDO(stockId, null, klines, lastKlineDTO, updateTypeEnum);
 
 
         // --------------------- DB
@@ -1788,12 +1743,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 1-全量更新   ->   1-本地TDX
-        if (updateTypeEnum == UpdateTypeEnum.ALL) {
+        if (updateTypeEnum == UpdateTypeEnum.HIS) {
             apiType = 1;
         }
 
         // 2-增量更新   ->   2-券商API
-        else if (updateTypeEnum == UpdateTypeEnum.INCR) {
+        else if (updateTypeEnum == UpdateTypeEnum.N_DAY) {
             apiType = 2;
         }
 
@@ -1812,7 +1767,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private List<String> klineHis__updateType(Long stockId, List<String> new_klines, UpdateTypeEnum updateTypeEnum) {
 
         // 1-全量更新
-        if (updateTypeEnum == UpdateTypeEnum.ALL) {
+        if (updateTypeEnum == UpdateTypeEnum.HIS) {
             return new_klines;
         }
 
@@ -1872,10 +1827,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private List<String> klinesFromTdx(String stockCode) {
+    private List<String> klinesFromTdx(String stockCode, UpdateTypeEnum updateTypeEnum) {
 
         // 个股 - K线数据
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
+
+
+        // 保留 最近N天
+        ldayDTOList = ListUtil.lastN(ldayDTOList, updateTypeEnum.days);
 
 
         List<String> klines = Lists.newArrayList();

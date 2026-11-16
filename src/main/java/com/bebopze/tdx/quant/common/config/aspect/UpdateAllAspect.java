@@ -73,7 +73,7 @@ public class UpdateAllAspect {
                 Object originalVal = args[i];
 
                 // 修改参数值
-                if (originalVal == UpdateTypeEnum.ALL) {
+                if (originalVal == UpdateTypeEnum.HIS) {
 
                     // 全量更新 -> 分段执行
                     args[i] = UpdateTypeEnum.ALL_RANGE;

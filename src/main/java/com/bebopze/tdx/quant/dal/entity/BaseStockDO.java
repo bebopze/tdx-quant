@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.*;
 import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -304,10 +305,10 @@ public class BaseStockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public void setKlineStr(String klineStr, KlineDataEnum klineDataEnum) {
-        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+    public void setKlineStr(String klineStr, UpdateTypeEnum updateTypeEnum) {
+        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
             setKlineNdStr(klineStr);
-        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
             setKlineHisStr(klineStr);
         }
     }
