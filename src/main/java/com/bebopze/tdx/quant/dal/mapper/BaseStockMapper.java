@@ -26,9 +26,14 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
     BaseStockDO getSimpleByCode(@Param("code") String code);
 
 
+    BaseStockDO getByCodeAndUpdateType(@Param("code") String code,
+                                       @Param("updateType") int updateType);
+
+
     List<BaseStockDO> listAllSimple();
 
-    List<BaseStockDO> listAllRpsKline(@Param("updateType") Integer updateType, Integer stockType);
+    List<BaseStockDO> listAllRpsKline(@Param("updateType") Integer updateType,
+                                      @Param("type") Integer type);
 
     List<BaseStockDO> listAllETFKline();
 

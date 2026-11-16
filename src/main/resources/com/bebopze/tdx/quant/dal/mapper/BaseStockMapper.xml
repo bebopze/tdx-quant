@@ -39,6 +39,33 @@
     </resultMap>
 
 
+    <sql id="updateType_Column_List">
+        <if test="updateType == 1">
+            id, code, name, type, tdx_market_type, block_name,
+            trade_date, open, high, low, close, prev_close,
+            volume, amount,
+            range_pct, change_pct, change_price, turnover_pct,
+
+            kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
+
+            gmt_create, gmt_modify
+        </if>
+        <if test="updateType == 2">
+            id, code, name, type, tdx_market_type, block_name,
+            trade_date, open, high, low, close, prev_close,
+            volume, amount,
+            range_pct, change_pct, change_price, turnover_pct,
+
+            kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
+
+            gmt_create, gmt_modify
+        </if>
+        <if test="updateType == 3">
+            *
+        </if>
+    </sql>
+
+
     <select id="getIdByCode" parameterType="java.lang.String" resultType="long">
         SELECT id
 
@@ -58,6 +85,17 @@
 
     <select id="getSimpleByCode" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT id, code, name, type, tdx_market_type
+
+        FROM base_stock
+
+        WHERE code = #{code}
+    </select>
+
+
+    <select id="getByCodeAndUpdateType" parameterType="java.lang.String" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT
+
+        <include refid="updateType_Column_List"/>
 
         FROM base_stock
 
@@ -94,33 +132,17 @@
     <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 
-        <if test="updateType == 1">
-            id, code, name, type, tdx_market_type, block_name,
-            trade_date, open, high, low, close, prev_close,
-            volume, amount,
-            range_pct, change_pct, change_price, turnover_pct,
-
-            kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
-
-            gmt_create, gmt_modify
-        </if>
-        <if test="updateType == 2">
-            id, code, name, type, tdx_market_type, block_name,
-            trade_date, open, high, low, close, prev_close,
-            volume, amount,
-            range_pct, change_pct, change_price, turnover_pct,
-
-            kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
-
-            gmt_create, gmt_modify
-        </if>
-        <if test="updateType == 3">
-            *
-        </if>
-
+        <include refid="updateType_Column_List"/>
 
         FROM base_stock
+
+        <where>
+            <if test="type != null">
+                type = #{type}
+            </if>
+        </where>
     </select>
+
 
     <select id="listAllETFKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT *
@@ -134,29 +156,7 @@
         SELECT
 
 
-        <if test="updateType == 1">
-            id, code, name, type, tdx_market_type, block_name,
-            trade_date, open, high, low, close, prev_close,
-            volume, amount,
-            range_pct, change_pct, change_price, turnover_pct,
-
-            kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
-
-            gmt_create, gmt_modify
-        </if>
-        <if test="updateType == 2">
-            id, code, name, type, tdx_market_type, block_name,
-            trade_date, open, high, low, close, prev_close,
-            volume, amount,
-            range_pct, change_pct, change_price, turnover_pct,
-
-            kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
-
-            gmt_create, gmt_modify
-        </if>
-        <if test="updateType == 3">
-            *
-        </if>
+        <include refid="updateType_Column_List"/>
 
 
         FROM base_stock

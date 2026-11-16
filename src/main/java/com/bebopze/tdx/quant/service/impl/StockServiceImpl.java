@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -39,14 +40,22 @@ public class StockServiceImpl implements StockService {
 
 
     @Override
-    public BaseStockDTO info(String stockCode) {
+    public BaseStockDTO info(String stockCode, Integer updateType) {
+
+
+        // 默认使用 ALL_RANGE（读取全部 nd + his）
+        updateType = updateType == null ? UpdateTypeEnum.ALL_RANGE.type : updateType;
+
+
+        // ---------------------------------
+
 
         BaseStockDO entity = null;
 
 
         if (StockTypeEnum.isBlock(stockCode)) {
 
-            BaseBlockDO blockDO = baseBlockService.getByCode(stockCode);
+            BaseBlockDO blockDO = baseBlockService.getByCodeAndUpdateType(stockCode, updateType);
             if (blockDO != null) {
                 entity = new BaseStockDO();
                 BeanUtils.copyProperties(blockDO, entity);
@@ -54,7 +63,8 @@ public class StockServiceImpl implements StockService {
 
 
         } else {
-            entity = baseStockService.getByCode(stockCode);
+            // entity = baseStockService.getByCode(stockCode);
+            entity = baseStockService.getByCodeAndUpdateType(stockCode, updateType);
         }
 
 

@@ -22,6 +22,8 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     Long getIdByCode(String code);
 
+    BaseBlockDO getByCodeAndUpdateType(String code, int updateType);
+
     BaseBlockDO getByCode(String code);
 
     BaseBlockDO getSimpleByCode(String code);

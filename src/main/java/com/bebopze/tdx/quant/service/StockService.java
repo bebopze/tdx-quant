@@ -10,7 +10,7 @@ import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
  */
 public interface StockService {
 
-    BaseStockDTO info(String stockCode);
+    BaseStockDTO info(String stockCode, Integer updateType);
 
     StockBlockInfoDTO blockInfo(String stockCode);
 }

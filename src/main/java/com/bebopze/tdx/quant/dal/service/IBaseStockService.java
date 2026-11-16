@@ -27,6 +27,9 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     BaseStockDO getSimpleByCode(String code);
 
 
+    BaseStockDO getByCodeAndUpdateType(String stockCode, int updateType);
+
+
     Map<String, Set<String>> market_stockCodePrefixList_map(int type, int N);
 
 

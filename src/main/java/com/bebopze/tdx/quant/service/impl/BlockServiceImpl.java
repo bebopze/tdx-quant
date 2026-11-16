@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.service.impl;
 
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BlockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -46,8 +47,17 @@ public class BlockServiceImpl implements BlockService {
 
 
     @Override
-    public BlockDTO info(String blockCode) {
-        BaseBlockDO entity = baseBlockService.getByCode(blockCode);
+    public BlockDTO info(String blockCode, Integer updateType) {
+
+
+        // 默认使用 ALL_RANGE（读取全部 nd + his）
+        updateType = updateType == null ? UpdateTypeEnum.ALL_RANGE.type : updateType;
+
+
+        // ---------------------------------
+
+
+        BaseBlockDO entity = baseBlockService.getByCodeAndUpdateType(blockCode, updateType);
 
 
         BlockDTO dto = new BlockDTO();

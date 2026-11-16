@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.cache;
 
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -65,7 +66,7 @@ public class PosStockCache {
 
     private PosStockCache refreshStock(String stockCode) {
         PosStockCache dto = new PosStockCache();
-        dto.setBaseStockDTO(stockService.info(stockCode));
+        dto.setBaseStockDTO(stockService.info(stockCode, UpdateTypeEnum.ALL_RANGE.type));
         dto.setStockBlockInfoDTO(stockService.blockInfo(stockCode));
         return dto;
     }

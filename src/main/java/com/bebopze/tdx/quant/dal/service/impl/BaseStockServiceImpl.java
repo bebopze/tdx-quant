@@ -81,6 +81,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
+    public BaseStockDO getByCodeAndUpdateType(String stockCode, int updateType) {
+        return baseMapper.getByCodeAndUpdateType(stockCode, updateType);
+    }
+
+
+    @Override
     public Map<String, Set<String>> market_stockCodePrefixList_map(int type, int N) {
         Map<String, Set<String>> market_stockCodePrefixList_map = Maps.newHashMap();
 

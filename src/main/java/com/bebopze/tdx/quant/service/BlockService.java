@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface BlockService {
 
-    BlockDTO info(String blockCode);
+    BlockDTO info(String blockCode, Integer updateType);
 
     List<BaseStockDO> listStock(String blockCode);
 

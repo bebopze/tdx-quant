@@ -295,7 +295,7 @@ public class BaseBlockDO implements Serializable {
 
             // HIS 更新时   ->   附带 同步更新1次 N_DAY
             List<String> nd_klineStrList = ListUtil.lastN(klineStrList, UpdateTypeEnum.N_DAY.days);
-            setExtDataNdStr(JSON.toJSONString(nd_klineStrList));
+            setKlineNdStr(JSON.toJSONString(nd_klineStrList));
         }
     }
 

@@ -160,6 +160,11 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
     @Override
+    public BaseBlockDO getByCodeAndUpdateType(String code, int updateType) {
+        return baseMapper.getByCodeAndUpdateType(code, updateType);
+    }
+
+    @Override
     public List<BaseBlockDO> listAllRpsKline(UpdateTypeEnum updateTypeEnum) {
         return baseMapper.listAllRpsKline(updateTypeEnum.getType());
     }
