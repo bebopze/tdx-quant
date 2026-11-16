@@ -21,9 +21,9 @@ public class Generator {
     public static void main(String[] args) {
 
 
-        String url = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.url");
-        String username = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.username");
-        String password = PropsUtil.getProperty("spring.shardingsphere.datasource.ds_common.password");
+        String url = PropsUtil.getProperty("dataSources.ds_common.url");
+        String username = PropsUtil.getProperty("dataSources.ds_common.username");
+        String password = PropsUtil.getProperty("dataSources.ds_common.password");
 
 
         FastAutoGenerator.create(url, username, password)
@@ -47,7 +47,7 @@ public class Generator {
                          )
 
                          .packageConfig(builder -> builder
-                                 .parent("com.bebopze.tdx.quant.dal2")
+                                 .parent("com.bebopze.tdx.quant.dal")
                                  .entity("entity")
                                  .mapper("mapper")
                                  .service("service")
@@ -58,14 +58,17 @@ public class Generator {
                          .strategyConfig(builder -> {
                              builder
                                      // 设置需要生成的表名
-                                     // .addInclude("base_stock", "base_block", "base_block_rela_stock")
+                                     // .addInclude("base_stock", "base_block", "base_block_rela_stock", "base_option")
                                      // .addInclude("base_block_new", "base_block_new_rela_stock")
 
                                      // .addInclude("bt_task", "bt_trade_record", "bt_position_record", "bt_daily_return")
 
-                                     .addInclude(/*"qa_block_new_rela_stock_his", "qa_market_mid_cycle", "qa_top_block"*/)
+                                     // .addInclude("qa_block_new_rela_stock_his", "qa_market_mid_cycle", "qa_top_block")
 
-                                      .addInclude(/*"conf_account",*/ "conf_distributed_lock")
+                                     // .addInclude("conf_account", "conf_distributed_lock")
+
+                                     .addInclude("base_option")
+
 
                                      .entityBuilder()
                                      .formatFileName("%sDO")

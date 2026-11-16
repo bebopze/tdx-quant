@@ -1,0 +1,19 @@
+package com.bebopze.tdx.quant.dal.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
+import org.apache.ibatis.annotations.Param;
+
+/**
+ * <p>
+ * 期权-实时行情 Mapper 接口
+ * </p>
+ *
+ * @author bebopze
+ * @since 2026-11-16
+ */
+public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
+
+    BaseOptionDO getByCode(@Param("code") String code);
+
+}
