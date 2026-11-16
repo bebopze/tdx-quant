@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.dal.service;
 
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.baomidou.mybatisplus.spring.service.IService;
 
@@ -42,10 +42,10 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
     /**
      * 细分行业 + 概念板块
      *
-     * @param klineDataEnum
+     * @param updateTypeEnum
      * @return
      */
-    List<BaseBlockDO> listAllRpsKline(KlineDataEnum klineDataEnum);
+    List<BaseBlockDO> listAllRpsKline(UpdateTypeEnum updateTypeEnum);
 
     List<BaseBlockDO> listAllKline();
 

@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.service.ExtDataService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,33 +31,33 @@ public class ExtDataController {
 
     @Operation(summary = "个股/ETF/板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/refreshExtDataAll")
-    public Result<Void> refreshExtDataAll(@Schema(description = "N_DAY：近N日更新；HIS：全量更新；", example = "N_DAY")
-                                          @RequestParam KlineDataEnum klineDataEnum) {
+    public Result<Void> refreshExtDataAll(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
+                                          @RequestParam UpdateTypeEnum updateTypeEnum) {
 
-        extDataService.refreshExtDataAll(klineDataEnum);
+        extDataService.refreshExtDataAll(updateTypeEnum);
         return Result.SUC();
     }
 
 
     @Operation(summary = "个股/ETF - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/stock/calc")
-    public Result<Void> calcStockExtData(@Schema(description = "N_DAY：近N日更新；HIS：全量更新；", example = "N_DAY")
-                                         @RequestParam KlineDataEnum klineDataEnum,
+    public Result<Void> calcStockExtData(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
+                                         @RequestParam UpdateTypeEnum updateTypeEnum,
 
                                          @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；", example = "1")
                                          @RequestParam Integer stockType) {
 
-        extDataService.calcStockExtData(klineDataEnum, stockType);
+        extDataService.calcStockExtData(updateTypeEnum, stockType);
         return Result.SUC();
     }
 
 
     @Operation(summary = "板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/block/calc")
-    public Result<Void> calcBlockExtData(@Schema(description = "N_DAY：近N日更新；HIS：全量更新；", example = "N_DAY")
-                                         @RequestParam KlineDataEnum klineDataEnum) {
+    public Result<Void> calcBlockExtData(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
+                                         @RequestParam UpdateTypeEnum updateTypeEnum) {
 
-        extDataService.calcBlockExtData(klineDataEnum);
+        extDataService.calcBlockExtData(updateTypeEnum);
         return Result.SUC();
     }
 

@@ -15,22 +15,41 @@ import lombok.Getter;
 public enum UpdateTypeEnum {
 
 
-    HIS(1, "历史行情", 250 * 100),
+    N_DAY(1, "nd", "近N日行情", 250 * 2),
 
-    N_DAY(2, "近N日行情", 250 * 2),
+
+    HIS(2, "his", "历史行情", 250 * 100),
 
 
     // ------------------------------------------------- 全量更新   =>   OOM优化  ->  分段执行
 
 
-    ALL_RANGE(100, "全量更新（分段执行）", -1),
+//    N_DAY(1, "nd", "近N日更新", "拉取近N日K线（短期）-> 用于[近N日更新]"),
+//
+//    HIS(2, "his", "历史更新", "拉取历史K线（长期）-> 用于[历史更新]"),
+//
+//    ALL(3, "all", "暂不支持[全部更新（近N日更新 + 历史更新）]", "拉取全部K线（his + nd）-> 用于[回测]");
+
+
+    ALL_RANGE(3, "all（nd + his）", "全量更新（分段执行）", -1),
 
 
     ;
 
 
+    /**
+     * 更新类型
+     */
     public final Integer type;
 
+    /**
+     * 字段flag
+     */
+    private final String klineField;
+
+    /**
+     * 更新说明
+     */
     public final String desc;
 
     /**

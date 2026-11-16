@@ -1,6 +1,6 @@
 package com.bebopze.tdx.quant.dal.service;
 
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.baomidou.mybatisplus.spring.service.IService;
 
@@ -37,21 +37,21 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     Map<String, Long> codeIdMap(Collection<String> codeList);
 
 
-    List<BaseStockDO> listAllRpsKline(KlineDataEnum klineDataEnum, Integer stockType);
+    List<BaseStockDO> listAllRpsKline(UpdateTypeEnum updateTypeEnum, Integer stockType);
 
-    List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Integer stockType);
+    List<BaseStockDO> listAllKline(UpdateTypeEnum updateTypeEnum, Integer stockType);
 
-    List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Set<Integer> stockTypeSet);
+    List<BaseStockDO> listAllKline(UpdateTypeEnum updateTypeEnum, Set<Integer> stockTypeSet);
 
     /**
      * 从 Cache 中获取   全部个股/ETF
      *
-     * @param klineDataEnum
-     * @param stockTypeSet  股票类型：null-全部；1-A股；2-ETF；11-港股；12-美股；
-     * @param refresh       是否刷新缓存：true/false
+     * @param updateTypeEnum
+     * @param stockTypeSet   股票类型：null-全部；1-A股；2-ETF；11-港股；12-美股；
+     * @param refresh        是否刷新缓存：true/false
      * @return
      */
-    List<BaseStockDO> listAllKline(KlineDataEnum klineDataEnum, Set<Integer> stockTypeSet, boolean refresh);
+    List<BaseStockDO> listAllKline(UpdateTypeEnum updateTypeEnum, Set<Integer> stockTypeSet, boolean refresh);
 
     List<BaseStockDO> listAllETFKline();
 
@@ -59,12 +59,12 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     /**
      * 游标分页（非 OFFSET 分页）-> 流式读取（因子挖掘 窗口加载）
      *
-     * @param klineDataEnum K线数据类型
-     * @param stockTypeSet  股票类型
-     * @param lastId        上一页最后一条 id（首页传 0）
-     * @param pageSize      页大小
+     * @param updateTypeEnum K线数据类型
+     * @param stockTypeSet   股票类型
+     * @param lastId         上一页最后一条 id（首页传 0）
+     * @param pageSize       页大小
      */
-    List<BaseStockDO> listByCursor(KlineDataEnum klineDataEnum, Set<Integer> stockTypeSet, Long lastId, int pageSize);
+    List<BaseStockDO> listByCursor(UpdateTypeEnum updateTypeEnum, Set<Integer> stockTypeSet, Long lastId, int pageSize);
 
 
     List<BaseStockDO> listAllSimple();

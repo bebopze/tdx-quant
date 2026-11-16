@@ -2,7 +2,7 @@ package com.bebopze.tdx.quant.dal.service.impl;
 
 import com.bebopze.tdx.quant.common.config.anno.DBLimiter;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.JsonFileWriterAndReader;
 import com.bebopze.tdx.quant.common.util.ListUtil;
@@ -160,8 +160,8 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
 
 
     @Override
-    public List<BaseBlockDO> listAllRpsKline(KlineDataEnum klineDataEnum) {
-        return baseMapper.listAllRpsKline(klineDataEnum.getUpdateType());
+    public List<BaseBlockDO> listAllRpsKline(UpdateTypeEnum updateTypeEnum) {
+        return baseMapper.listAllRpsKline(updateTypeEnum.getType());
     }
 
 

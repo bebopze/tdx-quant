@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
@@ -181,7 +180,7 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
-            extDataService.refreshExtDataAll(KlineDataEnum.HIS);
+            extDataService.refreshExtDataAll(UpdateTypeEnum.HIS);
 
 
             taskProgressManager.updateProgress(taskId, 70, "主线板块 计算");
@@ -289,15 +288,15 @@ public class TdxTask {
 
 
             taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
-            extDataService.calcBlockExtData(KlineDataEnum.N_DAY);
+            extDataService.calcBlockExtData(UpdateTypeEnum.N_DAY);
 
 
             taskProgressManager.updateProgress(taskId, 60, "ETF实时 扩展数据");
-            extDataService.calcStockExtData(KlineDataEnum.N_DAY, StockTypeEnum.ETF.type);
+            extDataService.calcStockExtData(UpdateTypeEnum.N_DAY, StockTypeEnum.ETF.type);
 
 
             taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
-            extDataService.calcStockExtData(KlineDataEnum.N_DAY, StockTypeEnum.A_STOCK.type);
+            extDataService.calcStockExtData(UpdateTypeEnum.N_DAY, StockTypeEnum.A_STOCK.type);
 
 
             // -------------------------------------------- 主线板块 ----------------------------------------------------

@@ -28,20 +28,20 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
     List<BaseStockDO> listAllSimple();
 
-    List<BaseStockDO> listAllRpsKline(@Param("klineDataType") Integer klineDataType, Integer stockType);
+    List<BaseStockDO> listAllRpsKline(@Param("updateType") Integer updateType, Integer stockType);
 
     List<BaseStockDO> listAllETFKline();
 
     /**
      * 游标分页（非 OFFSET分页）
      *
-     * @param klineDataType 更新类型：1-近N日（nd）；2-全量更新（his）
+     * @param updateType 更新类型：1-近N日（nd）；2-全量更新（his）
      * @param typeSet
      * @param lastId
      * @param pageSize
      * @return
      */
-    List<BaseStockDO> listByCursor(@Param("klineDataType") Integer klineDataType,
+    List<BaseStockDO> listByCursor(@Param("updateType") Integer updateType,
                                    @Param("typeSet") Set<Integer> typeSet,
                                    @Param("lastId") Long lastId,
                                    @Param("pageSize") int pageSize);

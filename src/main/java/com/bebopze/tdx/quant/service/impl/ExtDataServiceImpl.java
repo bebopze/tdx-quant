@@ -2,9 +2,9 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.ThreadPoolType;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStock;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
 import com.bebopze.tdx.quant.common.domain.dto.fun.MidAdjustResult;
@@ -66,25 +66,25 @@ public class ExtDataServiceImpl implements ExtDataService {
 
     @TotalTime
     @Override
-    public void refreshExtDataAll(KlineDataEnum klineDataEnum) {
+    public void refreshExtDataAll(UpdateTypeEnum updateTypeEnum) {
         // 板块
-        calcBlockExtData(klineDataEnum);
+        calcBlockExtData(updateTypeEnum);
         // ETF
-        calcStockExtData(klineDataEnum, StockTypeEnum.ETF.type);
+        calcStockExtData(updateTypeEnum, StockTypeEnum.ETF.type);
         // A股
-        calcStockExtData(klineDataEnum, StockTypeEnum.A_STOCK.type);
+        calcStockExtData(updateTypeEnum, StockTypeEnum.A_STOCK.type);
 
 
         // 港股
-        calcStockExtData(klineDataEnum, StockTypeEnum.HK_STOCK.type);
+        calcStockExtData(updateTypeEnum, StockTypeEnum.HK_STOCK.type);
         // 美股
-        calcStockExtData(klineDataEnum, StockTypeEnum.US_STOCK.type);
+        calcStockExtData(updateTypeEnum, StockTypeEnum.US_STOCK.type);
     }
 
 
     @TotalTime
     @Override
-    public void calcStockExtData(KlineDataEnum klineDataEnum, Integer stockType) {
+    public void calcStockExtData(UpdateTypeEnum updateTypeEnum, Integer stockType) {
 
 
         // N = StockUtil.N(N);
@@ -97,7 +97,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // 预加载 -> 解析数据
-        DataDTO data = loadAllStockKline(klineDataEnum, stockType);
+        DataDTO data = loadAllStockKline(updateTypeEnum, stockType);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         stockTask__RPS(data, stockType);
 
         // 扩展数据（ 继续计算 ext_data  +  save2DB[RPS + ext_data] ）
-        stockTask__extData(data, stockType, klineDataEnum);
+        stockTask__extData(data, stockType, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
     @TotalTime
     @Override
-    public void calcBlockExtData(KlineDataEnum klineDataEnum) {
+    public void calcBlockExtData(UpdateTypeEnum updateTypeEnum) {
 
 
         // N = StockUtil.N(N);
@@ -133,7 +133,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         // 预加载 -> 解析数据
         // DataDTO data = loadAllBlockKline(N);
-        DataDTO data = loadAllBlockKline(klineDataEnum);
+        DataDTO data = loadAllBlockKline(updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ public class ExtDataServiceImpl implements ExtDataService {
         blockTask__RPS(data);
 
         // 扩展数据
-        blockTask__extData(data, klineDataEnum);
+        blockTask__extData(data, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -165,15 +165,15 @@ public class ExtDataServiceImpl implements ExtDataService {
     /**
      * 从本地DB   加载全部（5000+支）个股的 收盘价序列
      *
-     * @param klineDataEnum
+     * @param updateTypeEnum
      * @param stockType
      * @return stock - close_arr
      */
-    private DataDTO loadAllStockKline(KlineDataEnum klineDataEnum, Integer stockType) {
+    private DataDTO loadAllStockKline(UpdateTypeEnum updateTypeEnum, Integer stockType) {
         DataDTO data = new DataDTO();
 
 
-        data.stockDOList = baseStockService.listAllKline(klineDataEnum, stockType);
+        data.stockDOList = baseStockService.listAllKline(updateTypeEnum, stockType);
         data.stockDOList = data.stockDOList.parallelStream().filter(BaseStockDO::hasKlineData).collect(Collectors.toList());
 
 
@@ -348,9 +348,9 @@ public class ExtDataServiceImpl implements ExtDataService {
      *
      * @param data
      * @param stockType
-     * @param klineDataEnum
+     * @param updateTypeEnum
      */
-    private void stockTask__extData(DataDTO data, Integer stockType, KlineDataEnum klineDataEnum) {
+    private void stockTask__extData(DataDTO data, Integer stockType, UpdateTypeEnum updateTypeEnum) {
         AtomicInteger count = new AtomicInteger(0);
         long start = System.currentTimeMillis();
 
@@ -369,7 +369,7 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         ParallelCalcUtil.forEach(data.stockDOList,
-                                 stockDO -> execCalcStockExtData(data, stockType, stockDO, count, start, klineDataEnum),
+                                 stockDO -> execCalcStockExtData(data, stockType, stockDO, count, start, updateTypeEnum),
                                  ThreadPoolType.CPU_INTENSIVE_2
         );
     }
@@ -379,7 +379,7 @@ public class ExtDataServiceImpl implements ExtDataService {
                                       BaseStockDO stockDO,
                                       AtomicInteger count,
                                       long start,
-                                      KlineDataEnum klineDataEnum) {
+                                      UpdateTypeEnum updateTypeEnum) {
 
 
         String code = stockDO.getCode();
@@ -387,10 +387,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         // --------------------------------------------------------
-
-
-        // old
-        // List<ExtDataDTO> old_extDataDTOList = stockDO.getExtDataDTOList();
 
 
         // fill -> new_RPS（后续计算 RPS相关指标）
@@ -414,17 +410,9 @@ public class ExtDataServiceImpl implements ExtDataService {
         // ------------------------------------------------------------------------ 更新 -> DB
 
 
-        // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
-        // compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
-
-
-        // -------------------------
-
-
         BaseStockDO entity = new BaseStockDO();
         entity.setId(data.codeIdMap.get(code));
-        // entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
-        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList)), klineDataEnum);
+        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList)), updateTypeEnum);
 
         // 更新 -> DB
         baseStockService.updateById(entity);
@@ -446,14 +434,14 @@ public class ExtDataServiceImpl implements ExtDataService {
     /**
      * 从本地DB   加载全部（380+支）板块的 收盘价序列
      *
-     * @param klineDataEnum
+     * @param updateTypeEnum
      * @return stock - close_arr
      */
-    private DataDTO loadAllBlockKline(KlineDataEnum klineDataEnum) {
+    private DataDTO loadAllBlockKline(UpdateTypeEnum updateTypeEnum) {
         DataDTO data = new DataDTO();
 
 
-        data.blockDOList = baseBlockService.listAllRpsKline(klineDataEnum);
+        data.blockDOList = baseBlockService.listAllRpsKline(updateTypeEnum);
         data.blockDOList = data.blockDOList.stream().filter(BaseBlockDO::hasKlineData).collect(Collectors.toList());
 
 
@@ -605,9 +593,9 @@ public class ExtDataServiceImpl implements ExtDataService {
      * 板块 - 扩展数据 计算
      *
      * @param data
-     * @param klineDataEnum
+     * @param updateTypeEnum
      */
-    private void blockTask__extData(DataDTO data, KlineDataEnum klineDataEnum) {
+    private void blockTask__extData(DataDTO data, UpdateTypeEnum updateTypeEnum) {
         AtomicInteger count = new AtomicInteger(0);
         long start = System.currentTimeMillis();
 
@@ -616,14 +604,14 @@ public class ExtDataServiceImpl implements ExtDataService {
 
 
         ParallelCalcUtil.forEach(data.blockDOList,
-                                 blockDO -> execCalcBlockExtData(data, blockDO, count, start, klineDataEnum),
+                                 blockDO -> execCalcBlockExtData(data, blockDO, count, start, updateTypeEnum),
                                  ThreadPoolType.CPU_INTENSIVE_2
         );
     }
 
 
     private void execCalcBlockExtData(DataDTO data, BaseBlockDO blockDO, AtomicInteger count, long start,
-                                      KlineDataEnum klineDataEnum) {
+                                      UpdateTypeEnum updateTypeEnum) {
 
 
         String code = blockDO.getCode();
@@ -666,8 +654,8 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         BaseBlockDO entity = new BaseBlockDO();
         entity.setId(data.codeIdMap.get(code));
-        entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
-        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)), klineDataEnum);    // 增量更新
+        // entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
+        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)), updateTypeEnum);    // 增量更新
 
 
         // 更新 -> DB

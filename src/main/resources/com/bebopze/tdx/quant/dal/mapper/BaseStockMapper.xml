@@ -95,7 +95,7 @@
         SELECT
 
         <where>
-            <if test="klineDataType == 1">
+            <if test="updateType == 1">
                 id, code, name, type, tdx_market_type, block_name,
                 trade_date, open, high, low, close, prev_close,
                 volume, amount,
@@ -105,7 +105,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 2">
+            <if test="updateType == 2">
                 id, code, name, type, tdx_market_type, block_name,
                 trade_date, open, high, low, close, prev_close,
                 volume, amount,
@@ -115,7 +115,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 3">
+            <if test="updateType == 3">
                 *
             </if>
         </where>
@@ -135,7 +135,7 @@
         SELECT
 
         <where>
-            <if test="klineDataType == 1">
+            <if test="updateType == 1">
                 id, code, name, type, tdx_market_type, block_name,
                 trade_date, open, high, low, close, prev_close,
                 volume, amount,
@@ -145,7 +145,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 2">
+            <if test="updateType == 2">
                 id, code, name, type, tdx_market_type, block_name,
                 trade_date, open, high, low, close, prev_close,
                 volume, amount,
@@ -155,7 +155,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 3">
+            <if test="updateType == 3">
                 *
             </if>
         </where>

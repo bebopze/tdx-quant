@@ -2,7 +2,6 @@ package com.bebopze.tdx.quant.dal.entity;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.*;
-import com.bebopze.tdx.quant.common.constant.KlineDataEnum;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockExtData;
@@ -313,10 +312,10 @@ public class BaseStockDO implements Serializable {
         }
     }
 
-    public void setExtDataStr(String extDataStr, KlineDataEnum klineDataEnum) {
-        if (Objects.equals(klineDataEnum, KlineDataEnum.N_DAY)) {
+    public void setExtDataStr(String extDataStr, UpdateTypeEnum updateTypeEnum) {
+        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
             setExtDataNdStr(extDataStr);
-        } else if (Objects.equals(klineDataEnum, KlineDataEnum.HIS)) {
+        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
             setExtDataHisStr(extDataStr);
         }
     }

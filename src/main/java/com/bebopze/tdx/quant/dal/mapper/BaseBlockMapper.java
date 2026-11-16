@@ -41,7 +41,7 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
      *
      * @return
      */
-    List<BaseBlockDO> listAllRpsKline(@Param("klineDataType") int klineDataType);
+    List<BaseBlockDO> listAllRpsKline(@Param("updateType") int updateType);
 
 
     List<BaseBlockDO> listSimpleByCodeList(@Param("codeList") Collection<String> codeList);

@@ -1514,9 +1514,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public void fillStockKlineAll(UpdateTypeEnum updateTypeEnum) {
 
 
+        // 全量股票   codeIdMap
         Map<String, Long> codeIdMap = baseStockService.codeIdMap((Integer) null);
 
 
+        // kline 更新
         update__fillStockKlineAll(codeIdMap, updateTypeEnum);
 
 
@@ -1525,10 +1527,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
     /**
-     * 1-历史更新
+     * kline 更新
      *
      * @param codeIdMap
-     * @param updateTypeEnum
+     * @param updateTypeEnum 历史更新 / 近N日更新
      */
     private void update__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
@@ -1639,15 +1641,46 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 //    }
 
 
-    private BaseStockDO convertStockDO(Long stockId, String stockName, List<String> klines, KlineDTO e,
+    private BaseStockDO convertStockDO(Long stockId,
+                                       String stockName,
+                                       List<String> klines,
                                        UpdateTypeEnum updateTypeEnum) {
+
 
         BaseStockDO entity = new BaseStockDO();
         entity.setId(stockId);
         entity.setName(stockName);
 
+
+        // 实时行情   -   last kline
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
         // K线数据
-        entity.setKlineStr(JSON.toJSONString(klines), updateTypeEnum);
+        // entity.setKlineStr(JSON.toJSONString(klines), updateTypeEnum);
+
+
+        // K线数据
+        // HIS更新时   ->   可附带同步更新1次 N_DAY
+        if (updateTypeEnum == UpdateTypeEnum.HIS) {
+
+            // his
+            entity.setKlineHisStr(JSON.toJSONString(klines));
+
+            // nd
+            List<String> nd_klines = ListUtil.lastN(klines, updateTypeEnum.days);
+            entity.setKlineNdStr(JSON.toJSONString(nd_klines));
+
+        } else if (updateTypeEnum == UpdateTypeEnum.N_DAY) {
+            // nd
+            entity.setKlineNdStr(JSON.toJSONString(klines));
+        }
+
+
+        // --------------------------------------------------------------------------------
 
 
         // 昨日
@@ -1658,20 +1691,20 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 实时行情   -   last kline
-        entity.setTradeDate(e.getDate());
+        entity.setTradeDate(lastKlineDTO.getDate());
 
-        entity.setOpen(of(e.getOpen()));
-        entity.setHigh(of(e.getHigh()));
-        entity.setLow(of(e.getLow()));
-        entity.setClose(of(e.getClose()));
+        entity.setOpen(of(lastKlineDTO.getOpen()));
+        entity.setHigh(of(lastKlineDTO.getHigh()));
+        entity.setLow(of(lastKlineDTO.getLow()));
+        entity.setClose(of(lastKlineDTO.getClose()));
 
-        entity.setVolume(e.getVol());
-        entity.setAmount(of(e.getAmo()));
+        entity.setVolume(lastKlineDTO.getVol());
+        entity.setAmount(of(lastKlineDTO.getAmo()));
 
-        entity.setRangePct(of(e.getRangePct()));
-        entity.setChangePct(of(e.getChangePct()));
-        entity.setChangePrice(of(e.getChangePrice()));
-        entity.setTurnoverPct(of(e.getTurnoverPct()));
+        entity.setRangePct(of(lastKlineDTO.getRangePct()));
+        entity.setChangePct(of(lastKlineDTO.getChangePct()));
+        entity.setChangePrice(of(lastKlineDTO.getChangePrice()));
+        entity.setTurnoverPct(of(lastKlineDTO.getTurnoverPct()));
 
 
         return entity;
@@ -1688,9 +1721,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private void fillStockKline(String stockCode, Long stockId, UpdateTypeEnum updateTypeEnum) {
 
 
-        // apiType = apiType(apiType, updateTypeEnum);
-
-
         // --------------------- ID
 
 
@@ -1701,15 +1731,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ---------------------  拉取数据     ->     通达信-本地读取   /   东方财富 API
 
 
-        // 1、通达信   本地读取
+        // 通达信   本地读取
         List<String> klines = klinesFromTdx(stockCode, updateTypeEnum);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        // klineHis   ->   全量更新 / 增量更新
-        // klines = klineHis__updateType(stockId, klines, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1722,12 +1745,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         }
 
 
-        // 实时行情   -   last kline
-        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
-
-
         // 实时行情
-        BaseStockDO entity = convertStockDO(stockId, null, klines, lastKlineDTO, updateTypeEnum);
+        BaseStockDO entity = convertStockDO(stockId, null, klines, updateTypeEnum);
 
 
         // --------------------- DB

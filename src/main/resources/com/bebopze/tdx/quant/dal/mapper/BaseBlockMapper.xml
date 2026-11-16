@@ -112,7 +112,7 @@
         SELECT
 
         <where>
-            <if test="klineDataType == 1">
+            <if test="updateType == 1">
                 id, code, name, code_path, name_path,
                 parent_id, type, level, end_level,
                 trade_date, open, high, low, close, prev_close,
@@ -123,7 +123,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 2">
+            <if test="updateType == 2">
                 id, code, name, code_path, name_path,
                 parent_id, type, level, end_level,
                 trade_date, open, high, low, close, prev_close,
@@ -134,7 +134,7 @@
 
                 gmt_create, gmt_modify
             </if>
-            <if test="klineDataType == 3">
+            <if test="updateType == 3">
                 *
             </if>
         </where>
