@@ -310,7 +310,9 @@ public class BaseStockDO implements Serializable {
 
         if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
 
-            setKlineNdStr(JSON.toJSONString(klineStrList));
+            // TODO：暂未从 源头（xx.lday / xx.txt）  ->   截取 近N日 K线数据
+            List<String> nd_klineStrList = ListUtil.lastN(klineStrList, UpdateTypeEnum.N_DAY.days);
+            setKlineNdStr(JSON.toJSONString(nd_klineStrList));
 
         } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
 
@@ -327,7 +329,9 @@ public class BaseStockDO implements Serializable {
 
         if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
 
-            setExtDataNdStr(JSON.toJSONString(extDataStrList));
+            // TODO：暂未从 源头（xx.lday / xx.txt）  ->   截取 近N日 K线数据
+            List<String> nd_extDataStrList = ListUtil.lastN(extDataStrList, UpdateTypeEnum.N_DAY.days);
+            setExtDataNdStr(JSON.toJSONString(nd_extDataStrList));
 
         } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
 
