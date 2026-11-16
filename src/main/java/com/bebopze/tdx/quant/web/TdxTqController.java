@@ -48,7 +48,7 @@ public class TdxTqController {
     public Result<List<KlineDTO>> get_market_data(@Schema(description = "通达信 代码（股票/ETF/板块/期权，推荐带市场后缀）", example = "600519.SH")
                                                   @RequestParam String code,
 
-                                                  @Schema(description = "周期（笔/分钟/日/周/月）", example = "DAY")
+                                                  @Schema(description = "周期（笔/分钟/日/周/月）", example = "DAY", implementation = PeriodEnum.class)
                                                   @RequestParam PeriodEnum periodEnum,
 
                                                   @Schema(description = "起始日期", example = "2026-01-01")
