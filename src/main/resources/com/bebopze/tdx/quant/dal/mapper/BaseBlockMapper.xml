@@ -111,33 +111,33 @@
     <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT
 
-        <where>
-            <if test="updateType == 1">
-                id, code, name, code_path, name_path,
-                parent_id, type, level, end_level,
-                trade_date, open, high, low, close, prev_close,
-                volume, amount,
-                range_pct, change_pct, change_price, turnover_pct,
 
-                kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
+        <if test="updateType == 1">
+            id, code, name, code_path, name_path,
+            parent_id, type, level, end_level,
+            trade_date, open, high, low, close, prev_close,
+            volume, amount,
+            range_pct, change_pct, change_price, turnover_pct,
 
-                gmt_create, gmt_modify
-            </if>
-            <if test="updateType == 2">
-                id, code, name, code_path, name_path,
-                parent_id, type, level, end_level,
-                trade_date, open, high, low, close, prev_close,
-                volume, amount,
-                range_pct, change_pct, change_price, turnover_pct,
+            kline_nd, kline_nd_raw_len, ext_data_nd, ext_data_nd_raw_len,
 
-                kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
+            gmt_create, gmt_modify
+        </if>
+        <if test="updateType == 2">
+            id, code, name, code_path, name_path,
+            parent_id, type, level, end_level,
+            trade_date, open, high, low, close, prev_close,
+            volume, amount,
+            range_pct, change_pct, change_price, turnover_pct,
 
-                gmt_create, gmt_modify
-            </if>
-            <if test="updateType == 3">
-                *
-            </if>
-        </where>
+            kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len,
+
+            gmt_create, gmt_modify
+        </if>
+        <if test="updateType == 3">
+            *
+        </if>
+
 
         FROM base_block
 

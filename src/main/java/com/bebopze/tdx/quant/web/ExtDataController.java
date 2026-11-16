@@ -31,33 +31,33 @@ public class ExtDataController {
 
     @Operation(summary = "个股/ETF/板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/refreshExtDataAll")
-    public Result<Void> refreshExtDataAll(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
-                                          @RequestParam UpdateTypeEnum updateTypeEnum) {
+    public Result<Void> refreshExtDataAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
+                                          @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        extDataService.refreshExtDataAll(updateTypeEnum);
+        extDataService.refreshExtDataAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
 
     @Operation(summary = "个股/ETF - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/stock/calc")
-    public Result<Void> calcStockExtData(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
-                                         @RequestParam UpdateTypeEnum updateTypeEnum,
+    public Result<Void> calcStockExtData(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
+                                         @RequestParam(required = false, defaultValue = "2") int updateType,
 
                                          @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；", example = "1")
                                          @RequestParam Integer stockType) {
 
-        extDataService.calcStockExtData(updateTypeEnum, stockType);
+        extDataService.calcStockExtData(UpdateTypeEnum.getByType(updateType), stockType);
         return Result.SUC();
     }
 
 
     @Operation(summary = "板块 - 扩展数据 计算", description = "（RPS/中期涨幅/高位爆量上影大阴/月多/RPS三线红/N日新高/均线预萌出/均线萌出/大均线多头/MA20多/MA20空/SSF多/SSF空）")
     @GetMapping(value = "/block/calc")
-    public Result<Void> calcBlockExtData(@Schema(description = "N_DAY：近N日更新；HIS：历史更新；", example = "N_DAY", implementation = UpdateTypeEnum.class)
-                                         @RequestParam UpdateTypeEnum updateTypeEnum) {
+    public Result<Void> calcBlockExtData(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
+                                         @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        extDataService.calcBlockExtData(updateTypeEnum);
+        extDataService.calcBlockExtData(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
