@@ -57,6 +57,7 @@ public class BlockKlineFun {
     private InitDataServiceImpl initDataServiceImpl;
 
 
+    @Deprecated
     @TotalTime
     public void calcAndFillBlockKlineAll() {
 

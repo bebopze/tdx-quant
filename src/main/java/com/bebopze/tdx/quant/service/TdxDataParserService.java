@@ -71,5 +71,6 @@ public interface TdxDataParserService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Deprecated
     void calcAndFillBlockKlineAll();
 }

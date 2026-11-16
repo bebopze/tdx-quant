@@ -195,6 +195,7 @@ public class ParserController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Deprecated
     @Operation(summary = "实时[最新一日] 板块行情（全部） - 实时计算 + 解析入库", description = "实时[最新一日] 板块行情（全部） - 实时计算 + 解析入")
     @GetMapping(value = "/calcAndFill/blockKlineAll")
     public Result<Void> calcAndFillBlockKlineAll() {

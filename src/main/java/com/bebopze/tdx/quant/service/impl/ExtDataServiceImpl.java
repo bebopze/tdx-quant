@@ -51,9 +51,6 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 public class ExtDataServiceImpl implements ExtDataService {
 
 
-//    private static final int lastN = 251;
-
-
     @Autowired
     private IBaseStockService baseStockService;
 
@@ -87,11 +84,6 @@ public class ExtDataServiceImpl implements ExtDataService {
     public void calcStockExtData(UpdateTypeEnum updateTypeEnum, Integer stockType) {
 
 
-        // N = StockUtil.N(N);
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
         // 预加载 全量行情
         // 从本地DB   加载全部（5000+支） 个股的   收盘价序列/日期序列/ code-id
 
@@ -123,16 +115,12 @@ public class ExtDataServiceImpl implements ExtDataService {
     public void calcBlockExtData(UpdateTypeEnum updateTypeEnum) {
 
 
-        // N = StockUtil.N(N);
-
-
         // -------------------------------------------------------------------------------------------------------------
 
         // 从本地DB   加载全部（380+支） 板块的   收盘价序列/日期序列/ code-id
 
 
         // 预加载 -> 解析数据
-        // DataDTO data = loadAllBlockKline(N);
         DataDTO data = loadAllBlockKline(updateTypeEnum);
 
 
@@ -175,19 +163,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         data.stockDOList = baseStockService.listAllKline(updateTypeEnum, stockType);
         data.stockDOList = data.stockDOList.parallelStream().filter(BaseStockDO::hasKlineData).collect(Collectors.toList());
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-//        // 增量更新     =>     kline_his（计算参数 -> 需截取） / ext_data_his（被计算 -> 无需截取）    =>     截取 最后N条
-//        if (StockUtil.incrUpdate(N)) {
-//            data.stockDOList.parallelStream().forEach(e -> {
-//                // klineHis   ->   最后N条
-//                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N + lastN);   // 为了计算 MA250、月多、...（需要至少 250日的K线数据）
-//                e.setKlineDTOList(klineDTOList);
-//            });
-//        }
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -240,11 +215,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
                 data.startDate = data.startDate == null ? date_arr[0] : DateTimeUtil.min(data.startDate, date_arr[0]);
                 data.endDate = data.endDate == null ? date_arr[len - 1] : DateTimeUtil.max(data.endDate, date_arr[len - 1]);
-
-//                if (StockUtil.incrUpdate(N)) {
-//                    data.startDate = DateTimeUtil.min(data.startDate, date_arr[Math.max(0, len - N)]);
-//                    data.endDate = DateTimeUtil.max(data.endDate, date_arr[len - 1]);
-//                }
             }
         });
 
@@ -448,20 +418,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-//        // 增量更新     =>     kline_his（计算参数 -> 需截取） / ext_data_his（被计算 -> 无需截取）    =>     截取 最后N条
-//        if (StockUtil.incrUpdate(N)) {
-//
-//            data.blockDOList.parallelStream().forEach(e -> {
-//                // klineHis   ->   最后N条
-//                List<KlineDTO> klineDTOList = ListUtil.lastN(e.getKlineDTOList(), N + lastN);   // 为了计算 MA250、月多、...（需要至少 250日的K线数据）
-//                e.setKlineDTOList(klineDTOList);
-//            });
-//        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
         data.blockDOList.parallelStream().forEach(e -> {
 
             Long id = e.getId();
@@ -497,11 +453,6 @@ public class ExtDataServiceImpl implements ExtDataService {
 
                 data.startDate = data.startDate == null ? date_arr[0] : DateTimeUtil.min(data.startDate, date_arr[0]);
                 data.endDate = data.endDate == null ? date_arr[len - 1] : DateTimeUtil.max(data.endDate, date_arr[len - 1]);
-
-//                if (StockUtil.incrUpdate(N)) {
-//                    data.startDate = DateTimeUtil.min(data.startDate, date_arr[Math.max(0, len - N)]);
-//                    data.endDate = DateTimeUtil.max(data.endDate, date_arr[len - 1]);
-//                }
             }
         });
 

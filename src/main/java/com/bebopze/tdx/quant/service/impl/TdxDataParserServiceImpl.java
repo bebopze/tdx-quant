@@ -107,7 +107,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         refreshKlineAll(UpdateTypeEnum.HIS);
 
-        extDataService.refreshExtDataAll(null);
+        extDataService.refreshExtDataAll(UpdateTypeEnum.HIS);
 
 
         // tdxTask.execTask__refreshAll();
@@ -1896,6 +1896,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Deprecated
     @TotalTime
     @Override
     public void calcAndFillBlockKlineAll() {
