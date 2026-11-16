@@ -306,23 +306,6 @@ public class BaseStockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-//    public void setKlineStr(String klineStr, UpdateTypeEnum updateTypeEnum) {
-//        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
-//            setKlineNdStr(klineStr);
-//        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
-//            setKlineHisStr(klineStr);
-//        }
-//    }
-//
-//    public void setExtDataStr(String extDataStr, UpdateTypeEnum updateTypeEnum) {
-//        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
-//            setExtDataNdStr(extDataStr);
-//        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
-//            setExtDataHisStr(extDataStr);
-//        }
-//    }
-
-
     public void setKlineStr(List<String> klineStrList, UpdateTypeEnum updateTypeEnum) {
 
         if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {

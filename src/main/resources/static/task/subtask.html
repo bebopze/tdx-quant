@@ -523,7 +523,7 @@
     function refreshKlineAll() {
         const updateType = document.getElementById('updateType').value;
         callApi(`/api/parser/tdxdata/refresh/klineAll?updateType=${updateType}`,
-            `行情数据刷新(${updateType === '1' ? '全量' : '增量'})`);
+            `行情数据刷新(${updateType === '1' ? '近N日（默认 近500日）' : '历史（更新 his -> 会附带更新 nd）'})`);
     }
 
     function fillBlockKline() {
@@ -553,7 +553,7 @@
     function fillStockKlineAll() {
         const updateType = document.getElementById('updateType').value;
         callApi(`/api/parser/tdxdata/fill/stockKlineAll?updateType=${updateType}`,
-            `全部个股行情更新(${updateType === '1' ? '全量' : '增量'})`);
+            `全部个股行情更新(${updateType === '1' ? '近N日（默认 近500日）' : '历史（更新 his -> 会附带更新 nd）'})`);
     }
 
     // 主线板块相关函数
