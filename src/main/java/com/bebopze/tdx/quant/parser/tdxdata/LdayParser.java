@@ -118,31 +118,8 @@ public class LdayParser {
     @SneakyThrows
     public static List<LdayDTO> exec_parseByStockCode(String stockCode) {
 
-        // A股（sz/sh/bj）
-        String market = StockMarketEnum.getMarketSymbol(stockCode);
-        // 兼容   ->   板块（全部sh） / 指数（sh/sz）
-        market = market == null ? "sh" : market;
 
-
-        // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
-        String filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
-
-
-        // 港美股（ds）
-        if (StockTypeEnum.isHkUsStock(stockCode)) {
-            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
-
-            // String filePath_a = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
-            // String filePath_a = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
-            filePath = TDX_PATH + String.format("/vipdoc/ds/lday/%s#%s.day", tdxMarketType, stockCode);
-        }
-
-
-        // 指数：上证 / 深证
-        if (!new File(filePath).exists()) {
-            market = "sz";
-            filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
-        }
+        String filePath = stockFilePath__lday(stockCode);
 
 
         // ---------------------------------------------------------------
@@ -228,6 +205,41 @@ public class LdayParser {
 
 
         return Lists.newArrayList();
+    }
+
+    private static String stockFilePath__lday(String stockCode) {
+
+
+        // A股（sz/sh/bj）
+        String market = StockMarketEnum.getMarketSymbol(stockCode);
+        // 兼容   ->   板块（全部sh） / 指数（sh/sz）
+        market = market == null ? "sh" : market;
+
+
+        // String filePath_a = TDX_PATH + "/vipdoc/sh/lday/sh600519.day";
+        String filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+
+
+        // 港美股/期权（ds）
+        if (StockTypeEnum.isHkUsOpStock(stockCode)) {
+            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
+
+            // String filePath_HK = TDX_PATH + "/vipdoc/ds/lday/31#00700.day";
+            // String filePath_US = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
+            // String filePath_OP_SH = TDX_PATH + "/vipdoc/ds/lday/8#10011565.day";
+            // String filePath_OP_SZ = TDX_PATH + "/vipdoc/ds/lday/9#90007858.day";
+            filePath = TDX_PATH + String.format("/vipdoc/ds/lday/%s#%s.day", tdxMarketType, stockCode);
+        }
+
+
+        // 指数：上证 / 深证
+        if (!new File(filePath).exists()) {
+            market = "sz";
+            filePath = TDX_PATH + String.format("/vipdoc/%s/lday/%s%s.day", market, market, stockCode);
+        }
+
+
+        return filePath;
     }
 
 
@@ -904,7 +916,9 @@ public class LdayParser {
 //        List<LdayDTO> stockDataList = parseByStockCode("00700");
 //        List<LdayDTO> stockDataList = parseByStockCode("513120");
 //        List<LdayDTO> stockDataList = parseByStockCode("300059");
-        List<LdayDTO> stockDataList = parseByStockCode("600519");
+//        List<LdayDTO> stockDataList = parseByStockCode("600519");
+        List<LdayDTO> stockDataList = parseByStockCode("10011565");
+
         for (LdayDTO e : stockDataList) {
             String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
             System.out.println(JSON.toJSONString(item));

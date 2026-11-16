@@ -49,26 +49,38 @@ public class KlineTxtExportParser {
     @SneakyThrows
     public static List<LdayParser.LdayDTO> parseTxtByStockCode(String stockCode) {
 
-        // sz/sh/bj
+
+        String filePath = stockFilePath__txt(stockCode);
+
+
+        return parseTxtByFilePath(filePath);
+    }
+
+
+    private static String stockFilePath__txt(String stockCode) {
+
+
+        // A股（sz/sh/bj）
         String market = StockMarketEnum.getMarketSymbol(stockCode);
+        // 兼容   ->   板块（全部sh） / 指数（sh/sz）
+        market = market == null ? "sh" : market;
 
 
-        String filePath;
-        if (market == null) {
-            // 兼容   ->   板块（全部sh） / 指数（sh/sz）
-            market = "sh";
-
-            // String filePath_bk = TDX_PATH + "/T0002/export/板块/SH#880302.txt";
-            // filePath = TDX_PATH + String.format("/T0002/export/板块/%s#%s.txt", market, stockCode);
-            filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
+        // String filePath_A = TDX_PATH + "/T0002/export/A股/SZ#000001.txt";
+        // String filePath_bk = TDX_PATH + "/T0002/export/A股/SH#880302.txt";
+        String filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
 
 
-        } else {
+        // 港美股/期权（ds）
+        if (StockTypeEnum.isHkUsOpStock(stockCode)) {
+            Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
 
-            // String filePath_a = TDX_PATH + "/T0002/export/A股/SZ#000001.txt";
-            // String filePath_a = TDX_PATH + "/T0002/export/A股/31#00700.txt";
-            // String filePath_a = TDX_PATH + "/T0002/export/A股/74#SPY.txt";
-            filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", market, stockCode);
+
+            // String filePath_HK = TDX_PATH + "/T0002/export/A股/31#00700.txt";
+            // String filePath_US = TDX_PATH + "/T0002/export/A股/74#SPY.txt";
+            // String filePath_OP_SH = TDX_PATH + "/T0002/export/A股/8#10011565.txt";
+            // String filePath_OP_SZ = TDX_PATH + "/T0002/export/A股/9#90007858.txt";
+            filePath = TDX_PATH + String.format("/T0002/export/A股/%s#%s.txt", tdxMarketType, stockCode);
         }
 
 
@@ -79,7 +91,7 @@ public class KlineTxtExportParser {
         }
 
 
-        return parseTxtByFilePath(filePath);
+        return filePath;
     }
 
 
@@ -330,10 +342,15 @@ public class KlineTxtExportParser {
         String stockCode_zs_sh = "880003";
 
 
-        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("881282");
-//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("300059");
-//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("00700");
-//        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode("SPY");
+        String stockCode_HK = "00700";
+        String stockCode_US = "SPY";
+
+
+        String stockCode_op_sh = "10011565";
+        String stockCode_op_sz = "90007858";
+
+
+        List<LdayParser.LdayDTO> stockDataList = parseTxtByStockCode(stockCode_sz);
 
 
         for (LdayParser.LdayDTO e : stockDataList) {

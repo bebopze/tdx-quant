@@ -57,7 +57,7 @@ public interface TdxDataParserService {
     void fillBlockKlineAll();
 
 
-    void fillStockKline(String stockCode, Integer apiType, UpdateTypeEnum updateTypeEnum);
+    void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum);
 
     void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
 

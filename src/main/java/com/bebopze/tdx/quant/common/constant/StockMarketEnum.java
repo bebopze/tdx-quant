@@ -62,7 +62,15 @@ public enum StockMarketEnum {
     // ------------------- 美股
 
 
-    US("美股", 74, "74", "", "US", "US", Set.of());
+    US("美股", 74, "74", "", "US", "US", Set.of()),
+
+
+    // ------------------- 期权
+
+
+    SHO("上交所期权", 8, "sh", "HA", "SH", "SHO", Set.of("1001")),
+    SZO("深交所期权", 9, "sz", "SA", "SZ", "SZO", Set.of("9000")),
+    ;
 
 
     /**
@@ -155,6 +163,21 @@ public enum StockMarketEnum {
         // 美股
         if (Objects.equals(stockTypeEnum, StockTypeEnum.US_STOCK)) {
             return US;
+        }
+
+
+        // ---------- 期权
+
+
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.OPTION)) {
+            // 期权（前4位）
+            String codePrefix = stockCode.trim().substring(0, 4);
+
+            for (StockMarketEnum value : StockMarketEnum.values()) {
+                if (value.stockCodePrefixSet.contains(codePrefix)) {
+                    return value;
+                }
+            }
         }
 
 

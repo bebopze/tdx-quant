@@ -135,7 +135,9 @@ public class ParserController {
 
     @Operation(summary = "板块行情（指定） - 解析入库", description = "板块行情（指定） - 解析入库")
     @GetMapping(value = "/fill/blockKline")
-    public Result<Void> fillBlockKline(@RequestParam String blockCode) {
+    public Result<Void> fillBlockKline(@Schema(description = "板块代码", example = "880515")
+                                       @RequestParam String blockCode) {
+
         tdxDataParserService.fillBlockKline(blockCode);
         return Result.SUC();
     }
@@ -150,15 +152,13 @@ public class ParserController {
 
     @Operation(summary = "个股/ETF行情（指定） - 拉取解析入库", description = "个股/ETF行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKline")
-    public Result<Void> fillStockKline(@RequestParam(defaultValue = "300059") String stockCode,
-
-                                       @Schema(description = "API类型：1-通达信；2-东方财富；3-同花顺；4-雪球；5-腾讯；", example = "1")
-                                       @RequestParam(required = false, defaultValue = "1") Integer apiType,
+    public Result<Void> fillStockKline(@Schema(description = "股票代码（个股/ETF）", example = "300059")
+                                       @RequestParam(defaultValue = "300059") String stockCode,
 
                                        @Schema(description = "更新类型：1-全量更新；2-增量更新；", example = "1")
                                        @RequestParam(required = false, defaultValue = "1") int updateType) {
 
-        tdxDataParserService.fillStockKline(stockCode, apiType, UpdateTypeEnum.getByType(updateType));
+        tdxDataParserService.fillStockKline(stockCode, UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -201,6 +201,5 @@ public class ParserController {
         tdxDataParserService.calcAndFillBlockKlineAll();
         return Result.SUC();
     }
-
 
 }

@@ -43,6 +43,12 @@ public enum StockTypeEnum {
     US_STOCK(12, "美股", Lists.newArrayList("")),
 
 
+    // ----------------------------------------------------
+
+
+    OPTION(21, "期权", Lists.newArrayList("1001", "9000")),
+
+
     ;
 
 
@@ -51,7 +57,7 @@ public enum StockTypeEnum {
     public final String desc;
 
     /**
-     * 个股（A股/ETF） -  股票代码 前缀（前2位）
+     * 个股（A股/ETF）/ 期权  -  股票代码 前缀（前1位）
      */
     private final List<String> stockCodePrefixList;
 
@@ -94,6 +100,20 @@ public enum StockTypeEnum {
         // 美股（SPY）
         if (NumUtil.isPureEnglish(stockCode)) {
             return StockTypeEnum.US_STOCK;
+        }
+
+
+        // -------------------------------------------------- 期权
+
+
+        // 期权（10011565 / 90007858）
+        if (stockCode.length() == 8 && NumUtil.isNumber(stockCode)) {
+            // 前4位
+            String codePrefix = stockCode.trim().substring(0, 4);
+
+            if (OPTION.stockCodePrefixList.contains(codePrefix)) {
+                return StockTypeEnum.OPTION;
+            }
         }
 
 
@@ -160,9 +180,15 @@ public enum StockTypeEnum {
     }
 
 
-    public static boolean isHkUsStock(String stockCode) {
+    /**
+     * 港美股/期权
+     *
+     * @param stockCode
+     * @return
+     */
+    public static boolean isHkUsOpStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum);
+        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum) || OPTION.equals(stockTypeEnum);
     }
 
 

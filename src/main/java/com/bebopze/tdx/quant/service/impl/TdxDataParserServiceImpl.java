@@ -1511,8 +1511,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @TotalTime
     @Override
-    public void fillStockKline(String stockCode, Integer apiType, UpdateTypeEnum updateTypeEnum) {
-        fillStockKline(stockCode, null, apiType, updateTypeEnum);
+    public void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum) {
+        fillStockKline(stockCode, null, updateTypeEnum);
         log.info("fillStockKline suc     >>>     stockCode : {}", stockCode);
     }
 
@@ -1557,10 +1557,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
                 // -------------------------------------------
 
 
-                int apiType = apiType(null, UpdateTypeEnum.ALL);
+                // int apiType = apiType(null, UpdateTypeEnum.ALL);
 
 
-                fillStockKline(stockCode, stockId, apiType, UpdateTypeEnum.ALL);
+                fillStockKline(stockCode, stockId, UpdateTypeEnum.ALL);
 
 
                 // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
@@ -1698,13 +1698,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      *
      * @param stockCode
      * @param stockId
-     * @param apiType
      * @param updateTypeEnum
      */
-    private void fillStockKline(String stockCode, Long stockId, Integer apiType, UpdateTypeEnum updateTypeEnum) {
+    private void fillStockKline(String stockCode, Long stockId, UpdateTypeEnum updateTypeEnum) {
 
 
-        apiType = apiType(apiType, updateTypeEnum);
+        // apiType = apiType(apiType, updateTypeEnum);
 
 
         // --------------------- ID
@@ -1721,11 +1720,14 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 1、通达信   本地读取
-        if (apiType == null || apiType == 1) {
+        klines = klinesFromTdx(stockCode);
 
-            klines = klinesFromTdx(stockCode);
-        }
 
+//        if (apiType == null || apiType == 1) {
+//
+//            klines = klinesFromTdx(stockCode);
+//        }
+//
 //        // 2、东方财富 API
 //        else if (apiType == 2) {
 //

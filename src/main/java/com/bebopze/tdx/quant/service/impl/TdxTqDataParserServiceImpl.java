@@ -116,7 +116,7 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
-    public void fillStockKline(String stockCode, Integer apiType, UpdateTypeEnum updateTypeEnum) {
+    public void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum) {
 
     }
 
