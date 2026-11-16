@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.dal.entity;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.*;
 import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
@@ -9,6 +10,7 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.util.CompressUtil;
+import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
@@ -304,19 +306,53 @@ public class BaseStockDO implements Serializable {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    public void setKlineStr(String klineStr, UpdateTypeEnum updateTypeEnum) {
+//    public void setKlineStr(String klineStr, UpdateTypeEnum updateTypeEnum) {
+//        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
+//            setKlineNdStr(klineStr);
+//        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
+//            setKlineHisStr(klineStr);
+//        }
+//    }
+//
+//    public void setExtDataStr(String extDataStr, UpdateTypeEnum updateTypeEnum) {
+//        if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
+//            setExtDataNdStr(extDataStr);
+//        } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
+//            setExtDataHisStr(extDataStr);
+//        }
+//    }
+
+
+    public void setKlineStr(List<String> klineStrList, UpdateTypeEnum updateTypeEnum) {
+
         if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
-            setKlineNdStr(klineStr);
+
+            setKlineNdStr(JSON.toJSONString(klineStrList));
+
         } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
-            setKlineHisStr(klineStr);
+
+            setKlineHisStr(JSON.toJSONString(klineStrList));
+
+            // HIS 更新时   ->   附带 同步更新1次 N_DAY
+            List<String> nd_klineStrList = ListUtil.lastN(klineStrList, UpdateTypeEnum.N_DAY.days);
+            setKlineNdStr(JSON.toJSONString(nd_klineStrList));
         }
     }
 
-    public void setExtDataStr(String extDataStr, UpdateTypeEnum updateTypeEnum) {
+
+    public void setExtDataStr(List<String> extDataStrList, UpdateTypeEnum updateTypeEnum) {
+
         if (Objects.equals(updateTypeEnum, UpdateTypeEnum.N_DAY)) {
-            setExtDataNdStr(extDataStr);
+
+            setExtDataNdStr(JSON.toJSONString(extDataStrList));
+
         } else if (Objects.equals(updateTypeEnum, UpdateTypeEnum.HIS)) {
-            setExtDataHisStr(extDataStr);
+
+            setExtDataHisStr(JSON.toJSONString(extDataStrList));
+
+            // HIS 更新时   ->   附带 同步更新1次 N_DAY
+            List<String> nd_extDataStrList = ListUtil.lastN(extDataStrList, UpdateTypeEnum.N_DAY.days);
+            setExtDataNdStr(JSON.toJSONString(nd_extDataStrList));
         }
     }
 

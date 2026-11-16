@@ -1364,7 +1364,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // 行情-板块
         Future<?> task1 = Executors.newSingleThreadExecutor().submit(() -> {
             // refresh  ->  block kline
-            fillBlockKlineAll();
+            fillBlockKlineAll(updateTypeEnum);
         });
 
 
@@ -1382,11 +1382,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @TotalTime
     @Override
-    public void fillBlockKline(String blockCode) {
-        fillBlockKline(blockCode, null);
+    public void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum) {
+        fillBlockKline(blockCode, null, updateTypeEnum);
     }
 
-    public void fillBlockKline(String blockCode, Long blockId) {
+    public void fillBlockKline(String blockCode, Long blockId, UpdateTypeEnum updateTypeEnum) {
 
         BaseBlockDO baseBlockDO = new BaseBlockDO();
         baseBlockDO.setCode(blockCode);
@@ -1417,7 +1417,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             klines.add(klineStr);
         });
 
-        baseBlockDO.setKlineHisStr(JSON.toJSONString(klines));
+
+        // kline
+        baseBlockDO.setKlineStr(klines, updateTypeEnum);
 
 
         if (CollectionUtils.isEmpty(ldayDTOList)) {
@@ -1465,7 +1467,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @TotalTime
     @Override
-    public void fillBlockKlineAll() {
+    public void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
         AtomicInteger count = new AtomicInteger(0);
 
@@ -1477,7 +1479,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             Long blockId = codeIdMap.get(blockCode);
 
 
-            fillBlockKline(blockCode, blockId);
+            fillBlockKline(blockCode, blockId, updateTypeEnum);
 
 
             // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
@@ -1660,24 +1662,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // K线数据
-        // entity.setKlineStr(JSON.toJSONString(klines), updateTypeEnum);
-
-
-        // K线数据
-        // HIS更新时   ->   可附带同步更新1次 N_DAY
-        if (updateTypeEnum == UpdateTypeEnum.HIS) {
-
-            // his
-            entity.setKlineHisStr(JSON.toJSONString(klines));
-
-            // nd
-            List<String> nd_klines = ListUtil.lastN(klines, updateTypeEnum.days);
-            entity.setKlineNdStr(JSON.toJSONString(nd_klines));
-
-        } else if (updateTypeEnum == UpdateTypeEnum.N_DAY) {
-            // nd
-            entity.setKlineNdStr(JSON.toJSONString(klines));
-        }
+        entity.setKlineStr(klines, updateTypeEnum);
 
 
         // --------------------------------------------------------------------------------
@@ -1732,7 +1717,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 通达信   本地读取
-        List<String> klines = klinesFromTdx(stockCode, updateTypeEnum);
+        List<String> klines = klinesFromTdx(stockCode);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1846,14 +1831,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private List<String> klinesFromTdx(String stockCode, UpdateTypeEnum updateTypeEnum) {
+    private List<String> klinesFromTdx(String stockCode) {
 
         // 个股 - K线数据
         List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
-
-
-        // 保留 最近N天
-        ldayDTOList = ListUtil.lastN(ldayDTOList, updateTypeEnum.days);
 
 
         List<String> klines = Lists.newArrayList();

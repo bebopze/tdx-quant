@@ -382,7 +382,9 @@ public class ExtDataServiceImpl implements ExtDataService {
 
         BaseStockDO entity = new BaseStockDO();
         entity.setId(data.codeIdMap.get(code));
-        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(new_extDataDTOList)), updateTypeEnum);
+        // ext_data
+        entity.setExtDataStr(ConvertStockExtData.dtoList2StrList(new_extDataDTOList), updateTypeEnum);
+
 
         // 更新 -> DB
         baseStockService.updateById(entity);
@@ -572,10 +574,6 @@ public class ExtDataServiceImpl implements ExtDataService {
         // --------------------------------------------------------
 
 
-        // old（完整His  ->  load时，并未截取）
-        List<ExtDataDTO> old_extDataDTOList = blockDO.getExtDataDTOList();
-
-
         // fill -> new_RPS（后续计算 RPS相关指标）
         blockDO.setExtDataDTOList(new_extDataDTOList);
 
@@ -596,17 +594,10 @@ public class ExtDataServiceImpl implements ExtDataService {
         // ------------------------------------------------------------------------ 更新 -> DB
 
 
-        // 比较新旧     ==>     old_list   =>   当日 已存在->覆盖     不存在->add
-        // compare__old_new__extData(old_extDataDTOList, new_extDataDTOList, N);
-
-
-        // -------------------------
-
-
         BaseBlockDO entity = new BaseBlockDO();
         entity.setId(data.codeIdMap.get(code));
-        // entity.setExtDataHisStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)));    // 增量更新
-        entity.setExtDataStr(JSON.toJSONString(ConvertStockExtData.dtoList2StrList(old_extDataDTOList)), updateTypeEnum);    // 增量更新
+        // ext_data
+        entity.setExtDataStr(ConvertStockExtData.dtoList2StrList(new_extDataDTOList), updateTypeEnum);
 
 
         // 更新 -> DB

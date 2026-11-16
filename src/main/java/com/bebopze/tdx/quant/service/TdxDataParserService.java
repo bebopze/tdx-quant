@@ -52,9 +52,9 @@ public interface TdxDataParserService {
     void refreshKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
-    void fillBlockKline(String blockCode);
+    void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum);
 
-    void fillBlockKlineAll();
+    void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum);
 
 
     void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum);

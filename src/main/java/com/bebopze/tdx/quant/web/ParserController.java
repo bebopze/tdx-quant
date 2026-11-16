@@ -138,14 +138,14 @@ public class ParserController {
     public Result<Void> fillBlockKline(@Schema(description = "板块代码", example = "880515")
                                        @RequestParam String blockCode) {
 
-        tdxDataParserService.fillBlockKline(blockCode);
+        tdxDataParserService.fillBlockKline(blockCode, UpdateTypeEnum.HIS);
         return Result.SUC();
     }
 
     @Operation(summary = "板块行情（全部） - 解析入库", description = "板块行情（全部） - 解析入库")
     @GetMapping(value = "/fill/blockKlineAll")
     public Result<Void> fillBlockKlineAll() {
-        tdxDataParserService.fillBlockKlineAll();
+        tdxDataParserService.fillBlockKlineAll(UpdateTypeEnum.HIS);
         return Result.SUC();
     }
 

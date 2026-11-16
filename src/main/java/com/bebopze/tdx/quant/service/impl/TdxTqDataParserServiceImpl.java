@@ -106,12 +106,12 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
-    public void fillBlockKline(String blockCode) {
+    public void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum) {
 
     }
 
     @Override
-    public void fillBlockKlineAll() {
+    public void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum) {
 
     }
 
