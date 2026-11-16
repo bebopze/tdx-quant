@@ -16,6 +16,7 @@ import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.TdxFormatCodeUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -148,10 +149,10 @@ public class TdxTqAPI {
     /**
      * 根据股票，获取 历史行情
      *
-     * @param stockCode  证券代码
+     * @param stockCode  证券代码（股票/ETF/板块/期权）
      * @param periodEnum 周期（笔/分钟/日/周/月）
-     * @param start_time 起始时间
-     * @param end_time   结束时间
+     * @param start_time 起始日期
+     * @param end_time   结束日期
      * @return
      */
     public static List<KlineDTO> get_market_data(String stockCode,
@@ -169,8 +170,8 @@ public class TdxTqAPI {
         // stock_list     Y         List[str]     证券代码列表
         // field_list     N         List[str]     字段筛选，传空则返回全部
         // period         Y         str           周期（笔/分钟/日/周/月）
-        // start_time     N         str           起始时间（年月日：yyyyMMdd）
-        // end_time       N         str           结束时间（年月日：yyyyMMdd）
+        // start_time     N         str           起始日期（年月日：yyyyMMdd）
+        // end_time       N         str           结束日期（年月日：yyyyMMdd）
         // count          N         int           返回数据个数（每只股票）
         // dividend_type  N         str           复权类型：none不复权、front前复权、back后复权
         // fill_data      N         bool          是否向后填充空缺数据，多只股票一起取k线时使用
@@ -212,31 +213,34 @@ public class TdxTqAPI {
                   JSONArray amount_arr = data.getJSONArray("Amount");
 
 
-                  for (int i = 0; i < close_arr.size(); i++) {
-                      KlineDTO dto = new KlineDTO();
-
-                      dto.setDate(DateTimeUtil.parseDate_yyyyMMdd(date_arr.getString(i)));
-                      // 分笔/分钟 级别
-                      // dto.setTime(DateTimeUtil.parseTime_HHmmss(time_arr.getString(i)));
-
-                      dto.setOpen(open_arr.getDouble(i));
-                      dto.setHigh(high_arr.getDouble(i));
-                      dto.setLow(low_arr.getDouble(i));
-                      dto.setClose(close_arr.getDouble(i));
+                  if (CollectionUtils.isNotEmpty(close_arr)) {
 
 
-                      // 股（A股、ETF、美股）
-                      long vol = volume_arr.getLong(i);
-                      // 手（板块、港股）
-                      if (StockTypeEnum.isBlock(code) || StockTypeEnum.isHkStock(code)) {
-                          // 股 = 手 x 100
-                          vol *= 100;
-                      }
-                      dto.setVol(vol);
+                      for (int i = 0; i < close_arr.size(); i++) {
+                          KlineDTO dto = new KlineDTO();
+
+                          dto.setDate(DateTimeUtil.parseDate_yyyyMMdd(date_arr.getString(i)));
+                          // 分笔/分钟 级别
+                          // dto.setTime(DateTimeUtil.parseTime_HHmmss(time_arr.getString(i)));
+
+                          dto.setOpen(open_arr.getDouble(i));
+                          dto.setHigh(high_arr.getDouble(i));
+                          dto.setLow(low_arr.getDouble(i));
+                          dto.setClose(close_arr.getDouble(i));
 
 
-                      // 万元 -> 元
-                      dto.setAmo(amount_arr.getDouble(i) * 1_0000);
+                          // 股（A股、ETF、美股）
+                          long vol = volume_arr.getLong(i);
+                          // 手（板块、港股）
+                          if (StockTypeEnum.isBlock(code) || StockTypeEnum.isHkStock(code)) {
+                              // 股 = 手 x 100
+                              vol *= 100;
+                          }
+                          dto.setVol(vol);
+
+
+                          // 万元 -> 元
+                          dto.setAmo(amount_arr.getDouble(i) * 1_0000);
 
 
 //                      // ---------- 股本（换手率、流通市值、总市值）
@@ -259,8 +263,11 @@ public class TdxTqAPI {
 //                      Assert.isTrue(date.isEqual(dto.getDate()), String.format("K线.date[%s] != 股本.date[%s]", dto.getDate(), gbDTO.getDate()));
 
 
-                      dtoList.add(dto);
+                          dtoList.add(dto);
+                      }
                   }
+
+
               });
 
 

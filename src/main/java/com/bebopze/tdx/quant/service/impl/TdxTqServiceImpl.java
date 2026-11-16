@@ -1,9 +1,13 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.client.TdxTqHttpClient;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.TdxFormatCodeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -15,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -57,71 +62,34 @@ public class TdxTqServiceImpl implements TdxTqService {
 
     @Override
     public JSONObject call(String method, Map<String, Object> params) {
-//        if (method == null || NOT_ALLOW_METHODS.contains(method)) {
-//            throw new IllegalArgumentException("禁止调用的 TQ 方法 : " + method);
-//        }
-
         return TdxTqHttpClient.call(method, params == null ? Map.of() : params);
     }
 
 
     @Override
-    public TdxRealtimeQuoteDTO get(String code) {
+    public List<KlineDTO> get_market_data(String code,
+                                          PeriodEnum periodEnum,
+                                          LocalDate startDate,
+                                          LocalDate endDate) {
 
-
-        // 获取快照数据 get_market_snapshot
-        //
-        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhthaq5qmg/mindoc-1h10iig4pb6e0.html
-
-
-        //   参数          是否必选       参数类型            参数说明
-        //  stock_code       Y          str           证券代码
-        //  field_list       N          List[str]     字段筛选，传空则返回全部
-
-
-//        {
-//            "stock_code": "300059.SZ",
-//            "field_list": ["Now"]
-//        }
-
-
-        String formatCode = TdxFormatCodeUtil.formatCode(code);
-
-
-        JSONObject result = call("get_market_snapshot",
-                                 Map.of("stock_code", formatCode, "field_list", SNAPSHOT_FIELDS));
-
-
-        long vol = result.getLongValue("Volume", 0L);
-        // 对于 沪深京 品种   ->   Volume、NowVol 的 单位为：手
-        if (StockTypeEnum.isAStock(code)) {
-            // 股 = 手 x 100
-            vol *= 100;
-        }
-
-
-        return new TdxRealtimeQuoteDTO(
-                code,
-                NumUtil.of(result.getDouble("Open")),
-                NumUtil.of(result.getDouble("Max")),
-                NumUtil.of(result.getDouble("Min")),
-                NumUtil.of(result.getDouble("Now")),
-                vol,
-                NumUtil.of(result.getDouble("Amount")),
-                NumUtil.of(result.getDouble("LastClose"))
-                // LocalDateTime.now()
-        );
+        return TdxTqAPI.get_market_data(code, periodEnum, startDate, endDate);
     }
 
 
     @Override
-    public List<TdxRealtimeQuoteDTO> getBatch(List<String> codes) {
-        return codes.stream().map(this::get).toList();
+    public StockSnapshotKlineDTO get_market_snapshot(String code) {
+        return TdxTqAPI.get_market_snapshot(code);
     }
 
 
     @Override
-    public List<TdxRealtimeQuoteDTO> getAll(StockTypeEnum stockTypeEnum) {
+    public List<StockSnapshotKlineDTO> get_market_snapshot_batch(List<String> codes) {
+        return codes.stream().map(this::get_market_snapshot).toList();
+    }
+
+
+    @Override
+    public List<StockSnapshotKlineDTO> getAll(StockTypeEnum stockTypeEnum) {
 
         List<String> codes;
         if (stockTypeEnum == null) {
@@ -150,11 +118,11 @@ public class TdxTqServiceImpl implements TdxTqService {
         // return ParallelCalcUtil.map(codes, this::get, ThreadPoolType.IO_INTENSIVE);
 
         // 27s / 1.6s / 3.7s
-        return codes.parallelStream().map(this::get).toList();
+        return codes.parallelStream().map(this::get_market_snapshot).toList();
     }
 
 
-    public List<TdxRealtimeQuoteDTO> getBatch_2(List<String> codes) {
+    public List<StockSnapshotKlineDTO> getBatch_2(List<String> codes) {
 
 
         List<String> formatCodes = TdxFormatCodeUtil.formatCodes(codes);
@@ -213,30 +181,30 @@ public class TdxTqServiceImpl implements TdxTqService {
         LocalDateTime now = LocalDateTime.now();
 
 
-        List<TdxRealtimeQuoteDTO> quotes = result.entrySet()
-                                                 .stream()
-                                                 .map(entry -> {
+        List<StockSnapshotKlineDTO> quotes = result.entrySet()
+                                                   .stream()
+                                                   .map(entry -> {
 
-                                                     String code = entry.getKey();
-                                                     JSONObject data = (JSONObject) entry.getValue();
+                                                       String code = entry.getKey();
+                                                       JSONObject data = (JSONObject) entry.getValue();
 
-                                                     return new TdxRealtimeQuoteDTO(
-                                                             code,
-                                                             NumUtil.of(data.getDouble("Open")),
-                                                             NumUtil.of(data.getDouble("Max")),
-                                                             NumUtil.of(data.getDouble("Min")),
-                                                             NumUtil.of(data.getDouble("Now")),
-                                                             result.getLongValue("Volume", 0L),
-                                                             NumUtil.of(data.getDouble("Amount")),
-                                                             NumUtil.of(data.getDouble("LastClose"))
-                                                             // now.toLocalDate().atTime(DateTimeUtil.parseTime__HH_mm_ss(data.getString("RefreshTime")))
-                                                     );
-                                                 })
-                                                 .toList();
+                                                       return new TdxRealtimeQuoteDTO(
+                                                               code,
+                                                               NumUtil.of(data.getDouble("Open")),
+                                                               NumUtil.of(data.getDouble("Max")),
+                                                               NumUtil.of(data.getDouble("Min")),
+                                                               NumUtil.of(data.getDouble("Now")),
+                                                               result.getLongValue("Volume", 0L),
+                                                               NumUtil.of(data.getDouble("Amount")),
+                                                               NumUtil.of(data.getDouble("LastClose"))
+                                                               // now.toLocalDate().atTime(DateTimeUtil.parseTime__HH_mm_ss(data.getString("RefreshTime")))
+
+                                                       ).toStockSnapshotKlineDTO();
+                                                   })
+                                                   .toList();
 
 
         return quotes;
     }
-
 
 }

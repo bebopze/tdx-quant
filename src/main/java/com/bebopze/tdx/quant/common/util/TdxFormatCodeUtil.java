@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * 通达信 TQ 证券代码 标准化工具（统一格式：600519.SH / 00700.HK / NVDA.US）
+ * 通达信 TQ 证券代码 标准化工具（统一格式：600519.SH / 00700.HK / NVDA.US / 10011565.SHO）
  *
  * @author: bebopze
  * @date: 2026/9/26
@@ -17,13 +17,13 @@ import java.util.regex.Pattern;
 public final class TdxFormatCodeUtil {
 
 
-    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700 / BRK.A）
+    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700 / BRK.A / 10011565.SHO）
     // 放宽前缀后的内容，允许包含 . 和 -
     private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ|HK)([A-Z0-9.\\-]+)$");
 
-    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / BRK.A.US）
+    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / BRK.A.US / 10011565.SHO）
     // 代码部分允许包含 . 和 -
-    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9.\\-]+)\\.(SH|SZ|BJ|HK|US)$");
+    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9.\\-]+)\\.(SH|SZ|BJ|HK|US|SHO|SZO)$");
 
     // 裸代码（6位数字=A股 / 5位数字=港股 / 1~10位字母或含. -的美股代码）
     // 允许字母数字混合，并可包含 . 和 -
@@ -91,7 +91,10 @@ public final class TdxFormatCodeUtil {
 
         System.out.println(formatCode("BRK.A.US"));
         System.out.println(formatCode("BRK.A"));
-    }
 
+
+        System.out.println(formatCode("10011565.SHO"));
+        System.out.println(formatCode("90007858.SZO"));
+    }
 
 }

@@ -1,8 +1,11 @@
 package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
+import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
+import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -32,21 +35,36 @@ public interface TdxTqService {
 
 
     /**
-     * 读取单个实时行情
+     * 获取历史行情数据
      *
-     * @param code 通达信 代码（股票/ETF/板块）
+     * @param code       通达信 代码（股票/ETF/板块/期权）
+     * @param periodEnum K线周期
+     * @param startDate  开始日期
+     * @param endDate    结束日期
      * @return
      */
-    TdxRealtimeQuoteDTO get(String code);
+    List<KlineDTO> get_market_data(String code,
+                                   PeriodEnum periodEnum,
+                                   LocalDate startDate,
+                                   LocalDate endDate);
+
+
+    /**
+     * 读取单个实时行情
+     *
+     * @param code 通达信 代码（股票/ETF/板块/期权）
+     * @return
+     */
+    StockSnapshotKlineDTO get_market_snapshot(String code);
 
 
     /**
      * 批量读取实时行情
      *
-     * @param codeList 通达信 代码（股票/ETF/板块）列表
+     * @param codeList 通达信 代码（股票/ETF/板块/期权）列表
      * @return
      */
-    List<TdxRealtimeQuoteDTO> getBatch(List<String> codeList);
+    List<StockSnapshotKlineDTO> get_market_snapshot_batch(List<String> codeList);
 
 
     /**
@@ -55,7 +73,6 @@ public interface TdxTqService {
      * @param stockTypeEnum 可选 股票类型，例如：A_STOCK,ETF,TDX_BLOCK（传空 -> 拉取全部类型）
      * @return
      */
-    List<TdxRealtimeQuoteDTO> getAll(StockTypeEnum stockTypeEnum);
-
+    List<StockSnapshotKlineDTO> getAll(StockTypeEnum stockTypeEnum);
 
 }

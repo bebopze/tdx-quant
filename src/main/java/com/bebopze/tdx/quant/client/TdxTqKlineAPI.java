@@ -1,7 +1,6 @@
 package com.bebopze.tdx.quant.client;
 
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -75,10 +73,7 @@ public class TdxTqKlineAPI {
 
         TdxTqService tdxTqService = new TdxTqServiceImpl(MybatisPlusUtil.getBaseStockService(), MybatisPlusUtil.getBaseBlockService());
 
-        List<StockSnapshotKlineDTO> klineDTOList = tdxTqService.getAll(stockTypeEnum)
-                                                               .stream()
-                                                               .map(TdxRealtimeQuoteDTO::toStockSnapshotKlineDTO)
-                                                               .collect(Collectors.toList());
+        List<StockSnapshotKlineDTO> klineDTOList = tdxTqService.getAll(stockTypeEnum);
 
         return klineDTOList;
     }
