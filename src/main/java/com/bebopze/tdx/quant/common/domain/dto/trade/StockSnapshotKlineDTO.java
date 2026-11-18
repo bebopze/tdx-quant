@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.constant.StockLimitEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.util.StockUtil;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 
 /**
@@ -79,6 +80,16 @@ public class StockSnapshotKlineDTO extends KlineDTO {
 
     public boolean isDtFlag() {
         return getClose() <= dtPrice && dtPrice > 0; // T+0类 ETF（涨跌停价格 东方财富API 返回0）
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public KlineDTO toKlineDTO() {
+        KlineDTO klineDTO = new KlineDTO();
+        BeanUtils.copyProperties(this, klineDTO);
+        return klineDTO;
     }
 
 

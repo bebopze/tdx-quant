@@ -50,6 +50,30 @@ public class TdxTqKlineAPI {
     }
 
 
+    /**
+     * 通达信 TQ   ->   批量拉取   全A + ETF   盘中实时行情（无限速）
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> pullAllStockETFSnapshotKline() {
+
+        List<StockSnapshotKlineDTO> all_AStock = pullAllStockSnapshotKline();
+        List<StockSnapshotKlineDTO> all_etf = pullAllETFSnapshotKline();
+
+
+        List<StockSnapshotKlineDTO> allSnapshotKlineDTOS = Lists.newArrayList(all_AStock);
+        allSnapshotKlineDTOS.addAll(all_etf);
+
+
+        Assert.notEmpty(allSnapshotKlineDTOS,
+                        String.format("pullAllStockETFSnapshotKline - err     >>>     通达信TQ -> 批量拉取 全A（ETF）实时行情 异常 , AStock_size : %s , etf_size : %s , total_size : %s",
+                                      all_AStock.size(), all_etf.size(), allSnapshotKlineDTOS.size()));
+
+
+        return allSnapshotKlineDTOS;
+    }
+
+
     public static List<StockSnapshotKlineDTO> pullAllStockSnapshotKline() {
         return pullAllSnapshotKline(StockTypeEnum.A_STOCK);
     }

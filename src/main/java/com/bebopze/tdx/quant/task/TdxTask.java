@@ -1,18 +1,13 @@
 package com.bebopze.tdx.quant.task;
 
 import com.alibaba.fastjson2.JSON;
-import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.TopBlockStrategyEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
-import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.MacUtil;
-import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.*;
-import com.bebopze.tdx.quant.task.progress.TaskProgress;
 import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin;
 import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
@@ -28,10 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Set;
-
-import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
 
 
 /**
@@ -84,11 +76,16 @@ public class TdxTask {
     private EastMoneyChromeLogin eastMoneyChromeLogin;
 
 
+    @Autowired
+    private TaskService taskService;
+
+
     /**
      * 通达信 盘后数据更新 -> 扩展数据计算 -> 自动选股
      */
     @Async
     @TotalTime
+
     // @Scheduled(cron = "0 50 15 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__933_902_921() {
 
@@ -137,81 +134,7 @@ public class TdxTask {
 
 
     /**
-     * 行情数据   盘后-全量更新   ->   DB
-     */
-
-    @TotalTime
-    @Async
-    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
-    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
-    public void execTask__refreshAll() {
-
-
-        String taskId = "refreshAll_" + System.currentTimeMillis();
-        TaskProgress taskProgress = taskProgressManager.createAndStartTask(taskId, "盘后-全量更新");
-
-
-        log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 start");
-
-
-        // -------------------------------------------- 板块-个股 -------------------------------------------------------
-
-
-        String subTask = "板块/个股/ETF/自定义板块/关联关系（需至少每周更新1次[每天都会变,尤其是 当前主线 概念板块]）";
-        try {
-            taskProgressManager.updateProgress(taskId, 10, subTask);
-            tdxDataParserService.importAll__blockRelaStock();
-            taskProgressManager.completeSubTask(taskId, subTask, "SUC");
-        } catch (Exception e) {
-            taskProgressManager.failSubTask(taskId, subTask, "FAIL");
-        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        try {
-            taskProgressManager.updateProgress(taskId, 10, "大盘量化 导入（更新）");
-            marketService.importMarketMidCycle();
-
-
-            taskProgressManager.updateProgress(taskId, 30, "行情数据 导入（更新）");
-            tdxDataParserService.refreshKlineAll(UpdateTypeEnum.HIS);
-
-
-            taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
-            extDataService.refreshExtDataAll(UpdateTypeEnum.HIS);
-
-
-            taskProgressManager.updateProgress(taskId, 70, "主线板块 计算");
-            topBlockService.refreshAll(UpdateTypeEnum.HIS);
-
-
-            taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache 刷新");
-            initDataService.refreshDiskCache();
-
-
-            taskProgressManager.completeTask(taskId, "任务执行完成");
-            log.info("---------------------------- 任务 [refreshAll - 盘后-全量更新 入库]   执行 end");
-
-
-            // TODO   更新 回测任务（今日数据）
-            refreshBacktest();
-
-
-        } catch (Exception e) {
-            taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
-            log.error("任务执行失败", e);
-        }
-
-
-        // 返回taskId 供前端查询
-        // return taskId;
-    }
-
-
-    /**
-     * 行情数据   盘中-增量更新   ->   DB
+     * refreshAll  -  盘中  ->  实时行情 更新（nd）                        // nd（更新频率：1次/min）
      */
     @Async
     @TotalTime
@@ -225,99 +148,28 @@ public class TdxTask {
     @Scheduled(cron = "0 0/5 13,14 * * 1-5")
     @Scheduled(cron = "0 0,5 15 * * 1-5")
     public void execTask__refreshKline__lastDay() {
-        execTask__refreshKline__lastDay(true);
+        taskService.execTask__refreshKline__lastDay(true);
     }
 
-    @Async
+
+    /**
+     * refreshAll  -  盘后  ->  近N日 更新（nd）                          // nd（更新频率：1次/日）
+     */
     @TotalTime
-    @DistributedLock(value = 300, autoRenew = true, renewInterval = 100, keyPrefix = "execTask__refreshAll")
-    public void execTask__refreshKline__lastDay(boolean check) {
-        log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 start");
+    @Async
+    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    public void execTask__refreshAll__ND() {
+        taskService.execTask__refreshAll(UpdateTypeEnum.N_DAY);
+    }
 
-
-        // -------------------------------------------- CHECK ----------------------------------------------------------
-
-
-        // 本机（Mac系统），跳过执行（仅 服务器端 执行）
-        if (check /*&& (!isTradeDateTime() || SystemUtils.IS_OS_MAC)*/) {
-            log.info("execTask__refreshKline__lastDay     >>>     非交易日/非交易时间段，跳过执行");
-            return;
-        }
-
-
-        // --------------------------------------------
-
-
-        String taskId = "refreshKline_lastDay_" + System.currentTimeMillis();
-        TaskProgress taskProgress = taskProgressManager.createAndStartTask(taskId, "盘中-增量更新");
-
-
-        // -------------------------------------------- 板块-个股 -------------------------------------------------------
-
-
-        String subTask = "板块-个股 关联关系（每天都会变,尤其是[当前主线 概念板块]）";
-        try {
-            taskProgressManager.updateProgress(taskId, 10, subTask);
-            tdxDataParserService.importBlockReport();
-            taskProgressManager.completeSubTask(taskId, subTask, "SUC");
-        } catch (Exception e) {
-            taskProgressManager.failSubTask(taskId, subTask, "FAIL");
-        }
-
-
-        // -------------------------------------------------------------------------------------------------------------
-
-
-        try {
-
-
-            // -------------------------------------------- KLINE ------------------------------------------------------
-
-
-            taskProgressManager.updateProgress(taskId, 30, "个股/ETF实时 行情数据");
-            // 全量个股 - 盘中实时行情   ->   API（东财/同花顺/雪球/新浪） 定时 循环拉取
-            tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.N_DAY);
-
-
-            taskProgressManager.updateProgress(taskId, 40, "板块实时 行情数据");
-            // 根据 板块-个股列表   ->   实时计算   板块指数 涨跌幅/成交额/成交量/...
-            tdxDataParserService.calcAndFillBlockKlineAll();
-
-
-            // -------------------------------------------- EXT_DATA ---------------------------------------------------
-
-
-            taskProgressManager.updateProgress(taskId, 50, "板块实时 扩展数据");
-            extDataService.calcBlockExtData(UpdateTypeEnum.N_DAY);
-
-
-            taskProgressManager.updateProgress(taskId, 60, "ETF实时 扩展数据");
-            extDataService.calcStockExtData(UpdateTypeEnum.N_DAY, StockTypeEnum.ETF.type);
-
-
-            taskProgressManager.updateProgress(taskId, 75, "个股实时 扩展数据");
-            extDataService.calcStockExtData(UpdateTypeEnum.N_DAY, StockTypeEnum.A_STOCK.type);
-
-
-            // -------------------------------------------- 主线板块 ----------------------------------------------------
-
-
-            taskProgressManager.updateProgress(taskId, 90, "主线板块");
-            topBlockService.refreshAll(UpdateTypeEnum.N_DAY);
-
-
-            taskProgressManager.completeSubTask(taskId, "主线板块", "任务执行完成");
-            taskProgressManager.completeTask(taskId, "任务执行完成");
-            log.info("---------------------------- 任务 [refreshKline__lastDay - 盘中-增量更新 入库]   执行 end");
-
-
-        } catch (Exception e) {
-            taskProgressManager.failTask(taskId, "任务执行失败: " + e.getMessage());
-            log.error("任务执行失败", e);
-        }
-
-
-        // return taskId;
+    /**
+     * refreshAll  -  盘后  ->  全量历史 更新（his + nd）                 // his（更新频率：1次/年）
+     */
+    @TotalTime
+    @Async
+    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    public void execTask__refreshAll__HIS() {
+        taskService.execTask__refreshAll(UpdateTypeEnum.HIS);
     }
 
 
@@ -409,7 +261,7 @@ public class TdxTask {
     /**
      * 更新 回测任务（今日数据）
      */
-    private void refreshBacktest() {
+    public void refreshBacktest() {
         // backtestService.execBacktestUpdate(19, null, LocalDate.now().minusDays(30), LocalDate.now());
     }
 
@@ -471,33 +323,6 @@ public class TdxTask {
 
 
         return result;
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * 校验 当前日期、时间   ->   是否 交易日、交易时间段
-     *
-     * @return
-     */
-    private boolean isTradeDateTime() {
-
-
-        // 最新交易日
-        LocalDate lastTradeDate = KlineAPI.lastTradeDate();
-
-
-        // 非交易日
-        if (!lastTradeDate.isEqual(LocalDate.now())) {
-            return false;
-        }
-
-
-        // 交易时间段
-        LocalTime nowTime = LocalTime.now();
-        return nowTime.isAfter(LocalTime.of(9, 25)) && nowTime.isBefore(LocalTime.of(15, 5));
     }
 
 

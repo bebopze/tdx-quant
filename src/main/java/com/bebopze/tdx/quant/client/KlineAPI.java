@@ -105,15 +105,6 @@ public class KlineAPI {
         }
 
 
-        // 东方财富
-        try {
-            SHSZQuoteSnapshotResp resp = EastMoneyTradeAPI.SHSZQuoteSnapshot(stockCode);
-            klineDTO = convert2DTO__eastmoney(resp);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
-
         // 通达信 TQ
         if (klineDTO == null) {
             klineDTO = TdxTqAPI.get_market_snapshot(stockCode);
@@ -151,14 +142,6 @@ public class KlineAPI {
         List<StockSnapshotKlineDTO> klineDTOList = null;
 
 
-//        // 东方财富
-//        try {
-//            klineDTOList = EastMoneyKlineAPI.pullAllStockSnapshotKline();
-//        } catch (Exception e) {
-//            log.error(e.getMessage(), e);
-//        }
-
-
         // 通达信 TQ
         if (klineDTOList == null) {
             log.info("pullAllStockSnapshotKline     >>>     使用 [通达信TQ] API");
@@ -178,6 +161,14 @@ public class KlineAPI {
         }
 
 
+//        // 东方财富（封IP -> 不可用）
+//        try {
+//            klineDTOList = EastMoneyKlineAPI.pullAllStockSnapshotKline();
+//        } catch (Exception e) {
+//            log.error(e.getMessage(), e);
+//        }
+
+
         // 雪球
         if (klineDTOList == null) {
             log.info("pullAllStockSnapshotKline     >>>     使用 [雪球] API");
@@ -195,6 +186,7 @@ public class KlineAPI {
         return klineDTOList;
     }
 
+
     /**
      * 拉取  所有ETF  行情快照
      *
@@ -202,14 +194,6 @@ public class KlineAPI {
      */
     public static List<StockSnapshotKlineDTO> pullAllETFSnapshotKline() {
         List<StockSnapshotKlineDTO> klineDTOList = null;
-
-
-//        // 东方财富
-//        try {
-//            klineDTOList = EastMoneyKlineAPI.pullAllETFSnapshotKline();
-//        } catch (Exception e) {
-//            log.error(e.getMessage(), e);
-//        }
 
 
         // 通达信 TQ
@@ -229,6 +213,14 @@ public class KlineAPI {
             log.info("pullAllETFSnapshotKline     >>>     使用 [新浪财经] API");
             klineDTOList = SinaKlineAPI.pullAllETFSnapshotKline();
         }
+
+
+//        // 东方财富（封IP -> 不可用）
+//        try {
+//            klineDTOList = EastMoneyKlineAPI.pullAllETFSnapshotKline();
+//        } catch (Exception e) {
+//            log.error(e.getMessage(), e);
+//        }
 
 
         // 雪球
@@ -270,6 +262,31 @@ public class KlineAPI {
                  stockDTOList.size(), stock_size, etfDTOList.size(), DateTimeUtil.formatNow2Hms(start));
 
         return stockDTOList;
+    }
+
+
+    /**
+     * 拉取  所有板块 行情快照
+     *
+     * @return
+     */
+    public static List<StockSnapshotKlineDTO> pullAllBlockSnapshotKline() {
+        List<StockSnapshotKlineDTO> klineDTOList = null;
+
+
+        // 通达信 TQ
+        if (klineDTOList == null) {
+            log.info("pullAllBlockSnapshotKline     >>>     使用 [通达信TQ] API");
+
+            try {
+                klineDTOList = TdxTqKlineAPI.pullAllBlockSnapshotKline();
+            } catch (Exception e) {
+                log.error("pullAllBlockSnapshotKline - 使用 [通达信TQ] API - 异常     >>>     errMsg : " + e.getMessage(), e);
+            }
+        }
+
+
+        return klineDTOList;
     }
 
 

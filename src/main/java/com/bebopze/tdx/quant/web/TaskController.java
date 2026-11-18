@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.service.InitDataService;
+import com.bebopze.tdx.quant.service.TaskService;
 import com.bebopze.tdx.quant.task.script.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
@@ -34,6 +35,9 @@ public class TaskController {
     private TdxTask tdxTask;
 
     @Autowired
+    private TaskService taskService;
+
+    @Autowired
     private DataService dataService;
 
     @Autowired
@@ -47,27 +51,40 @@ public class TaskController {
 
 
     /**
-     * refreshAll   -   盘中 -> 增量更新
+     * refreshAll  -  盘中  ->  实时行情 更新（nd）                        // nd（更新频率：1次/min）
      *
      * @return
      */
-    @Operation(summary = "refreshAll - 增量更新", description = "refreshAll - 盘中 -> 增量更新")
+    @Operation(summary = "refreshAll  -  盘中  ->  实时行情 更新（nd）", description = "refreshAll  -  盘中  ->  实时行情 更新（nd）")
     @GetMapping(value = "/refreshAll__lastDay")
     public Result<Void> refreshAll__lastDay() {
-        tdxTask.execTask__refreshKline__lastDay(false);
+        tdxTask.execTask__refreshKline__lastDay();
         return Result.SUC();
     }
 
 
     /**
-     * refreshAll   -   盘后 -> 全量更新
+     * refreshAll  -  盘后  ->  近N日 更新（nd）                          // nd（更新频率：1次/日）
      *
      * @return
      */
-    @Operation(summary = "refreshAll - 全量更新", description = "refreshAll - 盘后 -> 全量更新")
+    @Operation(summary = "refreshAll  -  盘后  ->  近N日 更新（nd）", description = "refreshAll  -  盘后  ->  近N日 更新（nd）")
+    @GetMapping(value = "/refreshAll__nd")
+    public Result<Void> refreshAll__nd() {
+        tdxTask.execTask__refreshAll__ND();
+        return Result.SUC();
+    }
+
+
+    /**
+     * refreshAll  -  盘后  ->  全量历史 更新（his + nd）                 // his（更新频率：1次/年）
+     *
+     * @return
+     */
+    @Operation(summary = "refreshAll  -  盘后  ->  全量历史 更新（his + nd）", description = "refreshAll  -  盘后  ->  全量历史 更新（his + nd）")
     @GetMapping(value = "/refreshAll")
-    public Result<Void> refreshAll() {
-        tdxTask.execTask__refreshAll();
+    public Result<Void> refreshAll__his() {
+        tdxTask.execTask__refreshAll__HIS();
         return Result.SUC();
     }
 

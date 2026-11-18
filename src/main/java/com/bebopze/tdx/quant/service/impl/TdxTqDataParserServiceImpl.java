@@ -106,6 +106,11 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
+    public void refreshKlineAll__lastDay() {
+
+    }
+
+    @Override
     public void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum) {
 
     }
@@ -116,12 +121,22 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
+    public void fillBlockKlineAll__lastDay() {
+
+    }
+
+    @Override
     public void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum) {
 
     }
 
     @Override
     public void fillStockKlineAll(UpdateTypeEnum updateTypeEnum) {
+
+    }
+
+    @Override
+    public void fillStockKlineAll__lastDay() {
 
     }
 

@@ -51,15 +51,21 @@ public interface TdxDataParserService {
      */
     void refreshKlineAll(UpdateTypeEnum updateTypeEnum);
 
+    void refreshKlineAll__lastDay();
+
 
     void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum);
 
     void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum);
 
+    void fillBlockKlineAll__lastDay();
+
 
     void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum);
 
     void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
+
+    void fillStockKlineAll__lastDay();
 
 
     // -----------------------------------------------------------------------------------------------------------------
