@@ -389,21 +389,21 @@ public class TdxTask {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    /**
-     * INDEX_BLOCK-880515   当日有数据（AMO>500亿）             // 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
-     *
-     * @return
-     */
-    private boolean checkBlockLastDay() {
-
-        LdayParser.LdayDTO lastDTO = ListUtil.last(LdayParser.parseByStockCode(INDEX_BLOCK));
-
-        return lastDTO != null
-                // 当日
-                && lastDTO.getTradeDate().isEqual(LocalDate.now())
-                // 有数据（AMO>500亿）
-                && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
-    }
+//    /**
+//     * INDEX_BLOCK-880515   当日有数据（AMO>500亿）             // 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
+//     *
+//     * @return
+//     */
+//    private boolean checkBlockLastDay() {
+//
+//        LdayParser.LdayDTO lastDTO = ListUtil.last(LdayParser.parseByStockCode(INDEX_BLOCK));
+//
+//        return lastDTO != null
+//                // 当日
+//                && lastDTO.getTradeDate().isEqual(LocalDate.now())
+//                // 有数据（AMO>500亿）
+//                && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
+//    }
 
 
     /**

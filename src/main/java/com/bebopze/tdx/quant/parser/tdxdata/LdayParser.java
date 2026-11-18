@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
@@ -68,7 +69,7 @@ import static com.bebopze.tdx.quant.parser.tdxdata.KlineTxtExportParser.TDX_SHIT
  * -
  *
  * @author: bebopze
- * @date: 2024/10/9
+ * @date: 2025/5/1
  * @see KlineTxtExportParser
  */
 @Slf4j
@@ -94,9 +95,14 @@ public class LdayParser {
 
 
     public static List<LdayDTO> parseByStockCode(String stockCode) {
+        return parseByStockCode(stockCode, UpdateTypeEnum.HIS.days);
+    }
+
+
+    public static List<LdayDTO> parseByStockCode(String stockCode, int nd) {
 
         // xx.lday 文件   ->   解析
-        List<LdayDTO> dtoList = exec_parseByStockCode(stockCode);
+        List<LdayDTO> dtoList = exec_parseByStockCode(stockCode, nd);
 
         // 每日股本（流通股本、总股本、换手率）
         fill_gbInfo(stockCode, dtoList);
@@ -113,10 +119,11 @@ public class LdayParser {
      * - 短期数据  ->  xx.day
      *
      * @param stockCode 证券代码
+     * @param nd
      * @return
      */
     @SneakyThrows
-    public static List<LdayDTO> exec_parseByStockCode(String stockCode) {
+    public static List<LdayDTO> exec_parseByStockCode(String stockCode, int nd) {
 
 
         String filePath = stockFilePath__lday(stockCode);
@@ -132,11 +139,6 @@ public class LdayParser {
 
 
         try {
-
-
-            // 往期数据  ->  报表
-            // klineTxtReport__ldayDTOList = Lists.newArrayList();
-
             // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
             klineTxtReport__ldayDTOList = KlineTxtExportParser.parseTxtByStockCode(stockCode);
 
@@ -154,7 +156,13 @@ public class LdayParser {
             if (CollectionUtils.isEmpty(klineTxtReport__ldayDTOList)) {
                 log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - start     >>>     code : {} , klineTxtReport__ldayDTOList : {} ", stockCode, ListUtil.size(klineTxtReport__ldayDTOList));
 
-                List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, KLINE_START_DATE, null);
+
+                // 交易日（250） -> 自然日（365 [ -> 390 多给出几天的弹性空间 ]）
+                LocalDate kline__start_date = DateTimeUtil.max(KLINE_START_DATE, LocalDate.now().minusDays(nd * 390 / 250));
+                // LocalDate kline__start_date = KLINE_START_DATE;
+
+
+                List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, kline__start_date, null);
                 klineTxtReport__ldayDTOList = tq_klineDTOList.stream().map(LdayDTO::of).collect(Collectors.toList());
 
                 log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - end       >>>     code : {} , tq_klineDTOList : {} ", stockCode, ListUtil.size(tq_klineDTOList));
@@ -162,19 +170,6 @@ public class LdayParser {
 
 
             // ---------------------------------------------------------------------------------------------------------
-
-
-//            // 往期数据  ->  报表
-//            // klineTxtReport__ldayDTOList = Lists.newArrayList();
-//            if (StockMarketEnum.getMarketSymbol(stockCode) != null) {
-//
-//                // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
-//                klineTxtReport__ldayDTOList = KlineReportParser.parseByStockCode(stockCode);
-//
-//
-//                // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-//                checkReport__lastKline(klineTxtReport__ldayDTOList);
-//            }
 
 
             // 短期数据  ->  xx.day

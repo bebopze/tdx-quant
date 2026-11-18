@@ -1393,7 +1393,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 板块 - K线数据
-        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode);
+        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode, updateTypeEnum.days);
 
 
         List<String> klines = Lists.newArrayList();
@@ -1717,7 +1717,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // 通达信   本地读取
-        List<String> klines = klinesFromTdx(stockCode);
+        List<String> klines = klinesFromTdx(stockCode, updateTypeEnum);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1831,10 +1831,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private List<String> klinesFromTdx(String stockCode) {
+    private List<String> klinesFromTdx(String stockCode, UpdateTypeEnum updateTypeEnum) {
 
         // 个股 - K线数据
-        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode);
+        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode, updateTypeEnum.days);
 
 
         List<String> klines = Lists.newArrayList();
