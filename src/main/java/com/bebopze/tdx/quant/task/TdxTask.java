@@ -8,7 +8,6 @@ import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.backtest.BSStrategyInfoDTO;
 import com.bebopze.tdx.quant.common.util.MacUtil;
 import com.bebopze.tdx.quant.service.*;
-import com.bebopze.tdx.quant.task.progress.TaskProgressManager;
 import com.bebopze.tdx.quant.task.script.EastMoneyChromeLogin;
 import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
 import com.bebopze.tdx.quant.task.script.TdxScript;
@@ -16,7 +15,6 @@ import com.bebopze.tdx.quant.task.script.TdxZipDownScript;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,30 +41,11 @@ public class TdxTask {
 
 
     @Autowired
-    @Qualifier("extDataServiceImpl")
-    private ExtDataService extDataService;
-
-    @Autowired
-    private InitDataService initDataService;
-
-
-    @Autowired
-    private MarketService marketService;
-
-    @Autowired
-    private TopBlockService topBlockService;
-
-
-    @Autowired
     private BacktestService backtestService;
 
 
     @Autowired
     private StrategyService strategyService;
-
-
-    @Autowired
-    private TaskProgressManager taskProgressManager;
 
 
     @Autowired
@@ -239,23 +218,6 @@ public class TdxTask {
 
 
     // -----------------------------------------------------------------------------------------------------------------
-
-
-//    /**
-//     * INDEX_BLOCK-880515   当日有数据（AMO>500亿）             // 主线板块（盘中  ->  无 TDX 板块数据   ->   除非手动导出）
-//     *
-//     * @return
-//     */
-//    private boolean checkBlockLastDay() {
-//
-//        LdayParser.LdayDTO lastDTO = ListUtil.last(LdayParser.parseByStockCode(INDEX_BLOCK));
-//
-//        return lastDTO != null
-//                // 当日
-//                && lastDTO.getTradeDate().isEqual(LocalDate.now())
-//                // 有数据（AMO>500亿）
-//                && lastDTO.getAmount().doubleValue() > 500_0000_0000L;
-//    }
 
 
     /**
