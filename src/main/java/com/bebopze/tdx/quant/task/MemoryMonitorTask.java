@@ -102,26 +102,26 @@ public class MemoryMonitorTask {
 
 
         // ---------- 5. 打印详情（可根据需要改为日志） ----------
-        String format = String.format("""
-                                              [MemoryGuard] 系统CPU: %.2f%% | Java CPU: %.2f%% | OS内存: %.2f%% (%d GB / %d GB) | Java内存: %.2f%% (%d GB / %d GB) | Java任务繁忙: %s
-                                              运行中的 Java 进程: %s
-                                              """,
+        String memInfo = String.format("""
+                                               [MemoryGuard] 系统CPU: %.2f%% | Java CPU: %.2f%% | OS内存: %.2f%% (%.2f GB / %.2f GB) | Java内存: %.2f%% (%.2f GB / %.2f GB) | Java任务繁忙: %s
+                                               运行中的 Java 进程: %s
+                                               """,
 
-                                      os__cpuLoad,
-                                      java__cpuLoad,
+                                       os__cpuLoad,
+                                       java__cpuLoad,
 
-                                      os__memUsePct,
-                                      (totalMemory - availableMemory) / 1024 / 1024 / 1024,
-                                      totalMemory / 1024 / 1024 / 1024,
+                                       os__memUsePct,
+                                       (double) (totalMemory - availableMemory) / 1024 / 1024 / 1024,
+                                       (double) totalMemory / 1024 / 1024 / 1024,
 
-                                      java__memUsePct,
-                                      heapUsed / 1024 / 1024 / 1024,
-                                      heapMax / 1024 / 1024 / 1024,
+                                       java__memUsePct,
+                                       (double) heapUsed / 1024 / 1024 / 1024,
+                                       (double) heapMax / 1024 / 1024 / 1024,
 
-                                      javaTaskBusy,
-                                      javaProcesses
+                                       javaTaskBusy,
+                                       javaProcesses
         );
-        log.info(format);
+        log.info(memInfo);
 
 
         // ---------- 6. 核心判断与 GC ----------
