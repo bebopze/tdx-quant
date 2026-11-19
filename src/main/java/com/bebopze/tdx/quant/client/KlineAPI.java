@@ -28,6 +28,32 @@ import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_STOCK;
 public class KlineAPI {
 
 
+    /**
+     * 最新交易日 Cache （refreshDate - lastTradeDate）
+     */
+    private static final Cache<LocalDate, LocalDate> REFRESH_DATE__LAST_TRADE_DATE__CACHE = Caffeine.newBuilder()
+                                                                                                    .expireAfterWrite(5, TimeUnit.MINUTES)
+                                                                                                    .build();
+
+
+    /**
+     * 最新交易日 Cache
+     *
+     * @return
+     */
+    public static LocalDate tradeDateCache() {
+        return REFRESH_DATE__LAST_TRADE_DATE__CACHE.get(LocalDate.now(), k -> {
+            LocalDate lastTradeDate = KlineAPI.lastTradeDate();
+
+            log.info("tradeDateCache - refresh     >>>     lastTradeDate : {}", lastTradeDate);
+            return lastTradeDate;
+        });
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static final Cache<String, StockSnapshotKlineDTO> klineCache = Caffeine.newBuilder()
                                                                                   .maximumSize(1_000)
                                                                                   // .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -356,7 +382,9 @@ public class KlineAPI {
 
         // pullAllStockSnapshotKline();
         // pullAllETFSnapshotKline();
-    }
 
+
+        System.out.println(tradeDateCache());
+    }
 
 }

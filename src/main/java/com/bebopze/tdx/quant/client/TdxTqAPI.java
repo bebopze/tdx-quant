@@ -338,7 +338,7 @@ public class TdxTqAPI {
         dto.setStockCode(stock_code);
         dto.setStockName(null);
 
-        dto.setDate(LocalDate.now());
+        dto.setDate(KlineAPI.tradeDateCache());
         dto.setOpen(NumUtil.of(result.getDouble("Open")));
         dto.setHigh(NumUtil.of(result.getDouble("Max")));
         dto.setLow(NumUtil.of(result.getDouble("Min")));
