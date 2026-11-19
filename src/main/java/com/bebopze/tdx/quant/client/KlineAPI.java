@@ -31,9 +31,9 @@ public class KlineAPI {
     /**
      * 最新交易日 Cache （refreshDate - lastTradeDate）
      */
-    private static final Cache<LocalDate, LocalDate> REFRESH_DATE__LAST_TRADE_DATE__CACHE = Caffeine.newBuilder()
-                                                                                                    .expireAfterWrite(5, TimeUnit.MINUTES)
-                                                                                                    .build();
+    private static final Cache<LocalDate, LocalDate> LAST_TRADE_DATE__CACHE = Caffeine.newBuilder()
+                                                                                      .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                                                      .build();
 
 
     /**
@@ -42,7 +42,7 @@ public class KlineAPI {
      * @return
      */
     public static LocalDate tradeDateCache() {
-        return REFRESH_DATE__LAST_TRADE_DATE__CACHE.get(LocalDate.now(), k -> {
+        return LAST_TRADE_DATE__CACHE.get(LocalDate.now(), k -> {
             LocalDate lastTradeDate = KlineAPI.lastTradeDate();
 
             log.info("tradeDateCache - refresh     >>>     lastTradeDate : {}", lastTradeDate);
