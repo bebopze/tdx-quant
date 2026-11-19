@@ -2,6 +2,9 @@ package com.bebopze.tdx.quant.service;
 
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * kline 行情数据 拉取
@@ -34,4 +37,10 @@ public interface KlineService {
     void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
 
     void fillStockKlineAll__lastDay();
+
+
+    /**
+     * 通达信 数据导入 - check（kline + ext_data）
+     */
+    Map<String, List<String>> importAll_check();
 }

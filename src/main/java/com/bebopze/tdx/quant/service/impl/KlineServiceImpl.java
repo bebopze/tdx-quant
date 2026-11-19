@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
+import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
@@ -18,6 +19,7 @@ import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.KlineService;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -491,6 +493,22 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
+    @Override
+    public Map<String, List<String>> importAll_check() {
+
+
+        // 个股   ->   kline_extData 数据check
+        Map<String, List<String>> stock___code_errInfoList__Map = check__Kline_ExtData___Stock();
+        // 板块   ->   kline_extData 数据check
+        Map<String, List<String>> block___code_errInfoList__Map = check__Kline_ExtData___Block();
+
+
+        // 合并结果
+        stock___code_errInfoList__Map.putAll(block___code_errInfoList__Map);
+        return stock___code_errInfoList__Map;
+    }
+
+
     /**
      * 个股行情 拉取 -> DB
      *
@@ -747,6 +765,289 @@ public class KlineServiceImpl implements KlineService {
 
     private BigDecimal of(Double val) {
         return NumUtil.double2Decimal(val);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    private Map<String, List<String>> check__Kline_ExtData___Stock() {
+
+
+        Map<String, List<String>> code_errInfoList__Map = Maps.newConcurrentMap();
+
+
+        // 全量股票   kline_extData 数据
+        List<BaseStockDO> baseStockDOList = baseStockService.listAllKline(UpdateTypeEnum.ALL_RANGE, null, true);
+
+
+        // ---------------------------------------------------------
+
+
+        baseStockDOList.parallelStream()
+                       .forEach(entity -> {
+
+
+                           String stockCode = entity.getCode();
+
+
+                           String klineNdStr = entity.getKlineNdStr();
+                           String klineHisStr = entity.getKlineHisStr();
+
+                           String extDataNdStr = entity.getExtDataNdStr();
+                           String extDataHisStr = entity.getExtDataHisStr();
+
+
+                           // -------------------------
+
+
+                           List<String> nd_klines = JSON.parseArray(klineNdStr, String.class);
+                           List<String> his_klines = JSON.parseArray(klineHisStr, String.class);
+
+                           List<String> nd_extDatas = JSON.parseArray(extDataNdStr, String.class);
+                           List<String> his_extDatas = JSON.parseArray(extDataHisStr, String.class);
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // kline size  =  ext_data size
+
+
+                           if (nd_klines.size() != nd_extDatas.size()) {
+                               String errInfo = String.format("nd size - err     >>>     stockCode : %s , kline size : %s , extData size : %s",
+                                                              stockCode, nd_klines.size(), nd_extDatas.size());
+
+                               log.error(errInfo);
+                               errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                           }
+
+                           if (his_klines.size() != his_extDatas.size()) {
+                               String errInfo = String.format("his size  -  err     >>>     stockCode : %s , kline size : %s , extData size : %s",
+                                                              stockCode, his_klines.size(), his_extDatas.size());
+
+                               log.error(errInfo);
+                               errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                           }
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // KlineDTO field size  =  kline length
+
+
+                           int KlineDTO_field__length = KlineDTO.class.getDeclaredFields().length;
+
+
+                           for (String kline : nd_klines) {
+
+                               String[] kline_arr = kline.split(",", -1);
+                               if (kline_arr.length != KlineDTO_field__length) {
+
+                                   String errInfo = String.format("kline_nd - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                  stockCode, KlineDTO_field__length, kline_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                               }
+                           }
+
+                           for (String kline : his_klines) {
+
+                               String[] kline_arr = kline.split(",", -1);
+                               if (kline_arr.length != KlineDTO_field__length) {
+
+                                   String errInfo = String.format("kline_his - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                  stockCode, KlineDTO_field__length, kline_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                               }
+                           }
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // ExtDataDTO field size  =  ext_data length
+
+
+                           int extDataDTO_field__length = ExtDataDTO.class.getDeclaredFields().length;
+
+
+                           for (String extData_str : nd_extDatas) {
+
+                               String[] extData_arr = extData_str.split(",", -1);
+                               if (extData_arr.length != extDataDTO_field__length) {
+
+                                   String errInfo = String.format("ext_data_nd - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                  stockCode, extDataDTO_field__length, extData_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                               }
+                           }
+
+
+                           for (String extData_str : his_extDatas) {
+
+                               String[] extData_arr = extData_str.split(",", -1);
+                               if (extData_arr.length != extDataDTO_field__length) {
+
+                                   String errInfo = String.format("ext_data_his - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                  stockCode, extDataDTO_field__length, extData_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                               }
+                           }
+                       });
+
+
+        return code_errInfoList__Map;
+    }
+
+
+    private Map<String, List<String>> check__Kline_ExtData___Block() {
+
+
+        Map<String, List<String>> code_errInfoList__Map = Maps.newConcurrentMap();
+
+
+        // 全量板块   kline_extData 数据
+        List<BaseBlockDO> baseBlockDOList = baseBlockService.listAllKline(true);
+
+
+        // ---------------------------------------------------------
+
+
+        baseBlockDOList.parallelStream()
+                       .forEach(entity -> {
+
+
+                           String blockCode = entity.getCode();
+
+
+                           String klineNdStr = entity.getKlineNdStr();
+                           String klineHisStr = entity.getKlineHisStr();
+
+                           String extDataNdStr = entity.getExtDataNdStr();
+                           String extDataHisStr = entity.getExtDataHisStr();
+
+
+                           // -------------------------
+
+
+                           List<String> nd_klines = JSON.parseArray(klineNdStr, String.class);
+                           List<String> his_klines = JSON.parseArray(klineHisStr, String.class);
+
+                           List<String> nd_extDatas = JSON.parseArray(extDataNdStr, String.class);
+                           List<String> his_extDatas = JSON.parseArray(extDataHisStr, String.class);
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // kline size  =  ext_data size
+
+
+                           if (nd_klines.size() != nd_extDatas.size()) {
+                               String errInfo = String.format("nd size - err     >>>     blockCode : %s , kline size : %s , extData size : %s",
+                                                              blockCode, nd_klines.size(), nd_extDatas.size());
+
+                               log.error(errInfo);
+                               errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                           }
+
+                           if (his_klines.size() != his_extDatas.size()) {
+                               String errInfo = String.format("his size  -  err     >>>     blockCode : %s , kline size : %s , extData size : %s",
+                                                              blockCode, his_klines.size(), his_extDatas.size());
+
+                               log.error(errInfo);
+                               errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                           }
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // KlineDTO field size  =  kline length
+
+
+                           int KlineDTO_field__length = KlineDTO.class.getDeclaredFields().length;
+
+
+                           for (String kline : nd_klines) {
+
+                               String[] kline_arr = kline.split(",", -1);
+                               if (kline_arr.length != KlineDTO_field__length) {
+
+                                   String errInfo = String.format("kline_nd - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                  blockCode, KlineDTO_field__length, kline_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                               }
+                           }
+
+                           for (String kline : his_klines) {
+
+                               String[] kline_arr = kline.split(",", -1);
+                               if (kline_arr.length != KlineDTO_field__length) {
+
+                                   String errInfo = String.format("kline_his - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                  blockCode, KlineDTO_field__length, kline_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                               }
+                           }
+
+
+                           // ------------------------------------------------------------------------------------------
+
+
+                           // ExtDataDTO field size  =  ext_data length
+
+
+                           int extDataDTO_field__length = ExtDataDTO.class.getDeclaredFields().length;
+
+
+                           for (String extData_str : nd_extDatas) {
+
+                               String[] extData_arr = extData_str.split(",", -1);
+                               if (extData_arr.length != extDataDTO_field__length) {
+
+                                   String errInfo = String.format("ext_data_nd - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                  blockCode, extDataDTO_field__length, extData_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                               }
+                           }
+
+
+                           for (String extData_str : his_extDatas) {
+
+                               String[] extData_arr = extData_str.split(",", -1);
+                               if (extData_arr.length != extDataDTO_field__length) {
+
+                                   String errInfo = String.format("ext_data_his - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                  blockCode, extDataDTO_field__length, extData_arr.length);
+
+                                   log.error(errInfo);
+                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                               }
+                           }
+                       });
+
+
+        return code_errInfoList__Map;
+    }
+
+    private void errInfoList(Map<String, List<String>> code_errInfoList__Map, String code, String errInfo) {
+        code_errInfoList__Map.computeIfAbsent(code, k -> Lists.newArrayList()).add(errInfo);
     }
 
 

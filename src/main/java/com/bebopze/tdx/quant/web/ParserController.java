@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -204,6 +205,16 @@ public class ParserController {
     public Result<Void> fillStockKlineAll__lastDay() {
         klineService.fillStockKlineAll__lastDay();
         return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "通达信 数据导入 - check（kline + ext_data）", description = "通达信 数据导入 - check（kline + ext_data）")
+    @GetMapping(value = "/importAll/check")
+    public Result<Map<String, List<String>>> importAll_check() {
+        return Result.SUC(klineService.importAll_check());
     }
 
 
