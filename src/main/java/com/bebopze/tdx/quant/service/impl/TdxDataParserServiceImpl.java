@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -1555,6 +1554,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // 全部板块   codeIdMap
         Map<String, Long> codeIdMap = baseBlockService.codeIdMap();
 
 
@@ -1728,11 +1728,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // 全量股票   codeIdMap
-        Map<String, Long> codeIdMap = baseStockService.codeIdMap((Integer) null);
+        // 全量股票（全A+ETF）   codeIdMap
+        Map<String, Long> codeIdMap = baseStockService.codeIdMap(StockTypeEnum.A_STOCK.type);
+        codeIdMap.putAll(baseStockService.codeIdMap(StockTypeEnum.ETF.type));
 
 
-        // 拉取全部   股票+ETF - K线数据（实时行情）
+        // 拉取全部   全A+ETF - K线数据（实时行情）
         List<StockSnapshotKlineDTO> stockSnapshotKlineDTOS = TdxTqKlineAPI.pullAllStockETFSnapshotKline();
         Map<String, StockSnapshotKlineDTO> stockCode_snapshotKline__Map = stockSnapshotKlineDTOS.stream()
                                                                                                 .collect(Collectors.toMap(StockSnapshotKlineDTO::getStockCode, e -> e));
@@ -2014,98 +2015,6 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-//    private int apiType(Integer apiType, UpdateTypeEnum updateTypeEnum) {
-//
-//        if (apiType != null && apiType == 1) {
-//            return apiType;
-//        }
-//
-//
-//        // 1-全量更新   ->   1-本地TDX
-//        if (updateTypeEnum == UpdateTypeEnum.HIS) {
-//            apiType = 1;
-//        }
-//
-//        // 2-增量更新   ->   2-券商API
-//        else if (updateTypeEnum == UpdateTypeEnum.N_DAY) {
-//            apiType = 2;
-//        }
-//
-//
-//        return apiType;
-//    }
-//
-//    /**
-//     * klineHis   ->   1-全量更新 / 2-增量更新
-//     *
-//     * @param stockId
-//     * @param new_klines
-//     * @param updateTypeEnum 1-全量更新；2-增量更新；
-//     * @return
-//     */
-//    private List<String> klineHis__updateType(Long stockId, List<String> new_klines, UpdateTypeEnum updateTypeEnum) {
-//
-//        // 1-全量更新
-//        if (updateTypeEnum == UpdateTypeEnum.HIS) {
-//            return new_klines;
-//        }
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        // 2-增量更新     =>     1、获取 old__klineHis
-//
-//        BaseStockDO stockDO = baseStockService.getById(stockId);
-//        List<KlineDTO> old_klineDTOList = stockDO.getKlineDTOList();
-//
-//
-//        // ----------------------------------
-//
-//
-//        // new__klineHis   ->   start_date
-//        LocalDate new__start_date = DateTimeUtil.parseDate_yyyy_MM_dd(new_klines.getFirst().split("\\,")[0]);
-//
-//
-//        // ----------------------------- remove + add     =>     2、从 old__klineHis 中   剔除全部 new__klineHis     =>     3、再 addAll  ->  new__klineHis
-//
-//
-//        // ------------------ 2、从 old__klineHis 中   剔除全部 new__klineHis
-//
-//
-//        // 从大到小排序索引，避免索引变化影响
-//        List<Integer> removeIdxList = Lists.newArrayList();
-//
-//
-//        for (int i = old_klineDTOList.size() - 1; i >= 0; i--) {
-//            KlineDTO old_klineDTO = old_klineDTOList.get(i);
-//
-//
-//            // 实际  new__start_date   永远 >=   old__last_klineDTO.date
-//            if (new__start_date.isAfter(old_klineDTO.getDate())) {
-//                break;
-//            } else {
-//                // 从后往前添加，自然就是从大到小
-//                removeIdxList.add(i);
-//            }
-//        }
-//
-//
-//        // 从大到小 删除，避免索引偏移          ->          默认已  从大到小 排序
-//        removeIdxList.forEach(idx -> old_klineDTOList.remove((int) idx));
-//
-//
-//        // ------------------ 3、再 addAll  ->  new__klineHis
-//
-//
-//        List<String> old_klines = ConvertStockKline.dtoList2StrList(old_klineDTOList);
-//        old_klines.addAll(new_klines);
-//
-//
-//        return old_klines;
-//    }
-
-
     private List<String> klinesFromTdx(String stockCode, UpdateTypeEnum updateTypeEnum) {
 
         // 个股 - K线数据
@@ -2158,6 +2067,5 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     public void calcAndFillBlockKlineAll() {
         blockKlineFun.calcAndFillBlockKlineAll();
     }
-
 
 }
