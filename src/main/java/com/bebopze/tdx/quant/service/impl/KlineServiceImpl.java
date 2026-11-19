@@ -2,7 +2,9 @@ package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.TdxTqKlineAPI;
+import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -493,6 +495,7 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
+    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "importAll_check")
     @Override
     public Map<String, List<String>> importAll_check() {
 
@@ -814,17 +817,18 @@ public class KlineServiceImpl implements KlineService {
                            // kline size  =  ext_data size
 
 
-                           if (nd_klines.size() != nd_extDatas.size()) {
+                           if (ListUtil.size(nd_klines) != ListUtil.size(nd_extDatas)) {
                                String errInfo = String.format("nd size - err     >>>     stockCode : %s , kline size : %s , extData size : %s",
-                                                              stockCode, nd_klines.size(), nd_extDatas.size());
+                                                              stockCode, ListUtil.size(nd_klines), ListUtil.size(nd_extDatas));
 
                                log.error(errInfo);
                                errInfoList(code_errInfoList__Map, stockCode, errInfo);
                            }
 
-                           if (his_klines.size() != his_extDatas.size()) {
+
+                           if (ListUtil.size(his_klines) != ListUtil.size(his_extDatas)) {
                                String errInfo = String.format("his size  -  err     >>>     stockCode : %s , kline size : %s , extData size : %s",
-                                                              stockCode, his_klines.size(), his_extDatas.size());
+                                                              stockCode, ListUtil.size(his_klines), ListUtil.size(his_extDatas));
 
                                log.error(errInfo);
                                errInfoList(code_errInfoList__Map, stockCode, errInfo);
@@ -840,29 +844,34 @@ public class KlineServiceImpl implements KlineService {
                            int KlineDTO_field__length = KlineDTO.class.getDeclaredFields().length;
 
 
-                           for (String kline : nd_klines) {
+                           if (CollectionUtils.isNotEmpty(nd_klines)) {
+                               for (String kline : nd_klines) {
 
-                               String[] kline_arr = kline.split(",", -1);
-                               if (kline_arr.length != KlineDTO_field__length) {
+                                   String[] kline_arr = kline.split(",", -1);
+                                   if (kline_arr.length != KlineDTO_field__length) {
 
-                                   String errInfo = String.format("kline_nd - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
-                                                                  stockCode, KlineDTO_field__length, kline_arr.length);
+                                       String errInfo = String.format("kline_nd - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                      stockCode, KlineDTO_field__length, kline_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                   }
                                }
                            }
 
-                           for (String kline : his_klines) {
 
-                               String[] kline_arr = kline.split(",", -1);
-                               if (kline_arr.length != KlineDTO_field__length) {
+                           if (CollectionUtils.isNotEmpty(his_klines)) {
+                               for (String kline : his_klines) {
 
-                                   String errInfo = String.format("kline_his - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
-                                                                  stockCode, KlineDTO_field__length, kline_arr.length);
+                                   String[] kline_arr = kline.split(",", -1);
+                                   if (kline_arr.length != KlineDTO_field__length) {
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                       String errInfo = String.format("kline_his - err     >>>     stockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                      stockCode, KlineDTO_field__length, kline_arr.length);
+
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                   }
                                }
                            }
 
@@ -876,30 +885,34 @@ public class KlineServiceImpl implements KlineService {
                            int extDataDTO_field__length = ExtDataDTO.class.getDeclaredFields().length;
 
 
-                           for (String extData_str : nd_extDatas) {
+                           if (CollectionUtils.isNotEmpty(nd_extDatas)) {
+                               for (String extData_str : nd_extDatas) {
 
-                               String[] extData_arr = extData_str.split(",", -1);
-                               if (extData_arr.length != extDataDTO_field__length) {
+                                   String[] extData_arr = extData_str.split(",", -1);
+                                   if (extData_arr.length != extDataDTO_field__length) {
 
-                                   String errInfo = String.format("ext_data_nd - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
-                                                                  stockCode, extDataDTO_field__length, extData_arr.length);
+                                       String errInfo = String.format("ext_data_nd - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                      stockCode, extDataDTO_field__length, extData_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                   }
                                }
                            }
 
 
-                           for (String extData_str : his_extDatas) {
+                           if (CollectionUtils.isNotEmpty(his_extDatas)) {
+                               for (String extData_str : his_extDatas) {
 
-                               String[] extData_arr = extData_str.split(",", -1);
-                               if (extData_arr.length != extDataDTO_field__length) {
+                                   String[] extData_arr = extData_str.split(",", -1);
+                                   if (extData_arr.length != extDataDTO_field__length) {
 
-                                   String errInfo = String.format("ext_data_his - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
-                                                                  stockCode, extDataDTO_field__length, extData_arr.length);
+                                       String errInfo = String.format("ext_data_his - err     >>>     stockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                      stockCode, extDataDTO_field__length, extData_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, stockCode, errInfo);
+                                   }
                                }
                            }
                        });
@@ -952,17 +965,21 @@ public class KlineServiceImpl implements KlineService {
                            // kline size  =  ext_data size
 
 
-                           if (nd_klines.size() != nd_extDatas.size()) {
+                           boolean isRpsBlock = BlockTypeEnum.isRpsBlock(entity.getType());
+
+
+                           if (isRpsBlock && ListUtil.size(nd_klines) != ListUtil.size(nd_extDatas)) {
                                String errInfo = String.format("nd size - err     >>>     blockCode : %s , kline size : %s , extData size : %s",
-                                                              blockCode, nd_klines.size(), nd_extDatas.size());
+                                                              blockCode, ListUtil.size(nd_klines), ListUtil.size(nd_extDatas));
 
                                log.error(errInfo);
                                errInfoList(code_errInfoList__Map, blockCode, errInfo);
                            }
 
-                           if (his_klines.size() != his_extDatas.size()) {
+
+                           if (isRpsBlock && ListUtil.size(his_klines) != ListUtil.size(his_extDatas)) {
                                String errInfo = String.format("his size  -  err     >>>     blockCode : %s , kline size : %s , extData size : %s",
-                                                              blockCode, his_klines.size(), his_extDatas.size());
+                                                              blockCode, ListUtil.size(his_klines), ListUtil.size(his_extDatas));
 
                                log.error(errInfo);
                                errInfoList(code_errInfoList__Map, blockCode, errInfo);
@@ -978,29 +995,34 @@ public class KlineServiceImpl implements KlineService {
                            int KlineDTO_field__length = KlineDTO.class.getDeclaredFields().length;
 
 
-                           for (String kline : nd_klines) {
+                           if (CollectionUtils.isNotEmpty(nd_klines)) {
+                               for (String kline : nd_klines) {
 
-                               String[] kline_arr = kline.split(",", -1);
-                               if (kline_arr.length != KlineDTO_field__length) {
+                                   String[] kline_arr = kline.split(",", -1);
+                                   if (kline_arr.length != KlineDTO_field__length) {
 
-                                   String errInfo = String.format("kline_nd - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
-                                                                  blockCode, KlineDTO_field__length, kline_arr.length);
+                                       String errInfo = String.format("kline_nd - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                      blockCode, KlineDTO_field__length, kline_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                   }
                                }
                            }
 
-                           for (String kline : his_klines) {
 
-                               String[] kline_arr = kline.split(",", -1);
-                               if (kline_arr.length != KlineDTO_field__length) {
+                           if (CollectionUtils.isNotEmpty(his_klines)) {
+                               for (String kline : his_klines) {
 
-                                   String errInfo = String.format("kline_his - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
-                                                                  blockCode, KlineDTO_field__length, kline_arr.length);
+                                   String[] kline_arr = kline.split(",", -1);
+                                   if (kline_arr.length != KlineDTO_field__length) {
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                       String errInfo = String.format("kline_his - err     >>>     blockCode : %s , KlineDTO 字段 length : %s , kline_arr length : %s",
+                                                                      blockCode, KlineDTO_field__length, kline_arr.length);
+
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                   }
                                }
                            }
 
@@ -1014,30 +1036,34 @@ public class KlineServiceImpl implements KlineService {
                            int extDataDTO_field__length = ExtDataDTO.class.getDeclaredFields().length;
 
 
-                           for (String extData_str : nd_extDatas) {
+                           if (CollectionUtils.isNotEmpty(nd_extDatas)) {
+                               for (String extData_str : nd_extDatas) {
 
-                               String[] extData_arr = extData_str.split(",", -1);
-                               if (extData_arr.length != extDataDTO_field__length) {
+                                   String[] extData_arr = extData_str.split(",", -1);
+                                   if (extData_arr.length != extDataDTO_field__length) {
 
-                                   String errInfo = String.format("ext_data_nd - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
-                                                                  blockCode, extDataDTO_field__length, extData_arr.length);
+                                       String errInfo = String.format("ext_data_nd - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                      blockCode, extDataDTO_field__length, extData_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                   }
                                }
                            }
 
 
-                           for (String extData_str : his_extDatas) {
+                           if (CollectionUtils.isNotEmpty(his_extDatas)) {
+                               for (String extData_str : his_extDatas) {
 
-                               String[] extData_arr = extData_str.split(",", -1);
-                               if (extData_arr.length != extDataDTO_field__length) {
+                                   String[] extData_arr = extData_str.split(",", -1);
+                                   if (extData_arr.length != extDataDTO_field__length) {
 
-                                   String errInfo = String.format("ext_data_his - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
-                                                                  blockCode, extDataDTO_field__length, extData_arr.length);
+                                       String errInfo = String.format("ext_data_his - err     >>>     blockCode : %s , ExtDataDTO 字段 length : %s , extData_arr length : %s",
+                                                                      blockCode, extDataDTO_field__length, extData_arr.length);
 
-                                   log.error(errInfo);
-                                   errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                       log.error(errInfo);
+                                       errInfoList(code_errInfoList__Map, blockCode, errInfo);
+                                   }
                                }
                            }
                        });
@@ -1045,6 +1071,7 @@ public class KlineServiceImpl implements KlineService {
 
         return code_errInfoList__Map;
     }
+
 
     private void errInfoList(Map<String, List<String>> code_errInfoList__Map, String code, String errInfo) {
         code_errInfoList__Map.computeIfAbsent(code, k -> Lists.newArrayList()).add(errInfo);

@@ -1,7 +1,10 @@
 package com.bebopze.tdx.quant.common.constant;
 
+import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.List;
 
 
 /**
@@ -31,6 +34,12 @@ public enum BlockTypeEnum {
     ZDY("zdy", 7, "自定义板块");
 
 
+    /**
+     * RPS板块  ->  2-细分板块  +  4-概念板块
+     */
+    static final List<BlockTypeEnum> RPS_BLOCK_TYPE = Lists.newArrayList(HY_PT, GN);
+
+
     @Getter
     public String code;
 
@@ -48,6 +57,17 @@ public enum BlockTypeEnum {
             }
         }
         return null;
+    }
+
+
+    /**
+     * 是否 RPS板块
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isRpsBlock(Integer type) {
+        return RPS_BLOCK_TYPE.contains(getDescByType(type));
     }
 
 }
