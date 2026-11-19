@@ -278,8 +278,9 @@
     <!-- 主要任务区域 -->
     <div class="task-section">
         <h2 class="section-title">🚀 主要任务</h2>
-        <button class="btn-primary" onclick="startTask('/api/task/refreshAll__lastDay?check=false', '增量更新 (盘中)')">
-            🔄 增量更新 (盘中)
+        <button class="btn-primary"
+                onclick="startTask('/api/task/refreshAll__lastDay?check=false', '实时行情 更新 (盘中)')">
+            🔄 实时行情 更新 (盘中)
         </button>
         <button class="btn-primary" onclick="startTask('/api/task/refreshAll__nd', '全量更新 (盘后)')">
             🔄 全量更新 (盘后 → nd)
