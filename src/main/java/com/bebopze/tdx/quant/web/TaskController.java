@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.service.InitDataService;
 import com.bebopze.tdx.quant.service.TaskService;
+import com.bebopze.tdx.quant.task.MemoryMonitorTask;
 import com.bebopze.tdx.quant.task.script.TdxScript;
 import com.bebopze.tdx.quant.task.TdxTask;
 import com.bebopze.tdx.quant.task.progress.TaskProgress;
@@ -33,6 +34,10 @@ public class TaskController {
 
     @Autowired
     private TdxTask tdxTask;
+
+    @Autowired
+    private MemoryMonitorTask memoryMonitorTask;
+
 
     @Autowired
     private TaskService taskService;
@@ -198,6 +203,17 @@ public class TaskController {
     @GetMapping(value = "/taskHistory")
     public Result<List<TaskProgress>> getTaskHistory() {
         return Result.SUC(taskProgressManager.getTaskHistory());
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @Operation(summary = "内存监控 -> GC", description = "内存监控 -> GC")
+    @GetMapping(value = "/memoryMonitor")
+    public Result<Void> memoryMonitor() {
+        memoryMonitorTask.memMonitorAndGc();
+        return Result.SUC();
     }
 
 }

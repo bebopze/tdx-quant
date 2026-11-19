@@ -495,7 +495,7 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
-    @DistributedLock(value = 600, autoRenew = true, renewInterval = 100, keyPrefix = "importAll_check")
+    @DistributedLock(value = 60, autoRenew = true, renewInterval = 10, keyPrefix = "importAll_check")
     @Override
     public Map<String, List<String>> importAll_check() {
 
