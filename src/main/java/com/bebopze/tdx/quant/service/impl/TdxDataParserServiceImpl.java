@@ -1494,7 +1494,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
+
         AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         Map<String, Long> codeIdMap = baseBlockService.codeIdMap();
@@ -1502,26 +1508,33 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         codeIdMap.keySet().parallelStream().forEach((blockCode) -> {
             Long blockId = codeIdMap.get(blockCode);
-
-
-            fillBlockKline(blockCode, blockId, updateTypeEnum);
-
-
-            // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
-
-
             int countVal = count.incrementAndGet();
-            long time = System.currentTimeMillis() - start[0];
 
 
-            long r1 = time / countVal;
-            long r2 = countVal * 1000L / time;
-            String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+            try {
+                fillBlockKline(blockCode, blockId, updateTypeEnum);
 
 
-            // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
-            log.info("fillBlockKlineAll suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     blockCode, blockId, countVal, r1, r2, r3);
+                // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
+
+
+                long time = System.currentTimeMillis() - start[0];
+
+
+                long r1 = time / countVal;
+                long r2 = countVal * 1000L / time;
+                String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+
+
+                // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
+                log.info("fillBlockKlineAll - suc     >>>     blockCode : {}, blockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         blockCode, blockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
+
+
+            } catch (Exception ex) {
+                log.error("fillBlockKlineAll - err     >>>     blockCode : {}, blockId : {} , count : {} , suc : {} , err : {}",
+                          blockCode, blockId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
+            }
         });
 
 
@@ -1533,7 +1546,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillBlockKlineAll__lastDay() {
         long[] start = {System.currentTimeMillis()};
+
         AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         Map<String, Long> codeIdMap = baseBlockService.codeIdMap();
@@ -1549,8 +1568,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         codeIdMap.keySet().parallelStream().forEach((blockCode) -> {
-
             Long blockId = codeIdMap.get(blockCode);
+            int countVal = count.incrementAndGet();
+
 
             StockSnapshotKlineDTO snapshot_klineDTO = blockCode_snapshotKline__Map.get(blockCode);
             if (snapshot_klineDTO == null) {
@@ -1558,27 +1578,32 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             }
 
 
-            // -------------------------------------------
+            try {
+                fillBlockKline__lastDay(blockCode, blockId, snapshot_klineDTO.toKlineDTO());
 
 
-            fillBlockKline__lastDay(blockCode, blockId, snapshot_klineDTO.toKlineDTO());
+                // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
 
 
-            // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
+                long time = System.currentTimeMillis() - start[0];
 
 
-            int countVal = count.incrementAndGet();
-            long time = System.currentTimeMillis() - start[0];
+                long r1 = time / countVal;
+                long r2 = countVal * 1000L / time;
+                String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
-            long r1 = time / countVal;
-            long r2 = countVal * 1000L / time;
-            String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+                // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
+                log.info("fillBlockKlineAll__lastDay - suc     >>>     blockCode : {}, blockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         blockCode, blockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 
 
-            // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
-            log.info("fillBlockKlineAll__lastDay suc     >>>     blockCode : {}, blockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                     blockCode, blockId, countVal, r1, r2, r3);
+            } catch (Exception ex) {
+
+                // 不要影响 其他正常板块
+                log.error("fillBlockKlineAll__lastDay - err     >>>     blockCode : {}, blockId : {} , count : {} , suc : {} , err : {}",
+                          blockCode, blockId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
+            }
         });
 
 
@@ -1694,7 +1719,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void fillStockKlineAll__lastDay() {
         long[] start = {System.currentTimeMillis()};
+
         AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         // 全量股票   codeIdMap
@@ -1711,25 +1742,23 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         codeIdMap.keySet().parallelStream().forEach(stockCode -> {
+            Long stockId = codeIdMap.get(stockCode);
+            int countVal = count.incrementAndGet();
+
+
+            StockSnapshotKlineDTO snapshot__klineDTO = stockCode_snapshotKline__Map.get(stockCode);
+            if (snapshot__klineDTO == null) {
+                return;
+            }
+
+
             try {
-                Long stockId = codeIdMap.get(stockCode);
-                StockSnapshotKlineDTO snapshot__klineDTO = stockCode_snapshotKline__Map.get(stockCode);
-
-                if (snapshot__klineDTO == null) {
-                    return;
-                }
-
-
-                // -------------------------------------------
-
-
                 fillStockKline__lastDay(stockCode, stockId, snapshot__klineDTO.toKlineDTO());
 
 
                 // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
 
 
-                int countVal = count.incrementAndGet();
                 long time = System.currentTimeMillis() - start[0];
 
 
@@ -1739,15 +1768,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
                 // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
-                log.info("fillStockKlineAll__lastDay suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                         stockCode, stockId, countVal, r1, r2, r3);
+                log.info("fillStockKlineAll__lastDay - suc     >>>     stockCode : {}, stockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         stockCode, stockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 
 
             } catch (Exception ex) {
 
                 // 不要影响 其他正常个股
-                log.error("fillStockKlineAll__lastDay error     >>>     stockCode : {}, stockId : {} , count : {}",
-                          stockCode, codeIdMap.get(stockCode), count.incrementAndGet(), ex);
+                log.error("fillStockKlineAll__lastDay - err     >>>     stockCode : {}, stockId : {} , count : {} , suc : {} , err : {}",
+                          stockCode, stockId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
             }
         });
 
@@ -1845,24 +1874,27 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
      */
     private void update__fillStockKlineAll(Map<String, Long> codeIdMap, UpdateTypeEnum updateTypeEnum) {
         long[] start = {System.currentTimeMillis()};
+
         AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
 
 
         codeIdMap.keySet().parallelStream().forEach(stockCode -> {
+            Long stockId = codeIdMap.get(stockCode);
+            int countVal = count.incrementAndGet();
+
+
             try {
-                Long stockId = codeIdMap.get(stockCode);
-
-
-                // -------------------------------------------
-
-
                 fillStockKline(stockCode, stockId, updateTypeEnum);
 
 
                 // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
 
 
-                int countVal = count.incrementAndGet();
                 long time = System.currentTimeMillis() - start[0];
 
 
@@ -1872,15 +1904,15 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
                 // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
-                log.info("update__fillStockKlineAll suc     >>>     stockCode : {}, stockId : {} , count : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
-                         stockCode, stockId, countVal, r1, r2, r3);
+                log.info("update__fillStockKlineAll - suc     >>>     stockCode : {}, stockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         stockCode, stockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 
 
             } catch (Exception ex) {
 
                 // 不要影响 其他正常个股
-                log.error("update__fillStockKlineAll error     >>>     stockCode : {}, stockId : {} , count : {}",
-                          stockCode, codeIdMap.get(stockCode), count.incrementAndGet(), ex);
+                log.error("update__fillStockKlineAll - err     >>>     stockCode : {}, stockId : {} , count : {} , suc : {} , err : {}",
+                          stockCode, stockId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
             }
         });
     }

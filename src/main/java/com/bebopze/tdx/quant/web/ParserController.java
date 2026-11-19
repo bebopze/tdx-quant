@@ -119,11 +119,11 @@ public class ParserController {
 
 
     /**
-     * 通达信 - 行情数据（个股/ETF/板块）   一键更新
+     * 通达信 - 盘后 行情数据（个股/ETF/板块）   一键更新
      *
      * @return
      */
-    @Operation(summary = "行情数据（个股/ETF/板块） - 一键刷新", description = "行情数据（个股/ETF/板块） - 一键刷新")
+    @Operation(summary = "盘后行情（个股/ETF/板块） - 一键刷新", description = "盘后行情（个股/ETF/板块） - 一键刷新")
     @GetMapping(value = "/refresh/klineAll")
     public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                         @RequestParam(required = false, defaultValue = "2") int updateType) {
@@ -132,8 +132,20 @@ public class ParserController {
         return Result.SUC();
     }
 
+    /**
+     * 通达信 - 实时行情（个股/ETF/板块）   一键更新
+     *
+     * @return
+     */
+    @Operation(summary = "实时行情（个股/ETF/板块） - 一键刷新", description = "实时行情（个股/ETF/板块） - 一键刷新")
+    @GetMapping(value = "/refresh/refreshKlineAll__lastDay")
+    public Result<Void> refreshKlineAll__lastDay() {
+        tdxDataParserService.refreshKlineAll__lastDay();
+        return Result.SUC();
+    }
 
-    @Operation(summary = "板块行情（指定） - 解析入库", description = "板块行情（指定） - 解析入库")
+
+    @Operation(summary = "板块 盘后行情（指定） - 解析入库", description = "板块 盘后行情（指定） - 解析入库")
     @GetMapping(value = "/fill/blockKline")
     public Result<Void> fillBlockKline(@Schema(description = "板块代码", example = "880515")
                                        @RequestParam String blockCode,
@@ -145,7 +157,7 @@ public class ParserController {
         return Result.SUC();
     }
 
-    @Operation(summary = "板块行情（全部） - 解析入库", description = "板块行情（全部） - 解析入库")
+    @Operation(summary = "板块 盘后行情（全部） - 解析入库", description = "板块 盘后行情（全部） - 解析入库")
     @GetMapping(value = "/fill/blockKlineAll")
     public Result<Void> fillBlockKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                           @RequestParam(required = false, defaultValue = "2") int updateType) {
@@ -154,8 +166,15 @@ public class ParserController {
         return Result.SUC();
     }
 
+    @Operation(summary = "板块 实时行情（全部） - 解析入库（仅最新一日）", description = "板块 实时行情（全部） - 解析入库（仅最新一日）")
+    @GetMapping(value = "/fill/fillBlockKlineAll__lastDay")
+    public Result<Void> fillBlockKlineAll__lastDay() {
+        tdxDataParserService.fillBlockKlineAll__lastDay();
+        return Result.SUC();
+    }
 
-    @Operation(summary = "个股/ETF行情（指定） - 拉取解析入库", description = "个股/ETF行情（指定） - 拉取解析入库")
+
+    @Operation(summary = "个股/ETF 盘后行情（指定） - 拉取解析入库", description = "个股/ETF 盘后行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKline")
     public Result<Void> fillStockKline(@Schema(description = "股票代码（个股/ETF）", example = "300059")
                                        @RequestParam(defaultValue = "300059") String stockCode,
@@ -167,12 +186,19 @@ public class ParserController {
         return Result.SUC();
     }
 
-    @Operation(summary = "个股/ETF行情（全部） - 拉取解析入库 ", description = "个股/ETF行情（全部） - 拉取解析入库")
+    @Operation(summary = "个股/ETF 盘后行情（全部） - 拉取解析入库", description = "个股/ETF 盘后行情（全部） - 拉取解析入库")
     @GetMapping(value = "/fill/stockKlineAll")
     public Result<Void> fillStockKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                           @RequestParam(required = false, defaultValue = "2") int updateType) {
 
         tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.getByType(updateType));
+        return Result.SUC();
+    }
+
+    @Operation(summary = "个股/ETF 实时行情（全部） - 拉取解析入库", description = "个股/ETF 实时行情（全部） - 拉取解析入库")
+    @GetMapping(value = "/fill/fillStockKlineAll__lastDay")
+    public Result<Void> fillStockKlineAll__lastDay() {
+        tdxDataParserService.fillStockKlineAll__lastDay();
         return Result.SUC();
     }
 

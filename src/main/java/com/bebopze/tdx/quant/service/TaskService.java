@@ -23,7 +23,7 @@ public interface TaskService {
     /**
      * 刷新 实时行情（nd -> 近1日）
      *
-     * @param check
+     * @param check 是否校验[交易日/交易时间段]
      */
     void execTask__refreshKline__lastDay(boolean check);
 

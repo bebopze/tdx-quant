@@ -57,8 +57,10 @@ public class TaskController {
      */
     @Operation(summary = "refreshAll  -  盘中  ->  实时行情 更新（nd）", description = "refreshAll  -  盘中  ->  实时行情 更新（nd）")
     @GetMapping(value = "/refreshAll__lastDay")
-    public Result<Void> refreshAll__lastDay() {
-        tdxTask.execTask__refreshKline__lastDay();
+    public Result<Void> refreshAll__lastDay(@Schema(description = "是否校验[交易日/交易时间段]", example = "false")
+                                            @RequestParam(required = false, defaultValue = "false") boolean check) {
+
+        taskService.execTask__refreshKline__lastDay(check);
         return Result.SUC();
     }
 
@@ -82,7 +84,7 @@ public class TaskController {
      * @return
      */
     @Operation(summary = "refreshAll  -  盘后  ->  全量历史 更新（his + nd）", description = "refreshAll  -  盘后  ->  全量历史 更新（his + nd）")
-    @GetMapping(value = "/refreshAll")
+    @GetMapping(value = "/refreshAll__his")
     public Result<Void> refreshAll__his() {
         tdxTask.execTask__refreshAll__HIS();
         return Result.SUC();
@@ -197,6 +199,5 @@ public class TaskController {
     public Result<List<TaskProgress>> getTaskHistory() {
         return Result.SUC(taskProgressManager.getTaskHistory());
     }
-
 
 }

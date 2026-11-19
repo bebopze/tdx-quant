@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.common.util;
 
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
+import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Locale;
@@ -70,7 +71,10 @@ public final class TdxFormatCodeUtil {
         }
 
 
-        return up_code + "." + StockMarketEnum.getTdxTqMarket(up_code).toUpperCase(Locale.ROOT);
+        String tdxTqMarket = StockMarketEnum.getTdxTqMarket(up_code);
+        Assert.notNull(tdxTqMarket, "无法识别[tdxTqMarket]的通达信证券代码 : [" + code + "]");
+
+        return up_code + "." + tdxTqMarket.toUpperCase(Locale.ROOT);
     }
 
 

@@ -8,6 +8,7 @@ import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.common.util.TdxFormatCodeUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
@@ -90,6 +91,9 @@ public class TdxTqServiceImpl implements TdxTqService {
 
     @Override
     public List<StockSnapshotKlineDTO> getAll(StockTypeEnum stockTypeEnum) {
+        log.info("getAll - start     >>>     stockTypeEnum : {}", stockTypeEnum);
+        long start = System.currentTimeMillis();
+
 
         List<String> codes;
         if (stockTypeEnum == null) {
@@ -115,10 +119,23 @@ public class TdxTqServiceImpl implements TdxTqService {
 
 
         // 27s / 1.6s / 3.7s
-        // return ParallelCalcUtil.map(codes, this::get, ThreadPoolType.IO_INTENSIVE);
+        // return ParallelCalcUtil.map(codes, this::get_market_snapshot, ThreadPoolType.IO_INTENSIVE);
 
         // 27s / 1.6s / 3.7s
-        return codes.parallelStream().map(this::get_market_snapshot).toList();
+        List<StockSnapshotKlineDTO> list = codes.parallelStream().map(code -> {
+                                                    try {
+                                                        return get_market_snapshot(code);
+                                                    } catch (Exception ex) {
+                                                        log.error("get_market_snapshot - err     >>>     stockTypeEnum : [{}] , code : [{}]", stockTypeEnum, code, ex);
+                                                        return null;
+                                                    }
+                                                })
+                                                .filter(Objects::nonNull)
+                                                .toList();
+
+
+        log.info("getAll - end     >>>     stockTypeEnum : {} , size : {} , time : {}", stockTypeEnum, list.size(), DateTimeUtil.formatNow2Hms(start));
+        return list;
     }
 
 
@@ -206,5 +223,6 @@ public class TdxTqServiceImpl implements TdxTqService {
 
         return quotes;
     }
+
 
 }

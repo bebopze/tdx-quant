@@ -89,11 +89,11 @@ public class TdxTqHttpClient {
 
 
         int status = response.getStatus();
-        Assert.isTrue(status == 200, String.format("[通达信TQ] 服务 [HTTP:%s] 异常，请检查 [TQ服务] 是否已开启", response.getStatus()));
+        Assert.isTrue(status == 200, String.format("[通达信TQ] 服务 [HTTP:%s] 异常，请检查 [TQ服务] 是否已开启     >>>     method : %s , params : %s", response.getStatus(), method, GSON.toJson(params)));
 
 
         String rawBody = response.getBody();
-        Assert.isTrue(StringUtils.isNotBlank(rawBody), "[通达信TQ] 服务未返回数据，请检查 [TQ服务] 是否已开启");
+        Assert.isTrue(StringUtils.isNotBlank(rawBody), String.format("[通达信TQ] 服务未返回数据，请检查 [TQ服务] 是否已开启     >>>     method : %s , params : %s , resp : %s", method, GSON.toJson(params), rawBody));
 
 
         // ----------------------
