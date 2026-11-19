@@ -53,6 +53,9 @@ public class TaskServiceImpl implements TaskService {
     private MarketService marketService;
 
     @Autowired
+    private KlineService klineService;
+
+    @Autowired
     private TopBlockService topBlockService;
 
 
@@ -98,7 +101,7 @@ public class TaskServiceImpl implements TaskService {
 
 
             taskProgressManager.updateProgress(taskId, 30, "行情数据 导入（更新）");
-            tdxDataParserService.refreshKlineAll(updateTypeEnum);
+            klineService.refreshKlineAll(updateTypeEnum);
 
 
             taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
@@ -183,7 +186,7 @@ public class TaskServiceImpl implements TaskService {
 
 
             taskProgressManager.updateProgress(taskId, 30, "行情数据 导入（更新）");
-            tdxDataParserService.refreshKlineAll__lastDay();
+            klineService.refreshKlineAll__lastDay();
 
 
             taskProgressManager.updateProgress(taskId, 50, "扩展（指标）计算");
@@ -216,7 +219,7 @@ public class TaskServiceImpl implements TaskService {
         // return taskId;
 
 
-        tdxDataParserService.fillBlockKlineAll__lastDay();
+        klineService.fillBlockKlineAll__lastDay();
     }
 
 

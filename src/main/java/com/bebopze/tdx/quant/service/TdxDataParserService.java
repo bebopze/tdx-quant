@@ -1,12 +1,12 @@
 package com.bebopze.tdx.quant.service;
 
-import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
-
 import java.util.Map;
 import java.util.Set;
 
 
 /**
+ * tdx  个股/ETF/板块/大盘  解析导入（关联关系 + 行情数据 + ext_data计算）                // 数据 初始化  ->  数据 更新
+ *
  * @author: bebopze
  * @date: 2025/5/7
  */
@@ -44,33 +44,6 @@ public interface TdxDataParserService {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    /**
-     * 行情（kline_his）  ->   板块 + 个股
-     *
-     * @param updateTypeEnum 1-全量更新；2-增量更新（实时行情）；
-     */
-    void refreshKlineAll(UpdateTypeEnum updateTypeEnum);
-
-    void refreshKlineAll__lastDay();
-
-
-    void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum);
-
-    void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum);
-
-    void fillBlockKlineAll__lastDay();
-
-
-    void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum);
-
-    void fillStockKlineAll(UpdateTypeEnum updateTypeEnum);
-
-    void fillStockKlineAll__lastDay();
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
     Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N);
 
 
@@ -79,4 +52,6 @@ public interface TdxDataParserService {
 
     @Deprecated
     void calcAndFillBlockKlineAll();
+
+
 }

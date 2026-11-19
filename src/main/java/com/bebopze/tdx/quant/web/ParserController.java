@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.web;
 
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
+import com.bebopze.tdx.quant.service.KlineService;
 import com.bebopze.tdx.quant.service.TdxDataParserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +31,9 @@ public class ParserController {
 
     @Autowired
     private TdxDataParserService tdxDataParserService;
+
+    @Autowired
+    private KlineService klineService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -128,7 +132,7 @@ public class ParserController {
     public Result<Void> refreshKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                         @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        tdxDataParserService.refreshKlineAll(UpdateTypeEnum.getByType(updateType));
+        klineService.refreshKlineAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -140,7 +144,7 @@ public class ParserController {
     @Operation(summary = "实时行情（个股/ETF/板块） - 一键刷新", description = "实时行情（个股/ETF/板块） - 一键刷新")
     @GetMapping(value = "/refresh/refreshKlineAll__lastDay")
     public Result<Void> refreshKlineAll__lastDay() {
-        tdxDataParserService.refreshKlineAll__lastDay();
+        klineService.refreshKlineAll__lastDay();
         return Result.SUC();
     }
 
@@ -153,7 +157,7 @@ public class ParserController {
                                        @Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                        @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        tdxDataParserService.fillBlockKline(blockCode, UpdateTypeEnum.getByType(updateType));
+        klineService.fillBlockKline(blockCode, UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -162,14 +166,14 @@ public class ParserController {
     public Result<Void> fillBlockKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                           @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        tdxDataParserService.fillBlockKlineAll(UpdateTypeEnum.getByType(updateType));
+        klineService.fillBlockKlineAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
     @Operation(summary = "板块 实时行情（全部） - 解析入库（仅最新一日）", description = "板块 实时行情（全部） - 解析入库（仅最新一日）")
     @GetMapping(value = "/fill/fillBlockKlineAll__lastDay")
     public Result<Void> fillBlockKlineAll__lastDay() {
-        tdxDataParserService.fillBlockKlineAll__lastDay();
+        klineService.fillBlockKlineAll__lastDay();
         return Result.SUC();
     }
 
@@ -182,7 +186,7 @@ public class ParserController {
                                        @Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                        @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        tdxDataParserService.fillStockKline(stockCode, UpdateTypeEnum.getByType(updateType));
+        klineService.fillStockKline(stockCode, UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
@@ -191,14 +195,14 @@ public class ParserController {
     public Result<Void> fillStockKlineAll(@Schema(description = "更新类型：1-近N日更新（默认 近500日）；2-历史更新（更新 his -> 会附带更新 nd）；", example = "2")
                                           @RequestParam(required = false, defaultValue = "2") int updateType) {
 
-        tdxDataParserService.fillStockKlineAll(UpdateTypeEnum.getByType(updateType));
+        klineService.fillStockKlineAll(UpdateTypeEnum.getByType(updateType));
         return Result.SUC();
     }
 
     @Operation(summary = "个股/ETF 实时行情（全部） - 拉取解析入库", description = "个股/ETF 实时行情（全部） - 拉取解析入库")
     @GetMapping(value = "/fill/fillStockKlineAll__lastDay")
     public Result<Void> fillStockKlineAll__lastDay() {
-        tdxDataParserService.fillStockKlineAll__lastDay();
+        klineService.fillStockKlineAll__lastDay();
         return Result.SUC();
     }
 

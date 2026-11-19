@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.service.impl;
 
-import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.ExtDataService;
@@ -101,49 +100,10 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
-    public void refreshKlineAll(UpdateTypeEnum updateTypeEnum) {
-
-    }
-
-    @Override
-    public void refreshKlineAll__lastDay() {
-
-    }
-
-    @Override
-    public void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum) {
-
-    }
-
-    @Override
-    public void fillBlockKlineAll(UpdateTypeEnum updateTypeEnum) {
-
-    }
-
-    @Override
-    public void fillBlockKlineAll__lastDay() {
-
-    }
-
-    @Override
-    public void fillStockKline(String stockCode, UpdateTypeEnum updateTypeEnum) {
-
-    }
-
-    @Override
-    public void fillStockKlineAll(UpdateTypeEnum updateTypeEnum) {
-
-    }
-
-    @Override
-    public void fillStockKlineAll__lastDay() {
-
-    }
-
-    @Override
     public Map<String, Set<String>> marketRelaStockCodePrefixList(int type, int N) {
         return Map.of();
     }
+
 
     @Override
     public void calcAndFillBlockKlineAll() {
