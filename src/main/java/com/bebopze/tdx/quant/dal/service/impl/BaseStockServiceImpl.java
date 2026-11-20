@@ -501,4 +501,18 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @TotalTime
+    @Override
+    public int delAllKlineExtData() {
+
+        int count = baseMapper.delAllKlineExtData();
+        log.info("delAllKlineExtData - stock     >>>     count : {}", count);
+
+        return count;
+    }
+
+
 }

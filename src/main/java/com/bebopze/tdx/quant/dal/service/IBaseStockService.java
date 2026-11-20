@@ -87,4 +87,16 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     int batchInsertOrUpdate(List<BaseStockDO> list);
 
     int saveOrUpdateBatch(List<BaseStockDO> list);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * HIS 更新前     =>     先 del ALL   ->   kline_ext_data
+     *
+     * @return
+     */
+    int delAllKlineExtData();
+
 }

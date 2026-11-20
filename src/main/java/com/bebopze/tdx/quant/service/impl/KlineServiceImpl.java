@@ -208,6 +208,18 @@ public class KlineServiceImpl implements KlineService {
         // -------------------------------------------------------------------------------------------------------------
 
 
+        // del ALL   ->   kline_ext_data
+        if (updateTypeEnum == UpdateTypeEnum.HIS) {
+            baseBlockService.delAllKlineExtData();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // insert ALL   ->   kline_ext_data
+
+
         Map<String, Long> codeIdMap = baseBlockService.codeIdMap();
 
 
@@ -605,6 +617,18 @@ public class KlineServiceImpl implements KlineService {
 
 
         // -------------------------------------------------------------------------------------------------------------
+
+
+        // del ALL   ->   kline_ext_data
+        if (updateTypeEnum == UpdateTypeEnum.HIS) {
+            baseStockService.delAllKlineExtData();
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // insert ALL   ->   kline_ext_data
 
 
         codeIdMap.keySet().parallelStream().forEach(stockCode -> {

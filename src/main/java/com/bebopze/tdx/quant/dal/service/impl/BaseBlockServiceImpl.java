@@ -315,4 +315,18 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    @TotalTime
+    @Override
+    public int delAllKlineExtData() {
+
+        int count = baseMapper.delAllKlineExtData();
+        log.info("delAllKlineExtData - block     >>>     count : {}", count);
+
+        return count;
+    }
+
+
 }

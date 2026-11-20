@@ -66,4 +66,16 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
     int batchInsertOrUpdate(List<BaseBlockDO> list);
 
     int saveOrUpdateBatch(List<BaseBlockDO> list);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * HIS 更新前     =>     先 del ALL   ->   kline_ext_data
+     *
+     * @return
+     */
+    int delAllKlineExtData();
+
 }

@@ -54,4 +54,8 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
     int batchInsert(@Param("list") List<BaseBlockDO> list);
 
     int batchInsertOrUpdate(@Param("list") List<BaseBlockDO> list);
+
+
+    int delAllKlineExtData();
+
 }

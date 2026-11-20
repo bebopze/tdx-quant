@@ -313,4 +313,21 @@
     </insert>
 
 
+    <update id="delAllKlineExtData">
+        UPDATE base_stock
+
+
+        SET kline_nd             = NULL,
+            kline_nd_raw_len     = 0,
+            ext_data_nd          = NULL,
+            ext_data_nd_raw_len  = 0,
+
+
+            kline_his            = NULL,
+            kline_his_raw_len    = 0,
+            ext_data_his         = NULL,
+            ext_data_his_raw_len = 0
+    </update>
+
+
 </mapper>
