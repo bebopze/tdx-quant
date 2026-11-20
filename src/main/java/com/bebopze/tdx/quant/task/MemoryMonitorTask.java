@@ -51,7 +51,7 @@ public class MemoryMonitorTask {
     @Scheduled(cron = "0 */5 * * * *")
     public void memMonitorAndGc() {
         try {
-            doMonitor();
+            doMonitorGc(false);
         } catch (Exception e) {
             // 监控任务自身异常不应导致调度中断
             log.error("MemoryMonitorTask - error", e);
@@ -59,7 +59,12 @@ public class MemoryMonitorTask {
     }
 
 
-    private void doMonitor() {
+    /**
+     * 监控并执行 GC
+     *
+     * @param forceGc 是否强制执行 GC
+     */
+    public void doMonitorGc(boolean forceGc) {
 
 
         // ---------- 1.1 采集 系统 CPU使用率 ----------
@@ -129,8 +134,8 @@ public class MemoryMonitorTask {
         boolean cpuLow = java__cpuLoad < 10.0;
         boolean memoryHigh = java__memUsePct > 90.0;
 
-        if (noJavaTaskRunning && cpuLow && memoryHigh) {
-            log.info("[MemoryGuard] 条件满足  ->  执行 System.gc()");
+        if (forceGc || (noJavaTaskRunning && cpuLow && memoryHigh)) {
+            log.info("[MemoryGuard] 条件满足  ->  执行 System.gc()     >>>     forceGc : {}", forceGc);
             System.gc();
         }
     }

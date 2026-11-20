@@ -211,8 +211,10 @@ public class TaskController {
 
     @Operation(summary = "内存监控 -> GC", description = "内存监控 -> GC")
     @GetMapping(value = "/memoryMonitor")
-    public Result<Void> memoryMonitor() {
-        memoryMonitorTask.memMonitorAndGc();
+    public Result<Void> memoryMonitor(@Schema(description = "是否强制执行 GC", example = "false")
+                                      @RequestParam(defaultValue = "false") boolean forceGc) {
+
+        memoryMonitorTask.doMonitorGc(forceGc);
         return Result.SUC();
     }
 
