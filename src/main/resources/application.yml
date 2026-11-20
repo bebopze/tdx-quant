@@ -26,6 +26,8 @@ management.endpoints.web.exposure.include: '*'         # 开放所有     ->    
 management.endpoint.health.show-details: ALWAYS        # 显示详细的健康信息
 management.endpoint.shutdown.access: unrestricted      # 如需 /shutdown
 management.prometheus.metrics.export.enabled: true     # 如需 /prometheus
+# 启用 restart 端点
+management.endpoint.restart.enabled: true
 
 
 

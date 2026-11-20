@@ -209,9 +209,9 @@ public class TaskController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    @Operation(summary = "内存监控 -> GC", description = "内存监控 -> GC")
+    @Operation(summary = "内存监控 -> GC（重启）", description = "内存监控 -> GC（重启）")
     @GetMapping(value = "/memoryMonitor")
-    public Result<Void> memoryMonitor(@Schema(description = "是否强制执行 GC", example = "false")
+    public Result<Void> memoryMonitor(@Schema(description = "是否强制执行 GC（重启）", example = "false")
                                       @RequestParam(defaultValue = "false") boolean forceGc) {
 
         memoryMonitorTask.doMonitorGc(forceGc);

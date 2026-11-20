@@ -6,6 +6,8 @@ import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.sun.management.OperatingSystemMXBean;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.restart.RestartEndpoint;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,7 @@ import java.util.List;
 
 
 /**
- * 内存监控 -> GC
+ * 内存监控 -> GC（重启）
  *
  * @author: bebopze
  * @date: 2026/11/20
@@ -40,11 +42,15 @@ public class MemoryMonitorTask {
     private ThreadPoolTaskExecutor taskExecutor;
 
 
+    @Autowired
+    private RestartEndpoint restartEndpoint;
+
+
     /**
      * 每 5 分钟执行一次
      *
      *
-     * 内存监控 -> GC
+     * 内存监控 -> GC（重启）
      */
     @TotalTime
     @DistributedLock
@@ -60,9 +66,9 @@ public class MemoryMonitorTask {
 
 
     /**
-     * 监控并执行 GC
+     * 监控并执行 GC（重启）
      *
-     * @param forceGc 是否强制执行 GC
+     * @param forceGc 是否强制执行 GC（重启）
      */
     public void doMonitorGc(boolean forceGc) {
 
@@ -131,12 +137,14 @@ public class MemoryMonitorTask {
 
         // ---------- 6. 核心判断与 GC ----------
         boolean noJavaTaskRunning = !javaTaskBusy;
-        boolean cpuLow = java__cpuLoad < 10.0;
-        boolean memoryHigh = java__memUsePct > 90.0;
+        boolean cpuLow = os__cpuLoad < 10.0;
+        boolean memoryHigh = os__memUsePct > 90.0;
 
         if (forceGc || (noJavaTaskRunning && cpuLow && memoryHigh)) {
             log.info("[MemoryGuard] 条件满足  ->  执行 System.gc()     >>>     forceGc : {}", forceGc);
-            System.gc();
+
+            // System.gc();
+            restartEndpoint.restart();
         }
     }
 
@@ -158,6 +166,7 @@ public class MemoryMonitorTask {
 //                                 .filter(t -> !t.getName().startsWith("monitor-sched-")) // 排除本任务线程
 //                                 .filter(t -> !t.getName().startsWith("DestroyJavaVM"))
 //                                 .count();
+//
 //        // 如果只有 main 线程和少量框架线程，视为空闲
 //        // 这个阈值需要根据项目实际线程情况调整
 //        return busyThreads > 5;
@@ -177,7 +186,7 @@ public class MemoryMonitorTask {
 
 
     /**
-     * 列出当前操作系统上正在运行的 Java 进程详情。
+     * 列出当前操作系统上正在运行的 Java 进程详情
      */
     private List<String> listRunningJavaProcesses() {
         OperatingSystem os = systemInfo.getOperatingSystem();
