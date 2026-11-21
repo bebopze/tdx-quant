@@ -14,6 +14,7 @@ import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
@@ -44,6 +45,11 @@ public class DataServiceImpl implements DataService {
 
     @Autowired
     private IConfAccountService confAccountService;
+
+
+    @Lazy
+    @Autowired
+    private EastMoneyLogin eastMoneyLogin;
 
 
     @Override
@@ -97,7 +103,7 @@ public class DataServiceImpl implements DataService {
     }
 
 
-    @PostConstruct
+    // @PostConstruct
     public void init__eastmoneySession() {
         String activeProfile = PropsUtil.getProperty("spring.profiles.active");
 
@@ -106,10 +112,14 @@ public class DataServiceImpl implements DataService {
             log.info("application-{}.yml     >>>     session 有效", activeProfile);
 
         } catch (Exception e) {
-            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
+            // log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
+            //
+            // ConfAccountDO entity = confAccountService.getById(1L);
+            // eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
 
-            ConfAccountDO entity = confAccountService.getById(1L);
-            eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
+
+            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试重新登录", activeProfile, e.getMessage());
+            eastMoneyLogin.login();
         }
     }
 
