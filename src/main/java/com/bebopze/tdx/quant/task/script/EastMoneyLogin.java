@@ -87,7 +87,7 @@ public class EastMoneyLogin {
 
 
     @TotalTime
-    @PostConstruct
+    // @PostConstruct
     public void login() {
 
 

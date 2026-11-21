@@ -103,23 +103,33 @@ public class DataServiceImpl implements DataService {
     }
 
 
-    // @PostConstruct
-    public void init__eastmoneySession() {
+    @PostConstruct
+    public void checkAndInit__eastmoneySession() {
         String activeProfile = PropsUtil.getProperty("spring.profiles.active");
+
 
         try {
             QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
-            log.info("application-{}.yml     >>>     session 有效", activeProfile);
+            log.info("✅ application-{}.yml     >>>     session 有效", activeProfile);
+
 
         } catch (Exception e) {
-            // log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
-            //
-            // ConfAccountDO entity = confAccountService.getById(1L);
-            // eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
+            log.warn("❌ application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
 
 
-            log.warn("application-{}.yml     >>>     session 无效 - [{}]   ->   尝试重新登录", activeProfile, e.getMessage());
-            eastMoneyLogin.login();
+            ConfAccountDO entity = confAccountService.getById(1L);
+            eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
+
+
+            try {
+                QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
+                log.info("✅ DB（conf_account）     >>>     session 有效");
+
+            } catch (Exception ex2) {
+
+                log.warn("❌ DB（conf_account）     >>>     session 无效 - [{}]   ->   尝试重新登录", ex2.getMessage());
+                eastMoneyLogin.login();
+            }
         }
     }
 
