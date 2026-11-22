@@ -1283,6 +1283,18 @@
             color: var(--link-hover)
         }
 
+        /* 期权合约编码 -> 历史 K 线（点击合约编码字段） */
+        .code-kline-link {
+            color: var(--link);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            white-space: nowrap
+        }
+
+        .code-kline-link:hover {
+            color: var(--link-hover)
+        }
+
         .checkbox-cell {
             width: 30px;
             text-align: center
@@ -3554,6 +3566,26 @@
         };
     }
 
+    // 期权历史 K 线：K 线页读取 ?code=（期权合约编码 Hybm，8 位）
+    function klineUrl(code) {
+        return '../kline/kline.html?code=' + encodeURIComponent(String(code || '').trim());
+    }
+
+    // 合约编码本身作为跳转入口；不再生成独立的“K线”按钮/文本
+    function klineCode(code, label) {
+        const id = String(code || '').trim();
+        const text = String(label || id || '—');
+        if (!id) return text;
+        return el('a', {
+            class: 'code-kline-link',
+            href: klineUrl(id),
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            title: '查看该期权历史 K 线',
+            onclick: (ev) => ev.stopPropagation(),
+        }, text);
+    }
+
     function quoteModel(raw) {
         if (!raw) return null;
         const fq = pick(raw, 'fivequote', {}) || {};
@@ -4063,11 +4095,12 @@
             el('td', {class: 'cell-strong', text: c.etfName || state.etfNames.get(c.etfCode) || '—'}),
             el('td', {class: 'mono', text: c.etfCode || '—'}),
             el('td', {text: c.name || '—'}),
-            el('td', {class: 'mono cell-strong', text: c.id || '—'}),
+            el('td', {class: 'mono cell-strong'}, klineCode(c.id, c.id || '—')),
             el('td', {class: 'mono', text: c.code || '—'}),
             el('td', {class: 'center', text: c.cp === 'C' ? '认购' : (c.cp === 'P' ? '认沽' : '—')}),
             el('td', {class: 'num', text: fmt.price(c.strike)}),
-            el('td', {class: 'center'}, el('span', {class: 'link-cell', text: '载入行情'}))));
+            el('td', {class: 'center'},
+                el('span', {class: 'link-cell', text: '载入行情'}))));
 
         replaceNode(wrap, el('table', {class: 'data'}, head, el('tbody', {}, rows)));
         state.contracts.forEach((c) => {
@@ -4649,9 +4682,8 @@
                         : null),
                 el('td', {
                     class: 'mono cell-strong',
-                    text: p.hybm || '—',
-                    title: `交易所 ${p.jybk || '—'} ${p.jybkmc || ''}`
-                }),
+                    title: `交易所 ${p.jybk || '—'} ${p.jybkmc || ''} · 点击合约编码查看K线`
+                }, klineCode(p.hybm, p.hybm || '—')),
                 el('td', {class: 'mono', text: p.hydm || '—'}),
                 el('td', {class: 'cell-wrap'},
                     el('span', {
@@ -4934,7 +4966,7 @@
                 el('td', {class: 'cell-wrap'},
                     el('div', {class: 'cell-strong', text: o.etfCode || '—'}),
                     o.etfName ? el('div', {class: 'cell-sub', text: o.etfName}) : null),
-                el('td', {class: 'mono', text: o.hybm || '—'}),
+                el('td', {class: 'mono'}, klineCode(o.hybm, o.hybm || '—')),
                 el('td', {class: 'cell-wrap'},
                     el('div', {text: o.hyjc || '—'}),
                     el('div', {class: 'cell-sub', text: o.hydm || ''})),
