@@ -122,7 +122,7 @@ public class QqcodeParser {
 
 
                     // 合约年月（2612  ->  202612）
-                    int optionYm = Integer.parseInt("20" + strArr[5]);
+                    int contractMonth = Integer.parseInt("20" + strArr[5]);
                     // 标的证券实时价格（1.3440）
                     BigDecimal underlyingPrice = NumUtil.ofDecimal(strArr[6]);
                     // 合约乘数（10000）
@@ -164,7 +164,7 @@ public class QqcodeParser {
                     String x_21 = strArr[21];
 
 
-                    QqcodeDTO dto = new QqcodeDTO(code, symbol, name, callPutType, underlyingType, underlyingCode, underlyingName, optionYm, underlyingPrice, multiplier, strikePrice, startDate, endDate);
+                    QqcodeDTO dto = new QqcodeDTO(code, symbol, name, callPutType, underlyingType, underlyingCode, underlyingName, contractMonth, underlyingPrice, multiplier, strikePrice, startDate, endDate);
                     dtoList.add(dto);
 
 
@@ -210,8 +210,8 @@ public class QqcodeParser {
         private String underlyingName;
 
 
-        // 合约年月（2612）
-        private int optionYm;
+        // 合约年月（202612）
+        private int contractMonth;
         // 标的证券实时价格（1.3440）
         private BigDecimal underlyingPrice;
         // 合约乘数（10000）

@@ -181,7 +181,19 @@ public enum StockTypeEnum {
 
 
     /**
-     * 港美股/期权
+     * 期权
+     *
+     * @param stockCode
+     * @return
+     */
+    public static boolean isOption(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        return OPTION.equals(stockTypeEnum);
+    }
+
+
+    /**
+     * 港美股/期权（ tdx市场类型#股票代码   ->   31#00700 / 74#SPY / 8#10011565 ）
      *
      * @param stockCode
      * @return

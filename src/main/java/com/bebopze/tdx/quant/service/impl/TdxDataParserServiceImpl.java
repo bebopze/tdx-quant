@@ -1177,6 +1177,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             entity.setUnderlyingType(e.getUnderlyingType());
             entity.setUnderlyingCode(e.getUnderlyingCode());
             entity.setUnderlyingName(e.getUnderlyingName());
+            entity.setContractMonth(e.getContractMonth());
             entity.setStartDate(e.getStartDate());
             entity.setEndDate(e.getEndDate());
             entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));

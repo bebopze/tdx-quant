@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
@@ -19,6 +20,8 @@ import java.util.Optional;
 
 
 /**
+ * 股票 info
+ *
  * @author: bebopze
  * @date: 2025/5/18
  */
@@ -31,6 +34,9 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private IBaseBlockService baseBlockService;
+
+    @Autowired
+    private IBaseOptionService baseOptionService;
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
@@ -53,7 +59,13 @@ public class StockServiceImpl implements StockService {
         BaseStockDO entity = null;
 
 
-        if (StockTypeEnum.isBlock(stockCode)) {
+        if (StockTypeEnum.isStock(stockCode)) {
+
+            entity = baseStockService.getByCodeAndUpdateType(stockCode, updateType);
+
+
+        } else if (StockTypeEnum.isBlock(stockCode)) {
+
 
             BaseBlockDO blockDO = baseBlockService.getByCodeAndUpdateType(stockCode, updateType);
             if (blockDO != null) {
@@ -62,9 +74,14 @@ public class StockServiceImpl implements StockService {
             }
 
 
-        } else {
-            // entity = baseStockService.getByCode(stockCode);
-            entity = baseStockService.getByCodeAndUpdateType(stockCode, updateType);
+        } else if (StockTypeEnum.isOption(stockCode)) {
+
+
+            BaseOptionDO optionDO = baseOptionService.getByCode(stockCode);
+            if (optionDO != null) {
+                entity = new BaseStockDO();
+                BeanUtils.copyProperties(optionDO, entity);
+            }
         }
 
 
@@ -144,6 +161,5 @@ public class StockServiceImpl implements StockService {
 
         return dto;
     }
-
 
 }

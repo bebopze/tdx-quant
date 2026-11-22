@@ -112,6 +112,13 @@ public class BaseOptionDO implements Serializable {
     private String underlyingName;
 
     /**
+     * 合约月份（yyyyMM）
+     */
+    @TableField("contract_month")
+    @Schema(description = "合约月份（yyyyMM）")
+    private Integer contractMonth;
+
+    /**
      * 合约开始日期
      */
     @TableField("start_date")
@@ -419,6 +426,5 @@ public class BaseOptionDO implements Serializable {
     public boolean hasExtData() {
         return extDataHis != null || extDataDTOList != null;
     }
-
 
 }
