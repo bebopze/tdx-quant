@@ -62,6 +62,19 @@ public class NumUtil {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    public static BigDecimal ofDecimal(String strVal) {
+        return isNumber(strVal) ? num2Decimal(of(Double.valueOf(strVal))) : null;
+    }
+
+
+    public static double ofDouble(String strVal) {
+        return isNumber(strVal) ? of(Double.valueOf(strVal)) : Double.NaN;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static double of(Number val) {
         return of(val, 5);
     }
@@ -118,7 +131,7 @@ public class NumUtil {
 
     public static boolean isNumber(String str) {
         try {
-            Integer.valueOf(str);
+            Double.valueOf(str);
         } catch (Exception e) {
             return false;
         }

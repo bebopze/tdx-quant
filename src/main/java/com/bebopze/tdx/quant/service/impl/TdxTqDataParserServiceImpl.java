@@ -33,6 +33,10 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     private IBaseBlockService baseBlockService;
 
     @Autowired
+    private IBaseOptionService baseOptionService;
+
+
+    @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
@@ -96,6 +100,11 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
 
     @Override
     public void importUsStock() {
+
+    }
+
+    @Override
+    public void importOption() {
 
     }
 

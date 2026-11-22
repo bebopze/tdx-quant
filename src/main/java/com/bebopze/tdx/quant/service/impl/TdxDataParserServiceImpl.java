@@ -44,6 +44,10 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     private IBaseBlockService baseBlockService;
 
     @Autowired
+    private IBaseOptionService baseOptionService;
+
+
+    @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
 
     @Autowired
@@ -135,6 +139,12 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
         importHkStock();
         importUsStock();
+
+
+        // ------------------------------------------------------------------------ 导入期权
+
+
+        importOption();
 
 
         // ------------------------------------------------------------------------ 补充info（股本/流通市值/总市值）
@@ -1132,6 +1142,69 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Override
     public void importUsStock() {
         import__hkOrUs_Stock(BlockPoolEnum.MG, StockTypeEnum.US_STOCK);
+    }
+
+
+    @TotalTime
+    @Override
+    public void importOption() {
+
+
+        // ----------------------------------------- 期权列表   解析（.txt）
+        List<QqcodeParser.QqcodeDTO> dtoList = QqcodeParser.parse();
+
+
+        // ----------------------------------------- 期权列表   save2DB
+
+
+        Map<String, Long> old__codeIdMap = baseOptionService.codeIdMap();
+
+
+        List<BaseOptionDO> entityList = Lists.newArrayList();
+        dtoList.forEach(e -> {
+            String code = e.getCode();
+
+
+            // 期权
+            BaseOptionDO entity = new BaseOptionDO();
+
+            entity.setCode(code);
+            entity.setSymbol(e.getSymbol());
+            entity.setName(e.getName());
+            entity.setCallPutType(e.getCallPutType());
+            entity.setStrikePrice(e.getStrikePrice());
+            entity.setMultiplier(e.getMultiplier());
+            entity.setUnderlyingType(e.getUnderlyingType());
+            entity.setUnderlyingCode(e.getUnderlyingCode());
+            entity.setUnderlyingName(e.getUnderlyingName());
+            entity.setStartDate(e.getStartDate());
+            entity.setEndDate(e.getEndDate());
+            entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));
+
+
+            entity.setId(old__codeIdMap.get(code));
+            entityList.add(entity);
+        });
+
+
+        // insert new
+        baseOptionService.batchInsertOrUpdate(entityList);
+
+
+        // --------------------------------------------------------
+
+
+        // 期权   ->   不能 DEL old（过期期权   ->   通达信 不提供）
+
+
+//        // DEL old（NOT IN -> new）
+//        Set<String> new__codeSet = entityList.stream().map(BaseOptionDO::getCode).collect(Collectors.toSet());
+//        old__codeIdMap.forEach((code, id) -> {
+//            if (!new__codeSet.contains(code)) {
+//                baseOptionService.removeById(id);
+//                log.warn("DEL old     >>>     code : {}", code);
+//            }
+//        });
     }
 
 

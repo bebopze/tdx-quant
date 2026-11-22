@@ -3,7 +3,9 @@ package com.bebopze.tdx.quant.dal.service;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import com.baomidou.mybatisplus.spring.service.IService;
 
+import java.util.List;
 import java.util.Map;
+
 
 /**
  * <p>
@@ -24,5 +26,25 @@ public interface IBaseOptionService extends IService<BaseOptionDO> {
     Map<String, Long> codeIdMap();
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    boolean updateById(BaseOptionDO entity);
+
+    int batchInsert(List<BaseOptionDO> list);
+
+    int batchInsertOrUpdate(List<BaseOptionDO> list);
+
+    int saveOrUpdateBatch(List<BaseOptionDO> list);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * HIS 更新前     =>     先 del ALL   ->   kline_ext_data
+     *
+     * @return
+     */
     int delAllKlineExtData();
 }

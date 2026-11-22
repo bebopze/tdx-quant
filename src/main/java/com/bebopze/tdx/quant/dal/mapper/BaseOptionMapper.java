@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+
 /**
  * <p>
  * 期权-实时行情 Mapper 接口
@@ -24,5 +25,12 @@ public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
     List<BaseOptionDO> listAllSimple();
 
 
+    int batchInsert(@Param("list") List<BaseOptionDO> list);
+
+    int batchInsertOrUpdate(@Param("list") List<BaseOptionDO> list);
+
+
     int delAllKlineExtData();
+
+
 }

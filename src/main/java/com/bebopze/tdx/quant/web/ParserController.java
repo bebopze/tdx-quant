@@ -120,6 +120,14 @@ public class ParserController {
     }
 
 
+    @Operation(summary = "导入 - 期权", description = "导入 - 期权")
+    @GetMapping(value = "/import/option")
+    public Result<Object> importOption() {
+        tdxDataParserService.importOption();
+        return Result.SUC();
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 
@@ -269,5 +277,6 @@ public class ParserController {
         tdxDataParserService.calcAndFillBlockKlineAll();
         return Result.SUC();
     }
+
 
 }
