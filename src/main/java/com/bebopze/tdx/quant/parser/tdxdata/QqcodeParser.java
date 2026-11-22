@@ -44,12 +44,8 @@ public class QqcodeParser {
 
 
     public static void main(String[] args) {
-        List<QqcodeDTO> sh__dtoList = parse(SHO_filePath);
-        List<QqcodeDTO> sz__dtoList = parse(SZO_filePath);
-        sh__dtoList.addAll(sz__dtoList);
-
-
-        System.out.println("size : " + sh__dtoList.size());
+        List<QqcodeDTO> dtoList = parse();
+        System.out.println("size : " + dtoList.size());
     }
 
 

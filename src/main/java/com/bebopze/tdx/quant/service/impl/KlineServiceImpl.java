@@ -657,7 +657,7 @@ public class KlineServiceImpl implements KlineService {
                 fillOptionKline(optionCode, optionId);
 
 
-                // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
+                // ------------------------------------------- 计时（频率）   12ms/次   x 1386     ->     总耗时：17.1s
 
 
                 long time = System.currentTimeMillis() - start[0];
@@ -668,7 +668,7 @@ public class KlineServiceImpl implements KlineService {
                 String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
-                // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
+                // optionCode : 90007890, optionId : 894 , count : 1386 , suc : 1386 , err : 0 , r1 : 12ms/次 , r2 : 80次/s , r3 : 1386次 - 17.1s
                 log.info("fillOptionKlineAll - suc     >>>     optionCode : {}, optionId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                          optionCode, optionId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 

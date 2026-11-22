@@ -318,8 +318,8 @@ public class KlineTxtExportParser {
 
 
     private static BigDecimal of(Number val) {
-        // 个股价格 - 2位小数          ETF价格 - 3位小数
-        return new BigDecimal(String.valueOf(val)).setScale(3, RoundingMode.HALF_UP);
+        // 个股价格 - 2位小数          ETF价格 - 3位小数          期权价格 - 4位小数
+        return new BigDecimal(String.valueOf(val)).setScale(4, RoundingMode.HALF_UP);
     }
 
 
