@@ -52,6 +52,9 @@ public enum StockTypeEnum {
     ;
 
 
+    /**
+     * 自定义 股票类型（区分 A股/ETF/板块/港股/美股/期权）    ->     对应 base_stock 表 type 字段（ base_block、base_option 表 未记录此字段  ->  因为 已拆分 独立建表）
+     */
     public final Integer type;
 
     public final String desc;

@@ -85,7 +85,11 @@ public class StockServiceImpl implements StockService {
 
         BaseStockDTO dto = new BaseStockDTO();
         if (entity != null) {
+            // copy
             BeanUtils.copyProperties(entity, dto);
+
+            // 股票类型
+            dto.setStockType(StockTypeEnum.getTypeByStockCode(stockCode));
         }
 
 
@@ -159,5 +163,6 @@ public class StockServiceImpl implements StockService {
 
         return dto;
     }
+
 
 }
