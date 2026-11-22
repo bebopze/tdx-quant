@@ -713,6 +713,8 @@
             height: 400px;
             min-height: 280px;
             position: relative;
+            display: flex;
+            flex-direction: column;
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: var(--radius);
@@ -724,8 +726,9 @@
         }
 
         .main-chart {
+            flex: 1 1 auto;
             width: 100%;
-            height: 100%;
+            height: auto;
             min-height: 260px;
         }
 
@@ -769,6 +772,44 @@
             height: 4px;
             border-radius: 50%;
             background: var(--accent);
+        }
+
+        /* 主图底部唯一的日期上下文条（副图不重复） */
+        .chart-date-bar {
+            flex: 0 0 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            border-top: 1px solid var(--border-soft);
+            background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+            color: var(--muted);
+            font-size: 9px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .chart-date-bar .cd-date {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .chart-date-bar .cd-sep {
+            color: var(--faint);
+        }
+
+        .chart-date-bar b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .chart-date-bar b.up {
+            color: var(--up);
+        }
+
+        .chart-date-bar b.down {
+            color: var(--down);
         }
 
         /* 主图 ext_data 指标值（中期涨幅 / 调整幅度 / 天数...） */
@@ -1951,6 +1992,7 @@
                     <span id="emptyMsg">请检查代码或稍后重试</span>
                     <button type="button" id="emptyRetry">重新加载</button>
                 </div>
+                <div class="chart-date-bar" id="chartDateBar"></div>
             </section>
 
             <!-- subcharts toolbar -->
@@ -2038,7 +2080,6 @@
         <span id="statusRange">近3年</span>
         <span id="statusCounts">—</span>
         <span id="statusLastDate">—</span>
-        <span class="status-context" id="statusContext"></span>
         <span class="status-right">UTC+8 · 自动刷新：关闭</span>
     </footer>
 </div>
@@ -2608,7 +2649,7 @@
 
         // 底部：日期/星期、距今交易日、至今涨幅
         function updateStatusContext(dateStr) {
-            const host = $('statusContext');
+            const host = $('chartDateBar');
             if (!host) return;
             const latest = latestDaily();
             if (!latest || !state.viewBars.length) {
@@ -2635,9 +2676,9 @@
             const cls = gain === null || gain === 0 ? '' : gain > 0 ? 'up' : 'down';
 
             host.innerHTML =
-                `<span>日期</span> <b>${esc(selected)}</b> <span>${esc(weekdayCN(selected))}</span>` +
-                `<em>·</em><span>距今</span> <b>${days}</b> <span>个交易日</span>` +
-                `<em>·</em><span>至今</span> <b class="${cls}">${fmtPct(gain)}</b>`;
+                `<span class="cd-date">${esc(selected)} ${esc(weekdayCN(selected))}</span>` +
+                `<span class="cd-sep">·</span><span>距今</span> <b>${days}</b> <span>个交易日</span>` +
+                `<span class="cd-sep">·</span><span>至今涨幅</span> <b class="${cls}">${fmtPct(gain)}</b>`;
         }
 
         function selectBar(index) {
@@ -3133,6 +3174,7 @@
             const base = {
                 animation: false,
                 backgroundColor: 'transparent',
+                axisPointer: {label: {show: false}},
                 grid: {left: 48, right: 66, top: 8, bottom: 8},
                 xAxis: {
                     type: 'category', data: dates, boundaryGap: true,
@@ -3151,6 +3193,7 @@
                 trigger: 'axis',
                 axisPointer: {
                     type: 'cross',
+                    label: {show: false},
                     crossStyle: {color: p.accent, width: 1},
                     lineStyle: {color: p.accent, opacity: .35}
                 },
@@ -3376,6 +3419,7 @@
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
+                        label: {show: false},
                         crossStyle: {color: p.accent, width: 1},
                         lineStyle: {color: p.accent, opacity: .35}
                     },
@@ -3393,7 +3437,7 @@
                         量 ${fmtVol(b.vol)} &nbsp; 额 ${fmtAmo(b.amo)}</div>`;
                     }
                 },
-                axisPointer: {link: [{xAxisIndex: 'all'}]},
+                axisPointer: {link: [{xAxisIndex: 'all'}], label: {show: false}},
                 xAxis: {
                     type: 'category', data: dates, boundaryGap: true,
                     axisLine: {lineStyle: {color: p.grid}}, axisTick: {show: false},
