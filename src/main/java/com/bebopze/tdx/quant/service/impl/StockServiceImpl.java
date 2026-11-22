@@ -56,7 +56,7 @@ public class StockServiceImpl implements StockService {
         // ---------------------------------
 
 
-        BaseStockDO entity = null;
+        BaseStockDO entity = new BaseStockDO();
 
 
         if (StockTypeEnum.isStock(stockCode)) {
@@ -69,7 +69,6 @@ public class StockServiceImpl implements StockService {
 
             BaseBlockDO blockDO = baseBlockService.getByCodeAndUpdateType(stockCode, updateType);
             if (blockDO != null) {
-                entity = new BaseStockDO();
                 BeanUtils.copyProperties(blockDO, entity);
             }
 
@@ -79,7 +78,6 @@ public class StockServiceImpl implements StockService {
 
             BaseOptionDO optionDO = baseOptionService.getByCode(stockCode);
             if (optionDO != null) {
-                entity = new BaseStockDO();
                 BeanUtils.copyProperties(optionDO, entity);
             }
         }
