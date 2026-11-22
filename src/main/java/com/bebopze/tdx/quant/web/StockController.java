@@ -1,6 +1,5 @@
 package com.bebopze.tdx.quant.web;
 
-import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
@@ -16,14 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 /**
- * 个股行情
+ * 股票行情
  *
  * @author: bebopze
  * @date: 2025/5/18
  */
 @RestController
 @RequestMapping("/api/stock")
-@Tag(name = "个股行情", description = "个股行情")
+@Tag(name = "股票行情", description = "股票行情")
 public class StockController {
 
 
@@ -32,11 +31,11 @@ public class StockController {
 
 
     /**
-     * 个股行情
+     * 股票行情（kline + ext_data）
      *
      * @return
      */
-    @Operation(summary = "个股行情", description = "个股行情")
+    @Operation(summary = "股票行情（kline + ext_data） ->  支持 股票/板块/期权", description = "股票行情（kline + ext_data） ->  支持 股票/板块/期权")
     @GetMapping(value = "/info")
     public Result<BaseStockDTO> info(@Schema(description = "证券代码", example = "300059")
                                      @RequestParam String stockCode,
@@ -49,7 +48,7 @@ public class StockController {
 
 
     /**
-     * 个股行情
+     * 个股-板块
      *
      * @return
      */
@@ -57,7 +56,9 @@ public class StockController {
     @GetMapping(value = "/blockInfo")
     public Result<StockBlockInfoDTO> blockInfo(@Schema(description = "证券代码", example = "300059")
                                                @RequestParam String stockCode) {
+
         return Result.SUC(stockService.blockInfo(stockCode));
     }
+
 
 }
