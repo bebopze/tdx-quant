@@ -1,0 +1,3738 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>股票K线行情 · TDX Quant</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('stockKline.theme.v2');
+                if (['light', 'dark', 'midnight', 'eye'].indexOf(t) >= 0) {
+                    document.documentElement.dataset.theme = t;
+                }
+            } catch (e) { /* ignore */
+            }
+        })();
+    </script>
+    <style>
+        /* =========================================================================
+   TDX Quant · K线行情
+   方案 A：专业终端布局，默认明亮主题，支持多主题
+   ========================================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        html {
+            color-scheme: light;
+        }
+
+        html[data-theme="dark"], html[data-theme="midnight"] {
+            color-scheme: dark;
+        }
+
+        /* ------------------------------ themes ------------------------------ */
+        html, html[data-theme="light"] {
+            --bg: #eef2f7;
+            --topbar: #ffffff;
+            --panel: #ffffff;
+            --panel-2: #f6f8fc;
+            --panel-3: #edf3fa;
+            --border: #dce5ef;
+            --border-soft: #e9eff6;
+            --text: #15263a;
+            --strong: #07182b;
+            --muted: #64748b;
+            --faint: #94a3b8;
+            --accent: #2563eb;
+            --accent-soft: rgba(37, 99, 235, .09);
+            --accent-line: rgba(37, 99, 235, .24);
+            --up: #dc3545;
+            --down: #0f9f6e;
+            --grid: #e7edf5;
+            --axis: #8497ab;
+            /* 通达信均线色系；明亮主题对白/黄/青做同色系加深，保证可读性 */
+            --ma5: #475569; /* MA5   COLORWHITE  NODRAW */
+            --ma10: #b77900; /* MA10  COLORYELLOW */
+            --ma20: #c026d3; /* MA20  COLORMAGENTA DOTLINE */
+            --ma30: #dc2626; /* MA30  COLORLIRED  NODRAW */
+            --ma50: #15803d; /* MA50  COLORGREEN */
+            --ma60: #65a30d; /* MA60  COLORLIGREEN NODRAW */
+            --ma100: #6b7280; /* MA100 COLORGRAY */
+            --ma120: #94a3b8; /* MA120 COLORLIGRAY NODRAW */
+            --ma200: #1d4ed8; /* MA200 COLORBLUE */
+            --ma250: #0e7490; /* MA250 COLORCYAN */
+            --shadow: 0 1px 2px rgba(15, 35, 60, .04), 0 8px 24px rgba(15, 35, 60, .035);
+            --radius: 7px;
+            --topbar-h: 56px;
+            --scroll: #cbd7e5;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #080d13;
+            --topbar: #0a1119;
+            --panel: #0e1722;
+            --panel-2: #111d2a;
+            --panel-3: #142333;
+            --border: #1c2b3b;
+            --border-soft: #172433;
+            --text: #d9e6f5;
+            --strong: #f1f7ff;
+            --muted: #7b8ea4;
+            --faint: #53677d;
+            --accent: #4f9cff;
+            --accent-soft: rgba(79, 156, 255, .14);
+            --accent-line: rgba(79, 156, 255, .3);
+            --up: #ef5364;
+            --down: #1cc08a;
+            --grid: #1a2837;
+            --axis: #52677d;
+            --ma5: #ffffff; /* MA5   COLORWHITE  NODRAW */
+            --ma10: #ffff00; /* MA10  COLORYELLOW */
+            --ma20: #ff00ff; /* MA20  COLORMAGENTA DOTLINE */
+            --ma30: #ff8080; /* MA30  COLORLIRED  NODRAW */
+            --ma50: #00ff00; /* MA50  COLORGREEN */
+            --ma60: #80ff80; /* MA60  COLORLIGREEN NODRAW */
+            --ma100: #808080; /* MA100 COLORGRAY */
+            --ma120: #c0c0c0; /* MA120 COLORLIGRAY NODRAW */
+            --ma200: #0000ff; /* MA200 COLORBLUE */
+            --ma250: #00ffff; /* MA250 COLORCYAN */
+            --shadow: none;
+            --radius: 5px;
+            --topbar-h: 56px;
+            --scroll: #2a3a4c;
+        }
+
+        html[data-theme="midnight"] {
+            --bg: #050f1a;
+            --topbar: #071522;
+            --panel: #091a2a;
+            --panel-2: #0c2134;
+            --panel-3: #0d2942;
+            --border: #12344d;
+            --border-soft: #0d293e;
+            --text: #d7effd;
+            --strong: #f0fbff;
+            --muted: #6e93ac;
+            --faint: #466b84;
+            --accent: #27d7f2;
+            --accent-soft: rgba(39, 215, 242, .11);
+            --accent-line: rgba(39, 215, 242, .3);
+            --up: #ff5d70;
+            --down: #2ce0b2;
+            --grid: #0e2a40;
+            --axis: #4c7993;
+            --ma5: #ffffff;
+            --ma10: #ffff00;
+            --ma20: #ff00ff;
+            --ma30: #ff8080;
+            --ma50: #00ff00;
+            --ma60: #80ff80;
+            --ma100: #808080;
+            --ma120: #c0c0c0;
+            --ma200: #0000ff;
+            --ma250: #00ffff;
+            --shadow: 0 0 0 1px rgba(39, 215, 242, .03), 0 18px 40px rgba(0, 0, 0, .18);
+            --radius: 9px;
+            --topbar-h: 58px;
+            --scroll: #1a4059;
+        }
+
+        html[data-theme="eye"] {
+            --bg: #f1f0e8;
+            --topbar: #fbfaf4;
+            --panel: #fbfaf4;
+            --panel-2: #f5f3e9;
+            --panel-3: #eceadc;
+            --border: #ddd9c9;
+            --border-soft: #eae6d7;
+            --text: #2c382e;
+            --strong: #15231a;
+            --muted: #72796c;
+            --faint: #9ba18f;
+            --accent: #507a4b;
+            --accent-soft: rgba(80, 122, 75, .1);
+            --accent-line: rgba(80, 122, 75, .28);
+            --up: #b14545;
+            --down: #3c7a58;
+            --grid: #e8e4d5;
+            --axis: #919783;
+            --ma5: #475569;
+            --ma10: #9a6700;
+            --ma20: #a21caf;
+            --ma30: #b14545;
+            --ma50: #3c7a58;
+            --ma60: #4f8268;
+            --ma100: #6b7280;
+            --ma120: #9ba18f;
+            --ma200: #1d4ed8;
+            --ma250: #0e7490;
+            --shadow: none;
+            --radius: 6px;
+            --topbar-h: 56px;
+            --scroll: #cec9b8;
+        }
+
+        body {
+            font-family: "Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        button, input, select {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .num {
+            font-family: "SF Mono", "Roboto Mono", "Menlo", monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .up {
+            color: var(--up) !important;
+        }
+
+        .down {
+            color: var(--down) !important;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .faint {
+            color: var(--faint);
+        }
+
+        .app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+
+        /* ------------------------------ topbar ------------------------------ */
+        .topbar {
+            height: var(--topbar-h);
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 18px;
+            background: var(--topbar);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 176px;
+            flex: 0 0 auto;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #00121f));
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, .12) inset;
+        }
+
+        html[data-theme="eye"] .brand-mark {
+            background: #507a4b;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .brand-text b {
+            color: var(--strong);
+            font-size: 12px;
+            letter-spacing: .14em;
+        }
+
+        .brand-text em {
+            color: var(--muted);
+            font-style: normal;
+            font-size: 9px;
+            margin-top: 3px;
+            letter-spacing: .08em;
+        }
+
+        .search-box {
+            flex: 0 1 330px;
+            display: flex;
+            align-items: center;
+            height: 31px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--panel-2);
+            overflow: hidden;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+
+        .search-icon {
+            color: var(--accent);
+            font-size: 16px;
+            padding: 0 8px 0 10px;
+            line-height: 1;
+        }
+
+        .search-box input {
+            min-width: 0;
+            flex: 1;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 11.5px;
+            height: 100%;
+            padding: 0;
+        }
+
+        .search-box input::placeholder {
+            color: var(--faint);
+        }
+
+        .search-box button {
+            height: 100%;
+            border: 0;
+            border-left: 1px solid var(--border);
+            background: transparent;
+            color: var(--accent);
+            font-size: 10px;
+            padding: 0 10px;
+        }
+
+        .search-box button:hover {
+            background: var(--accent-soft);
+        }
+
+        .periods {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px;
+            border-radius: 6px;
+            border: 1px solid var(--border-soft);
+            background: var(--panel-2);
+        }
+
+        .periods button {
+            height: 25px;
+            min-width: 29px;
+            padding: 0 8px;
+            border: 0;
+            border-radius: 4px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 11px;
+        }
+
+        .periods button:hover {
+            color: var(--text);
+        }
+
+        .periods button.active {
+            color: var(--accent);
+            background: var(--panel);
+            box-shadow: 0 0 0 1px var(--border) inset;
+            font-weight: 700;
+        }
+
+        .periods button.disabled {
+            opacity: .48;
+        }
+
+        .periods button.disabled i {
+            font-style: normal;
+            font-size: 8px;
+            margin-left: 3px;
+            color: var(--faint);
+        }
+
+        .top-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex: 0 0 auto;
+        }
+
+        .ghost-btn {
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 10.5px;
+        }
+
+        .ghost-btn:hover {
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .theme-wrap {
+            position: relative;
+        }
+
+        .theme-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .theme-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 1px solid var(--border);
+        }
+
+        .market-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9.5px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .market-status i {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--faint);
+        }
+
+        .market-status.open i {
+            background: var(--down);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 12%, transparent);
+        }
+
+        /* ------------------------------ workspace ------------------------------ */
+        .workspace {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 12px;
+            padding: 12px 14px 10px;
+        }
+
+        .chart-column {
+            min-width: 0;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll) transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 1px;
+        }
+
+        .chart-column::-webkit-scrollbar, .right-rail::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chart-column::-webkit-scrollbar-thumb, .right-rail::-webkit-scrollbar-thumb {
+            background: var(--scroll);
+            border-radius: 6px;
+        }
+
+        /* ------------------------------ stock header ------------------------------ */
+        .stock-header {
+            flex: 0 0 auto;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) auto auto auto;
+            align-items: center;
+            gap: 18px;
+            padding: 1px 2px 5px;
+        }
+
+        .stock-ident {
+            min-width: 0;
+        }
+
+        .title-line {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .title-line h1 {
+            margin: 0;
+            color: var(--strong);
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            line-height: 1.2;
+        }
+
+        .stock-code {
+            color: var(--muted);
+            font-size: 10.5px;
+        }
+
+        .stock-tags {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-tags span {
+            display: inline-flex;
+            align-items: center;
+            height: 17px;
+            padding: 0 5px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--faint);
+            font-size: 8.5px;
+        }
+
+        .stock-sub {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 9.5px;
+        }
+
+        .stock-sub .dot {
+            color: var(--faint);
+        }
+
+        .sync-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sync-dot i {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--down);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 12%, transparent);
+        }
+
+        .price-block {
+            display: flex;
+            align-items: baseline;
+            gap: 9px;
+            white-space: nowrap;
+        }
+
+        .price-block strong {
+            color: var(--strong);
+            font-size: 29px;
+            font-weight: 800;
+            letter-spacing: -.035em;
+        }
+
+        .price-change {
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(46px, auto));
+            gap: 12px;
+        }
+
+        .header-stats div {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .header-stats span {
+            color: var(--faint);
+            font-size: 8.5px;
+        }
+
+        .header-stats b {
+            color: var(--text);
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            width: 27px;
+            height: 27px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+        }
+
+        .icon-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .icon-btn.active {
+            color: #d59b00;
+            border-color: #e4bd57;
+            background: rgba(213, 155, 0, .08);
+        }
+
+        /* ------------------------------ toolbar ------------------------------ */
+        .chart-toolbar {
+            flex: 0 0 auto;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 0 2px;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tool-btn {
+            height: 24px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 10px;
+            padding: 0 7px;
+        }
+
+        .tool-btn:hover {
+            color: var(--text);
+            background: var(--panel-2);
+        }
+
+        .tool-btn.primary {
+            color: var(--accent);
+            background: var(--accent-soft);
+            border-color: var(--accent-line);
+            font-weight: 700;
+        }
+
+        .chip-static {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--faint);
+            font-size: 9px;
+            white-space: nowrap;
+        }
+
+        .toolbar-spacer {
+            flex: 1;
+        }
+
+        .range-label {
+            color: var(--faint);
+            font-size: 9px;
+        }
+
+        .range-select {
+            height: 24px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--panel);
+            color: var(--muted);
+            font-size: 9.5px;
+            padding: 0 5px;
+            outline: 0;
+        }
+
+        .range-select:hover {
+            border-color: var(--accent);
+        }
+
+        /* ------------------------------ main chart ------------------------------ */
+        .main-card {
+            flex: 0 0 400px;
+            height: 400px;
+            min-height: 280px;
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        html[data-theme="light"] .main-card, html[data-theme="eye"] .main-card {
+            box-shadow: var(--shadow);
+        }
+
+        .main-chart {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+        }
+
+        .chart-legend {
+            position: absolute;
+            z-index: 4;
+            top: 8px;
+            left: 12px;
+            right: 110px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            pointer-events: none;
+            font-size: 8.5px;
+            color: var(--muted);
+        }
+
+        .chart-legend span b {
+            font-weight: 600;
+        }
+
+        .chart-badge {
+            position: absolute;
+            z-index: 4;
+            top: 8px;
+            right: 11px;
+            height: 19px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 6px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: color-mix(in srgb, var(--panel) 88%, transparent);
+            color: var(--faint);
+            font-size: 8.5px;
+        }
+
+        .chart-badge i {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        /* 主图 ext_data 指标值（中期涨幅 / 调整幅度 / 天数...） */
+        .main-metrics {
+            position: absolute;
+            z-index: 4;
+            top: 27px;
+            left: 12px;
+            right: 108px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            overflow: hidden;
+            pointer-events: none;
+            white-space: nowrap;
+            font-size: 8.5px;
+            color: var(--muted);
+        }
+
+        .main-metrics .m-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            padding-right: 10px;
+            border-right: 1px solid var(--border-soft);
+        }
+
+        .main-metrics .m-item:last-child {
+            padding-right: 0;
+            border-right: 0;
+        }
+
+        .main-metrics .m-item span {
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .main-metrics .m-item b {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 8.5px;
+        }
+
+        .main-metrics .m-item b.up {
+            color: var(--up);
+        }
+
+        .main-metrics .m-item b.down {
+            color: var(--down);
+        }
+
+        .chart-loading, .chart-empty {
+            position: absolute;
+            z-index: 6;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: color-mix(in srgb, var(--panel) 88%, transparent);
+            color: var(--muted);
+            font-size: 10px;
+            backdrop-filter: blur(1px);
+        }
+
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .chart-empty b {
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .chart-empty button {
+            margin-top: 2px;
+            height: 26px;
+            padding: 0 10px;
+            border: 1px solid var(--accent-line);
+            border-radius: 4px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 10px;
+        }
+
+        /* ------------------------------ subcharts ------------------------------ */
+        .sub-toolbar {
+            flex: 0 0 auto;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 2px;
+        }
+
+        .sub-title {
+            color: var(--text);
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sub-title span {
+            color: var(--faint);
+            font-size: 8.5px;
+            font-weight: 400;
+            margin-left: 5px;
+        }
+
+        .sub-tabs {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .sub-tab {
+            position: relative;
+            height: 23px;
+            padding: 0 8px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 9.5px;
+            white-space: nowrap;
+        }
+
+        .sub-tab:hover {
+            color: var(--text);
+        }
+
+        .sub-tab.active {
+            color: var(--accent);
+            background: var(--accent-soft);
+            border-color: var(--accent-line);
+        }
+
+        .sub-tab.used::after {
+            content: '';
+            position: absolute;
+            right: 3px;
+            top: 3px;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: .65;
+        }
+
+        .sub-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .pane-count {
+            color: var(--faint);
+            font-size: 8.5px;
+        }
+
+        .add-pane {
+            height: 23px;
+            padding: 0 8px;
+            border: 1px dashed var(--accent-line);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--accent);
+            font-size: 9.5px;
+        }
+
+        .add-pane:hover {
+            background: var(--accent-soft);
+        }
+
+        .add-pane:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .subchart-list {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .subcard {
+            flex: 0 0 145px;
+            height: 145px;
+            min-height: 120px;
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        html[data-theme="light"] .subcard, html[data-theme="eye"] .subcard {
+            box-shadow: 0 1px 2px rgba(15, 35, 60, .025);
+        }
+
+        .subcard.active {
+            border-color: var(--accent-line);
+            box-shadow: 0 0 0 1px var(--accent-soft) inset;
+        }
+
+        .subcard > header {
+            height: 26px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 8px;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .subcard-title {
+            color: var(--text);
+            font-size: 9.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .subcard-title em {
+            color: var(--faint);
+            font-style: normal;
+            font-size: 8px;
+            font-weight: 400;
+            margin-left: 3px;
+        }
+
+        .subcard-value {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 8.5px;
+            white-space: nowrap;
+        }
+
+        .sub-close {
+            width: 18px;
+            height: 18px;
+            border: 0;
+            border-radius: 3px;
+            background: transparent;
+            color: var(--faint);
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .sub-close:hover {
+            color: var(--up);
+            background: var(--panel-2);
+        }
+
+        .subchart-canvas {
+            width: 100%;
+            height: calc(100% - 26px);
+            min-height: 60px;
+        }
+
+        .sub-empty {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+            color: var(--faint);
+            font-size: 9.5px;
+        }
+
+        .sub-empty button {
+            border: 0;
+            background: transparent;
+            color: var(--accent);
+            font-size: 9.5px;
+        }
+
+        /* ------------------------------ right rail ------------------------------ */
+        .right-rail {
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 1px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll) transparent;
+        }
+
+        .panel {
+            flex: 0 0 auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        html[data-theme="light"] .panel, html[data-theme="eye"] .panel {
+            box-shadow: var(--shadow);
+        }
+
+        .panel > header {
+            height: 29px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 9px;
+            border-bottom: 1px solid var(--border-soft);
+            color: var(--text);
+            font-size: 9.5px;
+            font-weight: 700;
+        }
+
+        .panel-meta {
+            margin-left: auto;
+            color: var(--faint);
+            font-size: 8px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .quote-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 16px;
+            padding: 4px 9px 5px;
+        }
+
+        .quote-grid div {
+            min-width: 0;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 7px;
+            padding: 3px 0;
+            border-bottom: 1px dotted var(--border-soft);
+        }
+
+        .quote-grid div:nth-last-child(-n+2) {
+            border-bottom: 0;
+        }
+
+        .quote-grid span {
+            color: var(--faint);
+            font-size: 8px;
+            white-space: nowrap;
+        }
+
+        .quote-grid b {
+            color: var(--text);
+            font-size: 8.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .quote-foot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 9px 6px;
+            border-top: 1px solid var(--border-soft);
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .quote-foot b {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 7px 9px 2px;
+        }
+
+        .tech-tag {
+            display: inline-flex;
+            height: 17px;
+            align-items: center;
+            padding: 0 5px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 8px;
+        }
+
+        .tech-tag.tag-down {
+            color: var(--down);
+            border-color: color-mix(in srgb, var(--down) 24%, transparent);
+            background: color-mix(in srgb, var(--down) 7%, transparent);
+        }
+
+        .tech-tag.tag-up {
+            color: var(--up);
+            border-color: color-mix(in srgb, var(--up) 24%, transparent);
+            background: color-mix(in srgb, var(--up) 7%, transparent);
+        }
+
+        .tech-tag.tag-neutral {
+            color: var(--muted);
+        }
+
+        .rps-list {
+            padding: 3px 9px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rps-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 11px;
+        }
+
+        .rps-row > span {
+            width: 38px;
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .rps-row .bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 3px;
+            background: var(--panel-2);
+            overflow: hidden;
+        }
+
+        .rps-row .bar i {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 52%, transparent), var(--accent));
+        }
+
+        .rps-row b {
+            width: 29px;
+            text-align: right;
+            color: var(--text);
+            font-size: 8px;
+            font-weight: 600;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 12px;
+            padding: 2px 9px 7px;
+        }
+
+        .tech-grid div {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: baseline;
+            gap: 4px;
+            padding: 3px 0;
+            border-top: 1px dotted var(--border-soft);
+        }
+
+        .tech-grid span {
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .tech-grid b {
+            color: var(--text);
+            font-size: 8.5px;
+            font-weight: 600;
+        }
+
+        .tech-grid small {
+            grid-column: 2;
+            text-align: right;
+            color: var(--faint);
+            font-size: 7.5px;
+        }
+
+        .indicator-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 7px 9px 4px;
+        }
+
+        .ind-chip {
+            display: inline-flex;
+            height: 20px;
+            align-items: center;
+            gap: 3px;
+            padding: 0 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 8px;
+        }
+
+        .ind-chip:hover {
+            border-color: var(--accent-line);
+            color: var(--accent);
+        }
+
+        .ind-chip.used {
+            color: var(--accent);
+            border-color: var(--accent-line);
+            background: var(--accent-soft);
+        }
+
+        .library-note {
+            padding: 0 9px 7px;
+            color: var(--faint);
+            font-size: 7.5px;
+            line-height: 1.5;
+        }
+
+        .related-list {
+            padding: 4px 9px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .related-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 2px 0;
+        }
+
+        .related-row span {
+            color: var(--muted);
+            font-size: 8.5px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .related-row em {
+            flex: 0 0 auto;
+            font-style: normal;
+            color: var(--faint);
+            font-size: 7.5px;
+            border: 1px solid var(--border-soft);
+            border-radius: 3px;
+            padding: 0 4px;
+        }
+
+        .empty-small {
+            padding: 7px 9px;
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .watch-list {
+            padding: 2px 9px 5px;
+        }
+
+        .watch-row {
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr) 22px;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 0;
+            border-bottom: 1px dotted var(--border-soft);
+        }
+
+        .watch-row:last-child {
+            border-bottom: 0;
+        }
+
+        .watch-code {
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .watch-name {
+            color: var(--text);
+            font-size: 8.5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .watch-name:hover {
+            color: var(--accent);
+        }
+
+        .watch-del {
+            border: 0;
+            background: transparent;
+            color: var(--faint);
+            font-size: 11px;
+        }
+
+        .watch-del:hover {
+            color: var(--up);
+        }
+
+        .watch-add {
+            margin: 0 9px 7px;
+            width: calc(100% - 18px);
+            height: 21px;
+            border: 1px dashed var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .watch-add:hover {
+            border-color: var(--accent-line);
+            color: var(--accent);
+        }
+
+        .data-line {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 7px;
+            padding: 3px 9px;
+            border-bottom: 1px dotted var(--border-soft);
+        }
+
+        .data-line:last-child {
+            border-bottom: 0;
+            padding-bottom: 6px;
+        }
+
+        .data-line span {
+            color: var(--faint);
+            font-size: 8px;
+            white-space: nowrap;
+        }
+
+        .data-line b, .data-line code {
+            color: var(--muted);
+            font-size: 7.5px;
+            font-weight: 400;
+            text-align: right;
+        }
+
+        .data-line code {
+            font-family: "SF Mono", "Roboto Mono", monospace;
+        }
+
+        .data-line b.ok {
+            color: var(--down);
+        }
+
+        /* ------------------------------ popover / modal / toast ------------------------------ */
+        .popover {
+            position: absolute;
+            z-index: 60;
+            min-width: 168px;
+            padding: 5px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .16);
+        }
+
+        #themeMenu {
+            right: 0;
+            top: 34px;
+        }
+
+        .popover-title {
+            padding: 5px 7px 6px;
+            color: var(--faint);
+            font-size: 8px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .theme-option {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 7px;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .theme-option:hover {
+            background: var(--panel-2);
+        }
+
+        .theme-option.active {
+            background: var(--accent-soft);
+        }
+
+        .theme-option .theme-swatch {
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .theme-option .theme-txt {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .theme-option b {
+            font-size: 9.5px;
+            font-weight: 600;
+        }
+
+        .theme-option small {
+            font-size: 7.5px;
+            color: var(--faint);
+        }
+
+        .theme-option .check {
+            margin-left: auto;
+            color: var(--accent);
+            font-size: 10px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(4, 12, 22, .45);
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-card {
+            width: min(560px, 92vw);
+            max-height: min(620px, 86vh);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .25);
+            overflow: hidden;
+        }
+
+        .modal-head {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .modal-head b {
+            color: var(--strong);
+            font-size: 12px;
+        }
+
+        .modal-head small {
+            color: var(--faint);
+            font-size: 8.5px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            width: 26px;
+            height: 26px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .modal-close:hover {
+            color: var(--up);
+            border-color: var(--up);
+        }
+
+        .library-grid {
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .library-card {
+            min-height: 70px;
+            display: grid;
+            grid-template-columns: 28px 1fr auto;
+            align-items: center;
+            gap: 8px;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--panel-2);
+        }
+
+        .library-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .library-card b {
+            display: block;
+            color: var(--text);
+            font-size: 9.5px;
+            font-weight: 700;
+        }
+
+        .library-card small {
+            display: block;
+            margin-top: 2px;
+            color: var(--faint);
+            font-size: 7.5px;
+            line-height: 1.4;
+        }
+
+        .library-card button {
+            height: 22px;
+            padding: 0 7px;
+            border: 1px solid var(--accent-line);
+            border-radius: 4px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 8px;
+        }
+
+        .library-card button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .modal-foot {
+            padding: 9px 15px;
+            border-top: 1px solid var(--border-soft);
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .toast {
+            position: fixed;
+            z-index: 120;
+            left: 50%;
+            top: 68px;
+            transform: translateX(-50%);
+            max-width: min(520px, 88vw);
+            padding: 7px 12px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--panel);
+            color: var(--text);
+            font-size: 9.5px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+        }
+
+        .toast.err {
+            border-color: color-mix(in srgb, var(--up) 40%, var(--border));
+        }
+
+        /* ------------------------------ status bar ------------------------------ */
+        .statusbar {
+            flex: 0 0 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 0 16px;
+            border-top: 1px solid var(--border);
+            background: var(--topbar);
+            color: var(--faint);
+            font-size: 8px;
+        }
+
+        .status-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--muted);
+        }
+
+        .status-left i {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--down);
+        }
+
+        .status-right {
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        .status-context {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
+            color: var(--faint);
+            white-space: nowrap;
+        }
+
+        .status-context b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .status-context em {
+            font-style: normal;
+            color: var(--faint);
+        }
+
+        .status-context b.up {
+            color: var(--up);
+        }
+
+        .status-context b.down {
+            color: var(--down);
+        }
+
+        /* ------------------------------ responsive ------------------------------ */
+        @media (max-width: 1440px) {
+            .workspace {
+                grid-template-columns: minmax(0, 1fr) 282px;
+                gap: 10px;
+                padding: 10px 12px 8px;
+            }
+
+            .header-stats {
+                gap: 8px;
+            }
+
+            .header-stats div:nth-child(4) {
+                display: none;
+            }
+
+            .chart-legend {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 1180px) {
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .workspace {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .right-rail {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                overflow: visible;
+            }
+
+            .chart-column {
+                overflow: visible;
+            }
+
+            .search-box {
+                flex-basis: 240px;
+            }
+
+            .price-block strong {
+                font-size: 25px;
+            }
+
+            .chart-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .statusbar {
+                position: sticky;
+                bottom: 0;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .topbar {
+                flex-wrap: wrap;
+                height: auto;
+                min-height: var(--topbar-h);
+                padding: 8px 12px;
+                gap: 8px;
+            }
+
+            .search-box {
+                order: 4;
+                flex-basis: 100%;
+            }
+
+            .brand {
+                min-width: 0;
+            }
+
+            .periods {
+                margin-left: auto;
+            }
+
+            .top-actions {
+                margin-left: 0;
+            }
+
+            .right-rail {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                display: none;
+            }
+
+            .stock-header {
+                grid-template-columns: minmax(0, 1fr) auto auto;
+            }
+
+            .chart-legend {
+                right: 80px;
+            }
+
+            .main-card {
+                height: 330px;
+                flex-basis: 330px;
+            }
+
+            .library-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+    <!-- ==================== topbar ==================== -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark">Q</span>
+            <span class="brand-text"><b>TDX QUANT</b><em>行情分析终端</em></span>
+        </div>
+
+        <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input id="stockInput" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="输入股票 / 板块 / 期权代码，如 300059"/>
+            <button id="searchBtn" type="button">查询</button>
+        </div>
+
+        <nav class="periods" id="periodTabs" aria-label="K线周期">
+            <button type="button" data-period="day" class="active">日</button>
+            <button type="button" data-period="week">周</button>
+            <button type="button" data-period="month">月</button>
+            <button type="button" data-period="quarter">季</button>
+            <button type="button" data-period="year">年</button>
+            <button type="button" class="disabled" id="minuteBtn" title="当前接口仅提供日线，暂无分钟/分时数据">
+                分时<i>暂无</i></button>
+        </nav>
+
+        <div class="top-actions">
+            <button type="button" class="ghost-btn" id="refreshBtn">刷新</button>
+            <div class="theme-wrap">
+                <button type="button" class="ghost-btn theme-btn" id="themeBtn" aria-haspopup="true"
+                        aria-expanded="false">
+                    <span class="theme-swatch" id="themeSwatch"></span><span id="themeLabel">明亮</span><span
+                        style="color:var(--faint);font-size:8px">▾</span>
+                </button>
+                <div class="popover" id="themeMenu" hidden></div>
+            </div>
+            <span class="market-status" id="marketStatus"><i></i>休市</span>
+        </div>
+    </header>
+
+    <!-- ==================== workspace ==================== -->
+    <div class="workspace">
+        <main class="chart-column">
+            <!-- stock header -->
+            <section class="stock-header">
+                <div class="stock-ident">
+                    <div class="title-line">
+                        <h1 id="stockName">—</h1>
+                        <span class="stock-code" id="stockCode">—</span>
+                        <span class="stock-tags" id="stockTags"></span>
+                    </div>
+                    <div class="stock-sub">
+                        <span id="stockDate">—</span>
+                        <span class="dot">·</span>
+                        <span id="stockPeriod">日线</span>
+                        <span class="dot">·</span>
+                        <span class="sync-dot"><i></i><span id="stockSync">行情与扩展数据已同步</span></span>
+                    </div>
+                </div>
+                <div class="price-block">
+                    <strong class="num" id="lastPrice">—</strong>
+                    <span class="price-change num" id="priceChange">—</span>
+                </div>
+                <div class="header-stats">
+                    <div><span>今开</span><b class="num" id="qOpen">—</b></div>
+                    <div><span>最高</span><b class="num" id="qHigh">—</b></div>
+                    <div><span>最低</span><b class="num" id="qLow">—</b></div>
+                    <div><span>昨收</span><b class="num" id="qPrev">—</b></div>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="icon-btn" id="watchBtn" title="加入自选">☆</button>
+                    <button type="button" class="icon-btn" id="refreshIconBtn" title="刷新">↻</button>
+                </div>
+            </section>
+
+            <!-- toolbar -->
+            <section class="chart-toolbar">
+                <div class="tool-group">
+                    <button type="button" class="tool-btn primary" id="libraryBtn">指标库</button>
+                    <span class="chip-static" title="接口数据为不复权日线">不复权</span>
+                    <span class="chip-static" id="periodChip">日K</span>
+                </div>
+                <div class="tool-group">
+                    <span class="range-label">区间</span>
+                    <select class="range-select" id="rangeSelect" aria-label="时间区间">
+                        <option value="1y">近1年</option>
+                        <option value="3y" selected>近3年</option>
+                        <option value="5y">近5年</option>
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="tool-group">
+                    <button type="button" class="tool-btn" id="resetZoomBtn" title="恢复默认缩放">重置缩放</button>
+                    <button type="button" class="tool-btn" id="fullscreenBtn" title="全屏">全屏</button>
+                    <button type="button" class="tool-btn" id="exportBtn" title="导出当前主图 PNG">导出主图</button>
+                </div>
+            </section>
+
+            <!-- main chart -->
+            <section class="main-card" id="mainCard">
+                <div id="mainChart" class="main-chart" role="img" aria-label="K线主图"></div>
+                <div class="chart-legend" id="mainLegend"></div>
+                <div class="main-metrics" id="mainMetrics"></div>
+                <div class="chart-badge"><i></i><span id="chartBadge">日K · 不复权</span></div>
+                <div class="chart-loading" id="chartLoading" hidden><span
+                        class="spinner"></span><span>正在加载行情...</span></div>
+                <div class="chart-empty" id="chartEmpty" hidden>
+                    <b id="emptyTitle">暂无数据</b>
+                    <span id="emptyMsg">请检查代码或稍后重试</span>
+                    <button type="button" id="emptyRetry">重新加载</button>
+                </div>
+            </section>
+
+            <!-- subcharts toolbar -->
+            <section class="sub-toolbar">
+                <div class="sub-title">副图指标 <span>切换 / 新增 / 删除</span></div>
+                <div class="sub-tabs" id="subTabs"></div>
+                <div class="sub-actions">
+                    <span class="pane-count" id="paneCount">2 / 6</span>
+                    <button type="button" class="add-pane" id="addPaneBtn">＋ 新增副图</button>
+                </div>
+            </section>
+
+            <!-- subcharts -->
+            <section class="subchart-list" id="subchartList"></section>
+        </main>
+
+        <!-- ==================== right rail ==================== -->
+        <aside class="right-rail">
+            <section class="panel">
+                <header><span>盘口摘要</span><span class="panel-meta" id="quoteDate">—</span></header>
+                <div class="quote-grid">
+                    <div><span>成交额</span><b class="num" id="qAmount">—</b></div>
+                    <div><span>成交量</span><b class="num" id="qVolume">—</b></div>
+                    <div><span>换手率</span><b class="num" id="qTurnover">—</b></div>
+                    <div><span>振幅</span><b class="num" id="qRange">—</b></div>
+                    <div><span>流通市值</span><b class="num" id="qLtsz">—</b></div>
+                    <div><span>总市值</span><b class="num" id="qZsz">—</b></div>
+                </div>
+                <div class="quote-foot"><span>涨跌</span><b class="num"
+                                                            id="qChange">—</b><span>·</span><span>最后数据</span><b
+                        class="num" id="qLastDate">—</b></div>
+            </section>
+
+            <section class="panel">
+                <header><span>技术画像</span><span class="panel-meta">日线 · ext_data</span></header>
+                <div class="tech-tags" id="techTags"></div>
+                <div class="rps-list" id="rpsList"></div>
+                <div class="tech-grid">
+                    <div><span>MA20</span><b class="num" id="tMa20">—</b><small class="num" id="tMa20Dev">—</small>
+                    </div>
+                    <div><span>MA60</span><b class="num" id="tMa60">—</b><small class="num" id="tMa60Dev">—</small>
+                    </div>
+                    <div><span>20日涨幅</span><b class="num" id="tGain20">—</b></div>
+                    <div><span>中期调整</span><b class="num" id="tMidAdjust">—</b><small class="num"
+                                                                                         id="tMidDays">—</small></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <header><span>指标库</span><span class="panel-meta">点击添加 / 定位</span></header>
+                <div class="indicator-chips" id="indicatorChips"></div>
+                <div class="library-note">可同时添加多个副图；副图之间共享十字光标与缩放区间。</div>
+            </section>
+
+            <section class="panel">
+                <header><span>关联板块</span><span class="panel-meta">blockInfo</span></header>
+                <div class="related-list" id="relatedList">
+                    <div class="empty-small">加载中...</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <header><span>自选观察</span><span class="panel-meta" id="watchCount">0 只</span></header>
+                <div class="watch-list" id="watchList"></div>
+                <button type="button" class="watch-add" id="watchAddBtn">☆ 将当前标的加入自选</button>
+            </section>
+
+            <section class="panel">
+                <header><span>数据说明</span><span class="panel-meta">API</span></header>
+                <div class="data-line"><span>数据源</span><code>GET /api/stock/info</code></div>
+                <div class="data-line"><span>K线 / 扩展</span><b id="dataCounts">—</b></div>
+                <div class="data-line"><span>周期 / 区间</span><b id="dataPeriodRange">—</b></div>
+                <div class="data-line"><span>数据截止</span><b id="dataLastDate">—</b></div>
+                <div class="data-line"><span>复权口径</span><b>不复权 · 日线</b></div>
+                <div class="data-line"><span>主题</span><b id="dataTheme">明亮</b></div>
+            </section>
+        </aside>
+    </div>
+
+    <!-- ==================== status bar ==================== -->
+    <footer class="statusbar">
+        <span class="status-left"><i></i>TDX Quant · 行情分析</span>
+        <span id="statusCode">—</span>
+        <span id="statusPeriod">日线</span>
+        <span id="statusRange">近3年</span>
+        <span id="statusCounts">—</span>
+        <span id="statusLastDate">—</span>
+        <span class="status-context" id="statusContext"></span>
+        <span class="status-right">UTC+8 · 自动刷新：关闭</span>
+    </footer>
+</div>
+
+<!-- ==================== theme menu / modal / toast ==================== -->
+<div class="modal" id="libraryModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
+        <div class="modal-head">
+            <b id="libraryTitle">指标库</b>
+            <small>添加到副图，可多选</small>
+            <button type="button" class="modal-close" id="libraryClose" aria-label="关闭">×</button>
+        </div>
+        <div class="library-grid" id="libraryGrid"></div>
+        <div class="modal-foot">已添加的指标会定位到对应副图；最多 6 个副图。指标共享主图日期轴与缩放区间。</div>
+    </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="../js/config.js"></script>
+<script src="../js/echarts.min.js"></script>
+<script>
+    /* =========================================================================
+   TDX Quant · K线行情 v2
+   - 数据：GET /api/stock/info?stockCode=&updateType=3
+   - 周期：日 / 周 / 月 / 季 / 年（日线聚合）
+   - 副图：成交量 / MACD / RPS / AMO / 中期涨幅 / MA偏离率
+   - 主题：明亮（默认）/ 深色 / 午夜蓝 / 护眼
+   ========================================================================= */
+    (function () {
+        'use strict';
+
+        const $ = (id) => document.getElementById(id);
+        const MAX_PANES = 6;
+        const STORAGE = {
+            theme: 'stockKline.theme.v2',
+            panes: 'stockKline.panes.v2',
+            watch: 'stockKline.watch.v2'
+        };
+
+        const THEMES = [
+            {id: 'light', name: '明亮', desc: '白底 · 默认', swatch: '#f4f7fb'},
+            {id: 'dark', name: '深色', desc: '石墨黑 · 终端', swatch: '#0e1722'},
+            {id: 'midnight', name: '午夜蓝', desc: '深蓝 · 青色', swatch: '#091a2a'},
+            {id: 'eye', name: '护眼', desc: '暖纸 · 低刺激', swatch: '#f1f0e8'}
+        ];
+
+        const INDICATORS = {
+            vol: {name: '成交量', short: 'VOL', desc: '成交量柱与 5 周期量能均线'},
+            macd: {name: 'MACD', short: 'DIF/DEA', desc: 'DIF / DEA / 柱状动能'},
+            rps: {name: 'RPS 相对强度', short: 'RPS', desc: 'RPS10 / 20 / 50 / 120 / 250'},
+            amo: {name: '成交额 AMO', short: 'AMO', desc: '成交额柱与 5 周期均额'},
+            gain: {name: '中期涨幅', short: 'GAIN', desc: 'N5 / N10 / N20 / N60 / N120 / N250 涨幅'},
+            deviation: {name: 'MA 偏离率', short: 'DEV', desc: '价格相对 MA5 / 10 / 20 / 60 / 120 / 250 偏离'}
+        };
+        const IND_ORDER = ['vol', 'macd', 'rps', 'amo', 'gain', 'deviation'];
+        const PERIOD_LABEL = {day: '日线', week: '周线', month: '月线', quarter: '季线', year: '年线'};
+        const PERIOD_SHORT = {day: '日K', week: '周K', month: '月K', quarter: '季K', year: '年K'};
+        const RANGE_LABEL = {'1y': '近1年', '3y': '近3年', '5y': '近5年', 'all': '全部'};
+        // 通达信 MA 定义：颜色、DOTLINE、NODRAW
+        const MA_DEFS = [
+            {key: 'MA5', period: 5, draw: false},
+            {key: 'MA10', period: 10, draw: true},
+            {key: 'MA20', period: 20, draw: true, lineType: 'dotted'},
+            {key: 'MA30', period: 30, draw: false},
+            {key: 'MA50', period: 50, draw: true},
+            {key: 'MA60', period: 60, draw: false},
+            {key: 'MA100', period: 100, draw: true},
+            {key: 'MA120', period: 120, draw: false},
+            {key: 'MA200', period: 200, draw: true},
+            {key: 'MA250', period: 250, draw: true}
+        ];
+        const MA_PERIODS = MA_DEFS.map(d => d.period);
+        const MA_KEYS = MA_DEFS.map(d => d.key);
+
+        const state = {
+            code: '300059',
+            stock: null,
+            klines: [],
+            period: 'day',
+            range: '3y',
+            theme: document.documentElement.dataset.theme || 'light',
+            fullBars: [],
+            viewBars: [],
+            selectedDate: null,
+            zoom: {start: 0, end: 100},
+            mainChart: null,
+            panes: [],
+            activePaneId: null,
+            charts: new Map(),
+            chartGroup: null,
+            blockInfo: null,
+            watchlist: [],
+            loading: false,
+            requestSeq: 0,
+            paneSeq: 0,
+            toastTimer: null,
+            lastRenderError: null
+        };
+
+        /* ---------------------------------------------------------------------
+       basic helpers
+       --------------------------------------------------------------------- */
+        function num(v) {
+            if (v === null || v === undefined || v === '') return null;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function fmt(v, digits = 2) {
+            const n = num(v);
+            return n === null ? '—' : n.toFixed(digits);
+        }
+
+        function fmtSigned(v, digits = 2) {
+            const n = num(v);
+            if (n === null) return '—';
+            return (n > 0 ? '+' : '') + n.toFixed(digits);
+        }
+
+        function fmtPct(v, digits = 2) {
+            const n = num(v);
+            return n === null ? '—' : fmtSigned(n, digits) + '%';
+        }
+
+        function fmtVol(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            if (Math.abs(n) >= 1e8) return (n / 1e8).toFixed(2) + '亿';
+            if (Math.abs(n) >= 1e4) return (n / 1e4).toFixed(1) + '万';
+            return String(Math.round(n));
+        }
+
+        function fmtAmo(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            if (Math.abs(n) >= 1e8) return (n / 1e8).toFixed(2) + '亿';
+            if (Math.abs(n) >= 1e4) return (n / 1e4).toFixed(1) + '万';
+            return String(Math.round(n));
+        }
+
+        function fmtCompact(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            if (Math.abs(n) >= 1e8) return (n / 1e8).toFixed(1) + '亿';
+            if (Math.abs(n) >= 1e4) return (n / 1e4).toFixed(0) + '万';
+            return String(Math.round(n));
+        }
+
+        function esc(v) {
+            return String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function formatLocalDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function parseDate(s) {
+            const d = new Date(String(s) + 'T00:00:00');
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function normalizeCode(input) {
+            let c = String(input || '').trim().toUpperCase();
+            if (!c) return '';
+            c = c.replace(/\.(SH|SZ|BJ)$/i, '').replace(/^(SH|SZ|BJ)\.?/i, '');
+            return c;
+        }
+
+        function marketTags(code, name) {
+            if (/^88[01]/.test(code)) return ['板块'];
+            if (code.length > 6) return ['期权'];
+            if (/^68/.test(code)) return ['科创板', '上交所'];
+            if (/^30/.test(code)) return ['创业板', '深交所'];
+            if (/^6/.test(code)) return ['沪市', '上交所'];
+            if (/^(0|3)/.test(code)) return ['深市', '深交所'];
+            if (/^(4|8)/.test(code)) return ['北交所'];
+            if (/^(5|1)/.test(code)) return ['ETF'];
+            return [name ? '证券' : '—'];
+        }
+
+        async function fetchJson(url) {
+            // 项目统一接口入口：ApiUtils（config.js）负责 API_HOST、环境与 URL 拼接。
+            if (!window.ApiUtils || typeof window.ApiUtils.fetch !== 'function') {
+                throw new Error('ApiUtils 未加载，请检查 js/config.js');
+            }
+            const res = await window.ApiUtils.fetch(url);
+            if (!res || !res.ok) throw new Error('HTTP ' + (res ? res.status : '?'));
+            return res.json();
+        }
+
+        function toast(msg, isErr) {
+            const el = $('toast');
+            el.textContent = msg;
+            el.classList.toggle('err', !!isErr);
+            el.hidden = false;
+            clearTimeout(state.toastTimer);
+            state.toastTimer = setTimeout(() => {
+                el.hidden = true;
+            }, 2600);
+        }
+
+        function setLoading(loading) {
+            state.loading = loading;
+            const el = $('chartLoading');
+            if (el) el.hidden = !loading;
+            $('searchBtn').disabled = loading;
+            $('refreshBtn').disabled = loading;
+            $('refreshIconBtn').disabled = loading;
+        }
+
+        function setChartEmpty(title, msg) {
+            $('emptyTitle').textContent = title || '暂无数据';
+            $('emptyMsg').textContent = msg || '请检查代码或稍后重试';
+            $('chartEmpty').hidden = false;
+            if (state.mainChart) state.mainChart.clear();
+            $('mainLegend').innerHTML = '';
+        }
+
+        function hideChartEmpty() {
+            $('chartEmpty').hidden = true;
+        }
+
+        function updateMarketStatus() {
+            const el = $('marketStatus');
+            if (!el) return;
+            const now = new Date();
+            const day = now.getDay();
+            const minutes = now.getHours() * 60 + now.getMinutes();
+            const weekday = day >= 1 && day <= 5;
+            const open = weekday && ((minutes >= 570 && minutes <= 690) || (minutes >= 780 && minutes <= 900));
+            el.classList.toggle('open', open);
+            el.innerHTML = '<i></i>' + (open ? '交易中' : '休市');
+        }
+
+        /* ---------------------------------------------------------------------
+       themes
+       --------------------------------------------------------------------- */
+        function themeById(id) {
+            return THEMES.find(t => t.id === id) || THEMES[0];
+        }
+
+        function renderThemeMenu() {
+            const menu = $('themeMenu');
+            menu.innerHTML = '<div class="popover-title">选择主题</div>' + THEMES.map(t =>
+                `<button type="button" class="theme-option ${state.theme === t.id ? 'active' : ''}" data-theme="${t.id}">
+                <span class="theme-swatch" style="background:${t.swatch}"></span>
+                <span class="theme-txt"><b>${esc(t.name)}</b><small>${esc(t.desc)}</small></span>
+                ${state.theme === t.id ? '<span class="check">✓</span>' : ''}
+             </button>`).join('');
+            const theme = themeById(state.theme);
+            $('themeLabel').textContent = theme.name;
+            $('themeSwatch').style.background = theme.swatch;
+            const dataTheme = $('dataTheme');
+            if (dataTheme) dataTheme.textContent = theme.name;
+        }
+
+        function setTheme(id) {
+            if (!THEMES.some(t => t.id === id)) return;
+            state.theme = id;
+            document.documentElement.dataset.theme = id;
+            try {
+                localStorage.setItem(STORAGE.theme, id);
+            } catch (e) { /* ignore */
+            }
+            renderThemeMenu();
+            $('themeMenu').hidden = true;
+            $('themeBtn').setAttribute('aria-expanded', 'false');
+            // 主题切换后重绘 ECharts（保留当前缩放）
+            renderMainChart();
+            renderAllPaneCharts();
+            connectCharts();
+            updatePanels();
+        }
+
+        function getPalette() {
+            const cs = getComputedStyle(document.documentElement);
+            const v = (name) => cs.getPropertyValue(name).trim();
+            return {
+                bg: v('--bg'), panel: v('--panel'), panel2: v('--panel-2'), border: v('--border'),
+                text: v('--text'), strong: v('--strong'), muted: v('--muted'), faint: v('--faint'),
+                accent: v('--accent'), accentSoft: v('--accent-soft'), accentLine: v('--accent-line'),
+                grid: v('--grid'), axis: v('--axis'), up: v('--up'), down: v('--down'),
+                ma: [v('--ma5'), v('--ma10'), v('--ma20'), v('--ma30'), v('--ma50'),
+                    v('--ma60'), v('--ma100'), v('--ma120'), v('--ma200'), v('--ma250')]
+            };
+        }
+
+        function alpha(hex, a) {
+            const h = String(hex || '').replace('#', '');
+            if (h.length !== 6) return hex;
+            const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+            return `rgba(${r},${g},${b},${a})`;
+        }
+
+        /* ---------------------------------------------------------------------
+       data load
+       --------------------------------------------------------------------- */
+        async function loadStock(input, options) {
+            const opts = options || {};
+            const code = normalizeCode(input);
+            if (!code) {
+                toast('请输入股票 / 板块 / 期权代码', true);
+                return;
+            }
+
+            const seq = ++state.requestSeq;
+            setLoading(true);
+            hideChartEmpty();
+            try {
+                const json = await fetchJson(`/api/stock/info?stockCode=${encodeURIComponent(code)}&updateType=3`);
+                if (seq !== state.requestSeq) return;
+                if (!json || json.success === false) {
+                    throw new Error((json && json.msg) || '接口返回失败');
+                }
+                const data = json.data || {};
+                const klines = parseKlines(data);
+                if (!klines.length) throw new Error('该代码暂无日线数据');
+
+                state.code = data.code || code;
+                state.stock = data;
+                state.klines = klines;
+                state.blockInfo = null;
+
+                $('stockInput').value = state.code;
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('code', state.code);
+                    window.history.replaceState({}, '', url);
+                } catch (e) { /* ignore */
+                }
+
+                rebuildData(true);
+                updateHeader();
+                updatePanels();
+                renderPanes();
+                loadBlocks(state.code);
+                $('chartEmpty').hidden = true;
+                if (!opts.silent) toast(`已加载 ${state.stock.name || state.code}`);
+            } catch (e) {
+                if (seq !== state.requestSeq) return;
+                state.lastRenderError = e;
+                const msg = e && e.message ? e.message : String(e);
+                if (!state.klines.length) {
+                    setChartEmpty('行情加载失败', msg);
+                    $('stockName').textContent = '加载失败';
+                    $('stockCode').textContent = code;
+                    $('stockTags').innerHTML = '';
+                    $('lastPrice').textContent = '—';
+                    $('priceChange').textContent = '—';
+                    $('statusCode').textContent = code;
+                }
+                toast('加载失败：' + msg, true);
+            } finally {
+                if (seq === state.requestSeq) setLoading(false);
+            }
+        }
+
+        function parseKlines(data) {
+            const raw = Array.isArray(data.klineDTOList) ? data.klineDTOList : [];
+            const extList = Array.isArray(data.extDataDTOList) ? data.extDataDTOList : [];
+            const extMap = new Map();
+            extList.forEach(e => {
+                if (e && e.date) extMap.set(String(e.date), e);
+            });
+
+            const byDate = new Map();
+            raw.forEach(k => {
+                if (!k || !k.date) return;
+                const open = num(k.open), high = num(k.high), low = num(k.low), close = num(k.close);
+                if (open === null || high === null || low === null || close === null || close <= 0) return;
+                const date = String(k.date);
+                byDate.set(date, {
+                    date,
+                    open, high, low, close,
+                    vol: num(k.vol) || 0,
+                    amo: num(k.amo) || 0,
+                    changePct: num(k.changePct),
+                    changePrice: num(k.changePrice),
+                    turnoverPct: num(k.turnoverPct),
+                    rangePct: num(k.rangePct),
+                    ltgb: num(k.ltgb),
+                    zgb: num(k.zgb),
+                    ext: extMap.get(date) || {}
+                });
+            });
+
+            return Array.from(byDate.values()).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+        }
+
+        async function loadBlocks(code) {
+            const seq = state.requestSeq;
+            try {
+                const json = await fetchJson(`/api/stock/blockInfo?stockCode=${encodeURIComponent(code)}`);
+                if (seq !== state.requestSeq) return;
+                if (json && json.success !== false) {
+                    state.blockInfo = json.data || null;
+                    renderBlocks();
+                } else {
+                    renderBlocks();
+                }
+            } catch (e) {
+                if (seq === state.requestSeq) renderBlocks();
+            }
+        }
+
+        /* ---------------------------------------------------------------------
+       aggregation
+       --------------------------------------------------------------------- */
+        function periodKey(date, period) {
+            if (period === 'week') {
+                const d = parseDate(date);
+                if (!d) return date;
+                const offset = (d.getDay() + 6) % 7;
+                const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - offset);
+                return 'W' + formatLocalDate(monday);
+            }
+            if (period === 'month') return date.slice(0, 7);
+            if (period === 'quarter') {
+                const y = date.slice(0, 4);
+                const m = Number(date.slice(5, 7));
+                return y + '-Q' + (Math.floor((m - 1) / 3) + 1);
+            }
+            if (period === 'year') return date.slice(0, 4);
+            return date;
+        }
+
+        function aggregateBars(klines, period) {
+            if (period === 'day') return klines.map(k => Object.assign({}, k));
+            const groups = new Map();
+            klines.forEach(k => {
+                const key = periodKey(k.date, period);
+                let g = groups.get(key);
+                if (!g) {
+                    g = {
+                        key,
+                        date: k.date,
+                        firstDate: k.date,
+                        open: k.open,
+                        high: k.high,
+                        low: k.low,
+                        close: k.close,
+                        vol: k.vol || 0,
+                        amo: k.amo || 0,
+                        ltgb: k.ltgb,
+                        zgb: k.zgb,
+                        ext: k.ext || {},
+                        days: 1
+                    };
+                    groups.set(key, g);
+                } else {
+                    g.date = k.date;
+                    g.high = Math.max(g.high, k.high);
+                    g.low = Math.min(g.low, k.low);
+                    g.close = k.close;
+                    g.vol += (k.vol || 0);
+                    g.amo += (k.amo || 0);
+                    g.ltgb = k.ltgb;
+                    g.zgb = k.zgb;
+                    g.ext = k.ext || g.ext;
+                    g.days += 1;
+                }
+            });
+            const bars = Array.from(groups.values()).sort((a, b) => a.date < b.date ? -1 : 1);
+            bars.forEach((b, i) => {
+                const prev = i > 0 ? bars[i - 1].close : b.open;
+                b.changePrice = b.close - prev;
+                b.changePct = prev ? (b.close - prev) / prev * 100 : 0;
+            });
+            return bars;
+        }
+
+        function attachMA(bars, useExt) {
+            bars.forEach((b, i) => {
+                b.ma = {};
+                MA_PERIODS.forEach(n => {
+                    let value = null;
+                    if (useExt && b.ext) {
+                        const ev = num(b.ext['MA' + n]);
+                        if (ev !== null && ev > 0) value = ev;
+                    }
+                    if (value === null && i >= n - 1) {
+                        let sum = 0;
+                        for (let j = i - n + 1; j <= i; j++) sum += bars[j].close;
+                        value = sum / n;
+                    }
+                    b.ma['MA' + n] = value;
+                });
+            });
+        }
+
+        function rangeStartDate(lastDate, range) {
+            if (range === 'all' || !lastDate) return null;
+            const years = range === '1y' ? 1 : range === '5y' ? 5 : 3;
+            const d = parseDate(lastDate);
+            if (!d) return null;
+            const targetYear = d.getFullYear() - years;
+            const maxDay = new Date(targetYear, d.getMonth() + 1, 0).getDate();
+            const target = new Date(targetYear, d.getMonth(), Math.min(d.getDate(), maxDay));
+            return formatLocalDate(target);
+        }
+
+        function defaultZoom(bars) {
+            const visible = {day: 260, week: 160, month: 120, quarter: 80, year: 60}[state.period] || 160;
+            if (!bars.length || bars.length <= visible) return {start: 0, end: 100};
+            return {start: Number((((bars.length - visible) / bars.length) * 100).toFixed(2)), end: 100};
+        }
+
+        function rebuildData(resetZoom) {
+            const full = aggregateBars(state.klines, state.period);
+            attachMA(full, state.period === 'day');
+            state.fullBars = full;
+            const lastDate = full.length ? full[full.length - 1].date : (state.klines.length ? state.klines[state.klines.length - 1].date : null);
+            const start = rangeStartDate(lastDate, state.range);
+            state.viewBars = start ? full.filter(b => b.date >= start) : full.slice();
+            if (!state.viewBars.length) state.viewBars = full.slice();
+            // 默认底部日期上下文显示最新一根；hover/点击主图后切换
+            state.selectedDate = state.viewBars.length ? state.viewBars[state.viewBars.length - 1].date : null;
+            if (resetZoom !== false) state.zoom = defaultZoom(state.viewBars);
+            updateHeader();
+            updatePanels();
+            renderMainChart();
+            renderAllPaneCharts();
+            connectCharts();
+            updatePeriodUI();
+            updateRangeUI();
+            resizeCharts();
+        }
+
+        /* ---------------------------------------------------------------------
+       header / panels
+       --------------------------------------------------------------------- */
+        function currentBar() {
+            return state.viewBars.length ? state.viewBars[state.viewBars.length - 1] : null;
+        }
+
+        function currentExt() {
+            const b = currentBar();
+            return (b && b.ext) || {};
+        }
+
+        function latestDaily() {
+            return state.klines.length ? state.klines[state.klines.length - 1] : null;
+        }
+
+        function latestExt() {
+            const d = latestDaily();
+            return (d && d.ext) || {};
+        }
+
+        function weekdayCN(dateStr) {
+            const d = parseDate(dateStr);
+            if (!d) return '—';
+            return '周' + '日一二三四五六'[d.getDay()];
+        }
+
+        // 底部：日期/星期、距今交易日、至今涨幅
+        function updateStatusContext(dateStr) {
+            const host = $('statusContext');
+            if (!host) return;
+            const latest = latestDaily();
+            if (!latest || !state.viewBars.length) {
+                host.textContent = '—';
+                return;
+            }
+            let selected = dateStr || state.selectedDate || latest.date;
+            let bar = state.viewBars.find(b => b.date === selected);
+            if (!bar) bar = state.viewBars[state.viewBars.length - 1];
+            selected = bar.date;
+            state.selectedDate = selected;
+
+            const latestIdx = state.klines.length - 1;
+            const selectedIdx = state.klines.findIndex(k => k.date === selected);
+            const days = selectedIdx >= 0
+                ? Math.max(0, latestIdx - selectedIdx)
+                : state.klines.filter(k => k.date > selected).length;
+
+            const close = num(bar.close);
+            const latestClose = num(latest.close);
+            const gain = close !== null && latestClose !== null && close !== 0
+                ? (latestClose - close) / close * 100
+                : null;
+            const cls = gain === null || gain === 0 ? '' : gain > 0 ? 'up' : 'down';
+
+            host.innerHTML =
+                `<span>日期</span> <b>${esc(selected)}</b> <span>${esc(weekdayCN(selected))}</span>` +
+                `<em>·</em><span>距今</span> <b>${days}</b> <span>个交易日</span>` +
+                `<em>·</em><span>至今</span> <b class="${cls}">${fmtPct(gain)}</b>`;
+        }
+
+        function selectBar(index) {
+            if (!state.viewBars.length) return;
+            const i = Math.max(0, Math.min(state.viewBars.length - 1, Number(index)));
+            state.selectedDate = state.viewBars[i].date;
+            updateStatusContext(state.selectedDate);
+        }
+
+        // 主图 ext_data 指标值条
+        function renderMainMetrics() {
+            const host = $('mainMetrics');
+            if (!host) return;
+            const ext = latestExt();
+            const pctItem = (label, key, field) => {
+                const v = num(ext[key]);
+                const cls = v === null || v === 0 ? '' : v > 0 ? 'up' : 'down';
+                return `<span class="m-item" title="ext_data.${esc(field || key)}"><span>${esc(label)}</span><b class="${cls}">${fmtPct(v)}</b></span>`;
+            };
+            const dayItem = (label, key, field) => {
+                const v = num(ext[key]);
+                return `<span class="m-item" title="ext_data.${esc(field || key)}"><span>${esc(label)}</span><b>${v === null ? '—' : v.toFixed(0) + '天'}</b></span>`;
+            };
+            host.innerHTML = [
+                pctItem('中期涨幅', '中期涨幅N20'),
+                pctItem('调整幅度', '中期调整幅度'),
+                dayItem('调整天数', '中期调整天数'),
+                pctItem('调整幅度2', '中期调整幅度2'),
+                dayItem('调整天数2', '中期调整天数2')
+            ].join('');
+        }
+
+        function updateHeader() {
+            const data = state.stock || {};
+            // 行情快照始终取最新日线，不随主图周期（周/月/季/年）变化
+            const bar = latestDaily();
+            const name = data.name || '—';
+            $('stockName').textContent = name;
+            $('stockCode').textContent = state.code || data.code || '—';
+            const tags = marketTags(state.code, name);
+            $('stockTags').innerHTML = tags.map(t => `<span>${esc(t)}</span>`).join('');
+            const lastDate = state.klines.length ? state.klines[state.klines.length - 1].date : '—';
+            $('stockDate').textContent = lastDate + ' 收盘';
+            $('stockPeriod').textContent = '主图' + (PERIOD_LABEL[state.period] || '日线');
+            $('stockSync').textContent = state.klines.length ? '行情与扩展数据已同步' : '暂无行情';
+            $('priceChange').textContent = '—';
+            $('priceChange').className = 'price-change num';
+            if (!bar) {
+                $('lastPrice').textContent = '—';
+                $('qOpen').textContent = '—';
+                $('qHigh').textContent = '—';
+                $('qLow').textContent = '—';
+                $('qPrev').textContent = '—';
+                return;
+            }
+            $('lastPrice').textContent = fmt(bar.close);
+            const change = num(bar.changePct);
+            const changePrice = num(bar.changePrice);
+            const prev = changePrice !== null ? bar.close - changePrice : bar.open;
+            $('priceChange').textContent = (bar.changePrice === null || bar.changePrice === undefined ? '' : fmtSigned(bar.changePrice)) + '  ' + (change === null ? '—' : fmtSigned(change) + '%');
+            $('priceChange').className = 'price-change num ' + (change === null ? '' : change >= 0 ? 'up' : 'down');
+            $('qOpen').textContent = fmt(bar.open);
+            $('qHigh').textContent = fmt(bar.high);
+            $('qLow').textContent = fmt(bar.low);
+            $('qPrev').textContent = fmt(prev);
+            $('quoteDate').textContent = bar.date;
+            $('qAmount').textContent = fmtAmo(bar.amo);
+            $('qVolume').textContent = fmtVol(bar.vol);
+            $('qTurnover').textContent = fmtPct(bar.turnoverPct);
+            $('qRange').textContent = fmtPct(bar.rangePct);
+            const ext = bar.ext || {};
+            const ltsz = num(ext.ltsz);
+            const zsz = num(ext.zsz);
+            $('qLtsz').textContent = ltsz !== null && ltsz > 0 ? fmtAmo(ltsz) : '—';
+            $('qZsz').textContent = zsz !== null && zsz > 0 ? fmtAmo(zsz) : '—';
+            $('qChange').textContent = fmtPct(change);
+            $('qLastDate').textContent = lastDate;
+            $('watchBtn').textContent = isWatched(state.code) ? '★' : '☆';
+            $('watchBtn').classList.toggle('active', isWatched(state.code));
+            $('chartBadge').textContent = (PERIOD_SHORT[state.period] || '日K') + ' · 不复权';
+            $('periodChip').textContent = PERIOD_SHORT[state.period] || '日K';
+            $('stockPeriod').textContent = '主图' + (PERIOD_LABEL[state.period] || '日线');
+        }
+
+        function updatePanels() {
+            const ext = latestExt();
+            // technical tags
+            const tags = [];
+            if (ext['MA5多'] === true) tags.push(['MA5多', 'up']);
+            if (ext['MA10多'] === true) tags.push(['MA10多', 'up']);
+            if (ext['MA20多'] === true) tags.push(['MA20多', 'up']);
+            if (ext['MA5空'] === true) tags.push(['MA5空', 'down']);
+            if (ext['MA20空'] === true) tags.push(['MA20空', 'down']);
+            if (ext['RPS红'] === true) tags.push(['RPS红', 'up']);
+            if (ext['月多'] === true) tags.push(['月多', 'up']);
+            if (ext['首次三线红'] === true) tags.push(['首次三线红', 'up']);
+            if (!tags.length) tags.push(['信号中性', 'neutral']);
+            $('techTags').innerHTML = tags.map(([label, cls]) => `<span class="tech-tag tag-${cls}">${esc(label)}</span>`).join('');
+
+            // RPS bars
+            const rpsKeys = [['RPS10', 'rps10'], ['RPS20', 'rps20'], ['RPS50', 'rps50'], ['RPS120', 'rps120'], ['RPS250', 'rps250']];
+            $('rpsList').innerHTML = rpsKeys.map(([label, key]) => {
+                const v = num(ext[key]);
+                const w = v === null ? 0 : Math.max(0, Math.min(100, v));
+                return `<div class="rps-row"><span>${label}</span><div class="bar"><i style="width:${w}%"></i></div><b>${v === null ? '—' : v.toFixed(1)}</b></div>`;
+            }).join('');
+
+            const ma20 = num(ext.MA20);
+            const ma60 = num(ext.MA60);
+            const dev20 = num(ext['C_MA20_偏离率']);
+            const dev60 = num(ext['C_MA60_偏离率']);
+            $('tMa20').textContent = fmt(ma20);
+            $('tMa60').textContent = fmt(ma60);
+            $('tMa20Dev').textContent = fmtPct(dev20);
+            $('tMa60Dev').textContent = fmtPct(dev60);
+            $('tMa20Dev').className = 'num ' + (dev20 === null ? '' : dev20 >= 0 ? 'up' : 'down');
+            $('tMa60Dev').className = 'num ' + (dev60 === null ? '' : dev60 >= 0 ? 'up' : 'down');
+            const gain20 = num(ext['N20日涨幅']);
+            $('tGain20').textContent = fmtPct(gain20);
+            $('tGain20').className = 'num ' + (gain20 === null ? '' : gain20 >= 0 ? 'up' : 'down');
+            const adjust = num(ext['中期调整幅度']);
+            $('tMidAdjust').textContent = fmtPct(adjust);
+            $('tMidDays').textContent = num(ext['中期调整天数']) === null ? '—' : (num(ext['中期调整天数']).toFixed(0) + '天');
+
+            // indicator chips
+            renderIndicatorChips();
+            // watch
+            renderWatchlist();
+            // data
+            const extCount = state.klines.reduce((n, k) => n + (k.ext && Object.keys(k.ext).length ? 1 : 0), 0);
+            $('dataCounts').textContent = `${state.klines.length} / ${extCount}`;
+            $('dataPeriodRange').textContent = `${PERIOD_LABEL[state.period]} · ${RANGE_LABEL[state.range]}`;
+            const lastDate = state.klines.length ? state.klines[state.klines.length - 1].date : '—';
+            $('dataLastDate').textContent = lastDate;
+            $('dataTheme').textContent = themeById(state.theme).name;
+            $('statusCode').textContent = `${state.code} ${state.stock && state.stock.name ? state.stock.name : ''}`;
+            $('statusPeriod').textContent = PERIOD_LABEL[state.period];
+            $('statusRange').textContent = RANGE_LABEL[state.range];
+            $('statusCounts').textContent = `${state.viewBars.length} 根 · ${state.klines.length} 日线`;
+            $('statusLastDate').textContent = `数据截止 ${lastDate}`;
+            $('quoteDate').textContent = currentBar() ? currentBar().date : '—';
+            renderMainMetrics();
+            updateStatusContext();
+        }
+
+        function renderBlocks() {
+            const el = $('relatedList');
+            const info = state.blockInfo;
+            if (!info) {
+                el.innerHTML = '<div class="empty-small">暂无关联板块数据</div>';
+                return;
+            }
+            const items = [];
+            const pushList = (list, kind) => (list || []).forEach(x => {
+                if (x && x.blockNamePath) {
+                    const parts = String(x.blockNamePath).split('-');
+                    items.push({name: parts[parts.length - 1], kind});
+                }
+            });
+            pushList(info.hyBlockDTOList, '行业');
+            pushList(info.gnBlockDTOList, '概念');
+            const seen = new Set();
+            const unique = [];
+            items.forEach(x => {
+                if (!seen.has(x.name)) {
+                    seen.add(x.name);
+                    unique.push(x);
+                }
+            });
+            if (!unique.length) {
+                el.innerHTML = '<div class="empty-small">暂无关联板块数据</div>';
+                return;
+            }
+            el.innerHTML = unique.slice(0, 6).map(x =>
+                `<div class="related-row"><span title="${esc(x.name)}">${esc(x.name)}</span><em>${esc(x.kind)}</em></div>`
+            ).join('');
+        }
+
+        /* ---------------------------------------------------------------------
+       watchlist
+       --------------------------------------------------------------------- */
+        function loadWatchlist() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(STORAGE.watch) || '[]');
+                if (Array.isArray(raw)) {
+                    state.watchlist = raw.filter(x => x && x.code).map(x => ({
+                        code: String(x.code),
+                        name: String(x.name || '')
+                    }));
+                }
+            } catch (e) {
+                state.watchlist = [];
+            }
+        }
+
+        function saveWatchlist() {
+            try {
+                localStorage.setItem(STORAGE.watch, JSON.stringify(state.watchlist));
+            } catch (e) { /* ignore */
+            }
+        }
+
+        function isWatched(code) {
+            return state.watchlist.some(x => x.code === code);
+        }
+
+        function toggleWatch() {
+            if (!state.code) return;
+            const idx = state.watchlist.findIndex(x => x.code === state.code);
+            if (idx >= 0) state.watchlist.splice(idx, 1);
+            else state.watchlist.unshift({
+                code: state.code,
+                name: state.stock && state.stock.name ? state.stock.name : ''
+            });
+            saveWatchlist();
+            renderWatchlist();
+            updateHeader();
+            toast(idx >= 0 ? '已从自选移除' : '已加入自选');
+        }
+
+        function renderWatchlist() {
+            const el = $('watchList');
+            $('watchCount').textContent = state.watchlist.length + ' 只';
+            if (!state.watchlist.length) {
+                el.innerHTML = '<div class="empty-small">暂无自选，点击星标添加</div>';
+                return;
+            }
+            el.innerHTML = state.watchlist.map(x =>
+                `<div class="watch-row">
+                <span class="watch-code">${esc(x.code)}</span>
+                <span class="watch-name" data-watch-code="${esc(x.code)}">${esc(x.name || x.code)}</span>
+                <button type="button" class="watch-del" data-watch-del="${esc(x.code)}" title="移除">×</button>
+             </div>`).join('');
+        }
+
+        /* ---------------------------------------------------------------------
+       panes / indicators
+       --------------------------------------------------------------------- */
+        function loadPanes() {
+            let types = [];
+            try {
+                const raw = JSON.parse(localStorage.getItem(STORAGE.panes) || '[]');
+                if (Array.isArray(raw)) types = raw;
+            } catch (e) {
+                types = [];
+            }
+            types = types.filter((t, i) => INDICATORS[t] && types.indexOf(t) === i).slice(0, MAX_PANES);
+            if (!types.length) types = ['vol', 'macd'];
+            state.panes = types.map((type, i) => ({id: 'p' + (++state.paneSeq), type}));
+            state.activePaneId = state.panes.length ? state.panes[0].id : null;
+        }
+
+        function savePanes() {
+            try {
+                localStorage.setItem(STORAGE.panes, JSON.stringify(state.panes.map(p => p.type)));
+            } catch (e) { /* ignore */
+            }
+        }
+
+        function activePane() {
+            return state.panes.find(p => p.id === state.activePaneId) || state.panes[0] || null;
+        }
+
+        function setActivePane(id) {
+            if (!state.panes.some(p => p.id === id)) return;
+            state.activePaneId = id;
+            document.querySelectorAll('.subcard').forEach(el => el.classList.toggle('active', el.dataset.paneId === id));
+            renderSubTabs();
+        }
+
+        function addPane(type) {
+            if (!INDICATORS[type]) return;
+            const used = state.panes.find(p => p.type === type);
+            if (used) {
+                setActivePane(used.id);
+                toast('该指标已在副图中');
+                return;
+            }
+            if (state.panes.length >= MAX_PANES) {
+                toast('最多同时显示 ' + MAX_PANES + ' 个副图', true);
+                return;
+            }
+            const pane = {id: 'p' + (++state.paneSeq), type};
+            state.panes.push(pane);
+            state.activePaneId = pane.id;
+            savePanes();
+            renderPanes();
+            toast('已添加副图：' + INDICATORS[type].name);
+        }
+
+        function changePaneType(pane, type) {
+            if (!pane || !INDICATORS[type] || pane.type === type) return;
+            const other = state.panes.find(p => p.id !== pane.id && p.type === type);
+            if (other) {
+                setActivePane(other.id);
+                toast('该指标已在副图中');
+                renderPanes();
+                return;
+            }
+            pane.type = type;
+            state.activePaneId = pane.id;
+            savePanes();
+            renderPanes();
+        }
+
+        function removePane(pane) {
+            const idx = state.panes.findIndex(p => p.id === pane.id);
+            if (idx < 0) return;
+            const chart = state.charts.get(pane.id);
+            if (chart) {
+                chart.dispose();
+                state.charts.delete(pane.id);
+            }
+            state.panes.splice(idx, 1);
+            if (state.activePaneId === pane.id) {
+                state.activePaneId = state.panes.length ? state.panes[Math.min(idx, state.panes.length - 1)].id : null;
+            }
+            savePanes();
+            renderPanes();
+        }
+
+        function renderPanes() {
+            const list = $('subchartList');
+            // dispose old charts
+            state.charts.forEach(chart => {
+                try {
+                    chart.dispose();
+                } catch (e) { /* ignore */
+                }
+            });
+            state.charts.clear();
+            list.innerHTML = '';
+
+            if (!state.panes.length) {
+                list.innerHTML = '<div class="sub-empty">暂无副图 <button type="button" id="emptyAddPane">＋ 新增副图</button></div>';
+                const btn = $('emptyAddPane');
+                if (btn) btn.addEventListener('click', openLibrary);
+                state.activePaneId = null;
+                renderSubTabs();
+                updatePaneCount();
+                renderIndicatorChips();
+                return;
+            }
+
+            if (!state.panes.some(p => p.id === state.activePaneId)) state.activePaneId = state.panes[0].id;
+
+            state.panes.forEach(pane => {
+                const ind = INDICATORS[pane.type];
+                const title = ind.name.indexOf(ind.short) >= 0 ? esc(ind.name) : `${esc(ind.name)} <em>${esc(ind.short)}</em>`;
+                const el = document.createElement('div');
+                el.className = 'subcard' + (pane.id === state.activePaneId ? ' active' : '');
+                el.dataset.paneId = pane.id;
+                el.innerHTML = `
+                <header>
+                    <span class="subcard-title">${title}</span>
+                    <span class="subcard-value" data-pane-value="${pane.id}">—</span>
+                    <button type="button" class="sub-close" data-pane-close="${pane.id}" title="删除副图">×</button>
+                </header>
+                <div class="subchart-canvas" id="chart-${pane.id}"></div>`;
+                list.appendChild(el);
+
+                el.addEventListener('click', (ev) => {
+                    if (ev.target.closest('select') || ev.target.closest('button')) return;
+                    setActivePane(pane.id);
+                });
+                el.querySelector('.sub-close').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    removePane(pane);
+                });
+
+                const chart = echarts.init($('chart-' + pane.id));
+                state.charts.set(pane.id, chart);
+                renderPaneChart(pane);
+            });
+
+            renderSubTabs();
+            updatePaneCount();
+            renderIndicatorChips();
+            connectCharts();
+            requestAnimationFrame(resizeCharts);
+        }
+
+        function updatePaneCount() {
+            $('paneCount').textContent = `${state.panes.length} / ${MAX_PANES}`;
+            $('addPaneBtn').disabled = state.panes.length >= MAX_PANES;
+        }
+
+        function renderSubTabs() {
+            const active = activePane();
+            const el = $('subTabs');
+            el.innerHTML = IND_ORDER.map(type => {
+                const used = state.panes.some(p => p.type === type);
+                const isActive = active && active.type === type;
+                return `<button type="button" class="sub-tab ${isActive ? 'active' : ''} ${used ? 'used' : ''}" data-sub-type="${type}">${esc(INDICATORS[type].name)}</button>`;
+            }).join('');
+        }
+
+        function renderIndicatorChips() {
+            const el = $('indicatorChips');
+            if (!el) return;
+            const used = new Set(state.panes.map(p => p.type));
+            el.innerHTML = IND_ORDER.map(type =>
+                `<button type="button" class="ind-chip ${used.has(type) ? 'used' : ''}" data-ind-type="${type}">${esc(INDICATORS[type].short)}</button>`
+            ).join('') + '<button type="button" class="ind-chip" id="moreIndicators">＋ 更多</button>';
+        }
+
+        function renderAllPaneCharts() {
+            const active = activePane();
+            state.panes.forEach(pane => {
+                renderPaneChart(pane);
+                const el = document.querySelector(`[data-pane-value="${pane.id}"]`);
+                if (el) el.innerHTML = paneValue(pane, active && active.id === pane.id);
+                const card = document.querySelector(`[data-pane-id="${pane.id}"]`);
+                if (card) card.classList.toggle('active', active && active.id === pane.id);
+            });
+        }
+
+        function paneValue(pane, isActive) {
+            const bars = state.viewBars;
+            if (!bars.length) return '—';
+            const b = bars[bars.length - 1];
+            const ext = b.ext || {};
+            switch (pane.type) {
+                case 'vol':
+                    return '量 ' + fmtVol(b.vol);
+                case 'macd': {
+                    const m = calcMacd(bars);
+                    return 'MACD ' + fmt(m.hist[m.hist.length - 1], 3);
+                }
+                case 'rps':
+                    return 'RPS20 ' + fmt(ext.rps20, 1);
+                case 'amo':
+                    return '额 ' + fmtAmo(b.amo);
+                case 'gain':
+                    return 'N20 ' + fmtPct(ext['中期涨幅N20']);
+                case 'deviation':
+                    return 'MA20 ' + fmtPct(ext['C_MA20_偏离率']);
+                default:
+                    return '—';
+            }
+        }
+
+        /* ---------------------------------------------------------------------
+       indicators implementation
+       --------------------------------------------------------------------- */
+        function calcMacd(bars) {
+            const closes = bars.map(b => b.close);
+            const ema = (arr, period) => {
+                const k = 2 / (period + 1);
+                const out = new Array(arr.length);
+                let prev = arr[0] || 0;
+                out[0] = prev;
+                for (let i = 1; i < arr.length; i++) {
+                    prev = arr[i] * k + prev * (1 - k);
+                    out[i] = prev;
+                }
+                return out;
+            };
+            const e12 = ema(closes, 12);
+            const e26 = ema(closes, 26);
+            const dif = closes.map((_, i) => e12[i] - e26[i]);
+            const dea = ema(dif, 9);
+            const hist = dif.map((v, i) => (v - dea[i]) * 2);
+            return {dif, dea, hist};
+        }
+
+        function movingAverage(values, period) {
+            const out = new Array(values.length).fill(null);
+            let sum = 0;
+            for (let i = 0; i < values.length; i++) {
+                sum += values[i] || 0;
+                if (i >= period) sum -= (values[i - period] || 0);
+                if (i >= period - 1) out[i] = sum / period;
+            }
+            return out;
+        }
+
+        function lineSeries(name, data, color, width, lineType) {
+            return {
+                name, type: 'line', data, symbol: 'none', smooth: true, connectNulls: true,
+                lineStyle: {width: width || 1, color, opacity: .9, type: lineType || 'solid'},
+                emphasis: {disabled: true}
+            };
+        }
+
+        function buildIndicator(pane, bars) {
+            const p = getPalette();
+            const dates = bars.map(b => b.date);
+            const base = {
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: {left: 48, right: 66, top: 8, bottom: 8},
+                xAxis: {
+                    type: 'category', data: dates, boundaryGap: true,
+                    axisLine: {lineStyle: {color: p.grid}}, axisTick: {show: false},
+                    axisLabel: {show: false}, splitLine: {show: false}
+                },
+                dataZoom: [{type: 'inside', start: state.zoom.start, end: state.zoom.end}]
+            };
+            const axis = {
+                type: 'value', scale: true, position: 'right',
+                axisLine: {show: false}, axisTick: {show: false},
+                axisLabel: {color: p.faint, fontSize: 8, margin: 5},
+                splitLine: {lineStyle: {color: p.grid, opacity: .8}}, splitNumber: 4
+            };
+            const tooltip = (formatter) => ({
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    crossStyle: {color: p.accent, width: 1},
+                    lineStyle: {color: p.accent, opacity: .35}
+                },
+                backgroundColor: p.panel, borderColor: p.border || p.grid, textStyle: {color: p.text, fontSize: 8.5},
+                confine: true, padding: [5, 7], formatter
+            });
+
+            if (pane.type === 'vol') {
+                const ma5 = movingAverage(bars.map(b => b.vol || 0), 5);
+                return Object.assign({}, base, {
+                    tooltip: tooltip(params => {
+                        const i = params[0].dataIndex;
+                        return `<b>${dates[i]}</b><br>成交量 ${fmtVol(bars[i].vol)}<br>成交额 ${fmtAmo(bars[i].amo)}`;
+                    }),
+                    yAxis: Object.assign({}, axis, {
+                        axisLabel: {
+                            color: p.faint,
+                            fontSize: 8,
+                            margin: 5,
+                            formatter: v => v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : (v / 1e4).toFixed(0) + '万'
+                        }
+                    }),
+                    series: [
+                        {
+                            name: '成交量',
+                            type: 'bar',
+                            data: bars.map(b => ({
+                                value: b.vol,
+                                itemStyle: {color: b.close >= b.open ? p.up : p.down, opacity: .62}
+                            })),
+                            barMaxWidth: 5
+                        },
+                        lineSeries('VOL MA5', ma5, p.ma[1] || p.accent, 1)
+                    ]
+                });
+            }
+
+            if (pane.type === 'macd') {
+                const m = calcMacd(bars);
+                return Object.assign({}, base, {
+                    tooltip: tooltip(params => {
+                        const i = params[0].dataIndex;
+                        return `<b>${dates[i]}</b><br>DIF ${fmt(m.dif[i], 4)}<br>DEA ${fmt(m.dea[i], 4)}<br>MACD ${fmt(m.hist[i], 4)}`;
+                    }),
+                    yAxis: axis,
+                    series: [
+                        {
+                            name: 'MACD',
+                            type: 'bar',
+                            data: m.hist.map(v => ({
+                                value: v,
+                                itemStyle: {color: v >= 0 ? p.up : p.down, opacity: .57}
+                            })),
+                            barMaxWidth: 4
+                        },
+                        lineSeries('DIF', m.dif, p.ma[1] || p.accent, 1),
+                        lineSeries('DEA', m.dea, p.ma[0] || '#e7bd4d', 1)
+                    ]
+                });
+            }
+
+            if (pane.type === 'rps') {
+                const keys = [['RPS10', 'rps10'], ['RPS20', 'rps20'], ['RPS50', 'rps50'], ['RPS120', 'rps120'], ['RPS250', 'rps250']];
+                return Object.assign({}, base, {
+                    tooltip: tooltip(params => {
+                        const i = params[0].dataIndex;
+                        return `<b>${dates[i]}</b><br>` + keys.map(([label, key]) => `${label} ${fmt(bars[i].ext && bars[i].ext[key], 1)}`).join('<br>');
+                    }),
+                    yAxis: Object.assign({}, axis, {min: 0, max: 100, splitNumber: 4}),
+                    series: keys.map(([label, key], idx) => lineSeries(label, bars.map(b => b.ext ? num(b.ext[key]) : null), p.ma[idx] || p.accent, 1.05))
+                });
+            }
+
+            if (pane.type === 'amo') {
+                const ma5 = movingAverage(bars.map(b => b.amo || 0), 5);
+                return Object.assign({}, base, {
+                    tooltip: tooltip(params => {
+                        const i = params[0].dataIndex;
+                        return `<b>${dates[i]}</b><br>成交额 ${fmtAmo(bars[i].amo)}<br>成交量 ${fmtVol(bars[i].vol)}`;
+                    }),
+                    yAxis: Object.assign({}, axis, {
+                        axisLabel: {
+                            color: p.faint,
+                            fontSize: 8,
+                            margin: 5,
+                            formatter: v => v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : (v / 1e4).toFixed(0) + '万'
+                        }
+                    }),
+                    series: [
+                        {
+                            name: '成交额',
+                            type: 'bar',
+                            data: bars.map(b => ({
+                                value: b.amo,
+                                itemStyle: {color: b.close >= b.open ? p.up : p.down, opacity: .55}
+                            })),
+                            barMaxWidth: 5
+                        },
+                        lineSeries('AMO MA5', ma5, p.ma[2] || p.accent, 1)
+                    ]
+                });
+            }
+
+            if (pane.type === 'gain') {
+                const keys = [['N5', '中期涨幅N5'], ['N10', '中期涨幅N10'], ['N20', '中期涨幅N20'], ['N60', '中期涨幅N60'], ['N120', '中期涨幅N120'], ['N250', '中期涨幅N250']];
+                return Object.assign({}, base, {
+                    tooltip: tooltip(params => {
+                        const i = params[0].dataIndex;
+                        return `<b>${dates[i]}</b><br>` + keys.map(([label, key]) => `${label} ${fmtPct(bars[i].ext && bars[i].ext[key])}`).join('<br>');
+                    }),
+                    yAxis: Object.assign({}, axis, {
+                        axisLabel: {color: p.faint, fontSize: 8, margin: 5, formatter: v => v.toFixed(0) + '%'}
+                    }),
+                    series: keys.map(([label, key], idx) => lineSeries(label, bars.map(b => b.ext ? num(b.ext[key]) : null), p.ma[idx] || p.accent, 1))
+                        .concat([{
+                            name: '零轴',
+                            type: 'line',
+                            data: bars.map(() => 0),
+                            symbol: 'none',
+                            silent: true,
+                            lineStyle: {width: 1, color: p.axis, type: 'dashed', opacity: .35},
+                            emphasis: {disabled: true}
+                        }])
+                });
+            }
+
+            // deviation
+            const keys = [['MA5', 'C_MA5_偏离率'], ['MA10', 'C_MA10_偏离率'], ['MA20', 'C_MA20_偏离率'], ['MA60', 'C_MA60_偏离率'], ['MA120', 'C_MA120_偏离率'], ['MA250', 'C_MA250_偏离率']];
+            return Object.assign({}, base, {
+                tooltip: tooltip(params => {
+                    const i = params[0].dataIndex;
+                    return `<b>${dates[i]}</b><br>` + keys.map(([label, key]) => `${label} ${fmtPct(bars[i].ext && bars[i].ext[key])}`).join('<br>');
+                }),
+                yAxis: Object.assign({}, axis, {
+                    axisLabel: {color: p.faint, fontSize: 8, margin: 5, formatter: v => v.toFixed(0) + '%'}
+                }),
+                series: keys.map(([label, key], idx) => lineSeries(label, bars.map(b => b.ext ? num(b.ext[key]) : null), p.ma[idx] || p.accent, 1))
+            });
+        }
+
+        function renderPaneChart(pane) {
+            const chart = state.charts.get(pane.id);
+            if (!chart) return;
+            const bars = state.viewBars;
+            if (!bars.length) {
+                chart.clear();
+                return;
+            }
+            const option = buildIndicator(pane, bars);
+            chart.setOption(option, true);
+            const valueEl = document.querySelector(`[data-pane-value="${pane.id}"]`);
+            if (valueEl) valueEl.innerHTML = paneValue(pane);
+            chart.resize();
+        }
+
+        /* ---------------------------------------------------------------------
+       main chart
+       --------------------------------------------------------------------- */
+        function initMainChart() {
+            if (state.mainChart) return;
+            state.mainChart = echarts.init($('mainChart'));
+            state.mainChart.on('dataZoom', () => {
+                const opt = state.mainChart.getOption();
+                const dz = opt && opt.dataZoom && opt.dataZoom[0];
+                if (dz) state.zoom = {start: dz.start, end: dz.end};
+            });
+            state.mainChart.on('updateAxisPointer', (event) => {
+                const info = event && event.axesInfo && event.axesInfo[0];
+                if (!info || info.value === null || info.value === undefined) return;
+                const value = info.value;
+                let idx;
+                if (typeof value === 'number' && Number.isFinite(value)) idx = Math.round(value);
+                else idx = state.viewBars.findIndex(b => b.date === String(value));
+                if (idx >= 0) selectBar(idx);
+            });
+            state.mainChart.on('click', (params) => {
+                if (params && params.dataIndex !== undefined && params.dataIndex !== null) {
+                    selectBar(params.dataIndex);
+                }
+            });
+            // 兜底：部分浏览器/ECharts 版本 showTip 不派发 updateAxisPointer；
+            // 直接监听 zrender mousemove，按像素反查类目索引，保证底部日期上下文跟随十字光标。
+            state.mainChart.getZr().on('mousemove', (e) => {
+                const x = e.offsetX !== undefined ? e.offsetX : e.zrX;
+                const y = e.offsetY !== undefined ? e.offsetY : e.zrY;
+                if (x === undefined || y === undefined) return;
+                if (!state.mainChart.containPixel({gridIndex: 0}, [x, y])) return;
+                const idx = state.mainChart.convertFromPixel({xAxisIndex: 0}, x);
+                if (typeof idx === 'number' && Number.isFinite(idx)) selectBar(Math.round(idx));
+            });
+        }
+
+        function renderMainChart() {
+            initMainChart();
+            const bars = state.viewBars;
+            if (!bars.length) {
+                if (state.mainChart) state.mainChart.clear();
+                $('mainLegend').innerHTML = '';
+                return;
+            }
+            hideChartEmpty();
+            const p = getPalette();
+            const dates = bars.map(b => b.date);
+            const ohlc = bars.map(b => [b.open, b.close, b.low, b.high]);
+            const main = state.mainChart;
+
+            const maSeries = MA_DEFS.map((def, idx) => {
+                if (!def.draw) return null;
+                return lineSeries(
+                    def.key,
+                    bars.map(b => b.ma ? b.ma[def.key] : null),
+                    p.ma[idx] || p.accent,
+                    1,
+                    def.lineType
+                );
+            }).filter(Boolean);
+
+            const option = {
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: {left: 48, right: 66, top: 50, bottom: 54},
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        crossStyle: {color: p.accent, width: 1},
+                        lineStyle: {color: p.accent, opacity: .35}
+                    },
+                    backgroundColor: p.panel, borderColor: p.border || p.grid,
+                    textStyle: {color: p.text, fontSize: 9}, confine: true, padding: [6, 8],
+                    formatter: (params) => {
+                        const i = params[0].dataIndex;
+                        const b = bars[i];
+                        const prev = i > 0 ? bars[i - 1].close : b.open;
+                        const chg = prev ? (b.close - prev) / prev * 100 : 0;
+                        return `<div style="line-height:1.7"><b style="color:${p.strong}">${b.date}${b.firstDate && b.firstDate !== b.date ? ' ~ ' + b.firstDate : ''}</b><br>
+                        开 ${fmt(b.open)} &nbsp; 高 ${fmt(b.high)}<br>
+                        低 ${fmt(b.low)} &nbsp; 收 ${fmt(b.close)}<br>
+                        涨跌 <span style="color:${chg >= 0 ? p.up : p.down}">${fmtSigned(chg)}%</span><br>
+                        量 ${fmtVol(b.vol)} &nbsp; 额 ${fmtAmo(b.amo)}</div>`;
+                    }
+                },
+                axisPointer: {link: [{xAxisIndex: 'all'}]},
+                xAxis: {
+                    type: 'category', data: dates, boundaryGap: true,
+                    axisLine: {lineStyle: {color: p.grid}}, axisTick: {show: false},
+                    axisLabel: {color: p.faint, fontSize: 8, hideOverlap: true, formatter: v => String(v).slice(2)},
+                    splitLine: {show: false}
+                },
+                yAxis: {
+                    type: 'value', scale: true, position: 'right',
+                    axisLine: {show: false}, axisTick: {show: false},
+                    axisLabel: {color: p.faint, fontSize: 8, margin: 5},
+                    splitLine: {lineStyle: {color: p.grid, opacity: .85}}, splitNumber: 5
+                },
+                dataZoom: [
+                    {type: 'inside', start: state.zoom.start, end: state.zoom.end},
+                    {
+                        type: 'slider', start: state.zoom.start, end: state.zoom.end, height: 14, bottom: 8,
+                        borderColor: 'transparent', backgroundColor: 'transparent',
+                        fillerColor: alpha(p.accent, .14),
+                        handleStyle: {color: p.accent, borderColor: p.accent},
+                        textStyle: {color: p.faint, fontSize: 8}, showDetail: false,
+                        dataBackground: {lineStyle: {color: p.grid}, areaStyle: {color: p.grid}}
+                    }
+                ],
+                series: [
+                    {
+                        name: 'K线', type: 'candlestick', data: ohlc,
+                        itemStyle: {
+                            color: p.up,
+                            color0: p.down,
+                            borderColor: p.up,
+                            borderColor0: p.down,
+                            borderWidth: 1
+                        },
+                        barMaxWidth: 7, z: 2
+                    },
+                    ...maSeries
+                ]
+            };
+            main.setOption(option, true);
+            main.resize();
+            renderLegend(bars);
+            $('chartBadge').textContent = (PERIOD_SHORT[state.period] || '日K') + ' · 不复权';
+        }
+
+        function renderLegend(bars) {
+            const p = getPalette();
+            const b = bars[bars.length - 1];
+            $('mainLegend').innerHTML = MA_DEFS.map((def, idx) => {
+                const title = def.draw ? '通达信 ' + def.key : '通达信 NODRAW：仅显示数值，不画线';
+                return `<span title="${title}" style="color:${p.ma[idx] || p.accent}">${def.key} <b>${fmt(b && b.ma ? b.ma[def.key] : null)}</b></span>`;
+            }).join('');
+        }
+
+        function connectCharts() {
+            const charts = [];
+            if (state.mainChart) charts.push(state.mainChart);
+            state.charts.forEach(c => charts.push(c));
+            if (state.chartGroup) {
+                try {
+                    echarts.disconnect(state.chartGroup);
+                } catch (e) { /* ignore */
+                }
+                state.chartGroup = null;
+            }
+            if (charts.length > 1) state.chartGroup = echarts.connect(charts);
+        }
+
+        function resizeCharts() {
+            if (state.mainChart) state.mainChart.resize();
+            state.charts.forEach(c => {
+                try {
+                    c.resize();
+                } catch (e) { /* ignore */
+                }
+            });
+        }
+
+        /* ---------------------------------------------------------------------
+       library
+       --------------------------------------------------------------------- */
+        function openLibrary() {
+            renderLibrary();
+            $('libraryModal').hidden = false;
+            $('libraryClose').focus();
+        }
+
+        function closeLibrary() {
+            $('libraryModal').hidden = true;
+        }
+
+        function renderLibrary() {
+            const used = new Set(state.panes.map(p => p.type));
+            const full = state.panes.length >= MAX_PANES;
+            $('libraryGrid').innerHTML = IND_ORDER.map(type => {
+                const ind = INDICATORS[type];
+                const isUsed = used.has(type);
+                return `<div class="library-card">
+                <span class="library-icon">${esc(ind.short.slice(0, 3))}</span>
+                <div><b>${esc(ind.name)}</b><small>${esc(ind.desc)}</small></div>
+                <button type="button" data-lib-type="${type}" ${!isUsed && full ? 'disabled' : ''}>${isUsed ? '定位' : '添加'}</button>
+            </div>`;
+            }).join('');
+        }
+
+        function libraryAction(type) {
+            const used = state.panes.find(p => p.type === type);
+            if (used) {
+                setActivePane(used.id);
+                closeLibrary();
+                toast('已定位到副图');
+                return;
+            }
+            if (state.panes.length >= MAX_PANES) {
+                toast('最多同时显示 ' + MAX_PANES + ' 个副图', true);
+                return;
+            }
+            addPane(type);
+            closeLibrary();
+        }
+
+        /* ---------------------------------------------------------------------
+       period / range / toolbar
+       --------------------------------------------------------------------- */
+        function setPeriod(period) {
+            if (!PERIOD_LABEL[period] || state.period === period) return;
+            state.period = period;
+            updatePeriodUI();
+            rebuildData(true);
+        }
+
+        function updatePeriodUI() {
+            document.querySelectorAll('#periodTabs [data-period]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.period === state.period);
+            });
+            $('periodChip').textContent = PERIOD_SHORT[state.period] || '日K';
+            $('stockPeriod').textContent = '主图' + (PERIOD_LABEL[state.period] || '日线');
+            $('statusPeriod').textContent = PERIOD_LABEL[state.period] || '日线';
+        }
+
+        function setRange(range) {
+            if (!RANGE_LABEL[range] || state.range === range) return;
+            state.range = range;
+            $('rangeSelect').value = range;
+            updateRangeUI();
+            rebuildData(true);
+        }
+
+        function updateRangeUI() {
+            $('rangeSelect').value = state.range;
+            $('statusRange').textContent = RANGE_LABEL[state.range];
+        }
+
+        function resetZoom() {
+            state.zoom = defaultZoom(state.viewBars);
+            renderMainChart();
+            renderAllPaneCharts();
+            connectCharts();
+        }
+
+        async function toggleFullscreen() {
+            try {
+                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+                else await document.exitFullscreen();
+            } catch (e) {
+                toast('当前浏览器不支持全屏', true);
+            }
+            setTimeout(resizeCharts, 120);
+        }
+
+        function exportMainChart() {
+            if (!state.mainChart) return;
+            try {
+                const bg = getPalette().panel;
+                const url = state.mainChart.getDataURL({type: 'png', pixelRatio: 2, backgroundColor: bg});
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${state.code}-${PERIOD_SHORT[state.period] || 'K'}-${(currentBar() || {}).date || ''}.png`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                toast('主图已导出');
+            } catch (e) {
+                toast('导出失败：' + e.message, true);
+            }
+        }
+
+        /* ---------------------------------------------------------------------
+       bind events
+       --------------------------------------------------------------------- */
+        function bindEvents() {
+            $('searchBtn').addEventListener('click', () => loadStock($('stockInput').value));
+            $('stockInput').addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    loadStock($('stockInput').value);
+                }
+                if (ev.key === 'Escape') $('stockInput').blur();
+            });
+            $('refreshBtn').addEventListener('click', () => loadStock(state.code, {silent: true}));
+            $('refreshIconBtn').addEventListener('click', () => loadStock(state.code, {silent: true}));
+            $('emptyRetry').addEventListener('click', () => loadStock(state.code));
+            $('watchBtn').addEventListener('click', toggleWatch);
+            $('watchAddBtn').addEventListener('click', () => {
+                if (!isWatched(state.code)) toggleWatch();
+                else toast('当前标的已在自选中');
+            });
+
+            $('periodTabs').addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-period]');
+                if (btn) setPeriod(btn.dataset.period);
+                if (ev.target.closest('#minuteBtn')) toast('当前接口仅提供日线，暂无分钟 / 分时数据', true);
+            });
+
+            $('rangeSelect').addEventListener('change', () => setRange($('rangeSelect').value));
+            $('resetZoomBtn').addEventListener('click', resetZoom);
+            $('fullscreenBtn').addEventListener('click', toggleFullscreen);
+            $('exportBtn').addEventListener('click', exportMainChart);
+
+            $('themeBtn').addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const open = $('themeMenu').hidden;
+                $('themeMenu').hidden = !open;
+                $('themeBtn').setAttribute('aria-expanded', String(open));
+                renderThemeMenu();
+            });
+            $('themeMenu').addEventListener('click', (ev) => {
+                const opt = ev.target.closest('[data-theme]');
+                if (opt) setTheme(opt.dataset.theme);
+            });
+            document.addEventListener('click', (ev) => {
+                if (!$('themeMenu').hidden && !ev.target.closest('.theme-wrap')) {
+                    $('themeMenu').hidden = true;
+                    $('themeBtn').setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            $('subTabs').addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-sub-type]');
+                if (!btn) return;
+                const type = btn.dataset.subType;
+                const used = state.panes.find(p => p.type === type);
+                if (used) {
+                    setActivePane(used.id);
+                    return;
+                }
+                const active = activePane();
+                if (active) changePaneType(active, type);
+                else addPane(type);
+            });
+
+            $('addPaneBtn').addEventListener('click', openLibrary);
+            $('libraryBtn').addEventListener('click', openLibrary);
+            $('libraryClose').addEventListener('click', closeLibrary);
+            $('libraryModal').addEventListener('click', (ev) => {
+                if (ev.target === $('libraryModal')) closeLibrary();
+            });
+            $('libraryGrid').addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-lib-type]');
+                if (btn && !btn.disabled) libraryAction(btn.dataset.libType);
+            });
+
+            $('indicatorChips').addEventListener('click', (ev) => {
+                const more = ev.target.closest('#moreIndicators');
+                if (more) {
+                    openLibrary();
+                    return;
+                }
+                const btn = ev.target.closest('[data-ind-type]');
+                if (!btn) return;
+                const type = btn.dataset.indType;
+                const used = state.panes.find(p => p.type === type);
+                if (used) {
+                    setActivePane(used.id);
+                    toast('已定位到副图');
+                    return;
+                }
+                addPane(type);
+            });
+
+            $('watchList').addEventListener('click', (ev) => {
+                const del = ev.target.closest('[data-watch-del]');
+                if (del) {
+                    const code = del.dataset.watchDel;
+                    state.watchlist = state.watchlist.filter(x => x.code !== code);
+                    saveWatchlist();
+                    renderWatchlist();
+                    updateHeader();
+                    return;
+                }
+                const item = ev.target.closest('[data-watch-code]');
+                if (item) loadStock(item.dataset.watchCode);
+            });
+
+            document.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Escape') {
+                    if (!$('libraryModal').hidden) closeLibrary();
+                    if (!$('themeMenu').hidden) {
+                        $('themeMenu').hidden = true;
+                        $('themeBtn').setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+
+            window.addEventListener('resize', resizeCharts);
+            document.addEventListener('fullscreenchange', () => setTimeout(resizeCharts, 100));
+        }
+
+        /* ---------------------------------------------------------------------
+       init
+       --------------------------------------------------------------------- */
+        function init() {
+            loadWatchlist();
+            loadPanes();
+            state.theme = document.documentElement.dataset.theme || 'light';
+            renderThemeMenu();
+            bindEvents();
+            updateMarketStatus();
+            setInterval(updateMarketStatus, 60000);
+
+            // restore code / theme / period / range from URL
+            let code = '300059';
+            try {
+                const q = new URLSearchParams(window.location.search);
+                const qCode = q.get('code');
+                if (qCode) code = normalizeCode(qCode) || code;
+                const qTheme = q.get('theme');
+                if (THEMES.some(t => t.id === qTheme)) {
+                    state.theme = qTheme;
+                    document.documentElement.dataset.theme = qTheme;
+                    renderThemeMenu();
+                }
+                const qPeriod = q.get('period');
+                if (PERIOD_LABEL[qPeriod]) state.period = qPeriod;
+                const qRange = q.get('range');
+                if (RANGE_LABEL[qRange]) state.range = qRange;
+                $('rangeSelect').value = state.range;
+                updatePeriodUI();
+                updateRangeUI();
+            } catch (e) { /* ignore */
+            }
+            $('stockInput').value = code;
+            loadStock(code);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
+</body>
+</html>
