@@ -21,15 +21,16 @@
                 <div class="row">
                     <div class="col-md-4">
                         <label for="stockCode" class="form-label">股票代码</label>
-                        <input type="text" class="form-control" id="stockCode" onkeydown="handleKeyDown(event)"/>
+                        <input type="text" class="form-control" id="stockCode" value="300059"
+                               onkeydown="handleKeyDown(event)"/>
                     </div>
                     <div class="col-md-4">
                         <label for="startDate" class="form-label">起始日期</label>
-                        <input type="date" class="form-control" id="startDate" value="2025-07-01"/>
+                        <input type="date" class="form-control" id="startDate"/>
                     </div>
                     <div class="col-md-4">
                         <label for="endDate" class="form-label">结束日期</label>
-                        <input type="date" class="form-control" id="endDate" value="2025-07-03"/>
+                        <input type="date" class="form-control" id="endDate"/>
                     </div>
                 </div>
                 <button type="button" class="btn btn-primary mt-3" onclick="loadKline()">查询</button>
@@ -71,6 +72,35 @@
             event.preventDefault(); // 阻止默认行为，避免表单提交导致的页面刷新或参数清空
             loadKline(); // 调用查询函数
         }
+    }
+
+    // 默认日期区间：结束日期=今天，起始日期=今天往前 3 年（本地时区，避免 toISOString 的 UTC 偏移）
+    function formatLocalDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function initDefaultDateRange() {
+        const today = new Date();
+        const endDate = formatLocalDate(today);
+
+        const targetYear = today.getFullYear() - 3;
+        const targetMonth = today.getMonth();
+        // 处理 2/29 -> 非闰年 2/28
+        const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const targetDay = Math.min(today.getDate(), lastDayOfTargetMonth);
+        const startDate = formatLocalDate(new Date(targetYear, targetMonth, targetDay));
+
+        const startEl = document.getElementById('startDate');
+        const endEl = document.getElementById('endDate');
+        startEl.value = startDate;
+        endEl.value = endDate;
+
+        // 禁止选择未来日期
+        endEl.max = endDate;
+        startEl.max = endDate;
     }
 
     function loadKline() {
@@ -169,8 +199,11 @@
             });
     }
 
-    // 页面加载时默认查询一次
-    window.onload = loadKline;
+    // 页面加载时：先初始化默认日期，再默认查询一次
+    window.addEventListener('DOMContentLoaded', function () {
+        initDefaultDateRange();
+        loadKline();
+    });
 
 </script>
 </body>
