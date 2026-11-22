@@ -213,8 +213,8 @@ public class ParserController {
 
     @Operation(summary = "期权 盘后行情（指定） - 拉取解析入库", description = "期权 盘后行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/fillOptionKline")
-    public Result<Void> fillOptionKline(@Schema(description = "期权代码（个股/ETF）", example = "10011565.SHO")
-                                        @RequestParam(defaultValue = "10011565.SHO") String optionCode) {
+    public Result<Void> fillOptionKline(@Schema(description = "期权代码（不能带后缀 .SHO / .SZO）", example = "10011565")
+                                        @RequestParam(defaultValue = "10011565") String optionCode) {
 
         klineService.fillOptionKline(optionCode);
         return Result.SUC();

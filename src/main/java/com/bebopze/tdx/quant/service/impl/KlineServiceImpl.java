@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.client.TdxTqKlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
@@ -577,11 +578,11 @@ public class KlineServiceImpl implements KlineService {
     private void fillOptionKline(String optionCode, Long optionId) {
 
 
-        // --------------------- ID
-
-
-        optionId = optionId == null ? baseOptionService.getIdByCode(optionCode) : optionId;
-        Assert.notNull(optionId, "期权信息不存在：" + optionCode);
+//        // --------------------- ID
+//
+//
+//        optionId = optionId == null ? baseOptionService.getIdByCode(optionCode) : optionId;
+//        Assert.notNull(optionId, "期权信息不存在：" + optionCode);
 
 
         // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
@@ -606,7 +607,16 @@ public class KlineServiceImpl implements KlineService {
 
 
         // --------------------- DB
-        baseOptionService.updateById(entity);
+
+
+        if (optionId != null) {
+            baseOptionService.updateById(entity);
+        } else {
+            optionId = baseOptionService.getIdByCode(optionCode);
+            entity.setId(optionId);
+
+            baseOptionService.saveOrUpdate(entity);
+        }
     }
 
 
@@ -894,7 +904,9 @@ public class KlineServiceImpl implements KlineService {
 
         BaseOptionDO entity = new BaseOptionDO();
         entity.setId(optionId);
+        entity.setCode(optionCode);
         entity.setName(optionName);
+        entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(optionCode));
 
 
         // --------------------------------------------------------------------------------
@@ -928,7 +940,7 @@ public class KlineServiceImpl implements KlineService {
         GetStockInfoDTO stockInfo = TdxTqAPI.get_stock_info(optionCode);
 
 
-        if (stockInfo == null) {
+        if (stockInfo != null) {
 
 
             // 科创50购12月1900
