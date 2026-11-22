@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * <p>
  * 期权-实时行情 Mapper 接口
@@ -14,6 +16,13 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
 
+
+    Long getIdByCode(@Param("code") String code);
+
     BaseOptionDO getByCode(@Param("code") String code);
 
+    List<BaseOptionDO> listAllSimple();
+
+
+    int delAllKlineExtData();
 }

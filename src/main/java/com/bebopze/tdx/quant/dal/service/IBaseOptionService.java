@@ -3,6 +3,8 @@ package com.bebopze.tdx.quant.dal.service;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import com.baomidou.mybatisplus.spring.service.IService;
 
+import java.util.Map;
+
 /**
  * <p>
  * 期权-实时行情 服务类
@@ -14,6 +16,13 @@ import com.baomidou.mybatisplus.spring.service.IService;
 public interface IBaseOptionService extends IService<BaseOptionDO> {
 
 
-    BaseOptionDO getByCode(String optionCode);
+    Long getIdByCode(String code);
 
+    BaseOptionDO getByCode(String code);
+
+
+    Map<String, Long> codeIdMap();
+
+
+    int delAllKlineExtData();
 }

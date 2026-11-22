@@ -10,6 +10,7 @@ import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
+import com.bebopze.tdx.quant.common.domain.tq.GetStockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
@@ -31,24 +32,6 @@ import java.util.Map;
  */
 @Slf4j
 public class TdxTqAPI {
-
-
-    public static void main(String[] args) {
-
-
-//        System.out.println(get_stock_list(GetStockListEnum.A_STOCK));
-//        System.out.println(get_sector_list());
-//        System.out.println(get_stock_list_in_sector("880952", 1));
-//
-//
-//        System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
-//        System.out.println(get_market_snapshot("880003.SH"));
-//
-//
-//        System.out.println(get_gb_info_by_date("000001.SZ", LocalDate.of(2017, 1, 1), null));
-//        System.out.println(get_gb_info_by_date("880515.SH", LocalDate.of(2017, 1, 1), null));
-//        System.out.println(get_gb_info_by_date("300783.SZ", LocalDate.of(2019, 7, 12), LocalDate.of(2026, 9, 30)));
-    }
 
 
     // -------------------------------------------- 分类/板块成份股 ------------------------------------------------------
@@ -359,6 +342,36 @@ public class TdxTqAPI {
     }
 
 
+    /**
+     * 获取 证券基本信息
+     *
+     * @param stock_code 证券代码
+     * @return
+     */
+    public static GetStockInfoDTO get_stock_info(String stock_code) {
+
+
+        // 获取 证券基本信息   get_stock_info
+        //
+        // https://help.tdx.com.cn/quant/docs/markdown/mindoc-1ctuhthaq5qmg/mindoc-1h10jj7r7jol4.html
+
+
+        //     参数       是否必选       参数类型                参数说明
+        // stock_code       Y            str             证券代码
+        // field_list       N          List[str]         字段筛选，传空则返回全部
+
+
+        JSONObject result = TdxTqHttpClient.call("get_stock_info",
+
+                                                 Map.of("stock_code", TdxFormatCodeUtil.formatCode(stock_code),
+                                                        "field_list", List.of()));
+
+
+        GetStockInfoDTO dto = JSON.to(GetStockInfoDTO.class, result);
+        return dto;
+    }
+
+
     //
 
 
@@ -393,5 +406,32 @@ public class TdxTqAPI {
         String data = result.getString("Value");
         return JSON.parseArray(data, GetGbInfoDTO.class);
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    public static void main(String[] args) {
+
+
+        // GetStockInfoDTO stockInfo = get_stock_info("000001.SZ");
+        GetStockInfoDTO stockInfo = get_stock_info("10011565.SHO");
+        System.out.println(stockInfo);
+
+
+//        System.out.println(get_stock_list(GetStockListEnum.A_STOCK));
+//        System.out.println(get_sector_list());
+//        System.out.println(get_stock_list_in_sector("880952", 1));
+//
+//
+//        System.out.println(get_market_data("000001.SZ", PeriodEnum.DAY, LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_market_snapshot("880003.SH"));
+//
+//
+//        System.out.println(get_gb_info_by_date("000001.SZ", LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_gb_info_by_date("880515.SH", LocalDate.of(2017, 1, 1), null));
+//        System.out.println(get_gb_info_by_date("300783.SZ", LocalDate.of(2019, 7, 12), LocalDate.of(2026, 9, 30)));
+    }
+
 
 }

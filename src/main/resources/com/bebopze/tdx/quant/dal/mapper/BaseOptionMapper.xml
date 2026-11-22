@@ -3,6 +3,15 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseOptionMapper">
 
 
+    <select id="getIdByCode" resultType="java.lang.Long">
+        SELECT id
+
+        FROM base_option
+
+        WHERE code = #{code}
+    </select>
+
+
     <select id="getByCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
         SELECT *
 
@@ -10,6 +19,54 @@
 
         WHERE code = #{code}
     </select>
+
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
+        SELECT id,
+               code,
+               symbol,
+               name,
+               call_put_type,
+               strike_price,
+               multiplier,
+               underlying_type,
+               underlying_code,
+               underlying_name,
+               start_date,
+               end_date,
+
+               tdx_market_type,
+
+               trade_date,
+               open,
+               high,
+               low,
+               close,
+               prev_close,
+               volume,
+               amount,
+               range_pct,
+               change_pct,
+               change_price,
+               turnover_pct,
+
+               gmt_create,
+               gmt_modify
+
+
+        FROM base_option
+    </select>
+
+
+    <update id="delAllKlineExtData">
+        UPDATE base_option
+
+
+        SET kline_his            = NULL,
+            kline_his_raw_len    = 0,
+            ext_data_his         = NULL,
+            ext_data_his_raw_len = 0
+    </update>
 
 
 </mapper>

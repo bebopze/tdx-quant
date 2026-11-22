@@ -211,6 +211,27 @@ public class ParserController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Operation(summary = "期权 盘后行情（指定） - 拉取解析入库", description = "期权 盘后行情（指定） - 拉取解析入库")
+    @GetMapping(value = "/fill/fillOptionKline")
+    public Result<Void> fillOptionKline(@Schema(description = "期权代码（个股/ETF）", example = "10011565.SHO")
+                                        @RequestParam(defaultValue = "10011565.SHO") String optionCode) {
+
+        klineService.fillOptionKline(optionCode);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "期权 盘后行情（全部） - 拉取解析入库", description = "期权 盘后行情（全部） - 拉取解析入库")
+    @GetMapping(value = "/fill/fillOptionKlineAll")
+    public Result<Void> fillOptionKlineAll() {
+        klineService.fillOptionKlineAll();
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Operation(summary = "通达信 数据导入 - check（kline + ext_data）", description = "通达信 数据导入 - check（kline + ext_data）")
     @GetMapping(value = "/importAll/check")
     public Result<Map<String, List<String>>> importAll_check() {

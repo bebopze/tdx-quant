@@ -39,8 +39,14 @@ public interface KlineService {
     void fillStockKlineAll__lastDay();
 
 
+    void fillOptionKline(String optionCode);
+
+    void fillOptionKlineAll();
+
+
     /**
      * 通达信 数据导入 - check（kline + ext_data）
      */
     Map<String, List<String>> importAll_check();
+
 }

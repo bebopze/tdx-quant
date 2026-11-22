@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.client.TdxTqKlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
@@ -11,10 +12,12 @@ import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.domain.tq.GetStockInfoDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
@@ -55,6 +58,9 @@ public class KlineServiceImpl implements KlineService {
     @Autowired
     private IBaseBlockService baseBlockService;
 
+    @Autowired
+    private IBaseOptionService baseOptionService;
+
 
     @Autowired
     private InitDataService initDataService;
@@ -82,8 +88,16 @@ public class KlineServiceImpl implements KlineService {
         });
 
 
+        // 行情-期权
+        Future<?> task3 = Executors.newSingleThreadExecutor().submit(() -> {
+            // refresh  ->  option kline
+            fillOptionKlineAll();
+        });
+
+
         task1.get();
         task2.get();
+        task3.get();
     }
 
     @TotalTime
@@ -114,84 +128,124 @@ public class KlineServiceImpl implements KlineService {
     @Override
     public void fillBlockKline(String blockCode, UpdateTypeEnum updateTypeEnum) {
         fillBlockKline(blockCode, null, updateTypeEnum);
+        log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
     }
 
     public void fillBlockKline(String blockCode, Long blockId, UpdateTypeEnum updateTypeEnum) {
 
-        BaseBlockDO baseBlockDO = new BaseBlockDO();
-        baseBlockDO.setCode(blockCode);
+
+        // --------------------- ID
 
 
-        // 板块 - K线数据
-        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode, updateTypeEnum.days);
+        blockId = blockId == null ? baseBlockService.getIdByCode(blockCode) : blockId;
+        Assert.notNull(blockId, "板块信息不存在：" + blockCode);
 
 
-        List<String> klines = Lists.newArrayList();
-
-        ldayDTOList.forEach(x -> {
+        // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
 
 
-            // K线数据-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
-            // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
+        // 通达信   本地读取
+        List<String> klines = klinesFromTdx(blockCode, updateTypeEnum);
 
 
-            // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
-            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本
-
-            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本]）
-            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
-                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null, x.getLtgb(), x.getZgb());
+        // -------------------------------------------------------------------------------------------------------------
 
 
-            String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-            klines.add(klineStr);
-        });
+        // --------------------- entity -> 实时行情
 
-
-        // kline
-        baseBlockDO.setKlineStr(klines, updateTypeEnum);
-
-
-        if (CollectionUtils.isEmpty(ldayDTOList)) {
+        if (CollectionUtils.isEmpty(klines)) {
             return;
         }
 
 
-        // 昨日
-        if (ldayDTOList.size() >= 2) {
-            LdayParser.LdayDTO prev = ldayDTOList.get(ldayDTOList.size() - 2);
-            baseBlockDO.setPrevClose(prev.getClose());
-        }
+        // 实时行情
+        BaseBlockDO entity = convertBlockDO(blockId, null, klines, updateTypeEnum);
 
 
-        // 板块 - 实时行情
-        LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
-
-        baseBlockDO.setTradeDate(last.getTradeDate());
-        baseBlockDO.setOpen(last.getOpen());
-        baseBlockDO.setHigh(last.getHigh());
-        baseBlockDO.setLow(last.getLow());
-        baseBlockDO.setClose(last.getClose());
-        baseBlockDO.setVolume(last.getVol());
-        baseBlockDO.setAmount(last.getAmount());
-        baseBlockDO.setRangePct(last.getRangePct());
-        baseBlockDO.setChangePct(last.getChangePct());
-        baseBlockDO.setChangePrice(last.getChangePrice());
-        baseBlockDO.setTurnoverPct(last.getTurnoverPct());
+        // --------------------- DB
+        baseBlockService.updateById(entity);
 
 
-        if (blockId != null) {
-            baseBlockDO.setId(blockId);
-            baseBlockService.updateById(baseBlockDO);
-        } else {
-            blockId = baseBlockService.getIdByCode(blockCode);
-            baseBlockDO.setId(blockId);
-
-            baseBlockService.saveOrUpdate(baseBlockDO);
-        }
+        // --------------------------------
 
 
-        log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
+//        // 板块 - K线数据
+//        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode, updateTypeEnum.days);
+//
+//
+//        List<String> klines = Lists.newArrayList();
+//
+//        ldayDTOList.forEach(x -> {
+//
+//
+//            // K线数据-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
+//            // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
+//
+//
+//            // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
+//            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本
+//
+//            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本]）
+//            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
+//                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null, x.getLtgb(), x.getZgb());
+//
+//
+//            String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
+//            klines.add(klineStr);
+//        });
+//
+//
+//        // -------------------------------------------------------------------------------------------------------------
+//
+//
+//        if (CollectionUtils.isEmpty(ldayDTOList)) {
+//            return;
+//        }
+//
+//
+//        BaseBlockDO entity = new BaseBlockDO();
+//        entity.setCode(blockCode);
+//
+//
+//        // kline
+//        entity.setKlineStr(klines, updateTypeEnum);
+//
+//
+//        // 昨日
+//        if (ldayDTOList.size() >= 2) {
+//            LdayParser.LdayDTO prev = ldayDTOList.get(ldayDTOList.size() - 2);
+//            entity.setPrevClose(prev.getClose());
+//        }
+//
+//
+//        // 板块 - 实时行情
+//        LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
+//
+//        entity.setTradeDate(last.getTradeDate());
+//        entity.setOpen(last.getOpen());
+//        entity.setHigh(last.getHigh());
+//        entity.setLow(last.getLow());
+//        entity.setClose(last.getClose());
+//        entity.setVolume(last.getVol());
+//        entity.setAmount(last.getAmount());
+//        entity.setRangePct(last.getRangePct());
+//        entity.setChangePct(last.getChangePct());
+//        entity.setChangePrice(last.getChangePrice());
+//        entity.setTurnoverPct(last.getTurnoverPct());
+//
+//
+//        if (blockId != null) {
+//            entity.setId(blockId);
+//            baseBlockService.updateById(entity);
+//        } else {
+//            blockId = baseBlockService.getIdByCode(blockCode);
+//            entity.setId(blockId);
+//
+//            baseBlockService.saveOrUpdate(entity);
+//        }
+//
+//
+//        log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
     }
 
 
@@ -332,7 +386,7 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
-    public void fillBlockKline__lastDay(String blockCode, Long blockId, KlineDTO snapshot__klineDTO) {
+    private void fillBlockKline__lastDay(String blockCode, Long blockId, KlineDTO snapshot__klineDTO) {
 
 
         // 板块 - K线数据
@@ -507,6 +561,119 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
+    @Override
+    public void fillOptionKline(String optionCode) {
+        fillOptionKline(optionCode, null);
+        log.info("fillOptionKline suc     >>>     optionCode : {}", optionCode);
+    }
+
+
+    /**
+     * 期权行情 拉取 -> DB
+     *
+     * @param optionCode
+     * @param optionId
+     */
+    private void fillOptionKline(String optionCode, Long optionId) {
+
+
+        // --------------------- ID
+
+
+        optionId = optionId == null ? baseOptionService.getIdByCode(optionCode) : optionId;
+        Assert.notNull(optionId, "期权信息不存在：" + optionCode);
+
+
+        // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
+
+
+        // 通达信   本地读取
+        List<String> klines = klinesFromTdx(optionCode, UpdateTypeEnum.HIS);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------- entity -> 实时行情
+
+        if (CollectionUtils.isEmpty(klines)) {
+            return;
+        }
+
+
+        // 实时行情
+        BaseOptionDO entity = convertOptionDO(optionId, optionCode, null, klines);
+
+
+        // --------------------- DB
+        baseOptionService.updateById(entity);
+    }
+
+
+    @TotalTime
+    @Override
+    public void fillOptionKlineAll() {
+
+
+        long[] start = {System.currentTimeMillis()};
+
+        AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // del ALL   ->   kline_ext_data
+        baseOptionService.delAllKlineExtData();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // insert ALL   ->   kline_ext_data
+
+
+        Map<String, Long> codeIdMap = baseOptionService.codeIdMap();
+
+
+        codeIdMap.keySet().parallelStream().forEach((optionCode) -> {
+            Long optionId = codeIdMap.get(optionCode);
+            int countVal = count.incrementAndGet();
+
+
+            try {
+                fillOptionKline(optionCode, optionId);
+
+
+                // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
+
+
+                long time = System.currentTimeMillis() - start[0];
+
+
+                long r1 = time / countVal;
+                long r2 = countVal * 1000L / time;
+                String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+
+
+                // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
+                log.info("fillOptionKlineAll - suc     >>>     optionCode : {}, optionId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         optionCode, optionId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
+
+
+            } catch (Exception ex) {
+                log.error("fillOptionKlineAll - err     >>>     optionCode : {}, optionId : {} , count : {} , suc : {} , err : {}",
+                          optionCode, optionId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
+            }
+        });
+
+
+        initDataService.deleteDiskCache();
+    }
+
+
     @DistributedLock(value = 60, autoRenew = true, renewInterval = 10, keyPrefix = "importAll_check")
     @Override
     public Map<String, List<String>> importAll_check() {
@@ -666,6 +833,156 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
+    private BaseBlockDO convertBlockDO(Long blockId,
+                                       String blockName,
+                                       List<String> klines,
+                                       UpdateTypeEnum updateTypeEnum) {
+
+
+        BaseBlockDO entity = new BaseBlockDO();
+        entity.setId(blockId);
+        entity.setName(blockName);
+
+
+        // 实时行情   -   last kline
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // K线数据
+        entity.setKlineStr(klines, updateTypeEnum);
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 昨日
+        if (klines.size() >= 2) {
+            KlineDTO prevKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
+            entity.setPrevClose(of(prevKlineDTO.getClose()));
+        }
+
+
+        // 实时行情   -   last kline
+        entity.setTradeDate(lastKlineDTO.getDate());
+
+        entity.setOpen(of(lastKlineDTO.getOpen()));
+        entity.setHigh(of(lastKlineDTO.getHigh()));
+        entity.setLow(of(lastKlineDTO.getLow()));
+        entity.setClose(of(lastKlineDTO.getClose()));
+
+        entity.setVolume(lastKlineDTO.getVol());
+        entity.setAmount(of(lastKlineDTO.getAmo()));
+
+        entity.setRangePct(of(lastKlineDTO.getRangePct()));
+        entity.setChangePct(of(lastKlineDTO.getChangePct()));
+        entity.setChangePrice(of(lastKlineDTO.getChangePrice()));
+        entity.setTurnoverPct(of(lastKlineDTO.getTurnoverPct()));
+
+
+        return entity;
+    }
+
+
+    private BaseOptionDO convertOptionDO(Long optionId,
+                                         String optionCode,
+                                         String optionName,
+                                         List<String> klines) {
+
+
+        BaseOptionDO entity = new BaseOptionDO();
+        entity.setId(optionId);
+        entity.setName(optionName);
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // K线数据
+        entity.setKlineHisStr(JSON.toJSONString(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 昨日
+        if (klines.size() >= 2) {
+            KlineDTO prevKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
+            entity.setPrevClose(of(prevKlineDTO.getClose()));
+        }
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 实时行情   -   last kline
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 期权 合约信息
+        GetStockInfoDTO stockInfo = TdxTqAPI.get_stock_info(optionCode);
+
+
+        if (stockInfo == null) {
+
+
+            // 科创50购12月1900
+            String name = stockInfo.getName();
+
+
+            String[] name_arr = name.split("购");
+            String callPutType = "C";
+            String underlyingName = name_arr[0];
+
+            if (name_arr.length != 2) {
+
+                name_arr = name.split("沽");
+                callPutType = "P";
+                underlyingName = name_arr[0];
+            }
+
+
+            entity.setSymbol(null);
+            entity.setName(name);
+            entity.setCallPutType(callPutType);
+            entity.setStrikePrice(stockInfo.getJ_mgjzc2());
+            entity.setMultiplier(stockInfo.getQHVolBaseRate());
+            entity.setUnderlyingType(1);
+            entity.setUnderlyingCode(stockInfo.getUnderly_code());
+            entity.setUnderlyingName(underlyingName);
+            entity.setStartDate(DateTimeUtil.parseDate_yyyyMMdd(stockInfo.getJ_start()));
+            entity.setEndDate(lastKlineDTO.getDate());
+        }
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 实时行情   -   last kline
+        entity.setTradeDate(lastKlineDTO.getDate());
+
+        entity.setOpen(of(lastKlineDTO.getOpen()));
+        entity.setHigh(of(lastKlineDTO.getHigh()));
+        entity.setLow(of(lastKlineDTO.getLow()));
+        entity.setClose(of(lastKlineDTO.getClose()));
+
+        entity.setVolume(lastKlineDTO.getVol());
+        entity.setAmount(of(lastKlineDTO.getAmo()));
+
+        entity.setRangePct(of(lastKlineDTO.getRangePct()));
+        entity.setChangePct(of(lastKlineDTO.getChangePct()));
+        entity.setChangePrice(of(lastKlineDTO.getChangePrice()));
+        entity.setTurnoverPct(of(lastKlineDTO.getTurnoverPct()));
+
+
+        return entity;
+    }
+
     private BaseStockDO convertStockDO(Long stockId,
                                        String stockName,
                                        List<String> klines,
@@ -736,7 +1053,7 @@ public class KlineServiceImpl implements KlineService {
         Assert.notNull(stockId, "个股信息不存在：" + stockCode);
 
 
-        // ---------------------  拉取数据     ->     通达信-本地读取   /   东方财富 API
+        // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
 
 
         // 通达信   本地读取
