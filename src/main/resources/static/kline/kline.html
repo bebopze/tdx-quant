@@ -61,14 +61,14 @@
             /* 通达信均线色系；明亮主题对白/黄/青做同色系加深，保证可读性 */
             --ma5: #475569; /* MA5   COLORWHITE  NODRAW */
             --ma10: #b77900; /* MA10  COLORYELLOW */
-            --ma20: #c026d3; /* MA20  COLORMAGENTA DOTLINE */
+            --ma20: #ff00ff; /* MA20  COLORMAGENTA DOTLINE */
             --ma30: #dc2626; /* MA30  COLORLIRED  NODRAW */
-            --ma50: #15803d; /* MA50  COLORGREEN */
-            --ma60: #65a30d; /* MA60  COLORLIGREEN NODRAW */
+            --ma50: GREEN; /* MA50  COLORGREEN */
+            --ma60: #05f475; /* MA60  COLORLIGREEN NODRAW */
             --ma100: #6b7280; /* MA100 COLORGRAY */
             --ma120: #94a3b8; /* MA120 COLORLIGRAY NODRAW */
-            --ma200: #1d4ed8; /* MA200 COLORBLUE */
-            --ma250: #0e7490; /* MA250 COLORCYAN */
+            --ma200: #0d66e6; /* MA200 COLORBLUE */
+            --ma250: #00e1ff; /* MA250 COLORCYAN */
             --shadow: 0 1px 2px rgba(15, 35, 60, .04), 0 8px 24px rgba(15, 35, 60, .035);
             --radius: 7px;
             --topbar-h: 56px;
@@ -2593,6 +2593,13 @@
             return (d && d.ext) || {};
         }
 
+        // 当前十字光标/点击选中的 K 线；默认最新一根
+        function selectedBar() {
+            if (!state.viewBars.length) return null;
+            return state.viewBars.find(b => b.date === state.selectedDate)
+                || state.viewBars[state.viewBars.length - 1];
+        }
+
         function weekdayCN(dateStr) {
             const d = parseDate(dateStr);
             if (!d) return '—';
@@ -2637,6 +2644,9 @@
             if (!state.viewBars.length) return;
             const i = Math.max(0, Math.min(state.viewBars.length - 1, Number(index)));
             state.selectedDate = state.viewBars[i].date;
+            // 主图顶部：MA 数值 + 中期涨幅/调整指标 + 底部日期上下文，统一切换到光标日期
+            renderLegend(state.viewBars);
+            renderMainMetrics();
             updateStatusContext(state.selectedDate);
         }
 
@@ -2644,7 +2654,8 @@
         function renderMainMetrics() {
             const host = $('mainMetrics');
             if (!host) return;
-            const ext = latestExt();
+            const bar = selectedBar();
+            const ext = (bar && bar.ext) || {};
             const pctItem = (label, key, field) => {
                 const v = num(ext[key]);
                 const cls = v === null || v === 0 ? '' : v > 0 ? 'up' : 'down';
@@ -3429,7 +3440,8 @@
 
         function renderLegend(bars) {
             const p = getPalette();
-            const b = bars[bars.length - 1];
+            const b = (bars || []).find(x => x.date === state.selectedDate)
+                || (bars && bars.length ? bars[bars.length - 1] : null);
             $('mainLegend').innerHTML = MA_DEFS.map((def, idx) => {
                 const title = def.draw ? '通达信 ' + def.key : '通达信 NODRAW：仅显示数值，不画线';
                 return `<span title="${title}" style="color:${p.ma[idx] || p.accent}">${def.key} <b>${fmt(b && b.ma ? b.ma[def.key] : null)}</b></span>`;
