@@ -295,13 +295,14 @@
 
         .search-box {
             flex: 0 1 330px;
+            position: relative;
             display: flex;
             align-items: center;
             height: 31px;
             border: 1px solid var(--border);
             border-radius: 6px;
             background: var(--panel-2);
-            overflow: hidden;
+            overflow: visible;
         }
 
         .search-box:focus-within {
@@ -344,6 +345,76 @@
 
         .search-box button:hover {
             background: var(--accent-soft);
+        }
+
+        /* 搜索关键词下拉：默认 10 条 code/name */
+        .search-suggest {
+            position: absolute;
+            z-index: 90;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 5px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            box-shadow: 0 12px 30px rgba(8, 20, 36, .18);
+        }
+
+        .search-item {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 62px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .search-item:hover,
+        .search-item.active {
+            background: var(--accent-soft);
+        }
+
+        .search-item .s-code {
+            font-family: var(--mono, "SF Mono", "Roboto Mono", monospace);
+            color: var(--accent);
+            font-size: 9.5px;
+        }
+
+        .search-item .s-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text);
+            font-size: 10px;
+        }
+
+        .search-item .s-type {
+            color: var(--faint);
+            font-size: 8px;
+            border: 1px solid var(--border-soft);
+            border-radius: 3px;
+            padding: 1px 4px;
+        }
+
+        .search-state {
+            padding: 10px 8px;
+            color: var(--faint);
+            font-size: 9px;
+            text-align: center;
+        }
+
+        .search-state.err {
+            color: var(--up);
         }
 
         .periods {
@@ -1892,8 +1963,10 @@
         <div class="search-box">
             <span class="search-icon">⌕</span>
             <input id="stockInput" type="text" autocomplete="off" spellcheck="false"
-                   placeholder="输入股票 / 板块 / 期权代码，如 300059"/>
+                   aria-autocomplete="list" aria-controls="stockSuggest"
+                   placeholder="输入股票 / 板块 / 期权代码或名称，如 300059 / 东方财富"/>
             <button id="searchBtn" type="button">查询</button>
+            <div class="search-suggest" id="stockSuggest" role="listbox" hidden></div>
         </div>
 
         <nav class="periods" id="periodTabs" aria-label="K线周期">
@@ -2180,6 +2253,11 @@
             lastRenderError: null
         };
 
+        let suggestTimer = null;
+        let suggestSeq = 0;
+        let suggestItems = [];
+        let suggestActive = -1;
+
         /* ---------------------------------------------------------------------
        basic helpers
        --------------------------------------------------------------------- */
@@ -2276,6 +2354,121 @@
             if (!c) return '';
             c = c.replace(/\.(SH|SZ|BJ)$/i, '').replace(/^(SH|SZ|BJ)\.?/i, '');
             return c;
+        }
+
+        function securityType(code) {
+            if (/^88[01]/.test(code)) return '板块';
+            if (code.length === 8 && /^(1001|9000)/.test(code)) return '期权';
+            if (/^[15]/.test(code)) return 'ETF';
+            if (/^[0369]/.test(code)) return '股票';
+            return '证券';
+        }
+
+        function normalizeSuggestions(list) {
+            const seen = new Set();
+            const out = [];
+            (list || []).forEach(x => {
+                const code = String(x.Code !== undefined ? x.Code : (x.code || '')).trim();
+                const name = String(x.Name !== undefined ? x.Name : (x.name || '')).trim();
+                if (!code || seen.has(code)) return;
+                seen.add(code);
+                out.push({code, name: name || code});
+            });
+            return out.slice(0, 10);
+        }
+
+        function hideSuggestions() {
+            clearTimeout(suggestTimer);
+            suggestTimer = null;
+            suggestSeq++;
+            suggestItems = [];
+            suggestActive = -1;
+            const box = $('stockSuggest');
+            if (box) {
+                box.hidden = true;
+                box.innerHTML = '';
+            }
+        }
+
+        function showSearchState(text, isError) {
+            const box = $('stockSuggest');
+            if (!box) return;
+            suggestItems = [];
+            suggestActive = -1;
+            box.innerHTML = `<div class="search-state${isError ? ' err' : ''}">${esc(text)}</div>`;
+            box.hidden = false;
+        }
+
+        function renderSuggestions() {
+            const box = $('stockSuggest');
+            if (!box) return;
+            if (!suggestItems.length) {
+                showSearchState('无匹配证券');
+                return;
+            }
+            box.innerHTML = suggestItems.map((item, index) => `
+                <button type="button" class="search-item ${index === suggestActive ? 'active' : ''}"
+                        role="option" data-suggest-index="${index}" aria-selected="${index === suggestActive}">
+                    <span class="s-code">${esc(item.code)}</span>
+                    <span class="s-name">${esc(item.name)}</span>
+                    <span class="s-type">${esc(securityType(item.code))}</span>
+                </button>`).join('');
+            box.hidden = false;
+            const active = box.querySelector('.search-item.active');
+            if (active) active.scrollIntoView({block: 'nearest'});
+        }
+
+        async function fetchSuggestions(keyword) {
+            const kw = String(keyword || '').trim();
+            if (!kw) {
+                hideSuggestions();
+                return [];
+            }
+            const seq = ++suggestSeq;
+            showSearchState('搜索中...');
+            try {
+                const json = await fetchJson(`/api/stock/search?keyword=${encodeURIComponent(kw)}&limit=10`);
+                if (seq !== suggestSeq) return [];
+                if (!json || json.success === false) {
+                    throw new Error((json && json.msg) || '搜索失败');
+                }
+                suggestItems = normalizeSuggestions(json.data || []);
+                suggestActive = suggestItems.length ? 0 : -1;
+                renderSuggestions();
+                return suggestItems;
+            } catch (e) {
+                if (seq === suggestSeq) showSearchState('搜索失败', true);
+                return [];
+            }
+        }
+
+        function chooseSuggestion(index) {
+            const item = suggestItems[index];
+            if (!item) return;
+            const code = item.code;
+            $('stockInput').value = code;
+            hideSuggestions();
+            loadStock(code);
+        }
+
+        async function submitSearch() {
+            const kw = String($('stockInput').value || '').trim();
+            if (!kw) {
+                toast('请输入股票 / 板块 / 期权代码或名称', true);
+                return;
+            }
+            if (suggestItems.length) {
+                chooseSuggestion(suggestActive >= 0 ? suggestActive : 0);
+                return;
+            }
+            if (/^\d{6}$/.test(kw) || /^\d{8}$/.test(kw)) {
+                hideSuggestions();
+                loadStock(kw);
+                return;
+            }
+            const list = await fetchSuggestions(kw);
+            if (list.length) chooseSuggestion(0);
+            else toast('未找到匹配证券', true);
         }
 
         function marketTags(code, name) {
@@ -2409,6 +2602,7 @@
        --------------------------------------------------------------------- */
         async function loadStock(input, options) {
             const opts = options || {};
+            hideSuggestions();
             const code = normalizeCode(input);
             if (!code) {
                 toast('请输入股票 / 板块 / 期权代码', true);
@@ -3681,13 +3875,50 @@
        bind events
        --------------------------------------------------------------------- */
         function bindEvents() {
-            $('searchBtn').addEventListener('click', () => loadStock($('stockInput').value));
+            $('searchBtn').addEventListener('click', submitSearch);
+            $('stockInput').addEventListener('input', () => {
+                clearTimeout(suggestTimer);
+                const kw = $('stockInput').value.trim();
+                if (!kw) {
+                    hideSuggestions();
+                    return;
+                }
+                hideSuggestions();
+                suggestTimer = setTimeout(() => fetchSuggestions(kw), 200);
+            });
             $('stockInput').addEventListener('keydown', (ev) => {
+                if (ev.key === 'ArrowDown') {
+                    if (!suggestItems.length) return;
+                    ev.preventDefault();
+                    suggestActive = (suggestActive + 1) % suggestItems.length;
+                    renderSuggestions();
+                    return;
+                }
+                if (ev.key === 'ArrowUp') {
+                    if (!suggestItems.length) return;
+                    ev.preventDefault();
+                    suggestActive = (suggestActive - 1 + suggestItems.length) % suggestItems.length;
+                    renderSuggestions();
+                    return;
+                }
                 if (ev.key === 'Enter') {
                     ev.preventDefault();
-                    loadStock($('stockInput').value);
+                    if (suggestItems.length) chooseSuggestion(suggestActive >= 0 ? suggestActive : 0);
+                    else submitSearch();
+                    return;
                 }
-                if (ev.key === 'Escape') $('stockInput').blur();
+                if (ev.key === 'Escape') {
+                    hideSuggestions();
+                    $('stockInput').blur();
+                }
+            });
+            $('stockSuggest').addEventListener('mousedown', (ev) => ev.preventDefault());
+            $('stockSuggest').addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-suggest-index]');
+                if (btn) chooseSuggestion(Number(btn.dataset.suggestIndex));
+            });
+            document.addEventListener('click', (ev) => {
+                if (!ev.target.closest('.search-box')) hideSuggestions();
             });
             $('refreshBtn').addEventListener('click', () => loadStock(state.code, {silent: true}));
             $('refreshIconBtn').addEventListener('click', () => loadStock(state.code, {silent: true}));
