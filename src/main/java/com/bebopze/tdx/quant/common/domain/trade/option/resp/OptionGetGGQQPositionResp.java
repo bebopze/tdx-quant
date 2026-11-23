@@ -2,6 +2,7 @@ package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
 import com.bebopze.tdx.quant.client.EastMoneyOptionTradeAPI;
 import com.bebopze.tdx.quant.client.KlineAPI;
+import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
@@ -243,7 +244,7 @@ public class OptionGetGGQQPositionResp {
     }
 
 
-    // ------------------------------------
+    // ------------------------------------ 标的证券
 
 
     // 标的证券name（ETF名称）
@@ -252,6 +253,19 @@ public class OptionGetGGQQPositionResp {
     public String getBdzqmc() {
         bdzqmc = EastMoneyOptionTradeAPI.getFromEtfDictCache(bdzqdm);
         return bdzqmc;
+    }
+
+
+    // 标的证券 雪球URL（ETF）
+    private String underlyingXueqiuUrl;
+
+    public String getUnderlyingXueqiuUrl() {
+        // https://www.xueqiu.com/S/SH588000
+        if (bdzqdm == null || bdzqdm.isBlank()) {
+            return null;
+        }
+        String market = StockMarketEnum.getXueqiuMarket(bdzqdm);
+        return market == null ? null : "https://xueqiu.com/S/" + market + bdzqdm;
     }
 
 

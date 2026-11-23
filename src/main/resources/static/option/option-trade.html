@@ -1283,6 +1283,16 @@
             color: var(--link-hover)
         }
 
+        .xueqiu-link {
+            color: var(--link);
+            text-decoration: underline;
+            text-underline-offset: 2px
+        }
+
+        .xueqiu-link:hover {
+            color: var(--link-hover)
+        }
+
         /* 期权合约编码 -> 历史 K 线（点击合约编码字段） */
         .code-kline-link {
             color: var(--link);
@@ -3473,6 +3483,7 @@
             ccfx: String(pick(raw, 'Ccfx', '')),
             etfCode: String(pick(raw, 'bdzqdm', '')),
             etfName: String(pick(raw, 'bdzqmc', '')),   // 后端按 ETF 字典缓存回填的标的名称
+            underlyingXueqiuUrl: String(pick(raw, 'underlyingXueqiuUrl', '')),
             jybk: String(pick(raw, 'Jybk', '')),
             jybkmc: String(pick(raw, 'Jybkmc', '')),
             qty: toNum(pick(raw, 'Hysjcc')),
@@ -3607,6 +3618,27 @@
             title: '查看该期权历史 K 线',
             onclick: (ev) => ev.stopPropagation(),
         }, text);
+    }
+
+    // ETF 标的 -> 雪球个股页
+    function xueqiuUrl(code) {
+        const c = String(code || '').trim();
+        if (!c) return '';
+        const market = /^[56]/.test(c) ? 'SH' : /^[013]/.test(c) ? 'SZ' : /^9/.test(c) ? 'BJ' : 'SH';
+        return `https://xueqiu.com/S/${market}${c}`;
+    }
+
+    function etfAnchor(code, url, ...children) {
+        const href = String(url || xueqiuUrl(code) || '').trim();
+        if (!href) return el('span', {}, ...children);
+        return el('a', {
+            class: 'xueqiu-link',
+            href,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            title: '雪球 - 标的ETF行情',
+            onclick: (ev) => ev.stopPropagation(),
+        }, ...children);
     }
 
     function quoteModel(raw) {
@@ -4129,7 +4161,8 @@
                 class: state.selectedContract && state.selectedContract.id === c.id ? 'is-selected' : '',
                 onclick: () => selectContract(c, {focusOrder: false}),
             },
-            el('td', {class: 'cell-strong', text: c.etfName || state.etfNames.get(c.etfCode) || '—'}),
+            el('td', {class: 'cell-strong'},
+                etfAnchor(c.etfCode, '', c.etfName || state.etfNames.get(c.etfCode) || c.etfCode || '—')),
             el('td', {class: 'mono', text: c.etfCode || '—'}),
             el('td', {text: c.name || '—'}),
             el('td', {class: 'mono cell-strong'}, klineCode(c.id, c.id || '—')),
@@ -4718,11 +4751,12 @@
                     dataset: {hybm: p.hybm},
                 },
                 el('td', {class: 'cell-wrap pos-etf-cell'}, cb,
-                    el('div', {},
-                        el('div', {class: 'cell-strong', text: p.etfCode || '—'}),
-                        (p.etfName || state.etfNames.get(p.etfCode))
-                            ? el('div', {class: 'cell-sub', text: p.etfName || state.etfNames.get(p.etfCode)})
-                            : null)),
+                    etfAnchor(p.etfCode, p.underlyingXueqiuUrl,
+                        el('div', {},
+                            el('div', {class: 'cell-strong', text: p.etfCode || '—'}),
+                            (p.etfName || state.etfNames.get(p.etfCode))
+                                ? el('div', {class: 'cell-sub', text: p.etfName || state.etfNames.get(p.etfCode)})
+                                : null))),
                 el('td', {
                     class: 'mono cell-strong',
                     title: `交易所 ${p.jybk || '—'} ${p.jybkmc || ''} · 点击合约编码查看K线`
@@ -5009,8 +5043,9 @@
                 el('td', {class: 'mono cell-strong', text: o.htxh || '—'}),
                 el('td', {text: `${o.jybk || '—'} ${marketName(o.jybk)}`.trim()}),
                 el('td', {class: 'cell-wrap'},
-                    el('div', {class: 'cell-strong', text: o.etfCode || '—'}),
-                    o.etfName ? el('div', {class: 'cell-sub', text: o.etfName}) : null),
+                    etfAnchor(o.etfCode, '',
+                        el('div', {class: 'cell-strong', text: o.etfCode || '—'}),
+                        o.etfName ? el('div', {class: 'cell-sub', text: o.etfName}) : null)),
                 el('td', {class: 'mono'}, klineCode(o.hybm, o.hybm || '—')),
                 el('td', {class: 'cell-wrap'},
                     el('div', {text: o.hyjc || '—'}),
