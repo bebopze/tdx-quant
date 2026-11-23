@@ -1300,6 +1300,16 @@
             text-align: center
         }
 
+        .pos-etf-cell {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px
+        }
+
+        .pos-etf-cell input[type="checkbox"] {
+            margin: 3px 0 0
+        }
+
         .checkbox-cell input {
             accent-color: var(--accent);
             width: 14px;
@@ -4564,8 +4574,6 @@
         const qty = sumBy(list, 'qty');
         const avail = sumBy(list, 'avail');
         const marketValue = sumBy(list, 'marketValue');
-        const floatPnl = sumBy(list, 'floatPnl');
-        const totalPnl = sumBy(list, 'totalPnl');
         const dailyProfit = sumBy(list, 'dailyProfit');
         const totalProfit = sumBy(list, 'totalProfit');
         const costAmount = sumBy(list, 'costAmount');
@@ -4578,25 +4586,22 @@
         const strike = weightedBy(list, 'strike', 'qty');
         const days = weightedBy(list, 'daysLeft', 'qty');
         return el('tr', {class: 'total-row', title: `共 ${list.length} 个合约`},
-            el('td', {class: 'checkbox-cell'}, el('span', {class: 'total-label', text: '合计'})),
+            el('td', {class: 'pos-etf-cell'}, el('span', {class: 'total-label', text: '合计'})),
             el('td', {class: 'total-empty', text: '—'}),
             el('td', {class: 'total-empty', text: '—'}),
             el('td', {class: 'total-empty', text: '—'}),
             el('td', {class: 'total-empty', text: '—'}),
             el('td', {class: 'total-empty', text: '—'}),
-            el('td', {class: 'total-empty', text: '—'}),
-            el('td', {class: 'num', text: fmt.qty(qty)}),
-            el('td', {class: 'num', text: fmt.qty(avail)}),
-            el('td', {class: 'num', text: fmt.num(marketValue, 2)}),
-            el('td', {class: 'num ' + pnlClass(floatPnl), text: fmt.signed(floatPnl, 2)}),
-            el('td', {class: 'num ' + pnlClass(totalPnl), text: fmt.signed(totalPnl, 2)}),
-            el('td', {class: 'num ' + pnlClass(dailyProfit), text: fmt.signed(dailyProfit, 2)}),
-            el('td', {class: 'num', text: fmt.ratioPct(dailyProfitRatio, 2)}),
-            el('td', {class: 'num ' + pnlClass(totalProfit), text: fmt.signed(totalProfit, 2)}),
-            el('td', {class: 'num', text: fmt.ratioPct(totalProfitRatio, 2)}),
             el('td', {class: 'num', text: fmt.price(cost)}),
             el('td', {class: 'num', text: fmt.price(current)}),
+            el('td', {class: 'num', text: fmt.num(marketValue, 2)}),
+            el('td', {class: 'num ' + pnlClass(totalProfit), text: fmt.signed(totalProfit, 2)}),
+            el('td', {class: 'num', text: fmt.ratioPct(totalProfitRatio, 2)}),
+            el('td', {class: 'num ' + pnlClass(dailyProfit), text: fmt.signed(dailyProfit, 2)}),
+            el('td', {class: 'num', text: fmt.ratioPct(dailyProfitRatio, 2)}),
             el('td', {class: 'num', text: fmt.ratioPct(posRatio, 2)}),
+            el('td', {class: 'num', text: fmt.qty(qty)}),
+            el('td', {class: 'num', text: fmt.qty(avail)}),
             el('td', {class: 'num', text: fmt.price(strike)}),
             el('td', {class: 'total-empty', text: '—'}),
             el('td', {class: 'num', text: days === null ? '—' : `${days.toFixed(1)} 天`}),
@@ -4666,25 +4671,22 @@
 
         const list = filteredPositions();
         const head = el('thead', {}, el('tr', {},
-            el('th', {class: 'checkbox-cell', text: ''}),
             sortHeader('标的 ETF', 'etfCode'),
             sortHeader('合约编码', 'hybm'),
             sortHeader('合约代码', 'hydm'),
             sortHeader('合约名称', 'hyjc'),
             sortHeader('类型', 'hylx', false, 'center'),
             sortHeader('方向', 'ccfx', false, 'center'),
-            sortHeader('持仓数量', 'qty', true),
-            sortHeader('可用数量', 'avail', true),
-            sortHeader('持仓市值', 'marketValue', true),
-            sortHeader('浮动盈亏', 'floatPnl', true),
-            sortHeader('总盈亏', 'totalPnl', true),
-            sortHeader('每日盈亏额', 'dailyProfit', true),
-            sortHeader('每日盈亏率', 'dailyProfitRatio', true),
-            sortHeader('总盈亏额', 'totalProfit', true),
-            sortHeader('总盈亏率', 'totalProfitRatio', true),
             sortHeader('成本价', 'costPrem', true),
             sortHeader('现价', 'currentPrem', true),
+            sortHeader('持仓市值', 'marketValue', true),
+            sortHeader('总盈亏额', 'totalProfit', true),
+            sortHeader('总盈亏率', 'totalProfitRatio', true),
+            sortHeader('每日盈亏额', 'dailyProfit', true),
+            sortHeader('每日盈亏率', 'dailyProfitRatio', true),
             sortHeader('仓位比例', 'posRatio', true),
+            sortHeader('持仓数量', 'qty', true),
+            sortHeader('可用数量', 'avail', true),
             sortHeader('行权价', 'strike', true),
             sortHeader('行权日', 'expiry'),
             sortHeader('剩余天数', 'daysLeft', true),
@@ -4715,12 +4717,12 @@
                     class: (selected ? 'is-selected' : '') + (canSell ? '' : ' is-blocked'),
                     dataset: {hybm: p.hybm},
                 },
-                el('td', {class: 'checkbox-cell'}, cb),
-                el('td', {class: 'cell-wrap'},
-                    el('div', {class: 'cell-strong', text: p.etfCode || '—'}),
-                    (p.etfName || state.etfNames.get(p.etfCode))
-                        ? el('div', {class: 'cell-sub', text: p.etfName || state.etfNames.get(p.etfCode)})
-                        : null),
+                el('td', {class: 'cell-wrap pos-etf-cell'}, cb,
+                    el('div', {},
+                        el('div', {class: 'cell-strong', text: p.etfCode || '—'}),
+                        (p.etfName || state.etfNames.get(p.etfCode))
+                            ? el('div', {class: 'cell-sub', text: p.etfName || state.etfNames.get(p.etfCode)})
+                            : null)),
                 el('td', {
                     class: 'mono cell-strong',
                     title: `交易所 ${p.jybk || '—'} ${p.jybkmc || ''} · 点击合约编码查看K线`
@@ -4736,16 +4738,6 @@
                 el('td', {class: 'center', text: p.hylx || '—'}),
                 el('td', {class: 'center'},
                     el('span', {class: 'badge ' + (short ? 'badge-danger' : 'badge-info'), text: p.ccfx || '—'})),
-                el('td', {class: 'num', text: fmt.qty(p.qty)}),
-                el('td', {class: 'num ' + (p.avail > 0 ? '' : 'danger-text'), text: fmt.qty(p.avail)},
-                    p.avail > 0 ? null : el('span', {class: 'cell-sub', text: '不可卖'})),
-                el('td', {class: 'num', text: fmt.num(p.marketValue, 2)}),
-                el('td', {class: 'num ' + pnlClass(p.floatPnl), text: fmt.signed(p.floatPnl, 2)}),
-                el('td', {class: 'num ' + pnlClass(p.totalPnl), text: fmt.signed(p.totalPnl, 2)}),
-                el('td', {class: 'num ' + pnlClass(p.dailyProfit), text: fmt.signed(p.dailyProfit, 2)}),
-                el('td', {class: 'num', text: fmt.ratioPct(p.dailyProfitRatio, 2)}),
-                el('td', {class: 'num ' + pnlClass(p.totalProfit), text: fmt.signed(p.totalProfit, 2)}),
-                el('td', {class: 'num', text: fmt.ratioPct(p.totalProfitRatio, 2)}),
                 el('td', {
                     class: 'num',
                     text: p.unit ? fmt.price(p.costPrice / p.unit) : fmt.price(p.costPrice, 2),
@@ -4756,7 +4748,15 @@
                     text: p.unit ? fmt.price(p.currentPrice / p.unit) : fmt.price(p.currentPrice, 2),
                     title: `后端 currentPrice=${fmt.price(p.currentPrice, 2)} 元/张 ÷ 合约单位 ${fmt.qty(p.unit)} = 权利金`,
                 }),
+                el('td', {class: 'num', text: fmt.num(p.marketValue, 2)}),
+                el('td', {class: 'num ' + pnlClass(p.totalProfit), text: fmt.signed(p.totalProfit, 2)}),
+                el('td', {class: 'num', text: fmt.ratioPct(p.totalProfitRatio, 2)}),
+                el('td', {class: 'num ' + pnlClass(p.dailyProfit), text: fmt.signed(p.dailyProfit, 2)}),
+                el('td', {class: 'num', text: fmt.ratioPct(p.dailyProfitRatio, 2)}),
                 el('td', {class: 'num', text: fmt.ratioPct(p.posRatio, 2)}),
+                el('td', {class: 'num', text: fmt.qty(p.qty)}),
+                el('td', {class: 'num ' + (p.avail > 0 ? '' : 'danger-text'), text: fmt.qty(p.avail)},
+                    p.avail > 0 ? null : el('span', {class: 'cell-sub', text: '不可卖'})),
                 el('td', {class: 'num', text: fmt.price(p.strike)}),
                 el('td', {class: 'mono', text: fmtDate(p.expiry)}),
                 el('td', {
