@@ -1,0 +1,2179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>ETF 期权 · 持仓与委托 | tdx-quant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../js/config.js"></script>
+    <style>
+        :root {
+            --bg: #f4f6fa;
+            --panel: #ffffff;
+            --panel-2: #f8fafc;
+            --border: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --text: #0f172a;
+            --text-2: #334155;
+            --muted: #64748b;
+            --dim: #94a3b8;
+            --primary: #2563eb;
+            --primary-2: #1d4ed8;
+            --up: #d92b2b;
+            --down: #0f8f4d;
+            --warn: #b45309;
+            --danger: #b91c1c;
+            --radius: 12px;
+            --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .05);
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+            "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .page {
+            max-width: 1880px;
+            margin: 0 auto;
+            padding: 0 18px 42px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 20px 0 14px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .brand-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+        }
+
+        h1 {
+            margin: 5px 0 3px;
+            font-size: 26px;
+            line-height: 1.2;
+            letter-spacing: -.02em;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        .head-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .env-pill {
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+            background: #fff;
+            color: var(--text-2);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .api-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+            background: #fff;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .api-pill .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--dim);
+        }
+
+        .api-pill.ok {
+            color: #0f6b4f;
+            border-color: #b7e4d2;
+            background: #f0fbf6;
+        }
+
+        .api-pill.ok .dot {
+            background: #0f8f6f;
+            box-shadow: 0 0 0 3px rgba(15, 143, 111, .12);
+        }
+
+        .api-pill.bad {
+            color: var(--danger);
+            border-color: #f0c2c2;
+            background: #fff5f5;
+        }
+
+        .api-pill.bad .dot {
+            background: var(--danger);
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff, #fbfcfe);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 20px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #eef4ff;
+            color: var(--primary-2);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .source {
+            color: var(--dim);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .panel-meta {
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .panel-body {
+            padding: 14px 16px 16px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 10px;
+        }
+
+        .kpi {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #fbfcfe;
+            padding: 10px 12px 11px;
+            min-width: 0;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 11.5px;
+            white-space: nowrap;
+        }
+
+        .kpi-value {
+            margin-top: 2px;
+            font-size: 20px;
+            line-height: 1.25;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .kpi-sub {
+            margin-top: 2px;
+            color: var(--dim);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .note {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 11.5px;
+            line-height: 1.6;
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px 12px;
+            flex-wrap: wrap;
+            padding: 0 0 11px;
+        }
+
+        .filter-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .filter-item .form-select,
+        .filter-item .form-control {
+            height: 30px;
+            padding: 2px 8px;
+            border-color: var(--border-strong);
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .filter-item .form-select {
+            min-width: 92px;
+        }
+
+        .filter-item .form-control {
+            min-width: 140px;
+        }
+
+        .filter-item .form-check-input {
+            margin: 0;
+        }
+
+        .filter-spacer {
+            margin-left: auto;
+        }
+
+        .filter-hint {
+            color: var(--dim);
+            font-size: 11.5px;
+            white-space: nowrap;
+        }
+
+        .date-range {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: auto;
+            max-height: 62vh;
+            background: #fff;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12.5px;
+            white-space: nowrap;
+        }
+
+        .data-table caption {
+            padding: 0;
+        }
+
+        .data-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f1f5f9;
+            color: #475569;
+            border-bottom: 1px solid var(--border-strong);
+            padding: 8px 8px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-align: left;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .data-table thead th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table thead th.sortable:hover {
+            background: #e8f0fb;
+            color: var(--primary-2);
+        }
+
+        .data-table thead th.is-sorted {
+            color: var(--primary-2);
+            background: #e8f0fb;
+        }
+
+        .data-table thead th:focus-visible {
+            outline: 2px solid rgba(37, 99, 235, .35);
+            outline-offset: -2px;
+        }
+
+        .sort-ind {
+            margin-left: 4px;
+            font-size: 9px;
+            opacity: .35;
+        }
+
+        .data-table thead th.is-sorted .sort-ind {
+            opacity: 1;
+        }
+
+        .data-table tbody td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #edf1f6;
+            vertical-align: middle;
+            color: var(--text-2);
+            background: #fff;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .data-table tbody tr:hover td {
+            background: #f8fbff;
+        }
+
+        .total-row td {
+            background: #eef4ff !important;
+            border-top: 1px solid #c7d7f5 !important;
+            border-bottom: 1px solid #dbe6f8 !important;
+            color: #1e3a8a !important;
+            font-weight: 700;
+        }
+
+        .total-row .total-empty {
+            color: #94a3b8 !important;
+            font-weight: 400;
+        }
+
+        .total-count {
+            display: inline-flex;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .empty-cell {
+            padding: 28px 14px !important;
+            color: var(--muted) !important;
+            text-align: center !important;
+            white-space: normal !important;
+        }
+
+        .error-cell {
+            padding: 22px 14px !important;
+            color: var(--danger) !important;
+            text-align: center !important;
+            white-space: normal !important;
+        }
+
+        .cell-main {
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .cell-sub {
+            color: var(--dim);
+            font-size: 10.5px;
+            line-height: 1.35;
+            margin-top: 1px;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11.5px;
+        }
+
+        .xueqiu-link {
+            color: var(--primary);
+            text-decoration: underline;
+            text-underline-offset: 2px
+        }
+
+        .xueqiu-link:hover {
+            color: var(--primary-2)
+        }
+
+        /* 期权合约编码 -> 历史 K 线（点击合约编码字段） */
+        .code-kline-link {
+            color: var(--primary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            white-space: nowrap
+        }
+
+        .code-kline-link:hover {
+            color: var(--primary-2)
+        }
+
+        .strong {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .num {
+            text-align: right !important;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .center {
+            text-align: center !important;
+        }
+
+        .up {
+            color: var(--up) !important;
+        }
+
+        .down {
+            color: var(--down) !important;
+        }
+
+        .warn-text {
+            color: var(--warn) !important;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            height: 19px;
+            padding: 0 7px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 17px;
+            white-space: nowrap;
+        }
+
+        .tag-call {
+            color: #1d4ed8;
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .tag-put {
+            color: #6d28d9;
+            background: #f5f3ff;
+            border-color: #ddd6fe;
+        }
+
+        .tag-long {
+            color: #0f6b4f;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .tag-short {
+            color: #b42318;
+            background: #fff1f1;
+            border-color: #fecaca;
+        }
+
+        .tag-buy {
+            color: #b42318;
+            background: #fff1f1;
+            border-color: #fecaca;
+        }
+
+        .tag-sell {
+            color: #0f6b4f;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .tag-ok {
+            color: #0f6b4f;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .tag-bad {
+            color: #b42318;
+            background: #fff1f1;
+            border-color: #fecaca;
+        }
+
+        .tag-warn {
+            color: #8a5a00;
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .tag-info {
+            color: #1d4ed8;
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .tag-muted {
+            color: #64748b;
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+
+        .tabs {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            appearance: none;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            padding: 7px 12px 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-2);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-2);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn .tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 17px;
+            margin-left: 4px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #eef2f7;
+            color: var(--muted);
+            font-size: 10.5px;
+        }
+
+        .tab-btn.active .tab-count {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 9px;
+            font-size: 12.5px;
+        }
+
+        .alert .alert-text {
+            flex: 1;
+            white-space: pre-wrap;
+        }
+
+        .alert .btn-close {
+            margin-left: auto;
+        }
+
+        .loading-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 92px;
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        .error-box {
+            border: 1px solid #f0c2c2;
+            background: #fff5f5;
+            color: var(--danger);
+            border-radius: 8px;
+            padding: 11px 12px;
+            font-size: 12.5px;
+            line-height: 1.6;
+        }
+
+        .error-box b {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .footer {
+            margin-top: 8px;
+            color: var(--dim);
+            font-size: 11.5px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .footer code {
+            color: var(--muted);
+            background: #eef2f7;
+            border-radius: 4px;
+            padding: 1px 4px;
+        }
+
+        .btn {
+            font-size: 12.5px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+        }
+
+        @media (max-width: 900px) {
+            .page {
+                padding: 0 10px 30px;
+            }
+
+            .page-header {
+                align-items: flex-start;
+                padding-top: 14px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .head-actions {
+                width: 100%;
+            }
+
+            .panel-head {
+                padding: 10px 12px;
+            }
+
+            .panel-body {
+                padding: 12px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+
+            .kpi-value {
+                font-size: 18px;
+            }
+
+            .filter-spacer {
+                display: none;
+            }
+
+            .filter-hint {
+                width: 100%;
+                white-space: normal;
+            }
+
+            .table-wrap {
+                max-height: 58vh;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header class="page-header">
+        <div>
+            <div class="eyebrow"><span class="brand-dot"></span> TDX QUANT · ETF OPTION</div>
+            <h1>ETF 期权 · 持仓与委托</h1>
+            <div class="subtitle">账户汇总 / 持仓列表 / 委托列表 · 实时后端数据 · 只读页面</div>
+        </div>
+        <div class="head-actions">
+            <span class="env-pill" id="env-pill">环境 —</span>
+            <span class="api-pill" id="api-pill"><span class="dot"></span><span id="api-text">检查中</span></span>
+            <a class="btn btn-outline-secondary btn-sm" href="./option-trade.html">交易工作台</a>
+            <button class="btn btn-primary btn-sm" id="refresh-all" type="button">刷新全部</button>
+        </div>
+    </header>
+
+    <div class="alert alert-danger d-none" id="global-alert" role="alert">
+        <span class="alert-text" id="global-alert-text"></span>
+        <button type="button" class="btn-close" id="global-alert-close" aria-label="关闭"></button>
+    </div>
+
+    <!-- ============================== 账户汇总 ============================== -->
+    <section class="panel" id="account-panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <h2>账户汇总</h2>
+                <span class="source">GET /getAccountFundsAndPositions</span>
+            </div>
+            <div class="panel-meta" id="account-meta">尚未加载</div>
+        </div>
+        <div class="panel-body">
+            <div class="kpi-grid" id="account-kpis">
+                <div class="loading-box" style="grid-column:1/-1">账户数据加载中…</div>
+            </div>
+            <div class="note">
+                账户总仓位来自 <code>totalAccount__actTotalPosRatio</code>（Sz / Zczz）；可用资金比例来自
+                <code>max_buyPosPct</code>。成本价 / 现价按权利金（元/股）展示，不使用前端本地行情替代后端数据。
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== 持仓列表 ============================== -->
+    <section class="panel" id="position-panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <h2>我的期权持仓</h2>
+                <span class="count-pill" id="positions-count">—</span>
+                <span class="source">GET /getAccountFundsAndPositions</span>
+            </div>
+            <div class="panel-actions">
+                <span class="panel-meta" id="positions-meta">尚未加载</span>
+                <button class="btn btn-outline-primary btn-sm" id="refresh-positions" type="button">刷新持仓</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="filter-bar">
+                <label class="filter-item">标的ETF
+                    <select class="form-select form-select-sm" id="pos-etf">
+                        <option value="">全部标的</option>
+                    </select>
+                </label>
+                <label class="filter-item">类型
+                    <select class="form-select form-select-sm" id="pos-type">
+                        <option value="">全部</option>
+                        <option value="认购">认购</option>
+                        <option value="认沽">认沽</option>
+                    </select>
+                </label>
+                <label class="filter-item">方向
+                    <select class="form-select form-select-sm" id="pos-direction">
+                        <option value="">全部</option>
+                        <option value="权利仓">权利仓</option>
+                        <option value="义务仓">义务仓</option>
+                    </select>
+                </label>
+                <label class="filter-item">关键词
+                    <input type="text" class="form-control form-control-sm" id="pos-keyword"
+                           placeholder="代码 / 名称" autocomplete="off">
+                </label>
+                <label class="filter-item">
+                    <input class="form-check-input" type="checkbox" id="pos-only-avail">
+                    仅可用 &gt; 0
+                </label>
+                <button class="btn btn-outline-secondary btn-sm" id="pos-reset" type="button">重置</button>
+                <span class="filter-spacer"></span>
+                <span class="filter-hint">点击表头排序；默认“持仓市值”倒序；合计行随筛选联动</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="position-table" aria-describedby="position-table-note">
+                    <caption class="visually-hidden">ETF 期权持仓列表，所有数据列可排序，首行为合计</caption>
+                    <thead></thead>
+                    <tbody>
+                    <tr>
+                        <td class="empty-cell" colspan="18">持仓加载中…</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note" id="position-table-note">
+                成本价 / 现价 = 后端 <code>buyPrice / currentPrice ÷ 合约单位 hydw</code>（权利金，元/股）；
+                合计行中的成本价 / 现价 / 行权价 / 剩余天数按持仓数量加权，仓位比例求和。
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== 委托列表 ============================== -->
+    <section class="panel" id="order-panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <h2>委托列表</h2>
+                <span class="count-pill" id="orders-count">—</span>
+                <span class="source">GET /getTodayOrders · /getHisOrders · /getRevokeList</span>
+            </div>
+            <div class="panel-actions">
+                <span class="panel-meta" id="orders-meta">尚未加载</span>
+                <button class="btn btn-outline-primary btn-sm" id="refresh-orders" type="button">刷新委托</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="tabs" id="order-tabs" role="tablist">
+                <button class="tab-btn active" type="button" data-tab="today" role="tab">当日委托
+                    <span class="tab-count" id="count-today">—</span>
+                </button>
+                <button class="tab-btn" type="button" data-tab="his" role="tab">历史委托
+                    <span class="tab-count" id="count-his">—</span>
+                </button>
+                <button class="tab-btn" type="button" data-tab="revoke" role="tab">可撤委托
+                    <span class="tab-count" id="count-revoke">—</span>
+                </button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="date-range d-none" id="order-date-range">
+                    <label class="filter-item">开始
+                        <input type="date" class="form-control form-control-sm" id="his-start">
+                    </label>
+                    <label class="filter-item">结束
+                        <input type="date" class="form-control form-control-sm" id="his-end">
+                    </label>
+                    <button class="btn btn-outline-primary btn-sm" id="his-query" type="button">查询</button>
+                </div>
+                <label class="filter-item">状态
+                    <select class="form-select form-select-sm" id="order-status">
+                        <option value="">全部状态</option>
+                    </select>
+                </label>
+                <label class="filter-item">买卖
+                    <select class="form-select form-select-sm" id="order-mm">
+                        <option value="">全部</option>
+                        <option value="买入">买入</option>
+                        <option value="卖出">卖出</option>
+                    </select>
+                </label>
+                <label class="filter-item">关键词
+                    <input type="text" class="form-control form-control-sm" id="order-keyword"
+                           placeholder="委托号 / 合约 / 代码" autocomplete="off">
+                </label>
+                <button class="btn btn-outline-secondary btn-sm" id="order-reset" type="button">重置</button>
+                <span class="filter-spacer"></span>
+                <span class="filter-hint">点击表头排序；默认“委托金额”倒序；合计行随筛选联动</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="order-table" aria-describedby="order-table-note">
+                    <caption class="visually-hidden">ETF 期权委托列表，所有数据列可排序，首行为合计</caption>
+                    <thead></thead>
+                    <tbody>
+                    <tr>
+                        <td class="empty-cell" colspan="20">委托加载中…</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="note" id="order-table-note">
+                历史委托默认查询最近 7 天（含当日）；可撤委托来自后端 <code>/getRevokeList</code>。
+                委托价合计按委托数量加权；委托金额 / 成交金额 / 数量 / 已成交 / 剩余求和；仓位占比求和。
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <span>只读页面 · 不提交任何交易委托 · 数据来自后端实时接口</span>
+        <span>tdx-quant · ETF 期权持仓与委托 · <code>option-position-list.html</code></span>
+    </footer>
+</div>
+
+<script>
+    'use strict';
+
+    /* ------------------------------------------------------------------ 1. 常量 / 状态 */
+    const API_BASE = '/api/option/trade';
+    const PRICE_DIGITS = 4;
+    const COMMON_ORDER_STATUS = ['待报', '未报', '已报', '部成', '已成', '已撤', '部撤', '废单', '正报', '已报待撤'];
+
+    const state = {
+        account: null,
+        accountError: null,
+        accountAt: null,
+        accountLoading: false,
+
+        positions: [],
+        positionsError: null,
+        positionsAt: null,
+        positionsLoading: false,
+
+        posFilters: {etf: '', type: '', direction: '', keyword: '', onlyAvail: false},
+        posSort: {key: 'marketValue', dir: 'desc'},
+
+        orders: {today: null, his: null, revoke: null},
+        orderErrors: {today: null, his: null, revoke: null},
+        orderAt: {today: null, his: null, revoke: null},
+        orderLoading: {today: false, his: false, revoke: false},
+        activeTab: 'today',
+        orderSort: {key: 'amount', dir: 'desc'},
+        orderFilters: {status: '', mm: '', keyword: ''},
+        hisStart: '',
+        hisEnd: '',
+
+        apiState: 'checking'
+    };
+
+    /* ------------------------------------------------------------------ 2. 工具函数 */
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function esc(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[c]));
+    }
+
+    function num(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function str(value) {
+        return value === null || value === undefined ? '' : String(value);
+    }
+
+    const moneyFmt = new Intl.NumberFormat('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const qtyFmt = new Intl.NumberFormat('zh-CN', {maximumFractionDigits: 0});
+
+    function fmtMoney(v) {
+        return v === null || v === undefined || !Number.isFinite(Number(v)) ? '—' : moneyFmt.format(Number(v));
+    }
+
+    function fmtQty(v) {
+        return v === null || v === undefined || !Number.isFinite(Number(v)) ? '—' : qtyFmt.format(Number(v));
+    }
+
+    function fmtSigned(v) {
+        if (v === null || v === undefined || !Number.isFinite(Number(v))) return '—';
+        const n = Number(v);
+        const s = n.toFixed(2);
+        return n > 0 ? `+${s}` : s;
+    }
+
+    function fmtPrice(v) {
+        return v === null || v === undefined || !Number.isFinite(Number(v))
+            ? '—'
+            : Number(v).toFixed(PRICE_DIGITS);
+    }
+
+    function fmtPctValue(v) {
+        return v === null || v === undefined || !Number.isFinite(Number(v))
+            ? '—'
+            : `${Number(v).toFixed(2)}%`;
+    }
+
+    function fmtRatioPct(v) {
+        return v === null || v === undefined || !Number.isFinite(Number(v))
+            ? '—'
+            : `${(Number(v) * 100).toFixed(2)}%`;
+    }
+
+    function fmtDate(value) {
+        const s = str(value).trim();
+        if (!s) return '—';
+        if (/^\d{8}$/.test(s)) return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+        return s;
+    }
+
+    function fmtClock(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '—';
+        return date.toLocaleTimeString('zh-CN', {hour12: false});
+    }
+
+    function localDateStr(date) {
+        const d = date || new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function addDays(dateStrValue, days) {
+        const d = new Date(`${dateStrValue}T12:00:00`);
+        d.setDate(d.getDate() + days);
+        return localDateStr(d);
+    }
+
+    function pnlClass(v) {
+        const n = num(v);
+        return n === null ? '' : n > 0 ? 'up' : n < 0 ? 'down' : '';
+    }
+
+    function pnlCell(v) {
+        return `<span class="${pnlClass(v)}">${fmtSigned(v)}</span>`;
+    }
+
+    function withTitle(html, title) {
+        return title ? `<span title="${esc(title)}">${html}</span>` : html;
+    }
+
+    function debounce(fn, wait) {
+        let timer = null;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+
+    /* ------------------------------------------------------------------ 3. 数据模型 */
+    function positionModel(raw) {
+        const unit = num(raw.hydw);
+        const costPrice = num(raw.buyPrice);
+        const currentPrice = num(raw.currentPrice);
+        return {
+            raw,
+            hybm: str(raw.Hybm),
+            hydm: str(raw.Hydm),
+            hyjc: str(raw.Hyjc),
+            hylx: str(raw.Hylx),
+            ccfx: str(raw.Ccfx),
+            etfCode: str(raw.bdzqdm),
+            etfName: str(raw.bdzqmc),
+            underlyingXueqiuUrl: str(raw.underlyingXueqiuUrl),
+            jybk: str(raw.Jybk),
+            jybkmc: str(raw.Jybkmc),
+            qty: num(raw.Hysjcc),
+            avail: num(raw.Hykysl),
+            marketValue: num(raw.Hysz),
+            floatPnl: num(raw.Fdyk),
+            totalPnl: num(raw.Zyk),
+            dailyProfit: num(raw.dailyProfit !== undefined ? raw.dailyProfit : raw.curProfit),
+            dailyProfitRatio: num(raw.dailyProfitRatio !== undefined ? raw.dailyProfitRatio : raw.curProfitRatio),
+            totalProfit: num(raw.totalProfit !== undefined ? raw.totalProfit : raw.Zyk),
+            totalProfitRatio: num(raw.totalProfitRatio !== undefined ? raw.totalProfitRatio : raw.zykRatio),
+            costAmount: num(raw.Hymrcb),
+            costPrice,
+            currentPrice,
+            unit,
+            costPrem: unit && unit > 0 && costPrice !== null ? costPrice / unit : costPrice,
+            currentPrem: unit && unit > 0 && currentPrice !== null ? currentPrice / unit : currentPrice,
+            posRatio: num(raw.posRatio),
+            strike: num(raw.xqj),
+            expiry: fmtDate(raw.qqxqr),
+            daysLeft: num(raw.syts)
+        };
+    }
+
+    function klineUrl(code) {
+        return '../kline/kline.html?code=' + encodeURIComponent(String(code || '').trim());
+    }
+
+    // 只通过“合约编码”字段跳转；不再生成独立“K线”按钮/文本
+    function klineCode(code, label) {
+        const id = String(code || '').trim();
+        if (!id) return esc(label || '—');
+        return `<a class="code-kline-link" href="${klineUrl(id)}" target="_blank" rel="noopener noreferrer"
+                   title="查看该期权历史 K 线">${esc(label || id)}</a>`;
+    }
+
+    function xueqiuUrl(code) {
+        const c = String(code || '').trim();
+        if (!c) return '';
+        const market = /^[56]/.test(c) ? 'SH' : /^[013]/.test(c) ? 'SZ' : /^9/.test(c) ? 'BJ' : 'SH';
+        return `https://xueqiu.com/S/${market}${c}`;
+    }
+
+    function etfLinkHtml(code, url, innerHtml) {
+        const href = String(url || xueqiuUrl(code) || '').trim();
+        if (!href) return innerHtml;
+        return `<a class="xueqiu-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer"
+                   title="雪球 - 标的ETF行情">${innerHtml}</a>`;
+    }
+
+    function orderModel(raw) {
+        const qty = num(raw.Wtsl);
+        const filledQty = num(raw.Ycjsl);
+        const date = fmtDate(raw.Wtrq);
+        const time = str(raw.Wtsj);
+        return {
+            raw,
+            etfCode: str(raw.Bdzqdm),
+            etfName: str(raw.Bdzqmc),
+            hybm: str(raw.Hybm),
+            hydm: str(raw.Hydm),
+            hyjc: str(raw.Hyjc),
+            hylx: str(raw.Hylx),
+            htxh: str(raw.Htxh),
+            jybk: str(raw.Jybk),
+            jybkmc: str(raw.Jybkmc),
+            mm: str(raw.Mm),
+            kp: str(raw.Kp),
+            zqyw: str(raw.Zqywcode),
+            priceType: str(raw.Zqywxw),
+            price: num(raw.Wtjg),
+            qty,
+            filledQty,
+            remaining: qty !== null && filledQty !== null ? Math.max(0, qty - filledQty) : null,
+            amount: num(raw.Wtje),
+            filledAmount: num(raw.Ycjje),
+            status: str(raw.Wtzt),
+            date,
+            time,
+            dateTime: date !== '—' || time ? `${date === '—' ? '' : date}${date !== '—' && time ? ' ' : ''}${time}`.trim() : '—',
+            sortTime: `${str(raw.Wtrq)}${time}`,
+            posPct: num(raw.posPct),
+            accountAssets: num(raw.accountAssets)
+        };
+    }
+
+    /* ------------------------------------------------------------------ 4. 标签渲染 */
+    function typeTag(type) {
+        if (!type) return '<span class="tag tag-muted">—</span>';
+        const cls = type === '认购' ? 'tag-call' : type === '认沽' ? 'tag-put' : 'tag-muted';
+        return `<span class="tag ${cls}">${esc(type)}</span>`;
+    }
+
+    function directionTag(direction) {
+        if (!direction) return '<span class="tag tag-muted">—</span>';
+        const cls = direction === '权利仓' ? 'tag-long' : direction === '义务仓' ? 'tag-short' : 'tag-muted';
+        return `<span class="tag ${cls}">${esc(direction)}</span>`;
+    }
+
+    function buySellTag(mm) {
+        if (!mm) return '<span class="tag tag-muted">—</span>';
+        const cls = mm.includes('买入') ? 'tag-buy' : mm.includes('卖出') ? 'tag-sell' : 'tag-muted';
+        return `<span class="tag ${cls}">${esc(mm)}</span>`;
+    }
+
+    function statusTag(status) {
+        if (!status) return '<span class="tag tag-muted">—</span>';
+        const map = {
+            '已成': 'tag-ok',
+            '废单': 'tag-bad',
+            '已撤': 'tag-muted',
+            '部撤': 'tag-muted',
+            '部成': 'tag-warn',
+            '已报待撤': 'tag-warn',
+            '已报': 'tag-info',
+            '待报': 'tag-info',
+            '未报': 'tag-info',
+            '正报': 'tag-info'
+        };
+        return `<span class="tag ${map[status] || 'tag-muted'}">${esc(status)}</span>`;
+    }
+
+    /* ------------------------------------------------------------------ 5. 列定义 */
+    const POSITION_COLUMNS = [
+        {
+            key: '__idx', label: '#', align: 'center', sortKey: null,
+            render: (row, index) => String(index + 1)
+        },
+        {
+            key: 'etfCode', label: '标的ETF', sortKey: 'etfCode',
+            render: (p) => etfLinkHtml(p.etfCode, p.underlyingXueqiuUrl,
+                `<div class="cell-main">${esc(p.etfCode || '—')}</div>${p.etfName ? `<div class="cell-sub">${esc(p.etfName)}</div>` : ''}`)
+        },
+        {
+            key: 'hybm', label: '合约编码', sortKey: 'hybm',
+            render: (p) => withTitle(`<span class="mono strong">${klineCode(p.hybm, p.hybm || '—')}</span>`, `交易所 ${p.jybk || '—'} ${p.jybkmc || ''} · 点击合约编码查看K线`)
+        },
+        {
+            key: 'hydm', label: '合约代码', sortKey: 'hydm',
+            render: (p) => `<span class="mono">${esc(p.hydm || '—')}</span>`
+        },
+        {
+            key: 'hyjc', label: '合约名称', sortKey: 'hyjc',
+            render: (p) => `<span title="${esc(p.hydm || '')}">${esc(p.hyjc || '—')}</span>`
+        },
+        {
+            key: 'hylx', label: '类型', align: 'center', sortKey: 'hylx',
+            render: (p) => typeTag(p.hylx)
+        },
+        {
+            key: 'ccfx', label: '方向', align: 'center', sortKey: 'ccfx',
+            render: (p) => directionTag(p.ccfx)
+        },
+        {
+            key: 'qty', label: '持仓数量', align: 'right', sortKey: 'qty',
+            totalType: 'sum', totalKind: 'qty',
+            render: (p) => fmtQty(p.qty)
+        },
+        {
+            key: 'avail', label: '可用数量', align: 'right', sortKey: 'avail',
+            totalType: 'sum', totalKind: 'qty',
+            render: (p) => `<span class="${p.avail > 0 ? '' : 'warn-text'}">${fmtQty(p.avail)}</span>`
+        },
+        {
+            key: 'marketValue', label: '持仓市值', align: 'right', sortKey: 'marketValue',
+            totalType: 'sum', totalKind: 'money',
+            render: (p) => fmtMoney(p.marketValue)
+        },
+        {
+            key: 'floatPnl', label: '浮动盈亏', align: 'right', sortKey: 'floatPnl',
+            totalType: 'sum', totalKind: 'pnl',
+            render: (p) => pnlCell(p.floatPnl)
+        },
+        {
+            key: 'totalPnl', label: '总盈亏', align: 'right', sortKey: 'totalPnl',
+            totalType: 'sum', totalKind: 'pnl',
+            render: (p) => pnlCell(p.totalPnl)
+        },
+        {
+            key: 'dailyProfit', label: '每日盈亏额', align: 'right', sortKey: 'dailyProfit',
+            totalType: 'sum', totalKind: 'pnl',
+            render: (p) => pnlCell(p.dailyProfit)
+        },
+        {
+            key: 'dailyProfitRatio', label: '每日盈亏率', align: 'right', sortKey: 'dailyProfitRatio',
+            totalType: 'weighted', totalKind: 'ratioPct', weight: 'marketValue',
+            render: (p) => fmtRatioPct(p.dailyProfitRatio)
+        },
+        {
+            key: 'totalProfit', label: '总盈亏额', align: 'right', sortKey: 'totalProfit',
+            totalType: 'sum', totalKind: 'pnl',
+            render: (p) => pnlCell(p.totalProfit)
+        },
+        {
+            key: 'totalProfitRatio', label: '总盈亏率', align: 'right', sortKey: 'totalProfitRatio',
+            totalType: 'weighted', totalKind: 'ratioPct', weight: 'costAmount',
+            render: (p) => fmtRatioPct(p.totalProfitRatio)
+        },
+        {
+            key: 'costPrem', label: '成本价', align: 'right', sortKey: 'costPrem',
+            totalType: 'weighted', totalKind: 'price', weight: 'qty',
+            render: (p) => withTitle(fmtPrice(p.costPrem), p.unit
+                ? `后端 buyPrice=${fmtMoney(p.costPrice)} 元/张 ÷ 合约单位 ${fmtQty(p.unit)} = 权利金`
+                : '后端未提供合约单位')
+        },
+        {
+            key: 'currentPrem', label: '现价', align: 'right', sortKey: 'currentPrem',
+            totalType: 'weighted', totalKind: 'price', weight: 'qty',
+            render: (p) => withTitle(fmtPrice(p.currentPrem), p.unit
+                ? `后端 currentPrice=${fmtMoney(p.currentPrice)} 元/张 ÷ 合约单位 ${fmtQty(p.unit)} = 权利金`
+                : '后端未提供合约单位')
+        },
+        {
+            key: 'posRatio', label: '仓位比例', align: 'right', sortKey: 'posRatio',
+            totalType: 'sum', totalKind: 'ratioPct',
+            render: (p) => fmtRatioPct(p.posRatio)
+        },
+        {
+            key: 'strike', label: '行权价', align: 'right', sortKey: 'strike',
+            totalType: 'weighted', totalKind: 'price', weight: 'qty',
+            render: (p) => fmtPrice(p.strike)
+        },
+        {
+            key: 'expiry', label: '行权日', align: 'center', sortKey: 'expiry',
+            render: (p) => fmtDate(p.expiry)
+        },
+        {
+            key: 'daysLeft', label: '剩余天数', align: 'right', sortKey: 'daysLeft',
+            totalType: 'weighted', totalKind: 'days', weight: 'qty',
+            render: (p) => p.daysLeft === null ? '—' : `<span class="${p.daysLeft <= 7 ? 'warn-text' : ''}">${p.daysLeft} 天</span>`
+        }
+    ];
+
+    const ORDER_COLUMNS = [
+        {
+            key: '__idx', label: '#', align: 'center', sortKey: null,
+            render: (row, index) => String(index + 1)
+        },
+        {
+            key: 'dateTime', label: '委托时间', sortKey: 'sortTime',
+            render: (o) => `<span class="mono">${esc(o.dateTime || '—')}</span>`
+        },
+        {
+            key: 'htxh', label: '委托号', sortKey: 'htxh',
+            render: (o) => `<span class="mono strong">${esc(o.htxh || '—')}</span>`
+        },
+        {
+            key: 'jybk', label: '交易所', sortKey: 'jybk',
+            render: (o) => `<div class="cell-main">${esc(o.jybk || '—')}</div><div class="cell-sub">${esc(o.jybkmc || '')}</div>`
+        },
+        {
+            key: 'etfCode', label: '标的ETF', sortKey: 'etfCode',
+            render: (o) => etfLinkHtml(o.etfCode, '',
+                `<div class="cell-main">${esc(o.etfCode || '—')}</div>${o.etfName ? `<div class="cell-sub">${esc(o.etfName)}</div>` : ''}`)
+        },
+        {
+            key: 'hybm', label: '合约编码', sortKey: 'hybm',
+            render: (o) => `<span class="mono strong">${klineCode(o.hybm, o.hybm || '—')}</span>`
+        },
+        {
+            key: 'hydm', label: '合约代码', sortKey: 'hydm',
+            render: (o) => `<span class="mono">${esc(o.hydm || '—')}</span>`
+        },
+        {
+            key: 'hyjc', label: '合约名称', sortKey: 'hyjc',
+            render: (o) => `<span title="${esc(o.hydm || '')}">${esc(o.hyjc || '—')}</span>`
+        },
+        {
+            key: 'hylx', label: '类型', align: 'center', sortKey: 'hylx',
+            render: (o) => typeTag(o.hylx)
+        },
+        {
+            key: 'mm', label: '买卖', align: 'center', sortKey: 'mm',
+            render: (o) => withTitle(buySellTag(o.mm), `Mm=${o.mm || '—'} · Kp=${o.kp || '—'} · Zqywcode=${o.zqyw || '—'}`)
+        },
+        {
+            key: 'kp', label: '开平', align: 'center', sortKey: 'kp',
+            render: (o) => esc(o.kp || '—')
+        },
+        {
+            key: 'priceType', label: '报价方式', sortKey: 'priceType',
+            render: (o) => esc(o.priceType || '—')
+        },
+        {
+            key: 'price', label: '委托价', align: 'right', sortKey: 'price',
+            totalType: 'weighted', totalKind: 'price', weight: 'qty',
+            render: (o) => fmtPrice(o.price)
+        },
+        {
+            key: 'qty', label: '委托数量', align: 'right', sortKey: 'qty',
+            totalType: 'sum', totalKind: 'qty',
+            render: (o) => fmtQty(o.qty)
+        },
+        {
+            key: 'filledQty', label: '已成交', align: 'right', sortKey: 'filledQty',
+            totalType: 'sum', totalKind: 'qty',
+            render: (o) => fmtQty(o.filledQty)
+        },
+        {
+            key: 'remaining', label: '剩余', align: 'right', sortKey: 'remaining',
+            totalType: 'sum', totalKind: 'qty',
+            render: (o) => fmtQty(o.remaining)
+        },
+        {
+            key: 'amount', label: '委托金额', align: 'right', sortKey: 'amount',
+            totalType: 'sum', totalKind: 'money',
+            render: (o) => fmtMoney(o.amount)
+        },
+        {
+            key: 'filledAmount', label: '成交金额', align: 'right', sortKey: 'filledAmount',
+            totalType: 'sum', totalKind: 'money',
+            render: (o) => fmtMoney(o.filledAmount)
+        },
+        {
+            key: 'status', label: '状态', align: 'center', sortKey: 'status',
+            render: (o) => statusTag(o.status)
+        },
+        {
+            key: 'posPct', label: '仓位占比', align: 'right', sortKey: 'posPct',
+            totalType: 'sum', totalKind: 'pct',
+            render: (o) => fmtPctValue(o.posPct)
+        }
+    ];
+
+    /* ------------------------------------------------------------------ 6. 排序 / 合计 / 表格 */
+    function alignClass(col) {
+        return col.align === 'right' ? 'num' : col.align === 'center' ? 'center' : '';
+    }
+
+    function headerHtml(col, sort) {
+        const cls = [alignClass(col), col.sortKey ? 'sortable' : ''].filter(Boolean).join(' ');
+        if (!col.sortKey) return `<th class="${cls}">${esc(col.label)}</th>`;
+        const active = sort.key === col.sortKey;
+        const icon = active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕';
+        const aria = active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+        return `<th class="${cls}${active ? ' is-sorted' : ''}" data-sort="${esc(col.sortKey)}" tabindex="0" aria-sort="${aria}">${esc(col.label)}<span class="sort-ind">${icon}</span></th>`;
+    }
+
+    function renderRow(columns, row, index) {
+        return '<tr>' + columns.map((col) => {
+            const content = col.render ? col.render(row, index) : esc(row[col.key]);
+            return `<td class="${alignClass(col)}">${content}</td>`;
+        }).join('') + '</tr>';
+    }
+
+    function sortRows(rows, columns, sort) {
+        const sorted = rows.slice();
+        const col = columns.find((c) => c.sortKey === sort.key)
+            || columns.find((c) => c.sortKey);
+        if (!col) return sorted;
+
+        const key = col.sortKey;
+        const dir = sort.dir === 'asc' ? 1 : -1;
+        sorted.sort((a, b) => {
+            let va = a[key];
+            let vb = b[key];
+            if (va === '' || va === undefined) va = null;
+            if (vb === '' || vb === undefined) vb = null;
+            if (va === null && vb === null) return 0;
+            if (va === null) return 1;
+            if (vb === null) return -1;
+            if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+            return String(va).localeCompare(String(vb), 'zh-CN', {numeric: true, sensitivity: 'base'}) * dir;
+        });
+        return sorted;
+    }
+
+    function computeTotal(rows, columns) {
+        const total = {};
+        columns.forEach((col) => {
+            if (!col.totalType) return;
+
+            if (col.totalType === 'sum') {
+                let sum = 0;
+                let count = 0;
+                rows.forEach((row) => {
+                    const v = num(row[col.key]);
+                    if (v !== null) {
+                        sum += v;
+                        count += 1;
+                    }
+                });
+                total[col.key] = count ? sum : null;
+            } else if (col.totalType === 'weighted') {
+                let weightedSum = 0;
+                let weight = 0;
+                rows.forEach((row) => {
+                    const v = num(row[col.key]);
+                    const w = num(row[col.weight || 'qty']);
+                    if (v !== null && w !== null && w > 0) {
+                        weightedSum += v * w;
+                        weight += w;
+                    }
+                });
+                total[col.key] = weight ? weightedSum / weight : null;
+            }
+        });
+        return total;
+    }
+
+    function formatTotal(col, value) {
+        if (value === null || value === undefined) return '—';
+        switch (col.totalKind) {
+            case 'qty':
+                return fmtQty(value);
+            case 'money':
+                return fmtMoney(value);
+            case 'pnl':
+                return pnlCell(value);
+            case 'pct':
+                return `${Number(value).toFixed(2)}%`;
+            case 'ratioPct':
+                return `${(Number(value) * 100).toFixed(2)}%`;
+            case 'price':
+                return fmtPrice(value);
+            case 'days':
+                return `${Number(value).toFixed(1)} 天`;
+            default:
+                return String(value);
+        }
+    }
+
+    function totalRowHtml(columns, total, rows, kind) {
+        return `<tr class="total-row" title="共 ${rows.length} ${kind === 'orders' ? '笔' : '个合约'}">` + columns.map((col, index) => {
+            if (index === 0) return '<td class="center">合计</td>';
+            if (col.key === 'status' && kind === 'orders') {
+                return `<td class="center"><span class="total-count">${rows.length} 笔</span></td>`;
+            }
+            if (!col.totalType) return `<td class="${alignClass(col)} total-empty">—</td>`;
+            const cell = formatTotal(col, total[col.key]);
+            const title = col.totalType === 'weighted' ? ' title="按持仓/委托数量加权"' : '';
+            return `<td class="${alignClass(col)}"${title}>${cell}</td>`;
+        }).join('') + '</tr>';
+    }
+
+    function msgRow(columns, text, error) {
+        return `<tr><td class="empty-cell ${error ? 'error-cell' : ''}" colspan="${columns.length}">${esc(text)}</td></tr>`;
+    }
+
+    function toggleSort(kind, key) {
+        const sort = kind === 'positions' ? state.posSort : state.orderSort;
+        if (sort.key === key) {
+            sort.dir = sort.dir === 'desc' ? 'asc' : 'desc';
+        } else {
+            sort.key = key;
+            sort.dir = 'desc';
+        }
+        if (kind === 'positions') renderPositions();
+        else renderOrders();
+    }
+
+    function bindSort(table, kind) {
+        table.addEventListener('click', (event) => {
+            const th = event.target.closest('th[data-sort]');
+            if (!th) return;
+            toggleSort(kind, th.dataset.sort);
+        });
+        table.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const th = event.target.closest('th[data-sort]');
+            if (!th) return;
+            event.preventDefault();
+            toggleSort(kind, th.dataset.sort);
+        });
+    }
+
+    /* ------------------------------------------------------------------ 7. 筛选 */
+    function filterPositions() {
+        const f = state.posFilters;
+        const keyword = f.keyword.trim().toLowerCase();
+        return state.positions.filter((p) => {
+            if (f.etf && p.etfCode !== f.etf) return false;
+            if (f.type && p.hylx !== f.type) return false;
+            if (f.direction && p.ccfx !== f.direction) return false;
+            if (f.onlyAvail && !(p.avail > 0)) return false;
+            if (keyword) {
+                const text = [p.hybm, p.hydm, p.hyjc, p.etfCode, p.etfName].join(' ').toLowerCase();
+                if (!text.includes(keyword)) return false;
+            }
+            return true;
+        });
+    }
+
+    function filterOrders(list) {
+        const f = state.orderFilters;
+        const keyword = f.keyword.trim().toLowerCase();
+        return list.filter((o) => {
+            if (f.status && o.status !== f.status) return false;
+            if (f.mm) {
+                const isBuy = o.mm.includes('买入');
+                if (f.mm === '买入' ? !isBuy : isBuy) return false;
+            }
+            if (keyword) {
+                const text = [o.htxh, o.hybm, o.hydm, o.hyjc, o.etfCode, o.etfName, o.status]
+                    .join(' ').toLowerCase();
+                if (!text.includes(keyword)) return false;
+            }
+            return true;
+        });
+    }
+
+    /* ------------------------------------------------------------------ 8. 渲染：账户 */
+    function kpiHtml(label, value, sub, cls) {
+        return `<div class="kpi">
+            <div class="kpi-label">${esc(label)}</div>
+            <div class="kpi-value ${cls || ''}">${value}</div>
+            ${sub ? `<div class="kpi-sub">${esc(sub)}</div>` : ''}
+        </div>`;
+    }
+
+    function renderAccount() {
+        const host = $('#account-kpis');
+        const meta = $('#account-meta');
+        if (!host || !meta) return;
+
+        if (state.accountLoading && !state.account) {
+            host.innerHTML = '<div class="loading-box" style="grid-column:1/-1">账户数据加载中…</div>';
+            meta.textContent = '加载中…';
+            return;
+        }
+        if (state.accountError) {
+            host.innerHTML = `<div class="error-box" style="grid-column:1/-1"><b>账户读取失败</b>${esc(state.accountError)}</div>`;
+            meta.textContent = '读取失败';
+            return;
+        }
+        if (!state.account) {
+            host.innerHTML = '<div class="loading-box" style="grid-column:1/-1">等待账户数据…</div>';
+            meta.textContent = '尚未加载';
+            return;
+        }
+
+        const a = state.account;
+        const totalAssets = num(a.Zczz);
+        const marketValue = num(a.Sz);
+        const available = num(a.Zjkyje);
+        const floatPnl = num(a.Fdyk);
+        const holdPnl = num(a.Ccyk);
+        const dailyProfit = num(a.dailyProfit !== undefined ? a.dailyProfit : a.curProfit);
+        const dailyProfitRatio = num(a.dailyProfitRatio !== undefined ? a.dailyProfitRatio : a.curProfitRatio);
+        const totalProfit = num(a.totalProfit !== undefined ? a.totalProfit : a.Ccyk);
+        const totalProfitRatio = num(a.totalProfitRatio);
+        const totalRatio = num(a.totalAccount__actTotalPosRatio);
+        const availableRatio = num(a.max_buyPosPct);
+        const totalQty = state.positions.reduce((sum, p) => sum + (p.qty || 0), 0);
+        const availQty = state.positions.reduce((sum, p) => sum + (p.avail || 0), 0);
+
+        host.innerHTML = [
+            kpiHtml('总资产（元）', fmtMoney(totalAssets)),
+            kpiHtml('持仓市值（元）', fmtMoney(marketValue)),
+            kpiHtml('可用资金（元）', fmtMoney(available)),
+            kpiHtml('浮动盈亏（元）', pnlCell(floatPnl), '账户浮动总盈亏 Fdyk'),
+            kpiHtml('持仓盈亏（元）', pnlCell(holdPnl), 'DTO 字段 Ccyk'),
+            kpiHtml('每日盈亏额（元）', pnlCell(dailyProfit), 'dailyProfit / curProfit'),
+            kpiHtml('每日盈亏率', fmtRatioPct(dailyProfitRatio), 'dailyProfitRatio / curProfitRatio'),
+            kpiHtml('总盈亏额（元）', pnlCell(totalProfit), 'totalProfit / Ccyk'),
+            kpiHtml('总盈亏率', fmtRatioPct(totalProfitRatio), 'totalProfitRatio'),
+            kpiHtml('账户总仓位', fmtRatioPct(totalRatio), 'Sz / Zczz'),
+            kpiHtml('可用资金比例', fmtPctValue(availableRatio), 'max_buyPosPct'),
+            kpiHtml('持仓合约', `${state.positions.length} 个`, `可用 ${fmtQty(availQty)} / 持仓 ${fmtQty(totalQty)} 张`)
+        ].join('');
+
+        meta.textContent = `更新于 ${fmtClock(state.accountAt)} · ${state.positions.length} 个合约`;
+    }
+
+    /* ------------------------------------------------------------------ 9. 渲染：持仓 */
+    function updatePositionsMeta(shownCount) {
+        const meta = $('#positions-meta');
+        if (!meta) return;
+        if (state.positionsLoading) {
+            meta.textContent = state.positionsAt ? '刷新中…' : '加载中…';
+            return;
+        }
+        if (state.positionsError) {
+            meta.textContent = '读取失败';
+            return;
+        }
+        if (!state.positionsAt) {
+            meta.textContent = '尚未加载';
+            return;
+        }
+        const shown = shownCount === undefined ? state.positions.length : shownCount;
+        meta.textContent = `共 ${state.positions.length} 个 · 显示 ${shown} 个 · 更新于 ${fmtClock(state.positionsAt)}`;
+    }
+
+    function renderPositions() {
+        const table = $('#position-table');
+        if (!table) return;
+        const head = table.tHead;
+        const body = table.tBodies[0];
+
+        head.innerHTML = '<tr>' + POSITION_COLUMNS.map((col) => headerHtml(col, state.posSort)).join('') + '</tr>';
+        const countPill = $('#positions-count');
+        if (countPill) countPill.textContent = state.positionsAt ? String(state.positions.length) : '—';
+
+        if (state.positionsLoading && !state.positionsAt) {
+            body.innerHTML = msgRow(POSITION_COLUMNS, '持仓加载中…');
+            updatePositionsMeta();
+            return;
+        }
+        if (state.positionsError) {
+            body.innerHTML = msgRow(POSITION_COLUMNS, `持仓读取失败：${state.positionsError}`, true);
+            updatePositionsMeta();
+            return;
+        }
+        if (!state.positionsAt) {
+            body.innerHTML = msgRow(POSITION_COLUMNS, '尚未加载持仓');
+            updatePositionsMeta();
+            return;
+        }
+
+        const filtered = filterPositions();
+        const sorted = sortRows(filtered, POSITION_COLUMNS, state.posSort);
+        const parts = [];
+
+        if (filtered.length) {
+            parts.push(totalRowHtml(POSITION_COLUMNS, computeTotal(filtered, POSITION_COLUMNS), filtered, 'positions'));
+        }
+        if (!sorted.length) {
+            parts.push(msgRow(POSITION_COLUMNS, state.positions.length ? '没有符合筛选条件的持仓' : '当前无期权持仓'));
+        } else {
+            sorted.forEach((p, index) => parts.push(renderRow(POSITION_COLUMNS, p, index)));
+        }
+
+        body.innerHTML = parts.join('');
+        updatePositionsMeta(filtered.length);
+    }
+
+    /* ------------------------------------------------------------------ 10. 渲染：委托 */
+    function tabLabel(tab) {
+        return tab === 'today' ? '当日委托' : tab === 'his' ? '历史委托' : '可撤委托';
+    }
+
+    function updateOrderTabs() {
+        $$('#order-tabs .tab-btn').forEach((btn) => {
+            const active = btn.dataset.tab === state.activeTab;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        const dateRange = $('#order-date-range');
+        if (dateRange) dateRange.classList.toggle('d-none', state.activeTab !== 'his');
+
+        const counts = {
+            today: state.orders.today,
+            his: state.orders.his,
+            revoke: state.orders.revoke
+        };
+        const ids = {today: '#count-today', his: '#count-his', revoke: '#count-revoke'};
+        Object.keys(counts).forEach((tab) => {
+            const el = $(ids[tab]);
+            if (el) el.textContent = counts[tab] === null ? '—' : String(counts[tab].length);
+        });
+        const activeList = counts[state.activeTab];
+        const countPill = $('#orders-count');
+        if (countPill) countPill.textContent = activeList === null ? '—' : String(activeList.length);
+    }
+
+    function updateOrdersMeta(shownCount, totalCount) {
+        const meta = $('#orders-meta');
+        if (!meta) return;
+        const tab = state.activeTab;
+        if (state.orderLoading[tab]) {
+            meta.textContent = state.orderAt[tab] ? '刷新中…' : '加载中…';
+            return;
+        }
+        if (state.orderErrors[tab]) {
+            meta.textContent = '读取失败';
+            return;
+        }
+        const list = state.orders[tab];
+        if (list === null) {
+            meta.textContent = tab === 'his' ? '选择日期后查询' : '尚未加载';
+            return;
+        }
+        const shown = shownCount === undefined ? list.length : shownCount;
+        const total = totalCount === undefined ? list.length : totalCount;
+        meta.textContent = `${tabLabel(tab)} · 显示 ${shown} / 共 ${total} 笔 · 更新于 ${fmtClock(state.orderAt[tab])}`;
+    }
+
+    function renderOrders() {
+        const table = $('#order-table');
+        if (!table) return;
+        const tab = state.activeTab;
+        const list = state.orders[tab];
+        const head = table.tHead;
+        const body = table.tBodies[0];
+
+        head.innerHTML = '<tr>' + ORDER_COLUMNS.map((col) => headerHtml(col, state.orderSort)).join('') + '</tr>';
+        updateOrderTabs();
+
+        if (state.orderLoading[tab] && list === null) {
+            body.innerHTML = msgRow(ORDER_COLUMNS, `${tabLabel(tab)}加载中…`);
+            updateOrdersMeta();
+            return;
+        }
+        if (state.orderErrors[tab]) {
+            body.innerHTML = msgRow(ORDER_COLUMNS, `${tabLabel(tab)}读取失败：${state.orderErrors[tab]}`, true);
+            updateOrdersMeta();
+            return;
+        }
+        if (list === null) {
+            body.innerHTML = msgRow(ORDER_COLUMNS, tab === 'his' ? '选择开始/结束日期后查询历史委托' : '尚未加载委托');
+            updateOrdersMeta();
+            return;
+        }
+
+        const filtered = filterOrders(list);
+        const sorted = sortRows(filtered, ORDER_COLUMNS, state.orderSort);
+        const parts = [];
+
+        if (filtered.length) {
+            parts.push(totalRowHtml(ORDER_COLUMNS, computeTotal(filtered, ORDER_COLUMNS), filtered, 'orders'));
+        }
+        if (!sorted.length) {
+            const emptyText = list.length
+                ? '没有符合筛选条件的委托'
+                : tab === 'today' ? '暂无当日委托'
+                    : tab === 'his' ? '当前日期区间无委托'
+                        : '暂无可撤委托';
+            parts.push(msgRow(ORDER_COLUMNS, emptyText));
+        } else {
+            sorted.forEach((o, index) => parts.push(renderRow(ORDER_COLUMNS, o, index)));
+        }
+
+        body.innerHTML = parts.join('');
+        updateOrdersMeta(filtered.length, list.length);
+    }
+
+    /* ------------------------------------------------------------------ 11. 下拉选项 */
+    function updateEtfOptions() {
+        const select = $('#pos-etf');
+        if (!select) return;
+        const current = state.posFilters.etf;
+        const map = new Map();
+        state.positions.forEach((p) => {
+            if (p.etfCode) map.set(p.etfCode, p.etfName || '');
+        });
+        const options = ['<option value="">全部标的</option>'];
+        Array.from(map.entries())
+            .sort((a, b) => a[0].localeCompare(b[0], 'zh-CN', {numeric: true}))
+            .forEach(([code, name]) => {
+                options.push(`<option value="${esc(code)}">${esc(code)}${name ? ` ${esc(name)}` : ''}</option>`);
+            });
+        select.innerHTML = options.join('');
+        if (map.has(current)) {
+            select.value = current;
+        } else {
+            select.value = '';
+            state.posFilters.etf = '';
+        }
+    }
+
+    function updateOrderStatusOptions() {
+        const select = $('#order-status');
+        if (!select) return;
+        const current = state.orderFilters.status;
+        const statuses = new Set(COMMON_ORDER_STATUS);
+        Object.values(state.orders).forEach((list) => {
+            (list || []).forEach((o) => {
+                if (o.status) statuses.add(o.status);
+            });
+        });
+        const options = ['<option value="">全部状态</option>'];
+        Array.from(statuses)
+            .sort((a, b) => a.localeCompare(b, 'zh-CN'))
+            .forEach((status) => options.push(`<option value="${esc(status)}">${esc(status)}</option>`));
+        select.innerHTML = options.join('');
+        if (statuses.has(current)) {
+            select.value = current;
+        } else {
+            select.value = '';
+            state.orderFilters.status = '';
+        }
+    }
+
+    /* ------------------------------------------------------------------ 12. API */
+    async function apiGet(path, params) {
+        if (!window.ApiUtils || typeof ApiUtils.fetch !== 'function') {
+            throw new Error('ApiUtils 未加载，请检查 ../js/config.js');
+        }
+        const query = new URLSearchParams();
+        Object.entries(params || {}).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') query.set(key, value);
+        });
+        const suffix = query.toString() ? `?${query.toString()}` : '';
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30000);
+        try {
+            const response = await ApiUtils.fetch(`${API_BASE}${path}${suffix}`, {
+                method: 'GET',
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`);
+            const json = await response.json();
+            if (!json || json.success !== true) {
+                throw new Error((json && (json.msg || json.message)) || '接口返回失败');
+            }
+            return json.data;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function errorText(err) {
+        if (err && err.name === 'AbortError') return '请求超时（30s）';
+        return (err && err.message) || String(err);
+    }
+
+    /* ------------------------------------------------------------------ 13. 数据加载 */
+    async function loadAccount(options) {
+        if (state.accountLoading) return;
+        state.accountLoading = true;
+        state.positionsLoading = true;
+        setApiStatus('checking', '检查中');
+        hideAlert();
+        updateButtons();
+        renderAccount();
+        renderPositions();
+
+        try {
+            const data = await apiGet('/getAccountFundsAndPositions');
+            if (!data || typeof data !== 'object') throw new Error('账户接口返回空数据');
+            const rawList = Array.isArray(data.optionPositionList) ? data.optionPositionList : [];
+            state.account = data;
+            state.positions = rawList.map(positionModel);
+            state.accountError = null;
+            state.positionsError = null;
+            state.accountAt = new Date();
+            state.positionsAt = new Date();
+            state.apiState = 'ok';
+            setApiStatus('ok', 'API 正常');
+            updateEtfOptions();
+        } catch (err) {
+            const message = errorText(err);
+            state.account = null;
+            state.positions = [];
+            state.accountError = message;
+            state.positionsError = message;
+            state.accountAt = null;
+            state.positionsAt = null;
+            state.apiState = 'bad';
+            setApiStatus('bad', 'API 失败');
+            if (!options || !options.silent) showAlert(`账户/持仓读取失败：${message}`);
+        } finally {
+            state.accountLoading = false;
+            state.positionsLoading = false;
+            updateButtons();
+            renderAccount();
+            renderPositions();
+        }
+    }
+
+    async function loadOrders(tab) {
+        const targetTab = tab || state.activeTab;
+        if (state.orderLoading[targetTab]) return;
+
+        if (targetTab === 'his') {
+            const start = $('#his-start') ? $('#his-start').value : '';
+            const end = $('#his-end') ? $('#his-end').value : '';
+            if (!start || !end) {
+                showAlert('请选择历史委托的开始和结束日期', 'warning');
+                return;
+            }
+            if (start > end) {
+                showAlert('开始日期不能晚于结束日期', 'warning');
+                return;
+            }
+            state.hisStart = start;
+            state.hisEnd = end;
+        }
+
+        state.orderLoading[targetTab] = true;
+        setApiStatus('checking', '检查中');
+        hideAlert();
+        updateButtons();
+        renderOrders();
+
+        try {
+            let data;
+            if (targetTab === 'today') {
+                data = await apiGet('/getTodayOrders');
+            } else if (targetTab === 'his') {
+                data = await apiGet('/getHisOrders', {startDate: state.hisStart, endDate: state.hisEnd});
+            } else {
+                data = await apiGet('/getRevokeList');
+            }
+            const list = Array.isArray(data) ? data.map(orderModel) : [];
+            state.orders[targetTab] = list;
+            state.orderErrors[targetTab] = null;
+            state.orderAt[targetTab] = new Date();
+            state.apiState = 'ok';
+            setApiStatus('ok', 'API 正常');
+            updateOrderStatusOptions();
+        } catch (err) {
+            const message = errorText(err);
+            state.orders[targetTab] = null;
+            state.orderErrors[targetTab] = message;
+            state.orderAt[targetTab] = null;
+            state.apiState = 'bad';
+            setApiStatus('bad', 'API 失败');
+            showAlert(`${tabLabel(targetTab)}读取失败：${message}`);
+        } finally {
+            state.orderLoading[targetTab] = false;
+            updateButtons();
+            renderOrders();
+        }
+    }
+
+    /* ------------------------------------------------------------------ 14. 状态 UI */
+    function setApiStatus(kind, text) {
+        const pill = $('#api-pill');
+        const label = $('#api-text');
+        if (label) label.textContent = text;
+        if (pill) {
+            pill.classList.remove('ok', 'bad');
+            if (kind === 'ok') pill.classList.add('ok');
+            if (kind === 'bad') pill.classList.add('bad');
+        }
+    }
+
+    function setEnv() {
+        const env = window.ApiUtils && typeof ApiUtils.getEnv === 'function' ? ApiUtils.getEnv() : '—';
+        const el = $('#env-pill');
+        if (el) el.textContent = `环境 ${env}`;
+    }
+
+    function showAlert(message, type) {
+        const box = $('#global-alert');
+        const text = $('#global-alert-text');
+        if (!box || !text) return;
+        text.textContent = message;
+        box.className = `alert ${type === 'warning' ? 'alert-warning' : 'alert-danger'}`;
+        box.classList.remove('d-none');
+    }
+
+    function hideAlert() {
+        const box = $('#global-alert');
+        if (box) box.classList.add('d-none');
+    }
+
+    function updateButtons() {
+        const allBtn = $('#refresh-all');
+        const posBtn = $('#refresh-positions');
+        const orderBtn = $('#refresh-orders');
+        const anyOrderLoading = Object.values(state.orderLoading).some(Boolean);
+        const activeOrderLoading = !!state.orderLoading[state.activeTab];
+
+        if (allBtn) {
+            allBtn.disabled = state.accountLoading || anyOrderLoading;
+            allBtn.textContent = state.accountLoading || activeOrderLoading ? '刷新中…' : '刷新全部';
+        }
+        if (posBtn) {
+            posBtn.disabled = state.accountLoading;
+            posBtn.textContent = state.accountLoading ? '刷新中…' : '刷新持仓';
+        }
+        if (orderBtn) {
+            orderBtn.disabled = activeOrderLoading;
+            orderBtn.textContent = activeOrderLoading ? '刷新中…' : '刷新委托';
+        }
+    }
+
+    /* ------------------------------------------------------------------ 15. 交互 */
+    function resetPositionFilters() {
+        state.posFilters = {etf: '', type: '', direction: '', keyword: '', onlyAvail: false};
+        if ($('#pos-etf')) $('#pos-etf').value = '';
+        if ($('#pos-type')) $('#pos-type').value = '';
+        if ($('#pos-direction')) $('#pos-direction').value = '';
+        if ($('#pos-keyword')) $('#pos-keyword').value = '';
+        if ($('#pos-only-avail')) $('#pos-only-avail').checked = false;
+        renderPositions();
+    }
+
+    function resetOrderFilters() {
+        state.orderFilters = {status: '', mm: '', keyword: ''};
+        if ($('#order-status')) $('#order-status').value = '';
+        if ($('#order-mm')) $('#order-mm').value = '';
+        if ($('#order-keyword')) $('#order-keyword').value = '';
+        renderOrders();
+    }
+
+    function setActiveTab(tab) {
+        if (!['today', 'his', 'revoke'].includes(tab)) return;
+        state.activeTab = tab;
+        updateOrderTabs();
+        updateButtons();
+        if (state.orders[tab] === null && !state.orderLoading[tab]) {
+            loadOrders(tab);
+        } else {
+            renderOrders();
+        }
+    }
+
+    function bindEvents() {
+        bindSort($('#position-table'), 'positions');
+        bindSort($('#order-table'), 'orders');
+
+        $('#pos-etf').addEventListener('change', (event) => {
+            state.posFilters.etf = event.target.value;
+            renderPositions();
+        });
+        $('#pos-type').addEventListener('change', (event) => {
+            state.posFilters.type = event.target.value;
+            renderPositions();
+        });
+        $('#pos-direction').addEventListener('change', (event) => {
+            state.posFilters.direction = event.target.value;
+            renderPositions();
+        });
+        $('#pos-keyword').addEventListener('input', debounce((event) => {
+            state.posFilters.keyword = event.target.value;
+            renderPositions();
+        }, 180));
+        $('#pos-only-avail').addEventListener('change', (event) => {
+            state.posFilters.onlyAvail = event.target.checked;
+            renderPositions();
+        });
+        $('#pos-reset').addEventListener('click', resetPositionFilters);
+
+        $('#order-status').addEventListener('change', (event) => {
+            state.orderFilters.status = event.target.value;
+            renderOrders();
+        });
+        $('#order-mm').addEventListener('change', (event) => {
+            state.orderFilters.mm = event.target.value;
+            renderOrders();
+        });
+        $('#order-keyword').addEventListener('input', debounce((event) => {
+            state.orderFilters.keyword = event.target.value;
+            renderOrders();
+        }, 180));
+        $('#order-reset').addEventListener('click', resetOrderFilters);
+
+        $('#order-tabs').addEventListener('click', (event) => {
+            const btn = event.target.closest('.tab-btn[data-tab]');
+            if (!btn) return;
+            setActiveTab(btn.dataset.tab);
+        });
+        $('#his-query').addEventListener('click', () => loadOrders('his'));
+
+        $('#refresh-all').addEventListener('click', async () => {
+            hideAlert();
+            await Promise.allSettled([loadAccount({silent: false}), loadOrders(state.activeTab)]);
+            updateButtons();
+        });
+        $('#refresh-positions').addEventListener('click', () => loadAccount());
+        $('#refresh-orders').addEventListener('click', () => loadOrders(state.activeTab));
+        $('#global-alert-close').addEventListener('click', hideAlert);
+    }
+
+    /* ------------------------------------------------------------------ 16. 初始化 */
+    function init() {
+        setEnv();
+        setApiStatus('checking', '检查中');
+
+        const today = localDateStr();
+        state.hisStart = addDays(today, -7);
+        state.hisEnd = today;
+        if ($('#his-start')) $('#his-start').value = state.hisStart;
+        if ($('#his-end')) $('#his-end').value = state.hisEnd;
+
+        bindEvents();
+        updateButtons();
+        renderAccount();
+        renderPositions();
+        renderOrders();
+
+        loadAccount();
+        loadOrders('today');
+    }
+
+    init();
+</script>
+</body>
+</html>
