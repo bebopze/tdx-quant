@@ -27,6 +27,9 @@ public interface IBaseStockService extends IService<BaseStockDO> {
     BaseStockDO getSimpleByCode(String code);
 
 
+    List<BaseStockDO> listSimpleByKeyword(String keyword);
+
+
     BaseStockDO getByCodeAndUpdateType(String stockCode, int updateType);
 
 
@@ -99,4 +102,5 @@ public interface IBaseStockService extends IService<BaseStockDO> {
      */
     int delAllKlineExtData();
 
+    ;
 }

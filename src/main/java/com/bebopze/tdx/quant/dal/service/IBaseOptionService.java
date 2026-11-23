@@ -23,6 +23,9 @@ public interface IBaseOptionService extends IService<BaseOptionDO> {
     BaseOptionDO getByCode(String code);
 
 
+    List<BaseOptionDO> listSimpleByKeyword(String keyword);
+
+
     Map<String, Long> codeIdMap();
 
 

@@ -53,7 +53,10 @@ public interface IBaseBlockService extends IService<BaseBlockDO> {
 
     List<BaseBlockDO> listAllKline(boolean refresh);
 
+
     List<BaseBlockDO> listAllSimple();
+
+    List<BaseBlockDO> listSimpleByKeyword(String keyword);
 
 
     // -----------------------------------------------------------------------------------------------------------------

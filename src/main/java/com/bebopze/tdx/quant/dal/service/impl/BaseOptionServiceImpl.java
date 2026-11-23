@@ -47,6 +47,12 @@ public class BaseOptionServiceImpl extends ServiceImpl<BaseOptionMapper, BaseOpt
 
 
     @Override
+    public List<BaseOptionDO> listSimpleByKeyword(String keyword) {
+        return baseMapper.listSimpleByKeyword(keyword);
+    }
+
+
+    @Override
     public Map<String, Long> codeIdMap() {
 
         List<BaseOptionDO> entityList = baseMapper.listAllSimple();

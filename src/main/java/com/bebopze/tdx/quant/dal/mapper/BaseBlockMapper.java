@@ -33,6 +33,9 @@ public interface BaseBlockMapper extends BaseMapper<BaseBlockDO> {
 
     List<BaseBlockDO> listAllSimple();
 
+    List<BaseBlockDO> listSimpleByKeyword(@Param("keyword") String keyword);
+
+
     /**
      * 全量板块   =>   2-普通行业   +   4-概念板块   +   12-研究行业
      *

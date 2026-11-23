@@ -132,6 +132,30 @@
     </select>
 
 
+    <select id="listSimpleByKeyword" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
+        SELECT id,
+               code,
+               name,
+               code_path,
+               name_path,
+               parent_id,
+               type,
+               level,
+               end_level
+
+
+        FROM base_block
+
+
+        WHERE (
+                  code LIKE CONCAT('%', #{keyword}, '%')
+                      OR name LIKE CONCAT('%', #{keyword}, '%')
+                  )
+
+        LIMIT 10
+    </select>
+
+
     <select id="listAllKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseBlockDO">
         SELECT *
 

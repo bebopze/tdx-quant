@@ -1,6 +1,7 @@
 package com.bebopze.tdx.quant.dal.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -22,7 +23,10 @@ public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
 
     BaseOptionDO getByCode(@Param("code") String code);
 
+
     List<BaseOptionDO> listAllSimple();
+
+    List<BaseOptionDO> listSimpleByKeyword(@Param("keyword") String keyword);
 
 
     int batchInsert(@Param("list") List<BaseOptionDO> list);

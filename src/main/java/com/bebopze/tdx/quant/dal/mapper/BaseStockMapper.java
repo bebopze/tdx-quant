@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+
 /**
  * <p>
  * 股票-实时行情 Mapper 接口
@@ -31,6 +32,9 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
 
     List<BaseStockDO> listAllSimple();
+
+    List<BaseStockDO> listSimpleByKeyword(@Param("keyword") String keyword);
+
 
     List<BaseStockDO> listAllRpsKline(@Param("updateType") Integer updateType,
                                       @Param("type") Integer type);
@@ -65,6 +69,5 @@ public interface BaseStockMapper extends BaseMapper<BaseStockDO> {
 
 
     int delAllKlineExtData();
-
 
 }

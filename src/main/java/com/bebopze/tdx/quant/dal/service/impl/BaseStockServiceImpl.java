@@ -81,6 +81,12 @@ public class BaseStockServiceImpl extends ServiceImpl<BaseStockMapper, BaseStock
 
 
     @Override
+    public List<BaseStockDO> listSimpleByKeyword(String keyword) {
+        return baseMapper.listSimpleByKeyword(keyword);
+    }
+
+
+    @Override
     public BaseStockDO getByCodeAndUpdateType(String stockCode, int updateType) {
         return baseMapper.getByCodeAndUpdateType(stockCode, updateType);
     }

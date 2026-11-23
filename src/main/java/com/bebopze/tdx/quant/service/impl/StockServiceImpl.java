@@ -4,6 +4,7 @@ import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
@@ -43,6 +44,42 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private IBaseBlockNewRelaStockService baseBlockNewRelaStockService;
+
+
+    @Override
+    public List<SimpleStockDTO> search(String keyword, int limit) {
+
+
+        List<BaseStockDO> stockDOList = baseStockService.listSimpleByKeyword(keyword);
+        List<BaseBlockDO> blockDOList = baseBlockService.listSimpleByKeyword(keyword);
+        List<BaseOptionDO> optionDOList = baseOptionService.listSimpleByKeyword(keyword);
+
+
+        List<SimpleStockDTO> dtoList = Lists.newArrayList();
+
+
+        stockDOList.forEach(e -> {
+            SimpleStockDTO dto = new SimpleStockDTO();
+            BeanUtils.copyProperties(e, dto);
+            dtoList.add(dto);
+        });
+
+        blockDOList.forEach(e -> {
+            SimpleStockDTO dto = new SimpleStockDTO();
+            BeanUtils.copyProperties(e, dto);
+            dtoList.add(dto);
+        });
+
+        optionDOList.forEach(e -> {
+            SimpleStockDTO dto = new SimpleStockDTO();
+            BeanUtils.copyProperties(e, dto);
+            dtoList.add(dto);
+        });
+
+
+        // limit
+        return dtoList.stream().limit(limit).toList();
+    }
 
 
     @Override

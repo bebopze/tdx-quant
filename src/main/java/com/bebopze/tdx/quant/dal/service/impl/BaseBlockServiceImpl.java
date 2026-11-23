@@ -141,6 +141,12 @@ public class BaseBlockServiceImpl extends ServiceImpl<BaseBlockMapper, BaseBlock
     }
 
     @Override
+    public List<BaseBlockDO> listSimpleByKeyword(String keyword) {
+        return baseMapper.listSimpleByKeyword(keyword);
+    }
+
+
+    @Override
     public List<BaseBlockDO> listAllKline() {
         return listAllKline(false);
     }

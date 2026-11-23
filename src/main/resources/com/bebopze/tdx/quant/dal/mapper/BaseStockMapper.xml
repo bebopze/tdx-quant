@@ -129,6 +129,41 @@
     </select>
 
 
+    <select id="listSimpleByKeyword" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
+        SELECT id,
+               code,
+               name,
+               type,
+               tdx_market_type,
+               block_name,
+               trade_date,
+               open,
+               high,
+               low,
+               close,
+               prev_close,
+               volume,
+               amount,
+               range_pct,
+               change_pct,
+               change_price,
+               turnover_pct,
+               gmt_create,
+               gmt_modify
+
+
+        FROM base_stock
+
+
+        WHERE (
+                  code LIKE CONCAT('%', #{keyword}, '%')
+                      OR name LIKE CONCAT('%', #{keyword}, '%')
+                  )
+
+        LIMIT 10
+    </select>
+
+
     <select id="listAllRpsKline" resultType="com.bebopze.tdx.quant.dal.entity.BaseStockDO">
         SELECT
 

@@ -3,6 +3,7 @@ package com.bebopze.tdx.quant.web;
 import com.bebopze.tdx.quant.common.domain.Result;
 import com.bebopze.tdx.quant.common.domain.dto.base.BaseStockDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
+import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 
 /**
@@ -28,6 +31,30 @@ public class StockController {
 
     @Autowired
     private StockService stockService;
+
+
+    /**
+     * 关键词 模糊搜索
+     *
+     * @return
+     */
+    @Operation(summary = "关键词 模糊搜索（支持 证券code/证券name）", description = "关键词 模糊搜索（支持 证券code/证券name）")
+    @GetMapping(value = "/search")
+    public Result<List<SimpleStockDTO>> search(@Schema(description = "关键词（支持 证券code/证券name）", example = "300059/东方财富")
+                                               @RequestParam(required = false, defaultValue = "") String keyword,
+
+                                               @Schema(description = "搜索结果数量限制", example = "10")
+                                               @RequestParam(required = false, defaultValue = "10") int limit) {
+
+        String kw = keyword == null ? "" : keyword.trim();
+        if (kw.isEmpty()) {
+            return Result.SUC(List.of());
+        }
+
+        // 默认 10 条；限制单次返回数量，避免搜索框下拉过大
+        int size = Math.max(1, Math.min(limit, 50));
+        return Result.SUC(stockService.search(kw, size));
+    }
 
 
     /**
@@ -59,6 +86,5 @@ public class StockController {
 
         return Result.SUC(stockService.blockInfo(stockCode));
     }
-
 
 }
