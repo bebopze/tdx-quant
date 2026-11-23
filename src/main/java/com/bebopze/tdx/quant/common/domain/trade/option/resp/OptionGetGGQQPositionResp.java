@@ -1,11 +1,10 @@
 package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
+import com.bebopze.tdx.quant.client.EastMoneyOptionTradeAPI;
 import com.bebopze.tdx.quant.client.KlineAPI;
 import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
-
-import static com.bebopze.tdx.quant.client.EastMoneyOptionTradeAPI.ETF_DICT__CODE_NAME_MAP__CACHE;
 
 
 /**
@@ -209,18 +208,18 @@ public class OptionGetGGQQPositionResp {
     // ------------------------------------
 
 
-    // 当日盈亏 = (close - prevClose) x 持仓数量
+    // 当日盈亏 = (close - prevClose) x 持仓数量 x 合约单位（10000份）
     private Double curProfit;
     // 当日盈亏比例
     private Double curProfitRatio;
 
 
     public double getCurProfit() {
-        return NumUtil.of(getKlineDTO().getChangePrice() * Hysjcc);
+        return NumUtil.of(getKlineDTO().getChangePrice() * Hysjcc * hydw);
     }
 
     public double getCurProfitRatio() {
-        return getKlineDTO().getChangePct() * 100.0;
+        return NumUtil.of(getKlineDTO().getChangePct() / 100.0);
     }
 
 
@@ -242,7 +241,7 @@ public class OptionGetGGQQPositionResp {
     private String bdzqmc;
 
     public String getBdzqmc() {
-        bdzqmc = ETF_DICT__CODE_NAME_MAP__CACHE.get(bdzqdm);
+        bdzqmc = EastMoneyOptionTradeAPI.getFromEtfDictCache(bdzqdm);
         return bdzqmc;
     }
 

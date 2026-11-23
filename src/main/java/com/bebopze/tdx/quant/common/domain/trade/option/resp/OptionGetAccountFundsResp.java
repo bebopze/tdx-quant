@@ -124,6 +124,28 @@ public class OptionGetAccountFundsResp {
     private List<OptionGetGGQQPositionResp> optionPositionList;
 
 
+    // ------------------------------------
+
+
+    // 当日盈亏
+    private Double curProfit;
+    // 当日盈亏比例 = 当日盈亏 / 昨日市值
+    private Double curProfitRatio;
+
+
+    public double getCurProfit() {
+        double sumCurProfit = optionPositionList.stream().mapToDouble(OptionGetGGQQPositionResp::getCurProfit).sum();
+        return NumUtil.of(sumCurProfit);
+    }
+
+    public double getCurProfitRatio() {
+        // 昨日收盘总市值  =  昨日收盘价 x 持仓数量 x 合约单位
+        double prevMarketValue = optionPositionList.stream().mapToDouble(e -> e.getKlineDTO().getPrevClose() * e.getHysjcc() * e.getHydw()).sum();
+
+        return NumUtil.of(getCurProfit() / prevMarketValue);
+    }
+
+
     // ---------------------------------
 
 
@@ -131,7 +153,7 @@ public class OptionGetAccountFundsResp {
     private Double totalCost;
 
     public double getTotalCost() {
-        return Sz - Ccyk;
+        return NumUtil.of(Sz - Ccyk);
     }
 
 

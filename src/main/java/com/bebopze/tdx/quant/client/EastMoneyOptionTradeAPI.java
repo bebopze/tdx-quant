@@ -265,6 +265,14 @@ public class EastMoneyOptionTradeAPI {
     public static final Map<String, String> ETF_DICT__CODE_NAME_MAP__CACHE = Maps.newConcurrentMap();
 
 
+    public static String getFromEtfDictCache(String key) {
+        if (MapUtils.isEmpty(ETF_DICT__CODE_NAME_MAP__CACHE)) {
+            searchTargetDict();
+        }
+        return ETF_DICT__CODE_NAME_MAP__CACHE.get(key);
+    }
+
+
     /**
      * ETF期权 - ETF标的证券 列表
      * -
