@@ -2164,6 +2164,7 @@
             fullBars: [],
             viewBars: [],
             selectedDate: null,
+            priceScale: 2,
             zoom: {start: 0, end: 100},
             mainChart: null,
             panes: [],
@@ -2191,6 +2192,30 @@
         function fmt(v, digits = 2) {
             const n = num(v);
             return n === null ? '—' : n.toFixed(digits);
+        }
+
+        // 价格：不做固定小数截取，保留接口数值精度；
+        // 同时消除 JS 浮点尾差（如 19.094999999999988 -> 19.095）
+        function fmtPrice(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            return String(Number(n.toPrecision(12)));
+        }
+
+        function fmtSignedPrice(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            return (n > 0 ? '+' : '') + fmtPrice(n);
+        }
+
+        // 计算型 MA（尤其期权 ext_data 为空时）按品种价格精度多保留 2 位，避免长浮点尾差
+        function fmtMA(v) {
+            const n = num(v);
+            if (n === null) return '—';
+            const scale = Math.min(8, Math.max(2, Number(state.priceScale) || 2) + 2);
+            let s = n.toFixed(scale);
+            if (s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+            return s;
         }
 
         function fmtSigned(v, digits = 2) {
@@ -2406,6 +2431,7 @@
                 state.code = data.code || code;
                 state.stock = data;
                 state.klines = klines;
+                state.priceScale = inferPriceScale(klines);
                 state.blockInfo = null;
 
                 $('stockInput').value = state.code;
@@ -2472,6 +2498,21 @@
             });
 
             return Array.from(byDate.values()).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+        }
+
+        function inferPriceScale(klines) {
+            let scale = 2;
+            (klines || []).slice(-200).forEach(k => {
+                ['open', 'high', 'low', 'close'].forEach(key => {
+                    const n = num(k[key]);
+                    if (n === null) return;
+                    const s = String(n);
+                    if (s.indexOf('e') >= 0) return;
+                    const p = s.indexOf('.');
+                    if (p >= 0) scale = Math.max(scale, Math.min(6, s.length - p - 1));
+                });
+            });
+            return scale;
         }
 
         async function loadBlocks(code) {
@@ -2559,18 +2600,25 @@
         function attachMA(bars, useExt) {
             bars.forEach((b, i) => {
                 b.ma = {};
+                b.maComputed = {};
                 MA_PERIODS.forEach(n => {
                     let value = null;
+                    let computed = true;
                     if (useExt && b.ext) {
                         const ev = num(b.ext['MA' + n]);
-                        if (ev !== null && ev > 0) value = ev;
+                        if (ev !== null && ev > 0) {
+                            value = ev;
+                            computed = false;
+                        }
                     }
                     if (value === null && i >= n - 1) {
                         let sum = 0;
                         for (let j = i - n + 1; j <= i; j++) sum += bars[j].close;
                         value = sum / n;
+                        computed = true;
                     }
                     b.ma['MA' + n] = value;
+                    b.maComputed['MA' + n] = computed;
                 });
             });
         }
@@ -2738,16 +2786,17 @@
                 $('qPrev').textContent = '—';
                 return;
             }
-            $('lastPrice').textContent = fmt(bar.close);
+            $('lastPrice').textContent = fmtPrice(bar.close);
             const change = num(bar.changePct);
             const changePrice = num(bar.changePrice);
-            const prev = changePrice !== null ? bar.close - changePrice : bar.open;
-            $('priceChange').textContent = (bar.changePrice === null || bar.changePrice === undefined ? '' : fmtSigned(bar.changePrice)) + '  ' + (change === null ? '—' : fmtSigned(change) + '%');
+            const apiPrev = num(state.stock && state.stock.prevClose);
+            const prev = apiPrev !== null ? apiPrev : (changePrice !== null ? bar.close - changePrice : bar.open);
+            $('priceChange').textContent = (bar.changePrice === null || bar.changePrice === undefined ? '' : fmtSignedPrice(bar.changePrice)) + '  ' + (change === null ? '—' : fmtSigned(change) + '%');
             $('priceChange').className = 'price-change num ' + (change === null ? '' : change >= 0 ? 'up' : 'down');
-            $('qOpen').textContent = fmt(bar.open);
-            $('qHigh').textContent = fmt(bar.high);
-            $('qLow').textContent = fmt(bar.low);
-            $('qPrev').textContent = fmt(prev);
+            $('qOpen').textContent = fmtPrice(bar.open);
+            $('qHigh').textContent = fmtPrice(bar.high);
+            $('qLow').textContent = fmtPrice(bar.low);
+            $('qPrev').textContent = fmtPrice(prev);
             $('quoteDate').textContent = bar.date;
             $('qAmount').textContent = fmtAmo(bar.amo);
             $('qVolume').textContent = fmtVol(bar.vol);
@@ -2794,8 +2843,8 @@
             const ma60 = num(ext.MA60);
             const dev20 = num(ext['C_MA20_偏离率']);
             const dev60 = num(ext['C_MA60_偏离率']);
-            $('tMa20').textContent = fmt(ma20);
-            $('tMa60').textContent = fmt(ma60);
+            $('tMa20').textContent = fmtPrice(ma20);
+            $('tMa60').textContent = fmtPrice(ma60);
             $('tMa20Dev').textContent = fmtPct(dev20);
             $('tMa60Dev').textContent = fmtPct(dev60);
             $('tMa20Dev').className = 'num ' + (dev20 === null ? '' : dev20 >= 0 ? 'up' : 'down');
@@ -3431,8 +3480,8 @@
                         const prev = i > 0 ? bars[i - 1].close : b.open;
                         const chg = prev ? (b.close - prev) / prev * 100 : 0;
                         return `<div style="line-height:1.7"><b style="color:${p.strong}">${b.date}${b.firstDate && b.firstDate !== b.date ? ' ~ ' + b.firstDate : ''}</b><br>
-                        开 ${fmt(b.open)} &nbsp; 高 ${fmt(b.high)}<br>
-                        低 ${fmt(b.low)} &nbsp; 收 ${fmt(b.close)}<br>
+                        开 ${fmtPrice(b.open)} &nbsp; 高 ${fmtPrice(b.high)}<br>
+                        低 ${fmtPrice(b.low)} &nbsp; 收 ${fmtPrice(b.close)}<br>
                         涨跌 <span style="color:${chg >= 0 ? p.up : p.down}">${fmtSigned(chg)}%</span><br>
                         量 ${fmtVol(b.vol)} &nbsp; 额 ${fmtAmo(b.amo)}</div>`;
                     }
@@ -3488,7 +3537,10 @@
                 || (bars && bars.length ? bars[bars.length - 1] : null);
             $('mainLegend').innerHTML = MA_DEFS.map((def, idx) => {
                 const title = def.draw ? '通达信 ' + def.key : '通达信 NODRAW：仅显示数值，不画线';
-                return `<span title="${title}" style="color:${p.ma[idx] || p.accent}">${def.key} <b>${fmt(b && b.ma ? b.ma[def.key] : null)}</b></span>`;
+                const raw = b && b.ma ? b.ma[def.key] : null;
+                const isComputed = b && b.maComputed && b.maComputed[def.key];
+                const text = isComputed ? fmtMA(raw) : fmtPrice(raw);
+                return `<span title="${title}" style="color:${p.ma[idx] || p.accent}">${def.key} <b>${text}</b></span>`;
             }).join('');
         }
 
