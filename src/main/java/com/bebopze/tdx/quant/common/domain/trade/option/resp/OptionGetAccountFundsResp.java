@@ -124,29 +124,39 @@ public class OptionGetAccountFundsResp {
     private List<OptionGetGGQQPositionResp> optionPositionList;
 
 
-    // ------------------------------------
+    // ------------------------------------ 账户 当日盈亏/当日盈亏率
 
 
     // 当日盈亏
-    private Double curProfit;
+    private Double dailyProfit;
     // 当日盈亏比例 = 当日盈亏 / 昨日市值
-    private Double curProfitRatio;
+    private Double dailyProfitRatio;
 
 
-    public double getCurProfit() {
-        double sumCurProfit = optionPositionList.stream().mapToDouble(OptionGetGGQQPositionResp::getCurProfit).sum();
+    // 每日盈亏额（账户持仓汇总，与 curProfit 同口径）
+    public double getDailyProfit() {
+        double sumCurProfit = optionPositionList.stream().mapToDouble(OptionGetGGQQPositionResp::getDailyProfit).sum();
         return NumUtil.of(sumCurProfit);
     }
 
-    public double getCurProfitRatio() {
+    // 每日盈亏率（小数，如 0.0203 = 2.03%）
+    public double getDailyProfitRatio() {
         // 昨日收盘总市值  =  昨日收盘价 x 持仓数量 x 合约单位
         double prevMarketValue = optionPositionList.stream().mapToDouble(e -> e.getKlineDTO().getPrevClose() * e.getHysjcc() * e.getHydw()).sum();
 
-        return NumUtil.of(getCurProfit() / prevMarketValue);
+        return NumUtil.of(getDailyProfit() / prevMarketValue);
     }
 
 
-    // ---------------------------------
+    // --------------------------------- 期权 总盈亏/总盈亏率
+
+
+    // 总盈亏额（账户持仓盈亏 Ccyk）
+    private Double totalProfit;
+
+    public double getTotalProfit() {
+        return Ccyk;
+    }
 
 
     // 账户总成本 = 账户总市值 - 账户持仓盈亏
@@ -161,7 +171,7 @@ public class OptionGetAccountFundsResp {
     private Double totalProfitRatio;
 
     public double getTotalProfitRatio() {
-        return NumUtil.of(Ccyk / getTotalCost());
+        return NumUtil.of(getTotalProfit() / getTotalCost());
     }
 
 

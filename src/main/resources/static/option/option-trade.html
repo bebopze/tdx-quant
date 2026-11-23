@@ -3470,6 +3470,19 @@
             marketValue: toNum(pick(raw, 'Hysz')),
             floatPnl: toNum(pick(raw, 'Fdyk')),
             totalPnl: toNum(pick(raw, 'Zyk')),
+            // 每日/总盈亏：优先新别名，兼容原 curProfit / Zyk / zykRatio
+            dailyProfit: toNum(pick(raw, 'dailyProfit', null)) !== null
+                ? toNum(pick(raw, 'dailyProfit'))
+                : toNum(pick(raw, 'curProfit')),
+            dailyProfitRatio: toNum(pick(raw, 'dailyProfitRatio', null)) !== null
+                ? toNum(pick(raw, 'dailyProfitRatio'))
+                : toNum(pick(raw, 'curProfitRatio')),
+            totalProfit: toNum(pick(raw, 'totalProfit', null)) !== null
+                ? toNum(pick(raw, 'totalProfit'))
+                : toNum(pick(raw, 'Zyk')),
+            totalProfitRatio: toNum(pick(raw, 'totalProfitRatio', null)) !== null
+                ? toNum(pick(raw, 'totalProfitRatio'))
+                : toNum(pick(raw, 'zykRatio')),
             costAmount: toNum(pick(raw, 'Hymrcb')),
             costPrice: toNum(pick(raw, 'buyPrice')),
             currentPrice: toNum(pick(raw, 'currentPrice')),
@@ -4022,6 +4035,16 @@
         const available = toNum(pick(a, 'Zjkyje'));
         const floatPnl = toNum(pick(a, 'Fdyk'));
         const holdPnl = toNum(pick(a, 'Ccyk'));
+        const dailyProfit = toNum(pick(a, 'dailyProfit', null)) !== null
+            ? toNum(pick(a, 'dailyProfit'))
+            : toNum(pick(a, 'curProfit'));
+        const dailyProfitRatio = toNum(pick(a, 'dailyProfitRatio', null)) !== null
+            ? toNum(pick(a, 'dailyProfitRatio'))
+            : toNum(pick(a, 'curProfitRatio'));
+        const totalProfit = toNum(pick(a, 'totalProfit', null)) !== null
+            ? toNum(pick(a, 'totalProfit'))
+            : holdPnl;
+        const totalProfitRatio = toNum(pick(a, 'totalProfitRatio'));
         const totalRatio = toNum(pick(a, 'totalAccount__actTotalPosRatio'));
         const buyPosPct = toNum(pick(a, 'max_buyPosPct'));
         const availQty = state.positions.reduce((sum, p) => sum + (p.avail || 0), 0);
@@ -4033,6 +4056,10 @@
             kpi('可用资金（元）', fmt.num(available, 2)),
             kpi('浮动盈亏（元）', fmt.signed(floatPnl, 2), '账户浮动总盈亏 Fdyk', pnlClass(floatPnl)),
             kpi('持仓盈亏（元）', fmt.signed(holdPnl, 2), 'DTO 字段 Ccyk', pnlClass(holdPnl)),
+            kpi('每日盈亏额（元）', fmt.signed(dailyProfit, 2), 'dailyProfit / curProfit', pnlClass(dailyProfit)),
+            kpi('每日盈亏率', fmt.ratioPct(dailyProfitRatio, 2), 'dailyProfitRatio / curProfitRatio', pnlClass(dailyProfitRatio)),
+            kpi('总盈亏额（元）', fmt.signed(totalProfit, 2), 'totalProfit / Ccyk', pnlClass(totalProfit)),
+            kpi('总盈亏率', fmt.ratioPct(totalProfitRatio, 2), 'totalProfitRatio', pnlClass(totalProfitRatio)),
             kpi('账户总仓位', fmt.ratioPct(totalRatio, 2), 'Sz / Zczz'),
             kpi('可用资金比例', fmt.pct(buyPosPct, 2), 'Zjkyje / Zczz × 100'),
             kpi('持仓合约', `${state.positions.length} 个`, `可用 ${fmt.qty(availQty)} / 持仓 ${fmt.qty(totalQty)} 张`));
@@ -4539,6 +4566,12 @@
         const marketValue = sumBy(list, 'marketValue');
         const floatPnl = sumBy(list, 'floatPnl');
         const totalPnl = sumBy(list, 'totalPnl');
+        const dailyProfit = sumBy(list, 'dailyProfit');
+        const totalProfit = sumBy(list, 'totalProfit');
+        const costAmount = sumBy(list, 'costAmount');
+        // 每日盈亏率按持仓市值加权；总盈亏率按成本加权
+        const dailyProfitRatio = weightedBy(list, 'dailyProfitRatio', 'marketValue');
+        const totalProfitRatio = totalProfit !== null && costAmount ? totalProfit / costAmount : null;
         const cost = weightedBy(list, 'costPrem', 'qty');
         const current = weightedBy(list, 'currentPrem', 'qty');
         const posRatio = sumBy(list, 'posRatio');
@@ -4557,6 +4590,10 @@
             el('td', {class: 'num', text: fmt.num(marketValue, 2)}),
             el('td', {class: 'num ' + pnlClass(floatPnl), text: fmt.signed(floatPnl, 2)}),
             el('td', {class: 'num ' + pnlClass(totalPnl), text: fmt.signed(totalPnl, 2)}),
+            el('td', {class: 'num ' + pnlClass(dailyProfit), text: fmt.signed(dailyProfit, 2)}),
+            el('td', {class: 'num', text: fmt.ratioPct(dailyProfitRatio, 2)}),
+            el('td', {class: 'num ' + pnlClass(totalProfit), text: fmt.signed(totalProfit, 2)}),
+            el('td', {class: 'num', text: fmt.ratioPct(totalProfitRatio, 2)}),
             el('td', {class: 'num', text: fmt.price(cost)}),
             el('td', {class: 'num', text: fmt.price(current)}),
             el('td', {class: 'num', text: fmt.ratioPct(posRatio, 2)}),
@@ -4641,6 +4678,10 @@
             sortHeader('持仓市值', 'marketValue', true),
             sortHeader('浮动盈亏', 'floatPnl', true),
             sortHeader('总盈亏', 'totalPnl', true),
+            sortHeader('每日盈亏额', 'dailyProfit', true),
+            sortHeader('每日盈亏率', 'dailyProfitRatio', true),
+            sortHeader('总盈亏额', 'totalProfit', true),
+            sortHeader('总盈亏率', 'totalProfitRatio', true),
             sortHeader('成本价', 'costPrem', true),
             sortHeader('现价', 'currentPrem', true),
             sortHeader('仓位比例', 'posRatio', true),
@@ -4701,6 +4742,10 @@
                 el('td', {class: 'num', text: fmt.num(p.marketValue, 2)}),
                 el('td', {class: 'num ' + pnlClass(p.floatPnl), text: fmt.signed(p.floatPnl, 2)}),
                 el('td', {class: 'num ' + pnlClass(p.totalPnl), text: fmt.signed(p.totalPnl, 2)}),
+                el('td', {class: 'num ' + pnlClass(p.dailyProfit), text: fmt.signed(p.dailyProfit, 2)}),
+                el('td', {class: 'num', text: fmt.ratioPct(p.dailyProfitRatio, 2)}),
+                el('td', {class: 'num ' + pnlClass(p.totalProfit), text: fmt.signed(p.totalProfit, 2)}),
+                el('td', {class: 'num', text: fmt.ratioPct(p.totalProfitRatio, 2)}),
                 el('td', {
                     class: 'num',
                     text: p.unit ? fmt.price(p.costPrice / p.unit) : fmt.price(p.costPrice, 2),

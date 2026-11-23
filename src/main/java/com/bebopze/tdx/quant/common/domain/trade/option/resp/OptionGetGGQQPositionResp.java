@@ -205,31 +205,40 @@ public class OptionGetGGQQPositionResp {
     }
 
 
-    // ------------------------------------
+    // ------------------------------------ 期权 当日盈亏/当日盈亏率
 
 
     // 当日盈亏 = (close - prevClose) x 持仓数量 x 合约单位（10000份）
-    private Double curProfit;
-    // 当日盈亏比例
-    private Double curProfitRatio;
+    private Double dailyProfit;
 
-
-    public double getCurProfit() {
+    public double getDailyProfit() {
         return NumUtil.of(getKlineDTO().getChangePrice() * Hysjcc * hydw);
     }
 
-    public double getCurProfitRatio() {
+
+    // 当日盈亏率（小数，如 0.0203 = 2.03%） =  当日涨跌幅 / 100
+    private Double dailyProfitRatio;
+
+    public double getDailyProfitRatio() {
         return NumUtil.of(getKlineDTO().getChangePct() / 100.0);
     }
 
 
-    // ------------------------------------
+    // --------------------------------- 期权 总盈亏/总盈亏率
 
 
-    // 总盈亏比例  =  总盈亏 / 总成本
-    private Double zykRatio;
+    // 总盈亏额（与 Zyk 同口径）
+    private Double TotalProfit;
 
-    public double getZykRatio() {
+    public double getTotalProfit() {
+        return Zyk;
+    }
+
+
+    // 总盈亏率  =  总盈亏 / 合约买入成本
+    private Double totalProfitRatio;
+
+    public double getTotalProfitRatio() {
         return NumUtil.of(Zyk / Hymrcb);
     }
 
