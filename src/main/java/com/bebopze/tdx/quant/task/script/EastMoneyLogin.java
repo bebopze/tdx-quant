@@ -2,10 +2,14 @@ package com.bebopze.tdx.quant.task.script;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.BizException;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
+import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
+import com.bebopze.tdx.quant.dal.entity.ConfAccountDO;
+import com.bebopze.tdx.quant.dal.service.IConfAccountService;
 import com.bebopze.tdx.quant.llm.CaptchaRecognizer;
 import com.bebopze.tdx.quant.service.DataService;
 import com.google.common.collect.Maps;
@@ -85,6 +89,9 @@ public class EastMoneyLogin {
     @Autowired
     private DataService dataService;
 
+    @Autowired
+    private IConfAccountService confAccountService;
+
 
     @TotalTime
     // @PostConstruct
@@ -97,6 +104,45 @@ public class EastMoneyLogin {
 
         // 获取并刷新 validateKey 和 Cookie
         fetchRefreshValidateKeyAndCookie(response.getCookies());
+    }
+
+
+    /**
+     * 检查并初始化 东方财富 会话
+     */
+    @PostConstruct
+    public void checkAndInit__eastmoneySession() {
+        String activeProfile = PropsUtil.getProperty("spring.profiles.active");
+
+
+        try {
+            // 1、默认：读取 yml session
+            QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
+            log.info("✅ application-{}.yml     >>>     session 有效", activeProfile);
+
+
+        } catch (Exception e) {
+            log.warn("❌ application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
+
+
+            try {
+                // 2、yml session 失效     ->     从DB（conf_account）读取 session
+                ConfAccountDO entity = confAccountService.getById(1L);
+                dataService.eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
+
+
+                QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
+                log.info("✅ DB（conf_account）     >>>     session 有效");
+
+
+            } catch (Exception ex2) {
+                log.warn("❌ DB（conf_account）     >>>     session 无效 - [{}]   ->   尝试重新登录", ex2.getMessage());
+
+
+                // 3、yml + DB   session 均失效     ->     重新登录
+                login();
+            }
+        }
     }
 
 

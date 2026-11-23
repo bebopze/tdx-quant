@@ -14,4 +14,8 @@ public interface DataService {
 
 
     void eastmoneyRefreshSession(String validatekey, String cookie);
+
+    void eastmoneyRefreshSession(String validatekey, String cookie, boolean save2DB);
+
+
 }

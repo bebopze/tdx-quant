@@ -4,17 +4,14 @@ import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.domain.dto.kline.DataInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
-import com.bebopze.tdx.quant.common.domain.trade.resp.QueryCreditNewPosResp;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.PropsUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.DataService;
 import com.bebopze.tdx.quant.task.script.EastMoneyLogin;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import static com.bebopze.tdx.quant.common.constant.TdxConst.INDEX_BLOCK;
@@ -45,11 +42,6 @@ public class DataServiceImpl implements DataService {
 
     @Autowired
     private IConfAccountService confAccountService;
-
-
-    @Lazy
-    @Autowired
-    private EastMoneyLogin eastMoneyLogin;
 
 
     @Override
@@ -83,7 +75,9 @@ public class DataServiceImpl implements DataService {
         eastmoneyRefreshSession(validatekey, cookie, true);
     }
 
-    private void eastmoneyRefreshSession(String validatekey, String cookie, boolean save2DB) {
+
+    @Override
+    public void eastmoneyRefreshSession(String validatekey, String cookie, boolean save2DB) {
         PropsUtil.refreshEastmoneySession(validatekey, cookie);
         EastMoneyTradeAPI.refreshEastmoneySession();
 
@@ -99,37 +93,6 @@ public class DataServiceImpl implements DataService {
             entity.setValidatekey(validatekey);
             entity.setCookie(cookie);
             confAccountService.updateById(entity);
-        }
-    }
-
-
-    @PostConstruct
-    public void checkAndInit__eastmoneySession() {
-        String activeProfile = PropsUtil.getProperty("spring.profiles.active");
-
-
-        try {
-            QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
-            log.info("✅ application-{}.yml     >>>     session 有效", activeProfile);
-
-
-        } catch (Exception e) {
-            log.warn("❌ application-{}.yml     >>>     session 无效 - [{}]   ->   尝试从DB（conf_account）读取", activeProfile, e.getMessage());
-
-
-            ConfAccountDO entity = confAccountService.getById(1L);
-            eastmoneyRefreshSession(entity.getValidatekey(), entity.getCookie(), false);
-
-
-            try {
-                QueryCreditNewPosResp posResp = EastMoneyTradeAPI.queryCreditNewPosV2();
-                log.info("✅ DB（conf_account）     >>>     session 有效");
-
-            } catch (Exception ex2) {
-
-                log.warn("❌ DB（conf_account）     >>>     session 无效 - [{}]   ->   尝试重新登录", ex2.getMessage());
-                eastMoneyLogin.login();
-            }
         }
     }
 
