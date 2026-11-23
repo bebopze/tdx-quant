@@ -132,7 +132,7 @@ public class KlineServiceImpl implements KlineService {
         log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
     }
 
-    public void fillBlockKline(String blockCode, Long blockId, UpdateTypeEnum updateTypeEnum) {
+    private void fillBlockKline(String blockCode, Long blockId, UpdateTypeEnum updateTypeEnum) {
 
 
         // --------------------- ID
@@ -165,88 +165,6 @@ public class KlineServiceImpl implements KlineService {
 
         // --------------------- DB
         baseBlockService.updateById(entity);
-
-
-        // --------------------------------
-
-
-//        // 板块 - K线数据
-//        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(blockCode, updateTypeEnum.days);
-//
-//
-//        List<String> klines = Lists.newArrayList();
-//
-//        ldayDTOList.forEach(x -> {
-//
-//
-//            // K线数据-JSON（日期：[O,H,L,C,VOL,AMO,涨幅,振幅,换手率]）
-//            // List<Number> kline = Lists.newArrayList(x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(), x.getChangePct(), null, null);
-//
-//
-//            // 2025-05-13,21.06,21.97,20.89,21.45,8455131,18181107751.03,5.18,2.98,0.62,6.33
-//            // 日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本
-//
-//            // K线数据-JSON（[日期,O,H,L,C,VOL,AMO,振幅,涨跌幅,涨跌额,换手率,流通股本,总股本]）
-//            List<Object> kline = Lists.newArrayList(String.valueOf(x.getTradeDate()), x.getOpen(), x.getHigh(), x.getLow(), x.getClose(), x.getVol(), x.getAmount(),
-//                                                    x.getRangePct(), x.getChangePct(), x.getChangePrice(), null, x.getLtgb(), x.getZgb());
-//
-//
-//            String klineStr = kline.stream().map(obj -> obj != null ? obj.toString() : "").collect(Collectors.joining(","));
-//            klines.add(klineStr);
-//        });
-//
-//
-//        // -------------------------------------------------------------------------------------------------------------
-//
-//
-//        if (CollectionUtils.isEmpty(ldayDTOList)) {
-//            return;
-//        }
-//
-//
-//        BaseBlockDO entity = new BaseBlockDO();
-//        entity.setCode(blockCode);
-//
-//
-//        // kline
-//        entity.setKlineStr(klines, updateTypeEnum);
-//
-//
-//        // 昨日
-//        if (ldayDTOList.size() >= 2) {
-//            LdayParser.LdayDTO prev = ldayDTOList.get(ldayDTOList.size() - 2);
-//            entity.setPrevClose(prev.getClose());
-//        }
-//
-//
-//        // 板块 - 实时行情
-//        LdayParser.LdayDTO last = ldayDTOList.get(ldayDTOList.size() - 1);
-//
-//        entity.setTradeDate(last.getTradeDate());
-//        entity.setOpen(last.getOpen());
-//        entity.setHigh(last.getHigh());
-//        entity.setLow(last.getLow());
-//        entity.setClose(last.getClose());
-//        entity.setVolume(last.getVol());
-//        entity.setAmount(last.getAmount());
-//        entity.setRangePct(last.getRangePct());
-//        entity.setChangePct(last.getChangePct());
-//        entity.setChangePrice(last.getChangePrice());
-//        entity.setTurnoverPct(last.getTurnoverPct());
-//
-//
-//        if (blockId != null) {
-//            entity.setId(blockId);
-//            baseBlockService.updateById(entity);
-//        } else {
-//            blockId = baseBlockService.getIdByCode(blockCode);
-//            entity.setId(blockId);
-//
-//            baseBlockService.saveOrUpdate(entity);
-//        }
-//
-//
-//        log.info("fillBlockKline suc     >>>     blockCode : {}", blockCode);
     }
 
 
@@ -287,7 +205,7 @@ public class KlineServiceImpl implements KlineService {
                 fillBlockKline(blockCode, blockId, updateTypeEnum);
 
 
-                // ------------------------------------------- 计时（频率）   26ms/次   x 881     ->     总耗时：23s
+                // ------------------------------------------- 计时（频率）   187ms/次   x 884     ->     总耗时：2min 45s
 
 
                 long time = System.currentTimeMillis() - start[0];
@@ -298,7 +216,7 @@ public class KlineServiceImpl implements KlineService {
                 String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
-                // blockCode : 880444, blockId : 94 , count : 881 , r1 : 26ms/次 , r2 : 37次/s , r3 : 881次 - 23s
+                // blockCode : 880367, blockId : 43 , count : 884 , suc : 881 , err : 3 , r1 : 187ms/次 , r2 : 5次/s , r3 : 884次 - 2min 45s
                 log.info("fillBlockKlineAll - suc     >>>     blockCode : {}, blockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                          blockCode, blockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 
@@ -817,7 +735,7 @@ public class KlineServiceImpl implements KlineService {
                 fillStockKline(stockCode, stockId, updateTypeEnum);
 
 
-                // ------------------------------------------- 计时（频率）   29ms/次   x 5500     ->     总耗时：161s
+                // ------------------------------------------- 计时（频率）   65ms/次   x 7171     ->     总耗时：7min 52s
 
 
                 long time = System.currentTimeMillis() - start[0];
@@ -828,7 +746,7 @@ public class KlineServiceImpl implements KlineService {
                 String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
 
 
-                // stockCode : 300154, stockId : 1630 , count : 5424 , r1 : 29ms/次 , r2 : 33次/s , r3 : 5424次 - 161s
+                // stockCode : 300033, stockId : 1523 , count : 7171 , suc : 7144 , err : 27 , r1 : 65ms/次 , r2 : 15次/s , r3 : 7171次 - 7min 52s
                 log.info("update__fillStockKlineAll - suc     >>>     stockCode : {}, stockId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
                          stockCode, stockId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
 

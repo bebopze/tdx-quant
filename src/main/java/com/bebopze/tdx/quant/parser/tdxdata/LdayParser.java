@@ -12,7 +12,6 @@ import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
-import com.bebopze.tdx.quant.common.util.StockTypeUtil;
 import com.bebopze.tdx.quant.parser.check.TdxFunCheck;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
@@ -133,18 +132,25 @@ public class LdayParser {
 
 
         // 往期数据  ->  报表
-        List<LdayDTO> klineTxtReport__ldayDTOList = Lists.newArrayList();
+        List<LdayDTO> txt__dtoList = Lists.newArrayList();
         // 短期数据  ->  xx.day
-        List<LdayDTO> lday__ldayDTOList = Lists.newArrayList();
+        List<LdayDTO> lday__dtoList = Lists.newArrayList();
 
 
         try {
             // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
-            klineTxtReport__ldayDTOList = KlineTxtExportParser.parseTxtByStockCode(stockCode);
+            txt__dtoList = KlineTxtExportParser.parseTxtByStockCode(stockCode);
 
 
             // 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日价格 全部为 昨日收盘价          盘后导出 -> 正常）
-            checkReport__lastKline(klineTxtReport__ldayDTOList);
+            checkReport__lastKline(txt__dtoList);
+
+
+            // ---------------------------------------------------------------------------------------------------------
+
+
+            // 短期数据  ->  xx.day
+            lday__dtoList = parseLdayByFilePath(filePath);
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -153,8 +159,9 @@ public class LdayParser {
             // TODO   后续：所有 kline 数据   ->   全部 切换到 TQ API
 
             // TQ   -替换->   无 导出txt
-            if (CollectionUtils.isEmpty(klineTxtReport__ldayDTOList)) {
-                log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - start     >>>     code : {} , klineTxtReport__ldayDTOList : {} ", stockCode, ListUtil.size(klineTxtReport__ldayDTOList));
+            if (CollectionUtils.isEmpty(txt__dtoList) || ListUtil.size(txt__dtoList) < ListUtil.size(lday__dtoList)) {
+                log.info("txt__dtoList 为空 / txt_size[{}] < lday_size[{}]，使用 TQ API 获取数据 - start     >>>     code : {} , txt__dtoList : {} ",
+                         ListUtil.size(txt__dtoList), ListUtil.size(lday__dtoList), stockCode, ListUtil.size(txt__dtoList));
 
 
                 // 交易日（250） -> 自然日（365 [ -> 390 多给出几天的弹性空间 ]）
@@ -163,38 +170,31 @@ public class LdayParser {
 
 
                 List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, kline__start_date, null);
-                klineTxtReport__ldayDTOList = tq_klineDTOList.stream().map(LdayDTO::of).collect(Collectors.toList());
+                txt__dtoList = tq_klineDTOList.stream().map(LdayDTO::of).collect(Collectors.toList());
 
-                log.info("klineTxtReport__ldayDTOList 为空，使用 TQ API 获取数据 - end       >>>     code : {} , tq_klineDTOList : {} ", stockCode, ListUtil.size(tq_klineDTOList));
+                log.info("txt__dtoList 为空 / txt_size < lday_size，使用 TQ API 获取数据 - end       >>>     code : {} , tq_klineDTOList : {} ", stockCode, ListUtil.size(tq_klineDTOList));
             }
-
-
-            // ---------------------------------------------------------------------------------------------------------
-
-
-            // 短期数据  ->  xx.day
-            lday__ldayDTOList = parseLdayByFilePath(filePath);
 
 
             // ---------------------------------------------------------------------
 
 
-            check(klineTxtReport__ldayDTOList, lday__ldayDTOList);
+            check(txt__dtoList, lday__dtoList);
 
 
-            return merge(stockCode, klineTxtReport__ldayDTOList, lday__ldayDTOList);
+            return merge(stockCode, txt__dtoList, lday__dtoList);
 
 
         } catch (Exception e) {
 
 
-            if (size(klineTxtReport__ldayDTOList) == 0 && size(lday__ldayDTOList) == 0) {
+            if (size(txt__dtoList) == 0 && size(lday__dtoList) == 0) {
                 // 准 新股  ->  未上市/上市失败                    688688 蚂蚁金服
-                log.warn("parseLdayByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
-                         stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+                log.warn("parseLdayByFilePath   err  -  准新股 -> 未上市/上市失败     >>>     stockCode : {} , filePath : {} , txt__dtoList : {} , lday__dtoList : {} , exMsg : {}",
+                         stockCode, filePath, size(txt__dtoList), size(lday__dtoList), e.getMessage(), e);
             } else {
-                log.error("parseLdayByFilePath   err     >>>     stockCode : {} , filePath : {} , klineTxtReport__ldayDTOList : {} , lday__ldayDTOList : {} , exMsg : {}",
-                          stockCode, filePath, size(klineTxtReport__ldayDTOList), size(lday__ldayDTOList), e.getMessage(), e);
+                log.error("parseLdayByFilePath   err     >>>     stockCode : {} , filePath : {} , txt__dtoList : {} , lday__dtoList : {} , exMsg : {}",
+                          stockCode, filePath, size(txt__dtoList), size(lday__dtoList), e.getMessage(), e);
             }
         }
 
@@ -303,18 +303,18 @@ public class LdayParser {
     /**
      * 报表导出  ->  最后一天数据 有bug（盘中导出  ->  最后一日     价格全部为 昨日收盘价 + VOL=0          盘后导出 -> 正常）
      *
-     * @param klineReport__ldayDTOList
+     * @param klineReport__dtoList
      * @return
      */
-    private static void checkReport__lastKline(List<LdayDTO> klineReport__ldayDTOList) {
+    private static void checkReport__lastKline(List<LdayDTO> klineReport__dtoList) {
 
-        int size = size(klineReport__ldayDTOList);
+        int size = size(klineReport__dtoList);
 
 
         // 盘中导出  ->  最后一日     价格 全部为 昨日收盘价     +     VOL=0
-        if (size > 0 && klineReport__ldayDTOList.get(size - 1).getVol() == 0) {
+        if (size > 0 && klineReport__dtoList.get(size - 1).getVol() == 0) {
 
-            klineReport__ldayDTOList.remove(size - 1);
+            klineReport__dtoList.remove(size - 1);
         }
     }
 
@@ -396,11 +396,13 @@ public class LdayParser {
             // ------------------------- 价格精度
 
 
-            // 股票价格 精度     ->     A股-2位小数；ETF-3位小数；
-            int priceScale = StockTypeUtil.stockPriceScale(code);
+            // 股票价格 精度     ->     A股-2位小数；ETF-3位小数；期权-4位小数；
+            int priceScale = StockTypeEnum.getPriceScale(code);
             // 2位精度 -> /100
             // 3位精度 -> /1000
-            int priceDivisor = priceScale == 3 ? 1_000 : 1_00;
+            // 4位精度 -> /10000
+            // int priceDivisor = priceScale == 3 ? 1_000 : 1_00;
+            int priceDivisor = (int) Math.pow(10, priceScale);
 
 
             // -------------------------
@@ -570,16 +572,16 @@ public class LdayParser {
     }
 
 
-    private static void check(List<LdayDTO> klineReport__ldayDTOList, List<LdayDTO> lday__ldayDTOList) {
+    private static void check(List<LdayDTO> klineReport__dtoList, List<LdayDTO> lday__dtoList) {
 
-        String stockCode = lday__ldayDTOList.get(0).code;
+        String stockCode = lday__dtoList.get(0).code;
 
 
         // ---------------------------------------------
 
 
-        int size1 = klineReport__ldayDTOList.size();
-        int size2 = lday__ldayDTOList.size();
+        int size1 = klineReport__dtoList.size();
+        int size2 = lday__dtoList.size();
 
         int size = Math.min(size1, size2);
 
@@ -587,9 +589,9 @@ public class LdayParser {
         if (size1 >= size2) {
             if (size1 - size2 <= 1) {
                 // 839680（*ST广道）
-                log.warn("check err - 退市股     >>>     [{}] , klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", stockCode, size1, size2);
+                log.warn("check err - 退市股     >>>     [{}] , klineReport__dtoList size : {} , lday__dtoList size : {}", stockCode, size1, size2);
             } else {
-                log.error("check err     >>>     [{}] , klineReport__ldayDTOList size : {} , lday__ldayDTOList size : {}", stockCode, size1, size2);
+                log.error("check err     >>>     [{}] , klineReport__dtoList size : {} , lday__dtoList size : {}", stockCode, size1, size2);
             }
         }
 
@@ -599,8 +601,8 @@ public class LdayParser {
 
         for (int i = 0; i < size; i++) {
 
-            LdayDTO dto1 = klineReport__ldayDTOList.get(i);
-            LdayDTO dto2 = lday__ldayDTOList.get(i);
+            LdayDTO dto1 = klineReport__dtoList.get(i);
+            LdayDTO dto2 = lday__dtoList.get(i);
 
 
             String dto1_str = JSON.toJSONString(dto1);
@@ -700,19 +702,19 @@ public class LdayParser {
 
 
     private static List<LdayDTO> merge(String stockCode,
-                                       List<LdayDTO> klineReport__ldayDTOList,
-                                       List<LdayDTO> lday__ldayDTOList) {
+                                       List<LdayDTO> klineReport__dtoList,
+                                       List<LdayDTO> lday__dtoList) {
 
 
-        int size1 = size(klineReport__ldayDTOList);
-        int size2 = size(lday__ldayDTOList);
+        int size1 = size(klineReport__dtoList);
+        int size2 = size(lday__dtoList);
 
 
         // ----------------------------------- VOL（手/股 check） DEBUG -------------------------------------------------
 
 
-        LdayDTO last_txt = ListUtil.last(klineReport__ldayDTOList);
-        LdayDTO last_ldy = ListUtil.last(lday__ldayDTOList);
+        LdayDTO last_txt = ListUtil.last(klineReport__dtoList);
+        LdayDTO last_ldy = ListUtil.last(lday__dtoList);
 
 
         if (last_txt != null) {
@@ -748,7 +750,7 @@ public class LdayParser {
 
 
             // 盘后   ->   已下载 [盘后数据]     ->     以 xx.day 为准（舍弃 盘中导出 行情数据）
-            klineReport__ldayDTOList.removeLast();
+            klineReport__dtoList.removeLast();
             size1--;
         }
 
@@ -759,28 +761,28 @@ public class LdayParser {
         if (size2 > size1 && size1 > 0) {
 
             // 真实 开始时间   ->   以 txt 导出为准
-            LocalDate txt_startDate = klineReport__ldayDTOList.getFirst().getTradeDate();    // VELO.txt（2025/08/19 起始）
+            LocalDate txt_startDate = klineReport__dtoList.getFirst().getTradeDate();    // VELO.txt（2025/08/19 起始）
             //                                                                        美股  ->  VELO.day 文件解析异常（2021/04/19 起始）  ->   不复权数据
 
 
-            lday__ldayDTOList.removeIf(e -> e.getTradeDate().isBefore(txt_startDate)
+            lday__dtoList.removeIf(e -> e.getTradeDate().isBefore(txt_startDate)
                     // 不复权 价格bug（尤其是 美股）
                     || e.getHigh().doubleValue() > DB_HIGH_LIMIT);
 
 
-            size1 = size(klineReport__ldayDTOList);
-            size2 = size(lday__ldayDTOList);
+            size1 = size(klineReport__dtoList);
+            size2 = size(lday__dtoList);
         }
 
 
         // -------------------------------------------------------------------------------------------------------------
 
 
-        List<LdayDTO> dtoList = Lists.newArrayList(klineReport__ldayDTOList);
+        List<LdayDTO> dtoList = Lists.newArrayList(klineReport__dtoList);
 
 
         if (size1 < size2) {
-            List<LdayDTO> subList = lday__ldayDTOList.subList(size1, size2);
+            List<LdayDTO> subList = lday__dtoList.subList(size1, size2);
             dtoList.addAll(subList);
         }
 
@@ -915,7 +917,7 @@ public class LdayParser {
         List<LdayDTO> stockDataList = parseByStockCode("10011565");
 
         for (LdayDTO e : stockDataList) {
-            String[] item = {e.code, String.valueOf(e.tradeDate), String.format("%.2f", e.open), String.format("%.2f", e.high), String.format("%.2f", e.low), String.format("%.2f", e.close), e.amount.toPlainString(), String.valueOf(e.vol), String.format("%.2f", e.changePct)};
+            Object[] item = {e.code, String.valueOf(e.tradeDate), e.open, e.high, e.low, e.close, e.amount.toPlainString(), e.vol, e.changePct};
             System.out.println(JSON.toJSONString(item));
         }
 

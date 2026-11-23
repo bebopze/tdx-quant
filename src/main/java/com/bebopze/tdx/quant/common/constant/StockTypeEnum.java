@@ -24,29 +24,29 @@ public enum StockTypeEnum {
 
 
     //    A_STOCK(1, "A股", Lists.newArrayList("00", "30", "60", "68", "92")),
-    A_STOCK(1, "A股", Lists.newArrayList("0", "3", "6", "9")),
+    A_STOCK(1, "A股", 2, Lists.newArrayList("0", "3", "6", "9")),
 
 
     //    ETF(2, "ETF", Lists.newArrayList("15", "16", "50", "51", "56", "58")),
-    ETF(2, "ETF", Lists.newArrayList("1", "5")),
+    ETF(2, "ETF", 3, Lists.newArrayList("1", "5")),
 
 
     //    TDX_BLOCK(3, "板块", Lists.newArrayList("88")),
-    TDX_BLOCK(3, "板块", Lists.newArrayList("8")),
+    TDX_BLOCK(3, "板块", 2, Lists.newArrayList("8")),
 
 
     // ----------------------------------------------------
 
 
-    HK_STOCK(11, "港股", Lists.newArrayList("")),
+    HK_STOCK(11, "港股", 3, Lists.newArrayList("")),
 
-    US_STOCK(12, "美股", Lists.newArrayList("")),
+    US_STOCK(12, "美股", 3, Lists.newArrayList("")),
 
 
     // ----------------------------------------------------
 
 
-    OPTION(21, "期权", Lists.newArrayList("1001", "9000")),
+    OPTION(21, "期权", 4, Lists.newArrayList("1001", "9000")),
 
 
     ;
@@ -56,8 +56,15 @@ public enum StockTypeEnum {
      * 自定义 股票类型（区分 A股/ETF/板块/港股/美股/期权）    ->     对应 base_stock 表 type 字段（ base_block、base_option 表 未记录此字段  ->  因为 已拆分 独立建表）
      */
     public final Integer type;
-
+    /**
+     * 描述
+     */
     public final String desc;
+
+    /**
+     * 价格精度
+     */
+    public final Integer priceScale;
 
     /**
      * 个股（A股/ETF）/ 期权  -  股票代码 前缀（前1位）
@@ -127,6 +134,13 @@ public enum StockTypeEnum {
     public static Integer getTypeByStockCode(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
         return stockTypeEnum == null ? null : stockTypeEnum.type;
+    }
+
+
+    public static Integer getPriceScale(String stockCode) {
+        StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
+        // 默认值：2
+        return stockTypeEnum == null ? 2 : stockTypeEnum.priceScale;
     }
 
 
