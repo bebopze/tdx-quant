@@ -57,6 +57,7 @@ public class OptionGetAccountFundsResp {
     //   }
 
 
+    // 持仓盈亏
     private double Ccyk;
     private double Dfzj;
     private double Dtzybzj;
@@ -121,6 +122,28 @@ public class OptionGetAccountFundsResp {
      * 期权持仓 - 详情列表
      */
     private List<OptionGetGGQQPositionResp> optionPositionList;
+
+
+    // ---------------------------------
+
+
+    // 账户总成本 = 账户总市值 - 账户持仓盈亏
+    private Double totalCost;
+
+    public double getTotalCost() {
+        return Sz - Ccyk;
+    }
+
+
+    // 账户总盈亏比例  =  账户总盈亏 / 账户总成本
+    private Double totalProfitRatio;
+
+    public double getTotalProfitRatio() {
+        return NumUtil.of(Ccyk / getTotalCost());
+    }
+
+
+    // ---------------------------------
 
 
     /**

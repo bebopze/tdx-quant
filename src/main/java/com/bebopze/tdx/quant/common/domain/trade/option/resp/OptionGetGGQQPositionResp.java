@@ -1,5 +1,8 @@
 package com.bebopze.tdx.quant.common.domain.trade.option.resp;
 
+import com.bebopze.tdx.quant.client.KlineAPI;
+import com.bebopze.tdx.quant.common.domain.dto.trade.StockSnapshotKlineDTO;
+import com.bebopze.tdx.quant.common.util.NumUtil;
 import lombok.Data;
 
 import static com.bebopze.tdx.quant.client.EastMoneyOptionTradeAPI.ETF_DICT__CODE_NAME_MAP__CACHE;
@@ -163,6 +166,8 @@ public class OptionGetGGQQPositionResp {
 
     private String Zqzhzbm;
 
+
+    // 总盈亏
     private double Zyk;
 
 
@@ -182,6 +187,55 @@ public class OptionGetGGQQPositionResp {
 
 
     // ---------------------------------------------- 自定义 字段---------------------------------------------------------
+
+
+    // --------------------------------------------------- 期权 - 实时行情
+
+
+    /**
+     * 期权 - 实时行情
+     */
+    private StockSnapshotKlineDTO klineDTO = getKlineDTO();
+
+
+    public StockSnapshotKlineDTO getKlineDTO() {
+        if (klineDTO == null && Hybm != null) {
+            klineDTO = KlineAPI.klineCache(Hybm);
+        }
+        return klineDTO;
+    }
+
+
+    // ------------------------------------
+
+
+    // 当日盈亏 = (close - prevClose) x 持仓数量
+    private Double curProfit;
+    // 当日盈亏比例
+    private Double curProfitRatio;
+
+
+    public double getCurProfit() {
+        return NumUtil.of(getKlineDTO().getChangePrice() * Hysjcc);
+    }
+
+    public double getCurProfitRatio() {
+        return getKlineDTO().getChangePct() * 100.0;
+    }
+
+
+    // ------------------------------------
+
+
+    // 总盈亏比例  =  总盈亏 / 总成本
+    private Double zykRatio;
+
+    public double getZykRatio() {
+        return NumUtil.of(Zyk / Hymrcb);
+    }
+
+
+    // ------------------------------------
 
 
     // 标的证券name（ETF名称）
@@ -208,18 +262,19 @@ public class OptionGetGGQQPositionResp {
 
 
     public double getBuyPrice() {
-        buyPrice = Hymrcb / Hysjcc;
+        buyPrice = NumUtil.of(Hymrcb / Hysjcc);
         return buyPrice;
     }
 
     public double getCurrentPrice() {
-        currentPrice = Hysz / Hysjcc;
+        currentPrice = NumUtil.of(Hysz / Hysjcc);
         return currentPrice;
     }
 
     public double getPosRatio() {
-        posRatio = Hysz / accountAssets;
+        posRatio = NumUtil.of(Hysz / accountAssets);
         return posRatio;
     }
+
 
 }
