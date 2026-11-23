@@ -179,7 +179,7 @@ public class LdayParser {
             // ---------------------------------------------------------------------
 
 
-            check(txt__dtoList, lday__dtoList);
+            check(txt__dtoList, lday__dtoList, stockCode);
 
 
             return merge(stockCode, txt__dtoList, lday__dtoList);
@@ -572,15 +572,10 @@ public class LdayParser {
     }
 
 
-    private static void check(List<LdayDTO> klineReport__dtoList, List<LdayDTO> lday__dtoList) {
-
-        String stockCode = lday__dtoList.get(0).code;
+    private static void check(List<LdayDTO> txt__dtoList, List<LdayDTO> lday__dtoList, String stockCode) {
 
 
-        // ---------------------------------------------
-
-
-        int size1 = klineReport__dtoList.size();
+        int size1 = txt__dtoList.size();
         int size2 = lday__dtoList.size();
 
         int size = Math.min(size1, size2);
@@ -601,7 +596,7 @@ public class LdayParser {
 
         for (int i = 0; i < size; i++) {
 
-            LdayDTO dto1 = klineReport__dtoList.get(i);
+            LdayDTO dto1 = txt__dtoList.get(i);
             LdayDTO dto2 = lday__dtoList.get(i);
 
 
@@ -717,7 +712,7 @@ public class LdayParser {
         LdayDTO last_ldy = ListUtil.last(lday__dtoList);
 
 
-        if (last_txt != null) {
+        if (last_txt != null && last_ldy != null) {
 
             String vol_msg = String.format("vol对比     >>>     last_txt : %s , last_ldy : %s", last_txt.vol, last_ldy.vol);
             // System.out.println(vol_msg);
