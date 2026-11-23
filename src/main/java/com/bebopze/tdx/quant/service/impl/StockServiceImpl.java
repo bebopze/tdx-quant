@@ -11,6 +11,7 @@ import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,9 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public List<SimpleStockDTO> search(String keyword, int limit) {
+        keyword = StringUtils.isBlank(keyword) ? "" : keyword.trim();
+        // limit ∈ [1,50]
+        limit = Math.max(1, Math.min(limit, 50));
 
 
         List<BaseStockDO> stockDOList = baseStockService.listSimpleByKeyword(keyword);
@@ -122,6 +126,7 @@ public class StockServiceImpl implements StockService {
 
         BaseStockDTO dto = new BaseStockDTO();
         if (entity != null) {
+
             // copy
             BeanUtils.copyProperties(entity, dto);
 

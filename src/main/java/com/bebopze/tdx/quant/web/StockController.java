@@ -36,6 +36,8 @@ public class StockController {
     /**
      * 关键词 模糊搜索
      *
+     * @param keyword
+     * @param limit
      * @return
      */
     @Operation(summary = "关键词 模糊搜索（支持 证券code/证券name）", description = "关键词 模糊搜索（支持 证券code/证券name）")
@@ -46,20 +48,15 @@ public class StockController {
                                                @Schema(description = "搜索结果数量限制", example = "10")
                                                @RequestParam(required = false, defaultValue = "10") int limit) {
 
-        String kw = keyword == null ? "" : keyword.trim();
-        if (kw.isEmpty()) {
-            return Result.SUC(List.of());
-        }
-
-        // 默认 10 条；限制单次返回数量，避免搜索框下拉过大
-        int size = Math.max(1, Math.min(limit, 50));
-        return Result.SUC(stockService.search(kw, size));
+        return Result.SUC(stockService.search(keyword, limit));
     }
 
 
     /**
      * 股票行情（kline + ext_data）
      *
+     * @param stockCode
+     * @param updateType
      * @return
      */
     @Operation(summary = "股票行情（kline + ext_data） ->  支持 股票/板块/期权", description = "股票行情（kline + ext_data） ->  支持 股票/板块/期权")
@@ -77,6 +74,7 @@ public class StockController {
     /**
      * 个股-板块
      *
+     * @param stockCode
      * @return
      */
     @Operation(summary = "个股-板块", description = "个股-板块")
@@ -86,5 +84,6 @@ public class StockController {
 
         return Result.SUC(stockService.blockInfo(stockCode));
     }
+
 
 }
