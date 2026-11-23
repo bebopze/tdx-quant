@@ -241,6 +241,19 @@
                 title="导入ETF数据（ETF name -> API拉取补全）">
             📈 导入ETF数据
         </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/hkStock', '导入港股🇭🇰')"
+                title="导入 - 自定义板块（港股）">
+            📈 导入港股🇭🇰
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/usStock', '导入美股🇺🇸')"
+                title="导入 - 自定义板块（美股）">
+            📈 导入美股🇺🇸
+        </button>
+        <button class="btn-primary" onclick="callApi('/api/parser/tdxdata/import/option', '导入期权')"
+                title="导入 - 期权">
+            📈 导入期权
+        </button>
+
     </div>
 
     <!-- 行情数据更新 -->
