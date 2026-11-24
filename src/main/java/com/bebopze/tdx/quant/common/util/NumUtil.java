@@ -63,12 +63,12 @@ public class NumUtil {
 
 
     public static BigDecimal ofDecimal(String strVal) {
-        return isNumber(strVal) ? num2Decimal(of(Double.valueOf(strVal))) : null;
+        return isDoubleNumber(strVal) ? num2Decimal(of(Double.valueOf(strVal))) : null;
     }
 
 
     public static double ofDouble(String strVal) {
-        return isNumber(strVal) ? of(Double.valueOf(strVal)) : Double.NaN;
+        return isDoubleNumber(strVal) ? of(Double.valueOf(strVal)) : Double.NaN;
     }
 
 
@@ -129,9 +129,20 @@ public class NumUtil {
     }
 
 
-    public static boolean isNumber(String str) {
+    public static boolean isDoubleNumber(String str) {
         try {
             Double.valueOf(str);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    public static boolean isIntNumber(String str) {
+        try {
+            Integer.valueOf(str);
         } catch (Exception e) {
             return false;
         }
@@ -159,7 +170,7 @@ public class NumUtil {
 
 
     public static void main(String[] args) {
-        System.out.println(NumUtil.isNumber("00700"));
+        System.out.println(NumUtil.isIntNumber("00700"));
         System.out.println(NumUtil.isPureEnglish("SPY"));
     }
 

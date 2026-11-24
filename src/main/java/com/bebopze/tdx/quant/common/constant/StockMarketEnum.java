@@ -68,8 +68,8 @@ public enum StockMarketEnum {
     // ------------------- 期权
 
 
-    SHO("上交所期权", 8, "sh", "HA", "SH", "SHO", Set.of("1001")),
-    SZO("深交所期权", 9, "sz", "SA", "SZ", "SZO", Set.of("9000")),
+    SHO("上交所期权", 8, "sh", "HA", "SH", "SHO", Set.of("1")),
+    SZO("深交所期权", 9, "sz", "SA", "SZ", "SZO", Set.of("9")),
     ;
 
 
@@ -170,8 +170,8 @@ public enum StockMarketEnum {
 
 
         if (Objects.equals(stockTypeEnum, StockTypeEnum.OPTION)) {
-            // 期权（前4位）
-            String codePrefix = stockCode.trim().substring(0, 4);
+            // 期权（前1位）
+            String codePrefix = stockCode.trim().substring(0, 1);
 
             for (StockMarketEnum value : StockMarketEnum.values()) {
                 if (value.stockCodePrefixSet.contains(codePrefix)) {

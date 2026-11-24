@@ -46,7 +46,7 @@ public enum StockTypeEnum {
     // ----------------------------------------------------
 
 
-    OPTION(21, "期权", 4, Lists.newArrayList("1001", "9000")),
+    OPTION(21, "期权", 4, Lists.newArrayList("1", "9")),
 
 
     ;
@@ -87,7 +87,7 @@ public enum StockTypeEnum {
         // -------------------------------------------------- A股/ETF/板块
 
 
-        if (stockCode.length() == 6 && NumUtil.isNumber(stockCode)) {
+        if (stockCode.length() == 6 && NumUtil.isIntNumber(stockCode)) {
             // 前1位
             String codePrefix = stockCode.trim().substring(0, 1);
 
@@ -103,7 +103,7 @@ public enum StockTypeEnum {
 
 
         // 港股（00700）
-        if (stockCode.length() == 5 && NumUtil.isNumber(stockCode)) {
+        if (stockCode.length() == 5 && NumUtil.isIntNumber(stockCode)) {
             return StockTypeEnum.HK_STOCK;
         }
 
@@ -117,9 +117,11 @@ public enum StockTypeEnum {
 
 
         // 期权（10011565 / 90007858）
-        if (stockCode.length() == 8 && NumUtil.isNumber(stockCode)) {
-            // 前4位
-            String codePrefix = stockCode.trim().substring(0, 4);
+        // 上交所     10000001 ~ 19999999（ETF期权合约从此区间起始，按顺序对新挂牌合约编排，逐一递增，永不复用）
+        // 深交所     90000001 ~ 91999999（ETF期权合约从此区间起始，按顺序对新挂牌合约编排，逐一递增，永不复用）
+        if (stockCode.length() == 8 && NumUtil.isIntNumber(stockCode)) {
+            // 前1位
+            String codePrefix = stockCode.trim().substring(0, 1);
 
             if (OPTION.stockCodePrefixList.contains(codePrefix)) {
                 return StockTypeEnum.OPTION;
