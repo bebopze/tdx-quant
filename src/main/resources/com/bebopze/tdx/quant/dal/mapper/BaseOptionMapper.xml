@@ -3,6 +3,104 @@
 <mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseOptionMapper">
 
 
+    <select id="listSimpleInDate" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
+        SELECT id,
+        code,
+        symbol,
+        name,
+        call_put_type,
+        strike_price,
+        multiplier,
+        underlying_type,
+        underlying_code,
+        underlying_name,
+        contract_month,
+        start_date,
+        end_date,
+
+        tdx_market_type,
+
+        trade_date,
+        open,
+        high,
+        low,
+        close,
+        prev_close,
+        volume,
+        amount,
+        range_pct,
+        change_pct,
+        change_price,
+        turnover_pct,
+
+        gmt_create,
+        gmt_modify
+
+
+        FROM base_option
+
+
+        WHERE
+
+        <![CDATA[ start_date <= #{date} ]]>
+
+
+        <!-- 存续判定：优先 end_date；存续合约的 end_date 可能被覆写为「最后一根K线日期」，故用 合约月份月末 兜底 -->
+        <![CDATA[  AND ( #{date} <= end_date
+                       OR #{date} <= LAST_DAY(STR_TO_DATE(CONCAT(contract_month, '01'), '%Y%m%d')) ) ]]>
+
+
+        <if test="underlyingCode != null and underlyingCode != ''">
+            AND underlying_code = #{underlyingCode}
+        </if>
+
+
+        ORDER BY underlying_code, contract_month, strike_price, call_put_type
+
+    </select>
+
+
+    <!-- 某日期 存续合约 的 kline_his（仅 code + blob，用于 T型报价 取当日行情） -->
+    <select id="listKlineHisInDate" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
+        SELECT code,
+        kline_his,
+        kline_his_raw_len
+
+        FROM base_option
+
+        WHERE
+
+        <![CDATA[ start_date <= #{date} ]]>
+
+
+        <!-- 存续判定：优先 end_date；存续合约的 end_date 可能被覆写为「最后一根K线日期」，故用 合约月份月末 兜底 -->
+        <![CDATA[  AND ( #{date} <= end_date
+                       OR #{date} <= LAST_DAY(STR_TO_DATE(CONCAT(contract_month, '01'), '%Y%m%d')) ) ]]>
+
+
+        <if test="underlyingCode != null and underlyingCode != ''">
+            AND underlying_code = #{underlyingCode}
+        </if>
+
+
+        ORDER BY code
+
+    </select>
+
+
+    <!-- 标的name（期权表口径） -->
+    <select id="getUnderlyingName" resultType="java.lang.String">
+        SELECT underlying_name
+
+        FROM base_option
+
+        WHERE underlying_code = #{underlyingCode}
+
+        LIMIT 1
+
+    </select>
+
+
     <select id="getIdByCode" resultType="java.lang.Long">
         SELECT id
 
@@ -32,6 +130,7 @@
                underlying_type,
                underlying_code,
                underlying_name,
+               contract_month,
                start_date,
                end_date,
 
@@ -69,6 +168,7 @@
                underlying_type,
                underlying_code,
                underlying_name,
+               contract_month,
                start_date,
                end_date,
 
@@ -108,7 +208,8 @@
 
         (
         code, symbol, name, call_put_type, strike_price, multiplier,
-        underlying_type, underlying_code, underlying_name, start_date, end_date,
+        underlying_type, underlying_code, underlying_name,
+        contract_month, start_date, end_date,
 
         tdx_market_type,
 
@@ -122,7 +223,8 @@
         <foreach collection="list" item="item" separator=",">
             (
             #{item.code}, #{item.symbol}, #{item.name}, #{item.callPutType}, #{item.strikePrice}, #{item.multiplier},
-            #{item.underlyingType}, #{item.underlyingCode}, #{item.underlyingName}, #{item.startDate}, #{item.endDate},
+            #{item.underlyingType}, #{item.underlyingCode}, #{item.underlyingName},
+            #{item.contractMonth}, #{item.startDate}, #{item.endDate},
 
             #{item.tdxMarketType},
 
@@ -140,7 +242,8 @@
 
         (
         code, symbol, name, call_put_type, strike_price, multiplier,
-        underlying_type, underlying_code, underlying_name, start_date, end_date,
+        underlying_type, underlying_code, underlying_name,
+        contract_month, start_date, end_date,
 
         tdx_market_type,
 
@@ -154,7 +257,8 @@
         <foreach collection="list" item="item" separator=",">
             (
             #{item.code}, #{item.symbol}, #{item.name}, #{item.callPutType}, #{item.strikePrice}, #{item.multiplier},
-            #{item.underlyingType}, #{item.underlyingCode}, #{item.underlyingName}, #{item.startDate}, #{item.endDate},
+            #{item.underlyingType}, #{item.underlyingCode}, #{item.underlyingName},
+            #{item.contractMonth}, #{item.startDate}, #{item.endDate},
 
             #{item.tdxMarketType},
 
@@ -178,6 +282,7 @@
         underlying_type = COALESCE(VALUES(underlying_type), underlying_type),
         underlying_code = COALESCE(VALUES(underlying_code), underlying_code),
         underlying_name = COALESCE(VALUES(underlying_name), underlying_name),
+        contract_month = COALESCE(VALUES(contract_month), contract_month),
         start_date = COALESCE(VALUES(start_date), start_date),
         end_date = COALESCE(VALUES(end_date), end_date),
 

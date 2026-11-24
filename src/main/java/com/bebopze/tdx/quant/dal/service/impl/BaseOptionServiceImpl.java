@@ -14,8 +14,11 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,6 +36,40 @@ import java.util.stream.Collectors;
 @Service
 public class BaseOptionServiceImpl extends ServiceImpl<BaseOptionMapper, BaseOptionDO> implements IBaseOptionService {
 
+
+    @Override
+    public List<BaseOptionDO> listOptionInDate(LocalDate date) {
+        return listOptionInDate(date, null);
+    }
+
+    @Override
+    public List<BaseOptionDO> listOptionInDate(LocalDate date, String underlyingCode) {
+        return baseMapper.listSimpleInDate(date, StringUtils.hasText(underlyingCode) ? underlyingCode.trim() : null);
+    }
+
+
+    @Override
+    public Map<String, String> klineHisMapInDate(LocalDate date, String underlyingCode) {
+
+        List<BaseOptionDO> klineList = baseMapper.listKlineHisInDate(date,
+                StringUtils.hasText(underlyingCode) ? underlyingCode.trim() : null);
+
+        Map<String, String> code_kline_map = new HashMap<>(Math.max(16, klineList.size() * 2));
+        for (BaseOptionDO entity : klineList) {
+            if (entity.getCode() == null || !entity.hasKlineData()) {
+                continue;
+            }
+            code_kline_map.put(entity.getCode(), entity.getKlineHisStr());
+        }
+
+        return code_kline_map;
+    }
+
+
+    @Override
+    public String getUnderlyingName(String underlyingCode) {
+        return StringUtils.hasText(underlyingCode) ? baseMapper.getUnderlyingName(underlyingCode.trim()) : null;
+    }
 
     @Override
     public Long getIdByCode(String code) {

@@ -886,7 +886,10 @@ public class KlineServiceImpl implements KlineService {
             entity.setUnderlyingCode(stockInfo.getUnderly_code());
             entity.setUnderlyingName(underlyingName);
             entity.setStartDate(DateTimeUtil.parseDate_yyyyMMdd(stockInfo.getJ_start()));
-            entity.setEndDate(lastKlineDTO.getDate());
+            // ⚠️ 不要用「最后一根K线日期」覆写 end_date（合约到期日）：
+            // 否则 存续合约 的 end_date 会变成「数据更新日」，导致 `date <= end_date` 的存续判定失效
+            // （base_option.end_date 语义 = 合约到期日，由 importOption / 历史合约导入 维护）
+            // entity.setEndDate(lastKlineDTO.getDate());
         }
 
 

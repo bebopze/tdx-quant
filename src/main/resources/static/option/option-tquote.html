@@ -1,0 +1,2662 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <title>期权 T型报价 | tdx-quant</title>
+
+    <!-- 项目共享 环境/API 配置：window.APP_CONFIG / window.ApiUtils（ENV、API_HOST、buildUrl） -->
+    <script src="../js/config.js"></script>
+
+    <!-- 主题引导（首屏前设置，避免闪烁）：仅保存主题偏好，不涉及任何交易数据 -->
+    <script>
+        (function () {
+            var KEY = 'tdx.option.tquote.theme';
+            var mode = 'dark';
+            try {
+                mode = localStorage.getItem(KEY) || 'dark';
+                if (mode !== 'dark' && mode !== 'light') mode = 'dark';
+            } catch (e) {
+                mode = 'dark';
+            }
+            document.documentElement.setAttribute('data-theme', mode);
+            document.documentElement.style.colorScheme = mode === 'light' ? 'light' : 'dark';
+        })();
+    </script>
+
+    <style>
+        /* =====================================================================
+           期权 T型报价（对齐 通达信「期权T型报价」；原生 HTML5 + CSS + JS 单文件）
+           数据：GET /api/option/listOptionInDate（合约分组）
+                GET /api/option/underlyingList（标的列表）
+                GET /api/option/underlyingKline（标的K线 ±3月）
+                GET /api/option/kline（合约K线）
+                GET /api/option/tradeDates（交易日历）
+           ===================================================================== */
+
+        /* ---------------- 主题变量 ---------------- */
+        html[data-theme="dark"] {
+            --bg: #07090d;
+            --bg-2: #0b0f16;
+            --panel: #0f141d;
+            --panel-2: #131a25;
+            --panel-3: #0c111a;
+            --border: #1e2836;
+            --border-2: #2a3648;
+            --text: #d7e2f0;
+            --text-2: #9fb0c6;
+            --muted: #6c7f97;
+            --dim: #4a5a70;
+            --gold: #f3c24b;
+            --gold-2: #d9a92f;
+            --up: #ff4d4f;
+            --up-2: #d92b2b;
+            --down: #17c964;
+            --down-2: #0f9e4f;
+            --accent: #2f81f7;
+            --call-bg: rgba(255, 77, 79, .055);
+            --call-bg-2: rgba(255, 77, 79, .11);
+            --put-bg: rgba(23, 201, 100, .05);
+            --put-bg-2: rgba(23, 201, 100, .10);
+            --atm-bg: rgba(243, 194, 75, .12);
+            --head-bg: linear-gradient(180deg, #151d29, #101722);
+            --shadow: 0 18px 44px rgba(0, 0, 0, .55);
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        }
+
+        html[data-theme="light"] {
+            --bg: #eef2f8;
+            --bg-2: #e6ecf5;
+            --panel: #ffffff;
+            --panel-2: #f5f8fc;
+            --panel-3: #fbfcfe;
+            --border: #dfe6ef;
+            --border-2: #c9d5e4;
+            --text: #17202c;
+            --text-2: #41505f;
+            --muted: #6b7d92;
+            --dim: #93a3b5;
+            --gold: #b8860b;
+            --gold-2: #9a6f06;
+            --up: #d92b2b;
+            --up-2: #b71c1c;
+            --down: #0f9e4f;
+            --down-2: #0a7a3c;
+            --accent: #1f6feb;
+            --call-bg: rgba(217, 43, 43, .045);
+            --call-bg-2: rgba(217, 43, 43, .09);
+            --put-bg: rgba(15, 158, 79, .045);
+            --put-bg-2: rgba(15, 158, 79, .09);
+            --atm-bg: rgba(184, 134, 11, .10);
+            --head-bg: linear-gradient(180deg, #f6f9fd, #eef3fa);
+            --shadow: 0 16px 36px rgba(23, 43, 77, .13);
+            --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, select {
+            font: inherit;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .up {
+            color: var(--up) !important;
+        }
+
+        .down {
+            color: var(--down) !important;
+        }
+
+        .flat {
+            color: var(--text-2) !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ================================ 顶栏 ================================ */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 46px;
+            padding: 0 14px;
+            background: linear-gradient(180deg, var(--panel-2), var(--panel));
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            z-index: 30;
+        }
+
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: .3px;
+            white-space: nowrap;
+        }
+
+        .brand em {
+            font-style: normal;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold);
+            border: 1px solid rgba(243, 194, 75, .45);
+            border-radius: 4px;
+            padding: 1px 5px;
+        }
+
+        .brand span {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .field {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .field select, .field input[type="date"] {
+            background: var(--panel-3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            height: 28px;
+            padding: 0 7px;
+            color: var(--text);
+            outline: none;
+        }
+
+        .field select:focus, .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .field input[type="date"] {
+            font-family: var(--mono);
+            width: 132px;
+        }
+
+        .btn {
+            background: var(--panel-3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            height: 28px;
+            padding: 0 10px;
+            color: var(--text-2);
+            white-space: nowrap;
+            transition: .12s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn.icon {
+            width: 30px;
+            padding: 0;
+            font-family: var(--mono);
+        }
+
+        .btn.gold {
+            border-color: rgba(243, 194, 75, .45);
+            color: var(--gold);
+        }
+
+        .btngroup {
+            display: inline-flex;
+        }
+
+        .btngroup .btn {
+            border-radius: 0;
+            margin-left: -1px;
+        }
+
+        .btngroup .btn:first-child {
+            border-radius: 6px 0 0 6px;
+            margin-left: 0;
+        }
+
+        .btngroup .btn:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .chk input {
+            accent-color: var(--accent);
+            margin: 0;
+        }
+
+        /* ================================ 状态条 ================================ */
+        .statusbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 30px;
+            padding: 0 14px;
+            background: var(--panel-3);
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+            overflow-x: auto;
+            scrollbar-width: none;
+            white-space: nowrap;
+        }
+
+        .statusbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 1px 8px;
+            border-radius: 20px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            font-family: var(--mono);
+            font-size: 11.5px;
+        }
+
+        .chip b {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .chip.warn {
+            border-color: rgba(243, 194, 75, .5);
+            color: var(--gold);
+        }
+
+        .chip.bad {
+            border-color: rgba(255, 77, 79, .5);
+            color: var(--up);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--down);
+            display: inline-block;
+        }
+
+        .dot.warn {
+            background: var(--gold);
+        }
+
+        .dot.bad {
+            background: var(--up);
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        /* ================================ 提示条 ================================ */
+        .banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            font-size: 12.5px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(243, 194, 75, .08);
+            color: var(--gold);
+        }
+
+        .banner.bad {
+            background: rgba(255, 77, 79, .08);
+            color: var(--up);
+        }
+
+        .banner b {
+            font-weight: 700;
+        }
+
+        .banner .x {
+            margin-left: auto;
+            cursor: pointer;
+            opacity: .7;
+            font-family: var(--mono);
+        }
+
+        /* ================================ 布局 ================================ */
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 430px;
+            gap: 10px;
+            padding: 10px 14px 14px;
+            height: calc(100vh - 46px - 30px);
+            min-height: 0;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        /* ================================ 统计条 ================================ */
+        .statstrip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-2);
+            overflow-x: auto;
+            scrollbar-width: none;
+            white-space: nowrap;
+        }
+
+        .statstrip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stat {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 5px;
+            padding: 0 9px;
+            border-right: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .stat:last-child {
+            border-right: none;
+        }
+
+        .stat b {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .stat b.gold {
+            color: var(--gold);
+        }
+
+        /* ================================ 月份 Tabs ================================ */
+        .months {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            background: var(--panel-3);
+        }
+
+        .months::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mtab {
+            flex: 0 0 auto;
+            min-width: 96px;
+            padding: 5px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--panel-2);
+            color: var(--text-2);
+            text-align: left;
+            transition: .12s;
+            position: relative;
+        }
+
+        .mtab:hover {
+            border-color: var(--border-2);
+            color: var(--text);
+        }
+
+        .mtab.on {
+            border-color: var(--gold);
+            background: var(--atm-bg);
+            color: var(--gold);
+            box-shadow: 0 0 0 1px rgba(243, 194, 75, .25) inset;
+        }
+
+        .mtab .m1 {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .4px;
+        }
+
+        .mtab .m2 {
+            font-size: 11px;
+            opacity: .82;
+            font-family: var(--mono);
+        }
+
+        .mtab .warnmark {
+            position: absolute;
+            top: 3px;
+            right: 5px;
+            font-size: 10px;
+            color: var(--gold);
+        }
+
+        /* ================================ T型报价表 ================================ */
+        .tablewrap {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        table.tq {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            table-layout: fixed;
+        }
+
+        table.tq thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--head-bg);
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 11.5px;
+            letter-spacing: .2px;
+            padding: 6px 4px;
+            border-bottom: 1px solid var(--border-2);
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            white-space: nowrap;
+        }
+
+        table.tq thead th.c-call {
+            color: var(--up);
+        }
+
+        table.tq thead th.c-put {
+            color: var(--down);
+        }
+
+        table.tq thead th.c-strike {
+            color: var(--gold);
+            background: linear-gradient(180deg, #1c1611, #141009);
+        }
+
+        html[data-theme="light"] table.tq thead th.c-strike {
+            background: linear-gradient(180deg, #fdf6e3, #faf0d7);
+        }
+
+        table.tq tbody td {
+            padding: 4px 4px;
+            border-bottom: 1px solid rgba(30, 40, 54, .55);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        html[data-theme="light"] table.tq tbody td {
+            border-bottom: 1px solid rgba(223, 230, 239, .9);
+        }
+
+        table.tq tbody tr:hover td {
+            background: rgba(47, 129, 247, .10) !important;
+        }
+
+        table.tq tbody tr.atm td {
+            background: var(--atm-bg);
+        }
+
+        table.tq tbody tr.atm td.c-strike {
+            box-shadow: inset 0 1px 0 rgba(243, 194, 75, .35), inset 0 -1px 0 rgba(243, 194, 75, .35);
+        }
+
+        td.c-code {
+            text-align: left !important;
+            color: var(--text-2);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        td.c-code:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        td.c-strike {
+            text-align: center !important;
+            border-left: 1px solid var(--border-2);
+            border-right: 1px solid var(--border-2);
+            background: var(--panel-3);
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        td.c-call {
+            background: var(--call-bg);
+        }
+
+        td.c-put {
+            background: var(--put-bg);
+        }
+
+        td.c-call.c-strong {
+            background: var(--call-bg-2);
+        }
+
+        td.c-put.c-strong {
+            background: var(--put-bg-2);
+        }
+
+        .mk {
+            display: inline-block;
+            margin-left: 4px;
+            padding: 0 3px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: -apple-system, "PingFang SC", sans-serif;
+            line-height: 14px;
+            vertical-align: 1px;
+        }
+
+        .mk.itm {
+            color: var(--up);
+            border: 1px solid rgba(255, 77, 79, .4);
+        }
+
+        .mk.otm {
+            color: var(--muted);
+            border: 1px solid var(--border-2);
+        }
+
+        .mk.atm {
+            color: #10131a;
+            background: var(--gold);
+            font-weight: 700;
+        }
+
+        td.staleable {
+            opacity: .62;
+        }
+
+        .staledot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--gold);
+            margin-left: 3px;
+            vertical-align: 3px;
+            opacity: .85;
+        }
+
+        .dash {
+            color: var(--dim);
+        }
+
+        /* ================================ 右侧卡片 ================================ */
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .cardhead {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-2);
+        }
+
+        .ctabs {
+            display: inline-flex;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .ctabs button {
+            border: none;
+            white-space: nowrap;
+            background: transparent;
+            color: var(--muted);
+            padding: 3px 9px;
+            font-size: 12px;
+        }
+
+        .ctabs button.on {
+            background: var(--panel-3);
+            color: var(--gold);
+        }
+
+        .cardhead .hint {
+            margin-left: auto;
+            font-size: 11.5px;
+            color: var(--muted);
+            font-family: var(--mono);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart {
+            flex: 1;
+            min-height: 220px;
+            width: 100%;
+        }
+
+        /* ================================ 抽屉（合约详情） ================================ */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            opacity: 0;
+            pointer-events: none;
+            transition: .18s;
+            z-index: 60;
+        }
+
+        .overlay.on {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 560px;
+            max-width: 94vw;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            box-shadow: -18px 0 44px rgba(0, 0, 0, .45);
+            transform: translateX(100%);
+            transition: transform .2s ease;
+            z-index: 70;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.on {
+            transform: translateX(0);
+        }
+
+        .drawer .dh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-2);
+        }
+
+        .drawer .dh .nm {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .drawer .dh .cd {
+            font-family: var(--mono);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .badge {
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge.c {
+            color: var(--up);
+            border: 1px solid rgba(255, 77, 79, .5);
+            background: rgba(255, 77, 79, .10);
+        }
+
+        .badge.p {
+            color: var(--down);
+            border: 1px solid rgba(23, 201, 100, .5);
+            background: rgba(23, 201, 100, .10);
+        }
+
+        .drawer .dh .close {
+            margin-left: auto;
+        }
+
+        .dbody {
+            flex: 1;
+            overflow: auto;
+            padding: 12px 14px 16px;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .kv .item {
+            background: var(--panel-3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 9px;
+            min-width: 0;
+        }
+
+        .kv .item .k {
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .kv .item .v {
+            font-family: var(--mono);
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sectitle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 14px 0 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .sectitle:after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        #detailChart {
+            height: 260px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--panel-3);
+        }
+
+        .dbar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            background: var(--panel-2);
+        }
+
+        /* ================================ 帮助 / Toast ================================ */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .55);
+        }
+
+        .modal.on {
+            display: flex;
+        }
+
+        .modal .box {
+            width: 720px;
+            max-width: 94vw;
+            max-height: 84vh;
+            overflow: auto;
+            background: var(--panel);
+            border: 1px solid var(--border-2);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 16px 18px;
+        }
+
+        .modal h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+
+        .modal h4 {
+            margin: 14px 0 6px;
+            font-size: 13px;
+            color: var(--gold);
+        }
+
+        .modal p, .modal li {
+            font-size: 12.5px;
+            color: var(--text-2);
+            line-height: 1.7;
+        }
+
+        .modal code {
+            font-family: var(--mono);
+            background: var(--panel-3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0 4px;
+            font-size: 11.5px;
+            color: var(--gold);
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            transform: translateX(-50%) translateY(14px);
+            background: var(--panel-2);
+            border: 1px solid var(--border-2);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            pointer-events: none;
+            transition: .18s;
+            z-index: 90;
+            max-width: 80vw;
+        }
+
+        .toast.on {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--muted);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .empty .big {
+            font-size: 34px;
+            opacity: .35;
+        }
+
+        .empty .t1 {
+            font-size: 14px;
+            color: var(--text-2);
+        }
+
+        .empty .t2 {
+            font-size: 12px;
+            max-width: 520px;
+            line-height: 1.8;
+        }
+
+        .loading {
+            position: fixed;
+            inset: 46px 0 auto 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            background-size: 40% 100%;
+            background-repeat: no-repeat;
+            animation: slide 1s linear infinite;
+            z-index: 40;
+        }
+
+        @keyframes slide {
+            0% {
+                background-position: -40% 0;
+            }
+            100% {
+                background-position: 140% 0;
+            }
+        }
+
+        /* ================================ 响应式 ================================ */
+        @media (max-width: 1280px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr) 360px;
+            }
+        }
+
+        @media (max-width: 1080px) {
+            body {
+                overflow: auto;
+            }
+
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+                height: auto;
+            }
+
+            .panel {
+                min-height: 62vh;
+            }
+
+            .side {
+                min-height: 380px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================================== 顶栏 ================================== -->
+<header class="topbar">
+    <div class="brand">期权 T型报价 <em>T-QUOTE</em><span>tdx-quant</span></div>
+
+    <div class="filters">
+        <label class="field">标的
+            <select id="underlyingSel" title="期权标的（ETF）"></select>
+        </label>
+
+        <label class="field">日期
+            <input type="date" id="dateInput" title="按日期筛选（替代原来的月份下拉）">
+        </label>
+
+        <div class="btngroup">
+            <button class="btn icon" id="prevDayBtn" title="上一交易日（←）">◀</button>
+            <button class="btn icon" id="nextDayBtn" title="下一交易日（→）">▶</button>
+        </div>
+
+        <button class="btn" id="latestBtn" title="跳到最近交易日">最新</button>
+
+        <label class="field">范围
+            <select id="rangeSel" title="只看平值附近 N 档">
+                <option value="all">全部行权价</option>
+                <option value="3">平值 ±3</option>
+                <option value="5" selected>平值 ±5</option>
+                <option value="10">平值 ±10</option>
+                <option value="20">平值 ±20</option>
+            </select>
+        </label>
+
+        <label class="chk" title="隐藏 认购+认沽 当日均无成交 的行权价">
+            <input type="checkbox" id="hideZeroChk">隐藏零成交
+        </label>
+
+        <label class="field">排序
+            <select id="sortSel" title="行权价排序">
+                <option value="asc">行权价 ↑</option>
+                <option value="desc">行权价 ↓</option>
+            </select>
+        </label>
+
+        <label class="chk" title="仅当日期为最近交易日时生效；后端缓存 60s">
+            <input type="checkbox" id="autoRefreshChk">自动刷新
+        </label>
+
+        <button class="btn" id="refreshBtn" title="刷新（r）">刷新</button>
+        <button class="btn" id="themeBtn" title="切换 深色/浅色">◐</button>
+        <button class="btn icon" id="helpBtn" title="字段说明 / 接口">?</button>
+    </div>
+</header>
+
+<!-- ================================== 状态条 ================================== -->
+<div class="statusbar" id="statusBar"></div>
+
+<!-- ================================== 提示条 ================================== -->
+<div class="banner hidden" id="banner">
+    <span id="bannerText"></span>
+    <span class="x" id="bannerClose">✕</span>
+</div>
+
+<!-- ================================== 主体 ================================== -->
+<main class="layout">
+    <!-- T型报价 -->
+    <section class="panel" id="tqPanel">
+        <div class="statstrip" id="statStrip"></div>
+        <div class="months" id="monthTabs"></div>
+
+        <div class="tablewrap" id="tableWrap">
+            <table class="tq" id="tqTable">
+                <colgroup>
+                    <col style="width:88px">
+                    <col style="width:74px">
+                    <col style="width:64px">
+                    <col style="width:66px">
+                    <col style="width:66px">
+                    <col style="width:74px">
+                    <col style="width:96px">
+                    <col style="width:74px">
+                    <col style="width:66px">
+                    <col style="width:66px">
+                    <col style="width:64px">
+                    <col style="width:74px">
+                    <col style="width:88px">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th class="c-call">合约代码</th>
+                    <th class="c-call">最新价</th>
+                    <th class="c-call">涨跌</th>
+                    <th class="c-call">涨跌幅</th>
+                    <th class="c-call">成交量</th>
+                    <th class="c-call">成交额</th>
+                    <th class="c-strike">行权价</th>
+                    <th class="c-put">成交额</th>
+                    <th class="c-put">成交量</th>
+                    <th class="c-put">涨跌幅</th>
+                    <th class="c-put">涨跌</th>
+                    <th class="c-put">最新价</th>
+                    <th class="c-put">合约代码</th>
+                </tr>
+                </thead>
+                <tbody id="tqBody"></tbody>
+            </table>
+            <div class="empty hidden" id="emptyState">
+                <div class="big">◍</div>
+                <div class="t1" id="emptyTitle">该日期无期权行情</div>
+                <div class="t2" id="emptyDesc"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 右侧：标的K线 / 成交量分布 -->
+    <aside class="side">
+        <div class="card">
+            <div class="cardhead">
+                <div class="ctabs">
+                    <button data-tab="etf" class="on">标的K线</button>
+                    <button data-tab="dist">成交量分布</button>
+                </div>
+                <div class="hint" id="etfHint">—</div>
+            </div>
+            <div class="chart" id="etfChart"></div>
+            <div class="chart hidden" id="distChart"></div>
+        </div>
+    </aside>
+</main>
+
+<!-- ================================== 合约详情抽屉 ================================== -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="dh">
+        <div>
+            <div class="nm" id="dName">—</div>
+            <div class="cd" id="dCode">—</div>
+        </div>
+        <span class="badge c" id="dBadge">C</span>
+        <button class="btn close" id="drawerClose">关闭 ✕</button>
+    </div>
+    <div class="dbody">
+        <div class="kv" id="dKv"></div>
+        <div class="sectitle">合约日K线
+            <span class="mono" id="dKlineHint" style="color:var(--muted);font-size:11.5px"></span>
+        </div>
+        <div id="detailChart"></div>
+        <div class="sectitle">说明</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.8;margin:0">
+            合约K线取自 <code>base_option.kline_his</code>；<b>内在价值 / 时间价值 / 杠杆</b> 基于标的ETF 当日收盘价计算；
+            若该合约当日无成交，涨跌按「上一根K线收盘」计算。
+        </p>
+    </div>
+    <div class="dbar">
+        <button class="btn" id="copyCodeBtn">复制合约代码</button>
+        <button class="btn" id="exportCsvBtn">导出本月份 CSV</button>
+    </div>
+</aside>
+
+<!-- ================================== 帮助 ================================== -->
+<div class="modal" id="helpModal">
+    <div class="box">
+        <h3>期权 T型报价 · 字段说明</h3>
+        <p>左侧为<b>认购（Call）</b>，右侧为<b>认沽（Put）</b>，中间为<b>行权价</b>；同一行权价 认购/认沽 对齐显示。
+            页面已把「筛选月份」替换为「筛选日期」，月份以 Tab 形式自动分组。</p>
+
+        <h4>数据与接口</h4>
+        <p style="font-size:12px;color:var(--muted)">
+            统一入口：<code>static/js/config.js</code> → <code>window.ApiUtils</code>
+            （ENV <b id="apiEnv">—</b> · <span class="mono" id="apiHost">—</span>）
+        </p>
+        <ul>
+            <li><code>GET /api/option/listOptionInDate?date=&amp;underlyingCode=</code> — 指定日期的 合约分组（合约月份 -
+                认购/认沽列表，含月度统计与派生指标）
+            </li>
+            <li><code>GET /api/option/underlyingList?date=</code> — 指定日期 存续合约的 标的列表 + 标的ETF行情</li>
+            <li><code>GET /api/option/underlyingKline?underlyingCode=&amp;date=&amp;months=3</code> — 标的ETF K线（前后 N
+                个月）
+            </li>
+            <li><code>GET /api/option/kline?code=</code> — 单合约 K线（详情抽屉）</li>
+            <li><code>GET /api/option/tradeDates?underlyingCode=</code> — 交易日历（上一/下一交易日、日期校验）</li>
+        </ul>
+
+        <h4>行情口径</h4>
+        <ul>
+            <li><b>最新价</b>：所选日期当日（或之前最近一根）<code>kline_his</code> 的收盘价；若当日无成交，显示最近行情日并置灰（合约代码旁有黄点）。
+            </li>
+            <li><b>涨跌 / 涨跌幅</b>：以「上一根K线收盘」为昨收重算，保证 历史合约（Excel导入）与 存续合约（通达信导入）口径一致。
+            </li>
+            <li><b>成交额</b>：通达信导出的存续合约 kline 不含成交额，此时显示 <code>—</code>（历史合约有真实成交额）。</li>
+            <li><b>内在价值</b>：认购 max(0, S-K)，认沽 max(0, K-S)；<b>时间价值</b> = 最新价 - 内在价值；S 为标的ETF 收盘价。
+            </li>
+            <li><b>杠杆</b> = 标的价 / 权利金；<b>盈亏平衡</b> = 认购 K+权利金，认沽 K-权利金。</li>
+            <li><b>实/平/虚</b>：按行权价与标的价格比较；<b>平值</b> = 最接近标的价的行权价。</li>
+        </ul>
+
+        <h4>快捷键</h4>
+        <ul>
+            <li><code>←</code> / <code>→</code> 上一 / 下一交易日；<code>1..9</code> 切换合约月份；<code>r</code>
+                刷新；<code>Esc</code> 关闭抽屉/弹窗。
+            </li>
+        </ul>
+
+        <h4>已知数据说明</h4>
+        <ul>
+            <li>存续合约的 <code>end_date</code> 曾被行情更新覆写为「最后一根K线日期」，本页用「合约月份第4个星期三（遇节假日顺延）」推导真实到期日。
+            </li>
+            <li>2026-01-01 ~ 2026-04-22 为期权行情数据缺口（历史 Excel 截止 2025-12-31，通达信数据自 2026-04-23 起）。</li>
+            <li>标的ETF 日K 自 2017-01-03 起；更早日期 无标的价，内在价值/平值 显示 <code>—</code>。</li>
+        </ul>
+        <div style="text-align:right;margin-top:14px">
+            <button class="btn" id="helpClose">知道了</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/echarts.min.js"></script>
+<script>
+    /* =====================================================================
+     *  期权 T型报价
+     *  - 依赖：../js/config.js（ApiUtils）、../js/echarts.min.js
+     *  - 无任何外部 CDN / 字体
+     * ===================================================================== */
+    (function () {
+        'use strict';
+
+        // ------------------------------------------------------------------ 常量
+
+        var THEME_KEY = 'tdx.option.tquote.theme';
+        var UP = '#ff4d4f', DOWN = '#17c964';
+        var DAY_MS = 86400000;
+
+        var DEFAULT_UNDERLYING = '510300';
+        var AUTO_REFRESH_MS = 60000;
+
+        // ------------------------------------------------------------------ 状态
+
+        var S = {
+            date: null,             // 当前日期 'YYYY-MM-DD'
+            underlying: null,       // 当前标的 code
+            underlyings: [],        // 标的列表
+            tradeDates: [],         // 交易日历（升序）
+            months: [],             // T型报价 月份分组
+            monthKey: null,         // 当前月份分组 key
+            range: '5',             // 行权价范围
+            hideZero: false,
+            sort: 'asc',
+            chartTab: 'etf',
+            etfKline: null,
+            detail: null,           // 当前抽屉合约
+            busy: 0,
+            autoTimer: null
+        };
+
+        var CH = {etf: null, dist: null, detail: null};
+
+        // ------------------------------------------------------------------ DOM
+
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        var el = {
+            underlyingSel: $('underlyingSel'),
+            dateInput: $('dateInput'),
+            prevDayBtn: $('prevDayBtn'),
+            nextDayBtn: $('nextDayBtn'),
+            latestBtn: $('latestBtn'),
+            rangeSel: $('rangeSel'),
+            hideZeroChk: $('hideZeroChk'),
+            sortSel: $('sortSel'),
+            autoRefreshChk: $('autoRefreshChk'),
+            refreshBtn: $('refreshBtn'),
+            themeBtn: $('themeBtn'),
+            helpBtn: $('helpBtn'),
+            statusBar: $('statusBar'),
+            banner: $('banner'),
+            bannerText: $('bannerText'),
+            bannerClose: $('bannerClose'),
+            statStrip: $('statStrip'),
+            monthTabs: $('monthTabs'),
+            tqBody: $('tqBody'),
+            tableWrap: $('tableWrap'),
+            emptyState: $('emptyState'),
+            emptyTitle: $('emptyTitle'),
+            emptyDesc: $('emptyDesc'),
+            etfHint: $('etfHint'),
+            etfChart: $('etfChart'),
+            distChart: $('distChart'),
+            overlay: $('overlay'),
+            drawer: $('drawer'),
+            drawerClose: $('drawerClose'),
+            dName: $('dName'),
+            dCode: $('dCode'),
+            dBadge: $('dBadge'),
+            dKv: $('dKv'),
+            dKlineHint: $('dKlineHint'),
+            detailChart: $('detailChart'),
+            copyCodeBtn: $('copyCodeBtn'),
+            exportCsvBtn: $('exportCsvBtn'),
+            helpModal: $('helpModal'),
+            helpClose: $('helpClose'),
+            toast: $('toast')
+        };
+
+        // ------------------------------------------------------------------ 工具
+
+        function pad2(n) {
+            return n < 10 ? '0' + n : '' + n;
+        }
+
+        function fmtDate(d) {
+            return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        }
+
+        function today() {
+            return fmtDate(new Date());
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function num(v) {
+            var n = Number(v);
+            return isFinite(n) ? n : null;
+        }
+
+        /** 价格：4 位小数 */
+        function fmtPrice(v) {
+            var n = num(v);
+            return n === null ? '<span class="dash">—</span>' : n.toFixed(4);
+        }
+
+        /** 涨跌额 */
+        function fmtChg(v) {
+            var n = num(v);
+            if (n === null) return '<span class="dash">—</span>';
+            var s = (n > 0 ? '+' : '') + n.toFixed(4);
+            return '<span class="' + cls(n) + '">' + s + '</span>';
+        }
+
+        /** 涨跌幅 */
+        function fmtPct(v, digits) {
+            var n = num(v);
+            if (n === null) return '<span class="dash">—</span>';
+            var s = (n > 0 ? '+' : '') + n.toFixed(digits == null ? 2 : digits) + '%';
+            return '<span class="' + cls(n) + '">' + s + '</span>';
+        }
+
+        function cls(n) {
+            if (n === null || n === undefined) return 'flat';
+            if (n > 0) return 'up';
+            if (n < 0) return 'down';
+            return 'flat';
+        }
+
+        /** 成交量（张） */
+        function fmtVol(v) {
+            var n = num(v);
+            if (n === null) return '<span class="dash">—</span>';
+            if (n >= 1e8) return (n / 1e8).toFixed(2) + '亿';
+            if (n >= 1e4) return (n / 1e4).toFixed(2) + '万';
+            return String(n);
+        }
+
+        /** 成交额（元）；0 视为 数据源未提供 */
+        function fmtAmt(v, volume) {
+            var n = num(v);
+            if (n === null || n === 0) {
+                return (num(volume) > 0)
+                    ? '<span class="dash" title="数据源未提供成交额">—</span>'
+                    : '<span class="dash">—</span>';
+            }
+            if (n >= 1e8) return (n / 1e8).toFixed(2) + '亿';
+            if (n >= 1e4) return (n / 1e4).toFixed(2) + '万';
+            return n.toFixed(0);
+        }
+
+        function toast(msg, ms) {
+            el.toast.textContent = msg;
+            el.toast.classList.add('on');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(function () {
+                el.toast.classList.remove('on');
+            }, ms || 2200);
+        }
+
+        function showBanner(msg, bad) {
+            el.banner.classList.remove('hidden');
+            el.banner.classList.toggle('bad', !!bad);
+            el.bannerText.innerHTML = msg;
+        }
+
+        function hideBanner() {
+            el.banner.classList.add('hidden');
+        }
+
+        function setBusy(on) {
+            S.busy += on ? 1 : -1;
+            var bar = $('loadingBar');
+            if (!bar) {
+                if (!on) return;
+                bar = document.createElement('div');
+                bar.id = 'loadingBar';
+                bar.className = 'loading';
+                document.body.appendChild(bar);
+            }
+            if (S.busy <= 0) {
+                S.busy = 0;
+                bar.remove();
+            }
+        }
+
+        // ------------------------------------------------------------------ API
+
+        /**
+         * 统一接口入口：static/js/config.js -> window.ApiUtils
+         * （ENV / API_HOST / buildUrl / fetch，负责 环境判定、域名拼接、跨域）
+         *
+         * 约定：本页所有后端调用一律走 ApiUtils，页面内不出现裸 fetch / 硬编码 host。
+         * 未加载 config.js 时直接抛错（页面顶部会给出明确提示），避免静默请求到错误地址。
+         */
+        function apiUtils() {
+            var au = window.ApiUtils;
+            if (!au || typeof au.fetch !== 'function' || typeof au.buildUrl !== 'function') {
+                throw new Error('ApiUtils 未加载，请检查 ../js/config.js');
+            }
+            return au;
+        }
+
+        /**
+         * 拼接 query string（空值自动忽略）
+         */
+        function buildQuery(params) {
+            var qs = [];
+            if (params) {
+                Object.keys(params).forEach(function (k) {
+                    var v = params[k];
+                    if (v === null || v === undefined || v === '') return;
+                    qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+                });
+            }
+            return qs.length ? '?' + qs.join('&') : '';
+        }
+
+        /**
+         * 统一 GET：ApiUtils.fetch(buildUrl(path + query)) -> Result.data
+         *
+         * @param {string} path   接口路径（如 /api/option/listOptionInDate）
+         * @param {object} params 查询参数
+         */
+        async function api(path, params) {
+            var au = apiUtils();
+            var url = path + buildQuery(params);
+
+            var ctrl = new AbortController();
+            var timer = setTimeout(function () {
+                ctrl.abort();
+            }, 25000);
+
+            try {
+                // ApiUtils.fetch 内部会调用 buildUrl(path) 拼接 API_HOST
+                var res = await au.fetch(url, {signal: ctrl.signal});
+                if (!res || !res.ok) throw new Error('HTTP ' + (res ? res.status : '?'));
+                var json = await res.json();
+                if (json && json.success === false) throw new Error(json.msg || '接口返回失败');
+                return json ? json.data : null;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        /**
+         * 当前接口环境（展示在 帮助弹窗 / 顶栏 title，便于排查环境与 API_HOST）
+         */
+        function apiEnvInfo() {
+            var au = window.ApiUtils;
+            if (!au) return {env: '—', host: '—', sample: '—'};
+            var env = (typeof au.getEnv === 'function') ? au.getEnv() : '—';
+            var host = (typeof au.buildUrl === 'function') ? au.buildUrl('/') : '—';
+            return {
+                env: env,
+                host: host,
+                sample: (typeof au.buildUrl === 'function') ? au.buildUrl('/api/option/listOptionInDate') : '—'
+            };
+        }
+
+        // ------------------------------------------------------------------ 交易日历
+
+        function isTradeDate(d) {
+            return S.tradeDates.indexOf(d) >= 0;
+        }
+
+        function prevTradeDate(d) {
+            var out = null;
+            for (var i = S.tradeDates.length - 1; i >= 0; i--) {
+                if (S.tradeDates[i] < d) {
+                    out = S.tradeDates[i];
+                    break;
+                }
+            }
+            return out;
+        }
+
+        function nextTradeDate(d) {
+            for (var i = 0; i < S.tradeDates.length; i++) {
+                if (S.tradeDates[i] > d) return S.tradeDates[i];
+            }
+            return null;
+        }
+
+        function lastTradeDate() {
+            return S.tradeDates.length ? S.tradeDates[S.tradeDates.length - 1] : null;
+        }
+
+        // ------------------------------------------------------------------ 加载
+
+        async function loadUnderlyings() {
+            var list = await api('/api/option/underlyingList', {date: S.date});
+            S.underlyings = list || [];
+
+            el.underlyingSel.innerHTML = S.underlyings.map(function (u) {
+                var label = (u.underlyingName || u.underlyingCode) + ' (' + u.underlyingCode + ') · ' + u.contractCount + '个合约';
+                return '<option value="' + esc(u.underlyingCode) + '">' + esc(label) + '</option>';
+            }).join('');
+
+            var exists = S.underlyings.some(function (u) {
+                return u.underlyingCode === S.underlying;
+            });
+            if (!exists) {
+                var prefer = S.underlyings.filter(function (u) {
+                    return u.underlyingCode === DEFAULT_UNDERLYING;
+                });
+                S.underlying = prefer.length ? DEFAULT_UNDERLYING
+                    : (S.underlyings.length ? S.underlyings[0].underlyingCode : null);
+            }
+            el.underlyingSel.value = S.underlying || '';
+
+            return S.underlyings.length > 0;
+        }
+
+        async function loadTradeDates() {
+            var list = await api('/api/option/tradeDates', {underlyingCode: S.underlying});
+            S.tradeDates = (list || []).map(String);
+
+            // 若所选日期超出 最近交易日（今日无行情 / 节假日），自动切到最近交易日
+            var last = lastTradeDate();
+            if (last && S.date > last) {
+                var from = S.date;
+                S.date = last;
+                toast('已切换至最近交易日 ' + last + '（' + from + ' 暂无行情）');
+            }
+        }
+
+        async function loadTQuote() {
+            var months = await api('/api/option/listOptionInDate', {
+                date: S.date,
+                underlyingCode: S.underlying
+            });
+            S.months = months || [];
+
+            if (!S.months.length) {
+                S.monthKey = null;
+                return false;
+            }
+
+            var byKey = function (k) {
+                return S.months.filter(function (m) {
+                    return m.key === k;
+                })[0];
+            };
+            if (!byKey(S.monthKey)) {
+                var withData = S.months.filter(function (m) {
+                    return m.hasData;
+                });
+                S.monthKey = (withData.length ? withData[0] : S.months[0]).key;
+            }
+            return true;
+        }
+
+        async function loadEtfKline() {
+            try {
+                S.etfKline = await api('/api/option/underlyingKline', {
+                    underlyingCode: S.underlying,
+                    date: S.date,
+                    months: 3
+                });
+            } catch (e) {
+                S.etfKline = null;
+            }
+        }
+
+        async function loadAll(silent) {
+            setBusy(true);
+            try {
+                hideBanner();
+
+                if (!S.underlyings.length || !silent) {
+                    var hasUnderlying = await loadUnderlyings();
+                    if (!hasUnderlying) {
+                        renderEmpty('该日期不存在任何期权合约',
+                            '请换一个日期：期权合约在 <b>上市日 ~ 到期日</b> 之间存在；' +
+                            '2026-01-01 ~ 2026-04-22 为数据缺口。');
+                        renderStatus();
+                        renderStats();
+                        renderMonthTabs();
+                        el.tqBody.innerHTML = '';
+                        renderEtfChart(null);
+                        return;
+                    }
+                }
+
+                await loadTradeDates();
+                el.dateInput.value = S.date;
+
+                var ok = await loadTQuote();
+                await loadEtfKline();
+
+                renderStatus();
+                renderStats();
+                renderMonthTabs();
+
+                if (!ok) {
+                    renderEmpty('所选日期无期权行情',
+                        '当前标的 <b>' + esc(S.underlying) + '</b> 在 <b>' + esc(S.date) + '</b> 无存续合约或行情。');
+                } else {
+                    renderTable();
+                }
+
+                renderEtfChart(S.etfKline);
+                renderDistChart();
+                syncUrl();
+            } catch (e) {
+                console.error(e);
+                showBanner('加载失败：' + esc(e.message) + '（请确认后端 7001 已启动，或点击「刷新」重试）', true);
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        // ------------------------------------------------------------------ 渲染：状态条
+
+        function currentMonth() {
+            if (!S.months.length) return null;
+            for (var i = 0; i < S.months.length; i++) {
+                if (S.months[i].key === S.monthKey) return S.months[i];
+            }
+            return S.months[0];
+        }
+
+        function underlyingMeta() {
+            for (var i = 0; i < S.underlyings.length; i++) {
+                if (S.underlyings[i].underlyingCode === S.underlying) return S.underlyings[i];
+            }
+            return null;
+        }
+
+        function renderStatus() {
+            var u = underlyingMeta();
+            var m = currentMonth();
+
+            var html = '';
+            html += '<span class="chip">日期 <b>' + esc(S.date || '—') + '</b></span>';
+
+            if (u) {
+                html += '<span class="chip">标的 <b>' + esc(u.underlyingName || u.underlyingCode) + '</b> '
+                    + esc(u.underlyingCode) + '</span>';
+
+                if (u.missingEtfKline) {
+                    html += '<span class="chip warn"><span class="dot warn"></span>标的ETF行情缺失</span>';
+                } else {
+                    var c = num(u.close), p = num(u.changePct);
+                    html += '<span class="chip">ETF <b class="' + cls(p) + '">'
+                        + (c === null ? '—' : c.toFixed(4)) + '</b> '
+                        + (p === null ? '' : '<span class="' + cls(p) + '">' + (p > 0 ? '+' : '') + p.toFixed(2) + '%</span>')
+                        + '</span>';
+                }
+            }
+
+            if (m) {
+                if (m.hasData) {
+                    html += '<span class="chip"><span class="dot"></span>行情日 <b>' + esc(m.quoteDate || S.date) + '</b></span>';
+                } else {
+                    html += '<span class="chip warn"><span class="dot warn"></span>当日无成交 · 最近行情日 <b>'
+                        + esc(m.quoteDate || '无') + '</b></span>';
+                }
+            }
+
+            var last = lastTradeDate();
+            var idx = S.tradeDates.indexOf(S.date);
+            if (idx >= 0) {
+                html += '<span class="chip">交易日 <b>' + (idx + 1) + ' / ' + S.tradeDates.length + '</b></span>';
+            } else {
+                html += '<span class="chip warn"><span class="dot warn"></span>非交易日</span>';
+            }
+            if (last) {
+                html += '<span class="chip">最近交易日 <b>' + esc(last) + '</b></span>';
+            }
+
+            el.statusBar.innerHTML = html;
+
+            // 数据缺口 提示
+            if (S.date && S.date >= '2026-01-01' && S.date <= '2026-04-22') {
+                showBanner('所选日期处于 <b>2026-01-01 ~ 2026-04-22 数据缺口</b>（历史Excel截止 2025-12-31，通达信数据自 2026-04-23 起），' +
+                    '此时仅能展示「最近行情日」快照。');
+            }
+        }
+
+        // ------------------------------------------------------------------ 渲染：统计条
+
+        function renderStats() {
+            var m = currentMonth();
+            if (!m) {
+                el.statStrip.innerHTML = '<span class="stat">暂无数据</span>';
+                return;
+            }
+
+            var items = [
+                ['合约月份', m.monthLabel, 'gold'],
+                ['到期日', m.expiryDate || '—', ''],
+                ['剩余天数', m.daysToExpiry == null ? '—' : (m.daysToExpiry + '天'), ''],
+                ['合约数', (m.callCount || 0) + 'C / ' + (m.putCount || 0) + 'P', ''],
+                ['认购量', fmtVol(m.callVolume).replace(/<[^>]+>/g, ''), 'up'],
+                ['认沽量', fmtVol(m.putVolume).replace(/<[^>]+>/g, ''), 'down'],
+                ['PCR(量)', m.pcrVolume == null ? '—' : Number(m.pcrVolume).toFixed(4), ''],
+                ['PCR(额)', m.pcrAmount == null ? '—' : Number(m.pcrAmount).toFixed(4), ''],
+                ['平值', m.atmStrike == null ? '—' : Number(m.atmStrike).toFixed(4), 'gold'],
+                ['标的价', m.underlyingClose == null ? '—' : Number(m.underlyingClose).toFixed(4), '']
+            ];
+
+            el.statStrip.innerHTML = items.map(function (it) {
+                return '<span class="stat">' + esc(it[0]) + ' <b class="' + it[2] + '">' + esc(it[1]) + '</b></span>';
+            }).join('');
+        }
+
+        // ------------------------------------------------------------------ 渲染：月份 Tabs
+
+        function renderMonthTabs() {
+            el.monthTabs.innerHTML = S.months.map(function (m, i) {
+                var on = m.key === S.monthKey ? ' on' : '';
+                var warn = m.hasData ? '' : '<span class="warnmark" title="该月份在所选日期无行情">◷</span>';
+                return '<button class="mtab' + on + '" data-key="' + esc(m.key) + '" title="' +
+                    esc(m.monthLabel + ' 到期 ' + (m.expiryDate || '—') + ' · 剩余 ' + (m.daysToExpiry == null ? '—' : m.daysToExpiry) + ' 天') + '">'
+                    + '<div class="m1">' + esc(m.monthLabel) + '</div>'
+                    + '<div class="m2">' + (m.daysToExpiry == null ? '—' : m.daysToExpiry + '天') + ' · '
+                    + (m.callCount || 0) + '/' + (m.putCount || 0) + '</div>' + warn + '</button>';
+            }).join('');
+        }
+
+        // ------------------------------------------------------------------ 渲染：T型表
+
+        function buildRows(month) {
+            var map = {};
+            var add = function (q) {
+                var k = num(q.strikePrice);
+                if (k === null) return;
+                var row = map[k] || (map[k] = {strike: k, call: null, put: null});
+                if (q.callPutType === 'C') row.call = q; else row.put = q;
+            };
+            (month.callDtoList || []).forEach(add);
+            (month.putDtoList || []).forEach(add);
+
+            var rows = Object.keys(map).map(function (k) {
+                return map[k];
+            }).sort(function (a, b) {
+                return a.strike - b.strike;
+            });
+
+            // 行权价范围（按 平值 收敛）
+            if (S.range !== 'all') {
+                var n = parseInt(S.range, 10) || 5;
+                var atm = num(month.atmStrike);
+                var idx = -1;
+                for (var i = 0; i < rows.length; i++) {
+                    if (atm !== null && rows[i].strike === atm) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx >= 0) {
+                    rows = rows.slice(Math.max(0, idx - n), Math.min(rows.length, idx + n + 1));
+                }
+            }
+
+            if (S.hideZero) {
+                rows = rows.filter(function (r) {
+                    return (r.call && num(r.call.volume) > 0) || (r.put && num(r.put.volume) > 0);
+                });
+            }
+
+            if (S.sort === 'desc') rows.reverse();
+            return rows;
+        }
+
+        function sideCells(q, side) {
+            if (!q) {
+                return '<td class="c-' + side + '"><span class="dash">—</span></td>'.repeat(3)
+                    + '<td class="c-' + side + '"><span class="dash">—</span></td>'.repeat(3);
+            }
+
+            var stale = q.stale === true;
+            var cellCls = 'c-' + side + (stale ? ' staleable' : '');
+            var staleDot = stale ? '<span class="staledot" title="当日无成交，显示最近行情日 ' + esc(q.barDate) + '"></span>' : '';
+            var volT = '成交量（张）' + (stale ? ' · ' + q.barDate : '');
+
+            var code = '<td class="c-code" data-code="' + esc(q.code) + '" title="点击查看合约K线">'
+                + esc(q.code) + staleDot + '</td>';
+            var price = '<td class="' + cellCls + ' ' + cls(num(q.changePct)) + '" title="最新价">' + fmtPrice(q.close) + '</td>';
+            var chg = '<td class="' + cellCls + '">' + fmtChg(q.changePrice) + '</td>';
+            var pct = '<td class="' + cellCls + '">' + fmtPct(q.changePct) + '</td>';
+            var vol = '<td class="' + cellCls + '" title="' + volT + '">' + fmtVol(q.volume) + '</td>';
+            var amt = '<td class="' + cellCls + '" title="成交额（元）">' + fmtAmt(q.amount, q.volume) + '</td>';
+
+            return side === 'call'
+                ? (code + price + chg + pct + vol + amt)
+                : (amt + vol + pct + chg + price + code);
+        }
+
+        function renderTable() {
+            var m = currentMonth();
+            if (!m) {
+                el.tqBody.innerHTML = '';
+                renderEmpty('暂无数据', '');
+                return;
+            }
+
+            var rows = buildRows(m);
+            var atm = num(m.atmStrike);
+
+            if (!rows.length) {
+                el.tqBody.innerHTML = '';
+                renderEmpty('当前筛选条件下无数据',
+                    '可尝试：把「范围」调为「全部行权价」，或取消「隐藏零成交」。');
+                return;
+            }
+
+            el.emptyState.classList.add('hidden');
+            el.tableWrap.style.display = '';
+
+            var html = rows.map(function (r) {
+                var isAtm = atm !== null && r.strike === atm;
+                var c = r.call, p = r.put;
+
+                // 中间列：行权价 + 实/平/虚
+                var mk = '';
+                var money = (c || p || {}).moneyness;
+                if (money === 'ATM') mk = '<span class="mk atm">平</span>';
+                else if (money === 'ITM') mk = '<span class="mk itm">实</span>';
+                else if (money === 'OTM') mk = '<span class="mk otm">虚</span>';
+
+                var strikeCell = '<td class="c-strike" title="行权价 ' + r.strike.toFixed(4) + '">'
+                    + r.strike.toFixed(4) + mk + '</td>';
+
+                return '<tr class="' + (isAtm ? 'atm' : '') + '" data-strike="' + r.strike + '">'
+                    + sideCells(c, 'call') + strikeCell + sideCells(p, 'put')
+                    + '</tr>';
+            }).join('');
+
+            el.tqBody.innerHTML = html;
+        }
+
+        function renderEmpty(title, desc) {
+            el.emptyState.classList.remove('hidden');
+            el.emptyTitle.innerHTML = title;
+            el.emptyDesc.innerHTML = desc || '';
+            el.tableWrap.style.display = 'block';
+        }
+
+        // ------------------------------------------------------------------ 图表：标的K线
+
+        function upDownColors(bar) {
+            var up = num(bar.close) >= num(bar.open);
+            return {color: up ? UP : DOWN, color0: up ? UP : DOWN};
+        }
+
+        function renderEtfChart(dto) {
+            if (!CH.etf) {
+                CH.etf = echarts.init(el.etfChart, null, {renderer: 'canvas'});
+            }
+
+            if (!dto || !dto.klineList || !dto.klineList.length) {
+                CH.etf.clear();
+                el.etfHint.textContent = dto ? '标的ETF 无K线数据' : '—';
+                CH.etf.setOption({
+                    backgroundColor: 'transparent',
+                    title: {
+                        text: '标的ETF 无K线数据',
+                        left: 'center', top: 'middle',
+                        textStyle: {color: '#6c7f97', fontSize: 13, fontWeight: 'normal'}
+                    }
+                });
+                return;
+            }
+
+            var bars = dto.klineList;
+            var dates = bars.map(function (b) {
+                return b.date;
+            });
+            var ohlc = bars.map(function (b) {
+                return [num(b.open), num(b.close), num(b.low), num(b.high)];
+            });
+            var vols = bars.map(function (b, i) {
+                return {
+                    value: num(b.vol),
+                    itemStyle: {color: num(b.close) >= num(b.open) ? UP : DOWN, opacity: .55}
+                };
+            });
+
+            var ma = function (n) {
+                var out = [];
+                for (var i = 0; i < bars.length; i++) {
+                    if (i < n - 1) {
+                        out.push(null);
+                        continue;
+                    }
+                    var s = 0;
+                    for (var j = i - n + 1; j <= i; j++) s += num(bars[j].close);
+                    out.push(+(s / n).toFixed(4));
+                }
+                return out;
+            };
+
+            var lastBar = bars[bars.length - 1];
+            var markDate = dto.quoteDate || S.date;
+            var label = (dto.underlyingName || dto.underlyingCode) + ' ' + Number(lastBar.close).toFixed(4);
+            var chgPct = dto.changePct == null ? null : Number(dto.changePct);
+            el.etfHint.textContent = (dto.underlyingName || dto.underlyingCode || '') + ' · '
+                + (dto.barCount || bars.length) + '根 · ' + (markDate ? markDate : '');
+
+            CH.etf.clear();
+            CH.etf.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: [
+                    {left: 52, right: 12, top: 26, height: '58%'},
+                    {left: 52, right: 12, top: '75%', height: '17%'}
+                ],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {type: 'cross', lineStyle: {color: '#3a4a60'}},
+                    backgroundColor: 'rgba(15,20,29,.96)',
+                    borderColor: '#2a3648',
+                    textStyle: {color: '#d7e2f0', fontSize: 12, fontFamily: 'ui-monospace, monospace'},
+                    formatter: function (ps) {
+                        var idx = -1;
+                        ps.forEach(function (p) {
+                            if (p.seriesType === 'candlestick') idx = p.dataIndex;
+                        });
+                        if (idx < 0) return '';
+                        var b = bars[idx];
+                        var prev = idx > 0 ? num(bars[idx - 1].close) : null;
+                        var pct = prev ? ((num(b.close) / prev - 1) * 100) : null;
+                        var col = pct == null ? '#9fb0c6' : (pct > 0 ? UP : DOWN);
+                        return '<div style="font-weight:700;margin-bottom:4px">' + b.date + '　' + label + '</div>'
+                            + '<div>开 <b>' + num(b.open).toFixed(4) + '</b>　高 <b>' + num(b.high).toFixed(4) + '</b></div>'
+                            + '<div>低 <b>' + num(b.low).toFixed(4) + '</b>　收 <b style="color:' + col + '">' + num(b.close).toFixed(4) + '</b></div>'
+                            + '<div>涨跌 <b style="color:' + col + '">' + (pct == null ? '—' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%') + '</b></div>'
+                            + '<div>量 <b>' + fmtVol(b.vol).replace(/<[^>]+>/g, '') + '</b>　额 <b>' + fmtAmt(b.amo, b.vol).replace(/<[^>]+>/g, '') + '</b></div>';
+                    }
+                },
+                axisPointer: {link: [{xAxisIndex: 'all'}]},
+                xAxis: [
+                    {
+                        type: 'category', data: dates, gridIndex: 0, boundaryGap: true,
+                        axisLine: {lineStyle: {color: '#2a3648'}},
+                        axisLabel: {color: '#6c7f97', fontSize: 10, hideOverlap: true},
+                        axisTick: {show: false},
+                        splitLine: {show: false}
+                    },
+                    {
+                        type: 'category', data: dates, gridIndex: 1, boundaryGap: true,
+                        axisLine: {lineStyle: {color: '#2a3648'}},
+                        axisLabel: {show: false},
+                        axisTick: {show: false}
+                    }
+                ],
+                yAxis: [
+                    {
+                        scale: true, gridIndex: 0, position: 'left',
+                        axisLine: {show: false},
+                        axisLabel: {
+                            color: '#6c7f97', fontSize: 10, formatter: function (v) {
+                                return Number(v).toFixed(2);
+                            }
+                        },
+                        splitLine: {lineStyle: {color: 'rgba(42,54,72,.55)'}}
+                    },
+                    {
+                        scale: true, gridIndex: 1, position: 'left',
+                        axisLine: {show: false},
+                        axisLabel: {
+                            color: '#4a5a70', fontSize: 9, formatter: function (v) {
+                                var n = Number(v);
+                                return n >= 1e8 ? (n / 1e8).toFixed(1) + '亿' : (n >= 1e4 ? (n / 1e4).toFixed(0) + '万' : n);
+                            }
+                        },
+                        splitLine: {show: false}
+                    }
+                ],
+                dataZoom: [{type: 'inside', xAxisIndex: [0, 1], start: 40, end: 100}],
+                series: [
+                    {
+                        name: 'ETF', type: 'candlestick', data: ohlc,
+                        itemStyle: {
+                            color: UP, color0: DOWN,
+                            borderColor: UP, borderColor0: DOWN
+                        },
+                        markLine: {
+                            silent: true,
+                            symbol: 'none',
+                            lineStyle: {color: '#f3c24b', type: 'dashed', width: 1},
+                            label: {
+                                color: '#f3c24b', fontSize: 10, position: 'insideEndTop', rotate: 0,
+                                formatter: '所选日期'
+                            },
+                            data: markDate ? [{xAxis: markDate}] : []
+                        }
+                    },
+                    {
+                        name: 'MA5', type: 'line', data: ma(5), smooth: true, symbol: 'none',
+                        lineStyle: {width: 1, color: '#f3c24b', opacity: .8}
+                    },
+                    {
+                        name: 'MA20', type: 'line', data: ma(20), smooth: true, symbol: 'none',
+                        lineStyle: {width: 1, color: '#2f81f7', opacity: .8}
+                    },
+                    {
+                        name: '成交量', type: 'bar', data: vols, xAxisIndex: 1, yAxisIndex: 1,
+                        barWidth: '60%'
+                    }
+                ]
+            }, true);
+        }
+
+        // ------------------------------------------------------------------ 图表：成交量分布
+
+        function renderDistChart() {
+            var m = currentMonth();
+            // 容器隐藏时（另一个 tab）不初始化，避免 ECharts 取到 0 宽高
+            if (el.distChart.classList.contains('hidden') && !CH.dist) {
+                return;
+            }
+            if (!CH.dist) {
+                CH.dist = echarts.init(el.distChart, null, {renderer: 'canvas'});
+            }
+            if (!m) {
+                CH.dist.clear();
+                return;
+            }
+
+            var rows = buildRows(m);
+            var cats = rows.map(function (r) {
+                return r.strike.toFixed(4);
+            });
+            var cVol = rows.map(function (r) {
+                return r.call ? num(r.call.volume) : 0;
+            });
+            var pVol = rows.map(function (r) {
+                return r.put ? num(r.put.volume) : 0;
+            });
+
+            CH.dist.clear();
+            CH.dist.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: {left: 52, right: 14, top: 30, bottom: 44},
+                legend: {
+                    top: 4, right: 8, itemWidth: 10, itemHeight: 8,
+                    textStyle: {color: '#9fb0c6', fontSize: 11}
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(15,20,29,.96)',
+                    borderColor: '#2a3648',
+                    textStyle: {color: '#d7e2f0', fontSize: 12},
+                    axisPointer: {type: 'shadow'}
+                },
+                xAxis: {
+                    type: 'category', data: cats,
+                    axisLine: {lineStyle: {color: '#2a3648'}},
+                    axisLabel: {color: '#6c7f97', fontSize: 9, rotate: cats.length > 12 ? 60 : 0, hideOverlap: true},
+                    axisTick: {show: false}
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {show: false},
+                    axisLabel: {
+                        color: '#6c7f97', fontSize: 9, formatter: function (v) {
+                            var n = Number(v);
+                            return n >= 1e4 ? (n / 1e4).toFixed(1) + '万' : n;
+                        }
+                    },
+                    splitLine: {lineStyle: {color: 'rgba(42,54,72,.55)'}}
+                },
+                dataZoom: [{type: 'inside'}],
+                series: [
+                    {name: '认购量', type: 'bar', data: cVol, itemStyle: {color: UP, opacity: .75}, barMaxWidth: 14},
+                    {name: '认沽量', type: 'bar', data: pVol, itemStyle: {color: DOWN, opacity: .75}, barMaxWidth: 14}
+                ]
+            }, true);
+        }
+
+        // ------------------------------------------------------------------ 抽屉：合约详情
+
+        async function openDetail(code) {
+            if (!code) return;
+            setBusy(true);
+            try {
+                var dto = await api('/api/option/kline', {code: code});
+                if (!dto || !dto.code) {
+                    toast('合约不存在：' + code);
+                    return;
+                }
+                S.detail = dto;
+                renderDetail(dto);
+                el.drawer.classList.add('on');
+                el.overlay.classList.add('on');
+                el.drawer.setAttribute('aria-hidden', 'false');
+            } catch (e) {
+                toast('加载合约K线失败：' + e.message);
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        function closeDetail() {
+            el.drawer.classList.remove('on');
+            el.overlay.classList.remove('on');
+            el.drawer.setAttribute('aria-hidden', 'true');
+            S.detail = null;
+        }
+
+        /** 在当月数据里找该合约的报价（取派生指标） */
+        function findQuote(code) {
+            var m = currentMonth();
+            if (!m) return null;
+            var all = (m.callDtoList || []).concat(m.putDtoList || []);
+            for (var i = 0; i < all.length; i++) {
+                if (all[i].code === code) return all[i];
+            }
+            return null;
+        }
+
+        function renderDetail(dto) {
+            var q = findQuote(dto.code) || {};
+            var isCall = dto.callPutType === 'C';
+
+            el.dName.textContent = dto.name || '—';
+            el.dCode.textContent = dto.code + '　行权价 ' + (dto.strikePrice == null ? '—' : Number(dto.strikePrice).toFixed(4))
+                + '　到期 ' + (q.expiryDate || dto.endDate || '—');
+            el.dBadge.textContent = isCall ? '认购 C' : '认沽 P';
+            el.dBadge.className = 'badge ' + (isCall ? 'c' : 'p');
+
+            var items = [
+                ['最新价', fmtPrice(q.close)],
+                ['涨跌幅', fmtPct(q.changePct)],
+                ['涨跌额', fmtChg(q.changePrice)],
+                ['成交量', fmtVol(q.volume)],
+                ['成交额', fmtAmt(q.amount, q.volume)],
+                ['振幅', fmtPct(q.rangePct)],
+                ['内在价值', fmtPrice(q.intrinsicValue)],
+                ['时间价值', fmtPrice(q.timeValue)],
+                ['盈亏平衡', fmtPrice(q.breakEven)],
+                ['杠杆', q.leverage == null ? '<span class="dash">—</span>' : Number(q.leverage).toFixed(2)],
+                ['剩余天数', q.daysToExpiry == null ? '<span class="dash">—</span>' : q.daysToExpiry + ' 天'],
+                ['价值状态', q.moneyness == null ? '<span class="dash">—</span>'
+                    : (q.moneyness === 'ATM' ? '<span style="color:var(--gold)">平值</span>'
+                        : (q.moneyness === 'ITM' ? '<span class="up">实值</span>' : '<span class="flat">虚值</span>'))],
+                ['昨收', fmtPrice(q.prevClose)],
+                ['合约开始', dto.startDate || '—'],
+                ['合约结束', dto.expiryDate || dto.endDate || '—']
+            ];
+
+            el.dKv.innerHTML = items.map(function (it) {
+                return '<div class="item"><div class="k">' + esc(it[0]) + '</div><div class="v">' + it[1] + '</div></div>';
+            }).join('');
+
+            renderDetailChart(dto, q);
+        }
+
+        function renderDetailChart(dto, q) {
+            if (!CH.detail) {
+                CH.detail = echarts.init(el.detailChart, null, {renderer: 'canvas'});
+            }
+
+            var bars = dto.klineList || [];
+            el.dKlineHint.textContent = bars.length
+                ? (bars.length + ' 根 · ' + bars[0].date + ' ~ ' + bars[bars.length - 1].date)
+                : '无K线数据';
+
+            if (!bars.length) {
+                CH.detail.clear();
+                return;
+            }
+
+            var dates = bars.map(function (b) {
+                return b.date;
+            });
+            var ohlc = bars.map(function (b) {
+                return [num(b.open), num(b.close), num(b.low), num(b.high)];
+            });
+            var vols = bars.map(function (b) {
+                return {
+                    value: num(b.vol),
+                    itemStyle: {color: num(b.close) >= num(b.open) ? UP : DOWN, opacity: .5}
+                };
+            });
+
+            var markDate = q && q.barDate ? q.barDate : null;
+
+            CH.detail.clear();
+            CH.detail.setOption({
+                animation: false,
+                backgroundColor: 'transparent',
+                grid: [{left: 52, right: 12, top: 16, height: '56%'}, {left: 52, right: 12, top: '74%', height: '18%'}],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {type: 'cross', lineStyle: {color: '#3a4a60'}},
+                    backgroundColor: 'rgba(15,20,29,.96)',
+                    borderColor: '#2a3648',
+                    textStyle: {color: '#d7e2f0', fontSize: 12, fontFamily: 'ui-monospace, monospace'},
+                    formatter: function (ps) {
+                        var idx = -1;
+                        ps.forEach(function (p) {
+                            if (p.seriesType === 'candlestick') idx = p.dataIndex;
+                        });
+                        if (idx < 0) return '';
+                        var b = bars[idx];
+                        var prev = idx > 0 ? num(bars[idx - 1].close) : null;
+                        var pct = prev ? ((num(b.close) / prev - 1) * 100) : null;
+                        var col = pct == null ? '#9fb0c6' : (pct > 0 ? UP : DOWN);
+                        return '<div style="font-weight:700;margin-bottom:4px">' + b.date + '</div>'
+                            + '<div>开 <b>' + num(b.open).toFixed(4) + '</b>　高 <b>' + num(b.high).toFixed(4) + '</b></div>'
+                            + '<div>低 <b>' + num(b.low).toFixed(4) + '</b>　收 <b style="color:' + col + '">' + num(b.close).toFixed(4) + '</b></div>'
+                            + '<div>涨跌 <b style="color:' + col + '">' + (pct == null ? '—' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%') + '</b>'
+                            + '　量 <b>' + fmtVol(b.vol).replace(/<[^>]+>/g, '') + '</b></div>';
+                    }
+                },
+                axisPointer: {link: [{xAxisIndex: 'all'}]},
+                xAxis: [
+                    {
+                        type: 'category', data: dates, gridIndex: 0, boundaryGap: true,
+                        axisLine: {lineStyle: {color: '#2a3648'}},
+                        axisLabel: {color: '#6c7f97', fontSize: 9, hideOverlap: true},
+                        axisTick: {show: false}
+                    },
+                    {
+                        type: 'category', data: dates, gridIndex: 1, boundaryGap: true,
+                        axisLine: {lineStyle: {color: '#2a3648'}},
+                        axisLabel: {show: false}, axisTick: {show: false}
+                    }
+                ],
+                yAxis: [
+                    {
+                        scale: true, gridIndex: 0, axisLine: {show: false},
+                        axisLabel: {
+                            color: '#6c7f97', fontSize: 9, formatter: function (v) {
+                                return Number(v).toFixed(3);
+                            }
+                        },
+                        splitLine: {lineStyle: {color: 'rgba(42,54,72,.55)'}}
+                    },
+                    {
+                        scale: true, gridIndex: 1, axisLine: {show: false},
+                        axisLabel: {color: '#4a5a70', fontSize: 8},
+                        splitLine: {show: false}
+                    }
+                ],
+                dataZoom: [{type: 'inside', xAxisIndex: [0, 1]}],
+                series: [
+                    {
+                        name: '合约', type: 'candlestick', data: ohlc,
+                        itemStyle: {color: UP, color0: DOWN, borderColor: UP, borderColor0: DOWN},
+                        markLine: {
+                            silent: true, symbol: 'none',
+                            lineStyle: {color: '#f3c24b', type: 'dashed'},
+                            label: {color: '#f3c24b', fontSize: 9, rotate: 0, formatter: '所选日期'},
+                            data: markDate ? [{xAxis: markDate}] : []
+                        }
+                    },
+                    {name: '成交量', type: 'bar', data: vols, xAxisIndex: 1, yAxisIndex: 1, barWidth: '60%'}
+                ]
+            }, true);
+        }
+
+        // ------------------------------------------------------------------ CSV
+
+        function exportCsv() {
+            var m = currentMonth();
+            if (!m) {
+                toast('暂无可导出的数据');
+                return;
+            }
+            var rows = buildRows(m);
+
+            var head = ['行权价',
+                '认购代码', '认购最新价', '认购涨跌', '认购涨跌幅', '认购成交量', '认购成交额', '认购内在价值', '认购时间价值',
+                '认沽代码', '认沽最新价', '认沽涨跌', '认沽涨跌幅', '认沽成交量', '认沽成交额', '认沽内在价值', '认沽时间价值'];
+
+            var lines = [head.join(',')];
+            var raw = function (v) {
+                return v === null || v === undefined ? '' : v;
+            };
+
+            rows.forEach(function (r) {
+                var c = r.call || {}, p = r.put || {};
+                lines.push([
+                    r.strike.toFixed(4),
+                    raw(c.code), raw(c.close), raw(c.changePrice), raw(c.changePct), raw(c.volume), raw(c.amount), raw(c.intrinsicValue), raw(c.timeValue),
+                    raw(p.code), raw(p.close), raw(p.changePrice), raw(p.changePct), raw(p.volume), raw(p.amount), raw(p.intrinsicValue), raw(p.timeValue)
+                ].join(','));
+            });
+
+            var blob = new Blob(['\ufeff' + lines.join('\r\n')], {type: 'text/csv;charset=utf-8'});
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'option-tquote_' + S.underlying + '_' + S.date + '_' + m.monthLabel + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () {
+                URL.revokeObjectURL(a.href);
+                a.remove();
+            }, 0);
+            toast('已导出 ' + rows.length + ' 行');
+        }
+
+        // ------------------------------------------------------------------ URL 同步
+
+        function syncUrl() {
+            var p = new URLSearchParams();
+            p.set('date', S.date || '');
+            p.set('underlying', S.underlying || '');
+            if (S.monthKey) p.set('month', S.monthKey);
+            if (S.range !== 'all') p.set('range', S.range);
+            var url = location.pathname + '?' + p.toString();
+            try {
+                history.replaceState(null, '', url);
+            } catch (e) {
+                /* ignore */
+            }
+        }
+
+        function readUrl() {
+            var p = new URLSearchParams(location.search);
+            var d = p.get('date');
+            S.date = (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) ? d : today();
+            S.underlying = p.get('underlying') || null;
+            S.monthKey = p.get('month') || null;
+            var r = p.get('range');
+            if (r) {
+                S.range = r;
+                el.rangeSel.value = r;
+            }
+        }
+
+        // ------------------------------------------------------------------ 事件
+
+        function bindEvents() {
+            el.underlyingSel.addEventListener('change', function () {
+                S.underlying = this.value;
+                S.monthKey = null;
+                S.underlyings = [];
+                loadAll(true);
+            });
+
+            el.dateInput.addEventListener('change', function () {
+                var v = this.value;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(v || '')) {
+                    toast('日期格式应为 YYYY-MM-DD');
+                    return;
+                }
+                S.date = v;
+                S.monthKey = null;
+                S.underlyings = [];
+                loadAll(true);
+            });
+
+            el.prevDayBtn.addEventListener('click', function () {
+                stepDate(-1);
+            });
+            el.nextDayBtn.addEventListener('click', function () {
+                stepDate(1);
+            });
+
+            el.latestBtn.addEventListener('click', function () {
+                var last = lastTradeDate();
+                if (!last) {
+                    toast('暂无交易日历');
+                    return;
+                }
+                S.date = last;
+                S.monthKey = null;
+                S.underlyings = [];
+                loadAll(true);
+            });
+
+            el.rangeSel.addEventListener('change', function () {
+                S.range = this.value;
+                renderTable();
+                renderDistChart();
+                syncUrl();
+            });
+
+            el.hideZeroChk.addEventListener('change', function () {
+                S.hideZero = this.checked;
+                renderTable();
+                renderDistChart();
+            });
+
+            el.sortSel.addEventListener('change', function () {
+                S.sort = this.value;
+                renderTable();
+                renderDistChart();
+            });
+
+            el.refreshBtn.addEventListener('click', function () {
+                loadAll(true);
+            });
+
+            el.autoRefreshChk.addEventListener('change', function () {
+                if (this.checked) {
+                    S.autoTimer = setInterval(function () {
+                        if (document.hidden) return;
+                        if (S.date === lastTradeDate()) loadAll(true);
+                    }, AUTO_REFRESH_MS);
+                    toast('已开启自动刷新（' + (AUTO_REFRESH_MS / 1000) + 's，仅最近交易日生效）');
+                } else {
+                    clearInterval(S.autoTimer);
+                    S.autoTimer = null;
+                    toast('已关闭自动刷新');
+                }
+            });
+
+            el.themeBtn.addEventListener('click', function () {
+                var cur = document.documentElement.getAttribute('data-theme');
+                var next = cur === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                document.documentElement.style.colorScheme = next === 'light' ? 'light' : 'dark';
+                try {
+                    localStorage.setItem(THEME_KEY, next);
+                } catch (e) {
+                    /* ignore */
+                }
+                resizeCharts();
+            });
+
+            el.helpBtn.addEventListener('click', function () {
+                el.helpModal.classList.add('on');
+            });
+            el.helpClose.addEventListener('click', function () {
+                el.helpModal.classList.remove('on');
+            });
+            el.helpModal.addEventListener('click', function (e) {
+                if (e.target === el.helpModal) el.helpModal.classList.remove('on');
+            });
+
+            el.bannerClose.addEventListener('click', hideBanner);
+
+            // 月份 tab
+            el.monthTabs.addEventListener('click', function (e) {
+                var btn = e.target.closest('.mtab');
+                if (!btn) return;
+                S.monthKey = btn.getAttribute('data-key');
+                renderMonthTabs();
+                renderStats();
+                renderTable();
+                renderDistChart();
+                syncUrl();
+            });
+
+            // 合约代码点击 -> 详情
+            el.tqBody.addEventListener('click', function (e) {
+                var td = e.target.closest('td.c-code');
+                if (!td) return;
+                openDetail(td.getAttribute('data-code'));
+            });
+
+            el.drawerClose.addEventListener('click', closeDetail);
+            el.overlay.addEventListener('click', closeDetail);
+
+            el.copyCodeBtn.addEventListener('click', function () {
+                if (!S.detail) return;
+                var txt = S.detail.code;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(txt).then(function () {
+                        toast('已复制：' + txt);
+                    }, function () {
+                        toast('复制失败：' + txt);
+                    });
+                } else {
+                    toast('合约代码：' + txt);
+                }
+            });
+
+            el.exportCsvBtn.addEventListener('click', exportCsv);
+
+            // 图表 tab
+            document.querySelectorAll('.ctabs button').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    document.querySelectorAll('.ctabs button').forEach(function (x) {
+                        x.classList.remove('on');
+                    });
+                    b.classList.add('on');
+                    S.chartTab = b.getAttribute('data-tab');
+                    el.etfChart.classList.toggle('hidden', S.chartTab !== 'etf');
+                    el.distChart.classList.toggle('hidden', S.chartTab !== 'dist');
+                    if (S.chartTab === 'dist') {
+                        renderDistChart();
+                        CH.dist && CH.dist.resize();
+                    } else {
+                        CH.etf && CH.etf.resize();
+                    }
+                });
+            });
+
+            // 键盘
+            document.addEventListener('keydown', function (e) {
+                if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+
+                if (e.key === 'Escape') {
+                    if (el.helpModal.classList.contains('on')) {
+                        el.helpModal.classList.remove('on');
+                    } else if (el.drawer.classList.contains('on')) {
+                        closeDetail();
+                    }
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    stepDate(-1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    stepDate(1);
+                } else if (e.key === 'r' || e.key === 'R') {
+                    loadAll(true);
+                } else if (/^[1-9]$/.test(e.key)) {
+                    var i = parseInt(e.key, 10) - 1;
+                    if (S.months[i]) {
+                        S.monthKey = S.months[i].key;
+                        renderMonthTabs();
+                        renderStats();
+                        renderTable();
+                        renderDistChart();
+                        syncUrl();
+                    }
+                }
+            });
+
+            var rt = null;
+            window.addEventListener('resize', function () {
+                clearTimeout(rt);
+                rt = setTimeout(resizeCharts, 120);
+            });
+
+            // 全部K线数据加载完后自动定位到所选日期
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden && el.autoRefreshChk.checked && S.date === lastTradeDate()) {
+                    loadAll(true);
+                }
+            });
+        }
+
+        function stepDate(dir) {
+            if (!S.tradeDates.length) {
+                toast('暂无交易日历');
+                return;
+            }
+            var target = dir < 0 ? prevTradeDate(S.date) : nextTradeDate(S.date);
+            if (!target) {
+                toast(dir < 0 ? '已是第一个交易日' : '已是最后一个交易日');
+                return;
+            }
+            S.date = target;
+            S.monthKey = null;
+            S.underlyings = [];
+            loadAll(true);
+        }
+
+        function resizeCharts() {
+            [CH.etf, CH.dist, CH.detail].forEach(function (c) {
+                try {
+                    c && c.resize();
+                } catch (e) {
+                    /* ignore */
+                }
+            });
+        }
+
+        // ------------------------------------------------------------------ 启动
+
+        async function boot() {
+            readUrl();
+            el.dateInput.value = S.date;
+            bindEvents();
+
+            // 接口环境（ApiUtils）
+            var env = apiEnvInfo();
+            var envEl = $('apiEnv'), hostEl = $('apiHost');
+            if (envEl) envEl.textContent = String(env.env);
+            if (hostEl) hostEl.textContent = String(env.host);
+            document.querySelector('.brand').title = 'API 入口：' + env.sample;
+
+            if (typeof echarts === 'undefined') {
+                showBanner('未加载 echarts（../js/echarts.min.js），图表不可用；T型报价 仍可正常使用。', true);
+            }
+
+            if (!window.ApiUtils) {
+                showBanner('未加载 <b>static/js/config.js</b>（window.ApiUtils），无法调用后端接口；请检查文件是否可访问。', true);
+                renderEmpty('接口入口未就绪', '页面未能加载 <code>../js/config.js</code>（ApiUtils），请刷新或检查静态资源路径。');
+                return;
+            }
+
+            await loadAll();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    })();
+</script>
+</body>
+</html>
