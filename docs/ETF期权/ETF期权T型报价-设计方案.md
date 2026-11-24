@@ -33,29 +33,74 @@
 响应 `List<MonthOptionDTO>`（按 标的 + 合约月份 升序）：
 
 ```json
-[{
-  "key": "510300-202610", "underlyingCode": "510300", "underlyingName": "300ETF",
-  "contractMonth": 202610, "monthLabel": "2026-10", "expiryDate": "2026-10-28", "daysToExpiry": 27,
-  "date": "2026-10-01", "quoteDate": "2026-09-30", "hasData": false,
-  "underlyingClose": 4.4320, "underlyingChangePct": 0.36, "underlyingTradeDate": "2026-09-30",
-  "callCount": 11, "putCount": 11,
-  "strikeList": [4.0, 4.1, 4.2, 4.3, 4.4, 4.5],
-  "atmStrike": 4.4000,
-  "callVolume": 25839, "putVolume": 21686, "callAmount": 0, "putAmount": 0,
-  "pcrVolume": 0.8393, "pcrAmount": null,
-  "callDtoList": [{
-    "code": "10012543", "name": "300ETF购11月4000", "callPutType": "C",
-    "strikePrice": 4.0000, "contractMonth": 202611, "startDate": "2026-09-29",
-    "endDate": "2026-11-23", "expiryDate": "2026-11-25", "daysToExpiry": 55,
-    "barDate": "2026-09-30", "stale": true,
-    "open": 0.4269, "high": 0.4308, "low": 0.4103, "close": 0.4291, "prevClose": 0.4291,
-    "volume": 1009, "amount": 0.00,
-    "changePrice": 0.0000, "changePct": 0.00, "rangePct": 0.00,
-    "intrinsicValue": 0.4320, "timeValue": -0.0029, "breakEven": 4.4291, "leverage": 10.3286,
-    "moneyness": "ITM", "otmLevel": -4
-  }],
-  "putDtoList": [...]
-}]
+[
+  {
+    "key": "510300-202610",
+    "underlyingCode": "510300",
+    "underlyingName": "300ETF",
+    "contractMonth": 202610,
+    "monthLabel": "2026-10",
+    "expiryDate": "2026-10-28",
+    "daysToExpiry": 27,
+    "date": "2026-10-01",
+    "quoteDate": "2026-09-30",
+    "hasData": false,
+    "underlyingClose": 4.4320,
+    "underlyingChangePct": 0.36,
+    "underlyingTradeDate": "2026-09-30",
+    "callCount": 11,
+    "putCount": 11,
+    "strikeList": [
+      4.0,
+      4.1,
+      4.2,
+      4.3,
+      4.4,
+      4.5
+    ],
+    "atmStrike": 4.4000,
+    "callVolume": 25839,
+    "putVolume": 21686,
+    "callAmount": 0,
+    "putAmount": 0,
+    "pcrVolume": 0.8393,
+    "pcrAmount": null,
+    "callDtoList": [
+      {
+        "code": "10012543",
+        "name": "300ETF购11月4000",
+        "callPutType": "C",
+        "strikePrice": 4.0000,
+        "contractMonth": 202611,
+        "startDate": "2026-09-29",
+        "endDate": "2026-11-23",
+        "expiryDate": "2026-11-25",
+        "daysToExpiry": 55,
+        "barDate": "2026-09-30",
+        "stale": true,
+        "open": 0.4269,
+        "high": 0.4308,
+        "low": 0.4103,
+        "close": 0.4291,
+        "prevClose": 0.4291,
+        "volume": 1009,
+        "amount": 0.00,
+        "changePrice": 0.0000,
+        "changePct": 0.00,
+        "rangePct": 0.00,
+        "intrinsicValue": 0.4320,
+        "timeValue": -0.0029,
+        "breakEven": 4.4291,
+        "leverage": 10.3286,
+        "moneyness": "ITM",
+        "otmLevel": -4
+      }
+    ],
+    "putDtoList": [
+      ...
+    ]
+  }
+]
 ```
 
 > `callDtoList` / `putDtoList` 保留原 `MonthOptionDTO` 的字段名，但元素由 `BaseOptionDO` 改为**纯报价 DTO** `OptionQuoteDTO`：实体里的 `klineHis(blob)` / `getKlineHisStr()` 会导致响应体被整段K线 JSON 撑爆（数十 MB），因此 API 一律不返回实体。
@@ -226,15 +271,15 @@ GET /api/option/listOptionInDate?date&underlyingCode
 
 **历史日期（2023-06-01，含真实成交额/涨跌幅）**
 
-![期权T型报价-历史日期](../img/option-tquote-historical.png)
+![期权T型报价-历史日期](../img/option/option-tquote-historical.png)
 
 **当日快照（2026-10-01 为国庆非交易日 → 自动展示最近行情日 2026-09-30）**
 
-![期权T型报价-当日](../img/option-tquote-live.png)
+![期权T型报价-当日](../img/option/option-tquote-live.png)
 
 **成交量分布（认购/认沽 按行权价）**
 
-![期权T型报价-成交量分布](../img/option-tquote-dist.png)
+![期权T型报价-成交量分布](../img/option/option-tquote-dist.png)
 
 ---
 
