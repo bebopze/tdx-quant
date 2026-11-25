@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtSignalEventMapper">
+
+
+    <delete id="deleteByTaskId">
+        DELETE
+        FROM obt_signal_event
+        WHERE task_id = #{taskId}
+    </delete>
+
+
+    <insert id="batchInsert">
+        INSERT INTO obt_signal_event
+        (task_id, signal_date, exec_date, prev_status, signal_type, cycle_id, ref_underlying,
+        ref_close, market_low_day, market_high_day, ma50_pct, position_pct, processed_flag)
+        VALUES
+        <foreach collection="list" item="e" separator=",">
+            (#{e.taskId}, #{e.signalDate}, #{e.execDate}, #{e.prevStatus}, #{e.signalType},
+            #{e.cycleId}, #{e.refUnderlying}, #{e.refClose}, #{e.marketLowDay},
+            #{e.marketHighDay}, #{e.ma50Pct}, #{e.positionPct}, #{e.processedFlag})
+        </foreach>
+    </insert>
+
+
+    <select id="listByTaskId" resultType="com.bebopze.tdx.quant.dal.entity.ObtSignalEventDO">
+        SELECT *
+
+        FROM obt_signal_event
+
+        WHERE task_id = #{taskId}
+
+        ORDER BY signal_date
+    </select>
+
+</mapper>

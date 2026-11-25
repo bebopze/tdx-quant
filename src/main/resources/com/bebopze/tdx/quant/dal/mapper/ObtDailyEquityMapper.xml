@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtDailyEquityMapper">
+
+
+    <delete id="deleteByTaskId">
+        DELETE
+        FROM obt_daily_equity
+        WHERE task_id = #{taskId}
+    </delete>
+
+
+    <insert id="batchInsert">
+        INSERT INTO obt_daily_equity
+        (task_id, trade_date, nav, equity, cash, market_value, position_pct, daily_return_pct,
+        cum_return_pct, drawdown_pct, benchmark_close, benchmark_nav, benchmark_return_pct,
+        signal_type, signal_status, position_count, fee, stale_flag)
+        VALUES
+        <foreach collection="list" item="e" separator=",">
+            (#{e.taskId}, #{e.tradeDate}, #{e.nav}, #{e.equity}, #{e.cash}, #{e.marketValue},
+            #{e.positionPct}, #{e.dailyReturnPct}, #{e.cumReturnPct}, #{e.drawdownPct},
+            #{e.benchmarkClose}, #{e.benchmarkNav}, #{e.benchmarkReturnPct},
+            #{e.signalType}, #{e.signalStatus}, #{e.positionCount}, #{e.fee}, #{e.staleFlag})
+        </foreach>
+    </insert>
+
+
+    <select id="listByTaskIdAndRange" resultType="com.bebopze.tdx.quant.dal.entity.ObtDailyEquityDO">
+        SELECT e.*,
+        IFNULL(t.buy_amount, 0) AS buy_amount,
+        IFNULL(t.sell_amount, 0) AS sell_amount
+
+        FROM obt_daily_equity e
+
+        LEFT JOIN (
+        SELECT task_id,
+        trade_date,
+        SUM(CASE WHEN trade_type = 1 THEN amount ELSE 0 END) AS buy_amount,
+        SUM(CASE WHEN trade_type = 2 THEN amount ELSE 0 END) AS sell_amount
+        FROM obt_trade
+        WHERE task_id = #{taskId}
+        GROUP BY task_id, trade_date
+        ) t ON t.task_id = e.task_id AND t.trade_date = e.trade_date
+
+        WHERE e.task_id = #{taskId}
+
+        <if test="startDate != null">
+            <![CDATA[ AND e.trade_date >= #{startDate} ]]>
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[ AND e.trade_date <= #{endDate} ]]>
+        </if>
+
+        ORDER BY e.trade_date
+    </select>
+
+
+    <select id="countByTaskId" resultType="int">
+        SELECT COUNT(*)
+        FROM obt_daily_equity
+        WHERE task_id = #{taskId}
+    </select>
+
+</mapper>

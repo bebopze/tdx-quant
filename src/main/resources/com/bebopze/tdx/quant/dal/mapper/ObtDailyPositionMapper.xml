@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtDailyPositionMapper">
+
+
+    <delete id="deleteByTaskId">
+        DELETE
+        FROM obt_daily_position
+        WHERE task_id = #{taskId}
+    </delete>
+
+
+    <insert id="batchInsert">
+        INSERT INTO obt_daily_position
+        (task_id, trade_date, underlying_code, underlying_name, option_code, option_name,
+        call_put_type, strike_price, contract_month, expiry_date, multiplier, qty, avg_cost,
+        close_price, cost_amount, market_value, unrealized_pnl, pnl_pct, weight_pct,
+        hold_days, open_reason, moneyness, stale_flag)
+        VALUES
+        <foreach collection="list" item="e" separator=",">
+            (#{e.taskId}, #{e.tradeDate}, #{e.underlyingCode}, #{e.underlyingName},
+            #{e.optionCode}, #{e.optionName}, #{e.callPutType}, #{e.strikePrice},
+            #{e.contractMonth}, #{e.expiryDate}, #{e.multiplier}, #{e.qty}, #{e.avgCost},
+            #{e.closePrice}, #{e.costAmount}, #{e.marketValue}, #{e.unrealizedPnl},
+            #{e.pnlPct}, #{e.weightPct}, #{e.holdDays}, #{e.openReason}, #{e.moneyness},
+            #{e.staleFlag})
+        </foreach>
+    </insert>
+
+
+    <select id="maxTradeDate" resultType="java.time.LocalDate">
+        SELECT MAX(trade_date)
+
+        FROM obt_daily_position
+
+        WHERE task_id = #{taskId}
+    </select>
+
+
+    <select id="countByTaskIdAndTradeDate" resultType="int">
+        SELECT COUNT(*)
+
+        FROM obt_daily_position
+
+        WHERE task_id = #{taskId}
+          AND trade_date = #{tradeDate}
+    </select>
+
+
+    <select id="pageByTaskIdAndTradeDate" resultType="com.bebopze.tdx.quant.dal.entity.ObtDailyPositionDO">
+        SELECT *
+
+        FROM obt_daily_position
+
+        WHERE task_id = #{taskId}
+          AND trade_date = #{tradeDate}
+
+        ORDER BY market_value DESC
+
+        LIMIT #{offset}, #{size}
+    </select>
+
+
+    <select id="listTradeDates" resultType="java.time.LocalDate">
+        SELECT DISTINCT trade_date
+
+        FROM obt_daily_position
+
+        WHERE task_id = #{taskId}
+
+        ORDER BY trade_date
+    </select>
+
+
+    <select id="listAllByTaskId" resultType="com.bebopze.tdx.quant.dal.entity.ObtDailyPositionDO">
+        SELECT *
+
+        FROM obt_daily_position
+
+        WHERE task_id = #{taskId}
+
+        ORDER BY trade_date, option_code
+    </select>
+
+</mapper>

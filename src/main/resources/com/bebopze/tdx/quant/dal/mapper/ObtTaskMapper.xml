@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtTaskMapper">
+
+
+    <select id="lastTaskNo" resultType="java.lang.String">
+        SELECT task_no
+
+        FROM obt_task
+
+        WHERE task_no LIKE CONCAT(#{prefix}, '%')
+
+        ORDER BY task_no DESC
+        LIMIT 1
+    </select>
+
+
+    <update id="updateStatus">
+        UPDATE obt_task
+
+        <set>
+            status = #{status},
+            progress = #{progress},
+            error_msg = #{errorMsg},
+            <if test="status == 1">
+                started_at = IFNULL(started_at, NOW()),
+            </if>
+            <if test="status == 2 or status == 3 or status == 4">
+                finished_at = NOW(),
+            </if>
+        </set>
+
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="updateProgress">
+        UPDATE obt_task
+
+        SET progress = #{progress}
+
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="updateFavorite">
+        UPDATE obt_task
+
+        SET favorite_flag = #{flag}
+
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="logicDelete">
+        UPDATE obt_task
+
+        SET deleted_flag = 1
+
+        WHERE id = #{id}
+    </update>
+
+
+    <sql id="pageWhere">
+        WHERE deleted_flag = 0
+
+        <if test="keyword != null and keyword != ''">
+            AND (task_name LIKE CONCAT('%', #{keyword}, '%')
+            OR task_no LIKE CONCAT('%', #{keyword}, '%')
+            OR creator LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+
+        <if test="signalMode != null and signalMode != ''">
+            AND signal_mode = #{signalMode}
+        </if>
+
+        <if test="underlyingCode != null and underlyingCode != ''">
+            AND underlying_codes LIKE CONCAT('%', #{underlyingCode}, '%')
+        </if>
+
+        <if test="startDate != null">
+            <![CDATA[ AND end_date >= #{startDate} ]]>
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[ AND start_date <= #{endDate} ]]>
+        </if>
+    </sql>
+
+
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*)
+
+        FROM obt_task
+
+        <include refid="pageWhere"/>
+    </select>
+
+
+    <select id="pageList" resultType="com.bebopze.tdx.quant.dal.entity.ObtTaskDO">
+        SELECT *
+
+        FROM obt_task
+
+        <include refid="pageWhere"/>
+
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'id'">id</when>
+            <when test="sortBy == 'initialCapital'">initial_capital</when>
+            <when test="sortBy == 'finalEquity'">final_equity</when>
+            <when test="sortBy == 'annualReturn'">annual_return_pct</when>
+            <when test="sortBy == 'maxDD'">max_drawdown_pct</when>
+            <when test="sortBy == 'sharpe'">sharpe_ratio</when>
+            <when test="sortBy == 'winRate'">win_rate_pct</when>
+            <when test="sortBy == 'totalTrades'">total_trades</when>
+            <when test="sortBy == 'createdAt'">gmt_create</when>
+            <otherwise>total_return_pct</otherwise>
+        </choose>
+
+        <choose>
+            <when test="sortAsc">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+
+        LIMIT #{offset}, #{size}
+    </select>
+
+</mapper>

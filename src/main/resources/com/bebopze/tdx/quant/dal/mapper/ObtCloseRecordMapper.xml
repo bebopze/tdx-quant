@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtCloseRecordMapper">
+
+
+    <delete id="deleteByTaskId">
+        DELETE
+        FROM obt_close_record
+        WHERE task_id = #{taskId}
+    </delete>
+
+
+    <insert id="batchInsert">
+        INSERT INTO obt_close_record
+        (task_id, cycle_id, underlying_code, option_code, option_name, call_put_type,
+        open_date, close_date, qty, avg_cost, avg_sell_price, realized_pnl, pnl_pct,
+        hold_days, max_pnl_pct, min_pnl_pct, close_reason, close_reason_desc)
+        VALUES
+        <foreach collection="list" item="e" separator=",">
+            (#{e.taskId}, #{e.cycleId}, #{e.underlyingCode}, #{e.optionCode}, #{e.optionName},
+            #{e.callPutType}, #{e.openDate}, #{e.closeDate}, #{e.qty}, #{e.avgCost},
+            #{e.avgSellPrice}, #{e.realizedPnl}, #{e.pnlPct}, #{e.holdDays},
+            #{e.maxPnlPct}, #{e.minPnlPct}, #{e.closeReason}, #{e.closeReasonDesc})
+        </foreach>
+    </insert>
+
+
+    <sql id="pageWhere">
+        WHERE task_id = #{taskId}
+
+        <if test="closeReason != null and closeReason != ''">
+            AND close_reason = #{closeReason}
+        </if>
+
+        <if test="startDate != null">
+            <![CDATA[ AND close_date >= #{startDate} ]]>
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[ AND close_date <= #{endDate} ]]>
+        </if>
+    </sql>
+
+
+    <select id="countByTaskId" resultType="long">
+        SELECT COUNT(*)
+
+        FROM obt_close_record
+
+        <include refid="pageWhere"/>
+    </select>
+
+
+    <select id="pageByTaskId" resultType="com.bebopze.tdx.quant.dal.entity.ObtCloseRecordDO">
+        SELECT *
+
+        FROM obt_close_record
+
+        <include refid="pageWhere"/>
+
+        ORDER BY close_date DESC, id DESC
+
+        LIMIT #{offset}, #{size}
+    </select>
+
+
+    <select id="listContribution" resultType="java.util.LinkedHashMap">
+        SELECT underlying_code   AS underlyingCode,
+               SUM(realized_pnl) AS pnl,
+               COUNT(*)          AS cnt
+
+        FROM obt_close_record
+
+        WHERE task_id = #{taskId}
+
+        GROUP BY underlying_code
+
+        ORDER BY pnl DESC
+    </select>
+
+
+    <select id="avgHoldDays" resultType="java.math.BigDecimal">
+        SELECT AVG(hold_days)
+        FROM obt_close_record
+        WHERE task_id = #{taskId}
+    </select>
+
+
+    <select id="listAllByTaskId" resultType="com.bebopze.tdx.quant.dal.entity.ObtCloseRecordDO">
+        SELECT *
+
+        FROM obt_close_record
+
+        WHERE task_id = #{taskId}
+
+        ORDER BY close_date, id
+    </select>
+
+</mapper>

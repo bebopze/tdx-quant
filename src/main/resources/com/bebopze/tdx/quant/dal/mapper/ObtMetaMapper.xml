@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.ObtMetaMapper">
+
+
+    <select id="listUnderlyings" resultType="java.util.LinkedHashMap">
+        SELECT underlying_code      AS underlyingCode,
+               MIN(underlying_name) AS underlyingName,
+               underlying_type      AS underlyingType,
+               COUNT(*)             AS contractCount,
+               MIN(start_date)      AS startDate,
+               MAX(end_date)        AS endDate
+
+        FROM base_option
+
+        WHERE underlying_code IN ('159915', '588000', '510500', '510300', '000852')
+
+        GROUP BY underlying_code, underlying_type
+
+        ORDER BY underlying_code
+    </select>
+
+</mapper>
