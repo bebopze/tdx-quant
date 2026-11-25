@@ -64,6 +64,9 @@ public interface IBaseOptionService extends IService<BaseOptionDO> {
     Map<String, Long> codeIdMap();
 
 
+    Map<String, Long> codeIdMapNotExpired();
+
+
     // -----------------------------------------------------------------------------------------------------------------
 
 

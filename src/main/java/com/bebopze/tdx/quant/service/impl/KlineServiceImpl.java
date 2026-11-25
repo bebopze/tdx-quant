@@ -516,6 +516,7 @@ public class KlineServiceImpl implements KlineService {
         // --------------------- entity -> 实时行情
 
         if (CollectionUtils.isEmpty(klines)) {
+            log.warn("fillOptionKline - 通达信 [klines] 为空  ->  请 check 是否为 [过期合约]     >>>     optionCode : {}", optionCode);
             return;
         }
 
@@ -563,7 +564,7 @@ public class KlineServiceImpl implements KlineService {
         // insert ALL   ->   kline_ext_data
 
 
-        Map<String, Long> codeIdMap = baseOptionService.codeIdMap();
+        Map<String, Long> codeIdMap = baseOptionService.codeIdMapNotExpired();
 
 
         codeIdMap.keySet().parallelStream().forEach((optionCode) -> {

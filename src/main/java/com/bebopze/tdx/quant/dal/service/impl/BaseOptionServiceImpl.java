@@ -52,7 +52,7 @@ public class BaseOptionServiceImpl extends ServiceImpl<BaseOptionMapper, BaseOpt
     public Map<String, String> klineHisMapInDate(LocalDate date, String underlyingCode) {
 
         List<BaseOptionDO> klineList = baseMapper.listKlineHisInDate(date,
-                StringUtils.hasText(underlyingCode) ? underlyingCode.trim() : null);
+                                                                     StringUtils.hasText(underlyingCode) ? underlyingCode.trim() : null);
 
         Map<String, String> code_kline_map = new HashMap<>(Math.max(16, klineList.size() * 2));
         for (BaseOptionDO entity : klineList) {
@@ -96,6 +96,31 @@ public class BaseOptionServiceImpl extends ServiceImpl<BaseOptionMapper, BaseOpt
 
 
         Map<String, Long> code_id_map = entityList.stream()
+                                                  .collect(Collectors.toMap(
+                                                          BaseOptionDO::getCode,
+                                                          BaseOptionDO::getId,
+
+                                                          (existingKey, newKey) -> existingKey  // 合并函数：处理重复键（保留旧值）
+                                                  ));
+
+        return code_id_map;
+    }
+
+
+    @Override
+    public Map<String, Long> codeIdMapNotExpired() {
+
+
+        List<BaseOptionDO> entityList = baseMapper.listAllSimple();
+
+
+        LocalDate date = LocalDate.now();
+        Map<String, Long> code_id_map = entityList.stream()
+                                                  .filter(e -> {
+                                                      // 未过期：start_date  <=  date  <=  end_date
+                                                      return e.getStartDate() != null && e.getEndDate() != null
+                                                              && DateTimeUtil.between(date, e.getStartDate(), e.getEndDate());
+                                                  })
                                                   .collect(Collectors.toMap(
                                                           BaseOptionDO::getCode,
                                                           BaseOptionDO::getId,
