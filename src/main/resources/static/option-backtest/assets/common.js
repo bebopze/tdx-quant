@@ -148,13 +148,47 @@
         return el.__chart;
     }
 
+    function equityTooltip(params, data, t) {
+        const p = params && params[0];
+        if (!p) return '';
+        const i = p.dataIndex;
+        const r = data[i] || {};
+        const prev = i > 0 ? data[i - 1] : null;
+        const pnl = prev ? Number(r.equity) - Number(prev.equity) : null;
+        const pos = r.positionPct == null ? '—' : Number(r.positionPct).toFixed(2) + '%';
+        const dd = r.drawdownPct == null ? '—' : Number(r.drawdownPct).toFixed(2) + '%';
+        const row = (label, value, color) => `<span style="color:${t.axis};white-space:nowrap">${label}</span><b style="font-family:var(--mono);font-weight:600;white-space:nowrap;color:${color || t.tooltipText}">${value}</b>`;
+        return `<div style="display:inline-block;padding:7px 10px;font-size:10.5px;line-height:1.6;color:${t.tooltipText}">
+            <div style="font-weight:700;margin-bottom:3px;white-space:nowrap">${r.tradeDate || ''}</div>
+            <div style="display:inline-grid;grid-template-columns:auto auto;column-gap:8px;row-gap:0;justify-content:start;align-items:baseline">
+                ${row('策略净值', num(r.nav, 4), t.strategy)}
+                ${row('沪深300 基准', r.benchmarkNav == null ? '—' : num(r.benchmarkNav, 4), '#d9a441')}
+                ${row('日收益率', r.dailyReturnPct == null ? '—' : pct(r.dailyReturnPct), Number(r.dailyReturnPct) >= 0 ? t.up : t.down)}
+                ${row('累计收益率', r.cumReturnPct == null ? '—' : pct(r.cumReturnPct), Number(r.cumReturnPct) >= 0 ? t.up : t.down)}
+                ${row('盈亏额', pnl == null ? '—' : money(pnl), pnl == null ? t.tooltipText : pnl >= 0 ? t.up : t.down)}
+                ${row('总资金', r.equity == null ? '—' : money(r.equity))}
+                ${row('市值', r.marketValue == null ? '—' : money(r.marketValue))}
+                ${row('仓位', pos)}
+                ${row('可用', r.cash == null ? '—' : money(r.cash))}
+                ${row('买入', r.buyAmount == null ? '—' : money(r.buyAmount), t.up)}
+                ${row('卖出', r.sellAmount == null ? '—' : money(r.sellAmount), t.down)}
+                ${row('回撤', dd, Number(r.drawdownPct) < 0 ? t.down : t.tooltipText)}
+            </div>
+        </div>`;
+    }
+
     function renderEquity(el, rows) {
         const c = chart(el), t = chartTheme();
         const data = rows || [];
         c.setOption({
             animationDuration: 500,
             grid: {left: 56, right: 20, top: 34, bottom: 42},
-            tooltip: tooltip(t, {trigger: 'axis'}),
+            tooltip: tooltip(t, {
+                trigger: 'axis',
+                appendToBody: true,
+                extraCssText: 'z-index: 9999; padding: 0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18);',
+                formatter: params => equityTooltip(params, data, t)
+            }),
             legend: {
                 top: 4,
                 right: 8,
