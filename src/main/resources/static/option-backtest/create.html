@@ -122,7 +122,7 @@
                                 <div class="field"><label>标签</label><input id="tags" value="中期信号, 全标的, 基线">
                                 </div>
                             </div>
-                            <div class="field" style="margin-top:12px"><label>备注</label><textarea id="remark">默认口径：当月+次月+当季；5 档行权价；周期内合约固定；收盘价成交；到期按内在价值结算。</textarea>
+                            <div class="field" style="margin-top:12px"><label>备注</label><textarea id="remark">默认口径：当月+次月+当季；5 档行权价；每日按最新价重选；收盘价成交；到期按内在价值结算。</textarea>
                             </div>
                         </div>
                     </section>
@@ -225,8 +225,8 @@
                             </div>
                             <div class="grid-3" style="margin-top:12px">
                                 <div class="field"><label>合约集合</label><select id="fixedContracts">
-                                    <option value="true">周期内固定（推荐）</option>
-                                    <option value="false">每日按最新价重选</option>
+                                    <option value="false" selected>每日按最新价重选（推荐）</option>
+                                    <option value="true">周期内固定</option>
                                 </select></div>
                                 <div class="field"><label>平值判定</label><select id="atmMode">
                                     <option value="NEAREST">最接近标的价（推荐）</option>
@@ -277,12 +277,12 @@
                             </div>
                             <div class="grid-3" style="margin-top:12px">
                                 <div class="field"><label>加仓范围</label><select id="addScope">
-                                    <option value="ALL">全标的等权（推荐）</option>
-                                    <option value="TRIGGERED">仅触发标的</option>
+                                    <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
+                                    <option value="ALL">全标的等权</option>
                                 </select></div>
                                 <div class="field"><label>买满后止盈</label><select id="reenter">
+                                    <option value="false" selected>不再买入（推荐）</option>
                                     <option value="true">下一轮信号重新建仓</option>
-                                    <option value="false">不再买入（推荐）</option>
                                 </select></div>
                                 <div class="field"><label>备用现金</label>
                                     <div class="unit"><input id="cashReserve" type="number" value="0"><i>%</i></div>
@@ -724,6 +724,17 @@
             if (confirm('确认重置所有参数？')) location.reload();
         });
 
+        function preferRecommended() {
+            // 所有带「（推荐）」的选项统一排到第一位，并作为默认选项
+            document.querySelectorAll('select').forEach(sel => {
+                const opts = Array.from(sel.options);
+                const idx = opts.findIndex(o => o.textContent.includes('（推荐）'));
+                if (idx > 0) sel.insertBefore(opts[idx], sel.options[0]);
+                if (idx >= 0) sel.selectedIndex = 0;
+            });
+        }
+
+        preferRecommended();
         renderUnds();
         loadMeta();
         update();
