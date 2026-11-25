@@ -18,6 +18,7 @@
     </script>
 
     <script src="../js/echarts.min.js"></script>
+    <script src="../js/config.js"></script>
 </head>
 <body>
 <div class="app">
@@ -155,7 +156,10 @@
                     <button class="tab" data-tab="signal">信号事件 <span class="cnt" id="cntSignal">—</span></button>
                     <button class="tab" data-tab="param">参数与日志</button>
                     <div class="right">
-                        <select class="date-select hidden" id="posDate"></select>
+                        <div class="date-filter hidden" id="dateFilter">
+                            <input class="date-input" id="listDate" type="date" title="按日期筛选持仓 / 清仓 / 交易">
+                            <button class="mini-btn date-clear" id="btnClearDate" type="button">清除</button>
+                        </div>
                         <input class="search" id="tableSearch" placeholder="筛选当前表…">
                         <button class="mini-btn" id="btnTableExport">导出当前</button>
                     </div>
@@ -291,10 +295,7 @@
                     </div>
                 </div>
 
-                <div class="pager" id="tablePager">
-                    <div class="info" id="pageInfo">—</div>
-                    <div class="pages" id="pages"></div>
-                </div>
+                <div class="pager" id="tablePager"></div>
             </section>
         </div>
     </main>
@@ -307,7 +308,7 @@
         const id = Number(O.qs('id', 0));
         let task = null, stats = null, equity = [], signals = [], positionDates = [];
         let activeTab = 'pos', posPage = 1, posSize = 10, closedPage = 1, tradePage = 1;
-        let equityPage = 1, signalPage = 1, posDate = null, chartName = 'equity';
+        let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
         let pollTimer = null;
 
         if (!id) {
@@ -336,7 +337,7 @@
                 }
                 $('#progressWrap').classList.add('hidden');
                 positionDates = task.positionDates || [];
-                fillPosDates();
+                initDateFilter();
                 if (Number(task.status) === 3) {
                     $('#taskTitle').innerHTML = (task.taskName || '任务') + ' ' + O.statusHtml(task.status);
                     $('#taskSub').innerHTML = '<span style="color:var(--up)">失败：' + (task.errorMsg || '未知错误') + '</span>';
@@ -444,13 +445,12 @@
             }).join('') : '<div class="empty">暂无信号</div>';
         }
 
-        function fillPosDates() {
-            const sel = $('#posDate');
-            sel.innerHTML = positionDates.map(d => `<option value="${d}">${d}</option>`).join('');
-            if (positionDates.length) {
-                posDate = positionDates[positionDates.length - 1];
-                sel.value = posDate;
-            }
+        function initDateFilter() {
+            const input = $('#listDate');
+            input.value = '';
+            listDate = '';
+            input.min = task.actualStartDate || task.startDate || '';
+            input.max = task.endDate || '';
         }
 
         function fillParam() {
@@ -494,10 +494,12 @@
         async function loadTable() {
             if (activeTab === 'param') return;
             const kw = ($('#tableSearch').value || '').trim();
+            const showDate = activeTab === 'pos' || activeTab === 'closed' || activeTab === 'trade';
+            $('#dateFilter').classList.toggle('hidden', !showDate);
+
             if (activeTab === 'pos') {
-                $('#posDate').classList.remove('hidden');
                 const q = new URLSearchParams({page: posPage, size: posSize});
-                if (posDate) q.set('date', posDate);
+                if (listDate) q.set('date', listDate);
                 const data = await O.api('/api/option/backtest/' + id + '/positions?' + q);
                 renderPositions(data.list || [], kw);
                 $('#cntPos').textContent = data.total || 0;
@@ -506,7 +508,12 @@
                     loadTable();
                 });
             } else if (activeTab === 'closed') {
-                const data = await O.api('/api/option/backtest/' + id + '/closes?page=' + closedPage + '&size=' + posSize);
+                const q = new URLSearchParams({page: closedPage, size: posSize});
+                if (listDate) {
+                    q.set('from', listDate);
+                    q.set('to', listDate);
+                }
+                const data = await O.api('/api/option/backtest/' + id + '/closes?' + q);
                 renderClosed(data.list || [], kw);
                 $('#cntClosed').textContent = data.total || 0;
                 pager(data.total || 0, posSize, closedPage, p => {
@@ -514,7 +521,12 @@
                     loadTable();
                 });
             } else if (activeTab === 'trade') {
-                const data = await O.api('/api/option/backtest/' + id + '/trades?page=' + tradePage + '&size=' + posSize);
+                const q = new URLSearchParams({page: tradePage, size: posSize});
+                if (listDate) {
+                    q.set('from', listDate);
+                    q.set('to', listDate);
+                }
+                const data = await O.api('/api/option/backtest/' + id + '/trades?' + q);
                 renderTrades(data.list || [], kw);
                 $('#cntTrade').textContent = data.total || 0;
                 pager(data.total || 0, posSize, tradePage, p => {
@@ -541,13 +553,15 @@
         }
 
         function pager(total, size, page, cb) {
-            const pages = Math.max(1, Math.ceil(total / size));
-            $('#pageInfo').textContent = total ? `第 ${(page - 1) * size + 1} - ${Math.min(page * size, total)} 条 / 共 ${total} 条` : '暂无数据';
-            let ps = `<button class="pg" ${page === 1 ? 'disabled' : ''} onclick="__page(${page - 1})">‹</button>`;
-            for (let i = 1; i <= pages; i++) ps += `<button class="pg ${i === page ? 'active' : ''}" onclick="__page(${i})">${i}</button>`;
-            ps += `<button class="pg" ${page === pages ? 'disabled' : ''} onclick="__page(${page + 1})">›</button>`;
-            $('#pages').innerHTML = ps;
-            window.__page = cb;
+            O.renderPager($('#tablePager'), {
+                total, page, size, sizes: [10, 20, 50, 100],
+                onPage: cb,
+                onSize: n => {
+                    posSize = n;
+                    posPage = closedPage = tradePage = equityPage = signalPage = 1;
+                    loadTable();
+                }
+            });
         }
 
         function renderPositions(list, kw) {
@@ -665,12 +679,18 @@
             activeTab = b.dataset.tab;
             ['pos', 'closed', 'trade', 'equity', 'signal', 'param'].forEach(k => $('#pane-' + k).classList.toggle('hidden', k !== activeTab));
             $('#tablePager').classList.toggle('hidden', activeTab === 'param');
-            $('#posDate').classList.toggle('hidden', activeTab !== 'pos');
+            $('#dateFilter').classList.toggle('hidden', !['pos', 'closed', 'trade'].includes(activeTab));
             if (activeTab === 'param') loadLogs(); else loadTable();
         }));
-        $('#posDate').addEventListener('change', e => {
-            posDate = e.target.value;
-            posPage = 1;
+        $('#listDate').addEventListener('change', e => {
+            listDate = e.target.value || '';
+            posPage = closedPage = tradePage = 1;
+            loadTable();
+        });
+        $('#btnClearDate').addEventListener('click', () => {
+            $('#listDate').value = '';
+            listDate = '';
+            posPage = closedPage = tradePage = 1;
             loadTable();
         });
         $('#tableSearch').addEventListener('input', () => {
@@ -679,14 +699,14 @@
         });
         $('#btnTableExport').addEventListener('click', () => {
             const type = activeTab === 'pos' ? 'positions' : activeTab === 'closed' ? 'closes' : activeTab === 'trade' ? 'trades' : 'equity';
-            location.href = `/api/option/backtest/${id}/export?type=${type}`;
+            location.href = O.apiUrl(`/api/option/backtest/${id}/export?type=${type}`);
         });
-        $('#exportTask').href = `/api/option/backtest/${id}/export?type=task`;
+        $('#exportTask').href = O.apiUrl(`/api/option/backtest/${id}/export?type=task`);
         $('#exportPdf').addEventListener('click', e => {
             e.preventDefault();
             window.print();
         });
-        $('#exportXlsx').href = `/api/option/backtest/${id}/export?type=positions`;
+        $('#exportXlsx').href = O.apiUrl(`/api/option/backtest/${id}/export?type=positions`);
 
         window.addEventListener('obt-theme', () => {
             if (equity.length) loadChart();

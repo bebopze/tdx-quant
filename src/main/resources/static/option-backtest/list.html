@@ -18,6 +18,7 @@
     </script>
 
     <script src="../js/echarts.min.js"></script>
+    <script src="../js/config.js"></script>
 </head>
 <body>
 <div class="app">
@@ -264,15 +265,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="pager">
-                    <div class="info" id="pageInfo">—</div>
-                    <div class="pages" id="pages"></div>
-                    <select class="page-size" id="pageSize">
-                        <option value="10">10 条/页</option>
-                        <option value="20">20 条/页</option>
-                        <option value="50">50 条/页</option>
-                    </select>
-                </div>
+                <div class="pager" id="listPager"></div>
             </section>
         </div>
     </main>
@@ -332,18 +325,24 @@
                         <td class="num" style="font-size:10px;color:var(--dim)">${String(t.gmtCreate || '').slice(5, 16)}</td>
                         <td><div class="field-actions" onclick="event.stopPropagation()">
                             <button class="icon-btn" title="详情" onclick="location.href='detail.html?id=${t.id}'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
-                            <a class="icon-btn" title="导出" href="/api/option/backtest/${t.id}/export?type=task"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a>
+                            <a class="icon-btn" title="导出" href="${O.apiUrl(`/api/option/backtest/${t.id}/export?type=task`)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a>
                         </div></td>
                     </tr>`;
                 }).join('');
             }
 
-            const pages = Math.max(1, Math.ceil(total / size));
-            $('#pageInfo').textContent = total ? `第 ${start + 1} - ${Math.min(start + size, total)} 条 / 共 ${total} 条` : '暂无数据';
-            let ps = `<button class="pg" ${page === 1 ? 'disabled' : ''} onclick="go(${page - 1})">‹</button>`;
-            for (let i = 1; i <= pages; i++) ps += `<button class="pg ${i === page ? 'active' : ''}" onclick="go(${i})">${i}</button>`;
-            ps += `<button class="pg" ${page === pages ? 'disabled' : ''} onclick="go(${page + 1})">›</button>`;
-            $('#pages').innerHTML = ps;
+            O.renderPager($('#listPager'), {
+                total, page, size, sizes: [10, 20, 50, 100],
+                onPage: p => {
+                    page = p;
+                    load();
+                },
+                onSize: n => {
+                    size = n;
+                    page = 1;
+                    load();
+                }
+            });
 
             document.querySelectorAll('th.sortable').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortBy));
             renderKpi();
@@ -389,11 +388,7 @@
             page = 1;
             load();
         });
-        $('#pageSize').addEventListener('change', e => {
-            size = +e.target.value;
-            page = 1;
-            load();
-        });
+
         $('#btnExport').addEventListener('click', exportCsv);
         $('#btnExport2').addEventListener('click', exportCsv);
 

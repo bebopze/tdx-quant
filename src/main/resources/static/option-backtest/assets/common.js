@@ -11,7 +11,10 @@
     function setTheme(t) {
         t = t === 'b' ? 'b' : 'a';
         document.documentElement.setAttribute('data-theme', t);
-        try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+        try {
+            localStorage.setItem(THEME_KEY, t);
+        } catch (e) {
+        }
         const label = document.getElementById('themeLabel');
         if (label) label.textContent = t === 'a' ? 'A 终端' : 'B 专业';
         window.dispatchEvent(new CustomEvent('obt-theme', {detail: t}));
@@ -19,7 +22,10 @@
 
     function initTheme() {
         let t = 'a';
-        try { t = localStorage.getItem(THEME_KEY) || 'a'; } catch (e) {}
+        try {
+            t = localStorage.getItem(THEME_KEY) || 'a';
+        } catch (e) {
+        }
         const urlTheme = new URLSearchParams(location.search).get('theme');
         if (urlTheme === 'a' || urlTheme === 'b') t = urlTheme;
         document.documentElement.setAttribute('data-theme', t === 'b' ? 'b' : 'a');
@@ -31,8 +37,20 @@
         if (label) label.textContent = currentTheme() === 'a' ? 'A 终端' : 'B 专业';
     }
 
+    function apiUrl(path) {
+        const au = window.ApiUtils;
+        if (!au || typeof au.buildUrl !== 'function') {
+            throw new Error('ApiUtils 未加载，请检查 ../js/config.js');
+        }
+        return au.buildUrl(path);
+    }
+
     async function api(path, opts) {
-        const res = await fetch(path, Object.assign({
+        const au = window.ApiUtils;
+        if (!au || typeof au.fetch !== 'function') {
+            throw new Error('ApiUtils 未加载，请检查 ../js/config.js');
+        }
+        const res = await au.fetch(path, Object.assign({
             headers: {'Content-Type': 'application/json'}
         }, opts || {}));
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -69,7 +87,13 @@
     }
 
     function statusHtml(s) {
-        const m = {0: ['s-queued', '排队'], 1: ['s-running', '运行中'], 2: ['s-success', '成功'], 3: ['s-failed', '失败'], 4: ['s-queued', '已取消']};
+        const m = {
+            0: ['s-queued', '排队'],
+            1: ['s-running', '运行中'],
+            2: ['s-success', '成功'],
+            3: ['s-failed', '失败'],
+            4: ['s-queued', '已取消']
+        };
         const x = m[Number(s)] || ['s-queued', '未知'];
         return `<span class="status ${x[0]}"><span class="d"></span>${x[1]}</span>`;
     }
@@ -131,17 +155,32 @@
             animationDuration: 500,
             grid: {left: 56, right: 20, top: 34, bottom: 42},
             tooltip: tooltip(t, {trigger: 'axis'}),
-            legend: {top: 4, right: 8, icon: 'roundRect', itemWidth: 10, itemHeight: 3, textStyle: {color: t.axis, fontSize: 10}},
+            legend: {
+                top: 4,
+                right: 8,
+                icon: 'roundRect',
+                itemWidth: 10,
+                itemHeight: 3,
+                textStyle: {color: t.axis, fontSize: 10}
+            },
             xAxis: axis(t, {type: 'category', boundaryGap: false, data: data.map(x => x.tradeDate)}),
             yAxis: axis(t, {type: 'value', scale: true}),
-            dataZoom: [{type: 'inside'}, {type: 'slider', height: 14, bottom: 8, borderColor: 'transparent', textStyle: {color: t.axis, fontSize: 9}}],
+            dataZoom: [{type: 'inside'}, {
+                type: 'slider',
+                height: 14,
+                bottom: 8,
+                borderColor: 'transparent',
+                textStyle: {color: t.axis, fontSize: 9}
+            }],
             series: [
                 {
                     name: '策略净值', type: 'line', data: data.map(x => Number(x.nav)), showSymbol: false,
                     lineStyle: {width: 2, color: t.strategy},
-                    areaStyle: {color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        {offset: 0, color: t.area0}, {offset: 1, color: 'rgba(53,208,255,0)'}
-                    ])}
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: t.area0}, {offset: 1, color: 'rgba(53,208,255,0)'}
+                        ])
+                    }
                 },
                 {
                     name: '沪深300 基准', type: 'line', data: data.map(x => x.benchmarkNav), showSymbol: false,
@@ -163,9 +202,11 @@
                 type: 'line', showSymbol: false,
                 data: (rows || []).map(x => Number(x.drawdownPct)),
                 lineStyle: {width: 1.2, color: t.up},
-                areaStyle: {color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    {offset: 0, color: 'rgba(255,77,79,.05)'}, {offset: 1, color: 'rgba(255,77,79,.35)'}
-                ])}
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        {offset: 0, color: 'rgba(255,77,79,.05)'}, {offset: 1, color: 'rgba(255,77,79,.35)'}
+                    ])
+                }
             }]
         });
     }
@@ -229,7 +270,11 @@
             grid: {left: 128, right: 42, top: 16, bottom: 14},
             tooltip: tooltip(t, {trigger: 'axis', axisPointer: {type: 'shadow'}}),
             xAxis: axis(t, {type: 'value'}),
-            yAxis: axis(t, {type: 'category', data: data.map(x => x.reasonDesc || x.reasonCode), axisLabel: {color: t.axis, fontSize: 9}}),
+            yAxis: axis(t, {
+                type: 'category',
+                data: data.map(x => x.reasonDesc || x.reasonCode),
+                axisLabel: {color: t.axis, fontSize: 9}
+            }),
             series: [{
                 type: 'bar', barWidth: 9, data: data.map(x => Number(x.cnt)),
                 itemStyle: {borderRadius: [0, 3, 3, 0], color: t.strategy},
@@ -244,7 +289,14 @@
         c.setOption({
             animationDuration: 500,
             tooltip: tooltip(t, {trigger: 'item', formatter: '{b}<br/>收益贡献 ¥{c}'}),
-            legend: {orient: 'vertical', right: 8, top: 'center', icon: 'circle', itemWidth: 8, textStyle: {color: t.axis, fontSize: 10}},
+            legend: {
+                orient: 'vertical',
+                right: 8,
+                top: 'center',
+                icon: 'circle',
+                itemWidth: 8,
+                textStyle: {color: t.axis, fontSize: 10}
+            },
             series: [{
                 type: 'pie', radius: ['48%', '72%'], center: ['38%', '50%'],
                 itemStyle: {borderColor: t.heatBorder, borderWidth: 2},
@@ -252,6 +304,78 @@
                 color: [t.strategy, '#8b7bff', '#f3c24b', '#ff8a65', '#17c964']
             }]
         });
+    }
+
+    /**
+     * 企业级分页：首/尾页、上一页/下一页、页码窗口 + 省略号、每页条数、跳页。
+     * opts: {total, page, size, sizes, onPage, onSize}
+     */
+    function renderPager(el, opts) {
+        if (!el) return;
+        const o = opts || {};
+        const total = Math.max(0, Number(o.total) || 0);
+        const sizes = o.sizes || [10, 20, 50, 100];
+        const size = sizes.includes(Number(o.size)) ? Number(o.size) : sizes[0];
+        const pages = Math.max(1, Math.ceil(total / size));
+        const page = Math.min(Math.max(1, Number(o.page) || 1), pages);
+        const from = total ? (page - 1) * size + 1 : 0;
+        const to = total ? Math.min(page * size, total) : 0;
+
+        const nums = [];
+        if (pages <= 7) {
+            for (let i = 1; i <= pages; i++) nums.push(i);
+        } else {
+            nums.push(1);
+            const start = Math.max(2, page - 1);
+            const end = Math.min(pages - 1, page + 1);
+            if (start > 2) nums.push('...');
+            for (let i = start; i <= end; i++) nums.push(i);
+            if (end < pages - 1) nums.push('...');
+            nums.push(pages);
+        }
+
+        const btn = (p, label, dis, title, cls) =>
+            `<button type="button" class="pg ${cls || ''}" data-p="${p}" ${dis ? 'disabled' : ''} title="${title || ''}">${label}</button>`;
+
+        el.innerHTML = `
+            <div class="info">共 <b>${total.toLocaleString('zh-CN')}</b> 条${total ? ` · 当前 <b>${from}-${to}</b>` : ''}</div>
+            <div class="controls">
+                <label class="size-label">每页
+                    <select class="page-size">${sizes.map(s => `<option value="${s}" ${s === size ? 'selected' : ''}>${s}</option>`).join('')}</select>
+                    条
+                </label>
+                <div class="pages">
+                    ${btn(1, '«', page === 1, '第一页')}
+                    ${btn(page - 1, '‹', page === 1, '上一页')}
+                    ${nums.map(n => n === '...'
+            ? '<span class="pg-ellipsis">…</span>'
+            : `<button type="button" class="pg ${n === page ? 'active' : ''}" data-p="${n}">${n}</button>`).join('')}
+                    ${btn(page + 1, '›', page === pages, '下一页')}
+                    ${btn(pages, '»', page === pages, '最后一页')}
+                </div>
+                <label class="jump-label">跳至
+                    <input class="page-jump" type="number" min="1" max="${pages}" value="${page}" aria-label="跳转页码">
+                    页
+                </label>
+            </div>`;
+
+        const go = p => {
+            const next = Math.min(Math.max(1, Number(p) || 1), pages);
+            if (next !== page && typeof o.onPage === 'function') o.onPage(next);
+        };
+        el.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => go(b.dataset.p)));
+        const sel = el.querySelector('.page-size');
+        if (sel) sel.addEventListener('change', e => {
+            if (typeof o.onSize === 'function') o.onSize(Number(e.target.value));
+        });
+        const jump = el.querySelector('.page-jump');
+        if (jump) {
+            const submit = () => go(jump.value);
+            jump.addEventListener('keydown', e => {
+                if (e.key === 'Enter') submit();
+            });
+            jump.addEventListener('change', submit);
+        }
     }
 
     function csvDownload(filename, text) {
@@ -278,10 +402,10 @@
     }
 
     window.Obt = {
-        api, qs, num, money, pct, cls, statusHtml, undName,
+        api, apiUrl, qs, num, money, pct, cls, statusHtml, undName,
         initTheme, setTheme, currentTheme, chartTheme,
         renderEquity, renderDrawdown, renderDaily, renderMonthly, renderSellReasons, renderContribution,
-        csvDownload, toast
+        renderPager, csvDownload, toast
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initTheme);

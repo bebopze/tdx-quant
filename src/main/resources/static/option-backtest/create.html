@@ -18,6 +18,7 @@
     </script>
 
     <script src="../js/echarts.min.js"></script>
+    <script src="../js/config.js"></script>
 </head>
 <body>
 <div class="app">
@@ -238,8 +239,16 @@
                                 </select></div>
                             </div>
                             <div class="grid-2" style="margin-top:12px">
-                                <div class="field"><label>买入最低剩余天数 <span class="req">*</span></label><div class="unit"><input id="minBuyDte" type="number" value="30" min="1" max="120"><i>天</i></div><div class="help">DTE 少于该值的合约严禁买入，默认 30 天</div></div>
-                                <div class="field"><label>自动换月阈值 <span class="req">*</span></label><div class="unit"><input id="rollDte" type="number" value="15" min="1" max="60"><i>天</i></div><div class="help">持仓 DTE 少于该值时自动切换次月/当季/次季，默认 15 天</div></div>
+                                <div class="field"><label>买入最低剩余天数 <span class="req">*</span></label>
+                                    <div class="unit"><input id="minBuyDte" type="number" value="30" min="1"
+                                                             max="120"><i>天</i></div>
+                                    <div class="help">DTE 少于该值的合约严禁买入，默认 30 天</div>
+                                </div>
+                                <div class="field"><label>自动换月阈值 <span class="req">*</span></label>
+                                    <div class="unit"><input id="rollDte" type="number" value="15" min="1"
+                                                             max="60"><i>天</i></div>
+                                    <div class="help">持仓 DTE 少于该值时自动切换次月/当季/次季，默认 15 天</div>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -502,8 +511,10 @@
             if (!state.underlyings.length) ok = false;
             const mb = +$('#minBuyDte').value, rd = +$('#rollDte').value;
             const mf = $('#minBuyDte').closest('.field');
-            if (!(mb > rd && mb >= 1 && rd >= 1)) { mf.classList.add('invalid'); ok = false; }
-            else mf.classList.remove('invalid');
+            if (!(mb > rd && mb >= 1 && rd >= 1)) {
+                mf.classList.add('invalid');
+                ok = false;
+            } else mf.classList.remove('invalid');
             return ok;
         }
 
