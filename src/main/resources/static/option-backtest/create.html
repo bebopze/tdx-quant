@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="a">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>期权 BS 回测 · 新建任务</title>
+    <link rel="stylesheet" href="assets/common.css">
+    <script>
+        (function () {
+            var t = 'a';
+            try {
+                var q = new URLSearchParams(location.search).get('theme');
+                t = q || localStorage.getItem('obt.theme') || 'a';
+            } catch (e) {
+            }
+            document.documentElement.setAttribute('data-theme', t === 'b' ? 'b' : 'a');
+        })();
+    </script>
+
+    <script src="../js/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+    <aside class="rail">
+        <div class="logo">TDX</div>
+        <div class="r-item" onclick="location.href='list.html'" title="总览">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M3 12l9-9 9 9"/>
+                <path d="M5 10v10h14V10"/>
+            </svg>
+        </div>
+        <div class="r-item active" title="回测">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M4 19V5"/>
+                <path d="M4 19h16"/>
+                <path d="M7 15l4-5 3 3 5-7"/>
+            </svg>
+        </div>
+        <div class="r-item" title="期权">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M12 3v18"/>
+                <path d="M5 8h14"/>
+                <path d="M7 8v6"/>
+                <path d="M17 8v6"/>
+            </svg>
+        </div>
+        <div class="spacer"></div>
+        <div class="avatar">BZ</div>
+    </aside>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="mark">Q</div>
+            <div><b>TDX Quant</b><span>OPTION RESEARCH</span></div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title">回测中心</div>
+            <div class="nav-item" onclick="location.href='list.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/>
+                    <path d="M3 9h18"/>
+                </svg>
+                期权 BS 回测
+            </div>
+            <div class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                新建回测
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M4 19V5M4 19h16"/>
+                    <path d="M8 14l3-4 3 2 4-6"/>
+                </svg>
+                结果对比
+            </div>
+        </div>
+        <div class="side-foot">
+            <div class="engine-pill"><span class="dot"></span>引擎 v1.0.0 · 在线</div>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="topbar">
+            <div class="crumb"><a href="list.html">期权 BS 回测</a> <i>/</i> <b>新建任务</b></div>
+            <div class="top-right">
+                <button class="theme-btn" id="themeBtn"><span class="sw"></span><span id="themeLabel">A 终端</span>
+                </button>
+                <div class="top-user"><span class="avatar">BZ</span> bebopze</div>
+            </div>
+        </div>
+
+        <div class="page">
+            <div class="page-head">
+                <div>
+                    <h1>新建 <em>期权 BS 回测</em></h1>
+                    <div class="sub">大盘中期顶底信号 → ETF / 指数期权 · 五档行权价 × 三档月份 · 默认本金
+                        <b>¥1,000,000</b></div>
+                </div>
+                <div class="head-actions">
+                    <select id="preset" class="btn" style="padding:0 8px">
+                        <option value="default">模板：默认方案</option>
+                        <option value="conservative">模板：保守（仅实值+平值）</option>
+                        <option value="aggressive">模板：激进（5档/8%）</option>
+                    </select>
+                    <button class="btn" id="btnReset">重置</button>
+                    <button class="btn primary" id="btnCreateTop">创建并开始</button>
+                </div>
+            </div>
+
+            <div class="create-grid">
+                <div class="form-col">
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">01</span>
+                            <h3>基础信息</h3><span class="hint">任务标识与备注</span></div>
+                        <div class="sec-body">
+                            <div class="grid-2">
+                                <div class="field"><label>任务名称 <span class="req">*</span></label><input
+                                        id="taskName" value="中期信号 · 全标的 · 当月/次月/当季" maxlength="64">
+                                    <div class="err">请输入任务名称</div>
+                                </div>
+                                <div class="field"><label>标签</label><input id="tags" value="中期信号, 全标的, 基线">
+                                </div>
+                            </div>
+                            <div class="field" style="margin-top:12px"><label>备注</label><textarea id="remark">默认口径：当月+次月+当季；5 档行权价；周期内合约固定；收盘价成交；到期按内在价值结算。</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">02</span>
+                            <h3>回测区间与本金</h3><span class="hint">默认 2017-01-01 至今</span></div>
+                        <div class="sec-body">
+                            <div class="grid-3">
+                                <div class="field"><label>开始日期 <span class="req">*</span></label><input
+                                        id="startDate" type="date" value="2017-01-01">
+                                    <div class="err">开始日期不能晚于结束日期</div>
+                                </div>
+                                <div class="field"><label>结束日期 <span class="req">*</span></label><input id="endDate"
+                                                                                                            type="date"
+                                                                                                            value="2026-11-25">
+                                </div>
+                                <div class="field"><label>初始本金 <span class="req">*</span></label>
+                                    <div class="unit"><input id="capital" type="number" value="1000000" step="10000"><i>CNY</i>
+                                    </div>
+                                    <div class="quick">
+                                        <button data-cap="500000">50万</button>
+                                        <button data-cap="1000000" class="active">100万</button>
+                                        <button data-cap="2000000">200万</button>
+                                        <button data-cap="5000000">500万</button>
+                                    </div>
+                                    <div class="err">本金至少 10,000</div>
+                                </div>
+                            </div>
+                            <div class="grid-2" style="margin-top:12px">
+                                <div class="field"><label>快捷区间</label>
+                                    <div class="quick">
+                                        <button data-range="1y">近1年</button>
+                                        <button data-range="3y">近3年</button>
+                                        <button data-range="5y">近5年</button>
+                                        <button data-range="all" class="active">2017至今</button>
+                                    </div>
+                                </div>
+                                <div class="field"><label>数据覆盖</label>
+                                    <div class="help" style="margin-top:2px">目标标的最早期权 <b
+                                            style="color:var(--accent)">510300 · 2019-12-23</b>；2017-01-01 ~ 2019-12-22
+                                        空仓等待首个有效信号。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">03</span>
+                            <h3>交易标的</h3><span class="hint">已选 <b id="undCount" style="color:var(--accent)">5</b> / 5 · 等权</span>
+                            <div class="right">
+                                <button class="mini-btn" id="btnAllUnd">全选</button>
+                                <button class="mini-btn" id="btnNoneUnd">清空</button>
+                            </div>
+                        </div>
+                        <div class="sec-body">
+                            <div class="und-grid" id="undGrid"></div>
+                            <div class="help" style="margin-top:8px">中证1000 使用中金所 000852 指数期权（乘数 100）；其余为
+                                ETF 期权（乘数 10,000）。
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">04</span>
+                            <h3>信号与合约</h3><span class="hint">顶底信号 · 月份 · 行权价档位</span></div>
+                        <div class="sec-body">
+                            <div class="grid-2">
+                                <div class="field"><label>信号模式</label>
+                                    <div class="seg" id="signalSeg">
+                                        <button data-v="BOTH" class="active">顶底对称</button>
+                                        <button data-v="BOTTOM">仅中期底</button>
+                                        <button data-v="TOP">仅中期顶</button>
+                                    </div>
+                                    <div class="help">中期底买认购、中期顶买认沽；信号来自 qa_market_mid_cycle。</div>
+                                </div>
+                                <div class="field"><label>合约月份（3 档）</label>
+                                    <select id="monthMode">
+                                        <option value="NEAREST">当月 + 次月 + 当季（推荐）</option>
+                                        <option value="QUARTER">当月 + 当季 + 下季</option>
+                                        <option value="NEXT2">当月 + 次月 + 次2月</option>
+                                    </select>
+                                    <div class="help">按实际挂牌顺序取前 3 个，缺失自动顺延。</div>
+                                </div>
+                            </div>
+                            <div class="field" style="margin-top:12px"><label>行权价档位（5 档）</label>
+                                <div class="strikes" id="strikes">
+                                    <span class="stk on" data-k="ITM1"><span
+                                            class="box">✓</span>实值1 <em>ITM1</em></span>
+                                    <span class="stk on" data-k="ATM"><span class="box">✓</span>平值 <em>ATM</em></span>
+                                    <span class="stk on" data-k="OTM1"><span
+                                            class="box">✓</span>虚值1 <em>OTM1</em></span>
+                                    <span class="stk on" data-k="OTM2"><span
+                                            class="box">✓</span>虚值2 <em>OTM2</em></span>
+                                    <span class="stk on" data-k="OTM3"><span
+                                            class="box">✓</span>虚值3 <em>OTM3</em></span>
+                                </div>
+                                <div class="help">以信号日标的收盘价定档；档位不足在同月内等比再分配。</div>
+                            </div>
+                            <div class="grid-3" style="margin-top:12px">
+                                <div class="field"><label>合约集合</label><select id="fixedContracts">
+                                    <option value="true">周期内固定（推荐）</option>
+                                    <option value="false">每日按最新价重选</option>
+                                </select></div>
+                                <div class="field"><label>平值判定</label><select id="atmMode">
+                                    <option value="NEAREST">最接近标的价（推荐）</option>
+                                    <option value="LOWER">并列取较低</option>
+                                    <option value="HIGHER">并列取较高</option>
+                                </select></div>
+                                <div class="field"><label>到期处理</label><select id="expiryMode">
+                                    <option value="INTRINSIC">内在价值结算（推荐）</option>
+                                    <option value="CLOSE">最后交易日收盘平仓</option>
+                                </select></div>
+                            </div>
+                            <div class="grid-2" style="margin-top:12px">
+                                <div class="field"><label>买入最低剩余天数 <span class="req">*</span></label><div class="unit"><input id="minBuyDte" type="number" value="30" min="1" max="120"><i>天</i></div><div class="help">DTE 少于该值的合约严禁买入，默认 30 天</div></div>
+                                <div class="field"><label>自动换月阈值 <span class="req">*</span></label><div class="unit"><input id="rollDte" type="number" value="15" min="1" max="60"><i>天</i></div><div class="help">持仓 DTE 少于该值时自动切换次月/当季/次季，默认 15 天</div></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">05</span>
+                            <h3>建仓规则</h3><span class="hint">逐日 5% · 逆势 10% · 上限 100%</span></div>
+                        <div class="sec-body">
+                            <div class="grid-4">
+                                <div class="field"><label>每日建仓</label>
+                                    <div class="unit"><input id="dailyBuy" type="number" value="5"><i>%</i></div>
+                                    <div class="help">每交易日买入本金</div>
+                                </div>
+                                <div class="field"><label>逆势加仓</label>
+                                    <div class="unit"><input id="addBuy" type="number" value="10"><i>%</i></div>
+                                    <div class="help">每次触发加仓</div>
+                                </div>
+                                <div class="field"><label>触发步长</label>
+                                    <div class="unit"><input id="addStep" type="number" value="5"><i>%</i></div>
+                                    <div class="help">每 ±5% 触发一次</div>
+                                </div>
+                                <div class="field"><label>仓位上限</label>
+                                    <div class="unit"><input id="maxPos" type="number" value="100"><i>%</i></div>
+                                    <div class="help">累计成本上限</div>
+                                </div>
+                            </div>
+                            <div class="grid-3" style="margin-top:12px">
+                                <div class="field"><label>加仓范围</label><select id="addScope">
+                                    <option value="ALL">全标的等权（推荐）</option>
+                                    <option value="TRIGGERED">仅触发标的</option>
+                                </select></div>
+                                <div class="field"><label>买满后止盈</label><select id="reenter">
+                                    <option value="true">下一轮信号重新建仓</option>
+                                    <option value="false">不再买入（推荐）</option>
+                                </select></div>
+                                <div class="field"><label>备用现金</label>
+                                    <div class="unit"><input id="cashReserve" type="number" value="0"><i>%</i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">06</span>
+                            <h3>卖出规则</h3><span class="hint">逐条启用 · 按优先级执行</span>
+                            <div class="right">
+                                <button class="mini-btn" id="btnAllRule">全部启用</button>
+                            </div>
+                        </div>
+                        <div class="sec-body">
+                            <div class="rules" id="rules">
+                                <div class="rule"><span class="idx">1</span><span class="nm">右侧卖·清仓</span><span
+                                        class="co">MA10空 / SSF空 / 下MA20 / MA20空</span><span class="param"><input
+                                        class="pct" value="100"><i>%</i></span><span class="switch on"
+                                                                                     data-rule="right"></span></div>
+                                <div class="rule"><span class="idx">2</span><span class="nm">左侧卖2</span><span
+                                        class="co">下MA5 / MA5空 / 下MA10</span><span class="param"><input class="pct"
+                                                                                                           value="30"><i>%</i></span><span
+                                        class="switch on" data-rule="left2"></span></div>
+                                <div class="rule"><span class="idx">3</span><span class="nm">左侧卖1</span><span
+                                        class="co">自首次顶信号起，标的每下跌 5%</span><span class="param"><input
+                                        class="pct" value="30"><i>%</i></span><span class="switch on"
+                                                                                    data-rule="left1"></span></div>
+                                <div class="rule"><span class="idx">4</span><span class="nm">强势卖出</span><span
+                                        class="co">自首次顶信号起，标的每上涨 5%</span><span class="param"><input
+                                        class="pct" value="20"><i>%</i></span><span class="switch on"
+                                                                                    data-rule="strong"></span></div>
+                                <div class="rule"><span class="idx">5</span><span class="nm">信号卖出</span><span
+                                        class="co">顶周期内每个交易日等比减仓</span><span class="param"><input
+                                        class="pct" value="10"><i>%</i></span><span class="switch on"
+                                                                                    data-rule="signal"></span></div>
+                                <div class="rule"><span class="idx">6</span><span class="nm">账户止盈</span><span
+                                        class="co">账户每盈利 50%，全部期权等比减仓</span><span class="param"><input
+                                        class="pct" value="10"><i>%</i></span><span class="switch on"
+                                                                                    data-rule="account"></span></div>
+                                <div class="rule"><span class="idx">7</span><span class="nm">单票止盈</span><span
+                                        class="co">单合约每盈利 100%，该合约减仓</span><span class="param"><input
+                                        class="pct" value="10"><i>%</i></span><span class="switch on"
+                                                                                    data-rule="single"></span></div>
+                            </div>
+                            <div class="grid-4" style="margin-top:11px">
+                                <div class="field"><label>MA5</label><input value="5" disabled></div>
+                                <div class="field"><label>MA10</label><input value="10" disabled></div>
+                                <div class="field"><label>MA20</label><input value="20" disabled></div>
+                                <div class="field"><label>SSF</label><input value="TdxExtFun.SSF" disabled></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="sec-head"><span class="sec-no">07</span>
+                            <h3>费用、基准与高级</h3><span class="hint">默认收盘价成交</span></div>
+                        <div class="sec-body">
+                            <div class="grid-4">
+                                <div class="field"><label>佣金（元/张/边）</label>
+                                    <div class="unit"><input id="commission" type="number" value="2.5"
+                                                             step="0.5"><i>¥</i></div>
+                                </div>
+                                <div class="field"><label>滑点</label>
+                                    <div class="unit"><input id="slippage" type="number" value="0"><i>bps</i></div>
+                                </div>
+                                <div class="field"><label>基准</label><select id="benchmark">
+                                    <option value="510300">沪深300ETF（510300）</option>
+                                    <option value="EQUAL">等权标的组合</option>
+                                </select></div>
+                                <div class="field"><label>无风险利率</label>
+                                    <div class="unit"><input id="rf" type="number" value="2"><i>%</i></div>
+                                </div>
+                            </div>
+                            <div class="grid-3" style="margin-top:12px">
+                                <div class="field"><label>引擎版本</label><input value="OptionBsBacktest v1.0.0"
+                                                                                 disabled></div>
+                                <div class="field"><label>数据版本</label><input id="dataVersion" value="base_option"
+                                                                                 disabled></div>
+                                <div class="field"><label>年化口径</label><select id="annualize">
+                                    <option value="true">365 自然日（推荐）</option>
+                                    <option value="false">252 交易日</option>
+                                </select></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="footer-bar">
+                        <span class="hint">参数将写入 <b style="color:var(--text-2)">obt_task.params_json</b>；创建后可在详情页重跑或导出。</span>
+                        <div class="right">
+                            <button class="btn" id="btnSave">保存草稿</button>
+                            <button class="btn primary" id="btnCreate">创建并开始回测</button>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="side-col">
+                    <div class="sum">
+                        <div class="sum-head"><h3>配置预估</h3><span class="live">LIVE</span></div>
+                        <div class="sum-body">
+                            <div class="hero"><span id="sumContracts">75</span><span>个合约/期</span></div>
+                            <div class="kv">
+                                <div class="r"><span class="k">交易标的</span><span class="v" id="sumUnd">5 个</span>
+                                </div>
+                                <div class="r"><span class="k">月份 × 档位</span><span class="v"
+                                                                                       id="sumGrid">3 × 5</span></div>
+                                <div class="r"><span class="k">每日建仓</span><span class="v hl"
+                                                                                    id="sumDaily">¥50,000</span></div>
+                                <div class="r"><span class="k">逆势单次加仓</span><span class="v"
+                                                                                        id="sumAdd">¥100,000</span>
+                                </div>
+                                <div class="r"><span class="k">满仓约需</span><span class="v"
+                                                                                    id="sumDays">20 个交易日</span>
+                                </div>
+                                <div class="r"><span class="k">首批有效信号</span><span class="v">2020-01-02 · 顶</span>
+                                </div>
+                                <div class="r"><span class="k">数据范围</span><span class="v"
+                                                                                    id="sumData">~1.2M 根日K</span>
+                                </div>
+                            </div>
+                            <div class="alloc">
+                                <div class="t"><span>标的资金分配</span><b>等权</b></div>
+                                <div class="alloc-bar" id="allocBar"></div>
+                                <div class="alloc-legend" id="allocLegend"></div>
+                            </div>
+                        </div>
+                        <div class="sum-actions">
+                            <button class="btn primary" id="btnCreate2">创建并开始回测</button>
+                            <div class="row">
+                                <button class="btn" id="btnSave2">保存草稿</button>
+                                <button class="btn" id="btnTemplate">存为模板</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sum">
+                        <div class="sum-head"><h3>校验与提示</h3></div>
+                        <div class="sum-body" style="padding-top:11px">
+                            <div class="check-box ok" id="validOk">✓ 参数校验通过，可以创建</div>
+                            <div class="tips">
+                                <div><b>2017-01-01 ~ 2019-12-22</b> 无目标期权，空仓等待首个有效信号。</div>
+                                <div><b>000852</b> 为指数期权（乘数 100），指数K线来自缓存/腾讯。</div>
+                                <div>仅使用有成交量且距到期 ≥3 天的合约，避免占位K线。</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="assets/common.js"></script>
+<script>
+    (function () {
+        const O = window.Obt;
+        const $ = s => document.querySelector(s);
+        const $$ = s => Array.from(document.querySelectorAll(s));
+        const CODES = ['159915', '588000', '510500', '510300', '000852'];
+        const state = {underlyings: CODES.slice(), strikes: ['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']};
+        const META = {
+            '159915': {name: '创业板ETF易方达', market: '深交所', start: '2022-09-19', contracts: 2014},
+            '588000': {name: '科创50ETF华夏', market: '上交所', start: '2023-06-05', contracts: 1368},
+            '510500': {name: '中证500ETF南方', market: '上交所', start: '2022-09-19', contracts: 1840},
+            '510300': {name: '沪深300ETF华泰柏瑞', market: '上交所', start: '2019-12-23', contracts: 2860},
+            '000852': {name: '中证1000', market: '中金所', start: '2022-07-22', contracts: 3366}
+        };
+
+        function renderUnds() {
+            $('#undGrid').innerHTML = CODES.map(code => {
+                const m = META[code];
+                const on = state.underlyings.includes(code);
+                return `<div class="und-card ${on ? 'on' : ''}" data-code="${code}">
+                    <span class="ck">${on ? '✓' : ''}</span>
+                    <div class="nm">${m.name}</div>
+                    <div class="cd">${code} · ${m.market}</div>
+                    <div class="meta"><span>起始 <b>${m.start.slice(0, 7)}</b></span><span><b>${O.num(m.contracts)}</b> 合约</span></div>
+                </div>`;
+            }).join('');
+            $$('#undGrid .und-card').forEach(c => c.addEventListener('click', () => {
+                const code = c.dataset.code, i = state.underlyings.indexOf(code);
+                if (i >= 0) {
+                    if (state.underlyings.length === 1) return O.toast('至少保留 1 个标的');
+                    state.underlyings.splice(i, 1);
+                } else state.underlyings.push(code);
+                renderUnds();
+                update();
+            }));
+        }
+
+        async function loadMeta() {
+            try {
+                const list = await O.api('/api/option/backtest/underlyings');
+                (list || []).forEach(r => {
+                    const code = r.underlyingCode;
+                    if (META[code]) {
+                        META[code].contracts = Number(r.contractCount || META[code].contracts);
+                        META[code].start = r.startDate || META[code].start;
+                        if (r.underlyingName && !META[code].name) META[code].name = r.underlyingName;
+                    }
+                });
+                renderUnds();
+                update();
+            } catch (e) { /* 离线时用默认元数据 */
+            }
+        }
+
+        function valid() {
+            const name = $('#taskName').value.trim(), cap = +$('#capital').value;
+            const sd = $('#startDate').value, ed = $('#endDate').value;
+            let ok = true;
+            const nf = $('#taskName').closest('.field');
+            if (!name) {
+                nf.classList.add('invalid');
+                ok = false;
+            } else nf.classList.remove('invalid');
+            const cf = $('#capital').closest('.field');
+            if (!(cap >= 10000)) {
+                cf.classList.add('invalid');
+                ok = false;
+            } else cf.classList.remove('invalid');
+            const sf = $('#startDate').closest('.field');
+            if (sd && ed && sd > ed) {
+                sf.classList.add('invalid');
+                ok = false;
+            } else sf.classList.remove('invalid');
+            if (!state.underlyings.length) ok = false;
+            const mb = +$('#minBuyDte').value, rd = +$('#rollDte').value;
+            const mf = $('#minBuyDte').closest('.field');
+            if (!(mb > rd && mb >= 1 && rd >= 1)) { mf.classList.add('invalid'); ok = false; }
+            else mf.classList.remove('invalid');
+            return ok;
+        }
+
+        function update() {
+            const cap = +$('#capital').value || 0;
+            const daily = (+$('#dailyBuy').value || 0) / 100;
+            const add = (+$('#addBuy').value || 0) / 100;
+            const maxPos = (+$('#maxPos').value || 0) / 100;
+            $('#sumUnd').textContent = state.underlyings.length + ' 个';
+            $('#undCount').textContent = state.underlyings.length;
+            $('#sumGrid').textContent = '3 × ' + state.strikes.length;
+            $('#sumContracts').textContent = state.underlyings.length * 3 * state.strikes.length;
+            $('#sumDaily').textContent = O.money(cap * daily);
+            $('#sumAdd').textContent = O.money(cap * add);
+            $('#sumDays').textContent = (daily > 0 ? Math.ceil(maxPos / daily) : 0) + ' 个交易日';
+            $('#sumData').textContent = state.underlyings.length >= 5 ? '~1.2M 根日K' : '~' + (state.underlyings.length * 0.24).toFixed(1) + 'M 根日K';
+            const colors = ['#35d0ff', '#8b7bff', '#f3c24b', '#17c964', '#ff8a65'];
+            const names = state.underlyings.map(c => META[c].name);
+            if (names.length) {
+                const w = 100 / names.length;
+                $('#allocBar').innerHTML = names.map((n, i) => `<i style="width:${w}%;background:${colors[i % colors.length]}"></i>`).join('');
+                $('#allocLegend').innerHTML = names.map((n, i) => `<span><i style="background:${colors[i % colors.length]}"></i>${n} ${w.toFixed(0)}%</span>`).join('');
+            } else {
+                $('#allocBar').innerHTML = '';
+                $('#allocLegend').innerHTML = '<span style="color:var(--up)">至少选择 1 个标的</span>';
+            }
+            const ok = valid();
+            const v = $('#validOk');
+            v.className = 'check-box ' + (ok ? 'ok' : 'bad');
+            v.textContent = ok ? '✓ 参数校验通过，可以创建' : '! 存在必填项/参数错误，请检查标红字段';
+            $('#btnCreate').disabled = !ok;
+            $('#btnCreate2').disabled = !ok;
+            $('#btnCreateTop').disabled = !ok;
+        }
+
+        function collect() {
+            const p = {
+                taskName: $('#taskName').value.trim(),
+                tags: $('#tags').value.split(',').map(x => x.trim()).filter(Boolean),
+                remark: $('#remark').value,
+                startDate: $('#startDate').value,
+                endDate: $('#endDate').value,
+                initialCapital: +$('#capital').value,
+                underlyingCodes: state.underlyings.slice(),
+                signalMode: $('#signalSeg .active').dataset.v,
+                monthMode: $('#monthMode').value,
+                strikes: state.strikes.slice(),
+                dailyBuyPct: (+$('#dailyBuy').value) / 100,
+                addBuyPct: (+$('#addBuy').value) / 100,
+                addStepPct: (+$('#addStep').value) / 100,
+                maxPositionPct: (+$('#maxPos').value) / 100,
+                cashReservePct: (+$('#cashReserve').value) / 100,
+                addScope: $('#addScope').value,
+                reenterOnNewCycle: $('#reenter').value === 'true',
+                fixedContracts: $('#fixedContracts').value === 'true',
+                atmMode: $('#atmMode').value,
+                minBuyDteDays: +$('#minBuyDte').value,
+                rollDteDays: +$('#rollDte').value,
+                expiryMode: $('#expiryMode').value,
+                commissionPerContract: +$('#commission').value,
+                slippageBps: +$('#slippage').value,
+                benchmarkCode: $('#benchmark').value === 'EQUAL' ? '510300' : $('#benchmark').value,
+                rf: (+$('#rf').value) / 100,
+                annualize365: $('#annualize').value === 'true',
+                creator: 'bebopze',
+                engineVersion: 'v1.0.0'
+            };
+            const rulePct = {};
+            $$('#rules .rule').forEach(r => {
+                rulePct[r.querySelector('.switch').dataset.rule] = (+r.querySelector('.param input').value) / 100;
+            });
+            p.enableRight = $('#rules .switch[data-rule="right"]').classList.contains('on');
+            p.enableLeft2 = $('#rules .switch[data-rule="left2"]').classList.contains('on');
+            p.enableLeft1 = $('#rules .switch[data-rule="left1"]').classList.contains('on');
+            p.enableStrong = $('#rules .switch[data-rule="strong"]').classList.contains('on');
+            p.enableSignalSell = $('#rules .switch[data-rule="signal"]').classList.contains('on');
+            p.enableAccountTp = $('#rules .switch[data-rule="account"]').classList.contains('on');
+            p.enableSingleTp = $('#rules .switch[data-rule="single"]').classList.contains('on');
+            p.left2SellPct = rulePct.left2;
+            p.left1SellPct = rulePct.left1;
+            p.strongSellPct = rulePct.strong;
+            p.signalSellDailyPct = rulePct.signal;
+            p.accountTpReducePct = rulePct.account;
+            p.singleTpReducePct = rulePct.single;
+            p.singleTpStepPct = 1.0;
+            p.accountTpStepPct = 0.5;
+            return p;
+        }
+
+        async function create() {
+            if (!valid()) return O.toast('请先修正标红字段');
+            const btn = $('#btnCreate');
+            btn.disabled = true;
+            btn.textContent = '创建中…';
+            try {
+                const data = await O.api('/api/option/backtest/run', {method: 'POST', body: JSON.stringify(collect())});
+                O.toast('任务已创建：' + data.taskNo + '，正在跳转…');
+                setTimeout(() => location.href = 'detail.html?id=' + data.taskId, 700);
+            } catch (e) {
+                O.toast('创建失败：' + e.message);
+                btn.disabled = false;
+                btn.textContent = '创建并开始回测';
+            }
+        }
+
+        $$('#signalSeg button').forEach(b => b.addEventListener('click', () => {
+            $$('#signalSeg button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            update();
+        }));
+        $$('#strikes .stk').forEach(s => s.addEventListener('click', () => {
+            const k = s.dataset.k, i = state.strikes.indexOf(k);
+            if (i >= 0) {
+                if (state.strikes.length === 1) return O.toast('至少保留 1 个档位');
+                state.strikes.splice(i, 1);
+                s.classList.remove('on');
+                s.querySelector('.box').textContent = '';
+            } else {
+                state.strikes.push(k);
+                s.classList.add('on');
+                s.querySelector('.box').textContent = '✓';
+            }
+            update();
+        }));
+        $$('#rules .switch').forEach(sw => sw.addEventListener('click', () => {
+            sw.classList.toggle('on');
+            sw.closest('.rule').classList.toggle('off', !sw.classList.contains('on'));
+            update();
+        }));
+        $('#btnAllRule').addEventListener('click', () => $$('#rules .switch').forEach(sw => {
+            sw.classList.add('on');
+            sw.closest('.rule').classList.remove('off');
+        }));
+        $('#btnAllUnd').addEventListener('click', () => {
+            state.underlyings = CODES.slice();
+            renderUnds();
+            update();
+        });
+        $('#btnNoneUnd').addEventListener('click', () => {
+            state.underlyings = [];
+            renderUnds();
+            update();
+        });
+        $$('.quick [data-cap]').forEach(b => b.addEventListener('click', () => {
+            $('#capital').value = b.dataset.cap;
+            $$('.quick [data-cap]').forEach(x => x.classList.toggle('active', x === b));
+            update();
+        }));
+        $$('.quick [data-range]').forEach(b => b.addEventListener('click', () => {
+            $$('.quick [data-range]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            const end = new Date('2026-11-25');
+            if (b.dataset.range === 'all') $('#startDate').value = '2017-01-01';
+            else {
+                const d = new Date(end), y = {'1y': 1, '3y': 3, '5y': 5}[b.dataset.range];
+                d.setFullYear(d.getFullYear() - y);
+                $('#startDate').value = d.toISOString().slice(0, 10);
+            }
+            update();
+        }));
+        ['capital', 'dailyBuy', 'addBuy', 'addStep', 'maxPos', 'startDate', 'endDate', 'cashReserve', 'minBuyDte', 'rollDte'].forEach(id => $('#' + id).addEventListener('input', update));
+        $('#preset').addEventListener('change', e => {
+            if (e.target.value === 'conservative') {
+                $('#dailyBuy').value = 5;
+                $('#addBuy').value = 5;
+                $('#addStep').value = 8;
+                $('#maxPos').value = 60;
+                setStrikes(['ITM1', 'ATM']);
+            } else if (e.target.value === 'aggressive') {
+                $('#dailyBuy').value = 8;
+                $('#addBuy').value = 15;
+                $('#addStep').value = 5;
+                $('#maxPos').value = 100;
+                setStrikes(['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']);
+            } else {
+                $('#dailyBuy').value = 5;
+                $('#addBuy').value = 10;
+                $('#addStep').value = 5;
+                $('#maxPos').value = 100;
+                setStrikes(['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']);
+            }
+            update();
+        });
+
+        function setStrikes(list) {
+            state.strikes = list.slice();
+            $$('#strikes .stk').forEach(s => {
+                const on = list.includes(s.dataset.k);
+                s.classList.toggle('on', on);
+                s.querySelector('.box').textContent = on ? '✓' : '';
+            });
+        }
+
+        $('#btnCreate').addEventListener('click', create);
+        $('#btnCreate2').addEventListener('click', create);
+        $('#btnCreateTop').addEventListener('click', create);
+        $('#btnSave').addEventListener('click', () => {
+            try {
+                localStorage.setItem('obt.create.draft', JSON.stringify(collect()));
+                O.toast('草稿已保存（本地）');
+            } catch (e) {
+            }
+        });
+        $('#btnSave2').addEventListener('click', () => $('#btnSave').click());
+        $('#btnTemplate').addEventListener('click', () => O.toast('模板已保存（本地）'));
+        $('#btnReset').addEventListener('click', () => {
+            if (confirm('确认重置所有参数？')) location.reload();
+        });
+
+        renderUnds();
+        loadMeta();
+        update();
+    })();
+</script>
+</body>
+</html>

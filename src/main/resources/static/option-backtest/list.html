@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="a">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>期权 BS 回测 · 任务列表</title>
+    <link rel="stylesheet" href="assets/common.css">
+    <script>
+        (function () {
+            var t = 'a';
+            try {
+                var q = new URLSearchParams(location.search).get('theme');
+                t = q || localStorage.getItem('obt.theme') || 'a';
+            } catch (e) {
+            }
+            document.documentElement.setAttribute('data-theme', t === 'b' ? 'b' : 'a');
+        })();
+    </script>
+
+    <script src="../js/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+    <aside class="rail">
+        <div class="logo">TDX</div>
+        <div class="r-item" title="总览">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M3 12l9-9 9 9"/>
+                <path d="M5 10v10h14V10"/>
+            </svg>
+        </div>
+        <div class="r-item active" title="回测">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M4 19V5"/>
+                <path d="M4 19h16"/>
+                <path d="M7 15l4-5 3 3 5-7"/>
+            </svg>
+        </div>
+        <div class="r-item" title="期权">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M12 3v18"/>
+                <path d="M5 8h14"/>
+                <path d="M7 8v6"/>
+                <path d="M17 8v6"/>
+            </svg>
+        </div>
+        <div class="r-item" title="信号">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M3 17l5-6 4 3 6-8"/>
+                <path d="M14 6h5v5"/>
+            </svg>
+        </div>
+        <div class="spacer"></div>
+        <div class="avatar">BZ</div>
+    </aside>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="mark">Q</div>
+            <div><b>TDX Quant</b><span>OPTION RESEARCH</span></div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title">回测中心</div>
+            <div class="nav-item active" onclick="location.href='list.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/>
+                    <path d="M3 9h18"/>
+                </svg>
+                期权 BS 回测
+            </div>
+            <div class="nav-item" onclick="location.href='create.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                新建回测
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M4 19V5M4 19h16"/>
+                    <path d="M8 14l3-4 3 2 4-6"/>
+                </svg>
+                结果对比
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M4 6h16M4 12h10M4 18h7"/>
+                </svg>
+                策略模板
+            </div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title">数据与信号</div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M3 17l5-6 4 3 6-8"/>
+                    <path d="M14 6h5v5"/>
+                </svg>
+                大盘顶底信号
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <circle cx="12" cy="12" r="8"/>
+                    <path d="M8 12h8"/>
+                </svg>
+                期权合约库
+            </div>
+        </div>
+        <div class="side-foot">
+            <div class="engine-pill"><span class="dot"></span>引擎 v1.0.0 · 在线</div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="crumb">量化研究 <i>/</i> 回测中心 <i>/</i> <b>期权 BS 回测</b></div>
+            <div class="top-right">
+                <button class="theme-btn" id="themeBtn" title="切换 A 终端 / B 专业模式">
+                    <span class="sw"></span><span id="themeLabel">A 终端</span>
+                </button>
+                <div class="top-user"><span class="avatar">BZ</span> bebopze</div>
+            </div>
+        </div>
+
+        <div class="page">
+            <div class="page-head">
+                <div>
+                    <h1>期权 <em>BS 回测</em> 任务</h1>
+                    <div class="sub">大盘中期顶底信号驱动 · ETF / 指数期权 · 五档行权价 × 三档月份 · 本金 ¥1,000,000
+                    </div>
+                </div>
+                <div class="head-actions">
+                    <button class="btn ghost" id="btnExport">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M12 3v12M7 10l5 5 5-5"/>
+                            <path d="M4 21h16"/>
+                        </svg>
+                        导出列表
+                    </button>
+                    <a class="btn primary" href="create.html">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        新建回测</a>
+                </div>
+            </div>
+
+            <div class="kpis">
+                <div class="kpi">
+                    <div class="k-label">累计任务</div>
+                    <div class="k-val" id="kpiTotal">—</div>
+                    <div class="k-sub" id="kpiTotalSub">当前筛选</div>
+                </div>
+                <div class="kpi">
+                    <div class="k-label">成功 / 运行中</div>
+                    <div class="k-val" id="kpiRun">—</div>
+                    <div class="k-sub" id="kpiRunSub">—</div>
+                </div>
+                <div class="kpi">
+                    <div class="k-label">平均年化</div>
+                    <div class="k-val up" id="kpiAvg">—</div>
+                    <div class="k-sub">当前筛选任务</div>
+                </div>
+                <div class="kpi">
+                    <div class="k-label">最佳总收益</div>
+                    <div class="k-val up" id="kpiBest">—</div>
+                    <div class="k-sub" id="kpiBestSub">—</div>
+                </div>
+            </div>
+
+            <section class="panel" style="margin-bottom:12px">
+                <div class="panel-head"><h3>筛选条件</h3><span class="hint">任务名 / 任务号 / 创建人</span>
+                    <div class="right">
+                        <button class="mini-btn" id="btnReset">重置</button>
+                    </div>
+                </div>
+                <div style="padding:13px 15px 15px;display:flex;flex-wrap:wrap;gap:11px;align-items:flex-end">
+                    <div class="field" style="min-width:220px"><label>关键字</label><input id="kw"
+                                                                                           placeholder="任务名称 / 任务号 / 创建人">
+                    </div>
+                    <div class="field" style="min-width:120px"><label>状态</label>
+                        <select id="status">
+                            <option value="">全部</option>
+                            <option value="0">排队</option>
+                            <option value="1">运行中</option>
+                            <option value="2">成功</option>
+                            <option value="3">失败</option>
+                            <option value="4">取消</option>
+                        </select>
+                    </div>
+                    <div class="field" style="min-width:120px"><label>信号模式</label>
+                        <select id="signalMode">
+                            <option value="">全部</option>
+                            <option value="BOTH">顶底对称</option>
+                            <option value="BOTTOM">仅中期底</option>
+                            <option value="TOP">仅中期顶</option>
+                        </select>
+                    </div>
+                    <div class="field" style="min-width:130px"><label>标的</label>
+                        <select id="underlying">
+                            <option value="">全部</option>
+                            <option value="159915">创业板ETF</option>
+                            <option value="588000">科创50</option>
+                            <option value="510500">中证500</option>
+                            <option value="510300">沪深300</option>
+                            <option value="000852">中证1000</option>
+                        </select>
+                    </div>
+                    <div class="field" style="min-width:135px"><label>区间起</label><input id="startDate" type="date">
+                    </div>
+                    <div class="field" style="min-width:135px"><label>区间止</label><input id="endDate" type="date">
+                    </div>
+                    <div class="field" style="min-width:150px"><label>排序</label>
+                        <select id="sortBy">
+                            <option value="totalReturn">总收益率</option>
+                            <option value="annualReturn">年化收益</option>
+                            <option value="maxDD">最大回撤</option>
+                            <option value="sharpe">夏普</option>
+                            <option value="createdAt">创建时间</option>
+                        </select>
+                    </div>
+                    <button class="btn primary" id="btnSearch">查询</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <h3>回测记录</h3><span class="hint" id="count">—</span>
+                    <div class="right">
+                        <button class="mini-btn" id="btnExport2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2">
+                                <path d="M12 3v12M7 10l5 5 5-5"/>
+                                <path d="M4 21h16"/>
+                            </svg>
+                            CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th style="width:26px"></th>
+                            <th class="sortable" data-k="id">任务 <span class="arrow">▼</span></th>
+                            <th>回测区间</th>
+                            <th>标的</th>
+                            <th class="sortable r" data-k="initialCapital">本金 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="finalEquity">期末权益 <span class="arrow">▼</span></th>
+                            <th class="sortable sorted r" data-k="totalReturn">总收益 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="annualReturn">年化 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="maxDD">最大回撤 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="sharpe">夏普 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="winRate">胜率 <span class="arrow">▼</span></th>
+                            <th class="sortable r" data-k="totalTrades">笔数 <span class="arrow">▼</span></th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th style="width:66px"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbody">
+                        <tr>
+                            <td colspan="15" class="loading"><span class="spinner"></span>加载中…</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pager">
+                    <div class="info" id="pageInfo">—</div>
+                    <div class="pages" id="pages"></div>
+                    <select class="page-size" id="pageSize">
+                        <option value="10">10 条/页</option>
+                        <option value="20">20 条/页</option>
+                        <option value="50">50 条/页</option>
+                    </select>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+<script src="assets/common.js"></script>
+<script>
+    (function () {
+        const O = window.Obt;
+        let page = 1, size = 10, sortBy = 'totalReturn', sortDir = 'desc';
+        let rows = [], total = 0;
+
+        const $ = s => document.querySelector(s);
+
+        async function load() {
+            $('#tbody').innerHTML = '<tr><td colspan="15" class="loading"><span class="spinner"></span>加载中…</td></tr>';
+            try {
+                const params = new URLSearchParams({page, size, sortBy, sortDir});
+                ['kw', 'status', 'signalMode', 'underlying', 'startDate', 'endDate'].forEach(id => {
+                    const v = $('#' + id).value.trim();
+                    if (v) {
+                        const key = id === 'underlying' ? 'underlyingCode' : id;
+                        params.set(key, v);
+                    }
+                });
+                const data = await O.api('/api/option/backtest/page?' + params.toString());
+                rows = data.list || [];
+                total = data.total || 0;
+                render();
+            } catch (e) {
+                $('#tbody').innerHTML = '<tr><td colspan="15" class="empty">加载失败：' + e.message + '<br><span class="muted">请确认服务已重启并已创建 obt_* 表</span></td></tr>';
+            }
+        }
+
+        function render() {
+            $('#count').textContent = total + ' 条';
+            const start = (page - 1) * size;
+            if (!rows.length) {
+                $('#tbody').innerHTML = '<tr><td colspan="15" class="empty">暂无回测记录，点击右上角「新建回测」开始</td></tr>';
+            } else {
+                $('#tbody').innerHTML = rows.map(t => {
+                    const unds = String(t.underlyingCodes || '').split(',').filter(Boolean).slice(0, 3)
+                        .map(c => `<span class="und">${O.undName(c)}</span>`).join('');
+                    return `<tr onclick="location.href='detail.html?id=${t.id}'">
+                        <td><span class="fav ${t.favoriteFlag == 1 ? 'on' : ''}" onclick="event.stopPropagation();fav(${t.id},${t.favoriteFlag == 1 ? 0 : 1})">${t.favoriteFlag == 1 ? '★' : '☆'}</span></td>
+                        <td><div class="task-cell"><span class="task-name">${esc(t.taskName)}</span><span class="task-id">${esc(t.taskNo)} · ${esc(t.signalMode || '')} · ${esc(t.monthMode || '')}</span></div></td>
+                        <td class="num" style="font-size:10.5px;color:var(--muted)">${short(t.startDate)} → ${short(t.endDate)}</td>
+                        <td><div class="und-chips">${unds || '—'}</div></td>
+                        <td class="num r">${O.money(t.initialCapital)}</td>
+                        <td class="num r" style="color:var(--text)">${O.money(t.finalEquity)}</td>
+                        <td class="num r ${O.cls(t.totalReturnPct)}" style="font-weight:700">${O.pct(t.totalReturnPct)}</td>
+                        <td class="num r ${O.cls(t.annualReturnPct)}">${O.pct(t.annualReturnPct)}</td>
+                        <td class="num r" style="color:var(--up)">${t.maxDrawdownPct == null ? '—' : Number(t.maxDrawdownPct).toFixed(2) + '%'}</td>
+                        <td class="num r">${t.sharpeRatio == null ? '—' : Number(t.sharpeRatio).toFixed(2)}</td>
+                        <td class="num r">${t.winRatePct == null ? '—' : Number(t.winRatePct).toFixed(1) + '%'}</td>
+                        <td class="num r">${O.num(t.totalTrades)}</td>
+                        <td>${O.statusHtml(t.status)}</td>
+                        <td class="num" style="font-size:10px;color:var(--dim)">${String(t.gmtCreate || '').slice(5, 16)}</td>
+                        <td><div class="field-actions" onclick="event.stopPropagation()">
+                            <button class="icon-btn" title="详情" onclick="location.href='detail.html?id=${t.id}'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+                            <a class="icon-btn" title="导出" href="/api/option/backtest/${t.id}/export?type=task"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a>
+                        </div></td>
+                    </tr>`;
+                }).join('');
+            }
+
+            const pages = Math.max(1, Math.ceil(total / size));
+            $('#pageInfo').textContent = total ? `第 ${start + 1} - ${Math.min(start + size, total)} 条 / 共 ${total} 条` : '暂无数据';
+            let ps = `<button class="pg" ${page === 1 ? 'disabled' : ''} onclick="go(${page - 1})">‹</button>`;
+            for (let i = 1; i <= pages; i++) ps += `<button class="pg ${i === page ? 'active' : ''}" onclick="go(${i})">${i}</button>`;
+            ps += `<button class="pg" ${page === pages ? 'disabled' : ''} onclick="go(${page + 1})">›</button>`;
+            $('#pages').innerHTML = ps;
+
+            document.querySelectorAll('th.sortable').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortBy));
+            renderKpi();
+        }
+
+        function renderKpi() {
+            const totalN = total;
+            const running = rows.filter(t => Number(t.status) === 1).length;
+            const success = rows.filter(t => Number(t.status) === 2).length;
+            const avg = rows.filter(t => t.annualReturnPct != null).reduce((a, b) => a + Number(b.annualReturnPct), 0) / Math.max(1, rows.filter(t => t.annualReturnPct != null).length);
+            const best = rows.reduce((a, b) => Number(b.totalReturnPct || -1e9) > Number(a.totalReturnPct || -1e9) ? b : a, rows[0]);
+            $('#kpiTotal').textContent = totalN;
+            $('#kpiTotalSub').textContent = '当前筛选 · 成功 ' + success;
+            $('#kpiRun').textContent = running + ' / ' + success;
+            $('#kpiRunSub').textContent = '运行中 / 成功（当前页）';
+            $('#kpiAvg').textContent = rows.length ? O.pct(avg) : '—';
+            $('#kpiBest').textContent = best ? O.pct(best.totalReturnPct) : '—';
+            $('#kpiBestSub').textContent = best ? (best.taskNo || '') : '';
+        }
+
+        window.go = function (p) {
+            page = Math.max(1, p);
+            load();
+        };
+
+        document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+            const k = th.dataset.k;
+            if (sortBy === k) sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+            else {
+                sortBy = k;
+                sortDir = 'desc';
+            }
+            page = 1;
+            load();
+        }));
+
+        $('#btnSearch').addEventListener('click', () => {
+            page = 1;
+            load();
+        });
+        $('#btnReset').addEventListener('click', () => {
+            ['kw', 'status', 'signalMode', 'underlying', 'startDate', 'endDate'].forEach(id => $('#' + id).value = '');
+            page = 1;
+            load();
+        });
+        $('#pageSize').addEventListener('change', e => {
+            size = +e.target.value;
+            page = 1;
+            load();
+        });
+        $('#btnExport').addEventListener('click', exportCsv);
+        $('#btnExport2').addEventListener('click', exportCsv);
+
+        function exportCsv() {
+            const head = ['任务号', '任务名称', '区间', '标的', '本金', '期末权益', '总收益%', '年化%', '最大回撤%', '夏普', '胜率%', '交易笔数', '状态', '创建时间'];
+            const lines = [head.join(',')];
+            rows.forEach(t => lines.push([t.taskNo, t.taskName, (t.startDate || '') + '~' + (t.endDate || ''),
+                String(t.underlyingCodes || '').split(',').map(O.undName).join('|'), t.initialCapital, t.finalEquity,
+                t.totalReturnPct, t.annualReturnPct, t.maxDrawdownPct, t.sharpeRatio, t.winRatePct, t.totalTrades, t.status, t.gmtCreate]
+                .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')));
+            O.csvDownload('期权BS回测任务_' + new Date().toISOString().slice(0, 10) + '.csv', lines.join('\n'));
+            O.toast('已导出当前页 ' + rows.length + ' 条');
+        }
+
+        async function fav(id, flag) {
+            try {
+                await O.api(`/api/option/backtest/${id}/favorite?flag=${flag}`, {method: 'POST'});
+                load();
+            } catch (e) {
+                O.toast('收藏失败：' + e.message);
+            }
+        }
+
+        window.fav = fav;
+
+        function short(d) {
+            return d ? String(d).slice(2) : '—';
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;'
+            }[c]));
+        }
+
+        load();
+    })();
+</script>
+</body>
+</html>

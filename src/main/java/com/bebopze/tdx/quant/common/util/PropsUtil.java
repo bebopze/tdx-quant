@@ -186,10 +186,26 @@ public class PropsUtil {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    /**
+     * DB - 数据源
+     */
+    public static final String DATA_SOURCE_URL = PropsUtil.getProperty("dataSources.ds_common.url");
+    public static final String DATA_SOURCE_USERNAME = PropsUtil.getProperty("dataSources.ds_common.username");
+    public static final String DATA_SOURCE_PASSWORD = PropsUtil.getProperty("dataSources.ds_common.password");
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     public static void main(String[] args) {
         String tdxPath = getTdxPath();
         getSid();
         getCookie();
+
+
+        System.out.println(DATA_SOURCE_URL);
+        System.out.println(DATA_SOURCE_USERNAME);
+        System.out.println(DATA_SOURCE_PASSWORD);
     }
 
 

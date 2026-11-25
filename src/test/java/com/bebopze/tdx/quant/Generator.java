@@ -3,10 +3,11 @@ package com.bebopze.tdx.quant;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
-import com.bebopze.tdx.quant.common.util.PropsUtil;
 
 import java.nio.file.Paths;
 import java.sql.Types;
+
+import static com.bebopze.tdx.quant.common.util.PropsUtil.*;
 
 
 /**
@@ -21,9 +22,9 @@ public class Generator {
     public static void main(String[] args) {
 
 
-        String url = PropsUtil.getProperty("dataSources.ds_common.url");
-        String username = PropsUtil.getProperty("dataSources.ds_common.username");
-        String password = PropsUtil.getProperty("dataSources.ds_common.password");
+        String url = DATA_SOURCE_URL;
+        String username = DATA_SOURCE_USERNAME;
+        String password = DATA_SOURCE_PASSWORD;
 
 
         FastAutoGenerator.create(url, username, password)

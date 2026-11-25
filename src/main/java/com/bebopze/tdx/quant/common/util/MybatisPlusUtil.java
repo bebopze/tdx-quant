@@ -16,6 +16,8 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 
+import static com.bebopze.tdx.quant.common.util.PropsUtil.*;
+
 
 /**
  * 静态调用   Mybatis-Plus
@@ -33,9 +35,9 @@ public class MybatisPlusUtil {
 
         // 1. 数据源
         DruidDataSource ds = new DruidDataSource();
-        ds.setUrl(PropsUtil.getProperty("dataSources.ds_common.url"));
-        ds.setUsername(PropsUtil.getProperty("dataSources.ds_common.username"));
-        ds.setPassword(PropsUtil.getProperty("dataSources.ds_common.password"));
+        ds.setUrl(DATA_SOURCE_URL);
+        ds.setUsername(DATA_SOURCE_USERNAME);
+        ds.setPassword(DATA_SOURCE_PASSWORD);
         ds.setDriverClassName(PropsUtil.getProperty("dataSources.ds_common.driverClassName"));
 
 

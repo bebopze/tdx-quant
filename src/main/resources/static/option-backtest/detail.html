@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="a">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>期权 BS 回测 · 任务详情</title>
+    <link rel="stylesheet" href="assets/common.css">
+    <script>
+        (function () {
+            var t = 'a';
+            try {
+                var q = new URLSearchParams(location.search).get('theme');
+                t = q || localStorage.getItem('obt.theme') || 'a';
+            } catch (e) {
+            }
+            document.documentElement.setAttribute('data-theme', t === 'b' ? 'b' : 'a');
+        })();
+    </script>
+
+    <script src="../js/echarts.min.js"></script>
+</head>
+<body>
+<div class="app">
+    <aside class="rail">
+        <div class="logo">TDX</div>
+        <div class="r-item" onclick="location.href='list.html'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M3 12l9-9 9 9"/>
+                <path d="M5 10v10h14V10"/>
+            </svg>
+        </div>
+        <div class="r-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M4 19V5"/>
+                <path d="M4 19h16"/>
+                <path d="M7 15l4-5 3 3 5-7"/>
+            </svg>
+        </div>
+        <div class="r-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M12 3v18"/>
+                <path d="M5 8h14"/>
+                <path d="M7 8v6"/>
+                <path d="M17 8v6"/>
+            </svg>
+        </div>
+        <div class="spacer"></div>
+        <div class="avatar">BZ</div>
+    </aside>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="mark">Q</div>
+            <div><b>TDX Quant</b><span>OPTION RESEARCH</span></div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title">回测中心</div>
+            <div class="nav-item active" onclick="location.href='list.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <rect x="3" y="4" width="18" height="16" rx="2"/>
+                    <path d="M3 9h18"/>
+                </svg>
+                期权 BS 回测
+            </div>
+            <div class="nav-item" onclick="location.href='create.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                新建回测
+            </div>
+        </div>
+        <div class="side-foot">
+            <div class="engine-pill"><span class="dot"></span>引擎 v1.0.0 · 在线</div>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="topbar">
+            <div class="crumb"><a href="list.html">期权 BS 回测</a> <i>/</i> <b id="crumbTask">任务详情</b></div>
+            <div class="top-right">
+                <button class="theme-btn" id="themeBtn"><span class="sw"></span><span id="themeLabel">A 终端</span>
+                </button>
+                <div class="top-user"><span class="avatar">BZ</span> bebopze</div>
+            </div>
+        </div>
+        <div class="page">
+            <div class="page-head">
+                <a class="btn ghost" href="list.html" style="height:30px;padding:0 9px">← 返回</a>
+                <div>
+                    <h1 id="taskTitle">加载中… <span id="taskStatus"></span></h1>
+                    <div class="sub" id="taskSub">—</div>
+                </div>
+                <div class="head-actions">
+                    <a class="btn ghost" id="exportTask" href="#">导出任务</a>
+                    <a class="btn ghost" id="exportPdf" href="#">导出 PDF</a>
+                    <a class="btn ghost" id="exportXlsx" href="#">导出持仓</a>
+                    <button class="btn primary" onclick="location.href='create.html'">重新运行</button>
+                </div>
+            </div>
+
+            <div id="progressWrap" class="progress-wrap hidden">
+                <div class="progress-info"><span id="progressText">任务执行中…</span><span id="progressPct">0%</span>
+                </div>
+                <div class="progress-bar"><i id="progressBar" style="width:0"></i></div>
+            </div>
+
+            <div class="meta-bar" id="metaBar"></div>
+
+            <div class="kpis" id="kpis"></div>
+
+            <div class="detail-grid">
+                <div class="card">
+                    <div class="card-head"><h3>净值与回撤</h3><span class="hint">策略 vs 沪深300</span>
+                        <div class="right">
+                            <button class="tab active" data-chart="equity">净值</button>
+                            <button class="tab" data-chart="drawdown">回撤</button>
+                            <button class="tab" data-chart="daily">日收益</button>
+                        </div>
+                    </div>
+                    <div id="mainChart" class="chart"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h3>核心风险指标</h3><span class="hint">日频</span></div>
+                    <div class="risk-list" id="riskList">
+                        <div class="loading"><span class="spinner"></span>加载中…</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h3>信号时间线</h3><span class="hint">最近 12 次</span></div>
+                    <div class="sig-list" id="sigList">
+                        <div class="loading"><span class="spinner"></span>加载中…</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-grid3">
+                <div class="card">
+                    <div class="card-head"><h3>月度收益热力图</h3><span class="hint">红涨绿跌</span></div>
+                    <div id="monthlyChart" class="chart-sm"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h3>卖出原因分布</h3><span class="hint">触发笔数</span></div>
+                    <div id="sellChart" class="chart-sm"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h3>标的收益贡献</h3><span class="hint">已实现盈亏</span></div>
+                    <div id="contribChart" class="chart-sm"></div>
+                </div>
+            </div>
+
+            <section class="card">
+                <div class="tabs-bar">
+                    <button class="tab active" data-tab="pos">每日持仓 <span class="cnt" id="cntPos">—</span></button>
+                    <button class="tab" data-tab="closed">每日清仓 <span class="cnt" id="cntClosed">—</span></button>
+                    <button class="tab" data-tab="trade">每日交易 <span class="cnt" id="cntTrade">—</span></button>
+                    <button class="tab" data-tab="equity">每日净值 <span class="cnt" id="cntEquity">—</span></button>
+                    <button class="tab" data-tab="signal">信号事件 <span class="cnt" id="cntSignal">—</span></button>
+                    <button class="tab" data-tab="param">参数与日志</button>
+                    <div class="right">
+                        <select class="date-select hidden" id="posDate"></select>
+                        <input class="search" id="tableSearch" placeholder="筛选当前表…">
+                        <button class="mini-btn" id="btnTableExport">导出当前</button>
+                    </div>
+                </div>
+
+                <div id="pane-pos">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>标的</th>
+                                <th>期权合约</th>
+                                <th>类型</th>
+                                <th class="r">行权价</th>
+                                <th>月份</th>
+                                <th class="r">剩余天数</th>
+                                <th class="r">数量</th>
+                                <th class="r">成本价</th>
+                                <th class="r">现价</th>
+                                <th class="r">成本金额</th>
+                                <th class="r">市值</th>
+                                <th class="r">浮动盈亏</th>
+                                <th class="r">收益率</th>
+                                <th class="r">权重</th>
+                                <th class="r">持仓天数</th>
+                                <th>建仓来源</th>
+                            </tr>
+                            </thead>
+                            <tbody id="posBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-closed" class="hidden">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>标的</th>
+                                <th>期权合约</th>
+                                <th>开仓日</th>
+                                <th>平仓日</th>
+                                <th class="r">数量</th>
+                                <th class="r">均价成本</th>
+                                <th class="r">均价卖出</th>
+                                <th class="r">持有天数</th>
+                                <th class="r">已实现盈亏</th>
+                                <th class="r">收益率</th>
+                                <th class="r">最大浮盈</th>
+                                <th>平仓原因</th>
+                            </tr>
+                            </thead>
+                            <tbody id="closedBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-trade" class="hidden">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>日期</th>
+                                <th>时间</th>
+                                <th>标的</th>
+                                <th>期权合约</th>
+                                <th>方向</th>
+                                <th class="r">成交价</th>
+                                <th class="r">数量</th>
+                                <th class="r">成交额</th>
+                                <th class="r">费用</th>
+                                <th>触发原因</th>
+                                <th class="r">触发值</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tradeBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-equity" class="hidden">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th class="r">单位净值</th>
+                                <th class="r">总权益</th>
+                                <th class="r">当日收益</th>
+                                <th class="r">累计收益</th>
+                                <th class="r">回撤</th>
+                                <th class="r">现金</th>
+                                <th class="r">持仓市值</th>
+                                <th class="r">仓位</th>
+                                <th>信号状态</th>
+                                <th class="r">持仓数</th>
+                            </tr>
+                            </thead>
+                            <tbody id="equityBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-signal" class="hidden">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>信号日</th>
+                                <th>类型</th>
+                                <th>前状态</th>
+                                <th>周期</th>
+                                <th class="r">low_day</th>
+                                <th class="r">high_day</th>
+                                <th class="r">MA50占比</th>
+                                <th>执行日</th>
+                            </tr>
+                            </thead>
+                            <tbody id="signalBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pane-param" class="hidden">
+                    <div class="param-grid" id="paramGrid"></div>
+                    <div style="border-top:1px solid var(--border)">
+                        <div class="card-head" style="border-bottom:0"><h3 style="font-size:11px">运行日志</h3><span
+                                class="hint">最近 200 行</span></div>
+                        <div class="logs" id="logBox">加载中…</div>
+                    </div>
+                </div>
+
+                <div class="pager" id="tablePager">
+                    <div class="info" id="pageInfo">—</div>
+                    <div class="pages" id="pages"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+<script src="assets/common.js"></script>
+<script>
+    (function () {
+        const O = window.Obt;
+        const $ = s => document.querySelector(s);
+        const id = Number(O.qs('id', 0));
+        let task = null, stats = null, equity = [], signals = [], positionDates = [];
+        let activeTab = 'pos', posPage = 1, posSize = 10, closedPage = 1, tradePage = 1;
+        let equityPage = 1, signalPage = 1, posDate = null, chartName = 'equity';
+        let pollTimer = null;
+
+        if (!id) {
+            location.href = 'list.html';
+            return;
+        }
+
+        async function loadDetail() {
+            try {
+                task = await O.api('/api/option/backtest/' + id);
+                if (!task) {
+                    O.toast('任务不存在');
+                    return;
+                }
+                renderHead();
+                renderKpi();
+                if (Number(task.status) < 2) {
+                    $('#progressWrap').classList.remove('hidden');
+                    $('#progressBar').style.width = (task.progress || 0) + '%';
+                    $('#progressPct').textContent = (task.progress || 0) + '%';
+                    $('#progressText').textContent = Number(task.status) === 0 ? '排队中…' : '回测执行中…';
+                    $('#taskTitle').innerHTML = (task.taskName || '任务') + ' ' + O.statusHtml(task.status);
+                    clearTimeout(pollTimer);
+                    pollTimer = setTimeout(loadAll, 3000);
+                    return;
+                }
+                $('#progressWrap').classList.add('hidden');
+                positionDates = task.positionDates || [];
+                fillPosDates();
+                if (Number(task.status) === 3) {
+                    $('#taskTitle').innerHTML = (task.taskName || '任务') + ' ' + O.statusHtml(task.status);
+                    $('#taskSub').innerHTML = '<span style="color:var(--up)">失败：' + (task.errorMsg || '未知错误') + '</span>';
+                    return;
+                }
+                await loadStats();
+            } catch (e) {
+                $('#taskTitle').textContent = '加载失败';
+                $('#taskSub').textContent = e.message;
+            }
+        }
+
+        async function loadAll() {
+            await loadDetail();
+            if (task && Number(task.status) === 2) {
+                await loadChart();
+                await loadTable();
+            }
+        }
+
+        async function loadStats() {
+            stats = await O.api('/api/option/backtest/' + id + '/stats');
+            equity = stats.equity || [];
+            signals = stats.signals || [];
+            renderRisk();
+            renderSignals();
+            O.renderMonthly($('#monthlyChart'), stats.monthlyReturns || {});
+            O.renderSellReasons($('#sellChart'), stats.sellReasons || []);
+            O.renderContribution($('#contribChart'), stats.contribution || []);
+            $('#cntEquity').textContent = equity.length;
+            $('#cntSignal').textContent = signals.length;
+            fillParam();
+            loadLogs();
+            await loadChart();
+        }
+
+        async function loadChart() {
+            if (!equity.length) return;
+            if (chartName === 'equity') O.renderEquity($('#mainChart'), equity);
+            else if (chartName === 'drawdown') O.renderDrawdown($('#mainChart'), equity);
+            else O.renderDaily($('#mainChart'), equity);
+        }
+
+        function renderHead() {
+            const status = O.statusHtml(task.status);
+            $('#taskTitle').innerHTML = esc(task.taskName || '回测任务') + ' ' + status;
+            $('#crumbTask').textContent = task.taskNo || ('#' + id);
+            $('#taskSub').innerHTML = `任务号 <b>${esc(task.taskNo)}</b> · 创建人 <b>${esc(task.creator)}</b> · 创建时间 <b>${esc(task.gmtCreate)}</b> · 耗时 <b>${task.durationMs ? (task.durationMs / 1000).toFixed(1) + 's' : '—'}</b>`;
+            const cells = [
+                ['回测区间', (task.startDate || '') + ' → ' + (task.endDate || '')],
+                ['实际数据起始', task.actualStartDate || '—'],
+                ['初始本金', O.money(task.initialCapital)],
+                ['期末权益', O.money(task.finalEquity)],
+                ['信号模式', task.signalMode === 'BOTH' ? '顶底对称' : task.signalMode === 'BOTTOM' ? '仅中期底' : '仅中期顶'],
+                ['合约月份', task.monthMode || '—'],
+                ['标的', String(task.underlyingCodes || '').split(',').filter(Boolean).length + ' 个'],
+                ['交易日数', O.num(task.totalDays)]
+            ];
+            $('#metaBar').innerHTML = cells.map(([k, v]) => `<div class="meta-cell"><span class="k">${k}</span><span class="v ${k === '实际数据起始' ? 'hl' : ''}">${v}</span></div>`).join('');
+        }
+
+        function renderKpi() {
+            const items = [
+                ['期末权益', O.money(task.finalEquity), '初始 ' + O.money(task.initialCapital), ''],
+                ['总收益率', O.pct(task.totalReturnPct), '基准见净值图', 'up'],
+                ['年化收益率', O.pct(task.annualReturnPct), 'CAGR', O.cls(task.annualReturnPct)],
+                ['最大回撤', task.maxDrawdownPct == null ? '—' : Number(task.maxDrawdownPct).toFixed(2) + '%', (task.maxDrawdownStart || '') + ' ~ ' + (task.maxDrawdownEnd || ''), 'drawdown'],
+                ['夏普比率', task.sharpeRatio == null ? '—' : Number(task.sharpeRatio).toFixed(2), 'rf 2.0%', ''],
+                ['卡玛比率', task.calmarRatio == null ? '—' : Number(task.calmarRatio).toFixed(2), '年化/最大回撤', ''],
+                ['胜率', task.winRatePct == null ? '—' : Number(task.winRatePct).toFixed(1) + '%', '盈利交易日', ''],
+                ['交易笔数', O.num(task.totalTrades), '买 ' + O.num(task.buyTrades) + ' / 卖 ' + O.num(task.sellTrades), '']
+            ];
+            $('#kpis').innerHTML = items.map(([k, v, sub, c]) => `<div class="kpi"><div class="k-label">${k}</div><div class="k-val ${c === 'drawdown' ? '' : c}" ${c === 'drawdown' ? 'style="color:var(--up)"' : ''}>${v}</div><div class="k-sub">${sub}</div></div>`).join('');
+        }
+
+        function renderRisk() {
+            const r = stats.riskMetrics || {};
+            const items = [
+                ['年化波动率', O.pct(r.volatilityPct)],
+                ['夏普', Number(r.sharpe || 0).toFixed(2)],
+                ['索提诺', Number(r.sortino || 0).toFixed(2)],
+                ['卡玛', Number(task.calmarRatio || 0).toFixed(2)],
+                ['最大回撤', O.pct(r.maxDrawdownPct)],
+                ['最长回撤天数', O.num(task.maxDrawdownDays) + ' 天'],
+                ['VaR 95%', O.pct(r.var95Pct)],
+                ['胜率（日）', O.pct(r.winRatePct)],
+                ['盈亏比', Number(r.profitFactor || 0).toFixed(2)],
+                ['平均仓位', O.pct(r.avgPositionPct)],
+                ['交易成本', O.money(r.totalFee)],
+                ['月胜率', O.pct(r.monthlyWinRate)],
+                ['平均持仓', Number(r.avgHoldDays || 0).toFixed(1) + ' 天'],
+                ['信号次数', O.num(r.signals)]
+            ];
+            $('#riskList').innerHTML = items.map(([k, v]) => `<div class="risk-row"><span class="n">${k}</span><span class="v">${v}</span></div>`).join('');
+        }
+
+        function renderSignals() {
+            const list = signals.slice(-8).reverse();
+            $('#sigList').innerHTML = list.length ? list.map(s => {
+                const bottom = Number(s.signalType) === 1;
+                return `<div class="sig ${bottom ? 'bottom' : 'top'}"><span class="node"></span><div style="flex:1;min-width:0">
+                    <div class="t"><b>${esc(s.signalDate)}</b><span class="lb">${bottom ? '中期底' : '中期顶'}</span></div>
+                    <div class="d">周期 #${esc(s.cycleId)} · low ${s.marketLowDay ?? '—'} / high ${s.marketHighDay ?? '—'} · MA50 ${s.ma50Pct ?? '—'}%</div>
+                </div></div>`;
+            }).join('') : '<div class="empty">暂无信号</div>';
+        }
+
+        function fillPosDates() {
+            const sel = $('#posDate');
+            sel.innerHTML = positionDates.map(d => `<option value="${d}">${d}</option>`).join('');
+            if (positionDates.length) {
+                posDate = positionDates[positionDates.length - 1];
+                sel.value = posDate;
+            }
+        }
+
+        function fillParam() {
+            const p = task.params || {};
+            const rows = [
+                ['区间', (task.startDate || '') + ' → ' + (task.endDate || '')],
+                ['本金', O.money(task.initialCapital)],
+                ['信号模式', p.signalMode || task.signalMode],
+                ['月份模式', p.monthMode || task.monthMode],
+                ['行权价档位', (p.strikes || String(task.strikeMode || '').split(',')).join(' / ')],
+                ['每日建仓', p.dailyBuyPct != null ? (p.dailyBuyPct * 100).toFixed(0) + '%' : '—'],
+                ['逆势加仓', p.addBuyPct != null ? (p.addBuyPct * 100).toFixed(0) + '%' : '—'],
+                ['步长', p.addStepPct != null ? (p.addStepPct * 100).toFixed(0) + '%' : '—'],
+                ['仓位上限', p.maxPositionPct != null ? (p.maxPositionPct * 100).toFixed(0) + '%' : '—'],
+                ['单票止盈', p.singleTpStepPct != null ? '+' + (p.singleTpStepPct * 100).toFixed(0) + '% / 减 ' + (p.singleTpReducePct * 100).toFixed(0) + '%' : '—'],
+                ['账户止盈', p.accountTpStepPct != null ? '+' + (p.accountTpStepPct * 100).toFixed(0) + '% / 减 ' + (p.accountTpReducePct * 100).toFixed(0) + '%' : '—'],
+                ['信号卖出', p.signalSellDailyPct != null ? '逐日 -' + (p.signalSellDailyPct * 100).toFixed(0) + '%' : '—'],
+                ['强势卖出', p.strongSellPct != null ? '-' + (p.strongSellPct * 100).toFixed(0) + '%' : '—'],
+                ['左侧卖1', p.left1SellPct != null ? '-' + (p.left1SellPct * 100).toFixed(0) + '%' : '—'],
+                ['左侧卖2', p.left2SellPct != null ? '-' + (p.left2SellPct * 100).toFixed(0) + '%' : '—'],
+                ['买入最低 DTE', p.minBuyDteDays != null ? '≥' + p.minBuyDteDays + ' 天' : '≥30 天'],
+                ['自动换月', p.rollDteDays != null ? '<' + p.rollDteDays + ' 天' : '<15 天'],
+                ['佣金', p.commissionPerContract != null ? p.commissionPerContract + ' 元/张/边' : '—'],
+                ['滑点', p.slippageBps != null ? p.slippageBps + ' bps' : '—'],
+                ['引擎', task.engineVersion || '—'],
+                ['数据版本', task.dataVersion || '—'],
+                ['创建人', task.creator || '—']
+            ];
+            $('#paramGrid').innerHTML = rows.map(([k, v]) => `<div class="param-row"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
+        }
+
+        async function loadLogs() {
+            try {
+                const logs = await O.api('/api/option/backtest/' + id + '/logs?limit=200');
+                $('#logBox').innerHTML = (logs || []).map(l => `<div><span class="ts">${esc(l.logTime)}</span> <span class="${l.level === 'ERROR' ? 'err' : l.level === 'WARN' ? 'warn' : 'ok'}">${esc(l.level)}</span> ${esc(l.message)}</div>`).join('') || '暂无日志';
+            } catch (e) {
+                $('#logBox').textContent = '日志加载失败：' + e.message;
+            }
+        }
+
+        async function loadTable() {
+            if (activeTab === 'param') return;
+            const kw = ($('#tableSearch').value || '').trim();
+            if (activeTab === 'pos') {
+                $('#posDate').classList.remove('hidden');
+                const q = new URLSearchParams({page: posPage, size: posSize});
+                if (posDate) q.set('date', posDate);
+                const data = await O.api('/api/option/backtest/' + id + '/positions?' + q);
+                renderPositions(data.list || [], kw);
+                $('#cntPos').textContent = data.total || 0;
+                pager(data.total || 0, posSize, posPage, p => {
+                    posPage = p;
+                    loadTable();
+                });
+            } else if (activeTab === 'closed') {
+                const data = await O.api('/api/option/backtest/' + id + '/closes?page=' + closedPage + '&size=' + posSize);
+                renderClosed(data.list || [], kw);
+                $('#cntClosed').textContent = data.total || 0;
+                pager(data.total || 0, posSize, closedPage, p => {
+                    closedPage = p;
+                    loadTable();
+                });
+            } else if (activeTab === 'trade') {
+                const data = await O.api('/api/option/backtest/' + id + '/trades?page=' + tradePage + '&size=' + posSize);
+                renderTrades(data.list || [], kw);
+                $('#cntTrade').textContent = data.total || 0;
+                pager(data.total || 0, posSize, tradePage, p => {
+                    tradePage = p;
+                    loadTable();
+                });
+            } else if (activeTab === 'equity') {
+                const list = filterRows(equity, kw);
+                const start = (equityPage - 1) * posSize;
+                renderEquity(list.slice(start, start + posSize));
+                pager(list.length, posSize, equityPage, p => {
+                    equityPage = p;
+                    loadTable();
+                });
+            } else if (activeTab === 'signal') {
+                const list = filterRows(signals, kw);
+                const start = (signalPage - 1) * posSize;
+                renderSignalsTable(list.slice(start, start + posSize));
+                pager(list.length, posSize, signalPage, p => {
+                    signalPage = p;
+                    loadTable();
+                });
+            }
+        }
+
+        function pager(total, size, page, cb) {
+            const pages = Math.max(1, Math.ceil(total / size));
+            $('#pageInfo').textContent = total ? `第 ${(page - 1) * size + 1} - ${Math.min(page * size, total)} 条 / 共 ${total} 条` : '暂无数据';
+            let ps = `<button class="pg" ${page === 1 ? 'disabled' : ''} onclick="__page(${page - 1})">‹</button>`;
+            for (let i = 1; i <= pages; i++) ps += `<button class="pg ${i === page ? 'active' : ''}" onclick="__page(${i})">${i}</button>`;
+            ps += `<button class="pg" ${page === pages ? 'disabled' : ''} onclick="__page(${page + 1})">›</button>`;
+            $('#pages').innerHTML = ps;
+            window.__page = cb;
+        }
+
+        function renderPositions(list, kw) {
+            if (!list.length) {
+                $('#posBody').innerHTML = '<tr><td colspan="17" class="empty">暂无持仓</td></tr>';
+                return;
+            }
+            $('#posBody').innerHTML = list.map((p, i) => `<tr>
+                <td class="num" style="color:var(--dim)">${i + 1}</td>
+                <td><span style="color:var(--text)">${esc(O.undName(p.underlyingCode))}</span> <span class="num" style="font-size:9px;color:var(--dim)">${esc(p.underlyingCode)}</span></td>
+                <td><span style="color:var(--text)">${esc(p.optionName)}</span><div class="num" style="font-size:9px;color:var(--dim)">${esc(p.optionCode)}</div></td>
+                <td><span class="tag ${p.callPutType === 'C' ? 'c' : 'p'}">${p.callPutType === 'C' ? '认购' : '认沽'}</span></td>
+                <td class="num r">${O.num(p.strikePrice, 4)}</td><td class="num">${month(p.contractMonth)}</td>
+                <td class="num r ${dteOf(p) < 15 ? 'up' : ''}">${dteOf(p)}</td><td class="num r">${O.num(p.qty)}</td><td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.closePrice, 4)}</td>
+                <td class="num r">${O.num(p.costAmount)}</td><td class="num r">${O.num(p.marketValue)}</td>
+                <td class="num r ${O.cls(p.unrealizedPnl)}">${O.num(p.unrealizedPnl)}</td>
+                <td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
+                <td class="num r">${O.num(p.weightPct, 2)}%</td><td class="num r">${p.holdDays}</td>
+                <td style="color:var(--muted);font-size:9.5px">${esc(p.openReason)}</td>
+            </tr>`).join('');
+        }
+
+        function renderClosed(list, kw) {
+            if (!list.length) {
+                $('#closedBody').innerHTML = '<tr><td colspan="13" class="empty">暂无平仓记录</td></tr>';
+                return;
+            }
+            $('#closedBody').innerHTML = list.map((p, i) => `<tr>
+                <td class="num" style="color:var(--dim)">${i + 1}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
+                <td class="num">${esc(p.openDate)}</td><td class="num">${esc(p.closeDate)}</td><td class="num r">${O.num(p.qty)}</td>
+                <td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.avgSellPrice, 4)}</td><td class="num r">${p.holdDays}</td>
+                <td class="num r ${O.cls(p.realizedPnl)}">${O.num(p.realizedPnl)}</td><td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
+                <td class="num r up">${O.pct(p.maxPnlPct)}</td><td><span class="tag">${esc(p.closeReasonDesc || p.closeReason)}</span></td>
+            </tr>`).join('');
+        }
+
+        function renderTrades(list, kw) {
+            if (!list.length) {
+                $('#tradeBody').innerHTML = '<tr><td colspan="12" class="empty">暂无交易</td></tr>';
+                return;
+            }
+            $('#tradeBody').innerHTML = list.map((p, i) => `<tr>
+                <td class="num" style="color:var(--dim)">${i + 1}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
+                <td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
+                <td><span class="tag ${Number(p.tradeType) === 1 ? 'buy' : 'sell'}">${Number(p.tradeType) === 1 ? '买入' : '卖出'}</span></td>
+                <td class="num r">${O.num(p.price, 4)}</td><td class="num r">${O.num(p.qty)}</td><td class="num r">${O.num(p.amount)}</td>
+                <td class="num r">${O.num(p.fee, 2)}</td><td style="color:var(--muted);font-size:9.5px">${esc(p.reasonDesc)}</td>
+                <td class="num r">${p.triggerValue == null ? '—' : O.num(p.triggerValue, 2)}</td>
+            </tr>`).join('');
+        }
+
+        function renderEquity(list) {
+            if (!list.length) {
+                $('#equityBody').innerHTML = '<tr><td colspan="11" class="empty">暂无净值</td></tr>';
+                return;
+            }
+            $('#equityBody').innerHTML = list.map(p => `<tr>
+                <td class="num" style="color:var(--text)">${esc(p.tradeDate)}</td><td class="num r">${Number(p.nav).toFixed(4)}</td>
+                <td class="num r">${O.num(p.equity)}</td><td class="num r ${O.cls(p.dailyReturnPct)}">${O.pct(p.dailyReturnPct)}</td>
+                <td class="num r ${O.cls(p.cumReturnPct)}">${O.pct(p.cumReturnPct)}</td><td class="num r" style="color:var(--up)">${Number(p.drawdownPct).toFixed(2)}%</td>
+                <td class="num r">${O.num(p.cash)}</td><td class="num r">${O.num(p.marketValue)}</td><td class="num r">${Number(p.positionPct).toFixed(1)}%</td>
+                <td><span class="tag">${esc(p.signalStatus || '—')}</span></td><td class="num r">${p.positionCount}</td>
+            </tr>`).join('');
+        }
+
+        function renderSignalsTable(list) {
+            if (!list.length) {
+                $('#signalBody').innerHTML = '<tr><td colspan="8" class="empty">暂无信号</td></tr>';
+                return;
+            }
+            $('#signalBody').innerHTML = list.map(s => `<tr>
+                <td class="num" style="color:var(--text)">${esc(s.signalDate)}</td>
+                <td><span class="tag ${Number(s.signalType) === 1 ? 'p' : 'c'}">${Number(s.signalType) === 1 ? '中期底' : '中期顶'}</span></td>
+                <td class="num">${s.prevStatus ?? '—'}</td><td class="num">#${s.cycleId}</td>
+                <td class="num r">${s.marketLowDay ?? '—'}</td><td class="num r">${s.marketHighDay ?? '—'}</td>
+                <td class="num r">${s.ma50Pct ?? '—'}%</td><td class="num">${esc(s.execDate || '')}</td>
+            </tr>`).join('');
+        }
+
+        function filterRows(list, kw) {
+            if (!kw) return list;
+            const k = kw.toLowerCase();
+            return list.filter(x => JSON.stringify(x).toLowerCase().includes(k));
+        }
+
+        function dteOf(p) {
+            if (!p.expiryDate || !p.tradeDate) return '—';
+            const d = Math.ceil((new Date(p.expiryDate) - new Date(p.tradeDate)) / 86400000);
+            return d < 0 ? 0 : d;
+        }
+
+        function month(m) {
+            const s = String(m || '');
+            return s.length === 6 ? s.slice(0, 4) + '-' + s.slice(4) : s;
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;'
+            }[c]));
+        }
+
+        document.querySelectorAll('[data-chart]').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('[data-chart]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            chartName = b.dataset.chart;
+            loadChart();
+        }));
+        document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('[data-tab]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            activeTab = b.dataset.tab;
+            ['pos', 'closed', 'trade', 'equity', 'signal', 'param'].forEach(k => $('#pane-' + k).classList.toggle('hidden', k !== activeTab));
+            $('#tablePager').classList.toggle('hidden', activeTab === 'param');
+            $('#posDate').classList.toggle('hidden', activeTab !== 'pos');
+            if (activeTab === 'param') loadLogs(); else loadTable();
+        }));
+        $('#posDate').addEventListener('change', e => {
+            posDate = e.target.value;
+            posPage = 1;
+            loadTable();
+        });
+        $('#tableSearch').addEventListener('input', () => {
+            posPage = closedPage = tradePage = equityPage = signalPage = 1;
+            loadTable();
+        });
+        $('#btnTableExport').addEventListener('click', () => {
+            const type = activeTab === 'pos' ? 'positions' : activeTab === 'closed' ? 'closes' : activeTab === 'trade' ? 'trades' : 'equity';
+            location.href = `/api/option/backtest/${id}/export?type=${type}`;
+        });
+        $('#exportTask').href = `/api/option/backtest/${id}/export?type=task`;
+        $('#exportPdf').addEventListener('click', e => {
+            e.preventDefault();
+            window.print();
+        });
+        $('#exportXlsx').href = `/api/option/backtest/${id}/export?type=positions`;
+
+        window.addEventListener('obt-theme', () => {
+            if (equity.length) loadChart();
+            if (stats) {
+                O.renderMonthly($('#monthlyChart'), stats.monthlyReturns || {});
+                O.renderSellReasons($('#sellChart'), stats.sellReasons || []);
+                O.renderContribution($('#contribChart'), stats.contribution || []);
+            }
+        });
+
+        loadAll();
+    })();
+</script>
+</body>
+</html>
