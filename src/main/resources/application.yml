@@ -78,3 +78,13 @@ springdoc.api-docs.path: "/v3/api-docs"
 springdoc.swagger-ui.path: "/swagger-ui.html"
 # 文档展开
 springdoc.swagger-ui.doc-expansion: none
+
+
+
+# 响应压缩（对 JSON/HTML/JS 生效   ->   压缩率：980KB / 6500KB = 15%）
+# 是否开启 HTTP 响应压缩（默认 false）
+server.compression.enabled: true
+# 指定需要压缩的 MIME 类型（文本和脚本类，不包含图片/视频）
+server.compression.mime-types: application/json,text/html,text/plain,application/javascript,text/css,application/xml
+# 触发压缩的最小响应大小（单位：字节，1024 即 1KB）
+server.compression.min-response-size: 1024
