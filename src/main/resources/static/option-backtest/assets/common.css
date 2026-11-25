@@ -2419,3 +2419,33 @@ html[data-theme="b"] #pane-pos, html[data-theme="b"] #pane-closed, html[data-the
 .pager .controls .pages {
     margin-left: 0;
 }
+
+/* 详情表格：页面滚动时固定表头（吸顶到 topbar 下方） */
+.table-card { overflow: visible !important; }
+.table-card .table-wrap { overflow: visible; max-height: none; min-height: 0; }
+.table-card thead th {
+    position: sticky !important;
+    top: 56px;
+    z-index: 15;
+    background: var(--table-head) !important;
+}
+html[data-theme="b"] .table-card thead th {
+    position: sticky !important;
+    top: 56px;
+    background: #f8fafd !important;
+    color: #7c8ba1 !important;
+}
+
+/* 详情表格区：tab 栏 + 表头 双重吸顶 */
+.table-card .tabs-bar {
+    position: sticky;
+    top: 56px;
+    z-index: 18;
+    background: var(--panel);
+}
+html[data-theme="b"] .table-card .tabs-bar {
+    background: #ffffff;
+}
+.table-card thead th {
+    top: 99px !important;
+}

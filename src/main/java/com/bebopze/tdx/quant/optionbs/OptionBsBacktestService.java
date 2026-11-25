@@ -54,7 +54,7 @@ public class OptionBsBacktestService {
     // =================================================================================================================
 
 
-    public Map<String, Object> submit(OptionBsParams p) throws Exception {
+    public Map<String, Object> submit(OptionBsParams p) {
         validate(p);
         String taskNo = repo.nextTaskNo();
         long id = repo.createTask(p, taskNo);
@@ -128,7 +128,7 @@ public class OptionBsBacktestService {
         }
     }
 
-    public void cancel(long id) throws Exception {
+    public void cancel(long id) {
         cancelFlags.put(id, true);
         repo.updateTask(id, 4, 100, "用户取消");
         repo.log(id, "WARN", "用户取消任务");
@@ -149,11 +149,11 @@ public class OptionBsBacktestService {
                                     String startDate,
                                     String endDate,
                                     String sortBy,
-                                    String sortDir) throws Exception {
+                                    String sortDir) {
         return repo.page(page, size, keyword, status, signalMode, underlyingCode, startDate, endDate, sortBy, sortDir);
     }
 
-    public Map<String, Object> detail(long id) throws Exception {
+    public Map<String, Object> detail(long id) {
         Map<String, Object> task = repo.getTask(id);
         if (task == null) return null;
         Integer liveProgress = progressMap.get(id);
@@ -163,11 +163,11 @@ public class OptionBsBacktestService {
         return task;
     }
 
-    public List<Map<String, Object>> equity(long id, String from, String to) throws Exception {
+    public List<Map<String, Object>> equity(long id, String from, String to) {
         return repo.equity(id, from, to);
     }
 
-    public Map<String, Object> positions(long id, String date, int page, int size) throws Exception {
+    public Map<String, Object> positions(long id, String date, int page, int size) {
         return repo.positions(id, date, page, size);
     }
 
@@ -177,7 +177,7 @@ public class OptionBsBacktestService {
                                       String type,
                                       String reason,
                                       String from,
-                                      String to) throws Exception {
+                                      String to) {
         return repo.trades(id, page, size, type, reason, from, to);
     }
 
@@ -186,23 +186,23 @@ public class OptionBsBacktestService {
                                       int size,
                                       String reason,
                                       String from,
-                                      String to) throws Exception {
+                                      String to) {
         return repo.closes(id, page, size, reason, from, to);
     }
 
-    public List<Map<String, Object>> signals(long id) throws Exception {
+    public List<Map<String, Object>> signals(long id) {
         return repo.signals(id);
     }
 
-    public List<Map<String, Object>> logs(long id, int limit) throws Exception {
+    public List<Map<String, Object>> logs(long id, int limit) {
         return repo.logs(id, limit);
     }
 
-    public List<Map<String, Object>> underlyings() throws Exception {
+    public List<Map<String, Object>> underlyings() {
         return repo.underlyings();
     }
 
-    public Map<String, Object> stats(long id) throws Exception {
+    public Map<String, Object> stats(long id) {
         Map<String, Object> task = repo.getTask(id);
         List<Map<String, Object>> equity = repo.equity(id, null, null);
         Map<String, Object> res = new LinkedHashMap<>();
@@ -273,7 +273,7 @@ public class OptionBsBacktestService {
     // =================================================================================================================
 
 
-    public String exportCsv(long id, String type) throws Exception {
+    public String exportCsv(long id, String type) {
         if ("task".equalsIgnoreCase(type)) {
             Map<String, Object> t = repo.getTask(id);
             StringBuilder b = new StringBuilder("\ufeff");

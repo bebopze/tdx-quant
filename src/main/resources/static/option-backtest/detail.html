@@ -147,7 +147,7 @@
                 </div>
             </div>
 
-            <section class="card">
+            <section class="card table-card" id="detailTableCard">
                 <div class="tabs-bar">
                     <button class="tab active" data-tab="pos">每日持仓 <span class="cnt" id="cntPos">—</span></button>
                     <button class="tab" data-tab="closed">每日清仓 <span class="cnt" id="cntClosed">—</span></button>
@@ -306,9 +306,33 @@
         const O = window.Obt;
         const $ = s => document.querySelector(s);
         const id = Number(O.qs('id', 0));
-        let task = null, stats = null, equity = [], signals = [], positionDates = [];
-        let activeTab = 'pos', posPage = 1, posSize = 10, closedPage = 1, tradePage = 1;
+        let task = null, stats = null, equity = [], signals = [];
+        const TAB_KEYS = ['pos', 'closed', 'trade', 'equity', 'signal', 'param'];
+        let activeTab = TAB_KEYS.includes(O.qs('tab', '')) ? O.qs('tab', '') : 'pos';
+        let posPage = 1, posSize = 100, closedPage = 1, tradePage = 1;
         let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
+        let posRows = [], closedRows = [], tradeRows = [];
+        let posKey = null, closedKey = null, tradeKey = null;
+        const sortState = {
+            pos: {key: '', dir: 1}, closed: {key: '', dir: 1}, trade: {key: '', dir: 1},
+            equity: {key: '', dir: 1}, signal: {key: '', dir: 1}
+        };
+        const SORT_KEYS = {
+            pos: ['__idx', 'underlyingCode', 'optionName', 'callPutType', 'strikePrice', 'contractMonth', 'dte',
+                'qty', 'avgCost', 'closePrice', 'costAmount', 'marketValue', 'unrealizedPnl', 'pnlPct',
+                'weightPct', 'holdDays', 'openReason'],
+            closed: ['__idx', 'underlyingCode', 'optionName', 'openDate', 'closeDate', 'qty', 'avgCost',
+                'avgSellPrice', 'holdDays', 'realizedPnl', 'pnlPct', 'maxPnlPct', 'closeReasonDesc'],
+            trade: ['__idx', 'tradeDate', 'tradeTime', 'underlyingCode', 'optionName', 'tradeType', 'price',
+                'qty', 'amount', 'fee', 'reasonDesc', 'triggerValue']
+        };
+
+        // 可选的深链排序：detail.html?id=22&sort=pnlPct&dir=asc
+        const initialSort = O.qs('sort', '');
+        if (initialSort && (SORT_KEYS[activeTab] || []).includes(initialSort)) {
+            sortState[activeTab].key = initialSort;
+            sortState[activeTab].dir = O.qs('dir', 'desc') === 'asc' ? 1 : -1;
+        }
         let pollTimer = null;
 
         if (!id) {
@@ -336,7 +360,6 @@
                     return;
                 }
                 $('#progressWrap').classList.add('hidden');
-                positionDates = task.positionDates || [];
                 initDateFilter();
                 if (Number(task.status) === 3) {
                     $('#taskTitle').innerHTML = (task.taskName || '任务') + ' ' + O.statusHtml(task.status);
@@ -447,8 +470,10 @@
 
         function initDateFilter() {
             const input = $('#listDate');
-            input.value = '';
-            listDate = '';
+            const dates = task.positionDates || [];
+            // 默认应用最后 1 个持仓日；无持仓日时回退到回测结束日
+            listDate = dates.length ? dates[dates.length - 1] : (task.endDate || '');
+            input.value = listDate;
             input.min = task.actualStartDate || task.startDate || '';
             input.max = task.endDate || '';
         }
@@ -491,65 +516,163 @@
             }
         }
 
+        function activateTabUI(tab) {
+            document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+            TAB_KEYS.forEach(k => $('#pane-' + k).classList.toggle('hidden', k !== tab));
+            $('#tablePager').classList.toggle('hidden', tab === 'param');
+            $('#dateFilter').classList.toggle('hidden', !['pos', 'closed', 'trade'].includes(tab));
+        }
+
+        function initSortableHeaders() {
+            Object.keys(SORT_KEYS).forEach(tab => {
+                document.querySelectorAll('#pane-' + tab + ' thead th').forEach((th, i) => {
+                    const key = SORT_KEYS[tab][i];
+                    if (!key) return;
+                    th.dataset.sort = key;
+                    th.classList.add('sortable');
+                    th.title = '点击排序';
+                    if (!th.querySelector('.arrow')) th.insertAdjacentHTML('beforeend', ' <span class="arrow">↕</span>');
+                    th.addEventListener('click', () => {
+                        if (activeTab !== tab) return;
+                        const st = sortState[tab];
+                        if (st.key === key) st.dir = -st.dir;
+                        else { st.key = key; st.dir = -1; }
+                        setPage(tab, 1);
+                        renderActiveTable();
+                    });
+                });
+                updateSortIndicators(tab);
+            });
+        }
+
+        function setPage(tab, p) {
+            if (tab === 'pos') posPage = p;
+            else if (tab === 'closed') closedPage = p;
+            else if (tab === 'trade') tradePage = p;
+            else if (tab === 'equity') equityPage = p;
+            else if (tab === 'signal') signalPage = p;
+        }
+
+        function getPage(tab) {
+            if (tab === 'pos') return posPage;
+            if (tab === 'closed') return closedPage;
+            if (tab === 'trade') return tradePage;
+            if (tab === 'equity') return equityPage;
+            return signalPage;
+        }
+
+        function currentRows() {
+            if (activeTab === 'pos') return posRows;
+            if (activeTab === 'closed') return closedRows;
+            if (activeTab === 'trade') return tradeRows;
+            if (activeTab === 'equity') return equity;
+            return signals;
+        }
+
+        function sortRows(rows, st) {
+            if (!st || !st.key) return rows;
+            const key = st.key, dir = st.dir || 1;
+            return rows.slice().sort((a, b) => {
+                let va = key === 'dte' ? a.__dte : a[key];
+                let vb = key === 'dte' ? b.__dte : b[key];
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (typeof va === 'number' || typeof vb === 'number') {
+                    return (Number(va) - Number(vb)) * dir;
+                }
+                return String(va).localeCompare(String(vb), 'zh-CN', {numeric: true}) * dir;
+            });
+        }
+
+        function updateSortIndicators(tab) {
+            const st = sortState[tab];
+            document.querySelectorAll('#pane-' + tab + ' thead th[data-sort]').forEach(th => {
+                const on = th.dataset.sort === st.key;
+                th.classList.toggle('sorted', on);
+                const arrow = th.querySelector('.arrow');
+                if (arrow) arrow.textContent = on ? (st.dir > 0 ? '▲' : '▼') : '↕';
+            });
+        }
+
+        function renderActiveTable() {
+            if (activeTab === 'param') return;
+            const rows = currentRows();
+            const kw = ($('#tableSearch').value || '').trim();
+            const filtered = filterRows(rows, kw);
+            const sorted = sortRows(filtered, sortState[activeTab]);
+            const size = posSize;
+            const total = sorted.length;
+            const pages = Math.max(1, Math.ceil(total / size));
+            const page = Math.min(Math.max(1, getPage(activeTab)), pages);
+            setPage(activeTab, page);
+            const start = (page - 1) * size;
+            const list = sorted.slice(start, start + size);
+
+            if (activeTab === 'pos') {
+                renderPositions(list);
+                $('#cntPos').textContent = total;
+            } else if (activeTab === 'closed') {
+                renderClosed(list);
+                $('#cntClosed').textContent = total;
+            } else if (activeTab === 'trade') {
+                renderTrades(list);
+                $('#cntTrade').textContent = total;
+            } else if (activeTab === 'equity') {
+                renderEquity(list);
+                $('#cntEquity').textContent = total;
+            } else if (activeTab === 'signal') {
+                renderSignalsTable(list);
+                $('#cntSignal').textContent = total;
+            }
+
+            pager(total, size, page, p => {
+                setPage(activeTab, p);
+                renderActiveTable();
+            });
+            updateSortIndicators(activeTab);
+        }
+
+        async function fetchAllRows(path, query) {
+            query.set('page', '1');
+            query.set('size', '100000');
+            const data = await O.api(path + '?' + query);
+            const rows = data.list || [];
+            rows.forEach((r, i) => {
+                r.__idx = i + 1;
+                if (r.expiryDate) r.__dte = dteOf(r);
+            });
+            return rows;
+        }
+
         async function loadTable() {
             if (activeTab === 'param') return;
-            const kw = ($('#tableSearch').value || '').trim();
             const showDate = activeTab === 'pos' || activeTab === 'closed' || activeTab === 'trade';
             $('#dateFilter').classList.toggle('hidden', !showDate);
 
             if (activeTab === 'pos') {
-                const q = new URLSearchParams({page: posPage, size: posSize});
-                if (listDate) q.set('date', listDate);
-                const data = await O.api('/api/option/backtest/' + id + '/positions?' + q);
-                renderPositions(data.list || [], kw);
-                $('#cntPos').textContent = data.total || 0;
-                pager(data.total || 0, posSize, posPage, p => {
-                    posPage = p;
-                    loadTable();
-                });
+                if (posKey !== listDate) {
+                    const q = new URLSearchParams();
+                    if (listDate) q.set('date', listDate);
+                    posRows = await fetchAllRows('/api/option/backtest/' + id + '/positions', q);
+                    posKey = listDate;
+                }
             } else if (activeTab === 'closed') {
-                const q = new URLSearchParams({page: closedPage, size: posSize});
-                if (listDate) {
-                    q.set('from', listDate);
-                    q.set('to', listDate);
+                if (closedKey !== listDate) {
+                    const q = new URLSearchParams();
+                    if (listDate) { q.set('from', listDate); q.set('to', listDate); }
+                    closedRows = await fetchAllRows('/api/option/backtest/' + id + '/closes', q);
+                    closedKey = listDate;
                 }
-                const data = await O.api('/api/option/backtest/' + id + '/closes?' + q);
-                renderClosed(data.list || [], kw);
-                $('#cntClosed').textContent = data.total || 0;
-                pager(data.total || 0, posSize, closedPage, p => {
-                    closedPage = p;
-                    loadTable();
-                });
             } else if (activeTab === 'trade') {
-                const q = new URLSearchParams({page: tradePage, size: posSize});
-                if (listDate) {
-                    q.set('from', listDate);
-                    q.set('to', listDate);
+                if (tradeKey !== listDate) {
+                    const q = new URLSearchParams();
+                    if (listDate) { q.set('from', listDate); q.set('to', listDate); }
+                    tradeRows = await fetchAllRows('/api/option/backtest/' + id + '/trades', q);
+                    tradeKey = listDate;
                 }
-                const data = await O.api('/api/option/backtest/' + id + '/trades?' + q);
-                renderTrades(data.list || [], kw);
-                $('#cntTrade').textContent = data.total || 0;
-                pager(data.total || 0, posSize, tradePage, p => {
-                    tradePage = p;
-                    loadTable();
-                });
-            } else if (activeTab === 'equity') {
-                const list = filterRows(equity, kw);
-                const start = (equityPage - 1) * posSize;
-                renderEquity(list.slice(start, start + posSize));
-                pager(list.length, posSize, equityPage, p => {
-                    equityPage = p;
-                    loadTable();
-                });
-            } else if (activeTab === 'signal') {
-                const list = filterRows(signals, kw);
-                const start = (signalPage - 1) * posSize;
-                renderSignalsTable(list.slice(start, start + posSize));
-                pager(list.length, posSize, signalPage, p => {
-                    signalPage = p;
-                    loadTable();
-                });
             }
+            renderActiveTable();
         }
 
         function pager(total, size, page, cb) {
@@ -559,7 +682,7 @@
                 onSize: n => {
                     posSize = n;
                     posPage = closedPage = tradePage = equityPage = signalPage = 1;
-                    loadTable();
+                    renderActiveTable();
                 }
             });
         }
@@ -570,7 +693,7 @@
                 return;
             }
             $('#posBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${i + 1}</td>
+                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td>
                 <td><span style="color:var(--text)">${esc(O.undName(p.underlyingCode))}</span> <span class="num" style="font-size:9px;color:var(--dim)">${esc(p.underlyingCode)}</span></td>
                 <td><span style="color:var(--text)">${esc(p.optionName)}</span><div class="num" style="font-size:9px;color:var(--dim)">${esc(p.optionCode)}</div></td>
                 <td><span class="tag ${p.callPutType === 'C' ? 'c' : 'p'}">${p.callPutType === 'C' ? '认购' : '认沽'}</span></td>
@@ -590,7 +713,7 @@
                 return;
             }
             $('#closedBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${i + 1}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
+                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td class="num">${esc(p.openDate)}</td><td class="num">${esc(p.closeDate)}</td><td class="num r">${O.num(p.qty)}</td>
                 <td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.avgSellPrice, 4)}</td><td class="num r">${p.holdDays}</td>
                 <td class="num r ${O.cls(p.realizedPnl)}">${O.num(p.realizedPnl)}</td><td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
@@ -604,7 +727,7 @@
                 return;
             }
             $('#tradeBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${i + 1}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
+                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
                 <td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td><span class="tag ${Number(p.tradeType) === 1 ? 'buy' : 'sell'}">${Number(p.tradeType) === 1 ? '买入' : '卖出'}</span></td>
                 <td class="num r">${O.num(p.price, 4)}</td><td class="num r">${O.num(p.qty)}</td><td class="num r">${O.num(p.amount)}</td>
@@ -644,7 +767,12 @@
         function filterRows(list, kw) {
             if (!kw) return list;
             const k = kw.toLowerCase();
-            return list.filter(x => JSON.stringify(x).toLowerCase().includes(k));
+            return list.filter(x => {
+                const row = Object.assign({}, x);
+                delete row.__idx;
+                delete row.__dte;
+                return JSON.stringify(row).toLowerCase().includes(k);
+            });
         }
 
         function dteOf(p) {
@@ -695,7 +823,7 @@
         });
         $('#tableSearch').addEventListener('input', () => {
             posPage = closedPage = tradePage = equityPage = signalPage = 1;
-            loadTable();
+            renderActiveTable();
         });
         $('#btnTableExport').addEventListener('click', () => {
             const type = activeTab === 'pos' ? 'positions' : activeTab === 'closed' ? 'closes' : activeTab === 'trade' ? 'trades' : 'equity';
@@ -717,6 +845,8 @@
             }
         });
 
+        activateTabUI(activeTab);
+        initSortableHeaders();
         loadAll();
     })();
 </script>
