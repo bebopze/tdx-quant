@@ -553,8 +553,8 @@ public class KlineServiceImpl implements KlineService {
         // -------------------------------------------------------------------------------------------------------------
 
 
-        // del ALL   ->   kline_ext_data
-        baseOptionService.delAllKlineExtData();
+        // del ALL   ->   kline_ext_data（❌ 期权 -> 严禁 删除 历史kline   =>   [过期合约] -> 通达信 无历史kline数据 ）
+        // baseOptionService.delAllKlineExtData();
 
 
         // -------------------------------------------------------------------------------------------------------------
