@@ -185,7 +185,9 @@
                                 <th class="r">浮动盈亏</th>
                                 <th class="r">收益率</th>
                                 <th class="r">权重</th>
+                                <th class="r">仓位（%）</th>
                                 <th class="r">持仓天数</th>
+                                <th>开仓日</th>
                                 <th>建仓来源</th>
                             </tr>
                             </thead>
@@ -209,6 +211,7 @@
                                 <th class="r">均价卖出</th>
                                 <th class="r">持有天数</th>
                                 <th class="r">已实现盈亏</th>
+                                <th class="r">仓位（%）</th>
                                 <th class="r">收益率</th>
                                 <th class="r">最大浮盈</th>
                                 <th>平仓原因</th>
@@ -233,6 +236,7 @@
                                 <th class="r">成交价</th>
                                 <th class="r">数量</th>
                                 <th class="r">成交额</th>
+                                <th class="r">仓位（%）</th>
                                 <th class="r">费用</th>
                                 <th>触发原因</th>
                                 <th class="r">触发值</th>
@@ -312,6 +316,7 @@
         let posPage = 1, posSize = 100, closedPage = 1, tradePage = 1;
         let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
         let posRows = [], closedRows = [], tradeRows = [];
+        let equityByDate = new Map();
         let posKey = null, closedKey = null, tradeKey = null;
         const sortState = {
             pos: {key: '', dir: 1}, closed: {key: '', dir: 1}, trade: {key: '', dir: 1},
@@ -320,11 +325,11 @@
         const SORT_KEYS = {
             pos: ['__idx', 'underlyingCode', 'optionName', 'callPutType', 'strikePrice', 'contractMonth', 'dte',
                 'qty', 'avgCost', 'closePrice', 'costAmount', 'marketValue', 'unrealizedPnl', 'pnlPct',
-                'weightPct', 'holdDays', 'openReason'],
+                'weightPct', 'accountPct', 'holdDays', 'openDate', 'openReason'],
             closed: ['__idx', 'underlyingCode', 'optionName', 'openDate', 'closeDate', 'qty', 'avgCost',
-                'avgSellPrice', 'holdDays', 'realizedPnl', 'pnlPct', 'maxPnlPct', 'closeReasonDesc'],
+                'avgSellPrice', 'holdDays', 'realizedPnl', 'accountPct', 'pnlPct', 'maxPnlPct', 'closeReasonDesc'],
             trade: ['__idx', 'tradeDate', 'tradeTime', 'underlyingCode', 'optionName', 'tradeType', 'price',
-                'qty', 'amount', 'fee', 'reasonDesc', 'triggerValue']
+                'qty', 'amount', 'accountPct', 'fee', 'reasonDesc', 'triggerValue']
         };
 
         // 可选的深链排序：detail.html?id=22&sort=pnlPct&dir=asc
@@ -384,6 +389,7 @@
         async function loadStats() {
             stats = await O.api('/api/option/backtest/' + id + '/stats');
             equity = stats.equity || [];
+            equityByDate = new Map(equity.map(e => [String(e.tradeDate || '').slice(0, 10), e]));
             signals = stats.signals || [];
             renderRisk();
             renderSignals();
@@ -471,8 +477,8 @@
         function initDateFilter() {
             const input = $('#listDate');
             const dates = task.positionDates || [];
-            // 默认应用最后 1 个持仓日；无持仓日时回退到回测结束日
-            listDate = dates.length ? dates[dates.length - 1] : (task.endDate || '');
+            // 默认应用最后 1 个持仓日；无持仓日时回退到回测结束日；支持 ?date=YYYY-MM-DD 深链
+            listDate = O.qs('date', '') || (dates.length ? dates[dates.length - 1] : (task.endDate || ''));
             input.value = listDate;
             input.min = task.actualStartDate || task.startDate || '';
             input.max = task.endDate || '';
@@ -536,7 +542,10 @@
                         if (activeTab !== tab) return;
                         const st = sortState[tab];
                         if (st.key === key) st.dir = -st.dir;
-                        else { st.key = key; st.dir = -1; }
+                        else {
+                            st.key = key;
+                            st.dir = -1;
+                        }
                         setPage(tab, 1);
                         renderActiveTable();
                     });
@@ -573,8 +582,11 @@
             if (!st || !st.key) return rows;
             const key = st.key, dir = st.dir || 1;
             return rows.slice().sort((a, b) => {
-                let va = key === 'dte' ? a.__dte : a[key];
-                let vb = key === 'dte' ? b.__dte : b[key];
+                const field = key === 'dte' ? '__dte'
+                    : key === 'accountPct' ? '__accountPct'
+                        : key === 'openDate' ? '__openDate' : key;
+                let va = a[field];
+                let vb = b[field];
                 if (va == null && vb == null) return 0;
                 if (va == null) return 1;
                 if (vb == null) return -1;
@@ -641,6 +653,24 @@
             rows.forEach((r, i) => {
                 r.__idx = i + 1;
                 if (r.expiryDate) r.__dte = dteOf(r);
+                if (r.tradeDate) {
+                    r.__openDate = addDays(r.tradeDate, -(Number(r.holdDays) || 0));
+                    const e = equityByDate.get(String(r.tradeDate).slice(0, 10));
+                    r.__accountPct = e && e.positionPct != null
+                        ? Number(e.positionPct) * Number(r.weightPct || 0) / 100 : null;
+                }
+                if (r.closeDate) {
+                    const e = equityByDate.get(String(r.closeDate).slice(0, 10));
+                    const mult = r.multiplier != null ? Number(r.multiplier)
+                        : (String(r.underlyingCode) === '000852' ? 100 : 10000);
+                    r.__sellAmount = Number(r.qty || 0) * Number(r.avgSellPrice || 0) * mult;
+                    r.__accountPct = e && e.equity
+                        ? r.__sellAmount / Number(e.equity) * 100 : null;
+                }
+                if (r.tradeDate && Number(r.tradeType) === 2) {
+                    const e = equityByDate.get(String(r.tradeDate).slice(0, 10));
+                    r.__accountPct = e && e.equity ? Number(r.amount || 0) / Number(e.equity) * 100 : null;
+                }
             });
             return rows;
         }
@@ -660,14 +690,20 @@
             } else if (activeTab === 'closed') {
                 if (closedKey !== listDate) {
                     const q = new URLSearchParams();
-                    if (listDate) { q.set('from', listDate); q.set('to', listDate); }
+                    if (listDate) {
+                        q.set('from', listDate);
+                        q.set('to', listDate);
+                    }
                     closedRows = await fetchAllRows('/api/option/backtest/' + id + '/closes', q);
                     closedKey = listDate;
                 }
             } else if (activeTab === 'trade') {
                 if (tradeKey !== listDate) {
                     const q = new URLSearchParams();
-                    if (listDate) { q.set('from', listDate); q.set('to', listDate); }
+                    if (listDate) {
+                        q.set('from', listDate);
+                        q.set('to', listDate);
+                    }
                     tradeRows = await fetchAllRows('/api/option/backtest/' + id + '/trades', q);
                     tradeKey = listDate;
                 }
@@ -689,7 +725,7 @@
 
         function renderPositions(list, kw) {
             if (!list.length) {
-                $('#posBody').innerHTML = '<tr><td colspan="17" class="empty">暂无持仓</td></tr>';
+                $('#posBody').innerHTML = '<tr><td colspan="19" class="empty">暂无持仓</td></tr>';
                 return;
             }
             $('#posBody').innerHTML = list.map((p, i) => `<tr>
@@ -702,28 +738,32 @@
                 <td class="num r">${O.num(p.costAmount)}</td><td class="num r">${O.num(p.marketValue)}</td>
                 <td class="num r ${O.cls(p.unrealizedPnl)}">${O.num(p.unrealizedPnl)}</td>
                 <td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
-                <td class="num r">${O.num(p.weightPct, 2)}%</td><td class="num r">${p.holdDays}</td>
+                <td class="num r">${O.num(p.weightPct, 2)}%</td>
+                <td class="num r" title="持仓市值 / 当日总权益">${accountPctText(p.__accountPct)}</td>
+                <td class="num r">${p.holdDays}</td><td class="num">${esc(p.__openDate || '—')}</td>
                 <td style="color:var(--muted);font-size:9.5px">${esc(p.openReason)}</td>
             </tr>`).join('');
         }
 
         function renderClosed(list, kw) {
             if (!list.length) {
-                $('#closedBody').innerHTML = '<tr><td colspan="13" class="empty">暂无平仓记录</td></tr>';
+                $('#closedBody').innerHTML = '<tr><td colspan="14" class="empty">暂无平仓记录</td></tr>';
                 return;
             }
             $('#closedBody').innerHTML = list.map((p, i) => `<tr>
                 <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td class="num">${esc(p.openDate)}</td><td class="num">${esc(p.closeDate)}</td><td class="num r">${O.num(p.qty)}</td>
                 <td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.avgSellPrice, 4)}</td><td class="num r">${p.holdDays}</td>
-                <td class="num r ${O.cls(p.realizedPnl)}">${O.num(p.realizedPnl)}</td><td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
+                <td class="num r ${O.cls(p.realizedPnl)}">${O.num(p.realizedPnl)}</td>
+                <td class="num r" title="卖出金额 / 平仓日账户总资产">${accountPctText(p.__accountPct)}</td>
+                <td class="num r ${O.cls(p.pnlPct)}">${O.pct(p.pnlPct)}</td>
                 <td class="num r up">${O.pct(p.maxPnlPct)}</td><td><span class="tag">${esc(p.closeReasonDesc || p.closeReason)}</span></td>
             </tr>`).join('');
         }
 
         function renderTrades(list, kw) {
             if (!list.length) {
-                $('#tradeBody').innerHTML = '<tr><td colspan="12" class="empty">暂无交易</td></tr>';
+                $('#tradeBody').innerHTML = '<tr><td colspan="13" class="empty">暂无交易</td></tr>';
                 return;
             }
             $('#tradeBody').innerHTML = list.map((p, i) => `<tr>
@@ -731,6 +771,7 @@
                 <td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td><span class="tag ${Number(p.tradeType) === 1 ? 'buy' : 'sell'}">${Number(p.tradeType) === 1 ? '买入' : '卖出'}</span></td>
                 <td class="num r">${O.num(p.price, 4)}</td><td class="num r">${O.num(p.qty)}</td><td class="num r">${O.num(p.amount)}</td>
+                <td class="num r" title="卖出金额 / 当日总资产（仅卖出）">${Number(p.tradeType) === 2 ? accountPctText(p.__accountPct) : '—'}</td>
                 <td class="num r">${O.num(p.fee, 2)}</td><td style="color:var(--muted);font-size:9.5px">${esc(p.reasonDesc)}</td>
                 <td class="num r">${p.triggerValue == null ? '—' : O.num(p.triggerValue, 2)}</td>
             </tr>`).join('');
@@ -773,6 +814,19 @@
                 delete row.__dte;
                 return JSON.stringify(row).toLowerCase().includes(k);
             });
+        }
+
+        function accountPctText(v) {
+            if (v == null) return '—';
+            const n = Number(v);
+            if (!isFinite(n)) return '—';
+            return n.toFixed(Math.abs(n) < 0.01 ? 4 : 2) + '%';
+        }
+
+        function addDays(dateStr, days) {
+            const d = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');
+            d.setDate(d.getDate() + days);
+            return d.toISOString().slice(0, 10);
         }
 
         function dteOf(p) {
