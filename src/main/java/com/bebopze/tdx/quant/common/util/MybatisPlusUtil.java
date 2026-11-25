@@ -4,8 +4,8 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.MybatisSqlSessionFactoryBuilder;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
-import com.bebopze.tdx.quant.dal.mapper.BaseBlockMapper;
-import com.bebopze.tdx.quant.dal.mapper.BaseStockMapper;
+import com.bebopze.tdx.quant.dal.mapper.*;
+import com.bebopze.tdx.quant.optionbs.OptionBsRepository;
 import com.bebopze.tdx.quant.dal.service.IBaseBlockService;
 import com.bebopze.tdx.quant.dal.service.IBaseStockService;
 import com.bebopze.tdx.quant.dal.service.impl.BaseBlockServiceImpl;
@@ -15,6 +15,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.apache.ibatis.type.JdbcType;
 
 import static com.bebopze.tdx.quant.common.util.PropsUtil.*;
 
@@ -52,12 +53,26 @@ public class MybatisPlusUtil {
         // 4. MyBatis-Plus Configuration
         MybatisConfiguration config = new MybatisConfiguration(env);
         config.setMapUnderscoreToCamelCase(true);
-        config.setJdbcTypeForNull(null);
+        config.setJdbcTypeForNull(JdbcType.NULL);
         config.setEnvironment(env);
 
         // 手动注册所有 Mapper 接口
         config.addMapper(BaseStockMapper.class);
         config.addMapper(BaseBlockMapper.class);
+        config.addMapper(BaseOptionMapper.class);
+        config.addMapper(QaMarketMidCycleMapper.class);
+
+        // 期权 BS 回测
+        config.addMapper(ObtTaskMapper.class);
+        config.addMapper(ObtDailyEquityMapper.class);
+        config.addMapper(ObtDailyPositionMapper.class);
+        config.addMapper(ObtTradeMapper.class);
+        config.addMapper(ObtCloseRecordMapper.class);
+        config.addMapper(ObtSignalEventMapper.class);
+        config.addMapper(ObtTaskLogMapper.class);
+        config.addMapper(ObtIndexKlineMapper.class);
+        config.addMapper(ObtTemplateMapper.class);
+        config.addMapper(ObtMetaMapper.class);
 
 
         // 5. 构建 SqlSessionFactory
@@ -84,6 +99,23 @@ public class MybatisPlusUtil {
         service.injectMapper(mapper);
 
         return service;
+    }
+
+
+    /**
+     * 期权 BS 回测 - 非 Spring 环境（CLI）仓储
+     */
+    public static OptionBsRepository getOptionBsRepository() {
+        SqlSession session = SQL_SESSION_FACTORY.openSession(true);
+        return new OptionBsRepository(
+                session.getMapper(ObtTaskMapper.class),
+                session.getMapper(ObtDailyEquityMapper.class),
+                session.getMapper(ObtDailyPositionMapper.class),
+                session.getMapper(ObtTradeMapper.class),
+                session.getMapper(ObtCloseRecordMapper.class),
+                session.getMapper(ObtSignalEventMapper.class),
+                session.getMapper(ObtTaskLogMapper.class),
+                session.getMapper(ObtMetaMapper.class));
     }
 
 

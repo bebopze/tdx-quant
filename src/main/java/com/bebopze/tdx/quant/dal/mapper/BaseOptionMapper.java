@@ -43,6 +43,14 @@ public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
 
 
     /**
+     * 回测用：指定标的、存续区间的合约（含 kline_his）
+     */
+    List<BaseOptionDO> listForBacktest(@Param("codes") List<String> codes,
+                                       @Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate);
+
+
+    /**
      * 标的name（期权表口径，如 50ETF / 300ETF）
      *
      * @param underlyingCode 标的code

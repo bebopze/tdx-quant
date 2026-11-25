@@ -5,6 +5,7 @@ import com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * <p>
@@ -21,4 +22,6 @@ public interface QaMarketMidCycleMapper extends BaseMapper<QaMarketMidCycleDO> {
     QaMarketMidCycleDO getByDate(@Param("date") LocalDate date);
 
     QaMarketMidCycleDO last();
+
+    List<QaMarketMidCycleDO> listUpToDate(@Param("endDate") LocalDate endDate);
 }

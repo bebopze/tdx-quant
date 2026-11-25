@@ -27,14 +27,21 @@ src/main/java/com/bebopze/tdx/quant/optionbs/
 ├── OptionBsParams.java                 参数（创建页字段）
 ├── OptionBsModels.java                 合约/标的/信号/持仓/交易/净值模型
 ├── OptionBsData.java                   输入数据
-├── OptionBsDb.java                     JDBC 数据源抽象（Spring / CLI）
-├── OptionBsDataLoader.java             信号/标的/合约/指数K线加载
+├── OptionBsDataLoader.java             信号/标的/合约/指数K线加载（MyBatis-Plus Mapper）
 ├── OptionBsEngine.java                 回测引擎（日频）
-├── OptionBsRepository.java             落库 / 查询 / 导出数据
+├── OptionBsRepository.java             落库 / 查询 / 导出编排（Mapper 调用）
 ├── OptionBsBacktestService.java        任务编排 / 异步 / 校验
 ├── OptionBsBacktestController.java     REST API
 ├── OptionBsConfig.java                 Spring Bean
 └── OptionBsCli.java                    命令行实跑入口
+```
+
+持久化分层（与项目现有风格一致）：
+
+```
+dal/entity/Obt*DO.java                   9 张表的 MyBatis-Plus 实体
+dal/mapper/Obt*Mapper.java               BaseMapper + 自定义方法
+resources/com/bebopze/.../mapper/Obt*Mapper.xml   自定义 SQL
 ```
 
 表结构：`src/main/resources/db/optionbs.sql`

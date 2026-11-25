@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.optionbs;
 
+import com.bebopze.tdx.quant.dal.mapper.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,11 +24,22 @@ import java.util.concurrent.ExecutorService;
 @Service
 public class OptionBsBacktestService {
 
+
     @Autowired
     private OptionBsRepository repo;
 
     @Autowired
-    private OptionBsDb db;
+    private QaMarketMidCycleMapper signalMapper;
+
+    @Autowired
+    private BaseStockMapper stockMapper;
+
+    @Autowired
+    private BaseOptionMapper optionMapper;
+
+    @Autowired
+    private ObtIndexKlineMapper indexKlineMapper;
+
 
     @Autowired
     @Qualifier("optionBsExecutor")
@@ -81,7 +93,7 @@ public class OptionBsBacktestService {
             repo.log(id, "INFO", "任务启动 " + taskNo + " capital=" + p.getInitialCapital());
             progressMap.put(id, 5);
 
-            OptionBsDataLoader loader = new OptionBsDataLoader(db);
+            OptionBsDataLoader loader = new OptionBsDataLoader(signalMapper, stockMapper, optionMapper, indexKlineMapper);
             OptionBsData data = loader.load(p);
             repo.updateProgress(id, 40);
             progressMap.put(id, 40);
@@ -146,7 +158,7 @@ public class OptionBsBacktestService {
         if (task == null) return null;
         Integer liveProgress = progressMap.get(id);
         task.put("progress", liveProgress != null ? liveProgress : task.get("progress"));
-        task.put("equityCount", repo.equity(id, null, null).size());
+        task.put("equityCount", repo.equityCount(id));
         task.put("positionDates", repo.positionDates(id));
         return task;
     }
@@ -169,8 +181,13 @@ public class OptionBsBacktestService {
         return repo.trades(id, page, size, type, reason, from, to);
     }
 
-    public Map<String, Object> closes(long id, int page, int size, String reason) throws Exception {
-        return repo.closes(id, page, size, reason);
+    public Map<String, Object> closes(long id,
+                                      int page,
+                                      int size,
+                                      String reason,
+                                      String from,
+                                      String to) throws Exception {
+        return repo.closes(id, page, size, reason, from, to);
     }
 
     public List<Map<String, Object>> signals(long id) throws Exception {
@@ -239,13 +256,7 @@ public class OptionBsBacktestService {
         risk.put("avgPositionPct", task == null ? 0 : num(task.get("avgPositionPct")));
         risk.put("profitFactor", task == null ? 0 : num(task.get("profitFactor")));
         risk.put("totalFee", task == null ? 0 : num(task.get("totalFee")));
-        double avgHold = 0;
-        try {
-            Map<String, Object> row = repo.queryOne("SELECT AVG(hold_days) a FROM obt_close_record WHERE task_id=?", id);
-            avgHold = row == null ? 0 : num(row.get("a"));
-        } catch (Exception ignore) {
-        }
-        risk.put("avgHoldDays", avgHold);
+        risk.put("avgHoldDays", repo.avgHoldDays(id));
         risk.put("monthlyWinRate", monthly.isEmpty() ? 0 : monthly.values().stream().filter(x -> x > 0).count() * 100.0 / monthly.size());
         risk.put("signals", task == null ? 0 : num(task.get("signalCount")));
         res.put("riskMetrics", risk);
@@ -284,15 +295,15 @@ public class OptionBsBacktestService {
         String header;
         switch (type) {
             case "positions" -> {
-                rows = repo.queryMaps("SELECT * FROM obt_daily_position WHERE task_id=? ORDER BY trade_date, option_code", id);
+                rows = repo.allPositions(id);
                 header = "日期,标的,合约代码,合约名称,类型,行权价,月份,数量,成本价,收盘价,成本金额,市值,浮动盈亏,收益率%,权重%,持仓天数,建仓来源,虚实值";
             }
             case "trades" -> {
-                rows = repo.queryMaps("SELECT * FROM obt_trade WHERE task_id=? ORDER BY trade_date, seq", id);
+                rows = repo.allTrades(id);
                 header = "日期,时间,序号,方向,标的,合约,类型,行权价,成交价,数量,金额,费用,触发规则,仓位比例,现金余额,成交后持仓";
             }
             case "closes" -> {
-                rows = repo.queryMaps("SELECT * FROM obt_close_record WHERE task_id=? ORDER BY close_date, id", id);
+                rows = repo.allCloses(id);
                 header = "开仓日,平仓日,标的,合约,类型,数量,均价成本,均价卖出,已实现盈亏,收益率%,持有天数,最大浮盈%,平仓原因";
             }
             default -> {

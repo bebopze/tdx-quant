@@ -324,4 +324,38 @@
     </update>
 
 
+    <select id="listForBacktest" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
+        SELECT
+
+        code,
+        symbol,
+        name,
+        call_put_type,
+        strike_price,
+        multiplier,
+        underlying_code,
+        underlying_name,
+        contract_month,
+        start_date,
+        end_date,
+        kline_his,
+        kline_his_raw_len
+
+
+        FROM base_option
+
+
+        WHERE
+
+        underlying_code IN
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+
+        <![CDATA[ AND start_date <= #{endDate} ]]>
+        <![CDATA[ AND end_date >= #{startDate} ]]>
+
+        ORDER BY underlying_code, contract_month, strike_price, call_put_type
+    </select>
+
 </mapper>

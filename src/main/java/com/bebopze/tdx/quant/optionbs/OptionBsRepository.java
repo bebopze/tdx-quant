@@ -1,17 +1,19 @@
 package com.bebopze.tdx.quant.optionbs;
 
 import com.alibaba.fastjson2.JSON;
+import com.bebopze.tdx.quant.dal.entity.*;
+import com.bebopze.tdx.quant.dal.mapper.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,7 +22,7 @@ import java.util.Map;
 
 
 /**
- * 期权 BS 回测 - 持久化 / 查询（原生 JDBC，Spring 与 CLI 共用）
+ * 期权 BS 回测 - 持久化 / 查询（MyBatis-Plus Mapper + XML）
  *
  * @author bebopze
  * @date 2026/11/26
@@ -28,10 +30,37 @@ import java.util.Map;
 @Slf4j
 public class OptionBsRepository {
 
-    private final OptionBsDb db;
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    public OptionBsRepository(OptionBsDb db) {
-        this.db = db;
+    private static final int BATCH_SIZE = 1000;
+
+    private final ObtTaskMapper taskMapper;
+    private final ObtDailyEquityMapper equityMapper;
+    private final ObtDailyPositionMapper positionMapper;
+    private final ObtTradeMapper tradeMapper;
+    private final ObtCloseRecordMapper closeMapper;
+    private final ObtSignalEventMapper signalMapper;
+    private final ObtTaskLogMapper logMapper;
+    private final ObtMetaMapper metaMapper;
+
+    public OptionBsRepository(ObtTaskMapper taskMapper,
+                              ObtDailyEquityMapper equityMapper,
+                              ObtDailyPositionMapper positionMapper,
+                              ObtTradeMapper tradeMapper,
+                              ObtCloseRecordMapper closeMapper,
+                              ObtSignalEventMapper signalMapper,
+                              ObtTaskLogMapper logMapper,
+                              ObtMetaMapper metaMapper) {
+        this.taskMapper = taskMapper;
+        this.equityMapper = equityMapper;
+        this.positionMapper = positionMapper;
+        this.tradeMapper = tradeMapper;
+        this.closeMapper = closeMapper;
+        this.signalMapper = signalMapper;
+        this.logMapper = logMapper;
+        this.metaMapper = metaMapper;
     }
 
 
@@ -40,84 +69,63 @@ public class OptionBsRepository {
     // =================================================================================================================
 
 
-    public String nextTaskNo() throws SQLException {
+    public String nextTaskNo() {
         String prefix = "OBT" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-";
-        String sql = "SELECT task_no FROM obt_task WHERE task_no LIKE ? ORDER BY task_no DESC LIMIT 1";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
-            try (ResultSet rs = ps.executeQuery()) {
-                int n = 1;
-                if (rs.next()) {
-                    String last = rs.getString(1);
-                    n = Integer.parseInt(last.substring(last.lastIndexOf('-') + 1)) + 1;
-                }
-                return prefix + String.format("%04d", n);
-            }
+        String last = taskMapper.lastTaskNo(prefix);
+        int n = 1;
+        if (last != null && last.lastIndexOf('-') >= 0) {
+            n = Integer.parseInt(last.substring(last.lastIndexOf('-') + 1)) + 1;
         }
+        return prefix + String.format("%04d", n);
     }
 
-    public long createTask(OptionBsParams p, String taskNo) throws SQLException {
-        String sql = "INSERT INTO obt_task(task_no, task_name, status, progress, start_date, end_date, initial_capital, " +
-                "underlying_codes, signal_mode, month_mode, strike_mode, params_json, engine_version, data_version, creator) " +
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, taskNo);
-            ps.setString(2, p.getTaskName());
-            ps.setInt(3, 0);
-            ps.setInt(4, 0);
-            ps.setDate(5, java.sql.Date.valueOf(p.getStartDate()));
-            ps.setDate(6, java.sql.Date.valueOf(p.getEndDate()));
-            ps.setBigDecimal(7, BigDecimal.valueOf(p.getInitialCapital()));
-            ps.setString(8, String.join(",", p.getUnderlyingCodes()));
-            ps.setString(9, p.getSignalMode());
-            ps.setString(10, p.getMonthMode());
-            ps.setString(11, String.join(",", p.getStrikes()));
-            ps.setString(12, JSON.toJSONString(p));
-            ps.setString(13, p.getEngineVersion());
-            ps.setString(14, p.getDataVersion());
-            ps.setString(15, p.getCreator());
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) return rs.getLong(1);
-            }
-            throw new SQLException("createTask no id");
-        }
+    public long createTask(OptionBsParams p, String taskNo) {
+        ObtTaskDO t = new ObtTaskDO();
+        t.setTaskNo(taskNo);
+        t.setTaskName(p.getTaskName());
+        t.setStatus(0);
+        t.setProgress(0);
+        t.setStartDate(p.getStartDate());
+        t.setEndDate(p.getEndDate());
+        t.setInitialCapital(bd(p.getInitialCapital()));
+        t.setUnderlyingCodes(String.join(",", p.getUnderlyingCodes()));
+        t.setSignalMode(p.getSignalMode());
+        t.setMonthMode(p.getMonthMode());
+        t.setStrikeMode(String.join(",", p.getStrikes()));
+        t.setParamsJson(JSON.toJSONString(p));
+        t.setEngineVersion(p.getEngineVersion());
+        t.setDataVersion(p.getDataVersion());
+        t.setCreator(p.getCreator());
+        taskMapper.insert(t);
+        return t.getId();
     }
 
-    public void updateTask(long id, int status, int progress, String error) throws SQLException {
-        String sql = "UPDATE obt_task SET status=?, progress=?, error_msg=?, " +
-                "started_at=IF(started_at IS NULL AND ?=1, NOW(), started_at), " +
-                "finished_at=IF(? IN (2,3,4), NOW(), finished_at) WHERE id=?";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, status);
-            ps.setInt(2, progress);
-            ps.setString(3, error);
-            ps.setInt(4, status);
-            ps.setInt(5, status);
-            ps.setLong(6, id);
-            ps.executeUpdate();
-        }
+    public void updateTask(long id, int status, int progress, String error) {
+        taskMapper.updateStatus(id, status, progress,
+                                error != null && error.length() > 1000 ? error.substring(0, 1000) : error);
     }
 
-    public void updateProgress(long id, int progress) throws SQLException {
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement("UPDATE obt_task SET progress=? WHERE id=?")) {
-            ps.setInt(1, progress);
-            ps.setLong(2, id);
-            ps.executeUpdate();
-        }
+    public void updateProgress(long id, int progress) {
+        taskMapper.updateProgress(id, progress);
+    }
+
+    public void favorite(long id, int flag) {
+        taskMapper.updateFavorite(id, flag);
+    }
+
+    public void logicDelete(long id) {
+        taskMapper.logicDelete(id);
     }
 
     public void log(long taskId, String level, String message) {
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement("INSERT INTO obt_task_log(task_id, log_time, level, logger, message) VALUES(?,?,?,?,?)")) {
-            ps.setLong(1, taskId);
-            ps.setTimestamp(2, java.sql.Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(3, level);
-            ps.setString(4, "OptionBs");
-            ps.setString(5, message.length() > 990 ? message.substring(0, 990) : message);
-            ps.executeUpdate();
+        try {
+            ObtTaskLogDO e = new ObtTaskLogDO();
+            e.setTaskId(taskId);
+            e.setLogTime(LocalDateTime.now());
+            e.setLevel(level);
+            e.setLogger("OptionBsEngine");
+            e.setMessage(message != null && message.length() > 1000 ? message.substring(0, 1000) : message);
+            logMapper.insert(e);
         } catch (Exception e) {
             log.warn("OptionBsRepository - log fail : {}", e.getMessage());
         }
@@ -129,239 +137,62 @@ public class OptionBsRepository {
     // =================================================================================================================
 
 
-    public void saveResult(long taskId, OptionBsModels.Result r) throws SQLException {
-        try (Connection c = db.getConnection()) {
-            c.setAutoCommit(false);
-            try {
-                delete(c, "obt_daily_equity", taskId);
-                delete(c, "obt_daily_position", taskId);
-                delete(c, "obt_trade", taskId);
-                delete(c, "obt_close_record", taskId);
-                delete(c, "obt_signal_event", taskId);
+    @Transactional(rollbackFor = Exception.class)
+    public void saveResult(long taskId, OptionBsModels.Result r) {
+        equityMapper.deleteByTaskId(taskId);
+        positionMapper.deleteByTaskId(taskId);
+        tradeMapper.deleteByTaskId(taskId);
+        closeMapper.deleteByTaskId(taskId);
+        signalMapper.deleteByTaskId(taskId);
 
-                batchEquity(c, taskId, r.equities);
-                batchPositions(c, taskId, r.positionRows);
-                batchTrades(c, taskId, r.trades);
-                batchCloses(c, taskId, r.closeRecords);
-                batchSignals(c, taskId, r.signals);
+        batchInsert(r.equities, (from, to) -> equityMapper.batchInsert(toEquity(taskId, r.equities.subList(from, to))));
+        batchInsert(r.positionRows, (from, to) -> positionMapper.batchInsert(toPosition(taskId, r.positionRows.subList(from, to))));
+        batchInsert(r.trades, (from, to) -> tradeMapper.batchInsert(toTrade(taskId, r.trades.subList(from, to))));
+        batchInsert(r.closeRecords, (from, to) -> closeMapper.batchInsert(toClose(taskId, r.closeRecords.subList(from, to))));
+        batchInsert(r.signals, (from, to) -> signalMapper.batchInsert(toSignal(taskId, r.signals.subList(from, to))));
 
-                String sql = "UPDATE obt_task SET actual_start_date=?, final_equity=?, total_return_pct=?, annual_return_pct=?, " +
-                        "max_drawdown_pct=?, max_drawdown_start=?, max_drawdown_end=?, max_drawdown_days=?, sharpe_ratio=?, " +
-                        "sortino_ratio=?, calmar_ratio=?, volatility_pct=?, win_rate_pct=?, profit_factor=?, total_trades=?, " +
-                        "buy_trades=?, sell_trades=?, total_days=?, avg_position_pct=?, total_fee=?, signal_count=?, " +
-                        "duration_ms=?, status=2, progress=100, finished_at=NOW() WHERE id=?";
-                try (PreparedStatement ps = c.prepareStatement(sql)) {
-                    int i = 1;
-                    setDate(ps, i++, r.actualStartDate);
-                    ps.setBigDecimal(i++, bd(r.finalEquity));
-                    ps.setBigDecimal(i++, bd(r.totalReturnPct));
-                    ps.setBigDecimal(i++, bd(r.annualReturnPct));
-                    ps.setBigDecimal(i++, bd(r.maxDrawdownPct));
-                    setDate(ps, i++, r.maxDrawdownStart);
-                    setDate(ps, i++, r.maxDrawdownEnd);
-                    ps.setInt(i++, r.maxDrawdownDays);
-                    ps.setBigDecimal(i++, bd(r.sharpe));
-                    ps.setBigDecimal(i++, bd(r.sortino));
-                    ps.setBigDecimal(i++, bd(r.calmar));
-                    ps.setBigDecimal(i++, bd(r.volatilityPct));
-                    ps.setBigDecimal(i++, bd(r.winRatePct));
-                    ps.setBigDecimal(i++, bd(r.profitFactor));
-                    ps.setInt(i++, r.totalTrades);
-                    ps.setInt(i++, r.buyTrades);
-                    ps.setInt(i++, r.sellTrades);
-                    ps.setInt(i++, r.totalDays);
-                    ps.setBigDecimal(i++, bd(r.avgPositionPct));
-                    ps.setBigDecimal(i++, bd(r.totalFee));
-                    ps.setInt(i++, r.signalCount);
-                    ps.setLong(i++, r.durationMs);
-                    ps.setLong(i, taskId);
-                    ps.executeUpdate();
-                }
-                c.commit();
-            } catch (Exception e) {
-                c.rollback();
-                throw e;
-            } finally {
-                c.setAutoCommit(true);
-            }
-        }
+        ObtTaskDO t = new ObtTaskDO();
+        t.setId(taskId);
+        t.setActualStartDate(r.actualStartDate);
+        t.setFinalEquity(bd(r.finalEquity));
+        t.setTotalReturnPct(bd(r.totalReturnPct));
+        t.setAnnualReturnPct(bd(r.annualReturnPct));
+        t.setMaxDrawdownPct(bd(r.maxDrawdownPct));
+        t.setMaxDrawdownStart(r.maxDrawdownStart);
+        t.setMaxDrawdownEnd(r.maxDrawdownEnd);
+        t.setMaxDrawdownDays(r.maxDrawdownDays);
+        t.setSharpeRatio(bd(r.sharpe));
+        t.setSortinoRatio(bd(r.sortino));
+        t.setCalmarRatio(bd(r.calmar));
+        t.setVolatilityPct(bd(r.volatilityPct));
+        t.setWinRatePct(bd(r.winRatePct));
+        t.setProfitFactor(bd(r.profitFactor));
+        t.setTotalTrades(r.totalTrades);
+        t.setBuyTrades(r.buyTrades);
+        t.setSellTrades(r.sellTrades);
+        t.setTotalDays(r.totalDays);
+        t.setAvgPositionPct(bd(r.avgPositionPct));
+        t.setTotalFee(bd(r.totalFee));
+        t.setSignalCount(r.signalCount);
+        t.setDurationMs(r.durationMs);
+        t.setStatus(2);
+        t.setProgress(100);
+        t.setFinishedAt(LocalDateTime.now());
+        taskMapper.updateById(t);
+
         log.info("OptionBsRepository - saveResult done taskId={} equity={} positions={} trades={} closes={}",
                  taskId, r.equities.size(), r.positionRows.size(), r.trades.size(), r.closeRecords.size());
     }
 
-    private void delete(Connection c, String table, long taskId) throws SQLException {
-        try (PreparedStatement ps = c.prepareStatement("DELETE FROM " + table + " WHERE task_id=?")) {
-            ps.setLong(1, taskId);
-            ps.executeUpdate();
-        }
+    @FunctionalInterface
+    private interface BatchWriter {
+        void write(int from, int to);
     }
 
-    private void batchEquity(Connection c, long taskId, List<OptionBsModels.Equity> list) throws SQLException {
-        String sql = "INSERT INTO obt_daily_equity(task_id,trade_date,nav,equity,cash,market_value,position_pct,daily_return_pct," +
-                "cum_return_pct,drawdown_pct,benchmark_close,benchmark_nav,benchmark_return_pct,signal_type,signal_status," +
-                "position_count,fee,stale_flag) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            int n = 0;
-            for (OptionBsModels.Equity e : list) {
-                int i = 1;
-                ps.setLong(i++, taskId);
-                ps.setDate(i++, java.sql.Date.valueOf(e.date));
-                ps.setBigDecimal(i++, bd(e.nav));
-                ps.setBigDecimal(i++, bd(e.equity));
-                ps.setBigDecimal(i++, bd(e.cash));
-                ps.setBigDecimal(i++, bd(e.marketValue));
-                ps.setBigDecimal(i++, bd(e.positionPct));
-                ps.setBigDecimal(i++, bd(e.dailyReturnPct));
-                ps.setBigDecimal(i++, bd(e.cumReturnPct));
-                ps.setBigDecimal(i++, bd(e.drawdownPct));
-                setBd(ps, i++, e.benchmarkClose);
-                setBd(ps, i++, e.benchmarkNav);
-                setBd(ps, i++, e.benchmarkReturnPct);
-                if (e.signalType == null) ps.setNull(i++, java.sql.Types.TINYINT);
-                else ps.setInt(i++, e.signalType);
-                ps.setString(i++, e.signalStatus);
-                ps.setInt(i++, e.positionCount);
-                ps.setBigDecimal(i++, bd(e.fee));
-                ps.setInt(i, e.stale ? 1 : 0);
-                ps.addBatch();
-                if (++n % 1000 == 0) ps.executeBatch();
-            }
-            ps.executeBatch();
-        }
-    }
-
-    private void batchPositions(Connection c, long taskId, List<OptionBsModels.PositionRow> list) throws SQLException {
-        String sql = "INSERT INTO obt_daily_position(task_id,trade_date,underlying_code,underlying_name,option_code,option_name," +
-                "call_put_type,strike_price,contract_month,expiry_date,multiplier,qty,avg_cost,close_price,cost_amount,market_value," +
-                "unrealized_pnl,pnl_pct,weight_pct,hold_days,open_reason,moneyness,stale_flag) " +
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            int n = 0;
-            for (OptionBsModels.PositionRow x : list) {
-                int i = 1;
-                ps.setLong(i++, taskId);
-                ps.setDate(i++, java.sql.Date.valueOf(x.date));
-                ps.setString(i++, x.contract.underlyingCode);
-                ps.setString(i++, x.contract.underlyingName);
-                ps.setString(i++, x.contract.code);
-                ps.setString(i++, x.contract.name);
-                ps.setString(i++, x.contract.callPut);
-                ps.setBigDecimal(i++, bd(x.contract.strike));
-                ps.setInt(i++, x.contract.month);
-                setDate(ps, i++, x.contract.expiryDate);
-                ps.setInt(i++, x.contract.multiplier);
-                ps.setInt(i++, x.qty);
-                ps.setBigDecimal(i++, bd(x.avgCost));
-                ps.setBigDecimal(i++, bd(x.closePrice));
-                ps.setBigDecimal(i++, bd(x.costAmount));
-                ps.setBigDecimal(i++, bd(x.marketValue));
-                ps.setBigDecimal(i++, bd(x.unrealizedPnl));
-                ps.setBigDecimal(i++, bd(x.pnlPct));
-                ps.setBigDecimal(i++, bd(x.weightPct));
-                ps.setInt(i++, x.holdDays);
-                ps.setString(i++, x.openReason);
-                ps.setString(i++, x.moneyness);
-                ps.setInt(i, x.stale ? 1 : 0);
-                ps.addBatch();
-                if (++n % 1000 == 0) ps.executeBatch();
-            }
-            ps.executeBatch();
-        }
-    }
-
-    private void batchTrades(Connection c, long taskId, List<OptionBsModels.Trade> list) throws SQLException {
-        String sql = "INSERT INTO obt_trade(task_id,trade_date,trade_time,seq,trade_type,underlying_code,underlying_name,option_code," +
-                "option_name,call_put_type,strike_price,contract_month,price,qty,multiplier,amount,fee,reason_code,reason_desc," +
-                "trigger_value,cash_after,qty_after,cycle_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            int n = 0;
-            for (OptionBsModels.Trade t : list) {
-                int i = 1;
-                ps.setLong(i++, taskId);
-                ps.setDate(i++, java.sql.Date.valueOf(t.date));
-                ps.setTime(i++, t.time == null ? java.sql.Time.valueOf("15:00:00") : java.sql.Time.valueOf(t.time));
-                ps.setInt(i++, t.seq);
-                ps.setInt(i++, t.type);
-                ps.setString(i++, t.contract.underlyingCode);
-                ps.setString(i++, t.contract.underlyingName);
-                ps.setString(i++, t.contract.code);
-                ps.setString(i++, t.contract.name);
-                ps.setString(i++, t.contract.callPut);
-                ps.setBigDecimal(i++, bd(t.contract.strike));
-                ps.setInt(i++, t.contract.month);
-                ps.setBigDecimal(i++, bd(t.price));
-                ps.setInt(i++, t.qty);
-                ps.setInt(i++, t.contract.multiplier);
-                ps.setBigDecimal(i++, bd(t.amount));
-                ps.setBigDecimal(i++, bd(t.fee));
-                ps.setString(i++, t.reasonCode);
-                ps.setString(i++, t.reasonDesc);
-                if (t.triggerValue == null) ps.setNull(i++, java.sql.Types.DECIMAL);
-                else ps.setBigDecimal(i++, bd(t.triggerValue));
-                ps.setBigDecimal(i++, bd(t.cashAfter));
-                ps.setInt(i++, t.qtyAfter);
-                ps.setInt(i, t.cycleId);
-                ps.addBatch();
-                if (++n % 1000 == 0) ps.executeBatch();
-            }
-            ps.executeBatch();
-        }
-    }
-
-    private void batchCloses(Connection c, long taskId, List<OptionBsModels.CloseRecord> list) throws SQLException {
-        String sql = "INSERT INTO obt_close_record(task_id,cycle_id,underlying_code,option_code,option_name,call_put_type,open_date," +
-                "close_date,qty,avg_cost,avg_sell_price,realized_pnl,pnl_pct,hold_days,max_pnl_pct,min_pnl_pct,close_reason,close_reason_desc) " +
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            int n = 0;
-            for (OptionBsModels.CloseRecord x : list) {
-                int i = 1;
-                ps.setLong(i++, taskId);
-                ps.setInt(i++, x.cycleId);
-                ps.setString(i++, x.contract.underlyingCode);
-                ps.setString(i++, x.contract.code);
-                ps.setString(i++, x.contract.name);
-                ps.setString(i++, x.contract.callPut);
-                ps.setDate(i++, java.sql.Date.valueOf(x.openDate));
-                ps.setDate(i++, java.sql.Date.valueOf(x.closeDate));
-                ps.setInt(i++, x.qty);
-                ps.setBigDecimal(i++, bd(x.avgCost));
-                ps.setBigDecimal(i++, bd(x.avgSellPrice));
-                ps.setBigDecimal(i++, bd(x.realizedPnl));
-                ps.setBigDecimal(i++, bd(x.pnlPct));
-                ps.setInt(i++, x.holdDays);
-                ps.setBigDecimal(i++, bd(x.maxPnlPct));
-                ps.setBigDecimal(i++, bd(x.minPnlPct));
-                ps.setString(i++, x.closeReason);
-                ps.setString(i, x.closeReasonDesc);
-                ps.addBatch();
-                if (++n % 1000 == 0) ps.executeBatch();
-            }
-            ps.executeBatch();
-        }
-    }
-
-    private void batchSignals(Connection c, long taskId, List<OptionBsModels.Signal> list) throws SQLException {
-        String sql = "INSERT INTO obt_signal_event(task_id,signal_date,exec_date,prev_status,signal_type,cycle_id," +
-                "market_low_day,market_high_day,ma50_pct,processed_flag) VALUES(?,?,?,?,?,?,?,?,?,1)";
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            for (OptionBsModels.Signal s : list) {
-                int i = 1;
-                ps.setLong(i++, taskId);
-                ps.setDate(i++, java.sql.Date.valueOf(s.date));
-                ps.setDate(i++, java.sql.Date.valueOf(s.date));
-                ps.setInt(i++, s.prevStatus);
-                ps.setInt(i++, s.type);
-                ps.setInt(i++, s.cycleId);
-                if (s.lowDay == null) ps.setNull(i++, java.sql.Types.INTEGER);
-                else ps.setInt(i++, s.lowDay);
-                if (s.highDay == null) ps.setNull(i++, java.sql.Types.INTEGER);
-                else ps.setInt(i++, s.highDay);
-                if (s.ma50Pct == null) ps.setNull(i++, java.sql.Types.DECIMAL);
-                else ps.setBigDecimal(i, bd(s.ma50Pct));
-                ps.addBatch();
-            }
-            ps.executeBatch();
+    private <T> void batchInsert(List<T> list, BatchWriter writer) {
+        if (list == null || list.isEmpty()) return;
+        for (int from = 0; from < list.size(); from += BATCH_SIZE) {
+            writer.write(from, Math.min(list.size(), from + BATCH_SIZE));
         }
     }
 
@@ -380,72 +211,15 @@ public class OptionBsRepository {
                                     String startDate,
                                     String endDate,
                                     String sortBy,
-                                    String sortDir) throws SQLException {
-        StringBuilder where = new StringBuilder(" WHERE deleted_flag=0");
-        List<Object> args = new ArrayList<>();
-        if (keyword != null && !keyword.isBlank()) {
-            where.append(" AND (task_name LIKE ? OR task_no LIKE ? OR creator LIKE ?)");
-            String kw = "%" + keyword.trim() + "%";
-            args.add(kw);
-            args.add(kw);
-            args.add(kw);
-        }
-        if (status != null) {
-            where.append(" AND status=?");
-            args.add(status);
-        }
-        if (signalMode != null && !signalMode.isBlank()) {
-            where.append(" AND signal_mode=?");
-            args.add(signalMode);
-        }
-        if (underlyingCode != null && !underlyingCode.isBlank()) {
-            where.append(" AND underlying_codes LIKE ?");
-            args.add("%" + underlyingCode + "%");
-        }
-        if (startDate != null && !startDate.isBlank()) {
-            where.append(" AND end_date>=?");
-            args.add(startDate);
-        }
-        if (endDate != null && !endDate.isBlank()) {
-            where.append(" AND start_date<=?");
-            args.add(endDate);
-        }
-
-        String order = switch (sortBy == null ? "" : sortBy) {
-            case "id" -> "id";
-            case "initialCapital" -> "initial_capital";
-            case "finalEquity" -> "final_equity";
-            case "annualReturn" -> "annual_return_pct";
-            case "maxDD" -> "max_drawdown_pct";
-            case "sharpe" -> "sharpe_ratio";
-            case "winRate" -> "win_rate_pct";
-            case "totalTrades" -> "total_trades";
-            case "createdAt" -> "gmt_create";
-            default -> "total_return_pct";
-        };
-        String dir = "asc".equalsIgnoreCase(sortDir) ? "ASC" : "DESC";
-
-        String countSql = "SELECT COUNT(*) FROM obt_task" + where;
-        int total;
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(countSql)) {
-            bind(ps, args);
-            try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                total = rs.getInt(1);
-            }
-        }
-
-        String sql = "SELECT id,task_no,task_name,status,progress,start_date,end_date,actual_start_date,initial_capital," +
-                "final_equity,total_return_pct,annual_return_pct,max_drawdown_pct,sharpe_ratio,calmar_ratio,win_rate_pct," +
-                "total_trades,total_days,duration_ms,favorite_flag,creator,gmt_create,underlying_codes,signal_mode,month_mode " +
-                "FROM obt_task" + where + " ORDER BY " + order + " " + dir + " LIMIT ?,?";
-        List<Object> args2 = new ArrayList<>(args);
-        args2.add((page - 1) * size);
-        args2.add(size);
-
-        List<Map<String, Object>> list = queryMaps(sql, args2);
+                                    String sortDir) {
+        LocalDate start = parseDate(startDate);
+        LocalDate end = parseDate(endDate);
+        long total = taskMapper.countPage(keyword, status, signalMode, underlyingCode, start, end);
+        int offset = (Math.max(page, 1) - 1) * size;
+        List<ObtTaskDO> list = taskMapper.pageList(keyword, status, signalMode, underlyingCode, start, end,
+                                                   sortBy, "asc".equalsIgnoreCase(sortDir), offset, size);
         Map<String, Object> res = new LinkedHashMap<>();
-        res.put("list", list);
+        res.put("list", toMaps(list));
         res.put("total", total);
         res.put("page", page);
         res.put("size", size);
@@ -453,40 +227,31 @@ public class OptionBsRepository {
         return res;
     }
 
-    public Map<String, Object> getTask(long id) throws SQLException {
-        Map<String, Object> t = queryOne("SELECT * FROM obt_task WHERE id=?", id);
-        if (t == null) return null;
-        Object pj = t.get("paramsJson");
-        if (pj != null) {
+    public Map<String, Object> getTask(long id) {
+        ObtTaskDO task = taskMapper.selectById(id);
+        if (task == null) return null;
+        Map<String, Object> t = toMap(task);
+        if (task.getParamsJson() != null) {
             try {
-                t.put("params", JSON.parseObject(String.valueOf(pj)));
+                t.put("params", JSON.parseObject(task.getParamsJson()));
             } catch (Exception ignore) {
             }
         }
         return t;
     }
 
-    public List<Map<String, Object>> equity(long id, String from, String to) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT * FROM obt_daily_equity WHERE task_id=?");
-        List<Object> args = new ArrayList<>();
-        args.add(id);
-        if (from != null && !from.isBlank()) {
-            sql.append(" AND trade_date>=?");
-            args.add(from);
-        }
-        if (to != null && !to.isBlank()) {
-            sql.append(" AND trade_date<=?");
-            args.add(to);
-        }
-        sql.append(" ORDER BY trade_date");
-        return queryMaps(sql.toString(), args);
+    public List<Map<String, Object>> equity(long id, String from, String to) {
+        return toMaps(equityMapper.listByTaskIdAndRange(id, parseDate(from), parseDate(to)));
     }
 
-    public Map<String, Object> positions(long id, String date, int page, int size) throws SQLException {
-        String d = date;
-        if (d == null || d.isBlank()) {
-            Map<String, Object> one = queryOne("SELECT MAX(trade_date) d FROM obt_daily_position WHERE task_id=?", id);
-            d = one == null || one.get("d") == null ? null : String.valueOf(one.get("d"));
+    public int equityCount(long id) {
+        return equityMapper.countByTaskId(id);
+    }
+
+    public Map<String, Object> positions(long id, String date, int page, int size) {
+        LocalDate d = parseDate(date);
+        if (d == null) {
+            d = positionMapper.maxTradeDate(id);
         }
         if (d == null) {
             Map<String, Object> empty = new LinkedHashMap<>();
@@ -495,28 +260,20 @@ public class OptionBsRepository {
             empty.put("date", null);
             return empty;
         }
-        int total = intOne("SELECT COUNT(*) FROM obt_daily_position WHERE task_id=? AND trade_date=?", id, d);
-        List<Map<String, Object>> list = queryMaps(
-                "SELECT * FROM obt_daily_position WHERE task_id=? AND trade_date=? ORDER BY market_value DESC LIMIT ?,?",
-                id, d, (page - 1) * size, size);
+        int total = positionMapper.countByTaskIdAndTradeDate(id, d);
+        List<ObtDailyPositionDO> list = positionMapper.pageByTaskIdAndTradeDate(id, d, (page - 1) * size, size);
         Map<String, Object> res = new LinkedHashMap<>();
-        res.put("list", list);
+        res.put("list", toMaps(list));
         res.put("total", total);
-        res.put("date", d);
+        res.put("date", d.toString());
         res.put("page", page);
         res.put("size", size);
         return res;
     }
 
-    public List<String> positionDates(long id) throws SQLException {
+    public List<String> positionDates(long id) {
         List<String> list = new ArrayList<>();
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT DISTINCT trade_date FROM obt_daily_position WHERE task_id=? ORDER BY trade_date")) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(rs.getDate(1).toString());
-            }
-        }
+        for (LocalDate d : positionMapper.listTradeDates(id)) list.add(d.toString());
         return list;
     }
 
@@ -526,75 +283,208 @@ public class OptionBsRepository {
                                       String type,
                                       String reason,
                                       String from,
-                                      String to) throws SQLException {
-        StringBuilder where = new StringBuilder(" WHERE task_id=?");
-        List<Object> args = new ArrayList<>();
-        args.add(id);
-        if (type != null && !type.isBlank()) {
-            where.append(" AND trade_type=?");
-            args.add(Integer.parseInt(type));
+                                      String to) {
+        Integer tradeType = type == null || type.isBlank() ? null : Integer.parseInt(type);
+        LocalDate start = parseDate(from);
+        LocalDate end = parseDate(to);
+        long total = tradeMapper.countByTaskId(id, tradeType, reason, start, end);
+        List<ObtTradeDO> list = tradeMapper.pageByTaskId(id, tradeType, reason, start, end, (page - 1) * size, size);
+        return pageResult(toMaps(list), total, page, size);
+    }
+
+    public Map<String, Object> closes(long id, int page, int size, String reason, String from, String to) {
+        LocalDate start = parseDate(from);
+        LocalDate end = parseDate(to);
+        long total = closeMapper.countByTaskId(id, reason, start, end);
+        List<ObtCloseRecordDO> list = closeMapper.pageByTaskId(id, reason, start, end, (page - 1) * size, size);
+        return pageResult(toMaps(list), total, page, size);
+    }
+
+    public List<Map<String, Object>> signals(long id) {
+        return toMaps(signalMapper.listByTaskId(id));
+    }
+
+    public List<Map<String, Object>> logs(long id, int limit) {
+        return toMaps(logMapper.listByTaskId(id, limit));
+    }
+
+    public List<Map<String, Object>> sellReasons(long id) {
+        return tradeMapper.listSellReasons(id);
+    }
+
+    public List<Map<String, Object>> contribution(long id) {
+        return closeMapper.listContribution(id);
+    }
+
+    public List<Map<String, Object>> underlyings() {
+        List<Map<String, Object>> rows = metaMapper.listUnderlyings();
+        for (Map<String, Object> row : rows) {
+            if (row.get("startDate") instanceof java.sql.Date d) row.put("startDate", d.toLocalDate().toString());
+            if (row.get("endDate") instanceof java.sql.Date d) row.put("endDate", d.toLocalDate().toString());
         }
-        if (reason != null && !reason.isBlank()) {
-            where.append(" AND reason_code=?");
-            args.add(reason);
+        return rows;
+    }
+
+    public double avgHoldDays(long id) {
+        BigDecimal v = closeMapper.avgHoldDays(id);
+        return v == null ? 0 : v.doubleValue();
+    }
+
+    public List<Map<String, Object>> allPositions(long id) {
+        return toMaps(positionMapper.listAllByTaskId(id));
+    }
+
+    public List<Map<String, Object>> allTrades(long id) {
+        return toMaps(tradeMapper.listAllByTaskId(id));
+    }
+
+    public List<Map<String, Object>> allCloses(long id) {
+        return toMaps(closeMapper.listAllByTaskId(id));
+    }
+
+
+    // =================================================================================================================
+    //                                                  转换
+    // =================================================================================================================
+
+
+    private List<ObtDailyEquityDO> toEquity(long taskId, List<OptionBsModels.Equity> list) {
+        List<ObtDailyEquityDO> rows = new ArrayList<>(list.size());
+        for (OptionBsModels.Equity e : list) {
+            ObtDailyEquityDO x = new ObtDailyEquityDO();
+            x.setTaskId(taskId);
+            x.setTradeDate(e.date);
+            x.setNav(bd(e.nav));
+            x.setEquity(bd(e.equity));
+            x.setCash(bd(e.cash));
+            x.setMarketValue(bd(e.marketValue));
+            x.setPositionPct(bd(e.positionPct));
+            x.setDailyReturnPct(bd(e.dailyReturnPct));
+            x.setCumReturnPct(bd(e.cumReturnPct));
+            x.setDrawdownPct(bd(e.drawdownPct));
+            x.setBenchmarkClose(bd(e.benchmarkClose));
+            x.setBenchmarkNav(bd(e.benchmarkNav));
+            x.setBenchmarkReturnPct(bd(e.benchmarkReturnPct));
+            x.setSignalType(e.signalType);
+            x.setSignalStatus(e.signalStatus);
+            x.setPositionCount(e.positionCount);
+            x.setFee(bd(e.fee));
+            x.setStaleFlag(e.stale ? 1 : 0);
+            rows.add(x);
         }
-        if (from != null && !from.isBlank()) {
-            where.append(" AND trade_date>=?");
-            args.add(from);
+        return rows;
+    }
+
+    private List<ObtDailyPositionDO> toPosition(long taskId, List<OptionBsModels.PositionRow> list) {
+        List<ObtDailyPositionDO> rows = new ArrayList<>(list.size());
+        for (OptionBsModels.PositionRow e : list) {
+            ObtDailyPositionDO x = new ObtDailyPositionDO();
+            x.setTaskId(taskId);
+            x.setTradeDate(e.date);
+            x.setUnderlyingCode(e.contract.underlyingCode);
+            x.setUnderlyingName(e.contract.underlyingName);
+            x.setOptionCode(e.contract.code);
+            x.setOptionName(e.contract.name);
+            x.setCallPutType(e.contract.callPut);
+            x.setStrikePrice(bd(e.contract.strike));
+            x.setContractMonth(e.contract.month);
+            x.setExpiryDate(e.contract.expiryDate);
+            x.setMultiplier(e.contract.multiplier);
+            x.setQty(e.qty);
+            x.setAvgCost(bd(e.avgCost));
+            x.setClosePrice(bd(e.closePrice));
+            x.setCostAmount(bd(e.costAmount));
+            x.setMarketValue(bd(e.marketValue));
+            x.setUnrealizedPnl(bd(e.unrealizedPnl));
+            x.setPnlPct(bd(e.pnlPct));
+            x.setWeightPct(bd(e.weightPct));
+            x.setHoldDays(e.holdDays);
+            x.setOpenReason(e.openReason);
+            x.setMoneyness(e.moneyness);
+            x.setStaleFlag(e.stale ? 1 : 0);
+            rows.add(x);
         }
-        if (to != null && !to.isBlank()) {
-            where.append(" AND trade_date<=?");
-            args.add(to);
+        return rows;
+    }
+
+    private List<ObtTradeDO> toTrade(long taskId, List<OptionBsModels.Trade> list) {
+        List<ObtTradeDO> rows = new ArrayList<>(list.size());
+        for (OptionBsModels.Trade e : list) {
+            ObtTradeDO x = new ObtTradeDO();
+            x.setTaskId(taskId);
+            x.setTradeDate(e.date);
+            x.setTradeTime(e.time == null ? LocalTime.of(15, 0) : e.time);
+            x.setSeq(e.seq);
+            x.setTradeType(e.type);
+            x.setUnderlyingCode(e.contract.underlyingCode);
+            x.setUnderlyingName(e.contract.underlyingName);
+            x.setOptionCode(e.contract.code);
+            x.setOptionName(e.contract.name);
+            x.setCallPutType(e.contract.callPut);
+            x.setStrikePrice(bd(e.contract.strike));
+            x.setContractMonth(e.contract.month);
+            x.setPrice(bd(e.price));
+            x.setQty(e.qty);
+            x.setMultiplier(e.contract.multiplier);
+            x.setAmount(bd(e.amount));
+            x.setFee(bd(e.fee));
+            x.setReasonCode(e.reasonCode);
+            x.setReasonDesc(e.reasonDesc);
+            x.setTriggerValue(bd(e.triggerValue));
+            x.setCashAfter(bd(e.cashAfter));
+            x.setQtyAfter(e.qtyAfter);
+            x.setCycleId(e.cycleId);
+            x.setSignalDate(e.signalDate);
+            x.setDeferredFlag(0);
+            rows.add(x);
         }
-        int total = intOne("SELECT COUNT(*) FROM obt_trade" + where, args.toArray());
-        List<Object> args2 = new ArrayList<>(args);
-        args2.add((page - 1) * size);
-        args2.add(size);
-        List<Map<String, Object>> list = queryMaps("SELECT * FROM obt_trade" + where +
-                                                           " ORDER BY trade_date DESC, seq DESC LIMIT ?,?", args2);
-        return pageResult(list, total, page, size);
+        return rows;
     }
 
-    public Map<String, Object> closes(long id, int page, int size, String reason) throws SQLException {
-        StringBuilder where = new StringBuilder(" WHERE task_id=?");
-        List<Object> args = new ArrayList<>();
-        args.add(id);
-        if (reason != null && !reason.isBlank()) {
-            where.append(" AND close_reason=?");
-            args.add(reason);
+    private List<ObtCloseRecordDO> toClose(long taskId, List<OptionBsModels.CloseRecord> list) {
+        List<ObtCloseRecordDO> rows = new ArrayList<>(list.size());
+        for (OptionBsModels.CloseRecord e : list) {
+            ObtCloseRecordDO x = new ObtCloseRecordDO();
+            x.setTaskId(taskId);
+            x.setCycleId(e.cycleId);
+            x.setUnderlyingCode(e.underlyingCode);
+            x.setOptionCode(e.contract.code);
+            x.setOptionName(e.contract.name);
+            x.setCallPutType(e.contract.callPut);
+            x.setOpenDate(e.openDate);
+            x.setCloseDate(e.closeDate);
+            x.setQty(e.qty);
+            x.setAvgCost(bd(e.avgCost));
+            x.setAvgSellPrice(bd(e.avgSellPrice));
+            x.setRealizedPnl(bd(e.realizedPnl));
+            x.setPnlPct(bd(e.pnlPct));
+            x.setHoldDays(e.holdDays);
+            x.setMaxPnlPct(bd(e.maxPnlPct));
+            x.setMinPnlPct(bd(e.minPnlPct));
+            x.setCloseReason(e.closeReason);
+            x.setCloseReasonDesc(e.closeReasonDesc);
+            rows.add(x);
         }
-        int total = intOne("SELECT COUNT(*) FROM obt_close_record" + where, args.toArray());
-        List<Object> args2 = new ArrayList<>(args);
-        args2.add((page - 1) * size);
-        args2.add(size);
-        List<Map<String, Object>> list = queryMaps("SELECT * FROM obt_close_record" + where +
-                                                           " ORDER BY close_date DESC, id DESC LIMIT ?,?", args2);
-        return pageResult(list, total, page, size);
+        return rows;
     }
 
-    public List<Map<String, Object>> signals(long id) throws SQLException {
-        return queryMaps("SELECT * FROM obt_signal_event WHERE task_id=? ORDER BY signal_date", id);
-    }
-
-    public List<Map<String, Object>> logs(long id, int limit) throws SQLException {
-        return queryMaps("SELECT * FROM obt_task_log WHERE task_id=? ORDER BY id DESC LIMIT ?", id, limit);
-    }
-
-    public List<Map<String, Object>> sellReasons(long id) throws SQLException {
-        return queryMaps("SELECT reason_code, reason_desc, COUNT(*) cnt FROM obt_trade WHERE task_id=? AND trade_type=2 " +
-                                 "GROUP BY reason_code, reason_desc ORDER BY cnt DESC", id);
-    }
-
-    public List<Map<String, Object>> contribution(long id) throws SQLException {
-        return queryMaps("SELECT underlying_code, SUM(realized_pnl) pnl, COUNT(*) cnt FROM obt_close_record " +
-                                 "WHERE task_id=? GROUP BY underlying_code ORDER BY pnl DESC", id);
-    }
-
-    public List<Map<String, Object>> underlyings() throws SQLException {
-        return queryMaps("SELECT underlying_code, MIN(underlying_name) underlying_name, underlying_type, COUNT(*) contract_count, " +
-                                 "MIN(start_date) start_date, MAX(end_date) end_date FROM base_option " +
-                                 "WHERE underlying_code IN ('159915','588000','510500','510300','000852') " +
-                                 "GROUP BY underlying_code, underlying_type ORDER BY underlying_code");
+    private List<ObtSignalEventDO> toSignal(long taskId, List<OptionBsModels.Signal> list) {
+        List<ObtSignalEventDO> rows = new ArrayList<>(list.size());
+        for (OptionBsModels.Signal e : list) {
+            ObtSignalEventDO x = new ObtSignalEventDO();
+            x.setTaskId(taskId);
+            x.setSignalDate(e.date);
+            x.setExecDate(e.date);
+            x.setPrevStatus(e.prevStatus);
+            x.setSignalType(e.type);
+            x.setCycleId(e.cycleId);
+            x.setMarketLowDay(e.lowDay);
+            x.setMarketHighDay(e.highDay);
+            x.setMa50Pct(bd(e.ma50Pct));
+            x.setProcessedFlag(1);
+            rows.add(x);
+        }
+        return rows;
     }
 
 
@@ -603,7 +493,7 @@ public class OptionBsRepository {
     // =================================================================================================================
 
 
-    private Map<String, Object> pageResult(List<Map<String, Object>> list, int total, int page, int size) {
+    private Map<String, Object> pageResult(List<Map<String, Object>> list, long total, int page, int size) {
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("list", list);
         res.put("total", total);
@@ -613,95 +503,32 @@ public class OptionBsRepository {
         return res;
     }
 
-    public List<Map<String, Object>> queryMaps(String sql, List<Object> args) throws SQLException {
-        return queryMaps(sql, args == null ? new Object[0] : args.toArray());
-    }
-
-    public int execute(String sql, Object... args) throws SQLException {
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            bind(ps, java.util.Arrays.asList(args));
-            return ps.executeUpdate();
+    private static LocalDate parseDate(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            return LocalDate.parse(s.length() > 10 ? s.substring(0, 10) : s);
+        } catch (Exception e) {
+            return null;
         }
-    }
-
-    public List<Map<String, Object>> queryMaps(String sql, Object... args) throws SQLException {
-        List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            bind(ps, java.util.Arrays.asList(args));
-            try (ResultSet rs = ps.executeQuery()) {
-                ResultSetMetaData md = rs.getMetaData();
-                int n = md.getColumnCount();
-                while (rs.next()) {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    for (int i = 1; i <= n; i++) {
-                        row.put(camel(md.getColumnLabel(i)), normalize(rs.getObject(i)));
-                    }
-                    list.add(row);
-                }
-            }
-        }
-        return list;
-    }
-
-    public Map<String, Object> queryOne(String sql, Object... args) throws SQLException {
-        List<Map<String, Object>> list = queryMaps(sql, args);
-        return list.isEmpty() ? null : list.get(0);
-    }
-
-    private int intOne(String sql, Object... args) throws SQLException {
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            bind(ps, java.util.Arrays.asList(args));
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        }
-    }
-
-    private void bind(PreparedStatement ps, List<Object> args) throws SQLException {
-        for (int i = 0; i < args.size(); i++) {
-            Object v = args.get(i);
-            if (v instanceof LocalDate d) ps.setDate(i + 1, java.sql.Date.valueOf(d));
-            else ps.setObject(i + 1, v);
-        }
-    }
-
-    private static String camel(String s) {
-        StringBuilder b = new StringBuilder();
-        boolean up = false;
-        for (char ch : s.toCharArray()) {
-            if (ch == '_') {
-                up = true;
-            } else if (up) {
-                b.append(Character.toUpperCase(ch));
-                up = false;
-            } else {
-                b.append(ch);
-            }
-        }
-        return b.toString();
-    }
-
-    private static Object normalize(Object v) {
-        if (v instanceof java.sql.Date d) return d.toLocalDate().toString();
-        if (v instanceof java.sql.Time t) return t.toLocalTime().toString();
-        if (v instanceof java.sql.Timestamp t) return t.toLocalDateTime().toString().replace('T', ' ');
-        if (v instanceof java.time.LocalDateTime t) return t.toString().replace('T', ' ');
-        if (v instanceof BigDecimal b) return b;
-        return v;
     }
 
     private static BigDecimal bd(double v) {
         return Double.isNaN(v) || Double.isInfinite(v) ? BigDecimal.ZERO : BigDecimal.valueOf(v);
     }
 
-    private static void setBd(PreparedStatement ps, int i, Double v) throws SQLException {
-        if (v == null || Double.isNaN(v)) ps.setNull(i, java.sql.Types.DECIMAL);
-        else ps.setBigDecimal(i, bd(v));
+    private static BigDecimal bd(Double v) {
+        return v == null || Double.isNaN(v) || Double.isInfinite(v) ? null : BigDecimal.valueOf(v);
     }
 
-    private static void setDate(PreparedStatement ps, int i, LocalDate d) throws SQLException {
-        if (d == null) ps.setNull(i, java.sql.Types.DATE);
-        else ps.setDate(i, java.sql.Date.valueOf(d));
+    private static Map<String, Object> toMap(Object o) {
+        return MAPPER.convertValue(o, new TypeReference<Map<String, Object>>() {
+        });
+    }
+
+    private static List<Map<String, Object>> toMaps(List<?> list) {
+        List<Map<String, Object>> rows = new ArrayList<>(list.size());
+        for (Object o : list) rows.add(toMap(o));
+        return rows;
     }
 
 

@@ -137,9 +137,11 @@ public class OptionBsBacktestController {
     public Result<Map<String, Object>> closes(@PathVariable long id,
                                               @RequestParam(defaultValue = "1") int page,
                                               @RequestParam(defaultValue = "20") int size,
-                                              @RequestParam(required = false) String reason) {
+                                              @RequestParam(required = false) String reason,
+                                              @RequestParam(required = false) String from,
+                                              @RequestParam(required = false) String to) {
         try {
-            return Result.SUC(service.closes(id, page, size, reason));
+            return Result.SUC(service.closes(id, page, size, reason, from, to));
         } catch (Exception e) {
             return Result.ERR(e.getMessage());
         }
@@ -191,7 +193,7 @@ public class OptionBsBacktestController {
     @PostMapping("/{id}/favorite")
     public Result<String> favorite(@PathVariable long id, @RequestParam int flag) {
         try {
-            repo.execute("UPDATE obt_task SET favorite_flag=? WHERE id=?", flag, id);
+            repo.favorite(id, flag);
             return Result.SUC("OK");
         } catch (Exception e) {
             return Result.ERR(e.getMessage());
@@ -202,7 +204,7 @@ public class OptionBsBacktestController {
     @DeleteMapping("/{id}")
     public Result<String> delete(@PathVariable long id) {
         try {
-            repo.execute("UPDATE obt_task SET deleted_flag=1 WHERE id=?", id);
+            repo.logicDelete(id);
             return Result.SUC("OK");
         } catch (Exception e) {
             return Result.ERR(e.getMessage());

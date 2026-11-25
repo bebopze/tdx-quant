@@ -9,6 +9,8 @@ import com.bebopze.tdx.quant.common.tdxfun.TdxExtFun;
 import com.bebopze.tdx.quant.common.tdxfun.TdxFun;
 import com.bebopze.tdx.quant.common.util.CompressUtil;
 import com.bebopze.tdx.quant.common.util.HttpUtil;
+import com.bebopze.tdx.quant.dal.entity.*;
+import com.bebopze.tdx.quant.dal.mapper.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -16,9 +18,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,11 +38,23 @@ import java.util.Set;
 @Slf4j
 public class OptionBsDataLoader {
 
-    private final OptionBsDb db;
 
-    public OptionBsDataLoader(OptionBsDb db) {
-        this.db = db;
+    private final QaMarketMidCycleMapper signalMapper;
+    private final BaseStockMapper stockMapper;
+    private final BaseOptionMapper optionMapper;
+    private final ObtIndexKlineMapper indexKlineMapper;
+
+
+    public OptionBsDataLoader(QaMarketMidCycleMapper signalMapper,
+                              BaseStockMapper stockMapper,
+                              BaseOptionMapper optionMapper,
+                              ObtIndexKlineMapper indexKlineMapper) {
+        this.signalMapper = signalMapper;
+        this.stockMapper = stockMapper;
+        this.optionMapper = optionMapper;
+        this.indexKlineMapper = indexKlineMapper;
     }
+
 
     public OptionBsData load(OptionBsParams p) throws Exception {
         OptionBsData data = new OptionBsData();
@@ -93,32 +104,20 @@ public class OptionBsDataLoader {
     // ---------------------------------------------------------------------------------------------------------------
 
 
-    private void loadSignals(OptionBsData data, OptionBsParams p) throws Exception {
-        String sql = "SELECT date, market_mid_status, market_low_day, market_high_day, ma50_pct " +
-                "FROM qa_market_mid_cycle WHERE date <= ? ORDER BY date";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(p.getEndDate()));
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    LocalDate d = rs.getDate(1).toLocalDate();
-                    int status = rs.getInt(2);
-                    data.statusByDate.put(d, status);
+    private void loadSignals(OptionBsData data, OptionBsParams p) {
+        List<QaMarketMidCycleDO> rows = signalMapper.listUpToDate(p.getEndDate());
+        for (QaMarketMidCycleDO row : rows) {
+            LocalDate d = row.getDate();
+            int status = row.getMarketMidStatus() == null ? 0 : row.getMarketMidStatus();
+            data.statusByDate.put(d, status);
 
-                    Number lowDayN = (Number) rs.getObject(3);
-                    Number highDayN = (Number) rs.getObject(4);
-                    Integer lowDay = lowDayN == null ? null : lowDayN.intValue();
-                    Integer highDay = highDayN == null ? null : highDayN.intValue();
-                    java.math.BigDecimal ma50 = rs.getBigDecimal(5);
-
-                    OptionBsModels.Signal s = new OptionBsModels.Signal();
-                    s.date = d;
-                    s.type = status;
-                    s.lowDay = lowDay;
-                    s.highDay = highDay;
-                    s.ma50Pct = ma50 == null ? null : ma50.doubleValue();
-                    data.signalMeta.put(d, s);
-                }
-            }
+            OptionBsModels.Signal sig = new OptionBsModels.Signal();
+            sig.date = d;
+            sig.type = status;
+            sig.lowDay = row.getMarketLowDay();
+            sig.highDay = row.getMarketHighDay();
+            sig.ma50Pct = row.getMa50Pct() == null ? null : row.getMa50Pct().doubleValue();
+            data.signalMeta.put(d, sig);
         }
         log.info("OptionBsDataLoader - 信号 {} 条", data.statusByDate.size());
     }
@@ -146,23 +145,14 @@ public class OptionBsDataLoader {
         return loadEtfFromStock(code, from, to);
     }
 
-    private OptionBsModels.Underlying loadEtfFromStock(String code, LocalDate from, LocalDate to) throws Exception {
-        String sql = "SELECT code, name, kline_his, kline_his_raw_len FROM base_stock WHERE code = ? LIMIT 1";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, code);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    log.warn("OptionBsDataLoader - 标的无行情 code={}", code);
-                    return null;
-                }
-                String name = rs.getString(2);
-                byte[] blob = rs.getBytes(3);
-                Number rawLenN = (Number) rs.getObject(4);
-                Integer rawLen = rawLenN == null ? null : rawLenN.intValue();
-                List<KlineDTO> bars = parseKline(blob, rawLen, from, to);
-                return buildUnderlying(code, name, 10000, bars);
-            }
+    private OptionBsModels.Underlying loadEtfFromStock(String code, LocalDate from, LocalDate to) {
+        BaseStockDO stock = stockMapper.getByCode(code);
+        if (stock == null) {
+            log.warn("OptionBsDataLoader - 标的无行情 code={}", code);
+            return null;
         }
+        List<KlineDTO> bars = parseKline(stock.getKlineHis(), stock.getKlineHisRawLen(), from, to);
+        return buildUnderlying(code, stock.getName(), 10000, bars);
     }
 
     private String etfName(String code) {
@@ -194,47 +184,37 @@ public class OptionBsDataLoader {
         return buildUnderlying(code, name, 100, bars);
     }
 
-    private List<KlineDTO> loadCache(String code, LocalDate from, LocalDate to, String source) throws Exception {
+    private List<KlineDTO> loadCache(String code, LocalDate from, LocalDate to, String source) {
         List<KlineDTO> list = new ArrayList<>();
-        String sql = "SELECT trade_date, open, high, low, close FROM obt_index_kline WHERE code = ? AND trade_date BETWEEN ? AND ?" +
-                (source == null ? "" : " AND source = ?") + " ORDER BY trade_date";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, code);
-            ps.setDate(2, java.sql.Date.valueOf(from));
-            ps.setDate(3, java.sql.Date.valueOf(to));
-            if (source != null) ps.setString(4, source);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    KlineDTO k = new KlineDTO();
-                    k.setDate(rs.getDate(1).toLocalDate());
-                    k.setOpen(rs.getBigDecimal(2) == null ? 0 : rs.getBigDecimal(2).doubleValue());
-                    k.setHigh(rs.getBigDecimal(3) == null ? 0 : rs.getBigDecimal(3).doubleValue());
-                    k.setLow(rs.getBigDecimal(4) == null ? 0 : rs.getBigDecimal(4).doubleValue());
-                    k.setClose(rs.getBigDecimal(5) == null ? 0 : rs.getBigDecimal(5).doubleValue());
-                    list.add(k);
-                }
-            }
+        List<ObtIndexKlineDO> rows = indexKlineMapper.listByCodeAndRange(code, from, to);
+        for (ObtIndexKlineDO e : rows) {
+            if (source != null && !source.equals(e.getSource())) continue;
+            KlineDTO k = new KlineDTO();
+            k.setDate(e.getTradeDate());
+            k.setOpen(e.getOpen() == null ? 0 : e.getOpen().doubleValue());
+            k.setHigh(e.getHigh() == null ? 0 : e.getHigh().doubleValue());
+            k.setLow(e.getLow() == null ? 0 : e.getLow().doubleValue());
+            k.setClose(e.getClose() == null ? 0 : e.getClose().doubleValue());
+            list.add(k);
         }
         return list;
     }
 
-    private void saveKline(String code, List<KlineDTO> bars, String source) throws Exception {
-        String sql = "INSERT INTO obt_index_kline(code, trade_date, open, high, low, close, source) " +
-                "VALUES(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE close=VALUES(close),open=VALUES(open),high=VALUES(high),low=VALUES(low),source=VALUES(source)";
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            int n = 0;
-            for (KlineDTO k : bars) {
-                ps.setString(1, code);
-                ps.setDate(2, java.sql.Date.valueOf(k.getDate()));
-                ps.setBigDecimal(3, java.math.BigDecimal.valueOf(k.getOpen()));
-                ps.setBigDecimal(4, java.math.BigDecimal.valueOf(k.getHigh()));
-                ps.setBigDecimal(5, java.math.BigDecimal.valueOf(k.getLow()));
-                ps.setBigDecimal(6, java.math.BigDecimal.valueOf(k.getClose()));
-                ps.setString(7, source);
-                ps.addBatch();
-                if (++n % 500 == 0) ps.executeBatch();
-            }
-            ps.executeBatch();
+    private void saveKline(String code, List<KlineDTO> bars, String source) {
+        List<ObtIndexKlineDO> rows = new ArrayList<>(bars.size());
+        for (KlineDTO k : bars) {
+            ObtIndexKlineDO e = new ObtIndexKlineDO();
+            e.setCode(code);
+            e.setTradeDate(k.getDate());
+            e.setOpen(java.math.BigDecimal.valueOf(k.getOpen()));
+            e.setHigh(java.math.BigDecimal.valueOf(k.getHigh()));
+            e.setLow(java.math.BigDecimal.valueOf(k.getLow()));
+            e.setClose(java.math.BigDecimal.valueOf(k.getClose()));
+            e.setSource(source);
+            rows.add(e);
+        }
+        for (int i = 0; i < rows.size(); i += 1000) {
+            indexKlineMapper.batchUpsert(rows.subList(i, Math.min(rows.size(), i + 1000)));
         }
     }
 
@@ -352,78 +332,54 @@ public class OptionBsDataLoader {
     }
 
 
-    private void loadContracts(OptionBsData data, OptionBsParams p) throws Exception {
+    private void loadContracts(OptionBsData data, OptionBsParams p) {
         List<String> codes = p.getUnderlyingCodes();
         if (codes.isEmpty()) return;
-
-        StringBuilder in = new StringBuilder();
-        for (int i = 0; i < codes.size(); i++) {
-            if (i > 0) in.append(',');
-            in.append('?');
-        }
-
-        String sql = "SELECT code, symbol, name, call_put_type, strike_price, multiplier, underlying_code, underlying_name, " +
-                "contract_month, start_date, end_date, kline_his, kline_his_raw_len " +
-                "FROM base_option WHERE underlying_code IN (" + in + ") " +
-                "AND start_date <= ? AND end_date >= ?";
 
         int total = 0, parse = 0;
         LocalDate kFrom = p.getStartDate().minusDays(5);
         LocalDate kTo = p.getEndDate().plusDays(2);
 
-        try (Connection c = db.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            int idx = 1;
-            for (String code : codes) ps.setString(idx++, code);
-            ps.setDate(idx++, java.sql.Date.valueOf(p.getEndDate()));
-            ps.setDate(idx++, java.sql.Date.valueOf(p.getStartDate()));
+        List<BaseOptionDO> rows = optionMapper.listForBacktest(codes, p.getStartDate(), p.getEndDate());
+        for (BaseOptionDO row : rows) {
+            total++;
+            byte[] blob = row.getKlineHis();
+            if (blob == null) continue;
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    total++;
-                    byte[] blob = rs.getBytes(12);
-                    Number rawLenN = (Number) rs.getObject(13);
-                    Integer rawLen = rawLenN == null ? null : rawLenN.intValue();
-                    if (blob == null) continue;
-
-                    List<KlineDTO> bars;
-                    try {
-                        bars = parseKline(blob, rawLen, kFrom, kTo);
-                    } catch (Exception e) {
-                        continue;
-                    }
-                    if (bars.isEmpty()) continue;
-
-                    OptionBsModels.Contract ct = new OptionBsModels.Contract();
-                    ct.code = rs.getString(1);
-                    ct.symbol = rs.getString(2);
-                    ct.name = rs.getString(3);
-                    ct.callPut = rs.getString(4);
-                    ct.strike = rs.getBigDecimal(5) == null ? 0 : rs.getBigDecimal(5).doubleValue();
-                    ct.multiplier = rs.getInt(6);
-                    ct.underlyingCode = rs.getString(7);
-                    ct.underlyingName = rs.getString(8);
-                    ct.month = rs.getInt(9);
-                    ct.startDate = rs.getDate(10).toLocalDate();
-                    ct.expiryDate = rs.getDate(11).toLocalDate();
-
-                    int n = bars.size();
-                    ct.dates = new LocalDate[n];
-                    ct.closes = new double[n];
-                    ct.vols = new long[n];
-                    for (int i = 0; i < n; i++) {
-                        ct.dates[i] = bars.get(i).getDate();
-                        ct.closes[i] = bars.get(i).getClose();
-                        ct.vols[i] = bars.get(i).getVol();
-                    }
-
-                    data.contracts.computeIfAbsent(ct.underlyingCode, k -> new ArrayList<>()).add(ct);
-                    if (data.firstOptionDate == null || ct.startDate.isAfter(data.firstOptionDate)) {
-                        // 首个可交易日：取所有合约 start_date 的最小值
-                    }
-                    parse++;
-                    if (parse % 2000 == 0) log.info("OptionBsDataLoader - 合约解析 {} / {}", parse, total);
-                }
+            List<KlineDTO> bars;
+            try {
+                bars = parseKline(blob, row.getKlineHisRawLen(), kFrom, kTo);
+            } catch (Exception e) {
+                continue;
             }
+            if (bars.isEmpty()) continue;
+
+            OptionBsModels.Contract ct = new OptionBsModels.Contract();
+            ct.code = row.getCode();
+            ct.symbol = row.getSymbol();
+            ct.name = row.getName();
+            ct.callPut = row.getCallPutType();
+            ct.strike = row.getStrikePrice() == null ? 0 : row.getStrikePrice().doubleValue();
+            ct.multiplier = row.getMultiplier() == null ? 0 : row.getMultiplier();
+            ct.underlyingCode = row.getUnderlyingCode();
+            ct.underlyingName = row.getUnderlyingName();
+            ct.month = row.getContractMonth() == null ? 0 : row.getContractMonth();
+            ct.startDate = row.getStartDate();
+            ct.expiryDate = row.getEndDate();
+
+            int n = bars.size();
+            ct.dates = new LocalDate[n];
+            ct.closes = new double[n];
+            ct.vols = new long[n];
+            for (int i = 0; i < n; i++) {
+                ct.dates[i] = bars.get(i).getDate();
+                ct.closes[i] = bars.get(i).getClose();
+                ct.vols[i] = bars.get(i).getVol();
+            }
+
+            data.contracts.computeIfAbsent(ct.underlyingCode, k -> new ArrayList<>()).add(ct);
+            parse++;
+            if (parse % 2000 == 0) log.info("OptionBsDataLoader - 合约解析 {} / {}", parse, total);
         }
 
         for (List<OptionBsModels.Contract> list : data.contracts.values()) {

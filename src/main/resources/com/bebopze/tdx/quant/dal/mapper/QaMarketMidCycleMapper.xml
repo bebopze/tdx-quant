@@ -32,4 +32,19 @@
     </select>
 
 
+    <select id="listUpToDate" resultType="com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO">
+        SELECT date,
+               market_mid_status,
+               market_low_day,
+               market_high_day,
+               ma50_pct,
+               position_pct
+
+        FROM qa_market_mid_cycle
+
+        <![CDATA[ WHERE date <= #{endDate} ]]>
+
+        ORDER BY date
+    </select>
+
 </mapper>

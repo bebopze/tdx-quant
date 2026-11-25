@@ -1,10 +1,9 @@
 package com.bebopze.tdx.quant.optionbs;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.bebopze.tdx.quant.dal.mapper.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.sql.DataSource;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -20,13 +19,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class OptionBsConfig {
 
     @Bean
-    public OptionBsDb optionBsDb(@Qualifier("dataSource") DataSource dataSource) {
-        return dataSource::getConnection;
-    }
-
-    @Bean
-    public OptionBsRepository optionBsRepository(OptionBsDb db) {
-        return new OptionBsRepository(db);
+    public OptionBsRepository optionBsRepository(ObtTaskMapper taskMapper,
+                                                 ObtDailyEquityMapper equityMapper,
+                                                 ObtDailyPositionMapper positionMapper,
+                                                 ObtTradeMapper tradeMapper,
+                                                 ObtCloseRecordMapper closeMapper,
+                                                 ObtSignalEventMapper signalMapper,
+                                                 ObtTaskLogMapper logMapper,
+                                                 ObtMetaMapper metaMapper) {
+        return new OptionBsRepository(taskMapper, equityMapper, positionMapper, tradeMapper,
+                                      closeMapper, signalMapper, logMapper, metaMapper);
     }
 
     @Bean(name = "optionBsExecutor", destroyMethod = "shutdown")
