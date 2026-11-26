@@ -28,7 +28,9 @@
     <select id="listByTaskIdAndRange" resultType="com.bebopze.tdx.quant.dal.entity.ObtDailyEquityDO">
         SELECT e.*,
         IFNULL(t.buy_amount, 0) AS buy_amount,
-        IFNULL(t.sell_amount, 0) AS sell_amount
+        IFNULL(t.sell_amount, 0) AS sell_amount,
+        IFNULL(p.call_market_value, 0) AS call_market_value,
+        IFNULL(p.put_market_value, 0) AS put_market_value
 
         FROM obt_daily_equity e
 
@@ -41,6 +43,16 @@
         WHERE task_id = #{taskId}
         GROUP BY task_id, trade_date
         ) t ON t.task_id = e.task_id AND t.trade_date = e.trade_date
+
+        LEFT JOIN (
+        SELECT task_id,
+        trade_date,
+        SUM(CASE WHEN call_put_type = 'C' THEN market_value ELSE 0 END) AS call_market_value,
+        SUM(CASE WHEN call_put_type = 'P' THEN market_value ELSE 0 END) AS put_market_value
+        FROM obt_daily_position
+        WHERE task_id = #{taskId}
+        GROUP BY task_id, trade_date
+        ) p ON p.task_id = e.task_id AND p.trade_date = e.trade_date
 
         WHERE e.task_id = #{taskId}
 
@@ -61,5 +73,6 @@
         FROM obt_daily_equity
         WHERE task_id = #{taskId}
     </select>
+
 
 </mapper>

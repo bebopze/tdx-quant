@@ -34,6 +34,7 @@
 
     <select id="listUpToDate" resultType="com.bebopze.tdx.quant.dal.entity.QaMarketMidCycleDO">
         SELECT date,
+               market_bull_bear_status,
                market_mid_status,
                market_low_day,
                market_high_day,
@@ -46,5 +47,6 @@
 
         ORDER BY date
     </select>
+
 
 </mapper>

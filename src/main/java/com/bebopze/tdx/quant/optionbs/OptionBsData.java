@@ -16,6 +16,10 @@ public class OptionBsData {
     public Map<String, OptionBsModels.Underlying> underlyings = new LinkedHashMap<>();
     public Map<String, List<OptionBsModels.Contract>> contracts = new LinkedHashMap<>();
     public TreeMap<LocalDate, Integer> statusByDate = new TreeMap<>();
+    /**
+     * 大盘牛熊：1=牛市；2=熊市
+     */
+    public TreeMap<LocalDate, Integer> bullBearByDate = new TreeMap<>();
     public TreeMap<LocalDate, OptionBsModels.Signal> signalMeta = new TreeMap<>();
     public OptionBsModels.Underlying benchmark;
     public LocalDate firstOptionDate;

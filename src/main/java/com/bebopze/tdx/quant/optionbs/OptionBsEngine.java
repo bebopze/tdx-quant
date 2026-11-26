@@ -133,7 +133,7 @@ public class OptionBsEngine {
 
         // 认购：开启新建仓周期
         if (p.allowCalls()) {
-            boolean canStart = callBought.isEmpty() || p.isReenterOnNewCycle()
+            boolean canStart = callBought.isEmpty() || reenter(date)
                     || positions.values().stream().noneMatch(x -> "C".equals(x.contract.callPut));
             if (canStart) {
                 cycleId++;
@@ -163,7 +163,7 @@ public class OptionBsEngine {
 
         // 认沽：开启新建仓周期
         if (p.allowPuts()) {
-            boolean canStart = putBought.isEmpty() || p.isReenterOnNewCycle()
+            boolean canStart = putBought.isEmpty() || reenter(date)
                     || positions.values().stream().noneMatch(x -> "P".equals(x.contract.callPut));
             if (canStart) {
                 cycleId++;
@@ -394,12 +394,12 @@ public class OptionBsEngine {
 
     private void processBuys(LocalDate date) {
         if (callBuyActive) {
-            double amount = p.getInitialCapital() * p.getDailyBuyPct();
+            double amount = capitalBase() * dailyBuyPct(date);
             buySide("C", date, amount, "BUY_DAILY", "中期底-逐日建仓", null, null);
             processAddOn("C", date);
         }
         if (putBuyActive) {
-            double amount = p.getInitialCapital() * p.getDailyBuyPct();
+            double amount = capitalBase() * dailyBuyPct(date);
             buySide("P", date, amount, "BUY_DAILY", "中期顶-逐日建仓", null, null);
             processAddOn("P", date);
         }
@@ -420,13 +420,13 @@ public class OptionBsEngine {
             if (Double.isNaN(close)) continue;
 
             double chg = close / ref - 1;
-            int step = isCall ? (int) Math.floor(-chg / p.getAddStepPct())
-                    : (int) Math.floor(chg / p.getAddStepPct());
+            int step = isCall ? (int) Math.floor(-chg / addStepPct(date))
+                    : (int) Math.floor(chg / addStepPct(date));
             int last = steps.getOrDefault(code, 0);
             while (step > last) {
-                if (bought.getOrDefault(side, 0D) >= maxBudget()) break;
-                double amount = p.getInitialCapital() * p.getAddBuyPct();
-                String only = "TRIGGERED".equalsIgnoreCase(p.getAddScope()) ? code : null;
+                if (bought.getOrDefault(side, 0D) >= maxBudget(date)) break;
+                double amount = capitalBase() * addBuyPct(date);
+                String only = "TRIGGERED".equalsIgnoreCase(addScope(date)) ? code : null;
                 double used = buySide(side, date, amount, "BUY_DIP",
                                       isCall ? "中期底-下跌加仓" : "中期顶-上涨加仓", chg * 100, only);
                 if (used <= 0) break;
@@ -442,7 +442,10 @@ public class OptionBsEngine {
     private double buySide(String side, LocalDate date, double amount, String reasonCode, String reasonDesc,
                            Double trigger, String onlyUnderlying) {
         if (amount <= 0) return 0;
-        double budget = maxBudget() - (("C".equals(side) ? callBought : putBought).getOrDefault(side, 0D));
+        final double base = capitalBase();
+        final double maxBudget = maxBudget(date);
+        final double reserve = base * cashReservePct(date);
+        double budget = maxBudget - (("C".equals(side) ? callBought : putBought).getOrDefault(side, 0D));
         if (budget <= 0) return 0;
         amount = Math.min(amount, budget);
 
@@ -463,15 +466,15 @@ public class OptionBsEngine {
             for (Contract c : cs) {
                 double price = c.closeOn(date);
                 if (Double.isNaN(price) || price <= 0.001D) continue;
-                double remain = maxBudget() - (("C".equals(side) ? callBought : putBought).getOrDefault(side, 0D));
+                double remain = maxBudget - (("C".equals(side) ? callBought : putBought).getOrDefault(side, 0D));
                 double alloc = Math.min(perC, remain);
                 if (alloc <= 0) break;
                 int qty = (int) Math.floor(alloc / (price * c.multiplier));
                 if (qty <= 0) continue;
                 double cost = qty * price * c.multiplier;
                 double fee = qty * p.getCommissionPerContract();
-                if (cost + fee > cash - p.getInitialCapital() * p.getCashReservePct()) {
-                    qty = (int) Math.floor((cash - p.getInitialCapital() * p.getCashReservePct() - fee) / (price * c.multiplier));
+                if (cost + fee > cash - reserve) {
+                    qty = (int) Math.floor((cash - reserve - fee) / (price * c.multiplier));
                     if (qty <= 0) continue;
                     cost = qty * price * c.multiplier;
                     fee = qty * p.getCommissionPerContract();
@@ -532,9 +535,70 @@ public class OptionBsEngine {
         return usedTotal;
     }
 
-    private double maxBudget() {
-        double reserve = p.getInitialCapital() * p.getCashReservePct();
-        return Math.min(p.getInitialCapital() * p.getMaxPositionPct(), p.getInitialCapital() - reserve);
+    private double capitalBase() {
+        return "INITIAL".equalsIgnoreCase(p.getCapitalBase()) ? p.getInitialCapital() : currentEquity();
+    }
+
+    /**
+     * 当前总资金 = 现金 + 持仓市值（价格已按当日收盘更新）
+     */
+    private double currentEquity() {
+        double mv = 0;
+        for (Position x : positions.values()) {
+            double px = Double.isNaN(x.lastPrice) ? x.avgCost : x.lastPrice;
+            mv += x.qty * px * x.contract.multiplier;
+        }
+        return cash + mv;
+    }
+
+    private double maxBudget(LocalDate date) {
+        double base = capitalBase();
+        double reserve = base * cashReservePct(date);
+        return Math.min(base * maxPositionPct(date), base - reserve);
+    }
+
+    private boolean reenter(LocalDate date) {
+        if (!separateRegime()) return p.isReenterOnNewCycle();
+        return isBear(date) ? p.isBearReenterOnNewCycle() : p.isBullReenterOnNewCycle();
+    }
+
+    private boolean separateRegime() {
+        return "SEPARATE".equalsIgnoreCase(p.getMarketRegimeMode());
+    }
+
+    private boolean isBear(LocalDate date) {
+        Map.Entry<LocalDate, Integer> e = data.bullBearByDate.floorEntry(date);
+        return e != null && e.getValue() != null && e.getValue() == 2;
+    }
+
+    private double dailyBuyPct(LocalDate date) {
+        if (!separateRegime()) return p.getDailyBuyPct();
+        return isBear(date) ? p.getBearDailyBuyPct() : p.getBullDailyBuyPct();
+    }
+
+    private double addBuyPct(LocalDate date) {
+        if (!separateRegime()) return p.getAddBuyPct();
+        return isBear(date) ? p.getBearAddBuyPct() : p.getBullAddBuyPct();
+    }
+
+    private double addStepPct(LocalDate date) {
+        if (!separateRegime()) return p.getAddStepPct();
+        return isBear(date) ? p.getBearAddStepPct() : p.getBullAddStepPct();
+    }
+
+    private double maxPositionPct(LocalDate date) {
+        if (!separateRegime()) return p.getMaxPositionPct();
+        return isBear(date) ? p.getBearMaxPositionPct() : p.getBullMaxPositionPct();
+    }
+
+    private double cashReservePct(LocalDate date) {
+        if (!separateRegime()) return p.getCashReservePct();
+        return isBear(date) ? p.getBearCashReservePct() : p.getBullCashReservePct();
+    }
+
+    private String addScope(LocalDate date) {
+        if (!separateRegime()) return p.getAddScope();
+        return isBear(date) ? p.getBearAddScope() : p.getBullAddScope();
     }
 
 
@@ -695,7 +759,7 @@ public class OptionBsEngine {
 
             replaceSelectedContract(old.contract, target);
             log.info("OptionBsEngine - {} 换月 {} -> {} (DTE {} -> {})", date,
-                    old.contract.name, target.name, dte, ChronoUnit.DAYS.between(date, target.expiryDate));
+                     old.contract.name, target.name, dte, ChronoUnit.DAYS.between(date, target.expiryDate));
         }
     }
 
@@ -705,29 +769,29 @@ public class OptionBsEngine {
     private Contract findRollTarget(Contract old, LocalDate date) {
         List<Contract> all = data.contracts.getOrDefault(old.underlyingCode, new ArrayList<>());
         List<Contract> valid = all.stream()
-                .filter(c -> old.callPut.equals(c.callPut))
-                .filter(c -> c.month > old.month)
-                .filter(c -> c.expiryDate != null && ChronoUnit.DAYS.between(date, c.expiryDate) >= p.getMinBuyDteDays())
-                .filter(c -> !c.code.equals(old.code))
-                .filter(c -> !c.startDate.isAfter(date))
-                .filter(c -> {
-                    double px = c.closeOn(date);
-                    return !Double.isNaN(px) && px > 0.0005;
-                })
-                .sorted(Comparator.comparingInt((Contract c) -> c.month)
-                        .thenComparingDouble(c -> Math.abs(c.strike - old.strike)))
-                .collect(Collectors.toList());
+                                  .filter(c -> old.callPut.equals(c.callPut))
+                                  .filter(c -> c.month > old.month)
+                                  .filter(c -> c.expiryDate != null && ChronoUnit.DAYS.between(date, c.expiryDate) >= p.getMinBuyDteDays())
+                                  .filter(c -> !c.code.equals(old.code))
+                                  .filter(c -> !c.startDate.isAfter(date))
+                                  .filter(c -> {
+                                      double px = c.closeOn(date);
+                                      return !Double.isNaN(px) && px > 0.0005;
+                                  })
+                                  .sorted(Comparator.comparingInt((Contract c) -> c.month)
+                                                    .thenComparingDouble(c -> Math.abs(c.strike - old.strike)))
+                                  .collect(Collectors.toList());
         if (valid.isEmpty()) return null;
 
         // 优先完全同行权价；否则在最早可用月份里取最近行权价
         int targetMonth = valid.get(0).month;
         Contract sameStrike = valid.stream()
-                .filter(c -> c.month == targetMonth)
-                .filter(c -> Math.abs(c.strike - old.strike) < 1e-9)
-                .findFirst().orElse(null);
+                                   .filter(c -> c.month == targetMonth)
+                                   .filter(c -> Math.abs(c.strike - old.strike) < 1e-9)
+                                   .findFirst().orElse(null);
         if (sameStrike != null) return sameStrike;
         return valid.stream().filter(c -> c.month == targetMonth)
-                .min(Comparator.comparingDouble(c -> Math.abs(c.strike - old.strike))).orElse(null);
+                    .min(Comparator.comparingDouble(c -> Math.abs(c.strike - old.strike))).orElse(null);
     }
 
     private void replaceSelectedContract(Contract old, Contract target) {
@@ -851,7 +915,8 @@ public class OptionBsEngine {
                 if (!side.equals(c.callPut)) continue;
                 if (c.month < nowMonth) continue;
                 if (!c.alive(date) || c.startDate.isAfter(date)) continue;
-                if (c.expiryDate == null || ChronoUnit.DAYS.between(date, c.expiryDate) < p.getMinBuyDteDays()) continue;
+                if (c.expiryDate == null || ChronoUnit.DAYS.between(date, c.expiryDate) < p.getMinBuyDteDays())
+                    continue;
                 byMonth.computeIfAbsent(c.month, k -> new ArrayList<>()).add(c);
             }
             if (byMonth.isEmpty()) continue;

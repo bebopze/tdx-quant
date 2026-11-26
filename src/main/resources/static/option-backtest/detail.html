@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 任务详情</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126d">
+    <link rel="stylesheet" href="assets/common.css?v=20261126h">
     <script>
         (function () {
             var t = 'a';
@@ -304,7 +304,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126d"></script>
+<script src="assets/common.js?v=20261126h"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -489,6 +489,8 @@
             const rows = [
                 ['区间', (task.startDate || '') + ' → ' + (task.endDate || '')],
                 ['本金', O.money(task.initialCapital)],
+                ['资金基数', (p.capitalBase || 'EQUITY') === 'INITIAL' ? '初始本金' : '当前总资金'],
+                ['牛熊配置', (p.marketRegimeMode || 'COMMON') === 'SEPARATE' ? '牛熊分开' : '牛熊通用'],
                 ['信号模式', p.signalMode || task.signalMode],
                 ['月份模式', p.monthMode || task.monthMode],
                 ['行权价档位', (p.strikes || String(task.strikeMode || '').split(',')).join(' / ')],
@@ -510,6 +512,10 @@
                 ['数据版本', task.dataVersion || '—'],
                 ['创建人', task.creator || '—']
             ];
+            if ((p.marketRegimeMode || 'COMMON') === 'SEPARATE') {
+                rows.push(['牛市建仓', `${((p.bullDailyBuyPct || 0) * 100).toFixed(0)}% / 逆势 ${((p.bullAddBuyPct || 0) * 100).toFixed(0)}% / 上限 ${((p.bullMaxPositionPct || 0) * 100).toFixed(0)}%`]);
+                rows.push(['熊市建仓', `${((p.bearDailyBuyPct || 0) * 100).toFixed(0)}% / 逆势 ${((p.bearAddBuyPct || 0) * 100).toFixed(0)}% / 上限 ${((p.bearMaxPositionPct || 0) * 100).toFixed(0)}%`]);
+            }
             $('#paramGrid').innerHTML = rows.map(([k, v]) => `<div class="param-row"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
         }
 

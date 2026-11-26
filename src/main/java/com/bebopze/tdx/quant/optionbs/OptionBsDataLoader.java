@@ -110,6 +110,7 @@ public class OptionBsDataLoader {
             LocalDate d = row.getDate();
             int status = row.getMarketMidStatus() == null ? 0 : row.getMarketMidStatus();
             data.statusByDate.put(d, status);
+            data.bullBearByDate.put(d, row.getMarketBullBearStatus());
 
             OptionBsModels.Signal sig = new OptionBsModels.Signal();
             sig.date = d;

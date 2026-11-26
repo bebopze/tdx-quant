@@ -25,6 +25,11 @@ public class OptionBsParams {
     private LocalDate endDate = LocalDate.now();
     private double initialCapital = 1_000_000D;
 
+    /**
+     * 仓位/买入预算基数：EQUITY=当前总资金（默认，复利）；INITIAL=初始本金
+     */
+    private String capitalBase = "EQUITY";
+
     // ---------------- 标的 ----------------
     private List<String> underlyingCodes = new ArrayList<>(List.of("159915", "588000", "510500", "510300", "000852"));
 
@@ -65,6 +70,11 @@ public class OptionBsParams {
     private int rollDteDays = 15;
 
     // ---------------- 建仓 ----------------
+    /**
+     * 建仓规则：COMMON=牛熊通用；SEPARATE=牛市/熊市分开
+     */
+    private String marketRegimeMode = "COMMON";
+
     private double dailyBuyPct = 0.05D;
     private double addBuyPct = 0.10D;
     private double addStepPct = 0.05D;
@@ -78,6 +88,23 @@ public class OptionBsParams {
      * 买满后止盈卖出，是否允许下一轮底/顶信号重新建仓
      */
     private boolean reenterOnNewCycle = true;
+
+    // ---------------- 牛市/熊市分开配置 ----------------
+    private double bullDailyBuyPct = 0.05D;
+    private double bullAddBuyPct = 0.10D;
+    private double bullAddStepPct = 0.05D;
+    private double bullMaxPositionPct = 1.00D;
+    private double bullCashReservePct = 0D;
+    private String bullAddScope = "TRIGGERED";
+    private boolean bullReenterOnNewCycle = false;
+
+    private double bearDailyBuyPct = 0.05D;
+    private double bearAddBuyPct = 0.10D;
+    private double bearAddStepPct = 0.05D;
+    private double bearMaxPositionPct = 1.00D;
+    private double bearCashReservePct = 0D;
+    private String bearAddScope = "TRIGGERED";
+    private boolean bearReenterOnNewCycle = false;
 
     // ---------------- 卖出 ----------------
     private boolean enableRight = true;

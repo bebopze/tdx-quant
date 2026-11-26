@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 新建任务</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126d">
+    <link rel="stylesheet" href="assets/common.css?v=20261126h">
     <script>
         (function () {
             var t = 'a';
@@ -122,7 +122,7 @@
                                 <div class="field"><label>标签</label><input id="tags" value="中期信号, 全标的, 基线">
                                 </div>
                             </div>
-                            <div class="field" style="margin-top:12px"><label>备注</label><textarea id="remark">默认口径：当月+次月+当季；5 档行权价；每日按最新价重选；收盘价成交；到期按内在价值结算。</textarea>
+                            <div class="field" style="margin-top:12px"><label>备注</label><textarea id="remark">默认口径：当月+次月+当季；5 档行权价；每日按最新价重选；资金基数=当前总资金；收盘价成交；到期按内在价值结算。</textarea>
                             </div>
                         </div>
                     </section>
@@ -150,6 +150,20 @@
                                         <button data-cap="5000000">500万</button>
                                     </div>
                                     <div class="err">本金至少 10,000</div>
+                                </div>
+                            </div>
+                            <div class="grid-2" style="margin-top:12px">
+                                <div class="field"><label>资金基数</label><select id="capitalBase">
+                                    <option value="EQUITY" selected>当前总资金（推荐）</option>
+                                    <option value="INITIAL">初始本金</option>
+                                </select>
+                                    <div class="help">当前总资金 = 现金 + 持仓市值；按复利滚动计算每日建仓/加仓/上限
+                                    </div>
+                                </div>
+                                <div class="field"><label>说明</label>
+                                    <div class="help" style="margin-top:2px">
+                                        选择「初始本金」时，预算固定为初始本金的百分比，不随权益增长。
+                                    </div>
                                 </div>
                             </div>
                             <div class="grid-2" style="margin-top:12px">
@@ -255,37 +269,138 @@
 
                     <section class="section">
                         <div class="sec-head"><span class="sec-no">05</span>
-                            <h3>建仓规则</h3><span class="hint">逐日 5% · 逆势 10% · 上限 100%</span></div>
+                            <h3>建仓规则</h3><span class="hint" id="buildHint">逐日 5% · 逆势 10% · 上限 100%</span>
+                        </div>
                         <div class="sec-body">
-                            <div class="grid-4">
-                                <div class="field"><label>每日建仓</label>
-                                    <div class="unit"><input id="dailyBuy" type="number" value="5"><i>%</i></div>
-                                    <div class="help">每交易日买入本金</div>
+                            <div class="grid-2">
+                                <div class="field"><label>牛熊市配置</label><select id="regimeMode">
+                                    <option value="COMMON" selected>牛熊通用（默认）</option>
+                                    <option value="SEPARATE">牛熊分开配置</option>
+                                </select>
+                                    <div class="help">「分开配置」按大盘牛熊状态分别使用两套建仓规则</div>
                                 </div>
-                                <div class="field"><label>逆势加仓</label>
-                                    <div class="unit"><input id="addBuy" type="number" value="10"><i>%</i></div>
-                                    <div class="help">每次触发加仓</div>
-                                </div>
-                                <div class="field"><label>触发步长</label>
-                                    <div class="unit"><input id="addStep" type="number" value="5"><i>%</i></div>
-                                    <div class="help">每 ±5% 触发一次</div>
-                                </div>
-                                <div class="field"><label>仓位上限</label>
-                                    <div class="unit"><input id="maxPos" type="number" value="100"><i>%</i></div>
-                                    <div class="help">累计成本上限</div>
+                                <div class="field"><label>说明</label>
+                                    <div class="help" style="margin-top:2px">
+                                        熊市底部假信号多，可降低每日建仓、提高逆势加仓；牛市顶部可单独收紧。
+                                    </div>
                                 </div>
                             </div>
-                            <div class="grid-3" style="margin-top:12px">
-                                <div class="field"><label>加仓范围</label><select id="addScope">
-                                    <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
-                                    <option value="ALL">全标的等权</option>
-                                </select></div>
-                                <div class="field"><label>买满后止盈</label><select id="reenter">
-                                    <option value="false" selected>不再买入（推荐）</option>
-                                    <option value="true">下一轮信号重新建仓</option>
-                                </select></div>
-                                <div class="field"><label>备用现金</label>
-                                    <div class="unit"><input id="cashReserve" type="number" value="0"><i>%</i></div>
+                            <div id="commonBuildRules">
+                                <div class="grid-4">
+                                    <div class="field"><label>每日建仓</label>
+                                        <div class="unit"><input id="dailyBuy" type="number" value="5"><i>%</i></div>
+                                        <div class="help">每交易日买入本金</div>
+                                    </div>
+                                    <div class="field"><label>逆势加仓</label>
+                                        <div class="unit"><input id="addBuy" type="number" value="10"><i>%</i></div>
+                                        <div class="help">每次触发加仓</div>
+                                    </div>
+                                    <div class="field"><label>触发步长</label>
+                                        <div class="unit"><input id="addStep" type="number" value="5"><i>%</i></div>
+                                        <div class="help">每 ±5% 触发一次</div>
+                                    </div>
+                                    <div class="field"><label>仓位上限</label>
+                                        <div class="unit"><input id="maxPos" type="number" value="100"><i>%</i></div>
+                                        <div class="help">累计成本上限</div>
+                                    </div>
+                                </div>
+                                <div class="grid-3" style="margin-top:12px">
+                                    <div class="field"><label>加仓范围</label><select id="addScope">
+                                        <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
+                                        <option value="ALL">全标的等权</option>
+                                    </select></div>
+                                    <div class="field"><label>买满后止盈</label><select id="reenter">
+                                        <option value="false" selected>不再买入（推荐）</option>
+                                        <option value="true">下一轮信号重新建仓</option>
+                                    </select></div>
+                                    <div class="field"><label>备用现金</label>
+                                        <div class="unit"><input id="cashReserve" type="number" value="0"><i>%</i></div>
+                                    </div>
+                                </div>
+                            </div><!-- /commonBuildRules -->
+
+                            <div id="regimeBuildRules" class="hidden">
+                                <div class="regime-rules">
+                                    <div class="regime-block">
+                                        <div class="regime-head"><b class="regime-bull">牛市 🐂 建仓规则</b><span>大盘牛熊状态 = 牛市</span>
+                                        </div>
+                                        <div class="grid-4">
+                                            <div class="field"><label>每日建仓</label>
+                                                <div class="unit"><input id="bullDaily" type="number" value="5"><i>%</i>
+                                                </div>
+                                                <div class="help">每交易日买入</div>
+                                            </div>
+                                            <div class="field"><label>逆势加仓</label>
+                                                <div class="unit"><input id="bullAdd" type="number" value="10"><i>%</i>
+                                                </div>
+                                                <div class="help">每次触发加仓</div>
+                                            </div>
+                                            <div class="field"><label>触发步长</label>
+                                                <div class="unit"><input id="bullStep" type="number" value="5"><i>%</i>
+                                                </div>
+                                                <div class="help">每 ±5% 触发一次</div>
+                                            </div>
+                                            <div class="field"><label>仓位上限</label>
+                                                <div class="unit"><input id="bullMax" type="number" value="100"><i>%</i>
+                                                </div>
+                                                <div class="help">累计成本上限</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-3" style="margin-top:12px">
+                                            <div class="field"><label>加仓范围</label><select id="bullScope">
+                                                <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
+                                                <option value="ALL">全标的等权</option>
+                                            </select></div>
+                                            <div class="field"><label>买满后止盈</label><select id="bullReenter">
+                                                <option value="false" selected>不再买入（推荐）</option>
+                                                <option value="true">下一轮信号重新建仓</option>
+                                            </select></div>
+                                            <div class="field"><label>备用现金</label>
+                                                <div class="unit"><input id="bullCash" type="number" value="0"><i>%</i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="regime-block">
+                                        <div class="regime-head"><b class="regime-bear">熊市 🐻 建仓规则</b><span>大盘牛熊状态 = 熊市</span>
+                                        </div>
+                                        <div class="grid-4">
+                                            <div class="field"><label>每日建仓</label>
+                                                <div class="unit"><input id="bearDaily" type="number" value="2"><i>%</i>
+                                                </div>
+                                                <div class="help">熊市建议降低每日建仓</div>
+                                            </div>
+                                            <div class="field"><label>逆势加仓</label>
+                                                <div class="unit"><input id="bearAdd" type="number" value="15"><i>%</i>
+                                                </div>
+                                                <div class="help">暴跌时提高加仓</div>
+                                            </div>
+                                            <div class="field"><label>触发步长</label>
+                                                <div class="unit"><input id="bearStep" type="number" value="5"><i>%</i>
+                                                </div>
+                                                <div class="help">每 ±5% 触发一次</div>
+                                            </div>
+                                            <div class="field"><label>仓位上限</label>
+                                                <div class="unit"><input id="bearMax" type="number" value="100"><i>%</i>
+                                                </div>
+                                                <div class="help">累计成本上限</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-3" style="margin-top:12px">
+                                            <div class="field"><label>加仓范围</label><select id="bearScope">
+                                                <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
+                                                <option value="ALL">全标的等权</option>
+                                            </select></div>
+                                            <div class="field"><label>买满后止盈</label><select id="bearReenter">
+                                                <option value="false" selected>不再买入（推荐）</option>
+                                                <option value="true">下一轮信号重新建仓</option>
+                                            </select></div>
+                                            <div class="field"><label>备用现金</label>
+                                                <div class="unit"><input id="bearCash" type="number" value="0"><i>%</i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -434,7 +549,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126d"></script>
+<script src="assets/common.js?v=20261126h"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -489,6 +604,29 @@
             }
         }
 
+        function regimeSeparate() {
+            return $('#regimeMode').value === 'SEPARATE';
+        }
+
+        function toggleRegime() {
+            const sep = regimeSeparate();
+            $('#commonBuildRules').classList.toggle('hidden', sep);
+            $('#regimeBuildRules').classList.toggle('hidden', !sep);
+            update();
+        }
+
+        function checkRuleGroup(ids) {
+            let ok = true;
+            ids.forEach(([id, min, max]) => {
+                const el = $('#' + id), v = +el.value;
+                const field = el.closest('.field');
+                const bad = !isFinite(v) || v < min || v > max;
+                field.classList.toggle('invalid', bad);
+                if (bad) ok = false;
+            });
+            return ok;
+        }
+
         function valid() {
             const name = $('#taskName').value.trim(), cap = +$('#capital').value;
             const sd = $('#startDate').value, ed = $('#endDate').value;
@@ -515,18 +653,46 @@
                 mf.classList.add('invalid');
                 ok = false;
             } else mf.classList.remove('invalid');
+
+            const ruleIds = [['Daily', 0.1, 100], ['Add', 0, 100], ['Step', 0.1, 100], ['Max', 0, 100], ['Cash', 0, 100]];
+            const groups = regimeSeparate()
+                ? [['bull', ...ruleIds], ['bear', ...ruleIds]]
+                : [['', ...ruleIds]];
+            for (const [prefix, ...rules] of groups) {
+                const ids = rules.map(([suffix, min, max]) => {
+                    const map = {Daily: 'Daily', Add: 'Add', Step: 'Step', Max: 'Max', Cash: 'Cash'};
+                    const common = {
+                        Daily: 'dailyBuy',
+                        Add: 'addBuy',
+                        Step: 'addStep',
+                        Max: 'maxPos',
+                        Cash: 'cashReserve'
+                    };
+                    const key = prefix ? prefix + map[suffix] : common[suffix];
+                    return [key, min, max];
+                });
+                // 每日建仓必须 > 0；其余允许 0
+                ids[0][1] = 0.1;
+                if (!checkRuleGroup(ids)) ok = false;
+            }
             return ok;
         }
 
         function update() {
             const cap = +$('#capital').value || 0;
-            const daily = (+$('#dailyBuy').value || 0) / 100;
-            const add = (+$('#addBuy').value || 0) / 100;
-            const maxPos = (+$('#maxPos').value || 0) / 100;
+            const sep = regimeSeparate();
+            const daily = (+$((sep ? '#bullDaily' : '#dailyBuy')).value || 0) / 100;
+            const add = (+$((sep ? '#bullAdd' : '#addBuy')).value || 0) / 100;
+            const maxPos = (+$((sep ? '#bullMax' : '#maxPos')).value || 0) / 100;
+            const bullDaily = (+$('#bullDaily').value || 0) / 100;
+            const bearDaily = (+$('#bearDaily').value || 0) / 100;
             $('#sumUnd').textContent = state.underlyings.length + ' 个';
             $('#undCount').textContent = state.underlyings.length;
             $('#sumGrid').textContent = '3 × ' + state.strikes.length;
             $('#sumContracts').textContent = state.underlyings.length * 3 * state.strikes.length;
+            $('#buildHint').textContent = sep
+                ? `牛市 ${(bullDaily * 100).toFixed(0)}% / 熊市 ${(bearDaily * 100).toFixed(0)}% · 分开配置`
+                : `逐日 ${(daily * 100).toFixed(0)}% · 逆势 ${(add * 100).toFixed(0)}% · 上限 ${(maxPos * 100).toFixed(0)}%`;
             $('#sumDaily').textContent = O.money(cap * daily);
             $('#sumAdd').textContent = O.money(cap * add);
             $('#sumDays').textContent = (daily > 0 ? Math.ceil(maxPos / daily) : 0) + ' 个交易日';
@@ -558,6 +724,22 @@
                 startDate: $('#startDate').value,
                 endDate: $('#endDate').value,
                 initialCapital: +$('#capital').value,
+                capitalBase: $('#capitalBase').value,
+                marketRegimeMode: $('#regimeMode').value,
+                bullDailyBuyPct: (+$('#bullDaily').value) / 100,
+                bullAddBuyPct: (+$('#bullAdd').value) / 100,
+                bullAddStepPct: (+$('#bullStep').value) / 100,
+                bullMaxPositionPct: (+$('#bullMax').value) / 100,
+                bullCashReservePct: (+$('#bullCash').value) / 100,
+                bullAddScope: $('#bullScope').value,
+                bullReenterOnNewCycle: $('#bullReenter').value === 'true',
+                bearDailyBuyPct: (+$('#bearDaily').value) / 100,
+                bearAddBuyPct: (+$('#bearAdd').value) / 100,
+                bearAddStepPct: (+$('#bearStep').value) / 100,
+                bearMaxPositionPct: (+$('#bearMax').value) / 100,
+                bearCashReservePct: (+$('#bearCash').value) / 100,
+                bearAddScope: $('#bearScope').value,
+                bearReenterOnNewCycle: $('#bearReenter').value === 'true',
                 underlyingCodes: state.underlyings.slice(),
                 signalMode: $('#signalSeg .active').dataset.v,
                 monthMode: $('#monthMode').value,
@@ -675,7 +857,10 @@
             }
             update();
         }));
-        ['capital', 'dailyBuy', 'addBuy', 'addStep', 'maxPos', 'startDate', 'endDate', 'cashReserve', 'minBuyDte', 'rollDte'].forEach(id => $('#' + id).addEventListener('input', update));
+        ['capital', 'dailyBuy', 'addBuy', 'addStep', 'maxPos', 'startDate', 'endDate', 'cashReserve', 'minBuyDte', 'rollDte',
+            'bullDaily', 'bullAdd', 'bullStep', 'bullMax', 'bullCash', 'bearDaily', 'bearAdd', 'bearStep', 'bearMax', 'bearCash'].forEach(id => $('#' + id).addEventListener('input', update));
+        $('#regimeMode').addEventListener('change', toggleRegime);
+        ['bullScope', 'bullReenter', 'bearScope', 'bearReenter'].forEach(id => $('#' + id).addEventListener('change', update));
         $('#preset').addEventListener('change', e => {
             if (e.target.value === 'conservative') {
                 $('#dailyBuy').value = 5;
@@ -735,8 +920,10 @@
         }
 
         preferRecommended();
+        if (O.qs('regime', '') === 'SEPARATE') $('#regimeMode').value = 'SEPARATE';
         renderUnds();
         loadMeta();
+        toggleRegime();
         update();
     })();
 </script>

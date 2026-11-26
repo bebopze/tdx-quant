@@ -177,4 +177,19 @@ public class ObtDailyEquityDO implements Serializable {
     @TableField(exist = false)
     private BigDecimal sellAmount;
 
+    /**
+     * 当日认购持仓市值（查询聚合，非表字段）
+     */
+    @Schema(description = "当日认购持仓市值")
+    @TableField(exist = false)
+    private BigDecimal callMarketValue;
+
+    /**
+     * 当日认沽持仓市值（查询聚合，非表字段）
+     */
+    @Schema(description = "当日认沽持仓市值")
+    @TableField(exist = false)
+    private BigDecimal putMarketValue;
+
+
 }

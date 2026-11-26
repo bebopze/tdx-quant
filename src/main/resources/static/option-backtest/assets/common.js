@@ -148,31 +148,45 @@
         return el.__chart;
     }
 
+    function compactMoney(v) {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (!isFinite(n)) return '—';
+        const sign = n < 0 ? '-' : '';
+        const a = Math.abs(n);
+        let body;
+        if (a >= 1e8) body = (a / 1e8).toFixed(2).replace(/\.?0+$/, '') + '亿';
+        else if (a >= 1e4) body = (a / 1e4).toFixed(2).replace(/\.?0+$/, '') + '万';
+        else body = a.toLocaleString('zh-CN', {maximumFractionDigits: 2});
+        return '¥' + sign + body;
+    }
+
     function equityTooltip(params, data, t) {
         const p = params && params[0];
         if (!p) return '';
         const i = p.dataIndex;
         const r = data[i] || {};
         const prev = i > 0 ? data[i - 1] : null;
-        const pnl = prev ? Number(r.equity) - Number(prev.equity) : null;
-        const pos = r.positionPct == null ? '—' : Number(r.positionPct).toFixed(2) + '%';
-        const dd = r.drawdownPct == null ? '—' : Number(r.drawdownPct).toFixed(2) + '%';
-        const row = (label, value, color) => `<span style="color:${t.axis};white-space:nowrap">${label}</span><b style="font-family:var(--mono);font-weight:600;white-space:nowrap;color:${color || t.tooltipText}">${value}</b>`;
-        return `<div style="display:inline-block;padding:7px 10px;font-size:10.5px;line-height:1.6;color:${t.tooltipText}">
-            <div style="font-weight:700;margin-bottom:3px;white-space:nowrap">${r.tradeDate || ''}</div>
-            <div style="display:inline-grid;grid-template-columns:auto auto;column-gap:8px;row-gap:0;justify-content:start;align-items:baseline">
-                ${row('策略净值', num(r.nav, 4), t.strategy)}
-                ${row('沪深300 基准', r.benchmarkNav == null ? '—' : num(r.benchmarkNav, 4), '#d9a441')}
-                ${row('日收益率', r.dailyReturnPct == null ? '—' : pct(r.dailyReturnPct), Number(r.dailyReturnPct) >= 0 ? t.up : t.down)}
-                ${row('累计收益率', r.cumReturnPct == null ? '—' : pct(r.cumReturnPct), Number(r.cumReturnPct) >= 0 ? t.up : t.down)}
-                ${row('盈亏额', pnl == null ? '—' : money(pnl), pnl == null ? t.tooltipText : pnl >= 0 ? t.up : t.down)}
-                ${row('总资金', r.equity == null ? '—' : money(r.equity))}
-                ${row('市值', r.marketValue == null ? '—' : money(r.marketValue))}
-                ${row('仓位', pos)}
-                ${row('可用', r.cash == null ? '—' : money(r.cash))}
-                ${row('买入', r.buyAmount == null ? '—' : money(r.buyAmount), t.up)}
-                ${row('卖出', r.sellAmount == null ? '—' : money(r.sellAmount), t.down)}
-                ${row('回撤', dd, Number(r.drawdownPct) < 0 ? t.down : t.tooltipText)}
+        const eq = Number(r.equity) || 0;
+        const pnl = prev ? eq - Number(prev.equity) : null;
+        const totalPnl = r.cumReturnPct == null || !isFinite(Number(r.cumReturnPct))
+            ? null : eq - eq / (1 + Number(r.cumReturnPct) / 100);
+        const pctOf = v => eq > 0 && v != null ? (Number(v) / eq * 100).toFixed(2) + '%' : '—';
+        const plainPct = v => v == null ? '—' : Number(v).toFixed(2) + '%';
+        const row = (label, value, color, labelColor) => `<span style="color:${labelColor || t.axis};white-space:nowrap;font-size:10px">${label}</span><b style="font-family:var(--mono);font-weight:600;white-space:nowrap;font-size:10px;color:${color || t.tooltipText}">${value}</b>`;
+        return `<div style="display:inline-block;padding:6px 9px;font-size:10px;line-height:1.5;color:${t.tooltipText}">
+            <div style="font-weight:700;margin-bottom:2px;white-space:nowrap;font-size:10.5px">${r.tradeDate || ''}</div>
+            <div style="display:inline-grid;grid-template-columns:auto auto;column-gap:7px;row-gap:0;justify-content:start;align-items:baseline">
+                ${row('策略净值/基准', `${num(r.nav, 4)} / ${r.benchmarkNav == null ? '—' : num(r.benchmarkNav, 4)}`, t.strategy)}
+                ${row('总资金', compactMoney(r.equity))}
+                ${row('认购/仓位', `${compactMoney(r.callMarketValue)} / ${pctOf(r.callMarketValue)}`, t.up, t.up)}
+                ${row('认沽/仓位', `${compactMoney(r.putMarketValue)} / ${pctOf(r.putMarketValue)}`, t.down, t.down)}
+                ${row('市值/仓位', `${compactMoney(r.marketValue)} / ${pctOf(r.marketValue)}`)}
+                ${row('可用/仓位', `${compactMoney(r.cash)} / ${pctOf(r.cash)}`)}
+                ${row('买入/仓位', `${compactMoney(r.buyAmount)} / ${pctOf(r.buyAmount)}`, t.up)}
+                ${row('卖出/仓位', `${compactMoney(r.sellAmount)} / ${pctOf(r.sellAmount)}`, t.down)}
+                ${row('日盈亏额/日收益率', `${pnl == null ? '—' : compactMoney(pnl)} / ${r.dailyReturnPct == null ? '—' : plainPct(r.dailyReturnPct)}`, pnl == null ? t.tooltipText : pnl >= 0 ? t.up : t.down)}
+                ${row('总盈亏额/总收益率', `${totalPnl == null ? '—' : compactMoney(totalPnl)} / ${r.cumReturnPct == null ? '—' : plainPct(r.cumReturnPct)}`, Number(r.cumReturnPct) >= 0 ? t.up : t.down)}
             </div>
         </div>`;
     }

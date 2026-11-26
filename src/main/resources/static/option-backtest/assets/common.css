@@ -2421,14 +2421,23 @@ html[data-theme="b"] #pane-pos, html[data-theme="b"] #pane-closed, html[data-the
 }
 
 /* 详情表格：页面滚动时固定表头（吸顶到 topbar 下方） */
-.table-card { overflow: visible !important; }
-.table-card .table-wrap { overflow: visible; max-height: none; min-height: 0; }
+.table-card {
+    overflow: visible !important;
+}
+
+.table-card .table-wrap {
+    overflow: visible;
+    max-height: none;
+    min-height: 0;
+}
+
 .table-card thead th {
     position: sticky !important;
     top: 56px;
     z-index: 15;
     background: var(--table-head) !important;
 }
+
 html[data-theme="b"] .table-card thead th {
     position: sticky !important;
     top: 56px;
@@ -2443,9 +2452,51 @@ html[data-theme="b"] .table-card thead th {
     z-index: 18;
     background: var(--panel);
 }
+
 html[data-theme="b"] .table-card .tabs-bar {
     background: #ffffff;
 }
+
 .table-card thead th {
     top: 99px !important;
+}
+
+/* 建仓规则：牛熊分开配置 */
+.regime-rules {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.regime-block {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--panel-2);
+}
+
+.regime-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--row-line);
+}
+
+.regime-head b {
+    font-size: 12px;
+}
+
+.regime-head span {
+    font-size: 10px;
+    color: var(--dim);
+}
+
+.regime-bull {
+    color: var(--up);
+}
+
+.regime-bear {
+    color: var(--down);
 }
