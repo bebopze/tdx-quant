@@ -61,7 +61,12 @@ public class OptionBsCli {
             r.taskId = taskId;
             r.taskNo = taskNo;
             repo.updateProgress(taskId, 80);
-            repo.saveResult(taskId, r);
+            System.out.println("PRE_SAVE   : " + String.format("%.2f%%", r.totalReturnPct)
+                                       + "  final=" + String.format("%.2f", r.finalEquity)
+                                       + "  trades=" + r.totalTrades);
+            if (!Boolean.getBoolean("obt.noSave")) {
+                repo.saveResult(taskId, r);
+            }
             repo.log(taskId, "INFO", "回测完成 final=" + String.format("%.2f", r.finalEquity)
                     + " total=" + String.format("%.2f%%", r.totalReturnPct)
                     + " trades=" + r.totalTrades + " closes=" + r.closeRecords.size());

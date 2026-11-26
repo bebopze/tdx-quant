@@ -41,7 +41,7 @@ public class OptionBsEngine {
     private int tradeSeq;
     private int prevStatus;
     private int cycleId;
-    private int accountTpStep = 1;
+    private double accountTpBase;
 
     private boolean callSellActive, putSellActive;
     private boolean callBuyActive, putBuyActive;
@@ -76,6 +76,7 @@ public class OptionBsEngine {
         this.cash = params.getInitialCapital();
         this.peakEquity = params.getInitialCapital();
         this.prevEquity = params.getInitialCapital();
+        this.accountTpBase = params.getInitialCapital();
         this.r.initialCapital = params.getInitialCapital();
         this.r.taskId = -1;
     }
@@ -356,18 +357,19 @@ public class OptionBsEngine {
     }
 
     private void accountTakeProfit(LocalDate date) {
+        if (positions.isEmpty()) return;
         double equity = equityAt(date);
         double step = p.getAccountTpStepPct();
         int guard = 0;
-        while (equity / p.getInitialCapital() >= 1 + accountTpStep * step && guard++ < 20) {
+        // 每次触发后，以触发时的账户权益作为新基准，下一次再上涨 +50% 才触发
+        while (equity >= accountTpBase * (1 + step) && guard++ < 20) {
             for (Position x : new ArrayList<>(positions.values())) {
                 if (x.qty <= 0) continue;
                 int q = Math.max(1, (int) Math.floor(x.qty * p.getAccountTpReducePct()));
-                sell(x, Math.min(q, x.qty), date, "ACCOUNT_TP", "账户止盈（每 +50%）",
-                     accountTpStep * step * 100);
+                sell(x, Math.min(q, x.qty), date, "ACCOUNT_TP", "账户止盈（每 +50%）", step * 100);
             }
-            accountTpStep++;
             equity = equityAt(date);
+            accountTpBase = equity;
         }
     }
 

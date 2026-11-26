@@ -433,14 +433,18 @@
             const s = sigs[idx];
             const start = phaseDate(s.signalDate);
             let end = ds[ds.length - 1];
-            if (sigs[idx + 1]) {
+            const hasNext = !!sigs[idx + 1];
+            if (hasNext) {
                 const next = phaseDate(sigs[idx + 1].signalDate);
                 const pos = ds.findIndex(d => d >= next);
-                if (pos > 0) end = ds[pos - 1];
-                else if (pos === 0) end = ds[0];
+                // 下一信号日必须包含在上一阶段内：该日的大幅反转收益不能丢
+                if (pos >= 0) end = ds[pos];
             }
             if (end < start) end = start;
-            return {key: start + '|' + end, start, end, type: Number(s.signalType), cycleId: s.cycleId};
+            return {
+                key: start + '|' + end, start, end, last: !hasNext,
+                type: Number(s.signalType), cycleId: s.cycleId
+            };
         }
 
         function phaseMaxDrawdownDays(rows) {
@@ -465,7 +469,9 @@
         function phaseSignals(phase, list) {
             return (list || signals).filter(s => {
                 const d = phaseDate(s.signalDate);
-                return d >= phase.start && d <= phase.end;
+                if (phase.last) return d >= phase.start && d <= phase.end;
+                // 结束日只是下一阶段信号日：归属下一阶段，避免信号数重复
+                return d >= phase.start && d < phase.end;
             });
         }
 
@@ -524,6 +530,8 @@
             ps.periodReturnPct = phaseReturn(ps.equity);
             ps.maxDrawdownDays = phaseMaxDrawdownDays(ps.equity);
             ps.phase = phase;
+            const phaseSigForCount = phaseSignals(phase, ps.signals);
+            if (ps.riskMetrics) ps.riskMetrics.signals = phaseSigForCount.length;
             phaseView = ps;
             renderKpi(ps);
             renderRisk(ps);
