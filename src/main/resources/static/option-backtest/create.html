@@ -644,15 +644,18 @@
         function collect() {
             const R = ruleValues;
             const rp = (prefix, r) => {
-                const cap = prefix ? prefix[0].toUpperCase() + prefix.slice(1) : '';
+                // 后端字段是 lowerCamelCase：bearLongDailyBuyPct / bullDailyBuyPct
+                // 无前缀时是 dailyBuyPct；有前缀时后缀首字母要大写
+                const pre = prefix || '';
+                const cap = x => pre ? pre + x[0].toUpperCase() + x.slice(1) : x;
                 return {
-                    [cap + 'dailyBuyPct']: r.daily / 100,
-                    [cap + 'addBuyPct']: r.add / 100,
-                    [cap + 'addStepPct']: r.step / 100,
-                    [cap + 'maxPositionPct']: r.max / 100,
-                    [cap + 'cashReservePct']: r.cash / 100,
-                    [cap + 'addScope']: r.scope,
-                    [cap + 'reenterOnNewCycle']: !!r.reenter
+                    [cap('dailyBuyPct')]: r.daily / 100,
+                    [cap('addBuyPct')]: r.add / 100,
+                    [cap('addStepPct')]: r.step / 100,
+                    [cap('maxPositionPct')]: r.max / 100,
+                    [cap('cashReservePct')]: r.cash / 100,
+                    [cap('addScope')]: r.scope,
+                    [cap('reenterOnNewCycle')]: !!r.reenter
                 };
             };
             const p = {
