@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 任务详情</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126l">
+    <link rel="stylesheet" href="assets/common.css?v=20261126m">
     <script>
         (function () {
             var t = 'a';
@@ -171,14 +171,16 @@
                             <option value="1">买入</option>
                             <option value="2">卖出</option>
                         </select>
-                        <select class="filter-select hidden" id="filterUnderlying" title="标的"><option value="">全部标的</option></select>
-                        <select class="filter-select hidden" id="filterMonth" title="月份"><option value="">全部月份</option></select>
+                        <select class="filter-select hidden" id="filterUnderlying" title="标的">
+                            <option value="">全部标的</option>
+                        </select>
+                        <select class="filter-select hidden" id="filterMonth" title="月份">
+                            <option value="">全部月份</option>
+                        </select>
                         <input class="search" id="tableSearch" placeholder="筛选当前表…">
                         <button class="mini-btn" id="btnTableExport">导出当前</button>
                     </div>
                 </div>
-
-                <div class="table-summary hidden" id="tableSummary"></div>
 
                 <div id="pane-pos">
                     <div class="table-wrap">
@@ -319,7 +321,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126l"></script>
+<script src="assets/common.js?v=20261126m"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -332,6 +334,7 @@
         let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
         let activePhase = null, phaseView = null, phaseTimer = null;
         let currentRowOffset = 0;
+        let summaryRows = [];
         const phaseCache = new Map();
         let posRows = [], closedRows = [], tradeRows = [];
         let equityByDate = new Map();
@@ -890,48 +893,87 @@
             });
         }
 
-        function renderSummary(rows, tab) {
-            const el = $('#tableSummary');
-            if (!el) return;
-            if (!['pos', 'closed', 'trade', 'equity', 'signal'].includes(tab)) {
-                el.classList.add('hidden');
-                return;
-            }
-            el.classList.remove('hidden');
-            if (!rows.length) {
-                el.innerHTML = '<span class="sum-label">筛选汇总</span><span>0 条</span>';
-                return;
-            }
-            const sum = (arr, f) => arr.reduce((a, b) => a + (Number(f(b)) || 0), 0);
-            let html = '<span class="sum-label">筛选汇总</span>';
+        function optMult(code) {
+            return String(code) === '000852' ? 100 : 10000;
+        }
+
+        function summaryRow(tab) {
+            const rows = summaryRows || [];
+            const n = rows.length;
+            const sum = f => rows.reduce((a, b) => a + (Number(f(b)) || 0), 0);
+            const weighted = (f, w) => {
+                const ws = sum(w);
+                return ws ? rows.reduce((a, b) => a + Number(f(b)) * Number(w(b) || 0), 0) / ws : 0;
+            };
             if (tab === 'pos') {
-                const qty = sum(rows, r => r.qty), cost = sum(rows, r => r.costAmount);
-                const mv = sum(rows, r => r.marketValue), pnl = sum(rows, r => r.unrealizedPnl);
-                html += `<span>持仓 <b>${O.num(rows.length)}</b></span><span>数量 <b>${O.num(qty)}</b></span>
-                    <span>成本 <b>${O.money(cost)}</b></span><span>市值 <b>${O.money(mv)}</b></span>
-                    <span>浮动盈亏 <b class="${O.cls(pnl)}">${O.money(pnl)}</b></span>
-                    <span>收益率 <b class="${O.cls(pnl)}">${cost > 0 ? O.pct(pnl / cost * 100) : '—'}</b></span>`;
-            } else if (tab === 'closed') {
-                const qty = sum(rows, r => r.qty), pnl = sum(rows, r => r.realizedPnl);
-                const avgPct = sum(rows, r => r.pnlPct) / rows.length;
-                html += `<span>清仓 <b>${O.num(rows.length)}</b></span><span>数量 <b>${O.num(qty)}</b></span>
-                    <span>已实现盈亏 <b class="${O.cls(pnl)}">${O.money(pnl)}</b></span>
-                    <span>平均收益率 <b class="${O.cls(avgPct)}">${O.pct(avgPct)}</b></span>`;
-            } else if (tab === 'trade') {
-                const buys = rows.filter(r => Number(r.tradeType) === 1), sells = rows.filter(r => Number(r.tradeType) === 2);
-                const buyAmt = sum(buys, r => r.amount), sellAmt = sum(sells, r => r.amount), fee = sum(rows, r => r.fee);
-                html += `<span>交易 <b>${O.num(rows.length)}</b></span><span>买入 <b>${O.num(buys.length)}</b> / ${O.money(buyAmt)}</span>
-                    <span>卖出 <b>${O.num(sells.length)}</b> / ${O.money(sellAmt)}</span><span>费用 <b>${O.money(fee)}</b></span>
-                    <span>净买入 <b>${O.money(buyAmt - sellAmt)}</b></span>`;
-            } else if (tab === 'equity') {
-                const first = rows[0], last = rows[rows.length - 1];
-                const ret = Number(first.equity) > 0 ? (Number(last.equity) / Number(first.equity) - 1) * 100 : 0;
-                html += `<span>净值 <b>${O.num(rows.length)}</b></span><span>期末权益 <b>${O.money(last.equity)}</b></span>
-                    <span>区间收益 <b class="${O.cls(ret)}">${O.pct(ret)}</b></span>`;
-            } else {
-                html += `<span>信号 <b>${O.num(rows.length)}</b></span>`;
+                const qty = sum(r => r.qty), cost = sum(r => r.costAmount), mv = sum(r => r.marketValue);
+                const pnl = sum(r => r.unrealizedPnl), acct = sum(r => r.__accountPct || 0);
+                const hold = weighted(r => r.holdDays, r => r.qty);
+                return `<tr class="sum-row">
+                    <td class="sum-label">合计</td><td>${O.num(n)} 条</td><td></td><td></td><td></td><td></td><td></td>
+                    <td class="num r">${O.num(qty)}</td><td></td><td></td>
+                    <td class="num r">${O.money(cost)}</td><td class="num r">${O.money(mv)}</td>
+                    <td class="num r ${O.cls(pnl)}">${O.money(pnl)}</td>
+                    <td class="num r ${O.cls(pnl)}">${cost > 0 ? O.pct(pnl / cost * 100) : '—'}</td>
+                    <td class="num r">${O.num(sum(r => r.weightPct), 2)}%</td>
+                    <td class="num r">${accountPctText(acct)}</td><td class="num r">${O.num(hold, 1)}</td>
+                    <td></td><td></td>
+                </tr>`;
             }
-            el.innerHTML = html;
+            if (tab === 'closed') {
+                const qty = sum(r => r.qty), realized = sum(r => r.realizedPnl);
+                const cost = sum(r => Number(r.qty || 0) * Number(r.avgCost || 0) * optMult(r.underlyingCode));
+                const acct = sum(r => r.__accountPct || 0);
+                const avgCost = weighted(r => r.avgCost, r => r.qty);
+                const avgSell = weighted(r => r.avgSellPrice, r => r.qty);
+                const hold = weighted(r => r.holdDays, r => r.qty);
+                const maxPnl = n ? sum(r => r.maxPnlPct) / n : 0;
+                return `<tr class="sum-row">
+                    <td class="sum-label">合计</td><td>${O.num(n)} 笔</td><td></td><td></td><td></td>
+                    <td class="num r">${O.num(qty)}</td><td class="num r">${avgCost ? O.num(avgCost, 4) : '—'}</td>
+                    <td class="num r">${avgSell ? O.num(avgSell, 4) : '—'}</td><td class="num r">${O.num(hold, 1)}</td>
+                    <td class="num r ${O.cls(realized)}">${O.money(realized)}</td>
+                    <td class="num r">${accountPctText(acct)}</td>
+                    <td class="num r ${O.cls(realized)}">${cost > 0 ? O.pct(realized / cost * 100) : '—'}</td>
+                    <td class="num r up">${O.pct(maxPnl)}</td><td></td>
+                </tr>`;
+            }
+            if (tab === 'trade') {
+                const buys = rows.filter(r => Number(r.tradeType) === 1),
+                    sells = rows.filter(r => Number(r.tradeType) === 2);
+                const qty = sum(r => r.qty), amount = sum(r => r.amount), acct = sum(r => r.__accountPct || 0),
+                    fee = sum(r => r.fee);
+                const avgPrice = weighted(r => r.price, r => r.qty);
+                return `<tr class="sum-row">
+                    <td class="sum-label">合计</td><td>${O.num(n)} 笔</td><td></td><td></td><td></td>
+                    <td>买 ${O.num(buys.length)} / 卖 ${O.num(sells.length)}</td>
+                    <td class="num r">${avgPrice ? O.num(avgPrice, 4) : '—'}</td><td class="num r">${O.num(qty)}</td>
+                    <td class="num r">${O.money(amount)}</td><td class="num r">${accountPctText(acct)}</td>
+                    <td class="num r">${O.money(fee)}</td><td></td><td></td>
+                </tr>`;
+            }
+            if (tab === 'equity') {
+                const first = rows[0] || {}, last = rows[n - 1] || {};
+                const avgDaily = n ? sum(r => r.dailyReturnPct) / n : 0;
+                const avgPos = n ? sum(r => r.positionPct) / n : 0;
+                const minDd = n ? Math.min(...rows.map(r => Number(r.drawdownPct) || 0)) : 0;
+                return `<tr class="sum-row">
+                    <td class="sum-label">合计</td><td class="num r">${last.nav == null ? '—' : Number(last.nav).toFixed(4)}</td>
+                    <td class="num r">${last.equity == null ? '—' : O.money(last.equity)}</td>
+                    <td class="num r ${O.cls(avgDaily)}">${O.pct(avgDaily)}</td>
+                    <td class="num r">${last.cumReturnPct == null ? '—' : O.pct(last.cumReturnPct)}</td>
+                    <td class="num r" style="color:var(--up)">${minDd.toFixed(2)}%</td>
+                    <td class="num r">${last.cash == null ? '—' : O.money(last.cash)}</td>
+                    <td class="num r">${last.marketValue == null ? '—' : O.money(last.marketValue)}</td>
+                    <td class="num r">${avgPos.toFixed(2)}%</td><td></td>
+                    <td class="num r">${O.num(sum(r => r.positionCount || 0))}</td>
+                </tr>`;
+            }
+            const bottoms = rows.filter(r => Number(r.signalType) === 1).length;
+            const tops = rows.filter(r => Number(r.signalType) === 3).length;
+            return `<tr class="sum-row">
+                <td class="sum-label">合计</td><td>底 ${bottoms} / 顶 ${tops}</td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>`;
         }
 
         function renderActiveTable() {
@@ -940,6 +982,7 @@
             const rows = currentRows();
             const kw = ($('#tableSearch').value || '').trim();
             const filtered = filterRows(applyTableFilters(rows, activeTab), kw);
+            summaryRows = filtered;
             const sorted = sortRows(filtered, sortState[activeTab]);
             const size = posSize;
             const total = sorted.length;
@@ -967,7 +1010,6 @@
                 $('#cntSignal').textContent = total;
             }
 
-            renderSummary(filtered, activeTab);
             pager(total, size, page, p => {
                 setPage(activeTab, p);
                 renderActiveTable();
@@ -986,8 +1028,8 @@
                 if (r.tradeDate) {
                     r.__openDate = addDays(r.tradeDate, -(Number(r.holdDays) || 0));
                     const e = equityByDate.get(String(r.tradeDate).slice(0, 10));
-                    r.__accountPct = e && e.positionPct != null
-                        ? Number(e.positionPct) * Number(r.weightPct || 0) / 100 : null;
+                    r.__accountPct = e && e.equity
+                        ? Number(r.marketValue || 0) / Number(e.equity) * 100 : null;
                 }
                 if (r.closeDate) {
                     const e = equityByDate.get(String(r.closeDate).slice(0, 10));
@@ -997,7 +1039,7 @@
                     r.__accountPct = e && e.equity
                         ? r.__sellAmount / Number(e.equity) * 100 : null;
                 }
-                if (r.tradeDate) {
+                if (r.tradeDate && r.tradeType != null) {
                     const e = equityByDate.get(String(r.tradeDate).slice(0, 10));
                     r.__accountPct = e && e.equity ? Number(r.amount || 0) / Number(e.equity) * 100 : null;
                 }
@@ -1055,11 +1097,12 @@
         }
 
         function renderPositions(list, kw) {
+            const summary = summaryRow('pos');
             if (!list.length) {
-                $('#posBody').innerHTML = '<tr><td colspan="19" class="empty">暂无持仓</td></tr>';
+                $('#posBody').innerHTML = summary + '<tr><td colspan="19" class="empty">暂无持仓</td></tr>';
                 return;
             }
-            $('#posBody').innerHTML = list.map((p, i) => `<tr>
+            $('#posBody').innerHTML = summary + list.map((p, i) => `<tr>
                 <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td>
                 <td><span style="color:var(--text)">${esc(O.undName(p.underlyingCode))}</span> <span class="num" style="font-size:9px;color:var(--dim)">${esc(p.underlyingCode)}</span></td>
                 <td><span style="color:var(--text)">${esc(p.optionName)}</span><div class="num" style="font-size:9px;color:var(--dim)">${esc(p.optionCode)}</div></td>
@@ -1077,11 +1120,12 @@
         }
 
         function renderClosed(list, kw) {
+            const summary = summaryRow('closed');
             if (!list.length) {
-                $('#closedBody').innerHTML = '<tr><td colspan="14" class="empty">暂无平仓记录</td></tr>';
+                $('#closedBody').innerHTML = summary + '<tr><td colspan="14" class="empty">暂无平仓记录</td></tr>';
                 return;
             }
-            $('#closedBody').innerHTML = list.map((p, i) => `<tr>
+            $('#closedBody').innerHTML = summary + list.map((p, i) => `<tr>
                 <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td class="num">${esc(p.openDate)}</td><td class="num">${esc(p.closeDate)}</td><td class="num r">${O.num(p.qty)}</td>
                 <td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.avgSellPrice, 4)}</td><td class="num r">${p.holdDays}</td>
@@ -1093,11 +1137,12 @@
         }
 
         function renderTrades(list, kw) {
+            const summary = summaryRow('trade');
             if (!list.length) {
-                $('#tradeBody').innerHTML = '<tr><td colspan="13" class="empty">暂无交易</td></tr>';
+                $('#tradeBody').innerHTML = summary + '<tr><td colspan="13" class="empty">暂无交易</td></tr>';
                 return;
             }
-            $('#tradeBody').innerHTML = list.map((p, i) => `<tr>
+            $('#tradeBody').innerHTML = summary + list.map((p, i) => `<tr>
                 <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
                 <td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td><span class="tag ${Number(p.tradeType) === 1 ? 'buy' : 'sell'}">${Number(p.tradeType) === 1 ? '买入' : '卖出'}</span></td>
@@ -1109,11 +1154,12 @@
         }
 
         function renderEquity(list) {
+            const summary = summaryRow('equity');
             if (!list.length) {
-                $('#equityBody').innerHTML = '<tr><td colspan="11" class="empty">暂无净值</td></tr>';
+                $('#equityBody').innerHTML = summary + '<tr><td colspan="11" class="empty">暂无净值</td></tr>';
                 return;
             }
-            $('#equityBody').innerHTML = list.map(p => `<tr>
+            $('#equityBody').innerHTML = summary + list.map(p => `<tr>
                 <td class="num" style="color:var(--text)">${esc(p.tradeDate)}</td><td class="num r">${Number(p.nav).toFixed(4)}</td>
                 <td class="num r">${O.num(p.equity)}</td><td class="num r ${O.cls(p.dailyReturnPct)}">${O.pct(p.dailyReturnPct)}</td>
                 <td class="num r ${O.cls(p.cumReturnPct)}">${O.pct(p.cumReturnPct)}</td><td class="num r" style="color:var(--up)">${Number(p.drawdownPct).toFixed(2)}%</td>
@@ -1123,11 +1169,12 @@
         }
 
         function renderSignalsTable(list) {
+            const summary = summaryRow('signal');
             if (!list.length) {
-                $('#signalBody').innerHTML = '<tr><td colspan="8" class="empty">暂无信号</td></tr>';
+                $('#signalBody').innerHTML = summary + '<tr><td colspan="8" class="empty">暂无信号</td></tr>';
                 return;
             }
-            $('#signalBody').innerHTML = list.map(s => `<tr>
+            $('#signalBody').innerHTML = summary + list.map(s => `<tr>
                 <td class="num" style="color:var(--text)">${esc(s.signalDate)}</td>
                 <td><span class="tag ${Number(s.signalType) === 1 ? 'p' : 'c'}">${Number(s.signalType) === 1 ? '中期底' : '中期顶'}</span></td>
                 <td class="num">${s.prevStatus ?? '—'}</td><td class="num">#${s.cycleId}</td>
@@ -1192,7 +1239,6 @@
             activeTab = b.dataset.tab;
             ['pos', 'closed', 'trade', 'equity', 'signal', 'param'].forEach(k => $('#pane-' + k).classList.toggle('hidden', k !== activeTab));
             $('#tablePager').classList.toggle('hidden', activeTab === 'param');
-            $('#tableSummary').classList.toggle('hidden', activeTab === 'param');
             $('#dateFilter').classList.toggle('hidden', !['pos', 'closed', 'trade'].includes(activeTab));
             if (activeTab === 'param') loadLogs(); else loadTable();
         }));

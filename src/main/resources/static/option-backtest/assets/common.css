@@ -2567,3 +2567,43 @@ html[data-theme="b"] .table-card .tabs-bar {
 .phase-bar.phase-bear .ph-type {
     color: var(--down);
 }
+
+/* 详情列表筛选与筛选汇总 */
+.filter-select {
+    height: 27px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-2);
+    font-size: 10.5px;
+    padding: 0 5px;
+    max-width: 112px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* 表格筛选汇总行：紧邻表头，吸顶显示 */
+tbody tr.sum-row td {
+    background: var(--panel-3) !important;
+    color: var(--text) !important;
+    font-weight: 600;
+    border-top: 1px solid var(--border-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 10.5px;
+}
+
+tbody tr.sum-row td.sum-label {
+    color: var(--accent) !important;
+}
+
+html[data-theme="b"] tbody tr.sum-row td {
+    background: #eef3fa !important;
+    color: #334155 !important;
+}
+
+html[data-theme="b"] tbody tr.sum-row td.sum-label {
+    color: #1d4ed8 !important;
+}
