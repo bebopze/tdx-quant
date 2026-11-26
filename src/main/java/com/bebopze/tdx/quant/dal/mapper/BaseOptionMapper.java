@@ -69,6 +69,15 @@ public interface BaseOptionMapper extends BaseMapper<BaseOptionDO> {
     List<BaseOptionDO> listSimpleByKeyword(@Param("keyword") String keyword);
 
 
+    /**
+     * 指定合约的 kline_his（日更：按 code 批量读取历史K线）
+     *
+     * @param codes 合约编码（建议每批 ≤ 500）
+     * @return 仅 code、kline_his、kline_his_raw_len
+     */
+    List<BaseOptionDO> listKlineHisByCodes(@Param("codes") List<String> codes);
+
+
     int batchInsert(@Param("list") List<BaseOptionDO> list);
 
     int batchInsertOrUpdate(@Param("list") List<BaseOptionDO> list);

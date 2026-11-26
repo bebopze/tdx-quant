@@ -111,6 +111,7 @@
         ORDER BY
         <choose>
             <when test="sortBy == 'id'">id</when>
+            <when test="sortBy == 'status'">status</when>
             <when test="sortBy == 'initialCapital'">initial_capital</when>
             <when test="sortBy == 'finalEquity'">final_equity</when>
             <when test="sortBy == 'annualReturn'">annual_return_pct</when>

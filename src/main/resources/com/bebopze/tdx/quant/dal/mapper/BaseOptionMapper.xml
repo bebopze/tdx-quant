@@ -4,7 +4,9 @@
 
 
     <select id="listSimpleInDate" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
-        SELECT id,
+        SELECT
+
+        id,
         code,
         symbol,
         name,
@@ -200,6 +202,26 @@
                   )
 
         LIMIT 10
+    </select>
+
+
+    <!-- 期权日更：按 code 批量读取 kline_his -->
+    <select id="listKlineHisByCodes" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionDO">
+        SELECT
+
+        id,
+        code,
+        kline_his,
+        kline_his_raw_len
+
+
+        FROM base_option
+
+
+        WHERE code IN
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
     </select>
 
 

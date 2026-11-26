@@ -241,8 +241,9 @@
                     <table>
                         <thead>
                         <tr>
+                            <th class="sortable" data-k="id" style="width:64px">ID <span class="arrow">▼</span></th>
                             <th style="width:26px"></th>
-                            <th class="sortable" data-k="id">任务 <span class="arrow">▼</span></th>
+                            <th>任务</th>
                             <th>回测区间</th>
                             <th>标的</th>
                             <th class="sortable r" data-k="initialCapital">本金 <span class="arrow">▼</span></th>
@@ -253,14 +254,14 @@
                             <th class="sortable r" data-k="sharpe">夏普 <span class="arrow">▼</span></th>
                             <th class="sortable r" data-k="winRate">胜率 <span class="arrow">▼</span></th>
                             <th class="sortable r" data-k="totalTrades">笔数 <span class="arrow">▼</span></th>
-                            <th>状态</th>
-                            <th>创建时间</th>
+                            <th class="sortable" data-k="status">状态 <span class="arrow">▼</span></th>
+                            <th class="sortable" data-k="createdAt">创建时间 <span class="arrow">▼</span></th>
                             <th style="width:66px"></th>
                         </tr>
                         </thead>
                         <tbody id="tbody">
                         <tr>
-                            <td colspan="15" class="loading"><span class="spinner"></span>加载中…</td>
+                            <td colspan="16" class="loading"><span class="spinner"></span>加载中…</td>
                         </tr>
                         </tbody>
                     </table>
@@ -280,7 +281,7 @@
         const $ = s => document.querySelector(s);
 
         async function load() {
-            $('#tbody').innerHTML = '<tr><td colspan="15" class="loading"><span class="spinner"></span>加载中…</td></tr>';
+            $('#tbody').innerHTML = '<tr><td colspan="16" class="loading"><span class="spinner"></span>加载中…</td></tr>';
             try {
                 const params = new URLSearchParams({page, size, sortBy, sortDir});
                 ['kw', 'status', 'signalMode', 'underlying', 'startDate', 'endDate'].forEach(id => {
@@ -295,7 +296,7 @@
                 total = data.total || 0;
                 render();
             } catch (e) {
-                $('#tbody').innerHTML = '<tr><td colspan="15" class="empty">加载失败：' + e.message + '<br><span class="muted">请确认服务已重启并已创建 obt_* 表</span></td></tr>';
+                $('#tbody').innerHTML = '<tr><td colspan="16" class="empty">加载失败：' + e.message + '<br><span class="muted">请确认服务已重启并已创建 obt_* 表</span></td></tr>';
             }
         }
 
@@ -303,12 +304,13 @@
             $('#count').textContent = total + ' 条';
             const start = (page - 1) * size;
             if (!rows.length) {
-                $('#tbody').innerHTML = '<tr><td colspan="15" class="empty">暂无回测记录，点击右上角「新建回测」开始</td></tr>';
+                $('#tbody').innerHTML = '<tr><td colspan="16" class="empty">暂无回测记录，点击右上角「新建回测」开始</td></tr>';
             } else {
                 $('#tbody').innerHTML = rows.map(t => {
                     const unds = String(t.underlyingCodes || '').split(',').filter(Boolean).slice(0, 3)
                         .map(c => `<span class="und">${O.undName(c)}</span>`).join('');
                     return `<tr onclick="location.href='detail.html?id=${t.id}'">
+                        <td class="num" style="color:var(--muted);font-family:var(--mono)">#${t.id}</td>
                         <td><span class="fav ${t.favoriteFlag == 1 ? 'on' : ''}" onclick="event.stopPropagation();fav(${t.id},${t.favoriteFlag == 1 ? 0 : 1})">${t.favoriteFlag == 1 ? '★' : '☆'}</span></td>
                         <td><div class="task-cell"><span class="task-name">${esc(t.taskName)}</span><span class="task-id">${esc(t.taskNo)} · ${esc(t.signalMode || '')} · ${esc(t.monthMode || '')}</span></div></td>
                         <td class="num" style="font-size:10.5px;color:var(--muted)">${short(t.startDate)} → ${short(t.endDate)}</td>
@@ -344,7 +346,12 @@
                 }
             });
 
-            document.querySelectorAll('th.sortable').forEach(th => th.classList.toggle('sorted', th.dataset.k === sortBy));
+            document.querySelectorAll('th.sortable').forEach(th => {
+                const on = th.dataset.k === sortBy;
+                th.classList.toggle('sorted', on);
+                const arrow = th.querySelector('.arrow');
+                if (arrow) arrow.textContent = on ? (sortDir === 'asc' ? '▲' : '▼') : '↕';
+            });
             renderKpi();
         }
 
@@ -393,9 +400,9 @@
         $('#btnExport2').addEventListener('click', exportCsv);
 
         function exportCsv() {
-            const head = ['任务号', '任务名称', '区间', '标的', '本金', '期末权益', '总收益%', '年化%', '最大回撤%', '夏普', '胜率%', '交易笔数', '状态', '创建时间'];
+            const head = ['ID', '任务号', '任务名称', '区间', '标的', '本金', '期末权益', '总收益%', '年化%', '最大回撤%', '夏普', '胜率%', '交易笔数', '状态', '创建时间'];
             const lines = [head.join(',')];
-            rows.forEach(t => lines.push([t.taskNo, t.taskName, (t.startDate || '') + '~' + (t.endDate || ''),
+            rows.forEach(t => lines.push([t.id, t.taskNo, t.taskName, (t.startDate || '') + '~' + (t.endDate || ''),
                 String(t.underlyingCodes || '').split(',').map(O.undName).join('|'), t.initialCapital, t.finalEquity,
                 t.totalReturnPct, t.annualReturnPct, t.maxDrawdownPct, t.sharpeRatio, t.winRatePct, t.totalTrades, t.status, t.gmtCreate]
                 .map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')));
