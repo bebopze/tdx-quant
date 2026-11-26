@@ -73,13 +73,20 @@
 
     <select id="listSellReasons" resultType="java.util.LinkedHashMap">
         SELECT reason_code AS reasonCode,
-               reason_desc AS reasonDesc,
-               COUNT(*)    AS cnt
+        reason_desc AS reasonDesc,
+        COUNT(*) AS cnt
 
         FROM obt_trade
 
         WHERE task_id = #{taskId}
-          AND trade_type = 2
+        AND trade_type = 2
+
+        <if test="startDate != null">
+            <![CDATA[ AND trade_date >= #{startDate} ]]>
+        </if>
+        <if test="endDate != null">
+            <![CDATA[ AND trade_date <= #{endDate} ]]>
+        </if>
 
         GROUP BY reason_code, reason_desc
 

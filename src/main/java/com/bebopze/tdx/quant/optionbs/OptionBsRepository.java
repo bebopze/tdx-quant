@@ -309,11 +309,19 @@ public class OptionBsRepository {
     }
 
     public List<Map<String, Object>> sellReasons(long id) {
-        return tradeMapper.listSellReasons(id);
+        return sellReasons(id, null, null);
+    }
+
+    public List<Map<String, Object>> sellReasons(long id, String from, String to) {
+        return tradeMapper.listSellReasons(id, parseDate(from), parseDate(to));
     }
 
     public List<Map<String, Object>> contribution(long id) {
-        return closeMapper.listContribution(id);
+        return contribution(id, null, null);
+    }
+
+    public List<Map<String, Object>> contribution(long id, String from, String to) {
+        return closeMapper.listContribution(id, parseDate(from), parseDate(to));
     }
 
     public List<Map<String, Object>> underlyings() {
@@ -325,8 +333,16 @@ public class OptionBsRepository {
         return rows;
     }
 
+    public long tradeCount(long id, String from, String to) {
+        return tradeMapper.countByTaskId(id, null, null, parseDate(from), parseDate(to));
+    }
+
     public double avgHoldDays(long id) {
-        BigDecimal v = closeMapper.avgHoldDays(id);
+        return avgHoldDays(id, null, null);
+    }
+
+    public double avgHoldDays(long id, String from, String to) {
+        BigDecimal v = closeMapper.avgHoldDays(id, parseDate(from), parseDate(to));
         return v == null ? 0 : v.doubleValue();
     }
 

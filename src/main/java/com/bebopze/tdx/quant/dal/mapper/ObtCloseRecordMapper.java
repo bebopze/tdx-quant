@@ -40,10 +40,14 @@ public interface ObtCloseRecordMapper extends BaseMapper<ObtCloseRecordDO> {
                                         @Param("size") int size);
 
 
-    List<Map<String, Object>> listContribution(@Param("taskId") Long taskId);
+    List<Map<String, Object>> listContribution(@Param("taskId") Long taskId,
+                                               @Param("startDate") java.time.LocalDate startDate,
+                                               @Param("endDate") java.time.LocalDate endDate);
 
 
-    BigDecimal avgHoldDays(@Param("taskId") Long taskId);
+    BigDecimal avgHoldDays(@Param("taskId") Long taskId,
+                           @Param("startDate") java.time.LocalDate startDate,
+                           @Param("endDate") java.time.LocalDate endDate);
 
 
     List<ObtCloseRecordDO> listAllByTaskId(@Param("taskId") Long taskId);

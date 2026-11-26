@@ -72,8 +72,11 @@ public class OptionBsBacktestController {
 
     @Operation(summary = "统计 / 风险 / 月度 / 归因")
     @GetMapping("/{id}/stats")
-    public Result<Map<String, Object>> stats(@PathVariable long id) {
-        return Result.SUC(service.stats(id));
+    public Result<Map<String, Object>> stats(@PathVariable long id,
+                                             @RequestParam(required = false) String from,
+                                             @RequestParam(required = false) String to) {
+
+        return Result.SUC(service.stats(id, from, to));
     }
 
     @Operation(summary = "净值曲线")

@@ -65,13 +65,24 @@
 
 
     <select id="listContribution" resultType="java.util.LinkedHashMap">
-        SELECT underlying_code   AS underlyingCode,
-               SUM(realized_pnl) AS pnl,
-               COUNT(*)          AS cnt
+        SELECT
+
+        underlying_code AS underlyingCode,
+        SUM(realized_pnl) AS pnl,
+        COUNT(*) AS cnt
+
 
         FROM obt_close_record
 
+
         WHERE task_id = #{taskId}
+
+        <if test="startDate != null">
+            <![CDATA[ AND close_date >= #{startDate} ]]>
+        </if>
+        <if test="endDate != null">
+            <![CDATA[ AND close_date <= #{endDate} ]]>
+        </if>
 
         GROUP BY underlying_code
 

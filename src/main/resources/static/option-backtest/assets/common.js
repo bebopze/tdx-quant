@@ -166,6 +166,9 @@
         if (!p) return '';
         const i = p.dataIndex;
         const r = data[i] || {};
+        if (window.__obtOnHoverDate && r.tradeDate) {
+            window.__obtOnHoverDate(String(r.tradeDate).slice(0, 10));
+        }
         const prev = i > 0 ? data[i - 1] : null;
         const eq = Number(r.equity) || 0;
         const pnl = prev ? eq - Number(prev.equity) : null;

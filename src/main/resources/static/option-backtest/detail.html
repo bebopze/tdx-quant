@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 任务详情</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126h">
+    <link rel="stylesheet" href="assets/common.css?v=20261126k">
     <script>
         (function () {
             var t = 'a';
@@ -116,6 +116,7 @@
                             <button class="tab" data-chart="daily">日收益</button>
                         </div>
                     </div>
+                    <div id="phaseBar" class="phase-bar hidden"></div>
                     <div id="mainChart" class="chart"></div>
                 </div>
                 <div class="card">
@@ -304,7 +305,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126h"></script>
+<script src="assets/common.js?v=20261126k"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -315,6 +316,8 @@
         let activeTab = TAB_KEYS.includes(O.qs('tab', '')) ? O.qs('tab', '') : 'pos';
         let posPage = 1, posSize = 100, closedPage = 1, tradePage = 1;
         let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
+        let activePhase = null, phaseView = null, phaseTimer = null;
+        const phaseCache = new Map();
         let posRows = [], closedRows = [], tradeRows = [];
         let equityByDate = new Map();
         let posKey = null, closedKey = null, tradeKey = null;
@@ -408,6 +411,185 @@
             if (chartName === 'equity') O.renderEquity($('#mainChart'), equity);
             else if (chartName === 'drawdown') O.renderDrawdown($('#mainChart'), equity);
             else O.renderDaily($('#mainChart'), equity);
+            bindPhaseHover();
+            if (activePhase) applyPhaseMark(activePhase);
+        }
+
+        function phaseDate(v) {
+            return String(v || '').slice(0, 10);
+        }
+
+        function phaseForDate(date) {
+            if (!signals.length || !equity.length) return null;
+            const ds = equity.map(x => phaseDate(x.tradeDate));
+            const sigs = signals.filter(s => s.signalDate).slice()
+                .sort((a, b) => String(a.signalDate).localeCompare(String(b.signalDate)));
+            let idx = -1;
+            for (let i = 0; i < sigs.length; i++) {
+                if (phaseDate(sigs[i].signalDate) <= date) idx = i;
+                else break;
+            }
+            if (idx < 0) return null;
+            const s = sigs[idx];
+            const start = phaseDate(s.signalDate);
+            let end = ds[ds.length - 1];
+            if (sigs[idx + 1]) {
+                const next = phaseDate(sigs[idx + 1].signalDate);
+                const pos = ds.findIndex(d => d >= next);
+                if (pos > 0) end = ds[pos - 1];
+                else if (pos === 0) end = ds[0];
+            }
+            if (end < start) end = start;
+            return {key: start + '|' + end, start, end, type: Number(s.signalType), cycleId: s.cycleId};
+        }
+
+        function phaseMaxDrawdownDays(rows) {
+            let peak = 0, peakIdx = 0, maxDays = 0;
+            (rows || []).forEach((r, i) => {
+                const v = Number(r.equity) || 0;
+                if (v >= peak) {
+                    peak = v;
+                    peakIdx = i;
+                }
+                maxDays = Math.max(maxDays, i - peakIdx);
+            });
+            return maxDays;
+        }
+
+        function phaseReturn(rows) {
+            if (!rows || rows.length < 2) return 0;
+            const a = Number(rows[0].equity) || 0, b = Number(rows[rows.length - 1].equity) || 0;
+            return a > 0 ? (b / a - 1) * 100 : 0;
+        }
+
+        function phaseSignals(phase, list) {
+            return (list || signals).filter(s => {
+                const d = phaseDate(s.signalDate);
+                return d >= phase.start && d <= phase.end;
+            });
+        }
+
+        function phaseStyle(type) {
+            return type === 1
+                ? {line: '#ff4d4f', fill: 'rgba(255,77,79,.12)'}
+                : {line: '#17c964', fill: 'rgba(23,201,100,.12)'};
+        }
+
+        function applyPhaseMark(phase) {
+            const c = window.echarts && echarts.getInstanceByDom($('#mainChart'));
+            if (!c) return;
+            const st = phaseStyle(phase.type);
+            c.setOption({
+                series: [{
+                    markArea: {
+                        silent: true,
+                        itemStyle: {color: st.fill},
+                        label: {
+                            show: true, position: 'insideTop', color: st.line, fontSize: 9,
+                            formatter: phase.type === 1 ? '底→顶' : '顶→底'
+                        },
+                        data: [[{xAxis: phase.start}, {xAxis: phase.end}]]
+                    }
+                }]
+            });
+        }
+
+        function clearPhaseMark() {
+            const c = window.echarts && echarts.getInstanceByDom($('#mainChart'));
+            if (c) c.setOption({series: [{markArea: {data: []}}]});
+        }
+
+        function showPhaseBar(phase, ps) {
+            const ret = Number(ps ? ps.periodReturnPct : phaseReturn(ps && ps.equity) || 0);
+            const dd = Number(ps && ps.riskMetrics ? ps.riskMetrics.maxDrawdownPct : 0);
+            const trades = ps ? ps.tradeCount : 0;
+            const sigN = phaseSignals(phase, ps ? ps.signals : signals).length;
+            const cls = ret >= 0 ? 'up' : 'down';
+            $('#phaseBar').className = 'phase-bar ' + (phase.type === 1 ? 'phase-bull' : 'phase-bear');
+            $('#phaseBar').classList.remove('hidden');
+            $('#phaseBar').innerHTML = `
+                <b>${phase.start} ~ ${phase.end}</b>
+                <span class="ph-type">${phase.type === 1 ? '中期底 → 顶（认购）' : '中期顶 → 底（认沽）'}</span>
+                <span class="ph-item">阶段收益 <strong class="${cls}">${O.pct(ret)}</strong></span>
+                <span class="ph-item">最大回撤 <strong style="color:var(--up)">${dd.toFixed(2)}%</strong></span>
+                <span class="ph-item">交易 <strong>${O.num(trades)}</strong></span>
+                <span class="ph-item">信号 <strong>${sigN}</strong></span>
+                <span class="ph-close" id="phaseClose">清除联动 ×</span>`;
+            const close = $('#phaseClose');
+            if (close) close.onclick = clearPhase;
+        }
+
+        function applyPhase(ps, phase) {
+            ps.__phase = true;
+            ps.periodReturnPct = phaseReturn(ps.equity);
+            ps.maxDrawdownDays = phaseMaxDrawdownDays(ps.equity);
+            ps.phase = phase;
+            phaseView = ps;
+            renderKpi(ps);
+            renderRisk(ps);
+            O.renderMonthly($('#monthlyChart'), ps.monthlyReturns || {});
+            O.renderSellReasons($('#sellChart'), ps.sellReasons || []);
+            O.renderContribution($('#contribChart'), ps.contribution || []);
+            const phaseSig = phaseSignals(phase, ps.signals);
+            renderSignals(phaseSig);
+            showPhaseBar(phase, ps);
+            applyPhaseMark(phase);
+        }
+
+        async function hoverPhase(date) {
+            const phase = phaseForDate(date);
+            if (!phase) {
+                clearPhase();
+                return;
+            }
+            if (activePhase && activePhase.key === phase.key) return;
+            activePhase = phase;
+            applyPhaseMark(phase);
+            $('#phaseBar').className = 'phase-bar ' + (phase.type === 1 ? 'phase-bull' : 'phase-bear');
+            $('#phaseBar').classList.remove('hidden');
+            $('#phaseBar').innerHTML = `<b>${phase.start} ~ ${phase.end}</b><span class="ph-item">加载阶段统计…</span>`;
+            const cached = phaseCache.get(phase.key);
+            if (cached) {
+                applyPhase(cached, phase);
+                return;
+            }
+            try {
+                const q = new URLSearchParams({from: phase.start, to: phase.end});
+                const ps = await O.api('/api/option/backtest/' + id + '/stats?' + q);
+                phaseCache.set(phase.key, ps);
+                if (activePhase && activePhase.key === phase.key) applyPhase(ps, phase);
+            } catch (e) {
+                clearPhase();
+            }
+        }
+
+        function clearPhase() {
+            if (!activePhase && !phaseView) return;
+            activePhase = null;
+            phaseView = null;
+            clearPhaseMark();
+            $('#phaseBar').className = 'phase-bar hidden';
+            if (stats) {
+                renderKpi();
+                renderRisk();
+                O.renderMonthly($('#monthlyChart'), stats.monthlyReturns || {});
+                O.renderSellReasons($('#sellChart'), stats.sellReasons || {});
+                O.renderContribution($('#contribChart'), stats.contribution || []);
+                renderSignals();
+            }
+        }
+
+        function bindPhaseHover() {
+            const c = window.echarts && echarts.getInstanceByDom($('#mainChart'));
+            if (!c) return;
+            // 由 tooltip formatter 回传当前悬停日期，避免 appendToBody tooltip 触发 globalout 后清空
+            window.__obtOnHoverDate = date => {
+                if (!date) return;
+                clearTimeout(phaseTimer);
+                phaseTimer = setTimeout(() => hoverPhase(phaseDate(date)), 50);
+            };
+            if (c.__phaseBound) return;
+            c.__phaseBound = true;
         }
 
         function renderHead() {
@@ -428,29 +610,58 @@
             $('#metaBar').innerHTML = cells.map(([k, v]) => `<div class="meta-cell"><span class="k">${k}</span><span class="v ${k === '实际数据起始' ? 'hl' : ''}">${v}</span></div>`).join('');
         }
 
-        function renderKpi() {
-            const items = [
-                ['期末权益', O.money(task.finalEquity), '初始 ' + O.money(task.initialCapital), ''],
-                ['总收益率', O.pct(task.totalReturnPct), '基准见净值图', 'up'],
-                ['年化收益率', O.pct(task.annualReturnPct), 'CAGR', O.cls(task.annualReturnPct)],
-                ['最大回撤', task.maxDrawdownPct == null ? '—' : Number(task.maxDrawdownPct).toFixed(2) + '%', (task.maxDrawdownStart || '') + ' ~ ' + (task.maxDrawdownEnd || ''), 'drawdown'],
-                ['夏普比率', task.sharpeRatio == null ? '—' : Number(task.sharpeRatio).toFixed(2), 'rf 2.0%', ''],
-                ['卡玛比率', task.calmarRatio == null ? '—' : Number(task.calmarRatio).toFixed(2), '年化/最大回撤', ''],
-                ['胜率', task.winRatePct == null ? '—' : Number(task.winRatePct).toFixed(1) + '%', '盈利交易日', ''],
-                ['交易笔数', O.num(task.totalTrades), '买 ' + O.num(task.buyTrades) + ' / 卖 ' + O.num(task.sellTrades), '']
-            ];
+        function renderKpi(view) {
+            const phase = view && view.__phase;
+            let items;
+            if (phase) {
+                const rows = view.equity || [];
+                const first = rows.length ? Number(rows[0].equity) : 0;
+                const last = rows.length ? Number(rows[rows.length - 1].equity) : 0;
+                const ret = first > 0 ? (last / first - 1) * 100 : 0;
+                const days = rows.length;
+                const annual = days > 1 && first > 0 ? (Math.pow(last / first, 252 / days) - 1) * 100 : 0;
+                const r = view.riskMetrics || {};
+                const mdd = Number(r.maxDrawdownPct || 0);
+                const calmar = Math.abs(mdd) > 0 ? ret / Math.abs(mdd) : 0;
+                const p = view.phase || {};
+                items = [
+                    ['阶段期末权益', O.money(last), `${p.start || ''} ~ ${p.end || ''}`, ''],
+                    ['阶段收益率', O.pct(ret), '区间权益变化', O.cls(ret)],
+                    ['阶段年化', O.pct(annual), '按阶段交易日', O.cls(annual)],
+                    ['阶段最大回撤', mdd.toFixed(2) + '%', '区间最大回撤', 'drawdown'],
+                    ['阶段夏普', Number(r.sharpe || 0).toFixed(2), '日频', ''],
+                    ['阶段卡玛', Number(calmar).toFixed(2), '阶段收益/最大回撤', ''],
+                    ['阶段胜率', Number(r.winRatePct || 0).toFixed(1) + '%', '盈利交易日', ''],
+                    ['阶段交易笔数', O.num(view.tradeCount || 0), '区间成交', '']
+                ];
+            } else {
+                items = [
+                    ['期末权益', O.money(task.finalEquity), '初始 ' + O.money(task.initialCapital), ''],
+                    ['总收益率', O.pct(task.totalReturnPct), '基准见净值图', 'up'],
+                    ['年化收益率', O.pct(task.annualReturnPct), 'CAGR', O.cls(task.annualReturnPct)],
+                    ['最大回撤', task.maxDrawdownPct == null ? '—' : Number(task.maxDrawdownPct).toFixed(2) + '%', (task.maxDrawdownStart || '') + ' ~ ' + (task.maxDrawdownEnd || ''), 'drawdown'],
+                    ['夏普比率', task.sharpeRatio == null ? '—' : Number(task.sharpeRatio).toFixed(2), 'rf 2.0%', ''],
+                    ['卡玛比率', task.calmarRatio == null ? '—' : Number(task.calmarRatio).toFixed(2), '年化/最大回撤', ''],
+                    ['胜率', task.winRatePct == null ? '—' : Number(task.winRatePct).toFixed(1) + '%', '盈利交易日', ''],
+                    ['交易笔数', O.num(task.totalTrades), '买 ' + O.num(task.buyTrades) + ' / 卖 ' + O.num(task.sellTrades), '']
+                ];
+            }
             $('#kpis').innerHTML = items.map(([k, v, sub, c]) => `<div class="kpi"><div class="k-label">${k}</div><div class="k-val ${c === 'drawdown' ? '' : c}" ${c === 'drawdown' ? 'style="color:var(--up)"' : ''}>${v}</div><div class="k-sub">${sub}</div></div>`).join('');
         }
 
-        function renderRisk() {
-            const r = stats.riskMetrics || {};
+        function renderRisk(view) {
+            const phase = view && view.__phase;
+            const r = (view && view.riskMetrics) || stats.riskMetrics || {};
+            const calmar = phase && Math.abs(Number(r.maxDrawdownPct) || 0) > 0
+                ? Number(view.periodReturnPct || 0) / Math.abs(Number(r.maxDrawdownPct))
+                : Number(task.calmarRatio || 0);
             const items = [
                 ['年化波动率', O.pct(r.volatilityPct)],
                 ['夏普', Number(r.sharpe || 0).toFixed(2)],
                 ['索提诺', Number(r.sortino || 0).toFixed(2)],
-                ['卡玛', Number(task.calmarRatio || 0).toFixed(2)],
+                ['卡玛', Number(calmar).toFixed(2)],
                 ['最大回撤', O.pct(r.maxDrawdownPct)],
-                ['最长回撤天数', O.num(task.maxDrawdownDays) + ' 天'],
+                ['最长回撤天数', O.num(phase ? view.maxDrawdownDays : task.maxDrawdownDays) + ' 天'],
                 ['VaR 95%', O.pct(r.var95Pct)],
                 ['胜率（日）', O.pct(r.winRatePct)],
                 ['盈亏比', Number(r.profitFactor || 0).toFixed(2)],
@@ -463,8 +674,8 @@
             $('#riskList').innerHTML = items.map(([k, v]) => `<div class="risk-row"><span class="n">${k}</span><span class="v">${v}</span></div>`).join('');
         }
 
-        function renderSignals() {
-            const list = signals.slice(-8).reverse();
+        function renderSignals(listArg) {
+            const list = (listArg || signals).slice(-8).reverse();
             $('#sigList').innerHTML = list.length ? list.map(s => {
                 const bottom = Number(s.signalType) === 1;
                 return `<div class="sig ${bottom ? 'bottom' : 'top'}"><span class="node"></span><div style="flex:1;min-width:0">

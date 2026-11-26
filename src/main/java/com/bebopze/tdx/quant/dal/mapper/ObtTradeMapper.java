@@ -41,7 +41,9 @@ public interface ObtTradeMapper extends BaseMapper<ObtTradeDO> {
                                   @Param("size") int size);
 
 
-    List<Map<String, Object>> listSellReasons(@Param("taskId") Long taskId);
+    List<Map<String, Object>> listSellReasons(@Param("taskId") Long taskId,
+                                              @Param("startDate") java.time.LocalDate startDate,
+                                              @Param("endDate") java.time.LocalDate endDate);
 
 
     List<ObtTradeDO> listAllByTaskId(@Param("taskId") Long taskId);

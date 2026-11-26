@@ -203,8 +203,12 @@ public class OptionBsBacktestService {
     }
 
     public Map<String, Object> stats(long id) {
+        return stats(id, null, null);
+    }
+
+    public Map<String, Object> stats(long id, String from, String to) {
         Map<String, Object> task = repo.getTask(id);
-        List<Map<String, Object>> equity = repo.equity(id, null, null);
+        List<Map<String, Object>> equity = repo.equity(id, from, to);
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("task", task);
         res.put("equity", equity);
@@ -253,17 +257,31 @@ public class OptionBsBacktestService {
         risk.put("maxDrawdownPct", maxDd);
         risk.put("var95Pct", var95);
         risk.put("winRatePct", rets.isEmpty() ? 0 : winDays * 100.0 / rets.size());
-        risk.put("avgPositionPct", task == null ? 0 : num(task.get("avgPositionPct")));
-        risk.put("profitFactor", task == null ? 0 : num(task.get("profitFactor")));
-        risk.put("totalFee", task == null ? 0 : num(task.get("totalFee")));
-        risk.put("avgHoldDays", repo.avgHoldDays(id));
+        double avgPos = equity.isEmpty() ? 0 : equity.stream().mapToDouble(x -> num(x.get("positionPct"))).average().orElse(0);
+        double feeSum = equity.stream().mapToDouble(x -> num(x.get("fee"))).sum();
+        double gain = 0, loss = 0;
+        for (int i = 1; i < equity.size(); i++) {
+            double d = num(equity.get(i).get("equity")) - num(equity.get(i - 1).get("equity"));
+            if (d > 0) gain += d;
+            else loss += Math.abs(d);
+        }
+        risk.put("avgPositionPct", avgPos);
+        risk.put("profitFactor", loss > 0 ? gain / loss : 0);
+        risk.put("totalFee", feeSum);
+        risk.put("avgHoldDays", repo.avgHoldDays(id, from, to));
         risk.put("monthlyWinRate", monthly.isEmpty() ? 0 : monthly.values().stream().filter(x -> x > 0).count() * 100.0 / monthly.size());
-        risk.put("signals", task == null ? 0 : num(task.get("signalCount")));
+        int sigCount = 0;
+        for (Map<String, Object> sig : repo.signals(id)) {
+            String d = String.valueOf(sig.get("signalDate"));
+            if ((from == null || d.compareTo(from) >= 0) && (to == null || d.compareTo(to) <= 0)) sigCount++;
+        }
+        risk.put("signals", sigCount);
         res.put("riskMetrics", risk);
         res.put("monthlyReturns", monthly);
-        res.put("sellReasons", repo.sellReasons(id));
-        res.put("contribution", repo.contribution(id));
+        res.put("sellReasons", repo.sellReasons(id, from, to));
+        res.put("contribution", repo.contribution(id, from, to));
         res.put("signals", repo.signals(id));
+        res.put("tradeCount", repo.tradeCount(id, from, to));
         return res;
     }
 

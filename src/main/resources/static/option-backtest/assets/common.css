@@ -2500,3 +2500,70 @@ html[data-theme="b"] .table-card .tabs-bar {
 .regime-bear {
     color: var(--down);
 }
+
+/* 净值图：中期阶段联动 */
+.phase-bar {
+    margin: 6px 14px 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 10.5px;
+    color: var(--text-2);
+}
+
+.phase-bar b {
+    color: var(--text);
+    font-family: var(--mono);
+    font-weight: 600;
+}
+
+.phase-bar .ph-type {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.phase-bar .ph-item {
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.phase-bar .ph-item strong {
+    color: var(--text-2);
+    font-family: var(--mono);
+    font-weight: 600;
+}
+
+.phase-bar .ph-close {
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--dim);
+}
+
+.phase-bar .ph-close:hover {
+    color: var(--accent);
+}
+
+/* 中期阶段：底→顶 黄/橙，顶→底 绿 */
+.phase-bar.phase-bull {
+    border-left-color: var(--up);
+    background: rgba(255, 77, 79, .08);
+}
+
+.phase-bar.phase-bull .ph-type {
+    color: var(--up);
+}
+
+.phase-bar.phase-bear {
+    border-left-color: var(--down);
+    background: rgba(23, 201, 100, .08);
+}
+
+.phase-bar.phase-bear .ph-type {
+    color: var(--down);
+}
