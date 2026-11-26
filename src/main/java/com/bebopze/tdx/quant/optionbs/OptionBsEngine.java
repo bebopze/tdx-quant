@@ -134,7 +134,7 @@ public class OptionBsEngine {
 
         // 认购：开启新建仓周期
         if (p.allowCalls()) {
-            boolean canStart = callBought.isEmpty() || reenter(date)
+            boolean canStart = callBought.isEmpty() || reenter("C", date)
                     || positions.values().stream().noneMatch(x -> "C".equals(x.contract.callPut));
             if (canStart) {
                 cycleId++;
@@ -164,7 +164,7 @@ public class OptionBsEngine {
 
         // 认沽：开启新建仓周期
         if (p.allowPuts()) {
-            boolean canStart = putBought.isEmpty() || reenter(date)
+            boolean canStart = putBought.isEmpty() || reenter("P", date)
                     || positions.values().stream().noneMatch(x -> "P".equals(x.contract.callPut));
             if (canStart) {
                 cycleId++;
@@ -396,12 +396,12 @@ public class OptionBsEngine {
 
     private void processBuys(LocalDate date) {
         if (callBuyActive) {
-            double amount = capitalBase() * dailyBuyPct(date);
+            double amount = capitalBase() * rule("C", date).daily();
             buySide("C", date, amount, "BUY_DAILY", "中期底-逐日建仓", null, null);
             processAddOn("C", date);
         }
         if (putBuyActive) {
-            double amount = capitalBase() * dailyBuyPct(date);
+            double amount = capitalBase() * rule("P", date).daily();
             buySide("P", date, amount, "BUY_DAILY", "中期顶-逐日建仓", null, null);
             processAddOn("P", date);
         }
@@ -409,6 +409,7 @@ public class OptionBsEngine {
 
     private void processAddOn(String side, LocalDate date) {
         boolean isCall = "C".equals(side);
+        RuleView rv = rule(side, date);
         Map<String, Double> refs = isCall ? callBuyRef : putBuyRef;
         Map<String, Integer> steps = isCall ? callAddStep : putAddStep;
         Map<String, Double> bought = isCall ? callBought : putBought;
@@ -422,13 +423,13 @@ public class OptionBsEngine {
             if (Double.isNaN(close)) continue;
 
             double chg = close / ref - 1;
-            int step = isCall ? (int) Math.floor(-chg / addStepPct(date))
-                    : (int) Math.floor(chg / addStepPct(date));
+            int step = isCall ? (int) Math.floor(-chg / rv.step())
+                    : (int) Math.floor(chg / rv.step());
             int last = steps.getOrDefault(code, 0);
             while (step > last) {
-                if (bought.getOrDefault(side, 0D) >= maxBudget(date)) break;
-                double amount = capitalBase() * addBuyPct(date);
-                String only = "TRIGGERED".equalsIgnoreCase(addScope(date)) ? code : null;
+                if (bought.getOrDefault(side, 0D) >= maxBudget(date, side)) break;
+                double amount = capitalBase() * rv.add();
+                String only = "TRIGGERED".equalsIgnoreCase(rv.scope()) ? code : null;
                 double used = buySide(side, date, amount, "BUY_DIP",
                                       isCall ? "中期底-下跌加仓" : "中期顶-上涨加仓", chg * 100, only);
                 if (used <= 0) break;
@@ -445,8 +446,9 @@ public class OptionBsEngine {
                            Double trigger, String onlyUnderlying) {
         if (amount <= 0) return 0;
         final double base = capitalBase();
-        final double maxBudget = maxBudget(date);
-        final double reserve = base * cashReservePct(date);
+        final RuleView rv = rule(side, date);
+        final double maxBudget = maxBudget(date, side);
+        final double reserve = base * rv.cash();
         double budget = maxBudget - (("C".equals(side) ? callBought : putBought).getOrDefault(side, 0D));
         if (budget <= 0) return 0;
         amount = Math.min(amount, budget);
@@ -553,15 +555,12 @@ public class OptionBsEngine {
         return cash + mv;
     }
 
-    private double maxBudget(LocalDate date) {
-        double base = capitalBase();
-        double reserve = base * cashReservePct(date);
-        return Math.min(base * maxPositionPct(date), base - reserve);
+    private record RuleView(double daily, double add, double step, double max,
+                            double cash, String scope, boolean reenter) {
     }
 
-    private boolean reenter(LocalDate date) {
-        if (!separateRegime()) return p.isReenterOnNewCycle();
-        return isBear(date) ? p.isBearReenterOnNewCycle() : p.isBullReenterOnNewCycle();
+    private boolean separateDirection() {
+        return "SEPARATE".equalsIgnoreCase(p.getDirectionMode());
     }
 
     private boolean separateRegime() {
@@ -573,34 +572,58 @@ public class OptionBsEngine {
         return e != null && e.getValue() != null && e.getValue() == 2;
     }
 
-    private double dailyBuyPct(LocalDate date) {
-        if (!separateRegime()) return p.getDailyBuyPct();
-        return isBear(date) ? p.getBearDailyBuyPct() : p.getBullDailyBuyPct();
+    private boolean reenter(String side, LocalDate date) {
+        return rule(side, date).reenter();
     }
 
-    private double addBuyPct(LocalDate date) {
-        if (!separateRegime()) return p.getAddBuyPct();
-        return isBear(date) ? p.getBearAddBuyPct() : p.getBullAddBuyPct();
+    /**
+     * 建仓规则优先级：
+     * 牛熊分开 + 多空分开 -> bullLong / bullShort / bearLong / bearShort
+     * 仅牛熊分开 -> bull / bear
+     * 仅多空分开 -> long / short
+     * 都通用 -> common
+     */
+    private RuleView rule(String side, LocalDate date) {
+        boolean call = "C".equals(side);
+        boolean regSep = separateRegime();
+        boolean dirSep = separateDirection();
+        if (regSep && dirSep) {
+            if (isBear(date)) {
+                return call
+                        ? new RuleView(p.getBearLongDailyBuyPct(), p.getBearLongAddBuyPct(), p.getBearLongAddStepPct(),
+                                       p.getBearLongMaxPositionPct(), p.getBearLongCashReservePct(), p.getBearLongAddScope(), p.isBearLongReenterOnNewCycle())
+                        : new RuleView(p.getBearShortDailyBuyPct(), p.getBearShortAddBuyPct(), p.getBearShortAddStepPct(),
+                                       p.getBearShortMaxPositionPct(), p.getBearShortCashReservePct(), p.getBearShortAddScope(), p.isBearShortReenterOnNewCycle());
+            }
+            return call
+                    ? new RuleView(p.getBullLongDailyBuyPct(), p.getBullLongAddBuyPct(), p.getBullLongAddStepPct(),
+                                   p.getBullLongMaxPositionPct(), p.getBullLongCashReservePct(), p.getBullLongAddScope(), p.isBullLongReenterOnNewCycle())
+                    : new RuleView(p.getBullShortDailyBuyPct(), p.getBullShortAddBuyPct(), p.getBullShortAddStepPct(),
+                                   p.getBullShortMaxPositionPct(), p.getBullShortCashReservePct(), p.getBullShortAddScope(), p.isBullShortReenterOnNewCycle());
+        }
+        if (regSep) {
+            return isBear(date)
+                    ? new RuleView(p.getBearDailyBuyPct(), p.getBearAddBuyPct(), p.getBearAddStepPct(),
+                                   p.getBearMaxPositionPct(), p.getBearCashReservePct(), p.getBearAddScope(), p.isBearReenterOnNewCycle())
+                    : new RuleView(p.getBullDailyBuyPct(), p.getBullAddBuyPct(), p.getBullAddStepPct(),
+                                   p.getBullMaxPositionPct(), p.getBullCashReservePct(), p.getBullAddScope(), p.isBullReenterOnNewCycle());
+        }
+        if (dirSep) {
+            return call
+                    ? new RuleView(p.getLongDailyBuyPct(), p.getLongAddBuyPct(), p.getLongAddStepPct(),
+                                   p.getLongMaxPositionPct(), p.getLongCashReservePct(), p.getLongAddScope(), p.isLongReenterOnNewCycle())
+                    : new RuleView(p.getShortDailyBuyPct(), p.getShortAddBuyPct(), p.getShortAddStepPct(),
+                                   p.getShortMaxPositionPct(), p.getShortCashReservePct(), p.getShortAddScope(), p.isShortReenterOnNewCycle());
+        }
+        return new RuleView(p.getDailyBuyPct(), p.getAddBuyPct(), p.getAddStepPct(),
+                            p.getMaxPositionPct(), p.getCashReservePct(), p.getAddScope(), p.isReenterOnNewCycle());
     }
 
-    private double addStepPct(LocalDate date) {
-        if (!separateRegime()) return p.getAddStepPct();
-        return isBear(date) ? p.getBearAddStepPct() : p.getBullAddStepPct();
-    }
-
-    private double maxPositionPct(LocalDate date) {
-        if (!separateRegime()) return p.getMaxPositionPct();
-        return isBear(date) ? p.getBearMaxPositionPct() : p.getBullMaxPositionPct();
-    }
-
-    private double cashReservePct(LocalDate date) {
-        if (!separateRegime()) return p.getCashReservePct();
-        return isBear(date) ? p.getBearCashReservePct() : p.getBullCashReservePct();
-    }
-
-    private String addScope(LocalDate date) {
-        if (!separateRegime()) return p.getAddScope();
-        return isBear(date) ? p.getBearAddScope() : p.getBullAddScope();
+    private double maxBudget(LocalDate date, String side) {
+        RuleView rv = rule(side, date);
+        double base = capitalBase();
+        double reserve = base * rv.cash();
+        return Math.min(base * rv.max(), base - reserve);
     }
 
 

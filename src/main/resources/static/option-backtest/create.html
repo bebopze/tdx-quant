@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 新建任务</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126k">
+    <link rel="stylesheet" href="assets/common.css?v=20261126l">
     <script>
         (function () {
             var t = 'a';
@@ -277,132 +277,19 @@
                                     <option value="COMMON" selected>牛熊通用（默认）</option>
                                     <option value="SEPARATE">牛熊分开配置</option>
                                 </select>
-                                    <div class="help">「分开配置」按大盘牛熊状态分别使用两套建仓规则</div>
+                                    <div class="help">按大盘 `market_bull_bear_status` 切换牛市/熊市规则</div>
                                 </div>
-                                <div class="field"><label>说明</label>
-                                    <div class="help" style="margin-top:2px">
-                                        熊市底部假信号多，可降低每日建仓、提高逆势加仓；牛市顶部可单独收紧。
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="commonBuildRules">
-                                <div class="grid-4">
-                                    <div class="field"><label>每日建仓</label>
-                                        <div class="unit"><input id="dailyBuy" type="number" value="5"><i>%</i></div>
-                                        <div class="help">每交易日买入本金</div>
-                                    </div>
-                                    <div class="field"><label>逆势加仓</label>
-                                        <div class="unit"><input id="addBuy" type="number" value="10"><i>%</i></div>
-                                        <div class="help">每次触发加仓</div>
-                                    </div>
-                                    <div class="field"><label>触发步长</label>
-                                        <div class="unit"><input id="addStep" type="number" value="5"><i>%</i></div>
-                                        <div class="help">每 ±5% 触发一次</div>
-                                    </div>
-                                    <div class="field"><label>仓位上限</label>
-                                        <div class="unit"><input id="maxPos" type="number" value="100"><i>%</i></div>
-                                        <div class="help">累计成本上限</div>
-                                    </div>
-                                </div>
-                                <div class="grid-3" style="margin-top:12px">
-                                    <div class="field"><label>加仓范围</label><select id="addScope">
-                                        <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
-                                        <option value="ALL">全标的等权</option>
-                                    </select></div>
-                                    <div class="field"><label>买满后止盈</label><select id="reenter">
-                                        <option value="false" selected>不再买入（推荐）</option>
-                                        <option value="true">下一轮信号重新建仓</option>
-                                    </select></div>
-                                    <div class="field"><label>备用现金</label>
-                                        <div class="unit"><input id="cashReserve" type="number" value="0"><i>%</i></div>
-                                    </div>
-                                </div>
-                            </div><!-- /commonBuildRules -->
-
-                            <div id="regimeBuildRules" class="hidden">
-                                <div class="regime-rules">
-                                    <div class="regime-block">
-                                        <div class="regime-head"><b class="regime-bull">牛市 🐂 建仓规则</b><span>大盘牛熊状态 = 牛市</span>
-                                        </div>
-                                        <div class="grid-4">
-                                            <div class="field"><label>每日建仓</label>
-                                                <div class="unit"><input id="bullDaily" type="number" value="5"><i>%</i>
-                                                </div>
-                                                <div class="help">每交易日买入</div>
-                                            </div>
-                                            <div class="field"><label>逆势加仓</label>
-                                                <div class="unit"><input id="bullAdd" type="number" value="10"><i>%</i>
-                                                </div>
-                                                <div class="help">每次触发加仓</div>
-                                            </div>
-                                            <div class="field"><label>触发步长</label>
-                                                <div class="unit"><input id="bullStep" type="number" value="5"><i>%</i>
-                                                </div>
-                                                <div class="help">每 ±5% 触发一次</div>
-                                            </div>
-                                            <div class="field"><label>仓位上限</label>
-                                                <div class="unit"><input id="bullMax" type="number" value="100"><i>%</i>
-                                                </div>
-                                                <div class="help">累计成本上限</div>
-                                            </div>
-                                        </div>
-                                        <div class="grid-3" style="margin-top:12px">
-                                            <div class="field"><label>加仓范围</label><select id="bullScope">
-                                                <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
-                                                <option value="ALL">全标的等权</option>
-                                            </select></div>
-                                            <div class="field"><label>买满后止盈</label><select id="bullReenter">
-                                                <option value="false" selected>不再买入（推荐）</option>
-                                                <option value="true">下一轮信号重新建仓</option>
-                                            </select></div>
-                                            <div class="field"><label>备用现金</label>
-                                                <div class="unit"><input id="bullCash" type="number" value="0"><i>%</i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="regime-block">
-                                        <div class="regime-head"><b class="regime-bear">熊市 🐻 建仓规则</b><span>大盘牛熊状态 = 熊市</span>
-                                        </div>
-                                        <div class="grid-4">
-                                            <div class="field"><label>每日建仓</label>
-                                                <div class="unit"><input id="bearDaily" type="number" value="2"><i>%</i>
-                                                </div>
-                                                <div class="help">熊市建议降低每日建仓</div>
-                                            </div>
-                                            <div class="field"><label>逆势加仓</label>
-                                                <div class="unit"><input id="bearAdd" type="number" value="15"><i>%</i>
-                                                </div>
-                                                <div class="help">暴跌时提高加仓</div>
-                                            </div>
-                                            <div class="field"><label>触发步长</label>
-                                                <div class="unit"><input id="bearStep" type="number" value="5"><i>%</i>
-                                                </div>
-                                                <div class="help">每 ±5% 触发一次</div>
-                                            </div>
-                                            <div class="field"><label>仓位上限</label>
-                                                <div class="unit"><input id="bearMax" type="number" value="100"><i>%</i>
-                                                </div>
-                                                <div class="help">累计成本上限</div>
-                                            </div>
-                                        </div>
-                                        <div class="grid-3" style="margin-top:12px">
-                                            <div class="field"><label>加仓范围</label><select id="bearScope">
-                                                <option value="TRIGGERED" selected>仅触发标的（推荐）</option>
-                                                <option value="ALL">全标的等权</option>
-                                            </select></div>
-                                            <div class="field"><label>买满后止盈</label><select id="bearReenter">
-                                                <option value="false" selected>不再买入（推荐）</option>
-                                                <option value="true">下一轮信号重新建仓</option>
-                                            </select></div>
-                                            <div class="field"><label>备用现金</label>
-                                                <div class="unit"><input id="bearCash" type="number" value="0"><i>%</i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="field"><label>多空配置</label><select id="directionMode">
+                                    <option value="COMMON" selected>多空通用（默认）</option>
+                                    <option value="SEPARATE">多空分开配置</option>
+                                </select>
+                                    <div class="help">做多 = 底→顶（认购）；做空 = 顶→底（认沽）</div>
                                 </div>
                             </div>
+                            <div class="help" style="margin-top:8px">两者同时分开时自动生成 4 套规则：牛市做多 / 牛市做空
+                                / 熊市做多 / 熊市做空。
+                            </div>
+                            <div id="buildRulesBox"></div>
                         </div>
                     </section>
 
@@ -549,7 +436,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126k"></script>
+<script src="assets/common.js?v=20261126l"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -564,6 +451,72 @@
             '510300': {name: '沪深300ETF华泰柏瑞', market: '上交所', start: '2019-12-23', contracts: 2860},
             '000852': {name: '中证1000', market: '中金所', start: '2022-07-22', contracts: 3366}
         };
+
+        const RULE_META = {
+            common: {label: '通用建仓规则', cls: '', desc: '牛熊通用 · 多空通用'},
+            bull: {label: '牛市 🐂 建仓规则', cls: 'regime-bull', desc: '仅牛市'},
+            bear: {label: '熊市 🐻 建仓规则', cls: 'regime-bear', desc: '仅熊市'},
+            long: {label: '做多（底→顶）建仓规则', cls: 'regime-bull', desc: '仅认购'},
+            short: {label: '做空（顶→底）建仓规则', cls: 'regime-bear', desc: '仅认沽'},
+            bullLong: {label: '牛市 🐂 · 做多（底→顶）', cls: 'regime-bull', desc: '牛市 + 认购'},
+            bullShort: {label: '牛市 🐂 · 做空（顶→底）', cls: 'regime-bear', desc: '牛市 + 认沽'},
+            bearLong: {label: '熊市 🐻 · 做多（底→顶）', cls: 'regime-bull', desc: '熊市 + 认购'},
+            bearShort: {label: '熊市 🐻 · 做空（顶→底）', cls: 'regime-bear', desc: '熊市 + 认沽'}
+        };
+        const ruleValues = {
+            common: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bull: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bear: {daily: 2, add: 15, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            long: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            short: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bullLong: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bullShort: {daily: 2, add: 5, step: 5, max: 30, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bearLong: {daily: 2, add: 5, step: 5, max: 30, cash: 0, scope: 'TRIGGERED', reenter: false},
+            bearShort: {daily: 5, add: 10, step: 5, max: 100, cash: 0, scope: 'TRIGGERED', reenter: false}
+        };
+
+        function activeRuleKeys() {
+            const reg = $('#regimeMode').value === 'SEPARATE';
+            const dir = $('#directionMode').value === 'SEPARATE';
+            if (reg && dir) return ['bullLong', 'bullShort', 'bearLong', 'bearShort'];
+            if (reg) return ['bull', 'bear'];
+            if (dir) return ['long', 'short'];
+            return ['common'];
+        }
+
+        function renderBuildRules() {
+            const box = $('#buildRulesBox');
+            if (!box) return;
+            box.innerHTML = `<div class="regime-rules">${activeRuleKeys().map(key => {
+                const m = RULE_META[key], r = ruleValues[key];
+                return `<div class="regime-block">
+                    <div class="regime-head"><b class="${m.cls}">${m.label}</b><span>${m.desc}</span></div>
+                    <div class="grid-4">
+                        <div class="field"><label>每日建仓</label><div class="unit"><input data-key="${key}" data-field="daily" type="number" value="${r.daily}"><i>%</i></div><div class="help">每交易日买入</div></div>
+                        <div class="field"><label>逆势加仓</label><div class="unit"><input data-key="${key}" data-field="add" type="number" value="${r.add}"><i>%</i></div><div class="help">每次触发加仓</div></div>
+                        <div class="field"><label>触发步长</label><div class="unit"><input data-key="${key}" data-field="step" type="number" value="${r.step}"><i>%</i></div><div class="help">每 ±5% 触发一次</div></div>
+                        <div class="field"><label>仓位上限</label><div class="unit"><input data-key="${key}" data-field="max" type="number" value="${r.max}"><i>%</i></div><div class="help">累计成本上限</div></div>
+                    </div>
+                    <div class="grid-3" style="margin-top:12px">
+                        <div class="field"><label>加仓范围</label><select data-key="${key}" data-field="scope"><option value="TRIGGERED" ${r.scope === 'TRIGGERED' ? 'selected' : ''}>仅触发标的（推荐）</option><option value="ALL" ${r.scope === 'ALL' ? 'selected' : ''}>全标的等权</option></select></div>
+                        <div class="field"><label>买满后止盈</label><select data-key="${key}" data-field="reenter"><option value="false" ${!r.reenter ? 'selected' : ''}>不再买入（推荐）</option><option value="true" ${r.reenter ? 'selected' : ''}>下一轮信号重新建仓</option></select></div>
+                        <div class="field"><label>备用现金</label><div class="unit"><input data-key="${key}" data-field="cash" type="number" value="${r.cash}"><i>%</i></div></div>
+                    </div>
+                </div>`;
+            }).join('')}</div>`;
+            box.querySelectorAll('[data-key][data-field]').forEach(el => {
+                el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+                    const key = el.dataset.key, field = el.dataset.field;
+                    let v = el.value;
+                    if (field === 'scope') v = String(v);
+                    else if (field === 'reenter') v = v === 'true';
+                    else v = +v;
+                    ruleValues[key][field] = v;
+                    update();
+                });
+            });
+            update();
+        }
 
         function renderUnds() {
             $('#undGrid').innerHTML = CODES.map(code => {
@@ -604,29 +557,6 @@
             }
         }
 
-        function regimeSeparate() {
-            return $('#regimeMode').value === 'SEPARATE';
-        }
-
-        function toggleRegime() {
-            const sep = regimeSeparate();
-            $('#commonBuildRules').classList.toggle('hidden', sep);
-            $('#regimeBuildRules').classList.toggle('hidden', !sep);
-            update();
-        }
-
-        function checkRuleGroup(ids) {
-            let ok = true;
-            ids.forEach(([id, min, max]) => {
-                const el = $('#' + id), v = +el.value;
-                const field = el.closest('.field');
-                const bad = !isFinite(v) || v < min || v > max;
-                field.classList.toggle('invalid', bad);
-                if (bad) ok = false;
-            });
-            return ok;
-        }
-
         function valid() {
             const name = $('#taskName').value.trim(), cap = +$('#capital').value;
             const sd = $('#startDate').value, ed = $('#endDate').value;
@@ -654,45 +584,40 @@
                 ok = false;
             } else mf.classList.remove('invalid');
 
-            const ruleIds = [['Daily', 0.1, 100], ['Add', 0, 100], ['Step', 0.1, 100], ['Max', 0, 100], ['Cash', 0, 100]];
-            const groups = regimeSeparate()
-                ? [['bull', ...ruleIds], ['bear', ...ruleIds]]
-                : [['', ...ruleIds]];
-            for (const [prefix, ...rules] of groups) {
-                const ids = rules.map(([suffix, min, max]) => {
-                    const map = {Daily: 'Daily', Add: 'Add', Step: 'Step', Max: 'Max', Cash: 'Cash'};
-                    const common = {
-                        Daily: 'dailyBuy',
-                        Add: 'addBuy',
-                        Step: 'addStep',
-                        Max: 'maxPos',
-                        Cash: 'cashReserve'
-                    };
-                    const key = prefix ? prefix + map[suffix] : common[suffix];
-                    return [key, min, max];
+            const box = $('#buildRulesBox');
+            activeRuleKeys().forEach(key => {
+                const r = ruleValues[key];
+                const bad = !(r.daily > 0 && r.daily <= 100)
+                    || !(r.add >= 0 && r.add <= 100)
+                    || !(r.step > 0 && r.step <= 100)
+                    || !(r.max >= 0 && r.max <= 100)
+                    || !(r.cash >= 0 && r.cash <= 100);
+                if (bad) ok = false;
+                box.querySelectorAll(`[data-key="${key}"][data-field]`).forEach(el => {
+                    const field = el.closest('.field');
+                    if (!field) return;
+                    const f = el.dataset.field;
+                    if (f === 'scope' || f === 'reenter') return;
+                    const v = +el.value;
+                    const invalid = !isFinite(v) || (f === 'daily' ? !(v > 0 && v <= 100) : !(v >= 0 && v <= 100));
+                    field.classList.toggle('invalid', invalid);
                 });
-                // 每日建仓必须 > 0；其余允许 0
-                ids[0][1] = 0.1;
-                if (!checkRuleGroup(ids)) ok = false;
-            }
+            });
             return ok;
         }
 
         function update() {
             const cap = +$('#capital').value || 0;
-            const sep = regimeSeparate();
-            const daily = (+$((sep ? '#bullDaily' : '#dailyBuy')).value || 0) / 100;
-            const add = (+$((sep ? '#bullAdd' : '#addBuy')).value || 0) / 100;
-            const maxPos = (+$((sep ? '#bullMax' : '#maxPos')).value || 0) / 100;
-            const bullDaily = (+$('#bullDaily').value || 0) / 100;
-            const bearDaily = (+$('#bearDaily').value || 0) / 100;
+            const keys = activeRuleKeys();
+            const first = ruleValues[keys[0]] || ruleValues.common;
+            const daily = first.daily / 100, add = first.add / 100, maxPos = first.max / 100;
             $('#sumUnd').textContent = state.underlyings.length + ' 个';
             $('#undCount').textContent = state.underlyings.length;
             $('#sumGrid').textContent = '3 × ' + state.strikes.length;
             $('#sumContracts').textContent = state.underlyings.length * 3 * state.strikes.length;
-            $('#buildHint').textContent = sep
-                ? `牛市 ${(bullDaily * 100).toFixed(0)}% / 熊市 ${(bearDaily * 100).toFixed(0)}% · 分开配置`
-                : `逐日 ${(daily * 100).toFixed(0)}% · 逆势 ${(add * 100).toFixed(0)}% · 上限 ${(maxPos * 100).toFixed(0)}%`;
+            $('#buildHint').textContent = keys.length > 1
+                ? `${keys.length} 套规则 · 当前首套：逐日 ${first.daily}% / 逆势 ${first.add}% / 上限 ${first.max}%`
+                : `逐日 ${first.daily}% · 逆势 ${first.add}% · 上限 ${first.max}%`;
             $('#sumDaily').textContent = O.money(cap * daily);
             $('#sumAdd').textContent = O.money(cap * add);
             $('#sumDays').textContent = (daily > 0 ? Math.ceil(maxPos / daily) : 0) + ' 个交易日';
@@ -717,6 +642,19 @@
         }
 
         function collect() {
+            const R = ruleValues;
+            const rp = (prefix, r) => {
+                const cap = prefix ? prefix[0].toUpperCase() + prefix.slice(1) : '';
+                return {
+                    [cap + 'dailyBuyPct']: r.daily / 100,
+                    [cap + 'addBuyPct']: r.add / 100,
+                    [cap + 'addStepPct']: r.step / 100,
+                    [cap + 'maxPositionPct']: r.max / 100,
+                    [cap + 'cashReservePct']: r.cash / 100,
+                    [cap + 'addScope']: r.scope,
+                    [cap + 'reenterOnNewCycle']: !!r.reenter
+                };
+            };
             const p = {
                 taskName: $('#taskName').value.trim(),
                 tags: $('#tags').value.split(',').map(x => x.trim()).filter(Boolean),
@@ -726,31 +664,20 @@
                 initialCapital: +$('#capital').value,
                 capitalBase: $('#capitalBase').value,
                 marketRegimeMode: $('#regimeMode').value,
-                bullDailyBuyPct: (+$('#bullDaily').value) / 100,
-                bullAddBuyPct: (+$('#bullAdd').value) / 100,
-                bullAddStepPct: (+$('#bullStep').value) / 100,
-                bullMaxPositionPct: (+$('#bullMax').value) / 100,
-                bullCashReservePct: (+$('#bullCash').value) / 100,
-                bullAddScope: $('#bullScope').value,
-                bullReenterOnNewCycle: $('#bullReenter').value === 'true',
-                bearDailyBuyPct: (+$('#bearDaily').value) / 100,
-                bearAddBuyPct: (+$('#bearAdd').value) / 100,
-                bearAddStepPct: (+$('#bearStep').value) / 100,
-                bearMaxPositionPct: (+$('#bearMax').value) / 100,
-                bearCashReservePct: (+$('#bearCash').value) / 100,
-                bearAddScope: $('#bearScope').value,
-                bearReenterOnNewCycle: $('#bearReenter').value === 'true',
+                directionMode: $('#directionMode').value,
+                ...rp('', R.common),
+                ...rp('bull', R.bull),
+                ...rp('bear', R.bear),
+                ...rp('long', R.long),
+                ...rp('short', R.short),
+                ...rp('bullLong', R.bullLong),
+                ...rp('bullShort', R.bullShort),
+                ...rp('bearLong', R.bearLong),
+                ...rp('bearShort', R.bearShort),
                 underlyingCodes: state.underlyings.slice(),
                 signalMode: $('#signalSeg .active').dataset.v,
                 monthMode: $('#monthMode').value,
                 strikes: state.strikes.slice(),
-                dailyBuyPct: (+$('#dailyBuy').value) / 100,
-                addBuyPct: (+$('#addBuy').value) / 100,
-                addStepPct: (+$('#addStep').value) / 100,
-                maxPositionPct: (+$('#maxPos').value) / 100,
-                cashReservePct: (+$('#cashReserve').value) / 100,
-                addScope: $('#addScope').value,
-                reenterOnNewCycle: $('#reenter').value === 'true',
                 fixedContracts: $('#fixedContracts').value === 'true',
                 atmMode: $('#atmMode').value,
                 minBuyDteDays: +$('#minBuyDte').value,
@@ -857,31 +784,23 @@
             }
             update();
         }));
-        ['capital', 'dailyBuy', 'addBuy', 'addStep', 'maxPos', 'startDate', 'endDate', 'cashReserve', 'minBuyDte', 'rollDte',
-            'bullDaily', 'bullAdd', 'bullStep', 'bullMax', 'bullCash', 'bearDaily', 'bearAdd', 'bearStep', 'bearMax', 'bearCash'].forEach(id => $('#' + id).addEventListener('input', update));
-        $('#regimeMode').addEventListener('change', toggleRegime);
-        ['bullScope', 'bullReenter', 'bearScope', 'bearReenter'].forEach(id => $('#' + id).addEventListener('change', update));
+        ['capital', 'startDate', 'endDate', 'minBuyDte', 'rollDte'].forEach(id => $('#' + id).addEventListener('input', update));
+        ['regimeMode', 'directionMode'].forEach(id => $('#' + id).addEventListener('change', renderBuildRules));
         $('#preset').addEventListener('change', e => {
+            let vals, strikes;
             if (e.target.value === 'conservative') {
-                $('#dailyBuy').value = 5;
-                $('#addBuy').value = 5;
-                $('#addStep').value = 8;
-                $('#maxPos').value = 60;
-                setStrikes(['ITM1', 'ATM']);
+                vals = {daily: 5, add: 5, step: 8, max: 60, cash: 0};
+                strikes = ['ITM1', 'ATM'];
             } else if (e.target.value === 'aggressive') {
-                $('#dailyBuy').value = 8;
-                $('#addBuy').value = 15;
-                $('#addStep').value = 5;
-                $('#maxPos').value = 100;
-                setStrikes(['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']);
+                vals = {daily: 8, add: 15, step: 5, max: 100, cash: 0};
+                strikes = ['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3'];
             } else {
-                $('#dailyBuy').value = 5;
-                $('#addBuy').value = 10;
-                $('#addStep').value = 5;
-                $('#maxPos').value = 100;
-                setStrikes(['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']);
+                vals = {daily: 5, add: 10, step: 5, max: 100, cash: 0};
+                strikes = ['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3'];
             }
-            update();
+            Object.values(ruleValues).forEach(r => Object.assign(r, vals));
+            setStrikes(strikes);
+            renderBuildRules();
         });
 
         function setStrikes(list) {
@@ -921,9 +840,10 @@
 
         preferRecommended();
         if (O.qs('regime', '') === 'SEPARATE') $('#regimeMode').value = 'SEPARATE';
+        if (O.qs('direction', '') === 'SEPARATE') $('#directionMode').value = 'SEPARATE';
         renderUnds();
         loadMeta();
-        toggleRegime();
+        renderBuildRules();
         update();
     })();
 </script>

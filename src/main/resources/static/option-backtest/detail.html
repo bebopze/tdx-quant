@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 任务详情</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126k">
+    <link rel="stylesheet" href="assets/common.css?v=20261126l">
     <script>
         (function () {
             var t = 'a';
@@ -161,10 +161,24 @@
                             <input class="date-input" id="listDate" type="date" title="按日期筛选持仓 / 清仓 / 交易">
                             <button class="mini-btn date-clear" id="btnClearDate" type="button">清除</button>
                         </div>
+                        <select class="filter-select hidden" id="filterType" title="类型">
+                            <option value="">全部类型</option>
+                            <option value="C">认购</option>
+                            <option value="P">认沽</option>
+                        </select>
+                        <select class="filter-select hidden" id="filterDirection" title="方向">
+                            <option value="">全部方向</option>
+                            <option value="1">买入</option>
+                            <option value="2">卖出</option>
+                        </select>
+                        <select class="filter-select hidden" id="filterUnderlying" title="标的"><option value="">全部标的</option></select>
+                        <select class="filter-select hidden" id="filterMonth" title="月份"><option value="">全部月份</option></select>
                         <input class="search" id="tableSearch" placeholder="筛选当前表…">
                         <button class="mini-btn" id="btnTableExport">导出当前</button>
                     </div>
                 </div>
+
+                <div class="table-summary hidden" id="tableSummary"></div>
 
                 <div id="pane-pos">
                     <div class="table-wrap">
@@ -305,7 +319,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126k"></script>
+<script src="assets/common.js?v=20261126l"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -317,6 +331,7 @@
         let posPage = 1, posSize = 100, closedPage = 1, tradePage = 1;
         let equityPage = 1, signalPage = 1, listDate = '', chartName = 'equity';
         let activePhase = null, phaseView = null, phaseTimer = null;
+        let currentRowOffset = 0;
         const phaseCache = new Map();
         let posRows = [], closedRows = [], tradeRows = [];
         let equityByDate = new Map();
@@ -326,12 +341,12 @@
             equity: {key: '', dir: 1}, signal: {key: '', dir: 1}
         };
         const SORT_KEYS = {
-            pos: ['__idx', 'underlyingCode', 'optionName', 'callPutType', 'strikePrice', 'contractMonth', 'dte',
+            pos: [null, 'underlyingCode', 'optionName', 'callPutType', 'strikePrice', 'contractMonth', 'dte',
                 'qty', 'avgCost', 'closePrice', 'costAmount', 'marketValue', 'unrealizedPnl', 'pnlPct',
                 'weightPct', 'accountPct', 'holdDays', 'openDate', 'openReason'],
-            closed: ['__idx', 'underlyingCode', 'optionName', 'openDate', 'closeDate', 'qty', 'avgCost',
+            closed: [null, 'underlyingCode', 'optionName', 'openDate', 'closeDate', 'qty', 'avgCost',
                 'avgSellPrice', 'holdDays', 'realizedPnl', 'accountPct', 'pnlPct', 'maxPnlPct', 'closeReasonDesc'],
-            trade: ['__idx', 'tradeDate', 'tradeTime', 'underlyingCode', 'optionName', 'tradeType', 'price',
+            trade: [null, 'tradeDate', 'tradeTime', 'underlyingCode', 'optionName', 'tradeType', 'price',
                 'qty', 'amount', 'accountPct', 'fee', 'reasonDesc', 'triggerValue']
         };
 
@@ -710,6 +725,7 @@
                 ['本金', O.money(task.initialCapital)],
                 ['资金基数', (p.capitalBase || 'EQUITY') === 'INITIAL' ? '初始本金' : '当前总资金'],
                 ['牛熊配置', (p.marketRegimeMode || 'COMMON') === 'SEPARATE' ? '牛熊分开' : '牛熊通用'],
+                ['多空配置', (p.directionMode || 'COMMON') === 'SEPARATE' ? '多空分开' : '多空通用'],
                 ['信号模式', p.signalMode || task.signalMode],
                 ['月份模式', p.monthMode || task.monthMode],
                 ['行权价档位', (p.strikes || String(task.strikeMode || '').split(',')).join(' / ')],
@@ -731,9 +747,20 @@
                 ['数据版本', task.dataVersion || '—'],
                 ['创建人', task.creator || '—']
             ];
-            if ((p.marketRegimeMode || 'COMMON') === 'SEPARATE') {
-                rows.push(['牛市建仓', `${((p.bullDailyBuyPct || 0) * 100).toFixed(0)}% / 逆势 ${((p.bullAddBuyPct || 0) * 100).toFixed(0)}% / 上限 ${((p.bullMaxPositionPct || 0) * 100).toFixed(0)}%`]);
-                rows.push(['熊市建仓', `${((p.bearDailyBuyPct || 0) * 100).toFixed(0)}% / 逆势 ${((p.bearAddBuyPct || 0) * 100).toFixed(0)}% / 上限 ${((p.bearMaxPositionPct || 0) * 100).toFixed(0)}%`]);
+            const ruleText = pre => `${((p[pre + 'DailyBuyPct'] || 0) * 100).toFixed(0)}% / 逆势 ${((p[pre + 'AddBuyPct'] || 0) * 100).toFixed(0)}% / 上限 ${((p[pre + 'MaxPositionPct'] || 0) * 100).toFixed(0)}%`;
+            const regSep = (p.marketRegimeMode || 'COMMON') === 'SEPARATE';
+            const dirSep = (p.directionMode || 'COMMON') === 'SEPARATE';
+            if (regSep && dirSep) {
+                rows.push(['牛市·做多', ruleText('bullLong')]);
+                rows.push(['牛市·做空', ruleText('bullShort')]);
+                rows.push(['熊市·做多', ruleText('bearLong')]);
+                rows.push(['熊市·做空', ruleText('bearShort')]);
+            } else if (regSep) {
+                rows.push(['牛市建仓', ruleText('bull')]);
+                rows.push(['熊市建仓', ruleText('bear')]);
+            } else if (dirSep) {
+                rows.push(['做多建仓', ruleText('long')]);
+                rows.push(['做空建仓', ruleText('short')]);
             }
             $('#paramGrid').innerHTML = rows.map(([k, v]) => `<div class="param-row"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
         }
@@ -832,11 +859,87 @@
             });
         }
 
+        function updateFilterVisibility(tab) {
+            $('#filterType').classList.toggle('hidden', tab !== 'pos');
+            $('#filterDirection').classList.toggle('hidden', tab !== 'trade');
+            $('#filterUnderlying').classList.toggle('hidden', !['pos', 'closed', 'trade'].includes(tab));
+            $('#filterMonth').classList.toggle('hidden', !['pos', 'trade'].includes(tab));
+        }
+
+        function refreshFilterOptions(rows, tab) {
+            if (!['pos', 'trade', 'closed'].includes(tab)) return;
+            const sel = $('#filterMonth');
+            const prev = sel.value;
+            const months = Array.from(new Set((rows || []).map(r => r.contractMonth).filter(v => v != null)))
+                .sort((a, b) => Number(a) - Number(b));
+            sel.innerHTML = '<option value="">全部月份</option>' + months.map(m => `<option value="${m}">${month(m)}</option>`).join('');
+            sel.value = months.some(m => String(m) === prev) ? prev : '';
+        }
+
+        function applyTableFilters(rows, tab) {
+            const type = $('#filterType').value;
+            const dir = $('#filterDirection').value;
+            const und = $('#filterUnderlying').value;
+            const mon = $('#filterMonth').value;
+            return (rows || []).filter(r => {
+                if (tab === 'pos' && type && r.callPutType !== type) return false;
+                if (tab === 'trade' && dir && String(r.tradeType) !== dir) return false;
+                if (['pos', 'closed', 'trade'].includes(tab) && und && r.underlyingCode !== und) return false;
+                if (['pos', 'trade'].includes(tab) && mon && String(r.contractMonth) !== String(mon)) return false;
+                return true;
+            });
+        }
+
+        function renderSummary(rows, tab) {
+            const el = $('#tableSummary');
+            if (!el) return;
+            if (!['pos', 'closed', 'trade', 'equity', 'signal'].includes(tab)) {
+                el.classList.add('hidden');
+                return;
+            }
+            el.classList.remove('hidden');
+            if (!rows.length) {
+                el.innerHTML = '<span class="sum-label">筛选汇总</span><span>0 条</span>';
+                return;
+            }
+            const sum = (arr, f) => arr.reduce((a, b) => a + (Number(f(b)) || 0), 0);
+            let html = '<span class="sum-label">筛选汇总</span>';
+            if (tab === 'pos') {
+                const qty = sum(rows, r => r.qty), cost = sum(rows, r => r.costAmount);
+                const mv = sum(rows, r => r.marketValue), pnl = sum(rows, r => r.unrealizedPnl);
+                html += `<span>持仓 <b>${O.num(rows.length)}</b></span><span>数量 <b>${O.num(qty)}</b></span>
+                    <span>成本 <b>${O.money(cost)}</b></span><span>市值 <b>${O.money(mv)}</b></span>
+                    <span>浮动盈亏 <b class="${O.cls(pnl)}">${O.money(pnl)}</b></span>
+                    <span>收益率 <b class="${O.cls(pnl)}">${cost > 0 ? O.pct(pnl / cost * 100) : '—'}</b></span>`;
+            } else if (tab === 'closed') {
+                const qty = sum(rows, r => r.qty), pnl = sum(rows, r => r.realizedPnl);
+                const avgPct = sum(rows, r => r.pnlPct) / rows.length;
+                html += `<span>清仓 <b>${O.num(rows.length)}</b></span><span>数量 <b>${O.num(qty)}</b></span>
+                    <span>已实现盈亏 <b class="${O.cls(pnl)}">${O.money(pnl)}</b></span>
+                    <span>平均收益率 <b class="${O.cls(avgPct)}">${O.pct(avgPct)}</b></span>`;
+            } else if (tab === 'trade') {
+                const buys = rows.filter(r => Number(r.tradeType) === 1), sells = rows.filter(r => Number(r.tradeType) === 2);
+                const buyAmt = sum(buys, r => r.amount), sellAmt = sum(sells, r => r.amount), fee = sum(rows, r => r.fee);
+                html += `<span>交易 <b>${O.num(rows.length)}</b></span><span>买入 <b>${O.num(buys.length)}</b> / ${O.money(buyAmt)}</span>
+                    <span>卖出 <b>${O.num(sells.length)}</b> / ${O.money(sellAmt)}</span><span>费用 <b>${O.money(fee)}</b></span>
+                    <span>净买入 <b>${O.money(buyAmt - sellAmt)}</b></span>`;
+            } else if (tab === 'equity') {
+                const first = rows[0], last = rows[rows.length - 1];
+                const ret = Number(first.equity) > 0 ? (Number(last.equity) / Number(first.equity) - 1) * 100 : 0;
+                html += `<span>净值 <b>${O.num(rows.length)}</b></span><span>期末权益 <b>${O.money(last.equity)}</b></span>
+                    <span>区间收益 <b class="${O.cls(ret)}">${O.pct(ret)}</b></span>`;
+            } else {
+                html += `<span>信号 <b>${O.num(rows.length)}</b></span>`;
+            }
+            el.innerHTML = html;
+        }
+
         function renderActiveTable() {
             if (activeTab === 'param') return;
+            updateFilterVisibility(activeTab);
             const rows = currentRows();
             const kw = ($('#tableSearch').value || '').trim();
-            const filtered = filterRows(rows, kw);
+            const filtered = filterRows(applyTableFilters(rows, activeTab), kw);
             const sorted = sortRows(filtered, sortState[activeTab]);
             const size = posSize;
             const total = sorted.length;
@@ -844,6 +947,7 @@
             const page = Math.min(Math.max(1, getPage(activeTab)), pages);
             setPage(activeTab, page);
             const start = (page - 1) * size;
+            currentRowOffset = start;
             const list = sorted.slice(start, start + size);
 
             if (activeTab === 'pos') {
@@ -863,6 +967,7 @@
                 $('#cntSignal').textContent = total;
             }
 
+            renderSummary(filtered, activeTab);
             pager(total, size, page, p => {
                 setPage(activeTab, p);
                 renderActiveTable();
@@ -892,7 +997,7 @@
                     r.__accountPct = e && e.equity
                         ? r.__sellAmount / Number(e.equity) * 100 : null;
                 }
-                if (r.tradeDate && Number(r.tradeType) === 2) {
+                if (r.tradeDate) {
                     const e = equityByDate.get(String(r.tradeDate).slice(0, 10));
                     r.__accountPct = e && e.equity ? Number(r.amount || 0) / Number(e.equity) * 100 : null;
                 }
@@ -933,6 +1038,7 @@
                     tradeKey = listDate;
                 }
             }
+            refreshFilterOptions(currentRows(), activeTab);
             renderActiveTable();
         }
 
@@ -954,7 +1060,7 @@
                 return;
             }
             $('#posBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td>
+                <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td>
                 <td><span style="color:var(--text)">${esc(O.undName(p.underlyingCode))}</span> <span class="num" style="font-size:9px;color:var(--dim)">${esc(p.underlyingCode)}</span></td>
                 <td><span style="color:var(--text)">${esc(p.optionName)}</span><div class="num" style="font-size:9px;color:var(--dim)">${esc(p.optionCode)}</div></td>
                 <td><span class="tag ${p.callPutType === 'C' ? 'c' : 'p'}">${p.callPutType === 'C' ? '认购' : '认沽'}</span></td>
@@ -976,7 +1082,7 @@
                 return;
             }
             $('#closedBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
+                <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td><td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td class="num">${esc(p.openDate)}</td><td class="num">${esc(p.closeDate)}</td><td class="num r">${O.num(p.qty)}</td>
                 <td class="num r">${O.num(p.avgCost, 4)}</td><td class="num r">${O.num(p.avgSellPrice, 4)}</td><td class="num r">${p.holdDays}</td>
                 <td class="num r ${O.cls(p.realizedPnl)}">${O.num(p.realizedPnl)}</td>
@@ -992,11 +1098,11 @@
                 return;
             }
             $('#tradeBody').innerHTML = list.map((p, i) => `<tr>
-                <td class="num" style="color:var(--dim)">${p.__idx || (i + 1)}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
+                <td class="num" style="color:var(--dim)">${currentRowOffset + i + 1}</td><td class="num">${esc(p.tradeDate)}</td><td class="num" style="color:var(--dim)">${esc(p.tradeTime)}</td>
                 <td>${esc(O.undName(p.underlyingCode))}</td><td>${esc(p.optionName)}</td>
                 <td><span class="tag ${Number(p.tradeType) === 1 ? 'buy' : 'sell'}">${Number(p.tradeType) === 1 ? '买入' : '卖出'}</span></td>
                 <td class="num r">${O.num(p.price, 4)}</td><td class="num r">${O.num(p.qty)}</td><td class="num r">${O.num(p.amount)}</td>
-                <td class="num r" title="卖出金额 / 当日总资产（仅卖出）">${Number(p.tradeType) === 2 ? accountPctText(p.__accountPct) : '—'}</td>
+                <td class="num r" title="成交金额 / 当日账户总资产">${accountPctText(p.__accountPct)}</td>
                 <td class="num r">${O.num(p.fee, 2)}</td><td style="color:var(--muted);font-size:9.5px">${esc(p.reasonDesc)}</td>
                 <td class="num r">${p.triggerValue == null ? '—' : O.num(p.triggerValue, 2)}</td>
             </tr>`).join('');
@@ -1086,6 +1192,7 @@
             activeTab = b.dataset.tab;
             ['pos', 'closed', 'trade', 'equity', 'signal', 'param'].forEach(k => $('#pane-' + k).classList.toggle('hidden', k !== activeTab));
             $('#tablePager').classList.toggle('hidden', activeTab === 'param');
+            $('#tableSummary').classList.toggle('hidden', activeTab === 'param');
             $('#dateFilter').classList.toggle('hidden', !['pos', 'closed', 'trade'].includes(activeTab));
             if (activeTab === 'param') loadLogs(); else loadTable();
         }));
@@ -1124,6 +1231,14 @@
             }
         });
 
+        $('#filterUnderlying').innerHTML = '<option value="">全部标的</option>' +
+            ['159915', '588000', '510500', '510300', '000852'].map(c => `<option value="${c}">${O.undName(c)}</option>`).join('');
+        ['filterType', 'filterDirection', 'filterUnderlying', 'filterMonth'].forEach(id => {
+            $('#' + id).addEventListener('change', () => {
+                posPage = closedPage = tradePage = equityPage = signalPage = 1;
+                renderActiveTable();
+            });
+        });
         activateTabUI(activeTab);
         initSortableHeaders();
         loadAll();

@@ -75,6 +75,11 @@ public class OptionBsParams {
      */
     private String marketRegimeMode = "COMMON";
 
+    /**
+     * 多空配置：COMMON=多空通用；SEPARATE=做多/做空分开
+     */
+    private String directionMode = "COMMON";
+
     private double dailyBuyPct = 0.05D;
     private double addBuyPct = 0.10D;
     private double addStepPct = 0.05D;
@@ -105,6 +110,56 @@ public class OptionBsParams {
     private double bearCashReservePct = 0D;
     private String bearAddScope = "TRIGGERED";
     private boolean bearReenterOnNewCycle = false;
+
+    // ---------------- 做多 / 做空分开（牛熊通用时） ----------------
+    private double longDailyBuyPct = 0.05D;
+    private double longAddBuyPct = 0.10D;
+    private double longAddStepPct = 0.05D;
+    private double longMaxPositionPct = 1.00D;
+    private double longCashReservePct = 0D;
+    private String longAddScope = "TRIGGERED";
+    private boolean longReenterOnNewCycle = false;
+
+    private double shortDailyBuyPct = 0.05D;
+    private double shortAddBuyPct = 0.10D;
+    private double shortAddStepPct = 0.05D;
+    private double shortMaxPositionPct = 1.00D;
+    private double shortCashReservePct = 0D;
+    private String shortAddScope = "TRIGGERED";
+    private boolean shortReenterOnNewCycle = false;
+
+    // ---------------- 牛熊 × 多空矩阵（两者都分开时） ----------------
+    private double bullLongDailyBuyPct = 0.05D;
+    private double bullLongAddBuyPct = 0.10D;
+    private double bullLongAddStepPct = 0.05D;
+    private double bullLongMaxPositionPct = 1.00D;
+    private double bullLongCashReservePct = 0D;
+    private String bullLongAddScope = "TRIGGERED";
+    private boolean bullLongReenterOnNewCycle = false;
+
+    private double bullShortDailyBuyPct = 0.02D;
+    private double bullShortAddBuyPct = 0.05D;
+    private double bullShortAddStepPct = 0.05D;
+    private double bullShortMaxPositionPct = 0.30D;
+    private double bullShortCashReservePct = 0D;
+    private String bullShortAddScope = "TRIGGERED";
+    private boolean bullShortReenterOnNewCycle = false;
+
+    private double bearLongDailyBuyPct = 0.02D;
+    private double bearLongAddBuyPct = 0.05D;
+    private double bearLongAddStepPct = 0.05D;
+    private double bearLongMaxPositionPct = 0.30D;
+    private double bearLongCashReservePct = 0D;
+    private String bearLongAddScope = "TRIGGERED";
+    private boolean bearLongReenterOnNewCycle = false;
+
+    private double bearShortDailyBuyPct = 0.05D;
+    private double bearShortAddBuyPct = 0.10D;
+    private double bearShortAddStepPct = 0.05D;
+    private double bearShortMaxPositionPct = 1.00D;
+    private double bearShortCashReservePct = 0D;
+    private String bearShortAddScope = "TRIGGERED";
+    private boolean bearShortReenterOnNewCycle = false;
 
     // ---------------- 卖出 ----------------
     private boolean enableRight = true;
