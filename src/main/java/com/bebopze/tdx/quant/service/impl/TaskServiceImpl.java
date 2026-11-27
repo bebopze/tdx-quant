@@ -109,7 +109,9 @@ public class TaskServiceImpl implements TaskService {
 
 
             taskProgressManager.updateProgress(taskId, 70, "主线板块 计算");
-            topBlockService.refreshAll(updateTypeEnum);
+            if (updateTypeEnum == UpdateTypeEnum.HIS) {
+                topBlockService.refreshAll(updateTypeEnum);
+            }
 
 
             taskProgressManager.updateProgress(taskId, 90, "个股/板块 - 行情/指标 Cache 刷新");

@@ -136,7 +136,7 @@ public class TdxTask {
      */
     @TotalTime
     @Async
-    // @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
+    @Scheduled(cron = "0 10 16 ? * 1-5", zone = "Asia/Shanghai")
     public void execTask__refreshAll__ND() {
         taskService.execTask__refreshAll(UpdateTypeEnum.N_DAY);
     }
