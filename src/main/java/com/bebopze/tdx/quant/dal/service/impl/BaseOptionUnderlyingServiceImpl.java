@@ -156,7 +156,7 @@ public class BaseOptionUnderlyingServiceImpl extends ServiceImpl<BaseOptionUnder
     public int batchInsertOrUpdate(List<BaseOptionUnderlyingDO> list) {
         log.info("batchInsertOrUpdate     >>>     size : {}", ListUtil.size(list));
 
-        return saveOrUpdateBatch(list);
+        return baseMapper.batchInsertOrUpdate(list);
     }
 
 

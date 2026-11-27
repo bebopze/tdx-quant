@@ -36,15 +36,15 @@ public class UnderlyingCodeConst {
     /**
      * 指数期权标的
      */
-    public static final Map<String, String> INDEX_OPTION_UNDERLYING__CODE_NAME__MAP = Map.of("IM1000", "中证1000",
+    public static final Map<String, String> INDEX_OPTION_UNDERLYING__CODE_NAME__MAP = Map.of("IH50", "上证50",
                                                                                              "IF300", "沪深300",
-                                                                                             "IH50", "上证50");
+                                                                                             "IM1000", "中证1000");
 
 
     /**
      * 期权标的（ETF期权标的 + 指数期权标的）
      */
-    public static final Map<String, String> OPTION_UNDERLYING__CODE_NAME__MAP = Maps.newHashMap();
+    public static final Map<String, String> OPTION_UNDERLYING__CODE_NAME__MAP = Maps.newTreeMap();
 
 
     static {

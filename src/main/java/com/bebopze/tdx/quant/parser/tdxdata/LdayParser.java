@@ -155,10 +155,10 @@ public class LdayParser {
             lday__dtoList = parseLdayByFilePath(filePath);
 
 
-            // 不复权
-            if (dividendTypeEnum == DividendTypeEnum.NONE && CollectionUtils.isNotEmpty(lday__dtoList)) {
-                return lday__dtoList;
-            }
+//            // 不复权（不复权数据 也有bug   ->   股指）
+//            if (dividendTypeEnum == DividendTypeEnum.NONE && CollectionUtils.isNotEmpty(lday__dtoList)) {
+//                return lday__dtoList;
+//            }
 
 
             // ---------------------------------------------------------------------------------------------------------

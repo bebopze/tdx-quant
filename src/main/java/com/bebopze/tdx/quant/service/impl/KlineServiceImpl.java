@@ -576,7 +576,7 @@ public class KlineServiceImpl implements KlineService {
 
 
         // --------------------- ID
-        optionUnderlyingId = optionUnderlyingId == null ? baseOptionService.getIdByCode(optionUnderlyingCode) : optionUnderlyingId;
+        optionUnderlyingId = optionUnderlyingId == null ? baseOptionUnderlyingService.getIdByCode(optionUnderlyingCode) : optionUnderlyingId;
 
 
         // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
@@ -965,8 +965,20 @@ public class KlineServiceImpl implements KlineService {
         entity.setId(optionUnderlyingId);
         entity.setCode(optionUnderlyingCode);
         entity.setName(optionUnderlyingName);
-        entity.setType(StockTypeEnum.getTypeByStockCode(optionUnderlyingCode));
         entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(optionUnderlyingCode));
+
+
+        // 期权标的类型
+        StockTypeEnum stockTypeEnum = StockTypeEnum.getByStockCode(optionUnderlyingCode);
+        if (stockTypeEnum != null) {
+            entity.setType(stockTypeEnum.optionUnderlyingType);
+        }
+
+
+        // 期权合约乘数（ETF期权：10000；指数期权：100）
+        int multiplier = stockTypeEnum == StockTypeEnum.ETF ? 1_0000 :
+                stockTypeEnum == StockTypeEnum.SIF_STOCK ? 1_00 : 1_000;
+        entity.setMultiplier(multiplier);
 
 
         // --------------------------------------------------------------------------------

@@ -1177,7 +1177,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             // 期权标的类型
             StockTypeEnum stockTypeEnum = StockTypeEnum.getByStockCode(code);
             if (stockTypeEnum != null) {
-                entity.setType(stockTypeEnum.type);
+                entity.setType(stockTypeEnum.optionUnderlyingType);
             }
 
 

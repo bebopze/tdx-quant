@@ -26,39 +26,39 @@ public enum StockTypeEnum {
 
 
     //    A_STOCK(1, "A股", Lists.newArrayList("00", "30", "60", "68", "92")),
-    A_STOCK(1, "A股", 2, Lists.newArrayList("0", "3", "6", "9")),
+    A_STOCK(1, null, "A股", 2, Lists.newArrayList("0", "3", "6", "9")),
 
 
     //    ETF(2, "ETF", Lists.newArrayList("15", "16", "50", "51", "56", "58")),
-    ETF(2, "ETF", 3, Lists.newArrayList("1", "5")),
+    ETF(2, 1, "ETF", 3, Lists.newArrayList("1", "5")),
 
 
     //    TDX_BLOCK(3, "板块", Lists.newArrayList("88")),
-    TDX_BLOCK(3, "板块", 2, Lists.newArrayList("8")),
+    TDX_BLOCK(3, null, "板块", 2, Lists.newArrayList("8")),
 
 
     // ----------------------------------------------------
 
 
-    HK_STOCK(11, "港股", 3, Lists.newArrayList("")),
+    HK_STOCK(11, null, "港股", 3, Lists.newArrayList("")),
 
-    US_STOCK(12, "美股", 3, Lists.newArrayList("")),
+    US_STOCK(12, null, "美股", 3, Lists.newArrayList("")),
 
 
     // ----------------------------------------------------
 
 
-    SIF_STOCK(21, "股指期货（中金所）", 2, Lists.newArrayList("IM", "IF", "IH")),
+    SIF_STOCK(21, 2, "股指期货（中金所）", 2, Lists.newArrayList("IM", "IF", "IH")),
 
 
     // ----------------------------------------------------
 
 
     // ETF期权：1/9
-    ETF_OPTION(101, "ETF期权", 4, Lists.newArrayList("1", "9")),
+    ETF_OPTION(101, null, "ETF期权", 4, Lists.newArrayList("1", "9")),
 
     // 股指期权：MO/IO/HO
-    INDEX_OPTION(102, "股指期权", 1, Lists.newArrayList("MO", "IO", "HO")),
+    INDEX_OPTION(102, null, "股指期权", 1, Lists.newArrayList("MO", "IO", "HO")),
 
 
     ;
@@ -68,6 +68,10 @@ public enum StockTypeEnum {
      * 自定义 股票类型（区分 A股/ETF/板块/港股/美股/股指期货/期权/）    ->     对应 base_stock 表 type 字段（ base_block、base_option 表 未记录此字段  ->  因为 已拆分 独立建表）
      */
     public final Integer type;
+    /**
+     * 期权标的类型
+     */
+    public final Integer optionUnderlyingType;
     /**
      * 描述
      */
@@ -259,14 +263,16 @@ public enum StockTypeEnum {
 
 
     /**
-     * 港美股/期权（ tdx市场类型#股票代码   ->   31#00700 / 74#SPY / 8#10011565 / 7#MO2709-C-7000）
+     * 港美股/期权（ tdx市场类型#股票代码   ->   31#00700 / 74#SPY / 47#IM1000 / 8#10011565 / 7#MO2709-C-7000）
      *
      * @param stockCode
      * @return
      */
     public static boolean isHkUsOpStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum) || ETF_OPTION.equals(stockTypeEnum) || INDEX_OPTION.equals(stockTypeEnum);
+        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum)
+                || SIF_STOCK.equals(stockTypeEnum)
+                || ETF_OPTION.equals(stockTypeEnum) || INDEX_OPTION.equals(stockTypeEnum);
     }
 
 
