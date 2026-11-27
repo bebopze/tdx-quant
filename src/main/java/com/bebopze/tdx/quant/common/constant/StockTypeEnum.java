@@ -8,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
+import static com.bebopze.tdx.quant.common.constant.option.UnderlyingCodeConst.OPTION_UNDERLYING__CODE_NAME__MAP;
+
 
 /**
  * 自定义 股票类型：1-A股；2-ETF；11-港股；12-美股；21-股指期货；      // 对应 base_stock 表 type 自定义字段
@@ -243,6 +245,16 @@ public enum StockTypeEnum {
     public static boolean isOption(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
         return ETF_OPTION.equals(stockTypeEnum) || INDEX_OPTION.equals(stockTypeEnum);
+    }
+
+    /**
+     * 期权标的
+     *
+     * @param stockCode
+     * @return
+     */
+    public static boolean isOptionUnderlying(String stockCode) {
+        return OPTION_UNDERLYING__CODE_NAME__MAP.containsKey(stockCode);
     }
 
 

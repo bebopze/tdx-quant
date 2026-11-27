@@ -7,6 +7,7 @@ import com.bebopze.tdx.quant.common.domain.dto.base.StockBlockInfoDTO;
 import com.bebopze.tdx.quant.common.domain.tq.SimpleStockDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.service.StockService;
@@ -39,6 +40,10 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private IBaseOptionService baseOptionService;
+
+    @Autowired
+    private IBaseOptionUnderlyingService baseOptionUnderlyingService;
+
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
@@ -120,6 +125,15 @@ public class StockServiceImpl implements StockService {
             BaseOptionDO optionDO = baseOptionService.getByCode(stockCode);
             if (optionDO != null) {
                 BeanUtils.copyProperties(optionDO, entity);
+            }
+
+
+        } else if (StockTypeEnum.isOptionUnderlying(stockCode)) {
+
+
+            BaseOptionUnderlyingDO optionUnderlyingDO = baseOptionUnderlyingService.getByCode(stockCode);
+            if (optionUnderlyingDO != null) {
+                BeanUtils.copyProperties(optionUnderlyingDO, entity);
             }
         }
 
