@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bebopze.tdx.quant.dal.mapper.BaseOptionUnderlyingMapper">
+
+
+    <select id="getIdByCode" resultType="java.lang.Long">
+        SELECT id
+
+        FROM base_option_underlying
+
+        WHERE code = #{code}
+    </select>
+
+
+    <select id="getByCode" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO">
+        SELECT *
+
+        FROM base_option_underlying
+
+        WHERE code = #{code}
+    </select>
+
+
+    <select id="listAllSimple" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO">
+        SELECT id,
+               code,
+               name,
+               multiplier,
+               type,
+               tdx_market_type,
+
+               trade_date,
+               open,
+               high,
+               low,
+               close,
+               prev_close,
+               volume,
+               amount,
+               range_pct,
+               change_pct,
+               change_price,
+               turnover_pct,
+
+               gmt_create,
+               gmt_modify
+
+
+        FROM base_option_underlying
+    </select>
+
+
+    <select id="listSimpleByKeyword" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO">
+        SELECT id,
+               code,
+               name,
+               multiplier,
+               type,
+               tdx_market_type,
+
+               trade_date,
+               open,
+               high,
+               low,
+               close,
+               prev_close,
+               volume,
+               amount,
+               range_pct,
+               change_pct,
+               change_price,
+               turnover_pct,
+
+               gmt_create,
+               gmt_modify
+
+
+        FROM base_option_underlying
+
+
+        WHERE (
+                  code LIKE CONCAT('%', #{keyword}, '%')
+                      OR name LIKE CONCAT('%', #{keyword}, '%')
+                  )
+
+        LIMIT 10
+    </select>
+
+
+    <!-- 期权日更：按 code 批量读取 kline_his -->
+    <select id="listKlineHisByCodes" resultType="com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO">
+        SELECT
+
+        id,
+        code,
+        kline_his,
+        kline_his_raw_len
+
+
+        FROM base_option_underlying
+
+
+        WHERE code IN
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+    </select>
+
+
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO base_option_underlying
+
+        (
+        code, name, multiplier, type, tdx_market_type,
+
+        trade_date, open, high, low, close, prev_close,
+        volume, amount, range_pct, change_pct, change_price, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.multiplier}, #{item.type}, #{item.tdxMarketType},
+
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+    </insert>
+
+
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO base_option_underlying
+
+        (
+        code, name, multiplier, type, tdx_market_type,
+
+        trade_date, open, high, low, close, prev_close,
+        volume, amount, range_pct, change_pct, change_price, turnover_pct,
+        kline_his, kline_his_raw_len, ext_data_his, ext_data_his_raw_len
+        )
+
+        VALUES
+
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.multiplier}, #{item.type}, #{item.tdxMarketType},
+
+            #{item.tradeDate}, #{item.open}, #{item.high}, #{item.low}, #{item.close}, #{item.prevClose},
+            #{item.volume}, #{item.amount},
+            #{item.rangePct}, #{item.changePct}, #{item.changePrice}, #{item.turnoverPct},
+            #{item.klineHis}, #{item.klineHisRawLen}, #{item.extDataHis}, #{item.extDataHisRawLen}
+            )
+        </foreach>
+
+
+        ON DUPLICATE KEY UPDATE
+
+
+        -- 下面使用 COALESCE(VALUES(col), col) ：当传入值为 NULL 时保留原值
+        code = COALESCE(VALUES(code), code),
+        name = COALESCE(VALUES(name), name),
+        multiplier = COALESCE(VALUES(multiplier), multiplier),
+        type = COALESCE(VALUES(type), type),
+        tdx_market_type = COALESCE(VALUES(tdx_market_type), tdx_market_type),
+
+
+        trade_date = COALESCE(VALUES(trade_date), trade_date),
+        open = COALESCE(VALUES(open), open),
+        high = COALESCE(VALUES(high), high),
+        low = COALESCE(VALUES(low), low),
+        close = COALESCE(VALUES(close), close),
+        prev_close = COALESCE(VALUES(prev_close), prev_close),
+
+        volume = COALESCE(VALUES(volume), volume),
+        amount = COALESCE(VALUES(amount), amount),
+
+        range_pct = COALESCE(VALUES(range_pct), range_pct),
+        change_pct = COALESCE(VALUES(change_pct), change_pct),
+        change_price = COALESCE(VALUES(change_price), change_price),
+        turnover_pct = COALESCE(VALUES(turnover_pct), turnover_pct),
+
+
+        kline_his = COALESCE(VALUES(kline_his), kline_his),
+        kline_his_raw_len = COALESCE(VALUES(kline_his_raw_len), kline_his_raw_len),
+        ext_data_his = COALESCE(VALUES(ext_data_his), ext_data_his),
+        ext_data_his_raw_len = COALESCE(VALUES(ext_data_his_raw_len), ext_data_his_raw_len)
+    </insert>
+
+
+    <update id="delAllKlineExtData">
+        UPDATE base_option_underlying
+
+
+        SET kline_his            = NULL,
+            kline_his_raw_len    = 0,
+            ext_data_his         = NULL,
+            ext_data_his_raw_len = 0
+    </update>
+
+</mapper>

@@ -47,6 +47,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     @Autowired
     private IBaseOptionService baseOptionService;
 
+    @Autowired
+    private IBaseOptionUnderlyingService baseOptionUnderlyingService;
+
 
     @Autowired
     private IBaseBlockRelaStockService baseBlockRelaStockService;
@@ -1157,18 +1160,17 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ----------------------------------------- 期权标的   save2DB
 
 
-        Map<String, Long> db__codeIdMap = baseStockService.codeIdMap((Integer) null);
+        Map<String, Long> db__codeIdMap = baseOptionUnderlyingService.codeIdMap();
 
 
-        List<BaseStockDO> entityList = Lists.newArrayList();
+        List<BaseOptionUnderlyingDO> entityList = Lists.newArrayList();
         UnderlyingCodeConst.OPTION_UNDERLYING__CODE_NAME__MAP.forEach((code, name) -> {
 
             // 期权标的
-            BaseStockDO entity = new BaseStockDO();
+            BaseOptionUnderlyingDO entity = new BaseOptionUnderlyingDO();
             entity.setCode(code);
             entity.setName(name);
             entity.setType(StockTypeEnum.getTypeByStockCode(code));
-            entity.setOptionUnderlyingFlag(1);
             entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));
 
 
@@ -1177,8 +1179,8 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         });
 
 
-        // insert new
-        baseStockService.batchInsertOrUpdate(entityList);
+        // save
+        baseOptionUnderlyingService.saveOrUpdateBatch(entityList);
     }
 
 
@@ -1194,7 +1196,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ----------------------------------------- 期权列表   save2DB
 
 
-        Map<String, Long> old__codeIdMap = baseOptionService.codeIdMap();
+        Map<String, Long> db__codeIdMap = baseOptionService.codeIdMap();
 
 
         List<BaseOptionDO> entityList = Lists.newArrayList();
@@ -1220,29 +1222,13 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));
 
 
-            entity.setId(old__codeIdMap.get(code));
+            entity.setId(db__codeIdMap.get(code));
             entityList.add(entity);
         });
 
 
-        // insert new
+        // save
         baseOptionService.batchInsertOrUpdate(entityList);
-
-
-        // --------------------------------------------------------
-
-
-        // 期权   ->   不能 DEL old（过期期权   ->   通达信 不提供）
-
-
-//        // DEL old（NOT IN -> new）
-//        Set<String> new__codeSet = entityList.stream().map(BaseOptionDO::getCode).collect(Collectors.toSet());
-//        old__codeIdMap.forEach((code, id) -> {
-//            if (!new__codeSet.contains(code)) {
-//                baseOptionService.removeById(id);
-//                log.warn("DEL old     >>>     code : {}", code);
-//            }
-//        });
     }
 
 

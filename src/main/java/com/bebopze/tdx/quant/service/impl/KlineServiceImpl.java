@@ -9,6 +9,7 @@ import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
+import com.bebopze.tdx.quant.common.config.OptionDailyUpdateProperties;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -19,6 +20,7 @@ import com.bebopze.tdx.quant.common.util.ListUtil;
 import com.bebopze.tdx.quant.common.util.NumUtil;
 import com.bebopze.tdx.quant.dal.entity.BaseBlockDO;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO;
 import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
 import com.bebopze.tdx.quant.dal.service.*;
 import com.bebopze.tdx.quant.parser.tdxdata.LdayParser;
@@ -62,6 +64,13 @@ public class KlineServiceImpl implements KlineService {
     @Autowired
     private IBaseOptionService baseOptionService;
 
+    @Autowired
+    private IBaseOptionUnderlyingService baseOptionUnderlyingService;
+
+
+    @Autowired
+    private OptionDailyUpdateProperties optionDailyUpdateProperties;
+
 
     @Autowired
     private InitDataService initDataService;
@@ -89,8 +98,15 @@ public class KlineServiceImpl implements KlineService {
         });
 
 
-        // 行情-期权
+        // 行情-期权标的
         Future<?> task3 = Executors.newSingleThreadExecutor().submit(() -> {
+            // refresh  ->  optionUnderlying kline
+            fillOptionUnderlyingKlineAll();
+        });
+
+
+        // 行情-期权
+        Future<?> task4 = Executors.newSingleThreadExecutor().submit(() -> {
             // refresh  ->  option kline
             fillOptionKlineAll();
         });
@@ -99,6 +115,7 @@ public class KlineServiceImpl implements KlineService {
         task1.get();
         task2.get();
         task3.get();
+        task4.get();
     }
 
     @TotalTime
@@ -480,10 +497,143 @@ public class KlineServiceImpl implements KlineService {
     }
 
 
+    @TotalTime
+    @Override
+    public void fillOptionUnderlyingKline(String optionUnderlyingCode) {
+        fillOptionUnderlyingKline(optionUnderlyingCode, null);
+        log.info("fillOptionUnderlyingKline suc     >>>     optionUnderlyingCode : {}", optionUnderlyingCode);
+    }
+
+
+    @TotalTime
+    @Override
+    public void fillOptionUnderlyingKlineAll() {
+
+
+        long[] start = {System.currentTimeMillis()};
+
+        AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger suc_count = new AtomicInteger(0);
+        AtomicInteger err_count = new AtomicInteger(0);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // del ALL   ->   kline_ext_data
+        baseOptionUnderlyingService.delAllKlineExtData();
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // insert ALL   ->   kline_ext_data
+
+
+        Map<String, Long> codeIdMap = baseOptionUnderlyingService.codeIdMap();
+
+
+        codeIdMap.keySet().parallelStream().forEach((optionUnderlyingCode) -> {
+            Long optionUnderlyingId = codeIdMap.get(optionUnderlyingCode);
+            int countVal = count.incrementAndGet();
+
+
+            try {
+                fillOptionUnderlyingKline(optionUnderlyingCode, optionUnderlyingId);
+
+
+                // ------------------------------------------- 计时（频率）   12ms/次   x 1386     ->     总耗时：17.1s
+
+
+                long time = System.currentTimeMillis() - start[0];
+
+
+                long r1 = time / countVal;
+                long r2 = countVal * 1000L / time;
+                String r3 = String.format("%s次 - %s", countVal, DateTimeUtil.format2Hms(time));
+
+
+                log.info("fillOptionUnderlyingKlineAll - suc     >>>     optionUnderlyingCode : {}, optionUnderlyingId : {} , count : {} , suc : {} , err : {} , r1 : {}ms/次 , r2 : {}次/s , r3 : {}",
+                         optionUnderlyingCode, optionUnderlyingId, countVal, suc_count.incrementAndGet(), err_count.get(), r1, r2, r3);
+
+
+            } catch (Exception ex) {
+                log.error("fillOptionUnderlyingKlineAll - err     >>>     optionUnderlyingCode : {}, optionUnderlyingId : {} , count : {} , suc : {} , err : {}",
+                          optionUnderlyingCode, optionUnderlyingId, countVal, suc_count.get(), err_count.incrementAndGet(), ex);
+            }
+        });
+
+
+        initDataService.deleteDiskCache();
+    }
+
+
+    /**
+     * 期权标的行情 拉取 -> DB
+     *
+     * @param optionUnderlyingCode
+     * @param optionUnderlyingId
+     */
+    private void fillOptionUnderlyingKline(String optionUnderlyingCode, Long optionUnderlyingId) {
+
+
+        // --------------------- ID
+        optionUnderlyingId = optionUnderlyingId == null ? baseOptionService.getIdByCode(optionUnderlyingCode) : optionUnderlyingId;
+
+
+        // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
+
+
+        // 通达信   本地读取
+        List<String> klines = klinesFromTdx(optionUnderlyingCode, UpdateTypeEnum.HIS);
+
+
+        // -------------------------------------------------------------------------------------------------------------
+
+
+        // --------------------- entity -> 实时行情
+
+        if (CollectionUtils.isEmpty(klines)) {
+            log.warn("fillOptionUnderlyingKline - 通达信 [klines] 为空     >>>     optionUnderlyingCode : {}", optionUnderlyingCode);
+            return;
+        }
+
+
+        // 实时行情
+        BaseOptionUnderlyingDO entity = convertOptionUnderlyingDO(optionUnderlyingId, optionUnderlyingCode, null, klines);
+
+
+        // --------------------- DB
+        baseOptionUnderlyingService.saveOrUpdate(entity);
+    }
+
+
     @Override
     public void fillOptionKline(String optionCode) {
+//        if (skipTdxOptionKline()) {
+//            return;
+//        }
+
+
         fillOptionKline(optionCode, null);
         log.info("fillOptionKline suc     >>>     optionCode : {}", optionCode);
+    }
+
+
+    /**
+     * 期权行情已由 C237 日更接管时，跳过 TDX 覆盖写入（见 option.daily-update.disable-tdx-overwrite）
+     */
+    private boolean skipTdxOptionKline() {
+
+        if (optionDailyUpdateProperties != null
+                && optionDailyUpdateProperties.isEnabled()
+                && optionDailyUpdateProperties.isDisableTdxOverwrite()) {
+
+            log.warn("期权行情已由 C237 日更接管（option.daily-update.enabled=true），跳过 TDX 覆盖写入");
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -496,11 +646,8 @@ public class KlineServiceImpl implements KlineService {
     private void fillOptionKline(String optionCode, Long optionId) {
 
 
-//        // --------------------- ID
-//
-//
-//        optionId = optionId == null ? baseOptionService.getIdByCode(optionCode) : optionId;
-//        Assert.notNull(optionId, "期权信息不存在：" + optionCode);
+        // --------------------- ID
+        optionId = optionId == null ? baseOptionService.getIdByCode(optionCode) : optionId;
 
 
         // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
@@ -526,22 +673,17 @@ public class KlineServiceImpl implements KlineService {
 
 
         // --------------------- DB
-
-
-        if (optionId != null) {
-            baseOptionService.updateById(entity);
-        } else {
-            optionId = baseOptionService.getIdByCode(optionCode);
-            entity.setId(optionId);
-
-            baseOptionService.saveOrUpdate(entity);
-        }
+        baseOptionService.saveOrUpdate(entity);
     }
 
 
     @TotalTime
     @Override
     public void fillOptionKlineAll() {
+
+//        if (skipTdxOptionKline()) {
+//            return;
+//        }
 
 
         long[] start = {System.currentTimeMillis()};
@@ -814,6 +956,67 @@ public class KlineServiceImpl implements KlineService {
         return entity;
     }
 
+
+    private BaseOptionUnderlyingDO convertOptionUnderlyingDO(Long optionUnderlyingId,
+                                                             String optionUnderlyingCode,
+                                                             String optionUnderlyingName,
+                                                             List<String> klines) {
+
+
+        BaseOptionUnderlyingDO entity = new BaseOptionUnderlyingDO();
+        entity.setId(optionUnderlyingId);
+        entity.setCode(optionUnderlyingCode);
+        entity.setName(optionUnderlyingName);
+        entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(optionUnderlyingCode));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // K线数据
+        entity.setKlineHisStr(JSON.toJSONString(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 昨日
+        if (klines.size() >= 2) {
+            KlineDTO prevKlineDTO = ConvertStockKline.kline2DTO(klines.get(klines.size() - 2));
+            entity.setPrevClose(of(prevKlineDTO.getClose()));
+        }
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 实时行情   -   last kline
+        KlineDTO lastKlineDTO = ConvertStockKline.kline2DTO(ListUtil.last(klines));
+
+
+        // --------------------------------------------------------------------------------
+
+
+        // 实时行情   -   last kline
+        entity.setTradeDate(lastKlineDTO.getDate());
+
+        entity.setOpen(of(lastKlineDTO.getOpen()));
+        entity.setHigh(of(lastKlineDTO.getHigh()));
+        entity.setLow(of(lastKlineDTO.getLow()));
+        entity.setClose(of(lastKlineDTO.getClose()));
+
+        entity.setVolume(lastKlineDTO.getVol());
+        entity.setAmount(of(lastKlineDTO.getAmo()));
+
+        entity.setRangePct(of(lastKlineDTO.getRangePct()));
+        entity.setChangePct(of(lastKlineDTO.getChangePct()));
+        entity.setChangePrice(of(lastKlineDTO.getChangePrice()));
+        entity.setTurnoverPct(of(lastKlineDTO.getTurnoverPct()));
+
+
+        return entity;
+
+    }
 
     private BaseOptionDO convertOptionDO(Long optionId,
                                          String optionCode,

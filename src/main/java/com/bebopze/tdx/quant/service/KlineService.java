@@ -39,6 +39,11 @@ public interface KlineService {
     void fillStockKlineAll__lastDay();
 
 
+    void fillOptionUnderlyingKline(String optionUnderlyingCode);
+
+    void fillOptionUnderlyingKlineAll();
+
+
     void fillOptionKline(String optionCode);
 
     void fillOptionKlineAll();

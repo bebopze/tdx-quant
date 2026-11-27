@@ -22,12 +22,7 @@ public class Generator {
     public static void main(String[] args) {
 
 
-        String url = DATA_SOURCE_URL;
-        String username = DATA_SOURCE_USERNAME;
-        String password = DATA_SOURCE_PASSWORD;
-
-
-        FastAutoGenerator.create(url, username, password)
+        FastAutoGenerator.create(DATA_SOURCE_URL, DATA_SOURCE_USERNAME, DATA_SOURCE_PASSWORD)
 
                          .globalConfig(builder -> builder
                                  .author("bebopze")
@@ -68,7 +63,7 @@ public class Generator {
 
                                      // .addInclude("conf_account", "conf_distributed_lock")
 
-                                     .addInclude("base_option")
+                                     .addInclude(/*"base_option",*/ "base_option_underlying")
 
 
                                      .entityBuilder()

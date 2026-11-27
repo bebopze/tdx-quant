@@ -227,6 +227,27 @@ public class ParserController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
+    @Operation(summary = "期权标的 盘后行情（指定） - 拉取解析入库", description = "期权标的 盘后行情（指定） - 拉取解析入库")
+    @GetMapping(value = "/fill/fillOptionUnderlyingKline")
+    public Result<Void> fillOptionUnderlyingKline(@Schema(description = "期权标的代码（不能带后缀 .SH / .SZ / .CFF）", example = "IM1000")
+                                                  @RequestParam(defaultValue = "588000") String optionUnderlyingCode) {
+
+        klineService.fillOptionUnderlyingKline(optionUnderlyingCode);
+        return Result.SUC();
+    }
+
+
+    @Operation(summary = "期权标的 盘后行情（全部） - 拉取解析入库", description = "期权标的 盘后行情（全部） - 拉取解析入库")
+    @GetMapping(value = "/fill/fillOptionUnderlyingKlineAll")
+    public Result<Void> fillOptionUnderlyingKlineAll() {
+        klineService.fillOptionUnderlyingKlineAll();
+        return Result.SUC();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
     @Operation(summary = "期权 盘后行情（指定） - 拉取解析入库", description = "期权 盘后行情（指定） - 拉取解析入库")
     @GetMapping(value = "/fill/fillOptionKline")
     public Result<Void> fillOptionKline(@Schema(description = "期权代码（不能带后缀 .SHO / .SZO）", example = "10011565")
