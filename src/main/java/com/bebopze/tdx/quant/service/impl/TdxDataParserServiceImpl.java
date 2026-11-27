@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.bebopze.tdx.quant.client.EastMoneyTradeAPI;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
 import com.bebopze.tdx.quant.common.constant.*;
+import com.bebopze.tdx.quant.common.constant.option.UnderlyingCodeConst;
 import com.bebopze.tdx.quant.common.tdxfun.BlockKlineFun;
 import com.bebopze.tdx.quant.common.util.DateTimeUtil;
 import com.bebopze.tdx.quant.dal.entity.*;
@@ -142,6 +143,9 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
 
         // ------------------------------------------------------------------------ 导入期权
+
+
+        importOptionUnderlying();
 
 
         importOption();
@@ -1147,6 +1151,39 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
 
     @TotalTime
     @Override
+    public void importOptionUnderlying() {
+
+
+        // ----------------------------------------- 期权标的   save2DB
+
+
+        Map<String, Long> db__codeIdMap = baseStockService.codeIdMap((Integer) null);
+
+
+        List<BaseStockDO> entityList = Lists.newArrayList();
+        UnderlyingCodeConst.OPTION_UNDERLYING__CODE_NAME__MAP.forEach((code, name) -> {
+
+            // 期权标的
+            BaseStockDO entity = new BaseStockDO();
+            entity.setCode(code);
+            entity.setName(name);
+            entity.setType(StockTypeEnum.getTypeByStockCode(code));
+            entity.setOptionUnderlyingFlag(1);
+            entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));
+
+
+            entity.setId(db__codeIdMap.get(code));
+            entityList.add(entity);
+        });
+
+
+        // insert new
+        baseStockService.batchInsertOrUpdate(entityList);
+    }
+
+
+    @TotalTime
+    @Override
     public void importOption() {
 
 
@@ -1209,7 +1246,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
     }
 
 
-    private void import__hkOrUs_Stock(BlockPoolEnum GG, StockTypeEnum HK_STOCK) {
+    private void import__hkOrUs_Stock(BlockPoolEnum GG, StockTypeEnum stockTypeEnum) {
 
 
         // ----------------------------------------- 港美股列表   解析
@@ -1230,7 +1267,7 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         // ----------------------------------------- 港美股列表   save2DB
 
 
-        Map<String, Long> old__hkStock_codeIdMap = baseStockService.codeIdMap(HK_STOCK.type);
+        Map<String, Long> old__hkStock_codeIdMap = baseStockService.codeIdMap(stockTypeEnum.type);
 
 
         List<BaseStockDO> entityList = Lists.newArrayList();
@@ -1242,11 +1279,11 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
             Integer tdxMarketType = StockMarketEnum.getTdxMarketType(stockCode);
 
 
-            // 港股
+            // 港美股
             BaseStockDO entity = new BaseStockDO();
             entity.setCode(stockCode);
             entity.setName(stockName);
-            entity.setType(HK_STOCK.type);
+            entity.setType(stockTypeEnum.type);
             entity.setTdxMarketType(tdxMarketType);
 
 

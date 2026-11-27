@@ -120,6 +120,14 @@ public class ParserController {
     }
 
 
+    @Operation(summary = "导入 - 期权标的（ETF期权标的/股指期权标的）", description = "导入 - 期权标的（ETF期权标的/股指期权标的）")
+    @GetMapping(value = "/import/optionUnderlying")
+    public Result<Object> importOptionUnderlying() {
+        tdxDataParserService.importOptionUnderlying();
+        return Result.SUC();
+    }
+
+
     @Operation(summary = "导入 - 期权", description = "导入 - 期权")
     @GetMapping(value = "/import/option")
     public Result<Object> importOption() {

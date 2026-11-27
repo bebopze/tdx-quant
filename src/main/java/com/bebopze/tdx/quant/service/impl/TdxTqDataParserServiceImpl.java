@@ -104,6 +104,11 @@ public class TdxTqDataParserServiceImpl implements TdxDataParserService {
     }
 
     @Override
+    public void importOptionUnderlying() {
+
+    }
+
+    @Override
     public void importOption() {
 
     }

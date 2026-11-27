@@ -183,7 +183,7 @@ public enum StockMarketEnum {
 
         // ---------- 中金所期货
 
-        if (Objects.equals(stockTypeEnum, StockTypeEnum.INDEX_STOCK)) {
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.SIF_STOCK)) {
             // 期权（前2位）
             String codePrefix = stockCode.trim().substring(0, 2);
 

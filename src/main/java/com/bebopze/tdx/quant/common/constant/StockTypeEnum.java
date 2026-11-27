@@ -46,7 +46,7 @@ public enum StockTypeEnum {
     // ----------------------------------------------------
 
 
-    INDEX_STOCK(21, "股指期货", 2, Lists.newArrayList("IM", "IF", "IH")),
+    SIF_STOCK(21, "股指期货（中金所）", 2, Lists.newArrayList("IM", "IF", "IH")),
 
 
     // ----------------------------------------------------
@@ -120,6 +120,20 @@ public enum StockTypeEnum {
         // 美股（SPY）
         if (NumUtil.isPureEnglish(stockCode)) {
             return StockTypeEnum.US_STOCK;
+        }
+
+
+        // -------------------------------------------------- 股指期货
+
+
+        // 股指期货（IM1000 / IF300 / IH50）
+        if (stockCode.startsWith("I")) {
+            // 前2位
+            String codePrefix = stockCode.trim().substring(0, 2);
+
+            if (SIF_STOCK.stockCodePrefixList.contains(codePrefix)) {
+                return StockTypeEnum.SIF_STOCK;
+            }
         }
 
 
