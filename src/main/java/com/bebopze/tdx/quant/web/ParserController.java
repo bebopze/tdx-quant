@@ -227,7 +227,8 @@ public class ParserController {
     // -----------------------------------------------------------------------------------------------------------------
 
 
-    @Operation(summary = "期权标的 盘后行情（指定） - 拉取解析入库", description = "期权标的 盘后行情（指定） - 拉取解析入库")
+    @Operation(summary = "期权标的 盘后行情 [不复权（期权回测 -> 必须用 不复权）] （指定） - 拉取解析入库",
+            description = "期权标的 盘后行情 [不复权（期权回测 -> 必须用 不复权）] （指定） - 拉取解析入库")
     @GetMapping(value = "/fill/fillOptionUnderlyingKline")
     public Result<Void> fillOptionUnderlyingKline(@Schema(description = "期权标的代码（不能带后缀 .SH / .SZ / .CFF）", example = "IM1000")
                                                   @RequestParam(defaultValue = "588000") String optionUnderlyingCode) {

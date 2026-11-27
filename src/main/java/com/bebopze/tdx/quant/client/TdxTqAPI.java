@@ -132,16 +132,18 @@ public class TdxTqAPI {
     /**
      * 根据股票，获取 历史行情
      *
-     * @param stockCode  证券代码（股票/ETF/板块/期权）
-     * @param periodEnum 周期（笔/分钟/日/周/月）
-     * @param start_time 起始日期
-     * @param end_time   结束日期
+     * @param stockCode        证券代码（股票/ETF/板块/期权）
+     * @param periodEnum       周期（笔/分钟/日/周/月）
+     * @param start_time       起始日期
+     * @param end_time         结束日期
+     * @param dividendTypeEnum 复权类型
      * @return
      */
     public static List<KlineDTO> get_market_data(String stockCode,
                                                  PeriodEnum periodEnum,
                                                  LocalDate start_time,
-                                                 LocalDate end_time) {
+                                                 LocalDate end_time,
+                                                 DividendTypeEnum dividendTypeEnum) {
 
 
         // 获取 历史行情     get_market_data
@@ -168,7 +170,8 @@ public class TdxTqAPI {
                                                         "start_time", DateTimeUtil.format_yyyyMMdd(start_time),
                                                         "end_time", DateTimeUtil.format_yyyyMMdd(end_time),
                                                         "count", 0,
-                                                        "dividend_type", DividendTypeEnum.FRONT.type,
+                                                        // 默认：前复权
+                                                        "dividend_type", dividendTypeEnum == null ? DividendTypeEnum.FRONT.type : dividendTypeEnum.type,
                                                         "fill_data", false));
 
 

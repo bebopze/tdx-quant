@@ -6,6 +6,7 @@ import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
 import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
+import com.bebopze.tdx.quant.common.constant.tq.DividendTypeEnum;
 import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.tq.GetGbInfoDTO;
@@ -94,14 +95,14 @@ public class LdayParser {
 
 
     public static List<LdayDTO> parseByStockCode(String stockCode) {
-        return parseByStockCode(stockCode, UpdateTypeEnum.HIS.days);
+        return parseByStockCode(stockCode, UpdateTypeEnum.HIS.days, DividendTypeEnum.FRONT);
     }
 
 
-    public static List<LdayDTO> parseByStockCode(String stockCode, int nd) {
+    public static List<LdayDTO> parseByStockCode(String stockCode, int nd, DividendTypeEnum dividendTypeEnum) {
 
         // xx.lday 文件   ->   解析
-        List<LdayDTO> dtoList = exec_parseByStockCode(stockCode, nd);
+        List<LdayDTO> dtoList = exec_parseByStockCode(stockCode, nd, dividendTypeEnum);
 
         // 每日股本（流通股本、总股本、换手率）
         fill_gbInfo(stockCode, dtoList);
@@ -117,12 +118,13 @@ public class LdayParser {
      * - 往期数据  ->  报表
      * - 短期数据  ->  xx.day
      *
-     * @param stockCode 证券代码
+     * @param stockCode        证券代码
      * @param nd
+     * @param dividendTypeEnum
      * @return
      */
     @SneakyThrows
-    public static List<LdayDTO> exec_parseByStockCode(String stockCode, int nd) {
+    public static List<LdayDTO> exec_parseByStockCode(String stockCode, int nd, DividendTypeEnum dividendTypeEnum) {
 
 
         String filePath = stockFilePath__lday(stockCode);
@@ -138,7 +140,7 @@ public class LdayParser {
 
 
         try {
-            // 个股   ->   行情数据   复权bug          // 板块/指数 - 不存在 复权
+            // 个股   ->   行情数据（前复权）        // 板块/指数 - 不存在 复权
             txt__dtoList = KlineTxtExportParser.parseTxtByStockCode(stockCode);
 
 
@@ -149,8 +151,14 @@ public class LdayParser {
             // ---------------------------------------------------------------------------------------------------------
 
 
-            // 短期数据  ->  xx.day
+            // 短期数据  ->  xx.day（不复权   ->   短期可用）
             lday__dtoList = parseLdayByFilePath(filePath);
+
+
+            // 不复权
+            if (dividendTypeEnum == DividendTypeEnum.NONE && CollectionUtils.isNotEmpty(lday__dtoList)) {
+                return lday__dtoList;
+            }
 
 
             // ---------------------------------------------------------------------------------------------------------
@@ -169,7 +177,7 @@ public class LdayParser {
                 // LocalDate kline__start_date = KLINE_START_DATE;
 
 
-                List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, kline__start_date, null);
+                List<KlineDTO> tq_klineDTOList = TdxTqAPI.get_market_data(stockCode, PeriodEnum.DAY, kline__start_date, null, dividendTypeEnum);
                 txt__dtoList = tq_klineDTOList.stream().map(LdayDTO::of).collect(Collectors.toList());
 
                 log.info("txt__dtoList 为空 / txt_size < lday_size，使用 TQ API 获取数据 - end       >>>     code : {} , tq_klineDTOList : {} ", stockCode, ListUtil.size(tq_klineDTOList));

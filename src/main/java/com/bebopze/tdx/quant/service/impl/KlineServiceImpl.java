@@ -5,11 +5,9 @@ import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.client.TdxTqKlineAPI;
 import com.bebopze.tdx.quant.common.config.anno.DistributedLock;
 import com.bebopze.tdx.quant.common.config.anno.TotalTime;
-import com.bebopze.tdx.quant.common.constant.BlockTypeEnum;
-import com.bebopze.tdx.quant.common.constant.StockMarketEnum;
-import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
-import com.bebopze.tdx.quant.common.constant.UpdateTypeEnum;
+import com.bebopze.tdx.quant.common.constant.*;
 import com.bebopze.tdx.quant.common.config.OptionDailyUpdateProperties;
+import com.bebopze.tdx.quant.common.constant.tq.DividendTypeEnum;
 import com.bebopze.tdx.quant.common.convert.ConvertStockKline;
 import com.bebopze.tdx.quant.common.domain.dto.kline.ExtDataDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
@@ -584,8 +582,8 @@ public class KlineServiceImpl implements KlineService {
         // ---------------------  拉取数据     ->     通达信-本地读取   /   通达信 TQ
 
 
-        // 通达信   本地读取
-        List<String> klines = klinesFromTdx(optionUnderlyingCode, UpdateTypeEnum.HIS);
+        // 通达信   本地读取   ->   不复权（期权回测 -> 必须用 不复权）
+        List<String> klines = klinesFromTdx(optionUnderlyingCode, UpdateTypeEnum.HIS, DividendTypeEnum.NONE);
 
 
         // -------------------------------------------------------------------------------------------------------------
@@ -1218,9 +1216,17 @@ public class KlineServiceImpl implements KlineService {
 
 
     private List<String> klinesFromTdx(String stockCode, UpdateTypeEnum updateTypeEnum) {
+        // 前复权（默认）
+        return klinesFromTdx(stockCode, updateTypeEnum, DividendTypeEnum.FRONT);
+    }
+
+
+    private List<String> klinesFromTdx(String stockCode,
+                                       UpdateTypeEnum updateTypeEnum,
+                                       DividendTypeEnum dividendTypeEnum) {
 
         // 个股 - K线数据
-        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode, updateTypeEnum.days);
+        List<LdayParser.LdayDTO> ldayDTOList = LdayParser.parseByStockCode(stockCode, updateTypeEnum.days, dividendTypeEnum);
 
 
         List<String> klines = Lists.newArrayList();

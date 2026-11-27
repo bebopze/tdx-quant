@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.bebopze.tdx.quant.client.TdxTqAPI;
 import com.bebopze.tdx.quant.client.TdxTqHttpClient;
 import com.bebopze.tdx.quant.common.constant.StockTypeEnum;
+import com.bebopze.tdx.quant.common.constant.tq.DividendTypeEnum;
 import com.bebopze.tdx.quant.common.constant.tq.PeriodEnum;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.tq.TdxRealtimeQuoteDTO;
@@ -73,7 +74,7 @@ public class TdxTqServiceImpl implements TdxTqService {
                                           LocalDate startDate,
                                           LocalDate endDate) {
 
-        return TdxTqAPI.get_market_data(code, periodEnum, startDate, endDate);
+        return TdxTqAPI.get_market_data(code, periodEnum, startDate, endDate, DividendTypeEnum.FRONT);
     }
 
 
