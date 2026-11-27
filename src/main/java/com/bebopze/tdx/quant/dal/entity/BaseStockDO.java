@@ -67,10 +67,10 @@ public class BaseStockDO implements Serializable {
     private String name;
 
     /**
-     * 股票类型：1-A股；2-ETF；11-港股；12-美股；21-股指期货；
+     * 股票类型：1-A股；2-ETF；11-港股；12-美股；
      */
     @TableField("type")
-    @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；21-股指期货；")
+    @Schema(description = "股票类型：1-A股；2-ETF；11-港股；12-美股；")
     private Integer type;
 
     /**
