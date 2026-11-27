@@ -967,6 +967,7 @@ public class KlineServiceImpl implements KlineService {
         entity.setId(optionUnderlyingId);
         entity.setCode(optionUnderlyingCode);
         entity.setName(optionUnderlyingName);
+        entity.setType(StockTypeEnum.getTypeByStockCode(optionUnderlyingCode));
         entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(optionUnderlyingCode));
 
 

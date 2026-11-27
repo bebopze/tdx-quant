@@ -1166,12 +1166,25 @@ public class TdxDataParserServiceImpl implements TdxDataParserService {
         List<BaseOptionUnderlyingDO> entityList = Lists.newArrayList();
         UnderlyingCodeConst.OPTION_UNDERLYING__CODE_NAME__MAP.forEach((code, name) -> {
 
+
             // 期权标的
             BaseOptionUnderlyingDO entity = new BaseOptionUnderlyingDO();
             entity.setCode(code);
             entity.setName(name);
-            entity.setType(StockTypeEnum.getTypeByStockCode(code));
             entity.setTdxMarketType(StockMarketEnum.getTdxMarketType(code));
+
+
+            // 期权标的类型
+            StockTypeEnum stockTypeEnum = StockTypeEnum.getByStockCode(code);
+            if (stockTypeEnum != null) {
+                entity.setType(stockTypeEnum.type);
+            }
+
+
+            // 期权合约乘数（ETF期权：10000；指数期权：100）
+            int multiplier = stockTypeEnum == StockTypeEnum.ETF ? 1_0000 :
+                    stockTypeEnum == StockTypeEnum.SIF_STOCK ? 1_00 : 1_000;
+            entity.setMultiplier(multiplier);
 
 
             entity.setId(db__codeIdMap.get(code));
