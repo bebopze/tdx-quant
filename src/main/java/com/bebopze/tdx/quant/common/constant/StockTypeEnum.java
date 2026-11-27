@@ -10,7 +10,7 @@ import java.util.List;
 
 
 /**
- * 股票类型：1-A股；2-ETF；3-板块；
+ * 自定义 股票类型：1-A股；2-ETF；11-港股；12-美股；21-股指期货；      // 对应 base_stock 表 type 自定义字段
  *
  * @author: bebopze
  * @date: 2025/7/29
@@ -46,14 +46,24 @@ public enum StockTypeEnum {
     // ----------------------------------------------------
 
 
-    OPTION(21, "期权", 4, Lists.newArrayList("1", "9")),
+    INDEX_STOCK(21, "股指期货", 2, Lists.newArrayList("IM", "IF", "IH")),
+
+
+    // ----------------------------------------------------
+
+
+    // ETF期权：1/9
+    ETF_OPTION(101, "ETF期权", 4, Lists.newArrayList("1", "9")),
+
+    // 股指期权：MO/IO/HO
+    INDEX_OPTION(102, "股指期权", 1, Lists.newArrayList("MO", "IO", "HO")),
 
 
     ;
 
 
     /**
-     * 自定义 股票类型（区分 A股/ETF/板块/港股/美股/期权）    ->     对应 base_stock 表 type 字段（ base_block、base_option 表 未记录此字段  ->  因为 已拆分 独立建表）
+     * 自定义 股票类型（区分 A股/ETF/板块/港股/美股/股指期货/期权/）    ->     对应 base_stock 表 type 字段（ base_block、base_option 表 未记录此字段  ->  因为 已拆分 独立建表）
      */
     public final Integer type;
     /**
@@ -116,15 +126,26 @@ public enum StockTypeEnum {
         // -------------------------------------------------- 期权
 
 
-        // 期权（10011565 / 90007858）
+        // ETF期权（10011565 / 90007858）
         // 上交所     10000001 ~ 19999999（ETF期权合约从此区间起始，按顺序对新挂牌合约编排，逐一递增，永不复用）
         // 深交所     90000001 ~ 91999999（ETF期权合约从此区间起始，按顺序对新挂牌合约编排，逐一递增，永不复用）
         if (stockCode.length() == 8 && NumUtil.isIntNumber(stockCode)) {
             // 前1位
             String codePrefix = stockCode.trim().substring(0, 1);
 
-            if (OPTION.stockCodePrefixList.contains(codePrefix)) {
-                return StockTypeEnum.OPTION;
+            if (ETF_OPTION.stockCodePrefixList.contains(codePrefix)) {
+                return StockTypeEnum.ETF_OPTION;
+            }
+        }
+
+
+        // 股指期权（MO2709-C-7000 / IO2709-P-3700 / HO2709-P-2500）
+        if (stockCode.length() == 13) {
+            // 前2位
+            String codePrefix = stockCode.trim().substring(0, 2);
+
+            if (INDEX_OPTION.stockCodePrefixList.contains(codePrefix)) {
+                return StockTypeEnum.INDEX_OPTION;
             }
         }
 
@@ -207,19 +228,19 @@ public enum StockTypeEnum {
      */
     public static boolean isOption(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return OPTION.equals(stockTypeEnum);
+        return ETF_OPTION.equals(stockTypeEnum) || INDEX_OPTION.equals(stockTypeEnum);
     }
 
 
     /**
-     * 港美股/期权（ tdx市场类型#股票代码   ->   31#00700 / 74#SPY / 8#10011565 ）
+     * 港美股/期权（ tdx市场类型#股票代码   ->   31#00700 / 74#SPY / 8#10011565 / 7#MO2709-C-7000）
      *
      * @param stockCode
      * @return
      */
     public static boolean isHkUsOpStock(String stockCode) {
         StockTypeEnum stockTypeEnum = getByStockCode(stockCode);
-        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum) || OPTION.equals(stockTypeEnum);
+        return HK_STOCK.equals(stockTypeEnum) || US_STOCK.equals(stockTypeEnum) || ETF_OPTION.equals(stockTypeEnum) || INDEX_OPTION.equals(stockTypeEnum);
     }
 
 

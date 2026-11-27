@@ -133,10 +133,10 @@ public class BaseOptionDO implements Serializable {
     private LocalDate endDate;
 
     /**
-     * 通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；48-香港创业板；74-美股；
+     * 通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；47-中金所期货；48-香港创业板；74-美股；
      */
     @TableField("tdx_market_type")
-    @Schema(description = "通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；48-香港创业板；74-美股；")
+    @Schema(description = "通达信-市场类型：0-深交所；1-上交所；2-北交所；12-美股指数；27-香港指数；31-香港主板；47-中金所期货；48-香港创业板；74-美股；")
     private Integer tdxMarketType;
 
     /**

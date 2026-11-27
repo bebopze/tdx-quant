@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
  * @date: 2026/10/1
  */
 @AllArgsConstructor
-public enum MarketEnum {
+public enum TdxTqMarketEnum {
 
 
     //    名称       类型        数值        说明

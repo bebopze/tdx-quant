@@ -415,7 +415,8 @@ public class TdxTqAPI {
 
 
         // GetStockInfoDTO stockInfo = get_stock_info("000001.SZ");
-        GetStockInfoDTO stockInfo = get_stock_info("10011565.SHO");
+        // GetStockInfoDTO stockInfo = get_stock_info("10011565.SHO");
+        GetStockInfoDTO stockInfo = get_stock_info("MO2709-C-7000.CFFO");
         System.out.println(stockInfo);
 
 

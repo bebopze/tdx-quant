@@ -18,17 +18,19 @@ import java.util.regex.Pattern;
 public final class TdxFormatCodeUtil {
 
 
-    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700 / BRK.A / 10011565.SHO）
+    // 前缀（SH600000 / SZ000001 / BJ920000 / HK00700 / BRK.A / 10011565.SHO / MO2709-C-7000.CFFO）
     // 放宽前缀后的内容，允许包含 . 和 -
     private static final Pattern PREFIX_CODE = Pattern.compile("^(SH|SZ|BJ|HK)([A-Z0-9.\\-]+)$");
 
-    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / BRK.A.US / 10011565.SHO）
+    // 后缀（600000.SH / 000001.SZ / 920000.BJ / 00700.HK / BRK.A.US / 10011565.SHO / MO2612-P-6400.CFFO）
     // 代码部分允许包含 . 和 -
-    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9.\\-]+)\\.(SH|SZ|BJ|HK|US|SHO|SZO)$");
+    private static final Pattern SUFFIX_CODE = Pattern.compile("^([A-Z0-9.\\-]+)\\.(SH|SZ|BJ|HK|US|SHO|SZO|CFFO)$");
 
     // 裸代码（6位数字=A股 / 5位数字=港股 / 1~10位字母或含. -的美股代码）
     // 允许字母数字混合，并可包含 . 和 -
     private static final Pattern RAW_CODE = Pattern.compile("^(\\d{5,6}|[A-Z0-9]{1,10}([.\\-][A-Z0-9]{1,5})?)$");
+    // 裸代码（股指期权）
+    private static final Pattern RAW_CODE_2 = Pattern.compile("^MO(\\d{2})(0[1-9]|1[0-2])-([PC])-(\\d+)$");
 
 
     public static List<String> formatCodes(List<String> codes) {
@@ -66,7 +68,7 @@ public final class TdxFormatCodeUtil {
             return prefixMatcher.group(2) + "." + prefixMatcher.group(1);
         }
 
-        if (!RAW_CODE.matcher(up_code).matches()) {
+        if (!RAW_CODE.matcher(up_code).matches() && !RAW_CODE_2.matcher(up_code).matches()) {
             throw new IllegalArgumentException("无效的通达信证券代码 : [" + code + "]");
         }
 
@@ -82,6 +84,7 @@ public final class TdxFormatCodeUtil {
 
 
     public static void main(String[] args) {
+
 
         System.out.println(formatCode("600519.SH"));
         System.out.println(formatCode("SH600519"));
@@ -99,6 +102,12 @@ public final class TdxFormatCodeUtil {
 
         System.out.println(formatCode("10011565.SHO"));
         System.out.println(formatCode("90007858.SZO"));
+
+
+        System.out.println(formatCode("MO2709-C-7000.CFFO"));
+        System.out.println(formatCode("MO2709-C-7000"));
+
     }
+
 
 }

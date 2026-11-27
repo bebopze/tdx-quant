@@ -223,6 +223,7 @@ public class LdayParser {
             // String filePath_US = TDX_PATH + "/vipdoc/ds/lday/74#SPY.day";
             // String filePath_OP_SH = TDX_PATH + "/vipdoc/ds/lday/8#10011565.day";
             // String filePath_OP_SZ = TDX_PATH + "/vipdoc/ds/lday/9#90007858.day";
+            // String filePath_OP_SZ = TDX_PATH + "/vipdoc/ds/lday/7#MO2709-C-7000.day";
             filePath = TDX_PATH + String.format("/vipdoc/ds/lday/%s#%s.day", tdxMarketType, stockCode);
         }
 
@@ -909,7 +910,10 @@ public class LdayParser {
 //        List<LdayDTO> stockDataList = parseByStockCode("513120");
 //        List<LdayDTO> stockDataList = parseByStockCode("300059");
 //        List<LdayDTO> stockDataList = parseByStockCode("600519");
-        List<LdayDTO> stockDataList = parseByStockCode("10011565");
+
+//        List<LdayDTO> stockDataList = parseByStockCode("10011565");
+        List<LdayDTO> stockDataList = parseByStockCode("MO2709-C-7000");
+
 
         for (LdayDTO e : stockDataList) {
             Object[] item = {e.code, String.valueOf(e.tradeDate), e.open, e.high, e.low, e.close, e.amount.toPlainString(), e.vol, e.changePct};

@@ -1,5 +1,6 @@
 package com.bebopze.tdx.quant.common.constant;
 
+import com.bebopze.tdx.quant.common.constant.tq.TdxTqMarketEnum;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,9 @@ import java.util.Set;
  *
  * @author: bebopze
  * @date: 2025/5/9
+ *
+ *         -
+ * @see TdxTqMarketEnum
  */
 @AllArgsConstructor
 public enum StockMarketEnum {
@@ -65,11 +69,22 @@ public enum StockMarketEnum {
     US("美股", 74, "74", "", "US", "US", Set.of()),
 
 
+    // ------------------- 中金所期货
+
+
+    CFF("中金所期货", 47, "47", "", "", "CFF", Set.of("IM", "IF", "IH")),
+
+
     // ------------------- 期权
+
+
+    CFFO("中金所期权", 7, "sz", "SA", "SZ", "CFFO", Set.of("MO", "FO", "HO")),
 
 
     SHO("上交所期权", 8, "sh", "HA", "SH", "SHO", Set.of("1")),
     SZO("深交所期权", 9, "sz", "SA", "SZ", "SZO", Set.of("9")),
+
+
     ;
 
 
@@ -166,12 +181,39 @@ public enum StockMarketEnum {
         }
 
 
-        // ---------- 期权
+        // ---------- 中金所期货
+
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.INDEX_STOCK)) {
+            // 期权（前2位）
+            String codePrefix = stockCode.trim().substring(0, 2);
+
+            for (StockMarketEnum value : StockMarketEnum.values()) {
+                if (value.stockCodePrefixSet.contains(codePrefix)) {
+                    return value;
+                }
+            }
+        }
 
 
-        if (Objects.equals(stockTypeEnum, StockTypeEnum.OPTION)) {
+        // ---------- ETF期权
+
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.ETF_OPTION)) {
             // 期权（前1位）
             String codePrefix = stockCode.trim().substring(0, 1);
+
+            for (StockMarketEnum value : StockMarketEnum.values()) {
+                if (value.stockCodePrefixSet.contains(codePrefix)) {
+                    return value;
+                }
+            }
+        }
+
+
+        // ---------- 股指期权
+
+        if (Objects.equals(stockTypeEnum, StockTypeEnum.INDEX_OPTION)) {
+            // 期权（前2位）
+            String codePrefix = stockCode.trim().substring(0, 2);
 
             for (StockMarketEnum value : StockMarketEnum.values()) {
                 if (value.stockCodePrefixSet.contains(codePrefix)) {
