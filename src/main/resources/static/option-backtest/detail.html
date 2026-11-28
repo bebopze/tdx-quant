@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 任务详情</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126m">
+    <link rel="stylesheet" href="assets/common.css?v=20261127n">
     <script>
         (function () {
             var t = 'a';
@@ -321,7 +321,7 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126m"></script>
+<script src="assets/common.js?v=20261127n"></script>
 <script>
     (function () {
         const O = window.Obt;
@@ -894,7 +894,8 @@
         }
 
         function optMult(code) {
-            return String(code) === '000852' ? 100 : 10000;
+            const c = String(code);
+            return ['IM1000', 'IF300', 'IH50'].includes(c) ? 100 : 10000;
         }
 
         function summaryRow(tab) {
@@ -1034,7 +1035,7 @@
                 if (r.closeDate) {
                     const e = equityByDate.get(String(r.closeDate).slice(0, 10));
                     const mult = r.multiplier != null ? Number(r.multiplier)
-                        : (String(r.underlyingCode) === '000852' ? 100 : 10000);
+                        : optMult(r.underlyingCode);
                     r.__sellAmount = Number(r.qty || 0) * Number(r.avgSellPrice || 0) * mult;
                     r.__accountPct = e && e.equity
                         ? r.__sellAmount / Number(e.equity) * 100 : null;
@@ -1278,7 +1279,7 @@
         });
 
         $('#filterUnderlying').innerHTML = '<option value="">全部标的</option>' +
-            ['159915', '588000', '510500', '510300', '000852'].map(c => `<option value="${c}">${O.undName(c)}</option>`).join('');
+            ['159915', '588000', '510500', '510300', 'IM1000'].map(c => `<option value="${c}">${O.undName(c)}</option>`).join('');
         ['filterType', 'filterDirection', 'filterUnderlying', 'filterMonth'].forEach(id => {
             $('#' + id).addEventListener('change', () => {
                 posPage = closedPage = tradePage = equityPage = signalPage = 1;

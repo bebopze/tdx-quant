@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>期权 BS 回测 · 新建任务</title>
-    <link rel="stylesheet" href="assets/common.css?v=20261126m">
+    <link rel="stylesheet" href="assets/common.css?v=20261127n">
     <script>
         (function () {
             var t = 'a';
@@ -195,7 +195,7 @@
                         </div>
                         <div class="sec-body">
                             <div class="und-grid" id="undGrid"></div>
-                            <div class="help" style="margin-top:8px">中证1000 使用中金所 000852 指数期权（乘数 100）；其余为
+                            <div class="help" style="margin-top:8px">中证1000 使用中金所 IM1000 指数期权（乘数 100）；其余为
                                 ETF 期权（乘数 10,000）。
                             </div>
                         </div>
@@ -426,7 +426,7 @@
                             <div class="check-box ok" id="validOk">✓ 参数校验通过，可以创建</div>
                             <div class="tips">
                                 <div><b>2017-01-01 ~ 2019-12-22</b> 无目标期权，空仓等待首个有效信号。</div>
-                                <div><b>000852</b> 为指数期权（乘数 100），指数K线来自缓存/腾讯。</div>
+                                <div><b>IM1000</b> 为指数期权（乘数 100），指数K线来自 base_option_underlying。</div>
                                 <div>仅使用有成交量且距到期 ≥3 天的合约，避免占位K线。</div>
                             </div>
                         </div>
@@ -436,20 +436,20 @@
         </div>
     </main>
 </div>
-<script src="assets/common.js?v=20261126m"></script>
+<script src="assets/common.js?v=20261127n"></script>
 <script>
     (function () {
         const O = window.Obt;
         const $ = s => document.querySelector(s);
         const $$ = s => Array.from(document.querySelectorAll(s));
-        const CODES = ['159915', '588000', '510500', '510300', '000852'];
+        const CODES = ['159915', '588000', '510500', '510300', 'IM1000'];
         const state = {underlyings: CODES.slice(), strikes: ['ITM1', 'ATM', 'OTM1', 'OTM2', 'OTM3']};
         const META = {
             '159915': {name: '创业板ETF易方达', market: '深交所', start: '2022-09-19', contracts: 2014},
             '588000': {name: '科创50ETF华夏', market: '上交所', start: '2023-06-05', contracts: 1368},
             '510500': {name: '中证500ETF南方', market: '上交所', start: '2022-09-19', contracts: 1840},
             '510300': {name: '沪深300ETF华泰柏瑞', market: '上交所', start: '2019-12-23', contracts: 2860},
-            '000852': {name: '中证1000', market: '中金所', start: '2022-07-22', contracts: 3366}
+            'IM1000': {name: '中证1000', market: '中金所', start: '2022-07-22', contracts: 3366}
         };
 
         const RULE_META = {
