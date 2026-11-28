@@ -31,7 +31,7 @@ public class OptionBsParams {
     private String capitalBase = "EQUITY";
 
     // ---------------- 标的 ----------------
-    private List<String> underlyingCodes = new ArrayList<>(List.of("159915", "588000", "510500", "510300", "000852"));
+    private List<String> underlyingCodes = new ArrayList<>(List.of("159915", "588000", "510500", "510300", "IM1000"));
 
     // ---------------- 信号 / 合约 ----------------
     /**

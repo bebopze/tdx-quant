@@ -60,6 +60,7 @@ public class MybatisPlusUtil {
         config.addMapper(BaseStockMapper.class);
         config.addMapper(BaseBlockMapper.class);
         config.addMapper(BaseOptionMapper.class);
+        config.addMapper(BaseOptionUnderlyingMapper.class);
         config.addMapper(QaMarketMidCycleMapper.class);
 
         // 期权 BS 回测
@@ -70,7 +71,6 @@ public class MybatisPlusUtil {
         config.addMapper(ObtCloseRecordMapper.class);
         config.addMapper(ObtSignalEventMapper.class);
         config.addMapper(ObtTaskLogMapper.class);
-        config.addMapper(ObtIndexKlineMapper.class);
         config.addMapper(ObtTemplateMapper.class);
         config.addMapper(ObtMetaMapper.class);
 

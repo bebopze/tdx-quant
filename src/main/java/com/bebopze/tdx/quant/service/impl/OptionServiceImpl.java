@@ -5,13 +5,14 @@ import com.bebopze.tdx.quant.common.domain.dto.option.MonthOptionDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.OptionDTO;
 import com.bebopze.tdx.quant.common.domain.dto.base.OptionEtfInfoDTO;
 import com.bebopze.tdx.quant.common.domain.dto.option.OptionKlineDTO;
+import com.bebopze.tdx.quant.common.constant.option.UnderlyingCodeConst;
 import com.bebopze.tdx.quant.common.domain.dto.option.OptionUnderlyingDTO;
 import com.bebopze.tdx.quant.common.domain.dto.option.OptionUnderlyingKlineDTO;
 import com.bebopze.tdx.quant.common.domain.dto.kline.KlineDTO;
 import com.bebopze.tdx.quant.dal.entity.BaseOptionDO;
-import com.bebopze.tdx.quant.dal.entity.BaseStockDO;
+import com.bebopze.tdx.quant.dal.entity.BaseOptionUnderlyingDO;
 import com.bebopze.tdx.quant.dal.service.IBaseOptionService;
-import com.bebopze.tdx.quant.dal.service.IBaseStockService;
+import com.bebopze.tdx.quant.dal.service.IBaseOptionUnderlyingService;
 import com.bebopze.tdx.quant.service.OptionService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -79,7 +80,7 @@ public class OptionServiceImpl implements OptionService {
     private IBaseOptionService baseOptionService;
 
     @Autowired
-    private IBaseStockService baseStockService;
+    private IBaseOptionUnderlyingService baseOptionUnderlyingService;
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -97,7 +98,8 @@ public class OptionServiceImpl implements OptionService {
     public List<MonthOptionDTO> listOptionInDate(String underlyingCode, LocalDate date) {
 
         LocalDate queryDate = date == null ? LocalDate.now() : date;
-        String underlyingCodeVal = StringUtils.hasText(underlyingCode) ? underlyingCode.trim() : null;
+        String underlyingCodeVal = StringUtils.hasText(underlyingCode)
+                ? UnderlyingCodeConst.toUnderlyingCode(underlyingCode.trim()) : null;
 
         String cacheKey = queryDate + "|" + underlyingCodeVal;
 
@@ -214,8 +216,8 @@ public class OptionServiceImpl implements OptionService {
                 }
             }
 
-            BaseStockDO stock = getStock(underlyingCode);
-            dto.setEtfName(stock == null ? null : stock.getName());
+            BaseOptionUnderlyingDO underlying = getUnderlying(underlyingCode);
+            dto.setEtfName(underlying == null ? null : underlying.getName());
 
             dtoList.add(dto);
         }
@@ -270,9 +272,9 @@ public class OptionServiceImpl implements OptionService {
         dto.setFrom(from);
         dto.setTo(to);
 
-        BaseStockDO stock = getStock(underlyingCode);
-        if (stock != null) {
-            dto.setEtfName(stock.getName());
+        BaseOptionUnderlyingDO underlying = getUnderlying(underlyingCode);
+        if (underlying != null) {
+            dto.setEtfName(underlying.getName());
         }
 
         // 标的name 取 期权表口径（如 300ETF）
@@ -392,11 +394,11 @@ public class OptionServiceImpl implements OptionService {
         }
 
         List<KlineDTO> barList = etfKlineCache.get(underlyingCode, code -> {
-            BaseStockDO stock = getStock(code);
-            if (stock == null) {
+            BaseOptionUnderlyingDO underlying = getUnderlying(code);
+            if (underlying == null) {
                 return new ArrayList<KlineDTO>();
             }
-            return ConvertOptionTQuote.str2DTOList(stock.getKlineHisStr());
+            return ConvertOptionTQuote.str2DTOList(underlying.getKlineHisStr());
         });
 
         return barList == null ? Lists.newArrayList() : barList;
@@ -457,11 +459,15 @@ public class OptionServiceImpl implements OptionService {
     }
 
 
-    private BaseStockDO getStock(String code) {
+    private BaseOptionUnderlyingDO getUnderlying(String code) {
         try {
-            return StringUtils.hasText(code) ? baseStockService.getByCode(code) : null;
+            if (!StringUtils.hasText(code)) {
+                return null;
+            }
+            String underlyingCode = UnderlyingCodeConst.toUnderlyingCode(code);
+            return baseOptionUnderlyingService.getByCode(underlyingCode);
         } catch (Exception e) {
-            log.warn("OptionServiceImpl#getStock - err     >>>     code : {} , errMsg : {}", code, e.getMessage());
+            log.warn("OptionServiceImpl#getUnderlying - err     >>>     code : {} , errMsg : {}", code, e.getMessage());
             return null;
         }
     }
@@ -474,6 +480,11 @@ public class OptionServiceImpl implements OptionService {
 
         if (!StringUtils.hasText(underlyingCode)) {
             return null;
+        }
+
+        BaseOptionUnderlyingDO underlying = getUnderlying(underlyingCode);
+        if (underlying != null && StringUtils.hasText(underlying.getName())) {
+            return underlying.getName();
         }
 
         try {

@@ -32,13 +32,10 @@ public class OptionBsBacktestService {
     private QaMarketMidCycleMapper signalMapper;
 
     @Autowired
-    private BaseStockMapper stockMapper;
-
-    @Autowired
     private BaseOptionMapper optionMapper;
 
     @Autowired
-    private ObtIndexKlineMapper indexKlineMapper;
+    private BaseOptionUnderlyingMapper underlyingMapper;
 
 
     @Autowired
@@ -93,7 +90,7 @@ public class OptionBsBacktestService {
             repo.log(id, "INFO", "任务启动 " + taskNo + " capital=" + p.getInitialCapital());
             progressMap.put(id, 5);
 
-            OptionBsDataLoader loader = new OptionBsDataLoader(signalMapper, stockMapper, optionMapper, indexKlineMapper);
+            OptionBsDataLoader loader = new OptionBsDataLoader(signalMapper, optionMapper, underlyingMapper);
             OptionBsData data = loader.load(p);
             repo.updateProgress(id, 40);
             progressMap.put(id, 40);

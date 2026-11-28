@@ -31,7 +31,7 @@ public class OptionBsCli {
         p.setEndDate(end);
         p.setInitialCapital(capital);
         p.setTaskName("中期信号 · 全标的 · 当月/次月/当季");
-        p.setDataVersion("base_option @ " + LocalDate.now());
+        p.setDataVersion("base_option_underlying");
 
 
         OptionBsRepository repo = MybatisPlusUtil.getOptionBsRepository();
@@ -45,9 +45,8 @@ public class OptionBsCli {
         try {
             OptionBsDataLoader loader = new OptionBsDataLoader(
                     MybatisPlusUtil.getMapper(QaMarketMidCycleMapper.class),
-                    MybatisPlusUtil.getMapper(BaseStockMapper.class),
                     MybatisPlusUtil.getMapper(BaseOptionMapper.class),
-                    MybatisPlusUtil.getMapper(ObtIndexKlineMapper.class));
+                    MybatisPlusUtil.getMapper(BaseOptionUnderlyingMapper.class));
 
             OptionBsData data = loader.load(p);
             repo.log(taskId, "INFO", "数据加载完成 underlyings=" + data.underlyings.size()

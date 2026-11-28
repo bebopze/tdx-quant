@@ -13,7 +13,7 @@
 
         FROM base_option
 
-        WHERE underlying_code IN ('159915', '588000', '510500', '510300', '000852')
+        WHERE underlying_code IN ('159915', '588000', '510500', '510300', 'IM1000')
 
         GROUP BY underlying_code, underlying_type
 

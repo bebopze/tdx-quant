@@ -65,7 +65,7 @@ public class OptionController {
      * @param date 指定日期（不传 = 今天）
      * @return 标的列表
      */
-    @Operation(summary = "期权标的列表（指定日期）", description = "指定日期 存续合约的标的概况 + 标的ETF行情（收盘价/涨跌幅）")
+    @Operation(summary = "期权标的列表（指定日期）", description = "指定日期 存续合约的标的概况 + 期权标的行情（收盘价/涨跌幅，取自 base_option_underlying）")
     @GetMapping(value = "/underlyingList")
     public Result<List<OptionUnderlyingDTO>> underlyingList(@Schema(description = "日期", example = "2026-10-01")
                                                             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
@@ -90,14 +90,14 @@ public class OptionController {
 
 
     /**
-     * 标的ETF K线（所选日期 前后 N 个月）
+     * 期权标的 K线（所选日期 前后 N 个月，取自 base_option_underlying）
      *
      * @param underlyingCode 标的code
      * @param date           所选日期（不传 = 今天）
      * @param months         前后月份数（默认 3）
      * @return 标的K线
      */
-    @Operation(summary = "标的ETF K线（所选日期 前后N个月）", description = "T型报价 右上角 标的K线图；默认 前后 3 个月")
+    @Operation(summary = "期权标的 K线（所选日期 前后N个月，取自 base_option_underlying）", description = "T型报价 右上角 标的K线图；默认 前后 3 个月")
     @GetMapping(value = "/underlyingKline")
     public Result<OptionUnderlyingKlineDTO> underlyingKline(@Schema(description = "标的证券code", example = "510300")
                                                             @RequestParam String underlyingCode,
